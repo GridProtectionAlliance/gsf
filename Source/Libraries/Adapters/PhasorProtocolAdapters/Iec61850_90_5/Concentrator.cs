@@ -47,11 +47,9 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
 
         // Fields
         private ConfigurationFrame m_configurationFrame;
-        private uint m_timeBase;
         private bool m_configurationChanged;
         private uint m_configurationRevision;
         private Ticks m_notificationStartTime;
-        private bool m_validateIDCode;
         private string m_msvid;
         private int m_asduCount;
         private ushort m_sampleCount;
@@ -65,32 +63,12 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         /// <summary>
         /// Gets or sets IEEE C37.118 time base for this concentrator instance.
         /// </summary>
-        public uint TimeBase
-        {
-            get
-            {
-                return m_timeBase;
-            }
-            set
-            {
-                m_timeBase = value;
-            }
-        }
+        public uint TimeBase { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if concentrator will validate ID code before processing commands.
         /// </summary>
-        public bool ValidateIDCode
-        {
-            get
-            {
-                return m_validateIDCode;
-            }
-            set
-            {
-                m_validateIDCode = value;
-            }
-        }
+        public bool ValidateIDCode { get; set; }
 
         /// <summary>
         /// Returns the detailed status of this <see cref="Concentrator"/>.
@@ -102,9 +80,9 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                 StringBuilder status = new StringBuilder();
 
                 status.AppendLine("           Output protocol: IEC 61850-90-5");
-                status.AppendFormat("      Configured time base: {0}", m_timeBase);
+                status.AppendFormat("      Configured time base: {0}", TimeBase);
                 status.AppendLine();
-                status.AppendFormat("        Validating ID code: {0}", m_validateIDCode);
+                status.AppendFormat("        Validating ID code: {0}", ValidateIDCode);
                 status.AppendLine();
                 status.AppendFormat("                     MSVID: {0}", m_msvid);
                 status.AppendLine();
@@ -126,24 +104,14 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         public override void Initialize()
         {
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Load optional parameters
-            if (settings.TryGetValue("validateIDCode", out setting))
-                m_validateIDCode = setting.ParseBoolean();
-            else
-                m_validateIDCode = false;
+            ValidateIDCode = settings.TryGetValue("validateIDCode", out string setting) && setting.ParseBoolean();
 
             // Pre-fetch ID code to create default MSVID
-            ushort idCode;
 
-            if (settings.TryGetValue("IDCode", out setting) && ushort.TryParse(setting, out idCode))
-            {
-                if (settings.TryGetValue("msvid", out setting))
-                    m_msvid = setting;
-                else
-                    m_msvid = $"{idCode}_{Name}";
-            }
+            if (settings.TryGetValue("IDCode", out setting) && ushort.TryParse(setting, out ushort idCode))
+                m_msvid = settings.TryGetValue("msvid", out setting) ? setting : $"{idCode}_{Name}";
 
             // Get ASDU count
             if (!(settings.TryGetValue("asduCount", out setting) && int.TryParse(setting, out m_asduCount) && m_asduCount > 0))
@@ -167,7 +135,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         protected override IConfigurationFrame CreateNewConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
-            ConfigurationFrame configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, m_timeBase, base.NominalFrequency);
+            ConfigurationFrame configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, TimeBase, NominalFrequency);
 
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
             bool configurationChanged = m_configurationFrame != null;
@@ -248,7 +216,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                 IServer commandChannel = (IServer)CommandChannel ?? DataChannel;
 
                 // Validate incoming ID code if requested
-                if (!m_validateIDCode || commandFrame.IDCode == this.IDCode)
+                if (!ValidateIDCode || commandFrame.IDCode == IDCode)
                 {
                     switch (commandFrame.Command)
                     {
@@ -315,24 +283,22 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame"/>.</returns>
         public static ConfigurationFrame CreateConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
         {
-            ConfigurationCell newCell;
-            uint maskValue;
-
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
             ConfigurationFrame configurationFrame = new ConfigurationFrame(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
             foreach (GSF.PhasorProtocols.Anonymous.ConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 configuration cell (i.e., a PMU configuration)
-                newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency);
-
-                // Update other cell level attributes
-                newCell.StationName = baseCell.StationName;
-                newCell.IDLabel = baseCell.IDLabel;
-                newCell.PhasorDataFormat = baseCell.PhasorDataFormat;
-                newCell.PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat;
-                newCell.FrequencyDataFormat = baseCell.FrequencyDataFormat;
-                newCell.AnalogDataFormat = baseCell.AnalogDataFormat;
+                ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency)
+                {
+                    // Update other cell level attributes
+                    StationName = baseCell.StationName,
+                    IDLabel = baseCell.IDLabel,
+                    PhasorDataFormat = baseCell.PhasorDataFormat,
+                    PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat,
+                    FrequencyDataFormat = baseCell.FrequencyDataFormat,
+                    AnalogDataFormat = baseCell.AnalogDataFormat
+                };
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
@@ -355,10 +321,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                     // Attempt to derive user defined mask value if available
                     DigitalDefinition anonymousDigitalDefinition = digitalDefinition as DigitalDefinition;
 
-                    if (anonymousDigitalDefinition != null)
-                        maskValue = anonymousDigitalDefinition.MaskValue;
-                    else
-                        maskValue = 0U;
+                    uint maskValue = anonymousDigitalDefinition?.MaskValue ?? 0U;
 
                     newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEC61850_90_5.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
@@ -384,12 +347,11 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         {
             // We create a new IEC 61850-90-5 data frame based on current configuration frame
             DataFrame dataFrame = new DataFrame(timestamp, configurationFrame, msvID, asduCount, asduImages, configurationRevision);
-            DataCell dataCell;
 
             foreach (ConfigurationCell configurationCell in configurationFrame.Cells)
             {
                 // Create a new IEC 61850-90-5 data cell (i.e., a PMU entry for this frame)
-                dataCell = new DataCell(dataFrame, configurationCell, true);
+                DataCell dataCell = new DataCell(dataFrame, configurationCell, true);
 
                 // Add data cell to the frame
                 dataFrame.Cells.Add(dataCell);

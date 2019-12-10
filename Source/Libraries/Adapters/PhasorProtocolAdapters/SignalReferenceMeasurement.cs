@@ -41,7 +41,6 @@ namespace PhasorProtocolAdapters
 
         // Fields
         private readonly IMeasurement m_measurement;
-        private readonly SignalReference m_signalReference;
 
         #endregion
 
@@ -55,7 +54,7 @@ namespace PhasorProtocolAdapters
         public SignalReferenceMeasurement(IMeasurement measurement, SignalReference signalReference)
         {
             m_measurement = measurement;
-            m_signalReference = signalReference;
+            SignalReference = signalReference;
         }
 
         #endregion
@@ -65,7 +64,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the <see cref="SignalReference"/> associated with this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
-        public SignalReference SignalReference => m_signalReference;
+        public SignalReference SignalReference { get; }
 
 
         /// <summary>
@@ -83,14 +82,8 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public MeasurementStateFlags StateFlags
         {
-            get
-            {
-                return m_measurement.StateFlags;
-            }
-            set
-            {
-                m_measurement.StateFlags = value;
-            }
+            get => m_measurement.StateFlags;
+            set => m_measurement.StateFlags = value;
         }
 
         /// <summary>
@@ -104,14 +97,8 @@ namespace PhasorProtocolAdapters
         /// <returns>Raw value of this <see cref="SignalReferenceMeasurement"/> (i.e., value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).</returns>
         public double Value
         {
-            get
-            {
-                return m_measurement.Value;
-            }
-            set
-            {
-                m_measurement.Value = value;
-            }
+            get => m_measurement.Value;
+            set => m_measurement.Value = value;
         }
 
         /// <summary>
@@ -141,14 +128,8 @@ namespace PhasorProtocolAdapters
         /// </remarks>
         public Ticks Timestamp
         {
-            get
-            {
-                return m_measurement.Timestamp;
-            }
-            set
-            {
-                m_measurement.Timestamp = value;
-            }
+            get => m_measurement.Timestamp;
+            set => m_measurement.Timestamp = value;
         }
 
         /// <summary>
@@ -171,26 +152,14 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public MeasurementMetadata Metadata
         {
-            get
-            {
-                return m_measurement.Metadata;
-            }
-            set
-            {
-                m_measurement.Metadata = value;
-            }
+            get => m_measurement.Metadata;
+            set => m_measurement.Metadata = value;
         }
 
         BigBinaryValue ITimeSeriesValue.Value
         {
-            get
-            {
-                return ((ITimeSeriesValue)m_measurement).Value;
-            }
-            set
-            {
-                ((ITimeSeriesValue)m_measurement).Value = value;
-            }
+            get => ((ITimeSeriesValue)m_measurement).Value;
+            set => ((ITimeSeriesValue)m_measurement).Value = value;
         }
 
         #endregion

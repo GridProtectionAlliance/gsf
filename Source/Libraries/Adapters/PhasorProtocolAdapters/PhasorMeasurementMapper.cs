@@ -149,7 +149,6 @@ namespace PhasorProtocolAdapters
         private MissingDataMonitor m_missingDataMonitor;
         private SharedTimer m_dataStreamMonitor;
         private SharedTimer m_measurementCounter;
-        private bool m_allowUseOfCachedConfiguration;
         private bool m_cachedConfigLoadAttempted;
         private readonly object m_configurationOperationLock;
         private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
@@ -157,24 +156,13 @@ namespace PhasorProtocolAdapters
         private int m_lastConfigurationPublishMinute;
         private bool m_configurationFramePublished;
         private long m_receivedConfigurationFrames;
-        private TimeZoneInfo m_timezone;
-        private Ticks m_timeAdjustmentTicks;
-        private Ticks m_lastReportTime;
-        private long m_outOfOrderFrames;
         private long m_totalLatency;
         private long m_minimumLatency;
         private long m_maximumLatency;
         private long m_latencyFrames;
-        private long m_connectionAttempts;
-        private long m_configurationChanges;
-        private long m_totalDataFrames;
-        private long m_totalConfigurationFrames;
-        private long m_totalHeaderFrames;
         private string m_sharedMapping;
         private uint m_sharedMappingID;
         private bool m_forceLabelMapping;
-        private ushort m_accessID;
-        private bool m_isConcentrator;
         private bool m_receivedConfigFrame;
         private long m_bytesReceived;
         private double m_lagTime;
@@ -183,9 +171,6 @@ namespace PhasorProtocolAdapters
         private bool m_countOnlyMappedMeasurements;
         private bool m_injectBadData;
 
-        private long m_lifetimeMeasurements;
-        private long m_minimumMeasurementsPerSecond;
-        private long m_maximumMeasurementsPerSecond;
         private long m_totalMeasurementsPerSecond;
         private long m_measurementsPerSecondCount;
         private long m_measurementsInSecond;
@@ -231,16 +216,12 @@ namespace PhasorProtocolAdapters
         /// Gets flag that determines if device being mapped is a concentrator (i.e., data from multiple
         /// devices combined together from the connected device).
         /// </summary>
-        public bool IsConcentrator => m_isConcentrator;
+        public bool IsConcentrator { get; private set; }
 
         /// <summary>
         /// Gets or sets access ID (or ID code) for this device connection which is often necessary in order to make a connection to some phasor protocols.
         /// </summary>
-        public ushort AccessID
-        {
-            get => m_accessID;
-            set => m_accessID = value;
-        }
+        public ushort AccessID { get; set; }
 
         private IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> StatisticsHelpers => m_labelDefinedDevices != null ? m_definedDevices.Values.Concat(m_labelDefinedDevices.Values) : m_definedDevices.Values;
 
@@ -252,11 +233,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets or sets flag that determines if use of cached configuration during initial connection is allowed when a configuration has not been received within the data loss interval.
         /// </summary>
-        public bool AllowUseOfCachedConfiguration
-        {
-            get => m_allowUseOfCachedConfiguration;
-            set => m_allowUseOfCachedConfiguration = value;
-        }
+        public bool AllowUseOfCachedConfiguration { get; set; }
 
         /// <summary>
         /// Gets the configuration cache file name, with path.
@@ -270,11 +247,7 @@ namespace PhasorProtocolAdapters
         /// If time zone of clock of connected device is not set to UTC, assigning this property
         /// with proper time zone will allow proper adjustment.
         /// </remarks>
-        public TimeZoneInfo TimeZone
-        {
-            get => m_timezone;
-            set => m_timezone = value;
-        }
+        public TimeZoneInfo TimeZone { get; set; }
 
         /// <summary>
         /// Gets or sets ticks used to manually adjust time of this <see cref="PhasorMeasurementMapper"/>.
@@ -283,11 +256,7 @@ namespace PhasorProtocolAdapters
         /// This property will allow for precise time adjustments of connected devices should
         /// this be needed.
         /// </remarks>
-        public Ticks TimeAdjustmentTicks
-        {
-            get => m_timeAdjustmentTicks;
-            set => m_timeAdjustmentTicks = value;
-        }
+        public Ticks TimeAdjustmentTicks { get; set; }
 
         /// <summary>
         /// Gets the number of missing frames of data, taking into account redundant frames.
@@ -306,11 +275,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets or set last report time for current mapper connection.
         /// </summary>
-        public Ticks LastReportTime
-        {
-            get => m_lastReportTime;
-            set => m_lastReportTime = value;
-        }
+        public Ticks LastReportTime { get; private set; }
 
         /// <summary>
         /// Gets the the total number of frames that have been received by the current mapper connection.
@@ -330,7 +295,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number frames that came in out of order from the current mapper connection.
         /// </summary>
-        public long OutOfOrderFrames => m_outOfOrderFrames;
+        public long OutOfOrderFrames { get; private set; }
 
         /// <summary>
         /// Gets the minimum latency in milliseconds over the last test interval.
@@ -350,27 +315,27 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number of connection attempts.
         /// </summary>
-        public long ConnectionAttempts => m_connectionAttempts;
+        public long ConnectionAttempts { get; private set; }
 
         /// <summary>
         /// Gets the total number of received configurations.
         /// </summary>
-        public long ConfigurationChanges => m_configurationChanges;
+        public long ConfigurationChanges { get; private set; }
 
         /// <summary>
         /// Gets the total number of received data frames.
         /// </summary>
-        public long TotalDataFrames => m_totalDataFrames;
+        public long TotalDataFrames { get; private set; }
 
         /// <summary>
         /// Gets the total number of received configuration frames.
         /// </summary>
-        public long TotalConfigurationFrames => m_totalConfigurationFrames;
+        public long TotalConfigurationFrames { get; private set; }
 
         /// <summary>
         /// Gets the total number of received header frames.
         /// </summary>
-        public long TotalHeaderFrames => m_totalHeaderFrames;
+        public long TotalHeaderFrames { get; private set; }
 
         /// <summary>
         /// Gets the defined frame rate.
@@ -453,17 +418,17 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number of measurements processed through this data publisher over the lifetime of the input stream.
         /// </summary>
-        public long LifetimeMeasurements => m_lifetimeMeasurements;
+        public long LifetimeMeasurements { get; private set; }
 
         /// <summary>
         /// Gets the minimum value of the measurements per second calculation.
         /// </summary>
-        public long MinimumMeasurementsPerSecond => m_minimumMeasurementsPerSecond;
+        public long MinimumMeasurementsPerSecond { get; private set; }
 
         /// <summary>
         /// Gets the maximum value of the measurements per second calculation.
         /// </summary>
-        public long MaximumMeasurementsPerSecond => m_maximumMeasurementsPerSecond;
+        public long MaximumMeasurementsPerSecond { get; private set; }
 
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
@@ -488,9 +453,9 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// When false, this adapter will not log any connection errors through OnProcessException. When true, all errors get logged.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Enable to allow this adapter to log connection errors. Disable to ignore connection errors."),
-        DefaultValue(true)]
+        [ConnectionStringParameter]
+        [Description("Enable to allow this adapter to log connection errors. Disable to ignore connection errors.")]
+        [DefaultValue(true)]
         public new bool EnableConnectionErrors
         {
             get => base.EnableConnectionErrors;
@@ -717,7 +682,7 @@ namespace PhasorProtocolAdapters
 
                 status.Append(base.Status);
 
-                status.AppendFormat("    Source is concentrator: {0}", m_isConcentrator);
+                status.AppendFormat("    Source is concentrator: {0}", IsConcentrator);
                 status.AppendLine();
                 status.AppendFormat("Forwarding only connection: {0}", m_forwardOnly);
                 status.AppendLine();
@@ -728,17 +693,17 @@ namespace PhasorProtocolAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat(" Source connection ID code: {0:N0}", m_accessID);
+                status.AppendFormat(" Source connection ID code: {0:N0}", AccessID);
                 status.AppendLine();
                 status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
                 status.AppendLine();
                 status.AppendFormat("      Label mapped devices: {0:N0}", (object)m_labelDefinedDevices == null ? 0 : m_labelDefinedDevices.Count);
                 status.AppendLine();
-                status.AppendFormat("          Target time zone: {0}", m_timezone.Id);
+                status.AppendFormat("          Target time zone: {0}", TimeZone.Id);
                 status.AppendLine();
-                status.AppendFormat("    Manual time adjustment: {0:0.000} seconds", m_timeAdjustmentTicks.ToSeconds());
+                status.AppendFormat("    Manual time adjustment: {0:0.000} seconds", TimeAdjustmentTicks.ToSeconds());
                 status.AppendLine();
-                status.AppendFormat("Allow use of cached config: {0}", m_allowUseOfCachedConfiguration);
+                status.AppendFormat("Allow use of cached config: {0}", AllowUseOfCachedConfiguration);
                 status.AppendLine();
                 status.AppendFormat("No data reconnect interval: {0:0.000} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds());
                 status.AppendLine();
@@ -746,14 +711,14 @@ namespace PhasorProtocolAdapters
                 if (m_injectBadData)
                     status.AppendLine("   Injecting bad data flag: Yes - WARNING: Test mode enabled to override bad data flag");
 
-                if (m_allowUseOfCachedConfiguration)
+                if (AllowUseOfCachedConfiguration)
                 {
                     //                   123456789012345678901234567890
                     status.AppendFormat("   Cached config file name: {0}", FilePath.TrimFileName(ConfigurationCacheFileName, 51));
                     status.AppendLine();
                 }
 
-                status.AppendFormat("       Out of order frames: {0:N0}", m_outOfOrderFrames);
+                status.AppendFormat("       Out of order frames: {0:N0}", OutOfOrderFrames);
                 status.AppendLine();
                 status.AppendFormat("           Minimum latency: {0:N0}ms over {1} tests", MinimumLatency, m_latencyFrames);
                 status.AppendLine();
@@ -849,7 +814,7 @@ namespace PhasorProtocolAdapters
                     status.Append(' ');
                     status.Append(definedDevice.TotalFrames.ToString("N0").CenterText(10));
                     status.Append(' ');
-                    status.Append(((DateTime)definedDevice.LastReportTime).ToString("HH:mm:ss.fff"));
+                    status.Append(definedDevice.LastReportTime.ToString("HH:mm:ss.fff"));
                     status.AppendLine();
                 }
 
@@ -941,9 +906,9 @@ namespace PhasorProtocolAdapters
             Dictionary<string, string> settings = Settings;
 
             // Load optional mapper specific connection parameters
-            m_isConcentrator = settings.TryGetValue("isConcentrator", out string setting) && setting.ParseBoolean();
+            IsConcentrator = settings.TryGetValue("isConcentrator", out string setting) && setting.ParseBoolean();
 
-            m_accessID = settings.TryGetValue("accessID", out setting) ? ushort.Parse(setting) : (ushort)1;
+            AccessID = settings.TryGetValue("accessID", out setting) ? ushort.Parse(setting) : (ushort)1;
 
             m_forceLabelMapping = settings.TryGetValue("forceLabelMapping", out setting) && setting.ParseBoolean();
 
@@ -996,25 +961,22 @@ namespace PhasorProtocolAdapters
             {
                 try
                 {
-                    m_timezone = TimeZoneInfo.FindSystemTimeZoneById(setting);
+                    TimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting);
                 }
                 catch (Exception ex)
                 {
                     OnProcessException(MessageLevel.Info, new InvalidOperationException($"Defaulting to UTC. Failed to find system time zone for ID \"{setting}\": {ex.Message}", ex));
-                    m_timezone = TimeZoneInfo.Utc;
+                    TimeZone = TimeZoneInfo.Utc;
                 }
             }
             else
             {
-                m_timezone = TimeZoneInfo.Utc;
+                TimeZone = TimeZoneInfo.Utc;
             }
 
-            m_timeAdjustmentTicks = settings.TryGetValue("timeAdjustmentTicks", out setting) ? long.Parse(setting) : 0L;
+            TimeAdjustmentTicks = settings.TryGetValue("timeAdjustmentTicks", out setting) ? long.Parse(setting) : 0L;
 
-            if (settings.TryGetValue("dataLossInterval", out setting))
-                m_dataStreamMonitor.Interval = (int)(double.Parse(setting) * 1000.0D);
-            else
-                m_dataStreamMonitor.Interval = 5000;
+            m_dataStreamMonitor.Interval = settings.TryGetValue("dataLossInterval", out setting) ? (int)(double.Parse(setting) * 1000.0D) : 5000;
 
             if (settings.TryGetValue("delayedConnectionInterval", out setting))
             {
@@ -1031,7 +993,7 @@ namespace PhasorProtocolAdapters
                 ConnectionAttemptInterval = 1500.0D;
             }
 
-            m_allowUseOfCachedConfiguration = !settings.TryGetValue("allowUseOfCachedConfiguration", out setting) || setting.ParseBoolean();
+            AllowUseOfCachedConfiguration = !settings.TryGetValue("allowUseOfCachedConfiguration", out setting) || setting.ParseBoolean();
 
             m_countOnlyMappedMeasurements = settings.TryGetValue("countOnlyMappedMeasurements", out setting) && setting.ParseBoolean();
 
@@ -1051,9 +1013,7 @@ namespace PhasorProtocolAdapters
             if (frameParser.TransportProtocol == TransportProtocol.File)
             {
                 frameParser.DefinedFrameRate = settings.TryGetValue("definedFrameRate", out setting) ? int.Parse(setting) : 30;
-
                 frameParser.AutoRepeatCapturedPlayback = !settings.TryGetValue("autoRepeatFile", out setting) || setting.ParseBoolean();
-
                 frameParser.UseHighResolutionInputTimer = settings.TryGetValue("useHighResolutionInputTimer", out setting) && setting.ParseBoolean();
 
                 if (settings.TryGetValue("replayStartTime", out setting) && DateTime.TryParse(setting, out DateTime replayTime))
@@ -1095,7 +1055,7 @@ namespace PhasorProtocolAdapters
                 m_timeResolution = 10000L;
 
             // Provide access ID to frame parser as this may be necessary to make a phasor connection
-            frameParser.DeviceID = m_accessID;
+            frameParser.DeviceID = AccessID;
             frameParser.SourceName = Name;
 
             // Assign reference to frame parser for this connection and attach to needed events
@@ -1155,7 +1115,7 @@ namespace PhasorProtocolAdapters
 
             m_definedDevices = new ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>>();
 
-            if (m_isConcentrator)
+            if (IsConcentrator)
             {
                 StringBuilder deviceStatus = new StringBuilder();
                 int index = 0;
@@ -1263,7 +1223,7 @@ namespace PhasorProtocolAdapters
             else
             {
                 // Making a connection to a single device
-                definedDevice = new ConfigurationCell(m_accessID);
+                definedDevice = new ConfigurationCell(AccessID);
 
                 // Used shared mapping name for single device connection if defined - this causes measurement mappings to be associated
                 // with alternate device by caching signal references associated with shared mapping acronym
@@ -1380,13 +1340,13 @@ namespace PhasorProtocolAdapters
             {
                 foreach (ConfigurationCell definedDevice in DefinedDevices)
                 {
-                    definedDevice.DataQualityErrors = 0;
-                    definedDevice.DeviceErrors = 0;
-                    definedDevice.TotalFrames = 0;
-                    definedDevice.TimeQualityErrors = 0;
+                    definedDevice.DataQualityErrors = 0L;
+                    definedDevice.DeviceErrors = 0L;
+                    definedDevice.TotalFrames = 0L;
+                    definedDevice.TimeQualityErrors = 0L;
                 }
 
-                m_outOfOrderFrames = 0;
+                OutOfOrderFrames = 0L;
 
                 OnStatusMessage(MessageLevel.Info, "Statistics reset for all devices associated with this connection.", "Statistics");
             }
@@ -1405,15 +1365,14 @@ namespace PhasorProtocolAdapters
         {
             if (m_definedDevices != null)
             {
-                ConfigurationCell definedDevice;
-
                 if (m_definedDevices.TryGetValue(idCode, out DeviceStatisticsHelper<ConfigurationCell> statisticsHelper))
                 {
-                    definedDevice = statisticsHelper.Device;
-                    definedDevice.DataQualityErrors = 0;
-                    definedDevice.DeviceErrors = 0;
-                    definedDevice.TotalFrames = 0;
-                    definedDevice.TimeQualityErrors = 0;
+                    ConfigurationCell definedDevice = statisticsHelper.Device;
+
+                    definedDevice.DataQualityErrors = 0L;
+                    definedDevice.DeviceErrors = 0L;
+                    definedDevice.TotalFrames = 0L;
+                    definedDevice.TimeQualityErrors = 0L;
 
                     OnStatusMessage(MessageLevel.Info, $"Statistics reset for device with ID code \"{idCode}\" associated with this connection.", "Statistics");
                 }
@@ -1434,7 +1393,7 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
-            m_lifetimeMeasurements = 0L;
+            LifetimeMeasurements = 0L;
             m_lifetimeTotalLatency = 0L;
             m_lifetimeMinimumLatency = 0L;
             m_lifetimeMaximumLatency = 0L;
@@ -1449,10 +1408,10 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Resets the latency counters for the device without interrupting the adapter's operations.", "Administrator", "Editor")]
         public void ResetLatencyCounters()
         {
-            m_minimumLatency = 0;
-            m_maximumLatency = 0;
-            m_totalLatency = 0;
-            m_latencyFrames = 0;
+            m_minimumLatency = 0L;
+            m_maximumLatency = 0L;
+            m_totalLatency = 0L;
+            m_latencyFrames = 0L;
         }
 
         /// <summary>
@@ -1467,6 +1426,7 @@ namespace PhasorProtocolAdapters
                 {
                     ConfigurationFrame.DeleteCachedConfiguration(Name);
                     m_frameParser.ConfigurationFrame = null;
+                    m_configurationFrame = null;
                     m_receivedConfigFrame = false;
                     OnStatusMessage(MessageLevel.Info, $"Cached configuration file \"{ConfigurationCacheFileName}\" was deleted.");
                     SendCommand(DeviceCommand.SendConfigurationFrame2);
@@ -1502,8 +1462,10 @@ namespace PhasorProtocolAdapters
                     if (configFrame != null)
                     {
                         m_frameParser.ConfigurationFrame = configFrame;
-                        StartMeasurementCounter();
+                        m_configurationFrame = configFrame;
                         m_receivedConfigFrame = true;
+
+                        StartMeasurementCounter();
                         CheckForConfigurationChanges();
                     }
                     else
@@ -1536,6 +1498,8 @@ namespace PhasorProtocolAdapters
                     if (configFrame != null)
                     {
                         m_frameParser.ConfigurationFrame = configFrame;
+                        m_configurationFrame = configFrame;
+                        m_receivedConfigFrame = true;
 
                         try
                         {
@@ -1550,7 +1514,6 @@ namespace PhasorProtocolAdapters
 
                         StartMeasurementCounter();
 
-                        m_receivedConfigFrame = true;
                         CheckForConfigurationChanges();
                     }
                     else
@@ -1576,7 +1539,7 @@ namespace PhasorProtocolAdapters
 
             if (m_frameParser != null && m_frameParser.IsConnected)
             {
-                if (m_lastReportTime > 0)
+                if (LastReportTime > 0L)
                 {
                     // Calculate total bad frames
                     long totalDataErrors = DefinedDevices.Sum(definedDevice => definedDevice.DataQualityErrors);
@@ -1598,7 +1561,7 @@ namespace PhasorProtocolAdapters
                     }
 
                     string uptimeStats = $"Up for {upTime}, {totalDataErrors} errors";
-                    string runtimeStats = $" {m_lastReportTime:MM/dd/yyyy HH:mm:ss.fff} {m_frameParser.CalculatedFrameRate:0.00} fps";
+                    string runtimeStats = $" {LastReportTime:MM/dd/yyyy HH:mm:ss.fff} {m_frameParser.CalculatedFrameRate:0.00} fps";
 
                     uptimeStats = uptimeStats.TruncateRight(maxLength - runtimeStats.Length).PadLeft(maxLength - runtimeStats.Length, '\xA0');
 
@@ -1627,9 +1590,9 @@ namespace PhasorProtocolAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_lastReportTime = 0;
-            m_bytesReceived = 0;
-            m_outOfOrderFrames = 0;
+            LastReportTime = 0L;
+            m_bytesReceived = 0L;
+            OutOfOrderFrames = 0L;
             m_receivedConfigFrame = false;
             m_cachedConfigLoadAttempted = false;
 
@@ -1694,22 +1657,21 @@ namespace PhasorProtocolAdapters
             List<IMeasurement> deviceMappedMeasurements = new List<IMeasurement>();
 
             // Adjust time to UTC based on source time zone
-            if (!m_timezone.Equals(TimeZoneInfo.Utc))
-                frame.Timestamp = TimeZoneInfo.ConvertTimeToUtc(frame.Timestamp, m_timezone);
+            if (!TimeZone.Equals(TimeZoneInfo.Utc))
+                frame.Timestamp = TimeZoneInfo.ConvertTimeToUtc(frame.Timestamp, TimeZone);
 
             // We also allow "fine tuning" of time for fickle GPS clocks...
-            if (m_timeAdjustmentTicks.Value != 0)
-                frame.Timestamp += m_timeAdjustmentTicks;
+            if (TimeAdjustmentTicks.Value != 0)
+                frame.Timestamp += TimeAdjustmentTicks;
 
             // Get adjusted timestamp of this frame
             Ticks timestamp = frame.Timestamp;
-            bool timestampIsValid = timestamp.UtcTimeIsValid(m_lagTime, m_leadTime);
 
             // Track latest reporting time for mapper
-            if (timestamp > m_lastReportTime && timestampIsValid)
-                m_lastReportTime = timestamp;
-            else
-                m_outOfOrderFrames++;
+            if (timestamp < LastReportTime)
+                OutOfOrderFrames++;
+
+            LastReportTime = timestamp;
 
             // Track latency statistics against system time - in order for these statistics
             // to be useful, the local clock must be fairly accurate
@@ -1753,7 +1715,7 @@ namespace PhasorProtocolAdapters
                         ConfigurationCell definedDevice = statisticsHelper.Device;
 
                         // Track latest reporting time for this device
-                        if (timestamp > definedDevice.LastReportTime && timestampIsValid)
+                        if (timestamp > definedDevice.LastReportTime && timestamp.UtcTimeIsValid(m_lagTime, m_leadTime))
                             definedDevice.LastReportTime = timestamp;
 
                         // Track quality statistics for this device
@@ -1858,7 +1820,7 @@ namespace PhasorProtocolAdapters
             OnNewMeasurements(mappedMeasurements);
 
             int measurementCount = mappedMeasurements.Count;
-            m_lifetimeMeasurements += measurementCount;
+            LifetimeMeasurements += measurementCount;
             UpdateMeasurementsPerSecond(measurementCount);
         }
 
@@ -1897,9 +1859,7 @@ namespace PhasorProtocolAdapters
             int parsedMeasurementCount = 0;
 
             parsedMeasurementCount += parsedDevice.PhasorValues?.Sum(phasorValue => phasorValue.Measurements.Count(measurement => !double.IsNaN(measurement.Value))) ?? 0;
-
             parsedMeasurementCount += parsedDevice.DigitalValues?.Sum(digitalValue => digitalValue.Measurements.Count(measurement => !double.IsNaN(measurement.Value))) ?? 0;
-
             parsedMeasurementCount += parsedDevice.AnalogValues?.Sum(analogValue => analogValue.Measurements.Count(measurement => !double.IsNaN(measurement.Value))) ?? 0;
 
             // Ignore frequency measurements when
@@ -1925,9 +1885,7 @@ namespace PhasorProtocolAdapters
             int parsedMeasurementCount = 0;
 
             parsedMeasurementCount += parsedDevice.PhasorValues?.Sum(phasorValue => phasorValue.Measurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))) ?? 0;
-
             parsedMeasurementCount += parsedDevice.DigitalValues?.Sum(digitalValue => digitalValue.Measurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))) ?? 0;
-
             parsedMeasurementCount += parsedDevice.AnalogValues?.Sum(analogValue => analogValue.Measurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))) ?? 0;
 
             // Ignore frequency measurements when
@@ -2047,11 +2005,11 @@ namespace PhasorProtocolAdapters
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {
-                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
-                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+                if (m_measurementsInSecond < MinimumMeasurementsPerSecond || MinimumMeasurementsPerSecond == 0L)
+                    MinimumMeasurementsPerSecond = m_measurementsInSecond;
 
-                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
-                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+                if (m_measurementsInSecond > MaximumMeasurementsPerSecond || MaximumMeasurementsPerSecond == 0L)
+                    MaximumMeasurementsPerSecond = m_measurementsInSecond;
 
                 m_totalMeasurementsPerSecond += m_measurementsInSecond;
                 m_measurementsPerSecondCount++;
@@ -2066,8 +2024,8 @@ namespace PhasorProtocolAdapters
         // Resets the measurements per second counters after reading the values from the last calculation interval.
         private void ResetMeasurementsPerSecondCounters()
         {
-            m_minimumMeasurementsPerSecond = 0L;
-            m_maximumMeasurementsPerSecond = 0L;
+            MinimumMeasurementsPerSecond = 0L;
+            MaximumMeasurementsPerSecond = 0L;
             m_totalMeasurementsPerSecond = 0L;
             m_measurementsPerSecondCount = 0L;
         }
@@ -2201,9 +2159,9 @@ namespace PhasorProtocolAdapters
                         {
                             if (m_publishChannel != null)
                                 m_publishChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
-                            else if (m_clientBasedPublishChannel != null)
-                                m_clientBasedPublishChannel.SendAsync(m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
-
+                            else
+                                m_clientBasedPublishChannel?.SendAsync(m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
+   
                             OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
                         }
 
@@ -2240,7 +2198,7 @@ namespace PhasorProtocolAdapters
                 OnStatusMessage(MessageLevel.Info, $"\r\nNo data received in {m_dataStreamMonitor.Interval / 1000.0D:0.0} seconds, restarting connect cycle...\r\n", "Connection Issues");
                 Start();
             }
-            else if (!m_receivedConfigFrame && m_allowUseOfCachedConfiguration)
+            else if (!m_receivedConfigFrame && AllowUseOfCachedConfiguration)
             {
                 // If data is being received but a configuration has yet to be loaded, attempt to load last known good configuration
                 if (!m_cachedConfigLoadAttempted)
@@ -2285,7 +2243,7 @@ namespace PhasorProtocolAdapters
 
             if (m_lastConfigurationFrame == null)
             {
-                m_configurationChanges++;
+                ConfigurationChanges++;
                 configurationChanged = true;
             }
             else
@@ -2293,7 +2251,7 @@ namespace PhasorProtocolAdapters
                 // Check binary image lengths first, if these are different there is already a change
                 if (m_lastConfigurationFrame.BinaryLength != newConfigurationFrame.BinaryLength)
                 {
-                    m_configurationChanges++;
+                    ConfigurationChanges++;
                     configurationChanged = true;
                 }
                 else
@@ -2328,7 +2286,7 @@ namespace PhasorProtocolAdapters
                     // Compare the binary images - if they are different, this counts as a configuration change
                     if (m_lastConfigurationFrame == null || !lastConfigFrameBuffer.SequenceEqual(newConfigFrameBuffer))
                     {
-                        m_configurationChanges++;
+                        ConfigurationChanges++;
                         configurationChanged = true;
                     }
                 }
@@ -2426,7 +2384,7 @@ namespace PhasorProtocolAdapters
                 return;
 
             ExtractFrameMeasurements(e.Argument);
-            m_totalDataFrames++;
+            TotalDataFrames++;
 
             if (m_frameParser.RedundantFramesPerPacket > 0)
             {
@@ -2459,6 +2417,7 @@ namespace PhasorProtocolAdapters
                 if (!m_receivedConfigFrame || configurationChanged)
                 {
                     OnStatusMessage(MessageLevel.Info, $"Received {(m_receivedConfigFrame ? "updated" : "initial")} configuration frame at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}");
+                    m_receivedConfigFrame = true;
 
                     try
                     {
@@ -2472,17 +2431,15 @@ namespace PhasorProtocolAdapters
                     }
 
                     StartMeasurementCounter();
-
-                    m_receivedConfigFrame = true;
                 }
             }
 
-            m_totalConfigurationFrames++;
+            TotalConfigurationFrames++;
         }
 
         private void m_frameParser_ReceivedHeaderFrame(object sender, EventArgs<IHeaderFrame> e)
         {
-            m_totalHeaderFrames++;
+            TotalHeaderFrames++;
         }
 
         private void m_frameParser_ReceivedFrameImage(object sender, EventArgs<FundamentalFrameType, int> e)
@@ -2510,7 +2467,7 @@ namespace PhasorProtocolAdapters
             ResetStatistics();
 
             // Enable data stream monitor for connections that support commands
-            m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands || m_allowUseOfCachedConfiguration;
+            m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands || AllowUseOfCachedConfiguration;
 
             // Reinitialize proxy connection if needed...
             if (Enabled && m_clientBasedPublishChannel != null && m_clientBasedPublishChannel.CurrentState != ClientState.Connected)
@@ -2558,7 +2515,7 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
         {
             OnStatusMessage(MessageLevel.Info, $"Initiating {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} protocol connection...");
-            m_connectionAttempts++;
+            ConnectionAttempts++;
         }
 
         private void m_frameParser_ConfigurationChanged(object sender, EventArgs e)
@@ -2575,7 +2532,6 @@ namespace PhasorProtocolAdapters
         private void udpPublishChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            
             OnProcessException(MessageLevel.Error, new InvalidOperationException($"Exception occurred while client attempting to connect to UDP publication channel: {ex.Message}", ex));
         }
 
@@ -2628,7 +2584,6 @@ namespace PhasorProtocolAdapters
         private void tcpPublishChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-
             OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred while client was attempting to connect to TCP publication channel: {ex.Message}", ex));
         }
 
@@ -2686,7 +2641,6 @@ namespace PhasorProtocolAdapters
         private void tcpClientBasedPublishChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-
             OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred while TCP publishing client was attempting to connect to TCP listening server channel \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex));
         }
 

@@ -60,10 +60,8 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
         // Fields
         private ConfigurationFrame2 m_configurationFrame;
-        private uint m_timeBase;
         private bool m_configurationChanged;
         private Ticks m_notificationStartTime;
-        private bool m_validateIDCode;
 
         #endregion
 
@@ -72,32 +70,12 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <summary>
         /// Gets or sets IEEE C37.118 time base for this concentrator instance.
         /// </summary>
-        public uint TimeBase
-        {
-            get
-            {
-                return m_timeBase;
-            }
-            set
-            {
-                m_timeBase = value;
-            }
-        }
+        public uint TimeBase { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if concentrator will validate ID code before processing commands.
         /// </summary>
-        public bool ValidateIDCode
-        {
-            get
-            {
-                return m_validateIDCode;
-            }
-            set
-            {
-                m_validateIDCode = value;
-            }
-        }
+        public bool ValidateIDCode { get; set; }
 
         /// <summary>
         /// Returns the detailed status of this <see cref="Concentrator"/>.
@@ -109,9 +87,9 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 StringBuilder status = new StringBuilder();
 
                 status.AppendLine("           Output protocol: IEEE C37.118");
-                status.AppendFormat("      Configured time base: {0}", m_timeBase);
+                status.AppendFormat("      Configured time base: {0}", TimeBase);
                 status.AppendLine();
-                status.AppendFormat("        Validating ID code: {0}", m_validateIDCode);
+                status.AppendFormat("        Validating ID code: {0}", ValidateIDCode);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -129,18 +107,11 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         public override void Initialize()
         {
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Load optional parameters
-            if (settings.TryGetValue("timebase", out setting))
-                m_timeBase = uint.Parse(setting);
-            else
-                m_timeBase = 16777215U;
+            TimeBase = settings.TryGetValue("timebase", out string setting) ? uint.Parse(setting) : 16777215U;
 
-            if (settings.TryGetValue("validateIDCode", out setting))
-                m_validateIDCode = setting.ParseBoolean();
-            else
-                m_validateIDCode = false;
+            ValidateIDCode = settings.TryGetValue("validateIDCode", out setting) && setting.ParseBoolean();
 
             // Start base class initialization
             base.Initialize();
@@ -154,10 +125,10 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         protected override IConfigurationFrame CreateNewConfigurationFrame(ConfigurationFrame baseConfigurationFrame)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
-            ConfigurationFrame2 configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, m_timeBase, base.NominalFrequency);
+            ConfigurationFrame2 configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, TimeBase, NominalFrequency);
 
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
-            bool configurationChanged = (object)m_configurationFrame != null;
+            bool configurationChanged = m_configurationFrame != null;
 
             // Cache new IEEE C7.118 for later use
             Interlocked.Exchange(ref m_configurationFrame, configurationFrame);
@@ -224,7 +195,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 IServer commandChannel = (IServer)CommandChannel ?? DataChannel;
 
                 // Validate incoming ID code if requested
-                if (!m_validateIDCode || commandFrame.IDCode == this.IDCode)
+                if (!ValidateIDCode || commandFrame.IDCode == IDCode)
                 {
                     switch (commandFrame.Command)
                     {
@@ -251,7 +222,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                 status.AppendFormat(" Auto-publish config frame: {0}\r\n", AutoPublishConfigurationFrame);
                                 status.AppendFormat("   Auto-start data channel: {0}\r\n", AutoStartDataChannel);
                                 status.AppendFormat("       Data stream ID code: {0}\r\n", IDCode);
-                                status.AppendFormat("       Derived system time: {0} UTC\r\n", ((DateTime)RealTime).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                                status.AppendFormat("       Derived system time: {0:yyyy-MM-dd HH:mm:ss.fff} UTC\r\n", RealTime);
 
                                 HeaderFrame headerFrame = new HeaderFrame(status.ToString());
                                 commandChannel.SendToAsync(clientID, headerFrame.BinaryImage, 0, headerFrame.BinaryLength);
@@ -313,24 +284,22 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame2"/>.</returns>
         public static ConfigurationFrame2 CreateConfigurationFrame(ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
         {
-            ConfigurationCell newCell;
-            uint maskValue;
-
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
             ConfigurationFrame2 configurationFrame = new ConfigurationFrame2(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
             foreach (GSF.PhasorProtocols.Anonymous.ConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 configuration cell (i.e., a PMU configuration)
-                newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency);
-
-                // Update other cell level attributes
-                newCell.StationName = baseCell.StationName;
-                newCell.IDLabel = baseCell.IDLabel;
-                newCell.PhasorDataFormat = baseCell.PhasorDataFormat;
-                newCell.PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat;
-                newCell.FrequencyDataFormat = baseCell.FrequencyDataFormat;
-                newCell.AnalogDataFormat = baseCell.AnalogDataFormat;
+                ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency)
+                {
+                    // Update other cell level attributes
+                    StationName = baseCell.StationName,
+                    IDLabel = baseCell.IDLabel,
+                    PhasorDataFormat = baseCell.PhasorDataFormat,
+                    PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat,
+                    FrequencyDataFormat = baseCell.FrequencyDataFormat,
+                    AnalogDataFormat = baseCell.AnalogDataFormat
+                };
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
@@ -353,10 +322,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                     // Attempt to derive user defined mask value if available
                     DigitalDefinition anonymousDigitalDefinition = digitalDefinition as DigitalDefinition;
 
-                    if (anonymousDigitalDefinition != null)
-                        maskValue = anonymousDigitalDefinition.MaskValue;
-                    else
-                        maskValue = 0U;
+                    uint maskValue = anonymousDigitalDefinition?.MaskValue ?? 0U;
 
                     newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
@@ -378,12 +344,11 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         {
             // We create a new IEEE C37.118 data frame based on current configuration frame
             DataFrame dataFrame = new DataFrame(timestamp, configurationFrame);
-            DataCell dataCell;
 
             foreach (ConfigurationCell configurationCell in configurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 data cell (i.e., a PMU entry for this frame)
-                dataCell = new DataCell(dataFrame, configurationCell, true);
+                DataCell dataCell = new DataCell(dataFrame, configurationCell, true);
 
                 // Add data cell to the frame
                 dataFrame.Cells.Add(dataCell);
@@ -405,8 +370,6 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             ConfigurationFrame1 derivedFrame;
 
             // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
-            ConfigurationCell derivedCell;
-
             if (sourceFrame.DraftRevision == DraftRevision.Draft7)
                 derivedFrame = new ConfigurationFrame1(sourceFrame.Timebase, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
             else
@@ -415,7 +378,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             foreach (ConfigurationCell sourceCell in sourceFrame.Cells)
             {
                 // Create new derived configuration cell
-                derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                 string stationName = sourceCell.StationName;
                 string idLabel = sourceCell.IDLabel;

@@ -89,34 +89,19 @@ namespace PhasorProtocolAdapters
 
         IConfigurationFrameParsingState IConfigurationFrame.State
         {
-            get
-            {
-                return null;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => null;
+            set => throw new NotImplementedException();
         }
 
         ushort IConfigurationFrame.FrameRate
         {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => 0;
+            set => throw new NotImplementedException();
         }
 
         decimal IConfigurationFrame.TicksPerFrame => 0;
 
-        void IConfigurationFrame.SetNominalFrequency(LineFrequency value)
-        {
-            throw new NotImplementedException();
-        }
+        void IConfigurationFrame.SetNominalFrequency(LineFrequency value) => throw new NotImplementedException();
 
         FundamentalFrameType IChannelFrame.FrameType => FundamentalFrameType.ConfigurationFrame;
 
@@ -124,14 +109,8 @@ namespace PhasorProtocolAdapters
 
         ushort IChannelFrame.IDCode
         {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => 0;
+            set => throw new NotImplementedException();
         }
 
         UnixTimeTag IChannelFrame.TimeTag => null;
@@ -140,108 +119,57 @@ namespace PhasorProtocolAdapters
 
         IChannelParsingState IChannel.State
         {
-            get
-            {
-                return null;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => null;
+            set => throw new NotImplementedException();
         }
 
         object IChannel.Tag
         {
-            get
-            {
-                return null;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => null;
+            set => throw new NotImplementedException();
         }
 
         int ISupportBinaryImage.BinaryLength => 0;
 
-        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
-        {
-            return 0;
-        }
+        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length) => 0;
 
-        int ISupportBinaryImage.GenerateBinaryImage(byte[] buffer, int startIndex)
-        {
-            return 0;
-        }
+        int ISupportBinaryImage.GenerateBinaryImage(byte[] buffer, int startIndex) => 0;
 
         IMeasurement IFrame.LastSortedMeasurement
         {
-            get
-            {
-                return null;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => null;
+            set => throw new NotImplementedException();
         }
 
         ConcurrentDictionary<MeasurementKey, IMeasurement> IFrame.Measurements => null;
 
         bool IFrame.Published
         {
-            get
-            {
-                return false;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => false;
+            set => throw new NotImplementedException();
         }
 
         int IFrame.SortedMeasurements
         {
-            get
-            {
-                return -1;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => -1;
+            set => throw new NotImplementedException();
         }
 
         Ticks IFrame.Timestamp
         {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => 0;
+            set => throw new NotImplementedException();
         }
 
         ShortTime IFrame.Lifespan => ShortTime.Now;
 
         Ticks IFrame.CreatedTimestamp => DateTime.UtcNow.Ticks;
 
-        bool IEquatable<IFrame>.Equals(IFrame other)
-        {
-            return false;
-        }
+        bool IEquatable<IFrame>.Equals(IFrame other) => false;
 
-        int IComparable<IFrame>.CompareTo(IFrame other)
-        {
-            return 1;
-        }
+        int IComparable<IFrame>.CompareTo(IFrame other) => 1;
 
-        int IComparable.CompareTo(object obj)
-        {
-            return 1;
-        }
+        int IComparable.CompareTo(object obj) => 1;
 
         #endregion
     }

@@ -65,16 +65,13 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets or sets primary keys of input measurements the calculated measurement expects.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override MeasurementKey[] InputMeasurementKeys
         {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
+            get => base.InputMeasurementKeys;
             set
             {
                 base.InputMeasurementKeys = value;
@@ -82,25 +79,20 @@ namespace PhasorProtocolAdapters
                 m_inputMeasurementKeyTypes = new SignalType[value.Length];
 
                 for (int i = 0; i < m_inputMeasurementKeyTypes.Length; i++)
-                {
                     m_inputMeasurementKeyTypes[i] = LookupSignalType(value[i]);
-                }
             }
         }
 
         /// <summary>
         /// Gets or sets output measurements that the calculated measurement will produce, if any.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override IMeasurement[] OutputMeasurements
         {
-            get
-            {
-                return base.OutputMeasurements;
-            }
+            get => base.OutputMeasurements;
             set
             {
                 base.OutputMeasurements = value;
@@ -108,9 +100,7 @@ namespace PhasorProtocolAdapters
                 m_outputMeasurementTypes = new SignalType[value.Length];
 
                 for (int i = 0; i < m_outputMeasurementTypes.Length; i++)
-                {
                     m_outputMeasurementTypes[i] = LookupSignalType(value[i].Key);
-                }
             }
         }
 
@@ -129,14 +119,8 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public virtual string ConfigurationSection
         {
-            get
-            {
-                return m_configurationSection;
-            }
-            set
-            {
-                m_configurationSection = value;
-            }
+            get => m_configurationSection;
+            set => m_configurationSection = value;
         }
 
         /// <summary>
@@ -171,11 +155,11 @@ namespace PhasorProtocolAdapters
                     {
                         count = OutputMeasurements.Where((key, index) => OutputMeasurementTypes[index] == signalType).Count();
 
-                        if (count > 0)
-                        {
-                            status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
-                            status.AppendLine();
-                        }
+                        if (count <= 0)
+                            continue;
+
+                        status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
+                        status.AppendLine();
                     }
                 }
 
@@ -189,11 +173,11 @@ namespace PhasorProtocolAdapters
                     {
                         count = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == signalType).Count();
 
-                        if (count > 0)
-                        {
-                            status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
-                            status.AppendLine();
-                        }
+                        if (count <= 0)
+                            continue;
+
+                        status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
+                        status.AppendLine();
                     }
                 }
 
@@ -213,7 +197,6 @@ namespace PhasorProtocolAdapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Load optional parameters
             if (!settings.TryGetValue("configurationSection", out m_configurationSection))
@@ -222,10 +205,7 @@ namespace PhasorProtocolAdapters
             if (string.IsNullOrEmpty(m_configurationSection))
                 m_configurationSection = Name;
 
-            if (settings.TryGetValue("supportsTemporalProcessing", out setting))
-                m_supportsTemporalProcessing = setting.ParseBoolean();
-            else
-                m_supportsTemporalProcessing = false;
+            m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out string setting) && setting.ParseBoolean();
         }
 
         // Lookup signal type for given measurement key

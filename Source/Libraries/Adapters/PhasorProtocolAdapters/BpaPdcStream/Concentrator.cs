@@ -38,6 +38,7 @@ using GSF.PhasorProtocols.BPAPDCstream;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
+// ReSharper disable PossibleInvalidCastExceptionInForeachLoop
 namespace PhasorProtocolAdapters.BpaPdcStream
 {
     /// <summary>
@@ -49,7 +50,6 @@ namespace PhasorProtocolAdapters.BpaPdcStream
 
         // Fields
         private ConfigurationFrame m_configurationFrame;
-        private string m_iniFileName;
 
         #endregion
 
@@ -58,17 +58,7 @@ namespace PhasorProtocolAdapters.BpaPdcStream
         /// <summary>
         /// Gets or sets the INI based configuration file name of this <see cref="Concentrator"/>.
         /// </summary>
-        public string IniFileName
-        {
-            get
-            {
-                return m_iniFileName;
-            }
-            set
-            {
-                m_iniFileName = value;
-            }
-        }
+        public string IniFileName { get; set; }
 
         /// <summary>
         /// Returns the detailed status of this <see cref="Concentrator"/>.
@@ -96,24 +86,23 @@ namespace PhasorProtocolAdapters.BpaPdcStream
         public override void Initialize()
         {
             string errorMessage = "{0} is missing from Settings - Example: iniFileName=TESTSTREAM.ini";
-            string setting;
 
             // Load required parameters
-            if (!Settings.TryGetValue("iniFileName", out setting))
+            if (!Settings.TryGetValue("iniFileName", out string setting))
                 throw new ArgumentException(string.Format(errorMessage, "iniFileName"));
 
-            m_iniFileName = FilePath.GetAbsolutePath(setting);
+            IniFileName = FilePath.GetAbsolutePath(setting);
 
             // Start base class initialization
             base.Initialize();
 
             // BPA PDCstream always publishes config frame over data channel
-            base.AutoPublishConfigurationFrame = true;
-            base.CommandChannel = null;
+            AutoPublishConfigurationFrame = true;
+            CommandChannel = null;
 
             // Coordinate format and data format are fixed for BPA PDCstream outgoing streams for now
-            base.CoordinateFormat = CoordinateFormat.Rectangular;
-            base.DataFormat = DataFormat.FixedInteger;
+            CoordinateFormat = CoordinateFormat.Rectangular;
+            DataFormat = DataFormat.FixedInteger;
         }
 
         /// <summary>
@@ -123,14 +112,13 @@ namespace PhasorProtocolAdapters.BpaPdcStream
         /// <returns>A new BPA PDCstream specific <see cref="IConfigurationFrame"/>.</returns>
         protected override IConfigurationFrame CreateNewConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame)
         {
-            ConfigurationCell newCell;
             int count = 0;
 
             // Fix ID labels to use BPA PDCstream 4 character label
             foreach (GSF.PhasorProtocols.Anonymous.ConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 baseCell.StationName = baseCell.IDLabel.TruncateLeft(baseCell.MaximumStationNameLength);
-                baseCell.IDLabel = DataSource.Tables["OutputStreamDevices"].Select(string.Format("IDCode={0}", baseCell.IDCode))[0]["BpaAcronym"].ToNonNullString(baseCell.IDLabel).TruncateLeft(4);
+                baseCell.IDLabel = DataSource.Tables["OutputStreamDevices"].Select($"IDCode={baseCell.IDCode}")[0]["BpaAcronym"].ToNonNullString(baseCell.IDLabel).TruncateLeft(4);
 
                 // If no ID label was provided, we default to first 4 characters of station name
                 if (string.IsNullOrEmpty(baseCell.IDLabel))
@@ -148,29 +136,30 @@ namespace PhasorProtocolAdapters.BpaPdcStream
             }
 
             // Create a default INI file if one doesn't exist
-            if (!File.Exists(m_iniFileName))
+            if (!File.Exists(IniFileName))
             {
-                using (StreamWriter iniFile = File.CreateText(m_iniFileName))
+                using (StreamWriter iniFile = File.CreateText(IniFileName))
                 {
                     iniFile.Write(GSF.PhasorProtocols.BPAPDCstream.ConfigurationFrame.GetIniFileImage(baseConfigurationFrame));
                 }
             }
 
             // Create a new BPA PDCstream configuration frame using base configuration
-            ConfigurationFrame configurationFrame = new ConfigurationFrame(DateTime.UtcNow.Ticks, m_iniFileName, 1, RevisionNumber.Revision2, StreamType.Compact);
+            ConfigurationFrame configurationFrame = new ConfigurationFrame(DateTime.UtcNow.Ticks, IniFileName, 1, RevisionNumber.Revision2, StreamType.Compact);
 
             foreach (GSF.PhasorProtocols.Anonymous.ConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new BPA PDCstream configuration cell (i.e., a PMU configuration)
-                newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, base.NominalFrequency);
-
-                // Update other cell level attributes
-                newCell.StationName = baseCell.StationName;
-                newCell.IDLabel = baseCell.IDLabel;
-                newCell.PhasorDataFormat = DataFormat.FixedInteger;             //baseCell.PhasorDataFormat;
-                newCell.PhasorCoordinateFormat = CoordinateFormat.Rectangular;  //baseCell.PhasorCoordinateFormat;
-                newCell.FrequencyDataFormat = DataFormat.FixedInteger;          //baseCell.FrequencyDataFormat;
-                newCell.AnalogDataFormat = DataFormat.FixedInteger;             //baseCell.AnalogDataFormat;
+                ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, NominalFrequency)
+                {
+                    // Update other cell level attributes
+                    StationName = baseCell.StationName,
+                    IDLabel = baseCell.IDLabel,
+                    PhasorDataFormat = DataFormat.FixedInteger,
+                    PhasorCoordinateFormat = CoordinateFormat.Rectangular,
+                    FrequencyDataFormat = DataFormat.FixedInteger,
+                    AnalogDataFormat = DataFormat.FixedInteger
+                };
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
@@ -220,15 +209,14 @@ namespace PhasorProtocolAdapters.BpaPdcStream
         protected override IFrame CreateNewFrame(Ticks timestamp)
         {
             // We create a new BPA PDCstream data frame based on current configuration frame
-            ushort sampleNumber = (ushort)((timestamp.DistanceBeyondSecond() + 1.0D) / base.TicksPerFrame);
+            ushort sampleNumber = (ushort)((timestamp.DistanceBeyondSecond() + 1.0D) / TicksPerFrame);
 
             DataFrame dataFrame = new DataFrame(timestamp, m_configurationFrame, 1, sampleNumber);
-            DataCell dataCell;
 
             foreach (ConfigurationCell configurationCell in m_configurationFrame.Cells)
             {
                 // Create a new BPA PDCstream data cell (i.e., a PMU entry for this frame)
-                dataCell = new DataCell(dataFrame, configurationCell, true);
+                DataCell dataCell = new DataCell(dataFrame, configurationCell, true);
 
                 // Add data cell to the frame
                 dataFrame.Cells.Add(dataCell);

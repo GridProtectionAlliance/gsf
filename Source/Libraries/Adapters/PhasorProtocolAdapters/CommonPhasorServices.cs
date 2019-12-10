@@ -121,13 +121,7 @@ namespace PhasorProtocolAdapters
         /// Since the common phasor services is designed to assist in various real-time operations,
         /// it is expected that this would not be desired in a temporal data streaming session.
         /// </remarks>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         #endregion
 
@@ -140,39 +134,38 @@ namespace PhasorProtocolAdapters
         [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_configurationWaitHandle", Justification = "Code Analysis does not understand null propagation :-p")]
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        // Detach from frame parser events and dispose
-                        if ((object)m_frameParser != null)
-                        {
-                            m_frameParser.ConnectionAttempt -= m_frameParser_ConnectionAttempt;
-                            m_frameParser.ConnectionEstablished -= m_frameParser_ConnectionEstablished;
-                            m_frameParser.ConnectionException -= m_frameParser_ConnectionException;
-                            m_frameParser.ConnectionTerminated -= m_frameParser_ConnectionTerminated;
-                            m_frameParser.ExceededParsingExceptionThreshold -= m_frameParser_ExceededParsingExceptionThreshold;
-                            m_frameParser.ParsingException -= m_frameParser_ParsingException;
-                            m_frameParser.ReceivedConfigurationFrame -= m_frameParser_ReceivedConfigurationFrame;
-                            m_frameParser.Dispose();
-                        }
-                        m_frameParser = null;
+                if (!disposing)
+                    return;
 
-                        // Dispose configuration of wait handle
-                        m_configurationWaitHandle?.Dispose();
-                        m_configurationWaitHandle = null;
-
-                        m_configurationFrame = null;
-                      
-                    }
-                }
-                finally
+                // Detach from frame parser events and dispose
+                if (m_frameParser != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_frameParser.ConnectionAttempt -= m_frameParser_ConnectionAttempt;
+                    m_frameParser.ConnectionEstablished -= m_frameParser_ConnectionEstablished;
+                    m_frameParser.ConnectionException -= m_frameParser_ConnectionException;
+                    m_frameParser.ConnectionTerminated -= m_frameParser_ConnectionTerminated;
+                    m_frameParser.ExceededParsingExceptionThreshold -= m_frameParser_ExceededParsingExceptionThreshold;
+                    m_frameParser.ParsingException -= m_frameParser_ParsingException;
+                    m_frameParser.ReceivedConfigurationFrame -= m_frameParser_ReceivedConfigurationFrame;
+                    m_frameParser.Dispose();
                 }
+                m_frameParser = null;
+
+                // Dispose configuration of wait handle
+                m_configurationWaitHandle?.Dispose();
+                m_configurationWaitHandle = null;
+
+                m_configurationFrame = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -211,11 +204,10 @@ namespace PhasorProtocolAdapters
                 try
                 {
                     Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-                    string setting;
                     ushort accessID;
 
                     // Get accessID from connection string
-                    if (settings.TryGetValue("accessID", out setting))
+                    if (settings.TryGetValue("accessID", out string setting))
                         accessID = ushort.Parse(setting);
                     else
                         accessID = 1;
@@ -299,7 +291,7 @@ namespace PhasorProtocolAdapters
         /// <param name="command"><see cref="DeviceCommand"/> to send to connected device.</param>
         public void SendCommand(DeviceCommand command)
         {
-            if ((object)m_frameParser != null)
+            if (m_frameParser != null)
             {
                 m_frameParser.SendDeviceCommand(command);
                 OnStatusMessage(MessageLevel.Info, $"Sent device command \"{command}\"...");
@@ -418,17 +410,16 @@ namespace PhasorProtocolAdapters
         public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string phasorLabel = null, int signalIndex = -1, char phase = '_', int baseKV = 0)
         {
             // Initialize point tag expression parser
-            if ((object)s_pointTagExpressionParser == null)
+            if (s_pointTagExpressionParser == null)
                 s_pointTagExpressionParser = InitializePointTagExpressionParser();
 
             // Initialize signal type dictionary
-            if ((object)s_signalTypes == null)
+            if (s_signalTypes == null)
                 s_signalTypes = InitializeSignalTypes();
 
             Dictionary<string, string> substitutions;
-            DataRow signalTypeValues;
 
-            if (!s_signalTypes.TryGetValue(signalTypeAcronym, out signalTypeValues))
+            if (!s_signalTypes.TryGetValue(signalTypeAcronym, out DataRow signalTypeValues))
                 throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
 
             // Validate key acronyms
@@ -526,7 +517,8 @@ namespace PhasorProtocolAdapters
         /// <param name="arguments">Arguments, if any, to be used but the data source validation.</param>
         /// <param name="statusMessage">The delegate which will display a status message to the user.</param>
         /// <param name="processException">The delegate which will handle exception logging.</param>
-        [SuppressMessage("Microsoft.Maintainability", "CA1502"), SuppressMessage("Microsoft.Maintainability", "CA1505")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1502")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1505")]
         private static void MeasurementDeviceAssociation(AdoDataConnection connection, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             if (string.IsNullOrEmpty(arguments))
@@ -537,17 +529,13 @@ namespace PhasorProtocolAdapters
 
             Dictionary<string, string> args = arguments.ParseKeyValuePairs();
 
-            string deviceAcronym;
-
-            if (!args.TryGetValue("DeviceAcronym", out deviceAcronym))
+            if (!args.TryGetValue("DeviceAcronym", out string deviceAcronym))
             {
                 statusMessage("WARNING: No \"deviceAcronyym\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
                 return;
             }
 
-            string lookupExpression;
-
-            if (!args.TryGetValue("LookupExpression", out lookupExpression))
+            if (!args.TryGetValue("LookupExpression", out string lookupExpression))
             {
                 statusMessage("WARNING: No \"lookupExpression\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
                 return;
@@ -600,7 +588,8 @@ namespace PhasorProtocolAdapters
         /// <param name="arguments">Arguments, if any, to be used but the data source validation.</param>
         /// <param name="statusMessage">The delegate which will display a status message to the user.</param>
         /// <param name="processException">The delegate which will handle exception logging.</param>
-        [SuppressMessage("Microsoft.Maintainability", "CA1502"), SuppressMessage("Microsoft.Maintainability", "CA1505")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1502")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1505")]
         private static void PhasorDataSourceValidation(AdoDataConnection database, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             // Make sure setting exists to allow user to by-pass phasor data source validation at startup
@@ -614,12 +603,12 @@ namespace PhasorProtocolAdapters
 
             Dictionary<string, string> args = new Dictionary<string, string>();
             bool skipOptimization = false, renameAllPointTags = false;
-            string arg, acronym;
+            string acronym;
 
             if (!string.IsNullOrEmpty(arguments))
                 args = arguments.ParseKeyValuePairs();
 
-            if (args.TryGetValue("skipOptimization", out arg))
+            if (args.TryGetValue("skipOptimization", out string arg))
                 skipOptimization = arg.ParseBoolean();
 
             if (args.TryGetValue("renameAllPointTags", out arg))
@@ -669,11 +658,11 @@ namespace PhasorProtocolAdapters
                     database.Connection.ExecuteNonQuery("UPDATE SignalType SET Abbreviation='QF' WHERE Acronym='QUAL'");
 
                 IEnumerable<DataRow> signalTypes = database.Connection.RetrieveData(database.AdapterType, "SELECT Name, Acronym FROM SignalType WHERE LongAcronym='Undefined'").AsEnumerable();
-                string longAcronym;
 
                 foreach (DataRow row in signalTypes)
                 {
                     acronym = row.Field<string>("Acronym").ToUpperInvariant().Trim();
+                    string longAcronym;
 
                     switch (acronym)
                     {
@@ -1065,7 +1054,7 @@ namespace PhasorProtocolAdapters
                         }
 
                         // Validate that the signal reference type is valid for an output stream
-                        if (!validOutputSignalKinds.Any(validSignalKind => deviceSignalReference.Kind == validSignalKind))
+                        if (validOutputSignalKinds.All(validSignalKind => deviceSignalReference.Kind != validSignalKind))
                         {
                             // This measurement has a signal reference type that is not valid for an output stream, so we mark it for deletion
                             measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
@@ -1352,9 +1341,7 @@ namespace PhasorProtocolAdapters
         [SuppressMessage("Microsoft.Usage", "CA1806")]
         private static void EstablishDefaultMeasurementKeyCache(AdoDataConnection database, Action<string> statusMessage, Action<Exception> processException)
         {
-            MeasurementKey key;
             string keyID, pointTag, signalType;
-            double adder, multiplier;
             MeasurementValueFilterFunction filterFunction;
 
             statusMessage("Establishing default measurement key cache...");
@@ -1368,14 +1355,14 @@ namespace PhasorProtocolAdapters
                     continue;
 
                 // Cache new measurement key with associated Guid signal ID
-                if (MeasurementKey.TryCreateOrUpdate(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), keyID, out key))
+                if (MeasurementKey.TryCreateOrUpdate(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), keyID, out MeasurementKey key))
                 {
                     pointTag = measurement["PointTag"].ToNonNullString();
 
-                    if (!double.TryParse(measurement["Adder"].ToNonNullString(), out adder))
+                    if (!double.TryParse(measurement["Adder"].ToNonNullString(), out double adder))
                         adder = 0.0D;
 
-                    if (!double.TryParse(measurement["Multiplier"].ToNonNullString(), out multiplier))
+                    if (!double.TryParse(measurement["Multiplier"].ToNonNullString(), out double multiplier))
                         multiplier = 1.0D;
 
                     signalType = measurement["SignalType"].ToNonNullString().ToUpperInvariant().Trim();
@@ -1416,9 +1403,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_TotalFrames(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.TotalFrames, "TotalFrames");
 
             return statistic;
@@ -1433,13 +1419,12 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_LastReportTime(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
             // Local archival uses a 32-bit floating point number for statistical value storage so we
             // reduce the last reporting time resolution down to the hour to make sure the archived
             // timestamp is accurate at least to the milliseconds - remaining date/time high data bits
             // can be later deduced from the statistic's archival timestamp
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
             {
                 Ticks lastReportTime = inputStream.LastReportTime;
                 statistic = lastReportTime - lastReportTime.BaselinedTimestamp(BaselineTimeInterval.Hour);
@@ -1457,9 +1442,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_MissingFrames(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.MissingFrames, "MissingFrames");
 
             return statistic;
@@ -1474,9 +1458,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_MissingData(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.MissingData, "MissingData");
 
             return statistic;
@@ -1491,9 +1474,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_CRCErrors(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.CRCErrors, "CRCErrors");
 
             return statistic;
@@ -1508,9 +1490,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_OutOfOrderFrames(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.OutOfOrderFrames, "OutOfOrderFrames");
 
             return statistic;
@@ -1528,9 +1509,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_MinimumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.MinimumLatency;
 
             return statistic;
@@ -1545,9 +1525,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_MaximumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.MaximumLatency;
 
             return statistic;
@@ -1562,9 +1541,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_AverageLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.AverageLatency;
 
             return statistic;
@@ -1579,9 +1557,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_Connected(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
             {
                 if (inputStream.IsConnected)
                     statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.ConnectionAttempts, "ConnectionAttempts") == 0.0D ? 1.0D : 0.0D;
@@ -1602,9 +1579,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_ReceivedConfiguration(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
             {
                 double configChanges = s_statisticValueCache.GetDifference(inputStream, inputStream.ConfigurationChanges, "ReceivedConfiguration");
                 statistic = configChanges > 0 ? 1.0D : 0.0D;
@@ -1622,9 +1598,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_ConfigurationChanges(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = (long)s_statisticValueCache.GetDifference(inputStream, inputStream.ConfigurationChanges, "ConfigurationChanges");
 
             return statistic;
@@ -1639,9 +1614,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_TotalDataFrames(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.TotalDataFrames, "TotalDataFrames");
 
             return statistic;
@@ -1656,9 +1630,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_TotalConfigurationFrames(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.TotalConfigurationFrames, "TotalConfigurationFrames");
 
             return statistic;
@@ -1673,9 +1646,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_TotalHeaderFrames(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.TotalHeaderFrames, "TotalHeaderFrames");
 
             return statistic;
@@ -1690,9 +1662,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_DefinedFrameRate(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.DefinedFrameRate;
 
             return statistic;
@@ -1707,9 +1678,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_ActualFrameRate(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.ActualFrameRate;
 
             return statistic;
@@ -1724,9 +1694,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_ActualDataRate(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.ActualDataRate * 8.0D / SI.Mega;
 
             return statistic;
@@ -1735,9 +1704,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_TotalBytesReceived(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
             {
                 statistic = s_statisticValueCache.GetDifference(source, inputStream.TotalBytesReceived, "TotalBytesReceived");
 
@@ -1751,9 +1719,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_LifetimeMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.LifetimeMeasurements;
 
             return statistic;
@@ -1762,9 +1729,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_MinimumMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.MinimumMeasurementsPerSecond;
 
             return statistic;
@@ -1773,9 +1739,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_MaximumMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.MaximumMeasurementsPerSecond;
 
             return statistic;
@@ -1784,9 +1749,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_AverageMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.AverageMeasurementsPerSecond;
 
             return statistic;
@@ -1795,9 +1759,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_LifetimeBytesReceived(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.TotalBytesReceived;
 
             return statistic;
@@ -1806,9 +1769,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_LifetimeMinimumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.LifetimeMinimumLatency;
 
             return statistic;
@@ -1817,9 +1779,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_LifetimeMaximumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.LifetimeMaximumLatency;
 
             return statistic;
@@ -1828,9 +1789,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_LifetimeAverageLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.LifetimeAverageLatency;
 
             return statistic;
@@ -1839,9 +1799,8 @@ namespace PhasorProtocolAdapters
         private static double GetInputStreamStatistic_UpTime(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorMeasurementMapper inputStream = source as PhasorMeasurementMapper;
 
-            if ((object)inputStream != null)
+            if (source is PhasorMeasurementMapper inputStream)
                 statistic = inputStream.RunTime;
 
             return statistic;
@@ -1860,9 +1819,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_DiscardedMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.DiscardedMeasurements, "DiscardedMeasurements");
 
             return statistic;
@@ -1877,9 +1835,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_ReceivedMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ReceivedMeasurements, "ReceivedMeasurements");
 
             return statistic;
@@ -1897,9 +1854,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_ExpectedMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
             {
                 double publishedFrames = s_statisticValueCache.GetDifference(outputStream, outputStream.PublishedFrames, "ExpectedMeasurements");
                 statistic = outputStream.ExpectedMeasurements * publishedFrames;
@@ -1917,9 +1873,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_ProcessedMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ProcessedMeasurements, "ProcessedMeasurements");
 
             return statistic;
@@ -1934,9 +1889,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_MeasurementsSortedByArrival(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.MeasurementsSortedByArrival, "MeasurementsSortedByArrival");
 
             return statistic;
@@ -1951,9 +1905,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_PublishedMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.PublishedMeasurements, "PublishedMeasurements");
 
             return statistic;
@@ -1968,9 +1921,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_DownsampledMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.DownsampledMeasurements, "DownsampledMeasurements");
 
             return statistic;
@@ -1985,9 +1937,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_MissedSortsByTimeout(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.MissedSortsByTimeout, "MissedSortsByTimeout");
 
             return statistic;
@@ -2002,9 +1953,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_FramesAheadOfSchedule(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.FramesAheadOfSchedule, "FramesAheadOfSchedule");
 
             return statistic;
@@ -2019,9 +1969,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_PublishedFrames(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.PublishedFrames, "PublishedFrames");
 
             return statistic;
@@ -2036,9 +1985,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_Connected(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
             {
                 if (outputStream.Enabled)
                     statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ActiveConnections, "ActiveConnections") == 0.0D ? 1.0D : 0.0D;
@@ -2059,9 +2007,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_MinimumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.MinimumLatency;
 
             return statistic;
@@ -2076,9 +2023,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_MaximumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.MaximumLatency;
 
             return statistic;
@@ -2093,9 +2039,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_AverageLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.AverageLatency;
 
             return statistic;
@@ -2110,9 +2055,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_ConnectedClientCount(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.ConnectedClientCount;
 
             return statistic;
@@ -2121,9 +2065,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_TotalBytesSent(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
             {
                 statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.TotalBytesSent, "TotalBytesSent");
 
@@ -2137,9 +2080,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_LifetimeMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.LifetimeMeasurements;
 
             return statistic;
@@ -2148,9 +2090,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_MinimumMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.MinimumMeasurementsPerSecond;
 
             return statistic;
@@ -2159,9 +2100,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_MaximumMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.MaximumMeasurementsPerSecond;
 
             return statistic;
@@ -2170,9 +2110,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_AverageMeasurementsPerSecond(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.AverageMeasurementsPerSecond;
 
             return statistic;
@@ -2181,9 +2120,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_LifetimeBytesSent(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.TotalBytesSent;
 
             return statistic;
@@ -2192,9 +2130,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_LifetimeMinimumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.LifetimeMinimumLatency;
 
             return statistic;
@@ -2203,9 +2140,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_LifetimeMaximumLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.LifetimeMaximumLatency;
 
             return statistic;
@@ -2214,9 +2150,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_LifetimeAverageLatency(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.LifetimeAverageLatency;
 
             return statistic;
@@ -2225,9 +2160,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_LifetimeDiscardedMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.DiscardedMeasurements;
 
             return statistic;
@@ -2236,9 +2170,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_LifetimeDownsampledMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.DownsampledMeasurements;
 
             return statistic;
@@ -2247,9 +2180,8 @@ namespace PhasorProtocolAdapters
         private static double GetOutputStreamStatistic_UpTime(object source, string arguments)
         {
             double statistic = 0.0D;
-            PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
-            if ((object)outputStream != null)
+            if (source is PhasorDataConcentratorBase outputStream)
                 statistic = outputStream.RunTime;
 
             return statistic;

@@ -160,28 +160,14 @@ namespace PhasorProtocolAdapters
         private UdpServer m_dataChannel;
         private TcpServer m_commandChannel;
         private IServer m_publishChannel;
-        private IConfigurationFrame m_configurationFrame;
-        private ConfigurationFrame m_baseConfigurationFrame;
         private Dictionary<MeasurementKey, SignalReference[]> m_signalReferences;
         private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
         private Timer m_commandChannelRestartTimer;
         private readonly object m_reinitializationLock;
-        private long m_activeConnections;
-        private LineFrequency m_nominalFrequency;
-        private DataFormat m_dataFormat;
-        private CoordinateFormat m_coordinateFormat;
-        private uint m_currentScalingValue;
-        private uint m_voltageScalingValue;
-        private uint m_analogScalingValue;
-        private uint m_digitalMaskValue;
-        private bool m_autoPublishConfigurationFrame;
         private int m_lastConfigurationPublishMinute;
         private bool m_configurationFramePublished;
-        private bool m_autoStartDataChannel;
-        private bool m_processDataValidFlag;
         private bool m_addPhaseLabelSuffix;
         private char m_replaceWithSpaceChar;
-        private ushort m_idCode;
         private long m_totalLatency;
         private long m_minimumLatency;
         private long m_maximumLatency;
@@ -189,10 +175,6 @@ namespace PhasorProtocolAdapters
         private int m_hashCode;
         private bool m_useAdjustedValue;
 
-        private long m_totalBytesSent;
-        private long m_lifetimeMeasurements;
-        private long m_minimumMeasurementsPerSecond;
-        private long m_maximumMeasurementsPerSecond;
         private long m_totalMeasurementsPerSecond;
         private long m_measurementsPerSecondCount;
         private long m_measurementsInSecond;
@@ -220,12 +202,15 @@ namespace PhasorProtocolAdapters
             m_reinitializationLock = new object();
 
             // Synchrophasor protocols should default to millisecond resolution
-            base.TimeResolution = Ticks.PerMillisecond;
+            TimeResolution = Ticks.PerMillisecond;
 
             // Setup a timer for restarting the command channel if it fails
-            m_commandChannelRestartTimer = new Timer(2000.0D);
-            m_commandChannelRestartTimer.AutoReset = false;
-            m_commandChannelRestartTimer.Enabled = false;
+            m_commandChannelRestartTimer = new Timer(2000.0D)
+            {
+                AutoReset = false,
+                Enabled = false
+            };
+            
             m_commandChannelRestartTimer.Elapsed += m_commandChannelRestartTimer_Elapsed;
         }
 
@@ -236,7 +221,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets ID code defined for this <see cref="PhasorDataConcentratorBase"/> parsed from the <see cref="ActionAdapterBase.ConnectionString"/>.
         /// </summary>
-        public ushort IDCode => m_idCode;
+        public ushort IDCode { get; private set; }
 
         /// <summary>
         /// Gets or sets flag that determines if configuration frame should be automatically published at the top
@@ -246,22 +231,12 @@ namespace PhasorProtocolAdapters
         /// By default if no command channel is defined, this flag will be <c>true</c>; otherwise if command channel
         /// is defined the flag will be <c>false</c>.
         /// </remarks>
-        public bool AutoPublishConfigurationFrame
-        {
-            get
-            {
-                return m_autoPublishConfigurationFrame;
-            }
-            set
-            {
-                m_autoPublishConfigurationFrame = value;
-            }
-        }
+        public bool AutoPublishConfigurationFrame { get; set; }
 
         /// <summary>
         /// Gets the total number of active socket connections.
         /// </summary>
-        public long ActiveConnections => m_activeConnections;
+        public long ActiveConnections { get; private set; }
 
         /// <summary>
         /// Gets or sets flag that determines if concentrator will automatically start data channel.
@@ -272,17 +247,7 @@ namespace PhasorProtocolAdapters
         /// be used to allow a remote to device to enable and disable data stream if the protocol supports
         /// such commands).
         /// </remarks>
-        public bool AutoStartDataChannel
-        {
-            get
-            {
-                return m_autoStartDataChannel;
-            }
-            set
-            {
-                m_autoStartDataChannel = value;
-            }
-        }
+        public bool AutoStartDataChannel { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if the data valid flag assignments should be processed during frame publication.
@@ -291,32 +256,12 @@ namespace PhasorProtocolAdapters
         /// In cases where client applications ignore the data validity flag, setting this flag to <c>false</c> will
         /// provide a slight processing optimization, especially useful on very large data streams.
         /// </remarks>
-        public bool ProcessDataValidFlag
-        {
-            get
-            {
-                return m_processDataValidFlag;
-            }
-            set
-            {
-                m_processDataValidFlag = value;
-            }
-        }
+        public bool ProcessDataValidFlag { get; set; }
 
         /// <summary>
         /// Gets or sets the nominal <see cref="LineFrequency"/> defined for this <see cref="PhasorDataConcentratorBase"/>.
         /// </summary>
-        public LineFrequency NominalFrequency
-        {
-            get
-            {
-                return m_nominalFrequency;
-            }
-            set
-            {
-                m_nominalFrequency = value;
-            }
-        }
+        public LineFrequency NominalFrequency { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="GSF.PhasorProtocols.DataFormat"/> defined for this <see cref="PhasorDataConcentratorBase"/>.
@@ -324,17 +269,7 @@ namespace PhasorProtocolAdapters
         /// <remarks>
         /// Note that this value represents the default format that will be used if user has not specified a data format for an individual device.
         /// </remarks>
-        public DataFormat DataFormat
-        {
-            get
-            {
-                return m_dataFormat;
-            }
-            set
-            {
-                m_dataFormat = value;
-            }
-        }
+        public DataFormat DataFormat { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> defined for this <see cref="PhasorDataConcentratorBase"/>.
@@ -342,17 +277,7 @@ namespace PhasorProtocolAdapters
         /// <remarks>
         /// Note that this value represents the default format that will be used if user has not specified a coordinate format for an individual device.
         /// </remarks>
-        public CoordinateFormat CoordinateFormat
-        {
-            get
-            {
-                return m_coordinateFormat;
-            }
-            set
-            {
-                m_coordinateFormat = value;
-            }
-        }
+        public CoordinateFormat CoordinateFormat { get; set; }
 
         /// <summary>
         /// Gets or sets the integer scaling value to apply to current values published by this <see cref="PhasorDataConcentratorBase"/>.
@@ -361,17 +286,7 @@ namespace PhasorProtocolAdapters
         /// Typically only the lower 24-bits will be used to scale current values in 10^–5 amperes per bit. Note that this value represents
         /// the default value that will be used if user has not specified a value for an individual device.
         /// </remarks>
-        public uint CurrentScalingValue
-        {
-            get
-            {
-                return m_currentScalingValue;
-            }
-            set
-            {
-                m_currentScalingValue = value;
-            }
-        }
+        public uint CurrentScalingValue { get; set; }
 
         /// <summary>
         /// Gets or sets the integer scaling value to apply to voltage values published by this <see cref="PhasorDataConcentratorBase"/>.
@@ -380,17 +295,7 @@ namespace PhasorProtocolAdapters
         /// Typically only the lower 24-bits will be used to scale voltage values in 10^–5 volts per bit. Note that this value represents
         /// the default value that will be used if user has not specified a value for an individual device.
         /// </remarks>
-        public uint VoltageScalingValue
-        {
-            get
-            {
-                return m_voltageScalingValue;
-            }
-            set
-            {
-                m_voltageScalingValue = value;
-            }
-        }
+        public uint VoltageScalingValue { get; set; }
 
         /// <summary>
         /// Gets or sets the integer scaling value to apply to analog values published by this <see cref="PhasorDataConcentratorBase"/>.
@@ -399,17 +304,7 @@ namespace PhasorProtocolAdapters
         /// Typically only the lower 24-bits will be used to scale analog values in 10^–5 units per bit. Note that this value represents
         /// the default value that will be used if user has not specified a value for an individual device.
         /// </remarks>
-        public uint AnalogScalingValue
-        {
-            get
-            {
-                return m_analogScalingValue;
-            }
-            set
-            {
-                m_analogScalingValue = value;
-            }
-        }
+        public uint AnalogScalingValue { get; set; }
 
         /// <summary>
         /// Gets or sets the digital mask value made available in configuration frames for use with digital values published by this <see cref="PhasorDataConcentratorBase"/>.
@@ -421,17 +316,7 @@ namespace PhasorProtocolAdapters
         /// The high word will indicate the current valid inputs to the PMU by having a bit set in the binary position corresponding to the digital input and all other bits
         /// set to 0. If digital status words are used for something other than boolean status indications, the use is left to the user.
         /// </remarks>
-        public uint DigitalMaskValue
-        {
-            get
-            {
-                return m_digitalMaskValue;
-            }
-            set
-            {
-                m_digitalMaskValue = value;
-            }
-        }
+        public uint DigitalMaskValue { get; set; }
 
         /// <summary>
         /// Gets the minimum latency in milliseconds over the last test interval.
@@ -464,54 +349,39 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ServerState.Running)
-                {
-                    try
-                    {
-                        return m_commandChannel.ClientIDs.Length;
-                    }
-                    catch (Exception)
-                    {
-                        return 0;
-                    }
-                }
+                if (m_commandChannel == null || m_commandChannel.CurrentState != ServerState.Running)
+                    return 0;
 
-                return 0;
+                try
+                {
+                    return m_commandChannel.ClientIDs.Length;
+                }
+                catch (Exception)
+                {
+                    return 0;
+                }
             }
         }
 
         /// <summary>
         /// Gets or sets the protocol specific <see cref="IConfigurationFrame"/> used to send to clients for protocol parsing.
         /// </summary>
-        public virtual IConfigurationFrame ConfigurationFrame
-        {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = value;
-            }
-        }
+        public IConfigurationFrame ConfigurationFrame { get; set; }
 
         /// <summary>
         /// Gets the protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/> defined for this <see cref="PhasorDataConcentratorBase"/>.
         /// </summary>
-        public ConfigurationFrame BaseConfigurationFrame => m_baseConfigurationFrame;
+        public ConfigurationFrame BaseConfigurationFrame { get; private set; }
 
         /// <summary>
         /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching and/or detaching to events as needed.
         /// </summary>
         protected UdpServer DataChannel
         {
-            get
-            {
-                return m_dataChannel;
-            }
+            get => m_dataChannel;
             set
             {
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ClientConnectingException -= m_dataChannel_ClientConnectingException;
@@ -527,7 +397,7 @@ namespace PhasorProtocolAdapters
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel != null)
                 {
                     // Attach to events on new data channel reference
                     m_dataChannel.ClientConnectingException += m_dataChannel_ClientConnectingException;
@@ -544,13 +414,10 @@ namespace PhasorProtocolAdapters
         /// </summary>
         protected TcpServer CommandChannel
         {
-            get
-            {
-                return m_commandChannel;
-            }
+            get => m_commandChannel;
             set
             {
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                 {
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
@@ -568,7 +435,7 @@ namespace PhasorProtocolAdapters
                 // Assign new command channel reference
                 m_commandChannel = value;
 
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                 {
                     // Attach to events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
@@ -587,10 +454,7 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public override DataSet DataSource
         {
-            get
-            {
-                return base.DataSource;
-            }
+            get => base.DataSource;
             set
             {
                 base.DataSource = value;
@@ -618,37 +482,37 @@ namespace PhasorProtocolAdapters
             {
                 StringBuilder status = new StringBuilder();
 
-                if ((object)m_configurationFrame != null)
+                if (ConfigurationFrame != null)
                 {
-                    status.AppendFormat("  Configuration frame size: {0} bytes", m_configurationFrame.BinaryLength);
+                    status.AppendFormat("  Configuration frame size: {0} bytes", ConfigurationFrame.BinaryLength);
                     status.AppendLine();
                 }
 
-                if ((object)m_baseConfigurationFrame != null && (object)m_baseConfigurationFrame.Cells != null)
+                if (BaseConfigurationFrame?.Cells != null)
                 {
-                    status.AppendFormat("  Total configured devices: {0}", m_baseConfigurationFrame.Cells.Count);
+                    status.AppendFormat("  Total configured devices: {0}", BaseConfigurationFrame.Cells.Count);
                     status.AppendLine();
                 }
 
                 Dictionary<MeasurementKey, SignalReference[]> signalReferences = Interlocked.CompareExchange(ref m_signalReferences, null, null);
 
-                if ((object)signalReferences != null)
+                if (signalReferences != null)
                 {
                     status.AppendFormat(" Total device measurements: {0}", signalReferences.Count);
                     status.AppendLine();
                 }
 
-                status.AppendFormat(" Auto-publish config frame: {0}", m_autoPublishConfigurationFrame);
+                status.AppendFormat(" Auto-publish config frame: {0}", AutoPublishConfigurationFrame);
                 status.AppendLine();
-                status.AppendFormat("   Auto-start data channel: {0}", m_autoStartDataChannel);
+                status.AppendFormat("   Auto-start data channel: {0}", AutoStartDataChannel);
                 status.AppendLine();
-                status.AppendFormat("       Data stream ID code: {0}", m_idCode);
+                status.AppendFormat("       Data stream ID code: {0}", IDCode);
                 status.AppendLine();
-                status.AppendFormat("         Nominal frequency: {0}Hz", (int)m_nominalFrequency);
+                status.AppendFormat("         Nominal frequency: {0}Hz", (int)NominalFrequency);
                 status.AppendLine();
-                status.AppendFormat("               Data format: {0}", m_dataFormat);
+                status.AppendFormat("               Data format: {0}", DataFormat);
                 status.AppendLine();
-                status.AppendFormat("         Coordinate format: {0}", m_coordinateFormat);
+                status.AppendFormat("         Coordinate format: {0}", CoordinateFormat);
                 status.AppendLine();
                 status.AppendFormat("    Minimum output latency: {0}ms over {1} tests", MinimumLatency, m_latencyMeasurements);
                 status.AppendLine();
@@ -657,22 +521,22 @@ namespace PhasorProtocolAdapters
                 status.AppendFormat("    Average output latency: {0}ms over {1} tests", AverageLatency, m_latencyMeasurements);
                 status.AppendLine();
 
-                if (m_dataFormat == DataFormat.FixedInteger)
+                if (DataFormat == DataFormat.FixedInteger)
                 {
-                    status.AppendFormat("     Current scaling value: {0:00000000} ({1:0.00000})", m_currentScalingValue, m_currentScalingValue * 0.00001D);
+                    status.AppendFormat("     Current scaling value: {0:00000000} ({1:0.00000})", CurrentScalingValue, CurrentScalingValue * 0.00001D);
                     status.AppendLine();
-                    status.AppendFormat("     Voltage scaling value: {0:00000000} ({1:0.00000})", m_voltageScalingValue, m_voltageScalingValue * 0.00001D);
+                    status.AppendFormat("     Voltage scaling value: {0:00000000} ({1:0.00000})", VoltageScalingValue, VoltageScalingValue * 0.00001D);
                     status.AppendLine();
-                    status.AppendFormat("      Analog scaling value: {0:00000000} ({1:0.00000})", m_analogScalingValue, m_analogScalingValue * 0.00001D);
+                    status.AppendFormat("      Analog scaling value: {0:00000000} ({1:0.00000})", AnalogScalingValue, AnalogScalingValue * 0.00001D);
                     status.AppendLine();
                 }
 
-                status.AppendFormat("       Digital normal mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(m_digitalMaskValue.LowWord())));
+                status.AppendFormat("       Digital normal mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.LowWord())));
                 status.AppendLine();
-                status.AppendFormat(" Digital valid inputs mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(m_digitalMaskValue.HighWord())));
+                status.AppendFormat(" Digital valid inputs mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.HighWord())));
                 status.AppendLine();
 
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel != null)
                 {
                     status.AppendLine();
                     status.AppendLine("Data Channel Status".CenterText(50));
@@ -680,7 +544,7 @@ namespace PhasorProtocolAdapters
                     status.Append(m_dataChannel.Status);
                 }
 
-                if ((object)m_commandChannel != null)
+                if (m_commandChannel != null)
                 {
                     status.AppendLine();
                     status.AppendLine("Command Channel Status".CenterText(50));
@@ -691,22 +555,17 @@ namespace PhasorProtocolAdapters
                 status.AppendLine();
                 status.Append(base.Status);
 
-                if ((object)m_commandChannel != null)
+                Guid[] clientIDs = m_commandChannel?.ClientIDs;
+
+                if (clientIDs != null && clientIDs.Length > 0)
                 {
-                    Guid[] clientIDs = m_commandChannel.ClientIDs;
+                    status.AppendLine();
+                    status.AppendFormat("Command channel has {0} connected clients:\r\n\r\n", clientIDs.Length);
 
-                    if ((object)clientIDs != null && clientIDs.Length > 0)
-                    {
-                        status.AppendLine();
-                        status.AppendFormat("Command channel has {0} connected clients:\r\n\r\n", clientIDs.Length);
+                    for (int i = 0; i < clientIDs.Length; i++)
+                        status.AppendFormat("    {0}) {1}\r\n", i + 1, GetConnectionID(m_commandChannel, clientIDs[i]));
 
-                        for (int i = 0; i < clientIDs.Length; i++)
-                        {
-                            status.AppendFormat("    {0}) {1}\r\n", i + 1, GetConnectionID(m_commandChannel, clientIDs[i]));
-                        }
-
-                        status.AppendLine();
-                    }
+                    status.AppendLine();
                 }
 
                 return status.ToString();
@@ -716,22 +575,22 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number of bytes sent to clients of this output stream.
         /// </summary>
-        public long TotalBytesSent => m_totalBytesSent;
+        public long TotalBytesSent { get; private set; }
 
         /// <summary>
         /// Gets the total number of measurements processed through this output stream over the lifetime of the output stream.
         /// </summary>
-        public long LifetimeMeasurements => m_lifetimeMeasurements;
+        public long LifetimeMeasurements { get; private set; }
 
         /// <summary>
         /// Gets the minimum value of the measurements per second calculation.
         /// </summary>
-        public long MinimumMeasurementsPerSecond => m_minimumMeasurementsPerSecond;
+        public long MinimumMeasurementsPerSecond { get; private set; }
 
         /// <summary>
         /// Gets the maximum value of the measurements per second calculation.
         /// </summary>
-        public long MaximumMeasurementsPerSecond => m_maximumMeasurementsPerSecond;
+        public long MaximumMeasurementsPerSecond { get; private set; }
 
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
@@ -781,30 +640,30 @@ namespace PhasorProtocolAdapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        // Dispose command channel restart timer
-                        if ((object)m_commandChannelRestartTimer != null)
-                        {
-                            m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
-                            m_commandChannelRestartTimer.Dispose();
-                            m_commandChannelRestartTimer = null;
-                        }
+            if (m_disposed)
+                return;
 
-                        // Dispose and detach from data and command channel events
-                        this.DataChannel = null;
-                        this.CommandChannel = null;
-                    }
-                }
-                finally
+            try
+            {
+                if (!disposing)
+                    return;
+
+                // Dispose command channel restart timer
+                if (m_commandChannelRestartTimer != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
+                    m_commandChannelRestartTimer.Dispose();
+                    m_commandChannelRestartTimer = null;
                 }
+
+                // Dispose and detach from data and command channel events
+                DataChannel = null;
+                CommandChannel = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -821,10 +680,10 @@ namespace PhasorProtocolAdapters
             m_configurationFramePublished = false;
 
             // Start communications servers
-            if ((m_autoStartDataChannel || (object)m_commandChannel == null) && (object)m_dataChannel != null && m_dataChannel.CurrentState == ServerState.NotRunning)
+            if ((AutoStartDataChannel || m_commandChannel == null) && m_dataChannel != null && m_dataChannel.CurrentState == ServerState.NotRunning)
                 m_dataChannel.Start();
 
-            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ServerState.NotRunning)
+            if (m_commandChannel != null && m_commandChannel.CurrentState == ServerState.NotRunning)
                 m_commandChannel.Start();
 
             // Make sure publication channel is defined
@@ -850,11 +709,8 @@ namespace PhasorProtocolAdapters
             StopDataChannel();
 
             // Stop communications servers
-            if ((object)m_dataChannel != null)
-                m_dataChannel.Stop();
-
-            if ((object)m_commandChannel != null)
-                m_commandChannel.Stop();
+            m_dataChannel?.Stop();
+            m_commandChannel?.Stop();
         }
 
         /// <summary>
@@ -871,25 +727,25 @@ namespace PhasorProtocolAdapters
             // Make sure publication channel is defined
             EstablishPublicationChannel();
 
-            // Make sure publication channel has started
-            if ((object)m_publishChannel != null)
-            {
-                if (m_publishChannel.CurrentState == ServerState.NotRunning)
-                {
-                    try
-                    {
-                        m_publishChannel.Start();
-                    }
-                    catch (Exception ex)
-                    {
-                        OnProcessException(MessageLevel.Warning, new ConnectionException("Failed to start publication channel: " + ex.Message, ex));
-                    }
-                }
+            if (m_publishChannel == null)
+                return;
 
-                // Start concentration engine
-                if (!Enabled)
-                    base.Start();
+            // Make sure publication channel has started
+            if (m_publishChannel.CurrentState == ServerState.NotRunning)
+            {
+                try
+                {
+                    m_publishChannel.Start();
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(MessageLevel.Warning, new ConnectionException("Failed to start publication channel: " + ex.Message, ex));
+                }
             }
+
+            // Start concentration engine
+            if (!Enabled)
+                base.Start();
         }
 
         // Define publication channel
@@ -897,10 +753,7 @@ namespace PhasorProtocolAdapters
         {
             // If data channel is not defined and command channel is defined system assumes
             // you want to make data available over TCP connection
-            if ((object)m_dataChannel == null && (object)m_commandChannel != null)
-                m_publishChannel = m_commandChannel;
-            else
-                m_publishChannel = m_dataChannel;
+            m_publishChannel = m_dataChannel == null && m_commandChannel != null ? (IServer)m_commandChannel : m_dataChannel;
         }
 
         /// <summary>
@@ -911,11 +764,7 @@ namespace PhasorProtocolAdapters
         /// the real-time data stream. If command channel is defined, it will be unaffected.
         /// </remarks>
         [AdapterCommand("Manually stops the real-time data stream.", "Administrator", "Editor")]
-        public virtual void StopDataChannel()
-        {
-            // Undefine publication channel. This effectively halts socket based data publication.
-            m_publishChannel = null;
-        }
+        public virtual void StopDataChannel() => m_publishChannel = null; // Undefine publication channel. This effectively halts socket based data publication.
 
         /// <summary>
         /// Initializes <see cref="PhasorDataConcentratorBase"/>.
@@ -926,12 +775,13 @@ namespace PhasorProtocolAdapters
             const string errorMessage = "{0} is missing from Settings - Example: IDCode=235; dataChannel={{Port=0; Clients=localhost:8800}}";
 
             Dictionary<string, string> settings = Settings;
+            uint value;
 
             // Load required parameters
             if (!settings.TryGetValue("IDCode", out string setting))
                 throw new ArgumentException(string.Format(errorMessage, "IDCode"));
 
-            m_idCode = ushort.Parse(setting);
+            IDCode = ushort.Parse(setting);
             settings.TryGetValue("dataChannel", out string dataChannel);
             settings.TryGetValue("commandChannel", out string commandChannel);
 
@@ -940,109 +790,75 @@ namespace PhasorProtocolAdapters
                 throw new InvalidOperationException("A data channel or command channel must be defined for a concentrator.");
 
             // Load optional parameters
-            if (settings.TryGetValue("autoPublishConfigFrame", out setting))
-                m_autoPublishConfigurationFrame = setting.ParseBoolean();
-            else
-                m_autoPublishConfigurationFrame = string.IsNullOrEmpty(commandChannel);
-
-            if (settings.TryGetValue("autoStartDataChannel", out setting))
-                m_autoStartDataChannel = setting.ParseBoolean();
-            else
-                m_autoStartDataChannel = true;
-
-            if (settings.TryGetValue("nominalFrequency", out setting))
-                m_nominalFrequency = (LineFrequency)int.Parse(setting);
-            else
-                m_nominalFrequency = LineFrequency.Hz60;
-
-            if (settings.TryGetValue("dataFormat", out setting))
-                m_dataFormat = (DataFormat)Enum.Parse(typeof(DataFormat), setting, true);
-            else
-                m_dataFormat = DataFormat.FloatingPoint;
-
-            if (settings.TryGetValue("coordinateFormat", out setting))
-                m_coordinateFormat = (CoordinateFormat)Enum.Parse(typeof(CoordinateFormat), setting, true);
-            else
-                m_coordinateFormat = CoordinateFormat.Polar;
+            AutoPublishConfigurationFrame = settings.TryGetValue("autoPublishConfigFrame", out setting) ? setting.ParseBoolean() : string.IsNullOrEmpty(commandChannel);
+            AutoStartDataChannel = !settings.TryGetValue("autoStartDataChannel", out setting) || setting.ParseBoolean();
+            NominalFrequency = settings.TryGetValue("nominalFrequency", out setting) ? (LineFrequency)int.Parse(setting) : LineFrequency.Hz60;
+            DataFormat = settings.TryGetValue("dataFormat", out setting) ? (DataFormat)Enum.Parse(typeof(DataFormat), setting, true) : DataFormat.FloatingPoint;
+            CoordinateFormat = settings.TryGetValue("coordinateFormat", out setting) ? (CoordinateFormat)Enum.Parse(typeof(CoordinateFormat), setting, true) : CoordinateFormat.Polar;
 
             if (settings.TryGetValue("currentScalingValue", out setting))
             {
-                if (!uint.TryParse(setting, out m_currentScalingValue))
-                    m_currentScalingValue = unchecked((uint)int.Parse(setting));
+                if (uint.TryParse(setting, out value))
+                    CurrentScalingValue = value;
+                else
+                    CurrentScalingValue = unchecked((uint)int.Parse(setting));
             }
             else
             {
-                m_currentScalingValue = 2423U;
+                CurrentScalingValue = 2423U;
             }
 
             if (settings.TryGetValue("voltageScalingValue", out setting))
             {
-                if (!uint.TryParse(setting, out m_voltageScalingValue))
-                    m_voltageScalingValue = unchecked((uint)int.Parse(setting));
+                if (uint.TryParse(setting, out value))
+                    VoltageScalingValue = value;
+                else
+                    VoltageScalingValue = unchecked((uint)int.Parse(setting));
             }
             else
             {
-                m_voltageScalingValue = 2725785U;
+                VoltageScalingValue = 2725785U;
             }
 
             if (settings.TryGetValue("analogScalingValue", out setting))
             {
-                if (!uint.TryParse(setting, out m_analogScalingValue))
-                    m_analogScalingValue = unchecked((uint)int.Parse(setting));
+                if (uint.TryParse(setting, out value))
+                    AnalogScalingValue = value;
+                else
+                    AnalogScalingValue = unchecked((uint)int.Parse(setting));
             }
             else
             {
-                m_analogScalingValue = 1373291U;
+                AnalogScalingValue = 1373291U;
             }
 
             if (settings.TryGetValue("digitalMaskValue", out setting))
             {
-                if (!uint.TryParse(setting, out m_digitalMaskValue))
-                    m_digitalMaskValue = unchecked((uint)int.Parse(setting));
+                if (uint.TryParse(setting, out value))
+                    DigitalMaskValue = value;
+                else
+                    DigitalMaskValue = unchecked((uint)int.Parse(setting));
             }
             else
             {
-                m_digitalMaskValue = Word.MakeDoubleWord(0xFFFF, 0x0000);
+                DigitalMaskValue = Word.MakeDoubleWord(0xFFFF, 0x0000);
             }
 
-            if (settings.TryGetValue("processDataValidFlag", out setting))
-                m_processDataValidFlag = setting.ParseBoolean();
-            else
-                m_processDataValidFlag = true;
-
-            if (settings.TryGetValue("addPhaseLabelSuffix", out setting))
-                m_addPhaseLabelSuffix = setting.ParseBoolean();
-            else
-                m_addPhaseLabelSuffix = true;
+            ProcessDataValidFlag = !settings.TryGetValue("processDataValidFlag", out setting) || setting.ParseBoolean();
+            m_addPhaseLabelSuffix = !settings.TryGetValue("addPhaseLabelSuffix", out setting) || setting.ParseBoolean();
 
             if (settings.TryGetValue("replaceWithSpaceChar", out setting))
-            {
-                if (!string.IsNullOrWhiteSpace(setting))
-                    m_replaceWithSpaceChar = setting[0];
-                else
-                    m_replaceWithSpaceChar = char.MinValue;
-            }
+                m_replaceWithSpaceChar = !string.IsNullOrWhiteSpace(setting) ? setting[0] : char.MinValue;
             else
-            {
                 m_replaceWithSpaceChar = char.MinValue;
-            }
 
-            if (settings.TryGetValue("useAdjustedValue", out setting))
-                m_useAdjustedValue = setting.ParseBoolean();
-            else
-                m_useAdjustedValue = true;
+            m_useAdjustedValue = !settings.TryGetValue("useAdjustedValue", out setting) || setting.ParseBoolean();
 
             // Initialize data channel if defined
-            if (!string.IsNullOrEmpty(dataChannel))
-                this.DataChannel = new UdpServer(dataChannel);
-            else
-                this.DataChannel = null;
+            DataChannel = !string.IsNullOrEmpty(dataChannel) ? new UdpServer(dataChannel) : null;
 
             // Initialize command channel if defined
-            if (!string.IsNullOrEmpty(commandChannel))
-                this.CommandChannel = new TcpServer(commandChannel) { NoDelay = true };
-            else
-                this.CommandChannel = null;
+            CommandChannel = !string.IsNullOrEmpty(commandChannel) ? new TcpServer(commandChannel) { NoDelay = true } : null;
 
             // Create the configuration frame
             UpdateConfiguration();
@@ -1061,15 +877,8 @@ namespace PhasorProtocolAdapters
         {
             const int LabelLength = 16;
 
-            PhasorType type;
-            AnalogType analogType;
-            char phase;
-            string label, scale;
-            uint scalingValue;
-            int order;
-
             // Define a protocol independent configuration frame
-            m_baseConfigurationFrame = new ConfigurationFrame(m_idCode, DateTime.UtcNow.Ticks, (ushort)base.FramesPerSecond);
+            BaseConfigurationFrame = new ConfigurationFrame(IDCode, DateTime.UtcNow.Ticks, (ushort)FramesPerSecond);
             Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             // Define configuration cells (i.e., PMU's that will appear in outgoing data stream)
@@ -1077,6 +886,10 @@ namespace PhasorProtocolAdapters
             {
                 try
                 {
+                    string label, scale;
+                    uint scalingValue;
+                    int order;
+
                     // Get device ID and ID code
                     int deviceID = int.Parse(deviceRow["ID"].ToString());
                     ushort idCode = ushort.Parse(deviceRow["IDCode"].ToString());
@@ -1086,22 +899,20 @@ namespace PhasorProtocolAdapters
                         idCode = unchecked((ushort)deviceID);
 
                     // Create a new configuration cell
-                    ConfigurationCell cell = new ConfigurationCell(m_baseConfigurationFrame, idCode);
+                    ConfigurationCell cell = new ConfigurationCell(BaseConfigurationFrame, idCode);
 
                     // Assign user selected data and coordinate formats, derived classes can change
-                    string formatString;
+                    string formatString = deviceRow["PhasorDataFormat"].ToNonNullString(DataFormat.ToString());
+                    cell.PhasorDataFormat = (DataFormat)Enum.Parse(typeof(DataFormat), string.IsNullOrEmpty(formatString) ? DataFormat.ToString() : formatString, true);
 
-                    formatString = deviceRow["PhasorDataFormat"].ToNonNullString(m_dataFormat.ToString());
-                    cell.PhasorDataFormat = (DataFormat)Enum.Parse(typeof(DataFormat), string.IsNullOrEmpty(formatString) ? m_dataFormat.ToString() : formatString, true);
+                    formatString = deviceRow["FrequencyDataFormat"].ToNonNullString(DataFormat.ToString());
+                    cell.FrequencyDataFormat = (DataFormat)Enum.Parse(typeof(DataFormat), string.IsNullOrEmpty(formatString) ? DataFormat.ToString() : formatString, true);
 
-                    formatString = deviceRow["FrequencyDataFormat"].ToNonNullString(m_dataFormat.ToString());
-                    cell.FrequencyDataFormat = (DataFormat)Enum.Parse(typeof(DataFormat), string.IsNullOrEmpty(formatString) ? m_dataFormat.ToString() : formatString, true);
+                    formatString = deviceRow["AnalogDataFormat"].ToNonNullString(DataFormat.ToString());
+                    cell.AnalogDataFormat = (DataFormat)Enum.Parse(typeof(DataFormat), string.IsNullOrEmpty(formatString) ? DataFormat.ToString() : formatString, true);
 
-                    formatString = deviceRow["AnalogDataFormat"].ToNonNullString(m_dataFormat.ToString());
-                    cell.AnalogDataFormat = (DataFormat)Enum.Parse(typeof(DataFormat), string.IsNullOrEmpty(formatString) ? m_dataFormat.ToString() : formatString, true);
-
-                    formatString = deviceRow["CoordinateFormat"].ToNonNullString(m_coordinateFormat.ToString());
-                    cell.PhasorCoordinateFormat = (CoordinateFormat)Enum.Parse(typeof(CoordinateFormat), string.IsNullOrEmpty(formatString) ? m_coordinateFormat.ToString() : formatString, true);
+                    formatString = deviceRow["CoordinateFormat"].ToNonNullString(CoordinateFormat.ToString());
+                    cell.PhasorCoordinateFormat = (CoordinateFormat)Enum.Parse(typeof(CoordinateFormat), string.IsNullOrEmpty(formatString) ? CoordinateFormat.ToString() : formatString, true);
 
                     // Assign device identification labels
                     string acronym = deviceRow["Acronym"].ToString();
@@ -1115,8 +926,8 @@ namespace PhasorProtocolAdapters
                     {
                         order = int.Parse(phasorRow["LoadOrder"].ToNonNullString("0"));
                         label = phasorRow["Label"].ToNonNullString("Phasor " + order).Trim().TruncateRight(LabelLength);
-                        type = phasorRow["Type"].ToNonNullString("V").Trim().ToUpper().StartsWith("V") ? PhasorType.Voltage : PhasorType.Current;
-                        phase = phasorRow["Phase"].ToNonNullString("+").Trim().ToUpper()[0];
+                        PhasorType type = phasorRow["Type"].ToNonNullString("V").Trim().ToUpper().StartsWith("V") ? PhasorType.Voltage : PhasorType.Current;
+                        char phase = phasorRow["Phase"].ToNonNullString("+").Trim().ToUpper()[0];
                         scale = phasorRow["ScalingValue"].ToNonNullString("0");
 
                         if (m_replaceWithSpaceChar != char.MinValue)
@@ -1128,7 +939,7 @@ namespace PhasorProtocolAdapters
 
                         // Choose stream defined default value if no scaling value was defined
                         if (scalingValue == 0)
-                            scalingValue = type == PhasorType.Voltage ? m_voltageScalingValue : m_currentScalingValue;
+                            scalingValue = type == PhasorType.Voltage ? VoltageScalingValue : CurrentScalingValue;
 
                         cell.PhasorDefinitions.Add(new PhasorDefinition(
                             cell,
@@ -1149,7 +960,7 @@ namespace PhasorProtocolAdapters
                         {
                             order = int.Parse(analogRow["LoadOrder"].ToNonNullString("0"));
                             label = analogRow["Label"].ToNonNullString("Analog " + order).Trim().TruncateRight(LabelLength);
-                            analogType = (AnalogType)int.Parse(analogRow["Type"].ToNonNullString("0"));
+                            AnalogType analogType = (AnalogType)int.Parse(analogRow["Type"].ToNonNullString("0"));
                             scale = analogRow["ScalingValue"].ToNonNullString("0");
 
                             if (m_replaceWithSpaceChar != char.MinValue)
@@ -1162,7 +973,7 @@ namespace PhasorProtocolAdapters
                             cell.AnalogDefinitions.Add(new AnalogDefinition(
                                 cell,
                                 label,
-                                scalingValue == 0 ? m_analogScalingValue : scalingValue,
+                                scalingValue == 0 ? AnalogScalingValue : scalingValue,
                                 analogType));
                         }
                     }
@@ -1188,14 +999,14 @@ namespace PhasorProtocolAdapters
                             cell.DigitalDefinitions.Add(new DigitalDefinition(
                                 cell,
                                 label,
-                                scalingValue == 0 ? m_digitalMaskValue : scalingValue));
+                                scalingValue == 0 ? DigitalMaskValue : scalingValue));
                         }
                     }
 
                     // Maintain a local dictionary of full length acronym cell indexes
-                    signalCellIndexes[acronym] = m_baseConfigurationFrame.Cells.Count;
+                    signalCellIndexes[acronym] = BaseConfigurationFrame.Cells.Count;
 
-                    m_baseConfigurationFrame.Cells.Add(cell);
+                    BaseConfigurationFrame.Cells.Add(cell);
                 }
                 catch (Exception ex)
                 {
@@ -1203,15 +1014,13 @@ namespace PhasorProtocolAdapters
                 }
             }
 
-            OnStatusMessage(MessageLevel.Info, $"Defined {m_baseConfigurationFrame.Cells.Count:N0} output stream devices...");
+            OnStatusMessage(MessageLevel.Info, $"Defined {BaseConfigurationFrame.Cells.Count:N0} output stream devices...");
 
             // Create new lookup table for signal references
             Dictionary<MeasurementKey, SignalReference[]> signalReferences = new Dictionary<MeasurementKey, SignalReference[]>();
             SignalReference signal;
             SignalReference lastSignal = new SignalReference("__-UNKNOWN");
-            MeasurementKey measurementKey;
             bool foundQualityFlagsMeasurement = false;
-            bool isQualityFlagsMeasurement;
 
             IEnumerable<DataRow> measurementRows = DataSource.Tables["OutputStreamMeasurements"]
                 .Select($"AdapterID={ID}")
@@ -1224,7 +1033,7 @@ namespace PhasorProtocolAdapters
             // Define measurement to signals cross reference dictionary
             foreach (DataRow measurementRow in measurementRows)
             {
-                isQualityFlagsMeasurement = false;
+                bool isQualityFlagsMeasurement = false;
 
                 try
                 {
@@ -1262,6 +1071,7 @@ namespace PhasorProtocolAdapters
                         string pointID = measurementRow["PointID"].ToString();
 
                         // Define measurement key
+                        MeasurementKey measurementKey;
                         if (!string.IsNullOrEmpty(historian))
                         {
                             measurementKey = MeasurementKey.LookUpOrCreate(historian, uint.Parse(pointID));
@@ -1275,7 +1085,7 @@ namespace PhasorProtocolAdapters
                             object activeMeasurementID = null;
 
                             // OPTIMIZE: This select query will be slow on very large ActiveMeasurement implementations, consider optimization.
-                            if ((object)activeMeasurements != null)
+                            if (activeMeasurements != null)
                                 activeMeasurementRows = activeMeasurements.Select($"ID LIKE '*:{pointID}'");
 
                             if (activeMeasurementRows.Length == 1)
@@ -1285,7 +1095,7 @@ namespace PhasorProtocolAdapters
                             }
 
                             // If we still can't find the measurement key, now is the time to give up
-                            if ((object)activeMeasurementSignalID == null && (object)activeMeasurementID == null)
+                            if (activeMeasurementSignalID == null && activeMeasurementID == null)
                                 throw new Exception($"Cannot find measurement key for measurement with pointID {pointID}");
 
                             measurementKey = MeasurementKey.LookUpOrCreate(Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()), activeMeasurementID.ToString());
@@ -1330,15 +1140,15 @@ namespace PhasorProtocolAdapters
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
             if (m_replaceWithSpaceChar != char.MinValue)
             {
-                foreach (IConfigurationCell cell in m_baseConfigurationFrame.Cells)
+                foreach (IConfigurationCell cell in BaseConfigurationFrame.Cells)
                     cell.StationName = cell.StationName.Replace(m_replaceWithSpaceChar, ' ');
             }
 
             // Create a new protocol specific configuration frame
-            m_configurationFrame = CreateNewConfigurationFrame(m_baseConfigurationFrame);
+            ConfigurationFrame = CreateNewConfigurationFrame(BaseConfigurationFrame);
 
             // Cache new protocol specific configuration frame
-            CacheConfigurationFrame(m_configurationFrame, Name);
+            CacheConfigurationFrame(ConfigurationFrame, Name);
         }
 
         // Generate a more descriptive phasor label including line phase and phasor type
@@ -1349,64 +1159,64 @@ namespace PhasorProtocolAdapters
             if (string.IsNullOrWhiteSpace(phasorLabel))
                 phasorLabel = "Phasor";
 
-            if (m_addPhaseLabelSuffix)
+            if (!m_addPhaseLabelSuffix)
+                return phasorLabel;
+
+            string suffix = phasorLabel.TruncateLeft(4).TruncateRight(3).ToUpper();
+            bool appended = false;
+
+            // Add phase suffix if it's not already there
+            switch (phase)
             {
-                string suffix = phasorLabel.TruncateLeft(4).TruncateRight(3).ToUpper();
-                bool appended = false;
+                case '+':   // Positive sequence
+                    if (suffix != " +S")
+                    {
+                        phaseSuffix.Append(" +S");
+                        appended = true;
+                    }
+                    break;
+                case '-':   // Negative sequence
+                    if (suffix != " -S")
+                    {
+                        phaseSuffix.Append(" -S");
+                        appended = true;
+                    }
+                    break;
+                case '0':   // Zero sequence
+                    if (suffix != " 0S")
+                    {
+                        phaseSuffix.Append(" 0S");
+                        appended = true;
+                    }
+                    break;
+                case 'A':   // A-Phase
+                    if (suffix != " AP")
+                    {
+                        phaseSuffix.Append(" AP");
+                        appended = true;
+                    }
+                    break;
+                case 'B':   // B-Phase
+                    if (suffix != " BP")
+                    {
+                        phaseSuffix.Append(" BP");
+                        appended = true;
+                    }
+                    break;
+                case 'C':   // C-Phase
+                    if (suffix != " CP")
+                    {
+                        phaseSuffix.Append(" CP");
+                        appended = true;
+                    }
+                    break;
+            }
 
-                // Add phase suffix if it's not already there
-                switch (phase)
-                {
-                    case '+':   // Positive sequence
-                        if (suffix != " +S")
-                        {
-                            phaseSuffix.Append(" +S");
-                            appended = true;
-                        }
-                        break;
-                    case '-':   // Negative sequence
-                        if (suffix != " -S")
-                        {
-                            phaseSuffix.Append(" -S");
-                            appended = true;
-                        }
-                        break;
-                    case '0':   // Zero sequence
-                        if (suffix != " 0S")
-                        {
-                            phaseSuffix.Append(" 0S");
-                            appended = true;
-                        }
-                        break;
-                    case 'A':   // A-Phase
-                        if (suffix != " AP")
-                        {
-                            phaseSuffix.Append(" AP");
-                            appended = true;
-                        }
-                        break;
-                    case 'B':   // B-Phase
-                        if (suffix != " BP")
-                        {
-                            phaseSuffix.Append(" BP");
-                            appended = true;
-                        }
-                        break;
-                    case 'C':   // C-Phase
-                        if (suffix != " CP")
-                        {
-                            phaseSuffix.Append(" CP");
-                            appended = true;
-                        }
-                        break;
-                }
-
-                if (appended)
-                {
-                    // Return label with appended phase suffix
-                    phaseSuffix.Append(type == PhasorType.Voltage ? 'V' : 'I');
-                    return phasorLabel.TruncateRight(12) + phaseSuffix;
-                }
+            if (appended)
+            {
+                // Return label with appended phase suffix
+                phaseSuffix.Append(type == PhasorType.Voltage ? 'V' : 'I');
+                return phasorLabel.TruncateRight(12) + phaseSuffix;
             }
 
             // Return original label
@@ -1419,8 +1229,8 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
-            m_lifetimeMeasurements = 0L;
-            m_totalBytesSent = 0L;
+            LifetimeMeasurements = 0L;
+            TotalBytesSent = 0L;
             m_lifetimeTotalLatency = 0L;
             m_lifetimeMinimumLatency = 0L;
             m_lifetimeMaximumLatency = 0L;
@@ -1436,7 +1246,7 @@ namespace PhasorProtocolAdapters
             Dictionary<MeasurementKey, SignalReference[]> signalReferences = Interlocked.CompareExchange(ref m_signalReferences, null, null);
             List<IMeasurement> inputMeasurements = new List<IMeasurement>();
 
-            if ((object)signalReferences == null)
+            if (signalReferences == null)
                 return;
 
             foreach (IMeasurement measurement in measurements)
@@ -1477,7 +1287,7 @@ namespace PhasorProtocolAdapters
             SignalReferenceMeasurement signalMeasurement = measurement as SignalReferenceMeasurement;
             IDataFrame dataFrame = frame as IDataFrame;
 
-            if ((object)signalMeasurement != null && (object)dataFrame != null)
+            if (signalMeasurement != null && dataFrame != null)
             {
                 PhasorValueCollection phasorValues;
                 SignalReference signal = signalMeasurement.SignalReference;
@@ -1545,10 +1355,10 @@ namespace PhasorProtocolAdapters
             }
 
             // This is not expected to occur - but just in case
-            if ((object)signalMeasurement == null && (object)measurement != null)
+            if (signalMeasurement == null && measurement != null)
                 OnProcessException(MessageLevel.Error, new InvalidCastException($"Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{measurement.GetType().Name}\""));
 
-            if ((object)dataFrame == null)
+            if (dataFrame == null)
                 OnProcessException(MessageLevel.Error, new InvalidCastException($"During measurement assignment, incoming frame was not a phasor data concentration frame, expected a type derived from \"IDataFrame\" but received a \"{frame.GetType().Name}\""));
         }
 
@@ -1560,89 +1370,87 @@ namespace PhasorProtocolAdapters
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IDataFrame dataFrame = frame as IDataFrame;
+            if (!(frame is IDataFrame dataFrame) || m_publishChannel == null)
+                return;
 
-            if ((object)dataFrame != null && (object)m_publishChannel != null)
+            byte[] image;
+
+            // Send the configuration frame at the top of each minute if the class has been configured
+            // to automatically publish the configuration frame over the data channel
+            if (AutoPublishConfigurationFrame)
             {
-                byte[] image;
+                DateTime frameTime = dataFrame.Timestamp;
 
-                // Send the configuration frame at the top of each minute if the class has been configured
-                // to automatically publish the configuration frame over the data channel
-                if (m_autoPublishConfigurationFrame)
+                if (frameTime.Second == 0)
                 {
-                    DateTime frameTime = dataFrame.Timestamp;
-
-                    if (frameTime.Second == 0)
+                    if (frameTime.Minute != m_lastConfigurationPublishMinute)
                     {
-                        if (frameTime.Minute != m_lastConfigurationPublishMinute)
-                        {
-                            m_lastConfigurationPublishMinute = frameTime.Minute;
-                            m_configurationFramePublished = false;
-                        }
+                        m_lastConfigurationPublishMinute = frameTime.Minute;
+                        m_configurationFramePublished = false;
+                    }
 
-                        if (!m_configurationFramePublished && (object)m_configurationFrame != null)
-                        {
-                            // Publish configuration frame binary image
-                            m_configurationFramePublished = true;
-                            m_configurationFrame.Timestamp = dataFrame.Timestamp;
+                    if (!m_configurationFramePublished && ConfigurationFrame != null)
+                    {
+                        // Publish configuration frame binary image
+                        m_configurationFramePublished = true;
+                        ConfigurationFrame.Timestamp = dataFrame.Timestamp;
 
-                            image = m_configurationFrame.BinaryImage();
-                            m_publishChannel.MulticastAsync(image, 0, image.Length);
-                            m_totalBytesSent += image.Length;
+                        image = ConfigurationFrame.BinaryImage();
+                        m_publishChannel.MulticastAsync(image, 0, image.Length);
+                        TotalBytesSent += image.Length;
 
-                            // Sleep for a moment between config frame and data frame transmissions
-                            Thread.Sleep(1);
-                        }
+                        // Sleep for a moment between config frame and data frame transmissions
+                        Thread.Sleep(1);
                     }
                 }
-
-                // If the expected values did not arrive for a device, we mark the data as invalid
-                if (m_processDataValidFlag)
-                {
-                    foreach (IDataCell cell in dataFrame.Cells)
-                    {
-                        if (!cell.AllValuesAssigned)
-                            cell.DataIsValid = false;
-                    }
-                }
-
-                // Publish data frame binary image
-                image = dataFrame.BinaryImage();
-                m_publishChannel.MulticastAsync(image, 0, image.Length);
-                m_totalBytesSent += image.Length;
-
-                // Track latency statistics against system time - in order for these statistics
-                // to be useful, the local clock must be fairly accurate
-                long latency = DateTime.UtcNow.Ticks - (long)dataFrame.Timestamp;
-
-                if (m_minimumLatency > latency || m_minimumLatency == 0)
-                    m_minimumLatency = latency;
-
-                if (m_maximumLatency < latency || m_maximumLatency == 0)
-                    m_maximumLatency = latency;
-
-                m_totalLatency += latency;
-                m_latencyMeasurements++;
-
-                if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
-                    m_lifetimeMinimumLatency = latency;
-
-                if (m_lifetimeMaximumLatency < latency || m_lifetimeMaximumLatency == 0)
-                    m_lifetimeMaximumLatency = latency;
-
-                m_lifetimeTotalLatency += latency;
-                m_lifetimeLatencyMeasurements++;
-
-                // Track measurement count and throughput statistics
-                int measurementCount = frame.Measurements.Count;
-                m_lifetimeMeasurements += measurementCount;
-                UpdateMeasurementsPerSecond(measurementCount);
             }
+
+            // If the expected values did not arrive for a device, we mark the data as invalid
+            if (ProcessDataValidFlag)
+            {
+                foreach (IDataCell cell in dataFrame.Cells.Where(cell => !cell.AllValuesAssigned))
+                    cell.DataIsValid = false;
+            }
+
+            // Publish data frame binary image
+            image = dataFrame.BinaryImage();
+            m_publishChannel.MulticastAsync(image, 0, image.Length);
+            TotalBytesSent += image.Length;
+
+            // Track latency statistics against system time - in order for these statistics
+            // to be useful, the local clock must be fairly accurate
+            long latency = DateTime.UtcNow.Ticks - (long)dataFrame.Timestamp;
+
+            if (m_minimumLatency > latency || m_minimumLatency == 0)
+                m_minimumLatency = latency;
+
+            if (m_maximumLatency < latency || m_maximumLatency == 0)
+                m_maximumLatency = latency;
+
+            m_totalLatency += latency;
+            m_latencyMeasurements++;
+
+            if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
+                m_lifetimeMinimumLatency = latency;
+
+            if (m_lifetimeMaximumLatency < latency || m_lifetimeMaximumLatency == 0)
+                m_lifetimeMaximumLatency = latency;
+
+            m_lifetimeTotalLatency += latency;
+            m_lifetimeLatencyMeasurements++;
+
+            // Track measurement count and throughput statistics
+            int measurementCount = frame.Measurements.Count;
+            LifetimeMeasurements += measurementCount;
+            UpdateMeasurementsPerSecond(measurementCount);
         }
 
         private void ReinitializeSocketLayer(object state)
         {
-            if (!m_disposed && Monitor.TryEnter(m_reinitializationLock))
+            if (m_disposed)
+                return;
+
+            if (Monitor.TryEnter(m_reinitializationLock))
             {
                 bool retry = false;
 
@@ -1652,22 +1460,22 @@ namespace PhasorProtocolAdapters
 
                     string commandChannelConfig = null, dataChannelConfig = null;
 
-                    if ((object)m_dataChannel != null)
+                    if (m_dataChannel != null)
                     {
                         // Get current configuration string
                         dataChannelConfig = m_dataChannel.ConfigurationString;
 
                         // Dispose the existing data channel
-                        this.DataChannel = null;
+                        DataChannel = null;
                     }
 
-                    if ((object)m_commandChannel != null)
+                    if (m_commandChannel != null)
                     {
                         // Get current configuration string
                         commandChannelConfig = m_commandChannel.ConfigurationString;
 
                         // Dispose the existing command channel
-                        this.CommandChannel = null;
+                        CommandChannel = null;
                     }
 
                     // Wait a moment to let sockets release
@@ -1678,11 +1486,11 @@ namespace PhasorProtocolAdapters
 
                     // Reinitialize data channel, if defined
                     if (!string.IsNullOrWhiteSpace(dataChannelConfig))
-                        this.DataChannel = new UdpServer(dataChannelConfig);
+                        DataChannel = new UdpServer(dataChannelConfig);
 
                     // Reinitialize command channel, if defined
                     if (!string.IsNullOrWhiteSpace(commandChannelConfig))
-                        this.CommandChannel = new TcpServer(commandChannelConfig);
+                        CommandChannel = new TcpServer(commandChannelConfig);
 
                     Start();
                 }
@@ -1706,10 +1514,10 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public void ResetLatencyCounters()
         {
-            m_minimumLatency = 0;
-            m_maximumLatency = 0;
-            m_totalLatency = 0;
-            m_latencyMeasurements = 0;
+            m_minimumLatency = 0L;
+            m_maximumLatency = 0L;
+            m_totalLatency = 0L;
+            m_latencyMeasurements = 0L;
         }
 
         /// <summary>
@@ -1731,9 +1539,7 @@ namespace PhasorProtocolAdapters
         // Thread procedure used to proxy data to the user implemented device command handler
         private void DeviceCommandHandlerProc(object state)
         {
-            EventArgs<Guid, byte[], int> e = state as EventArgs<Guid, byte[], int>;
-
-            if ((object)e != null)
+            if (state is EventArgs<Guid, byte[], int> e)
                 DeviceCommandHandler(e.Argument1, GetConnectionID(m_commandChannel, e.Argument1), e.Argument2, e.Argument3);
         }
 
@@ -1745,47 +1551,43 @@ namespace PhasorProtocolAdapters
         /// <returns>Connection ID (i.e., IP:Port) for specified <paramref name="clientID"/>.</returns>
         protected virtual string GetConnectionID(IServer server, Guid clientID)
         {
-            if (!m_connectionIDCache.TryGetValue(clientID, out string connectionID))
+            if (m_connectionIDCache.TryGetValue(clientID, out string connectionID))
+                return connectionID;
+
+            // Attempt to lookup remote connection identification for logging purposes
+            try
             {
-                // Attempt to lookup remote connection identification for logging purposes
-                try
-                {
-                    IPEndPoint remoteEndPoint = null;
-                    TcpServer commandChannel = server as TcpServer;
+                IPEndPoint remoteEndPoint = null;
 
-                    if ((object)commandChannel != null)
-                    {
-                        if (commandChannel.TryGetClient(clientID, out TransportProvider<Socket> tcpClient))
-                            remoteEndPoint = tcpClient.Provider.RemoteEndPoint as IPEndPoint;
-                    }
+                switch (server)
+                {
+                    case TcpServer commandChannel when commandChannel.TryGetClient(clientID, out TransportProvider<Socket> tcpClient):
+                        remoteEndPoint = tcpClient.Provider.RemoteEndPoint as IPEndPoint;
+                        break;
+                    case UdpServer dataChannel when dataChannel.TryGetClient(clientID, out TransportProvider<EndPoint> udpClient):
+                        remoteEndPoint = udpClient.Provider as IPEndPoint;
+                        break;
+                }
+
+                if (remoteEndPoint != null)
+                {
+                    if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
+                        connectionID = "[" + remoteEndPoint.Address + "]:" + remoteEndPoint.Port;
                     else
-                    {
-                        UdpServer dataChannel = server as UdpServer;
+                        connectionID = remoteEndPoint.Address + ":" + remoteEndPoint.Port;
 
-                        if ((object)dataChannel != null && dataChannel.TryGetClient(clientID, out TransportProvider<EndPoint> udpClient))
-                            remoteEndPoint = udpClient.Provider as IPEndPoint;
-                    }
-
-                    if ((object)remoteEndPoint != null)
-                    {
-                        if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-                            connectionID = "[" + remoteEndPoint.Address + "]:" + remoteEndPoint.Port;
-                        else
-                            connectionID = remoteEndPoint.Address + ":" + remoteEndPoint.Port;
-
-                        // Cache value for future lookup
-                        m_connectionIDCache.TryAdd(clientID, connectionID);
-                        ThreadPool.QueueUserWorkItem(LookupHostName, new Tuple<Guid, string, IPEndPoint>(clientID, connectionID, remoteEndPoint));
-                    }
+                    // Cache value for future lookup
+                    m_connectionIDCache.TryAdd(clientID, connectionID);
+                    ThreadPool.QueueUserWorkItem(LookupHostName, new Tuple<Guid, string, IPEndPoint>(clientID, connectionID, remoteEndPoint));
                 }
-                catch (Exception ex)
-                {
-                    OnProcessException(MessageLevel.Info, new ConnectionException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
-                }
-
-                if (string.IsNullOrEmpty(connectionID))
-                    connectionID = "unavailable";
             }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Info, new ConnectionException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
+            }
+
+            if (string.IsNullOrEmpty(connectionID))
+                connectionID = "unavailable";
 
             return connectionID;
         }
@@ -1863,11 +1665,11 @@ namespace PhasorProtocolAdapters
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {
-                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
-                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+                if (m_measurementsInSecond < MinimumMeasurementsPerSecond || MinimumMeasurementsPerSecond == 0L)
+                    MinimumMeasurementsPerSecond = m_measurementsInSecond;
 
-                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
-                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+                if (m_measurementsInSecond > MaximumMeasurementsPerSecond || MaximumMeasurementsPerSecond == 0L)
+                    MaximumMeasurementsPerSecond = m_measurementsInSecond;
 
                 m_totalMeasurementsPerSecond += m_measurementsInSecond;
                 m_measurementsPerSecondCount++;
@@ -1882,8 +1684,8 @@ namespace PhasorProtocolAdapters
         // Resets the measurements per second counters after reading the values from the last calculation interval.
         private void ResetMeasurementsPerSecondCounters()
         {
-            m_minimumMeasurementsPerSecond = 0L;
-            m_maximumMeasurementsPerSecond = 0L;
+            MinimumMeasurementsPerSecond = 0L;
+            MaximumMeasurementsPerSecond = 0L;
             m_totalMeasurementsPerSecond = 0L;
             m_measurementsPerSecondCount = 0L;
         }
@@ -1901,7 +1703,7 @@ namespace PhasorProtocolAdapters
             // Queue up derived class device command handling on a different thread since this will
             // often engage sending data back on the same command channel and we want this async
             // thread to complete gracefully...
-            if ((object)m_commandChannel == null)
+            if (m_commandChannel == null)
                 ThreadPool.QueueUserWorkItem(DeviceCommandHandlerProc, e);
         }
 
@@ -1924,16 +1726,16 @@ namespace PhasorProtocolAdapters
         private void m_dataChannel_ServerStarted(object sender, EventArgs e)
         {
             // Start concentration engine
-            if (m_autoStartDataChannel)
+            if (AutoStartDataChannel)
                 base.Start();
 
-            m_activeConnections++;
+            ActiveConnections++;
             OnStatusMessage(MessageLevel.Info, "Data channel started.");
         }
 
         private void m_dataChannel_ServerStopped(object sender, EventArgs e)
         {
-            m_activeConnections--;
+            ActiveConnections--;
             OnStatusMessage(MessageLevel.Info, "Data channel stopped.");
         }
 
@@ -1988,20 +1790,19 @@ namespace PhasorProtocolAdapters
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)
         {
             OnStatusMessage(MessageLevel.Info, "Command channel started.");
-            m_activeConnections++;
+            ActiveConnections++;
         }
 
         private void m_commandChannel_ServerStopped(object sender, EventArgs e)
         {
-            m_activeConnections--;
+            ActiveConnections--;
 
             if (Enabled)
             {
                 OnStatusMessage(MessageLevel.Info, "Command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
-                if ((object)m_commandChannelRestartTimer != null)
-                    m_commandChannelRestartTimer.Start();
+                m_commandChannelRestartTimer?.Start();
             }
             else
                 OnStatusMessage(MessageLevel.Info, "Command channel stopped.");
@@ -2009,17 +1810,17 @@ namespace PhasorProtocolAdapters
 
         private void m_commandChannelRestartTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if ((object)m_commandChannel != null)
+            if (m_commandChannel == null)
+                return;
+
+            try
             {
-                try
-                {
-                    // After a short delay, we try to restart the command channel
-                    m_commandChannel.Start();
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(MessageLevel.Info, new ConnectionException("Failed to restart command channel: " + ex.Message, ex));
-                }
+                // After a short delay, we try to restart the command channel
+                m_commandChannel.Start();
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Info, new ConnectionException("Failed to restart command channel: " + ex.Message, ex));
             }
         }
 
