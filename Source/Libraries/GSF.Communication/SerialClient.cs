@@ -120,7 +120,12 @@ namespace GSF.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
-        public const string DefaultConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False";
+        public const string DefaultConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False; ReceivedBytesThreshold=512";
+
+        /// <summary>
+        /// Default value for <see cref="ReceivedBytesThreshold"/> property.
+        /// </summary>
+        public const int DefaultReceivedBytesThreshold = 1;
 
         // Fields
         private readonly TransportProvider<SerialPort> m_serialClient;
@@ -144,11 +149,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="SerialClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public SerialClient(string connectString) : base(TransportProtocol.Serial, connectString)
-        {
-            m_serialClient = new TransportProvider<SerialPort>();
-            ReceivedBytesThreshold = 1;
-        }
+        public SerialClient(string connectString) : base(TransportProtocol.Serial, connectString) => m_serialClient = new TransportProvider<SerialPort>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
@@ -178,7 +179,8 @@ namespace GSF.Communication
         /// <remarks>
         /// This option is ignored under Mono deployments.
         /// </remarks>
-        public int ReceivedBytesThreshold { get; set; }
+        [DefaultValue(DefaultReceivedBytesThreshold)]
+        public int ReceivedBytesThreshold { get; set; } = DefaultReceivedBytesThreshold;
 
         #endregion
 
@@ -219,7 +221,6 @@ namespace GSF.Communication
                 ReadIndex = 0;
 
             return readBytes;
-
         }
 
         /// <summary>
@@ -256,9 +257,9 @@ namespace GSF.Communication
 
             m_serialClient.Provider = new SerialPort
             {
-#if !MONO
-                ReceivedBytesThreshold = ReceivedBytesThreshold,
-#endif
+            #if !MONO
+                ReceivedBytesThreshold = int.Parse(m_connectData["receivedBytesThreshold"]),
+            #endif
                 PortName = m_connectData["port"],
                 BaudRate = int.Parse(m_connectData["baudRate"]),
                 DataBits = int.Parse(m_connectData["dataBits"]),
@@ -326,8 +327,8 @@ namespace GSF.Communication
             if (!m_connectData.ContainsKey("port"))
                 throw new ArgumentException($"Port property is missing (Example: {DefaultConnectionString})");
 
-            if (!m_connectData.ContainsKey("baudRate"))
-                throw new ArgumentException($"BaudRate property is missing (Example: {DefaultConnectionString})");
+            if (!m_connectData.ContainsKey("baudRate") || !int.TryParse(m_connectData["baudRate"], out _))
+                throw new ArgumentException($"BaudRate property is missing or invalid (Example: {DefaultConnectionString})");
 
             if (!m_connectData.ContainsKey("parity"))
                 throw new ArgumentException($"Parity property is missing (Example: {DefaultConnectionString})");
@@ -335,8 +336,11 @@ namespace GSF.Communication
             if (!m_connectData.ContainsKey("stopBits"))
                 throw new ArgumentException($"StopBits property is missing (Example: {DefaultConnectionString})");
 
-            if (!m_connectData.ContainsKey("dataBits"))
-                throw new ArgumentException($"DataBits property is missing (Example: {DefaultConnectionString})");
+            if (!m_connectData.ContainsKey("dataBits") || !int.TryParse(m_connectData["dataBits"], out _))
+                throw new ArgumentException($"DataBits property is missing or invalid (Example: {DefaultConnectionString})");
+
+            if (!m_connectData.ContainsKey("receivedBytesThreshold") || !int.TryParse(m_connectData["receivedBytesThreshold"], out _))
+                m_connectData["receivedBytesThreshold"] = ReceivedBytesThreshold.ToString();
         }
 
         /// <summary>
