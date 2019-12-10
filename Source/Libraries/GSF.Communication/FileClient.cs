@@ -208,18 +208,12 @@ namespace GSF.Communication
         private bool m_receiveOnDemand;
         private int m_receiveInterval;
         private long m_startingOffset;
-        private FileMode m_fileOpenMode;
-        private FileShare m_fileShareMode;
         private FileAccess m_fileAccessMode;
         private readonly TransportProvider<FileStream> m_fileClient;
         private Dictionary<string, string> m_connectData;
         private readonly SharedTimer m_receiveDataTimer;
         private ManualResetEvent m_connectionHandle;
-#if ThreadTracking
-        private ManagedThread m_connectionThread;
-#else
         private Thread m_connectionThread;
-#endif
         private bool m_disposed;
 
         #endregion
@@ -229,8 +223,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="FileClient"/> class.
         /// </summary>
-        public FileClient()
-            : this(DefaultConnectionString)
+        public FileClient() : this(DefaultConnectionString)
         {
         }
 
@@ -238,15 +231,14 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="FileClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="FileClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public FileClient(string connectString)
-            : base(TransportProtocol.File, connectString)
+        public FileClient(string connectString) : base(TransportProtocol.File, connectString)
         {
             m_autoRepeat = DefaultAutoRepeat;
             m_receiveOnDemand = DefaultReceiveOnDemand;
             m_receiveInterval = DefaultReceiveInterval;
             m_startingOffset = DefaultStartingOffset;
-            m_fileOpenMode = DefaultFileOpenMode;
-            m_fileShareMode = DefaultFileShareMode;
+            FileOpenMode = DefaultFileOpenMode;
+            FileShareMode = DefaultFileShareMode;
             m_fileAccessMode = DefaultFileAccessMode;
             m_fileClient = new TransportProvider<FileStream>();
             m_receiveDataTimer = s_timerScheduler.CreateTimer();
@@ -257,12 +249,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="FileClient"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="FileClient"/>.</param>
-        public FileClient(IContainer container)
-            : this()
-        {
-            if (container != null)
-                container.Add(this);
-        }
+        public FileClient(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -272,15 +259,12 @@ namespace GSF.Communication
         /// Gets or sets a boolean value that indicates whether receiving (reading) of data is to be repeated endlessly.
         /// </summary>
         /// <exception cref="InvalidOperationException"><see cref="AutoRepeat"/> is enabled when <see cref="FileAccessMode"/> is <see cref="FileAccess.ReadWrite"/></exception>
-        [Category("Data"),
-        DefaultValue(DefaultAutoRepeat),
-        Description("Indicates whether receiving (reading) of data is to be repeated endlessly.")]
+        [Category("Data")]
+        [DefaultValue(DefaultAutoRepeat)]
+        [Description("Indicates whether receiving (reading) of data is to be repeated endlessly.")]
         public bool AutoRepeat
         {
-            get
-            {
-                return m_autoRepeat;
-            }
+            get => m_autoRepeat;
             set
             {
                 if (value && m_fileAccessMode == FileAccess.ReadWrite)
@@ -296,15 +280,12 @@ namespace GSF.Communication
         /// <remarks>
         /// <see cref="ReceiveInterval"/> will be set to -1 when <see cref="ReceiveOnDemand"/> is enabled.
         /// </remarks>
-        [Category("Data"),
-        DefaultValue(DefaultReceiveOnDemand),
-        Description("Indicates whether receiving (reading) of data will be initiated manually by calling ReceiveData().")]
+        [Category("Data")]
+        [DefaultValue(DefaultReceiveOnDemand)]
+        [Description("Indicates whether receiving (reading) of data will be initiated manually by calling ReceiveData().")]
         public bool ReceiveOnDemand
         {
-            get
-            {
-                return m_receiveOnDemand;
-            }
+            get => m_receiveOnDemand;
             set
             {
                 m_receiveOnDemand = value;
@@ -321,34 +302,25 @@ namespace GSF.Communication
         /// <remarks>
         /// Set <see cref="ReceiveInterval"/> = -1 to receive (read) data continuously without pausing.
         /// </remarks>
-        [Category("Data"),
-        DefaultValue(DefaultReceiveInterval),
-        Description("The number of milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing.")]
+        [Category("Data")]
+        [DefaultValue(DefaultReceiveInterval)]
+        [Description("The number of milliseconds to pause before receiving (reading) the next available set of data. Set ReceiveInterval = -1 to receive data continuously without pausing.")]
         public double ReceiveInterval
         {
-            get
-            {
-                return m_receiveInterval;
-            }
-            set
-            {
-                m_receiveInterval = value < 1.0D  ? - 1 : (int)value;
-            }
+            get => m_receiveInterval;
+            set => m_receiveInterval = value < 1.0D  ? - 1 : (int)value;
         }
 
         /// <summary>
         /// Gets or sets the starting point relative to the beginning of the file from where the data is to be received (read).
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not a positive number.</exception>
-        [Category("File"),
-        DefaultValue(DefaultStartingOffset),
-        Description("The starting point relative to the beginning of the file from where the data is to be received (read).")]
+        [Category("File")]
+        [DefaultValue(DefaultStartingOffset)]
+        [Description("The starting point relative to the beginning of the file from where the data is to be received (read).")]
         public long StartingOffset
         {
-            get
-            {
-                return m_startingOffset;
-            }
+            get => m_startingOffset;
             set
             {
                 if (value < 0)
@@ -361,52 +333,29 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the <see cref="FileMode"/> value to be used when opening the file.
         /// </summary>
-        [Category("File"),
-        DefaultValue(DefaultFileOpenMode),
-        Description("The System.IO.FileMode value to be used when opening the file.")]
-        public FileMode FileOpenMode
-        {
-            get
-            {
-                return m_fileOpenMode;
-            }
-            set
-            {
-                m_fileOpenMode = value;
-            }
-        }
+        [Category("File")]
+        [DefaultValue(DefaultFileOpenMode)]
+        [Description("The System.IO.FileMode value to be used when opening the file.")]
+        public FileMode FileOpenMode { get; set; }
 
         /// <summary>
         /// Gets or set the <see cref="FileShare"/> value to be used when opening the file.
         /// </summary>
-        [Category("File"),
-        DefaultValue(DefaultFileShareMode),
-        Description("The System.IO.FileShare value to be used when opening the file.")]
-        public FileShare FileShareMode
-        {
-            get
-            {
-                return m_fileShareMode;
-            }
-            set
-            {
-                m_fileShareMode = value;
-            }
-        }
+        [Category("File")]
+        [DefaultValue(DefaultFileShareMode)]
+        [Description("The System.IO.FileShare value to be used when opening the file.")]
+        public FileShare FileShareMode { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="FileAccess"/> value to be used when opening the file.
         /// </summary>
         /// <exception cref="InvalidOperationException"><see cref="FileAccessMode"/> is set to <see cref="FileAccess.ReadWrite"/> when <see cref="AutoRepeat"/> is enabled.</exception>
-        [Category("File"),
-        DefaultValue(DefaultFileAccessMode),
-        Description("The System.IO.FileAccess value to be used when opening the file.")]
+        [Category("File")]
+        [DefaultValue(DefaultFileAccessMode)]
+        [Description("The System.IO.FileAccess value to be used when opening the file.")]
         public FileAccess FileAccessMode
         {
-            get
-            {
-                return m_fileAccessMode;
-            }
+            get => m_fileAccessMode;
             set
             {
                 if (value == FileAccess.ReadWrite && m_autoRepeat)
@@ -453,22 +402,20 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if ((object)m_fileClient.ReceiveBuffer != null)
-            {
-                int sourceLength = m_fileClient.BytesReceived - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(m_fileClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
+            if (m_fileClient.ReceiveBuffer == null)
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
+            
+            int sourceLength = m_fileClient.BytesReceived - ReadIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(m_fileClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
 
-                // Update read index for next call
-                ReadIndex += readBytes;
+            // Update read index for next call
+            ReadIndex += readBytes;
 
-                if (ReadIndex >= m_fileClient.BytesReceived)
-                    ReadIndex = 0;
+            if (ReadIndex >= m_fileClient.BytesReceived)
+                ReadIndex = 0;
 
-                return readBytes;
-            }
-
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
+            return readBytes;
         }
 
         /// <summary>
@@ -496,16 +443,15 @@ namespace GSF.Communication
         /// </summary>
         public override void Disconnect()
         {
-            if (CurrentState != ClientState.Disconnected)
-            {
-                m_fileClient.Reset();
-                m_receiveDataTimer.Stop();
+            if (CurrentState == ClientState.Disconnected)
+                return;
 
-                if (m_connectionThread != null)
-                    m_connectionThread.Abort();
+            m_fileClient.Reset();
+            m_receiveDataTimer.Stop();
 
-                OnConnectionTerminated();
-            }
+            m_connectionThread?.Abort();
+
+            OnConnectionTerminated();
         }
 
         /// <summary>
@@ -519,13 +465,11 @@ namespace GSF.Communication
 
             m_fileClient.SetReceiveBuffer(ReceiveBufferSize);
 
-#if ThreadTracking
-            m_connectionThread = new ManagedThread(OpenFile);
-            m_connectionThread.Name = "GSF.Communication.FileClient.OpenFile()";
-#else
-            m_connectionThread = new Thread(OpenFile);
-            m_connectionThread.IsBackground = true;
-#endif
+            m_connectionThread = new Thread(OpenFile)
+            {
+                IsBackground = true
+            };
+
             m_connectionThread.Start();
 
             return m_connectionHandle;
@@ -538,20 +482,21 @@ namespace GSF.Communication
         {
             base.SaveSettings();
 
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["AutoRepeat", true].Update(m_autoRepeat);
-                settings["ReceiveOnDemand", true].Update(m_receiveOnDemand);
-                settings["ReceiveInterval", true].Update(m_receiveInterval);
-                settings["StartingOffset", true].Update(m_startingOffset);
-                settings["FileOpenMode", true].Update(m_fileOpenMode);
-                settings["FileShareMode", true].Update(m_fileShareMode);
-                settings["FileAccessMode", true].Update(m_fileAccessMode);
-                config.Save();
-            }
+            if (!PersistSettings)
+                return;
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["AutoRepeat", true].Update(m_autoRepeat);
+            settings["ReceiveOnDemand", true].Update(m_receiveOnDemand);
+            settings["ReceiveInterval", true].Update(m_receiveInterval);
+            settings["StartingOffset", true].Update(m_startingOffset);
+            settings["FileOpenMode", true].Update(FileOpenMode);
+            settings["FileShareMode", true].Update(FileShareMode);
+            settings["FileAccessMode", true].Update(m_fileAccessMode);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -561,26 +506,27 @@ namespace GSF.Communication
         {
             base.LoadSettings();
 
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("AutoRepeat", m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
-                settings.Add("ReceiveOnDemand", m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
-                settings.Add("ReceiveInterval", m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
-                settings.Add("StartingOffset", m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
-                settings.Add("FileOpenMode", m_fileOpenMode, "Open mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
-                settings.Add("FileShareMode", m_fileShareMode, "Share mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used when opening the file.");
-                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
-                AutoRepeat = settings["AutoRepeat"].ValueAs(m_autoRepeat);
-                ReceiveOnDemand = settings["ReceiveOnDemand"].ValueAs(m_receiveOnDemand);
-                ReceiveInterval = settings["ReceiveInterval"].ValueAs(m_receiveInterval);
-                StartingOffset = settings["StartingOffset"].ValueAs(m_startingOffset);
-                FileOpenMode = settings["FileOpenMode"].ValueAs(m_fileOpenMode);
-                FileShareMode = settings["FileShareMode"].ValueAs(m_fileShareMode);
-                FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
-            }
+            if (!PersistSettings)
+                return;
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings.Add("AutoRepeat", m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
+            settings.Add("ReceiveOnDemand", m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
+            settings.Add("ReceiveInterval", m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
+            settings.Add("StartingOffset", m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
+            settings.Add("FileOpenMode", FileOpenMode, "Open mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
+            settings.Add("FileShareMode", FileShareMode, "Share mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used when opening the file.");
+            settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
+            
+            AutoRepeat = settings["AutoRepeat"].ValueAs(m_autoRepeat);
+            ReceiveOnDemand = settings["ReceiveOnDemand"].ValueAs(m_receiveOnDemand);
+            ReceiveInterval = settings["ReceiveInterval"].ValueAs(m_receiveInterval);
+            StartingOffset = settings["StartingOffset"].ValueAs(m_startingOffset);
+            FileOpenMode = settings["FileOpenMode"].ValueAs(FileOpenMode);
+            FileShareMode = settings["FileShareMode"].ValueAs(FileShareMode);
+            FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
         }
 
         /// <summary>
@@ -589,29 +535,28 @@ namespace GSF.Communication
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if (m_connectionHandle != null)
-                            m_connectionHandle.Dispose();
+            if (m_disposed)
+                return;
 
-                        if (m_receiveDataTimer != null)
-                        {
-                            m_receiveDataTimer.Elapsed -= m_receiveDataTimer_Elapsed;
-                            m_receiveDataTimer.Dispose();
-                        }
-                    }
-                }
-                finally
+            try
+            {
+                // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
+
+                // This will be done only when the object is disposed by calling Dispose().
+                m_connectionHandle?.Dispose();
+
+                if (m_receiveDataTimer != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_receiveDataTimer.Elapsed -= m_receiveDataTimer_Elapsed;
+                    m_receiveDataTimer.Dispose();
                 }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -637,10 +582,8 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
-            WaitHandle handle;
-
             // Send data to the file asynchronously.
-            handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
+            WaitHandle handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
 
             // Notify that the send operation has started.
             m_fileClient.Statistics.UpdateBytesSent(length);
@@ -682,7 +625,7 @@ namespace GSF.Communication
                     OnConnectionAttempt();
 
                     // Open the file.
-                    m_fileClient.Provider = new FileStream(FilePath.GetAbsolutePath(m_connectData["file"]), m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
+                    m_fileClient.Provider = new FileStream(FilePath.GetAbsolutePath(m_connectData["file"]), FileOpenMode, m_fileAccessMode, FileShareMode);
 
                     // Move to the specified offset.
                     m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
@@ -755,10 +698,7 @@ namespace GSF.Communication
             }
         }
 
-        private void m_receiveDataTimer_Elapsed(object sender, EventArgs<DateTime> e)
-        {
-            ReadData();
-        }
+        private void m_receiveDataTimer_Elapsed(object sender, EventArgs<DateTime> e) => ReadData();
 
         /// <summary>
         /// Raises the <see cref="ClientBase.ConnectionException"/> event.
@@ -783,9 +723,7 @@ namespace GSF.Communication
         static FileClient()
         {
             using (Logger.AppendStackMessages("Owner", "FileClient"))
-            {
                 s_timerScheduler = new SharedTimerScheduler();
-            }
         }
 
         #endregion

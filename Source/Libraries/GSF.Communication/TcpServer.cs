@@ -212,16 +212,9 @@ namespace GSF.Communication
         public const string DefaultConfigurationString = "Port=8888";
 
         // Fields
-        private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private EndianOrder m_payloadEndianOrder;
-        private bool m_integratedSecurity;
-        private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
-        private bool m_allowDualStackSocket;
-        private int m_maxSendQueueSize;
-        private bool m_noDelay;
-        private Socket m_tcpServer;
         private SocketAsyncEventArgs m_acceptArgs;
         private readonly ConcurrentDictionary<Guid, TcpClientInfo> m_clientInfoLookup;
         private Dictionary<string, string> m_configData;
@@ -238,8 +231,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
-        public TcpServer()
-            : this(DefaultConfigurationString)
+        public TcpServer() : this(DefaultConfigurationString)
         {
         }
 
@@ -247,17 +239,16 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
         /// <param name="configString">Config string of the <see cref="TcpServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
-        public TcpServer(string configString)
-            : base(TransportProtocol.Tcp, configString)
+        public TcpServer(string configString) : base(TransportProtocol.Tcp, configString)
         {
-            m_payloadAware = DefaultPayloadAware;
+            PayloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_payloadEndianOrder = EndianOrder.LittleEndian;
-            m_integratedSecurity = DefaultIntegratedSecurity;
-            m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
-            m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_maxSendQueueSize = DefaultMaxSendQueueSize;
-            m_noDelay = DefaultNoDelay;
+            IntegratedSecurity = DefaultIntegratedSecurity;
+            IgnoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
+            AllowDualStackSocket = DefaultAllowDualStackSocket;
+            MaxSendQueueSize = DefaultMaxSendQueueSize;
+            NoDelay = DefaultNoDelay;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TcpClientInfo>();
 
             m_acceptHandler = (sender, args) => ProcessAccept(args);
@@ -270,12 +261,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="TcpServer"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TcpServer"/>.</param>
-        public TcpServer(IContainer container)
-            : this()
-        {
-            if (container != null)
-                container.Add(this);
-        }
+        public TcpServer(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -284,20 +270,10 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the payload boundaries are to be preserved during transmission.
         /// </summary>
-        [Category("Data"),
-        DefaultValue(DefaultPayloadAware),
-        Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
-        public bool PayloadAware
-        {
-            get
-            {
-                return m_payloadAware;
-            }
-            set
-            {
-                m_payloadAware = value;
-            }
-        }
+        [Category("Data")]
+        [DefaultValue(DefaultPayloadAware)]
+        [Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
+        public bool PayloadAware { get; set; }
 
         /// <summary>
         /// Gets or sets the byte sequence used to mark the beginning of a payload in a <see cref="PayloadAware"/> transmission.
@@ -305,18 +281,12 @@ namespace GSF.Communication
         /// <remarks>
         /// Setting property to <c>null</c> will create a zero-length payload marker.
         /// </remarks>
-        [Browsable(false),
-         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] PayloadMarker
         {
-            get
-            {
-                return m_payloadMarker;
-            }
-            set
-            {
-                m_payloadMarker = value ?? new byte[0];
-            }
+            get => m_payloadMarker;
+            set => m_payloadMarker = value ?? Array.Empty<byte>();
         }
 
         /// <summary>
@@ -325,18 +295,12 @@ namespace GSF.Communication
         /// <remarks>
         /// Setting property to <c>null</c> will force use of little-endian encoding.
         /// </remarks>
-        [Browsable(false),
-         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EndianOrder PayloadEndianOrder
         {
-            get
-            {
-                return m_payloadEndianOrder;
-            }
-            set
-            {
-                m_payloadEndianOrder = value ?? EndianOrder.LittleEndian;
-            }
+            get => m_payloadEndianOrder;
+            set => m_payloadEndianOrder = value ?? EndianOrder.LittleEndian;
         }
 
         /// <summary>
@@ -345,25 +309,10 @@ namespace GSF.Communication
         /// <remarks>   
         /// This option is ignored under Mono deployments.
         /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultIntegratedSecurity),
-        Description("Indicates whether the client Windows account credentials are used for authentication.")]
-        public bool IntegratedSecurity
-        {
-            get
-            {
-                return m_integratedSecurity;
-            }
-            set
-            {
-#if MONO
-                if (value)
-                    throw new NotImplementedException("Not supported under Mono.");
-#else
-                m_integratedSecurity = value;
-#endif
-            }
-        }
+        [Category("Security")]
+        [DefaultValue(DefaultIntegratedSecurity)]
+        [Description("Indicates whether the client Windows account credentials are used for authentication.")]
+        public bool IntegratedSecurity { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the server
@@ -375,97 +324,45 @@ namespace GSF.Communication
         /// to true, if the client's credentials are invalid, the <see cref="TryGetClientPrincipal"/>
         /// method will return true for that client, but the principal will still be null.
         /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultIgnoreInvalidCredentials),
-        Description("Indicates whether the client Windows account credentials are validated during authentication.")]
-        public bool IgnoreInvalidCredentials
-        {
-            get
-            {
-                return m_ignoreInvalidCredentials;
-            }
-            set
-            {
-                m_ignoreInvalidCredentials = value;
-            }
-        }
+        [Category("Security")]
+        [DefaultValue(DefaultIgnoreInvalidCredentials)]
+        [Description("Indicates whether the client Windows account credentials are validated during authentication.")]
+        public bool IgnoreInvalidCredentials { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultAllowDualStackSocket),
-        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
-        public bool AllowDualStackSocket
-        {
-            get
-            {
-                return m_allowDualStackSocket;
-            }
-            set
-            {
-                m_allowDualStackSocket = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultAllowDualStackSocket)]
+        [Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        public bool AllowDualStackSocket { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxSendQueueSize),
-        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
-        public int MaxSendQueueSize
-        {
-            get
-            {
-                return m_maxSendQueueSize;
-            }
-            set
-            {
-                m_maxSendQueueSize = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxSendQueueSize)]
+        [Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        public int MaxSendQueueSize { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if small packets are delivered to the remote host without delay.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultNoDelay),
-        Description("Determines if small packets are delivered to the remote host without delay.")]
-        public bool NoDelay
-        {
-            get
-            {
-                return m_noDelay;
-            }
-            set
-            {
-                m_noDelay = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultNoDelay)]
+        [Description("Determines if small packets are delivered to the remote host without delay.")]
+        public bool NoDelay { get; set; }
 
         /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="TcpServer"/>.
         /// </summary>
         [Browsable(false)]
-        public Socket Server
-        {
-            get
-            {
-                return m_tcpServer;
-            }
-        }
+        public Socket Server { get; private set; }
 
         /// <summary>
         /// Gets the receive handler used to handle data received on the connected sockets.
         /// </summary>
-        private EventHandler<SocketAsyncEventArgs> ReceiveHandler
-        {
-            get
-            {
-                return m_payloadAware ? m_receivePayloadAwareHandler : m_receivePayloadUnawareHandler;
-            }
-        }
+        private EventHandler<SocketAsyncEventArgs> ReceiveHandler => PayloadAware ? m_receivePayloadAwareHandler : m_receivePayloadUnawareHandler;
 
         /// <summary>
         /// Gets the descriptive status of the server.
@@ -516,35 +413,28 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            TcpClientInfo clientInfo;
-            TransportProvider<Socket> tcpClient;
+            if (!m_clientInfoLookup.TryGetValue(clientID, out TcpClientInfo clientInfo))
+                throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
 
-            if (m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
-            {
-                tcpClient = clientInfo.Client;
+            TransportProvider<Socket> tcpClient = clientInfo.Client;
 
-                if ((object)tcpClient.ReceiveBuffer != null)
-                {
-                    int readIndex = ReadIndicies[clientID];
-                    int sourceLength = tcpClient.BytesReceived - readIndex;
-                    int readBytes = length > sourceLength ? sourceLength : length;
-                    Buffer.BlockCopy(tcpClient.ReceiveBuffer, readIndex, buffer, startIndex, readBytes);
-
-                    // Update read index for next call
-                    readIndex += readBytes;
-
-                    if (readIndex >= tcpClient.BytesReceived)
-                        readIndex = 0;
-
-                    ReadIndicies[clientID] = readIndex;
-
-                    return readBytes;
-                }
-
+            if (tcpClient.ReceiveBuffer == null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
-            }
 
-            throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
+            int readIndex = ReadIndicies[clientID];
+            int sourceLength = tcpClient.BytesReceived - readIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(tcpClient.ReceiveBuffer, readIndex, buffer, startIndex, readBytes);
+
+            // Update read index for next call
+            readIndex += readBytes;
+
+            if (readIndex >= tcpClient.BytesReceived)
+                readIndex = 0;
+
+            ReadIndicies[clientID] = readIndex;
+
+            return readBytes;
         }
 
         /// <summary>
@@ -553,18 +443,20 @@ namespace GSF.Communication
         public override void SaveSettings()
         {
             base.SaveSettings();
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["PayloadAware", true].Update(m_payloadAware);
-                settings["IntegratedSecurity", true].Update(m_integratedSecurity);
-                settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
-                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
-                settings["NoDelay", true].Update(m_noDelay);
-                config.Save();
-            }
+
+            if (!PersistSettings)
+                return;
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["PayloadAware", true].Update(PayloadAware);
+            settings["IntegratedSecurity", true].Update(IntegratedSecurity);
+            settings["AllowDualStackSocket", true].Update(AllowDualStackSocket);
+            settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
+            settings["NoDelay", true].Update(NoDelay);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -573,22 +465,24 @@ namespace GSF.Communication
         public override void LoadSettings()
         {
             base.LoadSettings();
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
-                settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
-                settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
-                settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
-                settings.Add("NoDelay", m_noDelay, "True to disable Nagle so that small packets are delivered to the remote host without delay, otherwise False.");
-                PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
-                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
-                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
-                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
-                NoDelay = settings["NoDelay"].ValueAs(m_noDelay);
-            }
+
+            if (!PersistSettings)
+                return;
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings.Add("PayloadAware", PayloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+            settings.Add("IntegratedSecurity", IntegratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
+            settings.Add("AllowDualStackSocket", AllowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+            settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+            settings.Add("NoDelay", NoDelay, "True to disable Nagle so that small packets are delivered to the remote host without delay, otherwise False.");
+            
+            PayloadAware = settings["PayloadAware"].ValueAs(PayloadAware);
+            IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(IntegratedSecurity);
+            AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(AllowDualStackSocket);
+            MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(MaxSendQueueSize);
+            NoDelay = settings["NoDelay"].ValueAs(NoDelay);
         }
 
         /// <summary>
@@ -600,16 +494,16 @@ namespace GSF.Communication
 
             m_acceptArgs = null;
 
-            if (CurrentState == ServerState.Running)
-            {
-                DisconnectAll();        // Disconnection all clients.
-                m_tcpServer.Close();    // Stop accepting new connections.
+            if (CurrentState != ServerState.Running)
+                return;
 
-                // Clean up accept args.
-                acceptArgs?.Dispose();
+            DisconnectAll();   // Disconnection all clients.
+            Server.Close();    // Stop accepting new connections.
 
-                OnServerStopped();
-            }
+            // Clean up accept args.
+            acceptArgs?.Dispose();
+
+            OnServerStopped();
         }
 
         /// <summary>
@@ -618,52 +512,52 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Attempt is made to <see cref="Start()"/> the <see cref="TcpServer"/> when it is running.</exception>
         public override void Start()
         {
-            if (CurrentState == ServerState.NotRunning)
-            {
-                // Initialize if unitialized.
-                if (!Initialized)
-                    Initialize();
+            if (CurrentState != ServerState.NotRunning)
+                return;
 
-                // Overwrite config file if integrated security exists in connection string.
-                if (m_configData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
-                    m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+            // Initialize if unitialized.
+            if (!Initialized)
+                Initialize();
 
-#if MONO
+            // Overwrite config file if integrated security exists in connection string.
+            if (m_configData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
+                IntegratedSecurity = integratedSecuritySetting.ParseBoolean();
+
+        #if MONO
                 // Force integrated security to be False under Mono since it's not supported
                 m_integratedSecurity = false;
-#endif
+        #endif
 
-                // Overwrite config file if max client connections exists in connection string.
-                if (m_configData.ContainsKey("maxClientConnections") && int.TryParse(m_configData["maxClientConnections"], out int maxClientConnections))
-                    MaxClientConnections = maxClientConnections;
+            // Overwrite config file if max client connections exists in connection string.
+            if (m_configData.ContainsKey("maxClientConnections") && int.TryParse(m_configData["maxClientConnections"], out int maxClientConnections))
+                MaxClientConnections = maxClientConnections;
 
-                // Overwrite config file if max send queue size exists in connection string.
-                if (m_configData.ContainsKey("maxSendQueueSize") && int.TryParse(m_configData["maxSendQueueSize"], out int maxSendQueueSize))
-                    m_maxSendQueueSize = maxSendQueueSize;
+            // Overwrite config file if max send queue size exists in connection string.
+            if (m_configData.ContainsKey("maxSendQueueSize") && int.TryParse(m_configData["maxSendQueueSize"], out int maxSendQueueSize))
+                MaxSendQueueSize = maxSendQueueSize;
 
-                // Overwrite config file if no delay exists in connection string.
-                if (m_configData.TryGetValue("noDelay", out string noDelaySetting))
-                    m_noDelay = noDelaySetting.ParseBoolean();
+            // Overwrite config file if no delay exists in connection string.
+            if (m_configData.TryGetValue("noDelay", out string noDelaySetting))
+                NoDelay = noDelaySetting.ParseBoolean();
 
-                // Bind server socket to local end-point and listen.
-                m_tcpServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                m_tcpServer.NoDelay = m_noDelay;
-                m_tcpServer.Listen(1);
+            // Bind server socket to local end-point and listen.
+            Server = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp, m_ipStack, AllowDualStackSocket);
+            Server.NoDelay = NoDelay;
+            Server.Listen(1);
 
-                // Begin accepting incoming connection asynchronously.
-                m_acceptArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+            // Begin accepting incoming connection asynchronously.
+            m_acceptArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
-                m_acceptArgs.AcceptSocket = null;
-                m_acceptArgs.SetBuffer(null, 0, 0);
-                m_acceptArgs.SocketFlags = SocketFlags.None;
-                m_acceptArgs.Completed += m_acceptHandler;
+            m_acceptArgs.AcceptSocket = null;
+            m_acceptArgs.SetBuffer(null, 0, 0);
+            m_acceptArgs.SocketFlags = SocketFlags.None;
+            m_acceptArgs.Completed += m_acceptHandler;
 
-                if (!m_tcpServer.AcceptAsync(m_acceptArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessAccept((SocketAsyncEventArgs)state), m_acceptArgs);
+            if (!Server.AcceptAsync(m_acceptArgs))
+                ThreadPool.QueueUserWorkItem(state => ProcessAccept((SocketAsyncEventArgs)state), m_acceptArgs);
 
-                // Notify that the server has been started successfully.
-                OnServerStarted();
-            }
+            // Notify that the server has been started successfully.
+            OnServerStarted();
         }
 
         /// <summary>
@@ -673,14 +567,12 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            TransportProvider<Socket> client;
-
-            if (!TryGetClient(clientID, out client))
+            if (!TryGetClient(clientID, out TransportProvider<Socket> client))
                 return;
 
             try
             {
-                if ((object)client.Provider != null && client.Provider.Connected)
+                if (client.Provider != null && client.Provider.Connected)
                     client.Provider.Disconnect(false);
 
                 OnClientDisconnected(clientID);
@@ -700,13 +592,9 @@ namespace GSF.Communication
         /// <returns>A <see cref="TransportProvider{Socket}"/> object.</returns>
         public bool TryGetClient(Guid clientID, out TransportProvider<Socket> tcpClient)
         {
-            TcpClientInfo clientInfo;
-            bool clientExists = m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
+            bool clientExists = m_clientInfoLookup.TryGetValue(clientID, out TcpClientInfo clientInfo);
 
-            if (clientExists)
-                tcpClient = clientInfo.Client;
-            else
-                tcpClient = null;
+            tcpClient = clientExists ? clientInfo.Client : null;
 
             return clientExists;
         }
@@ -719,13 +607,9 @@ namespace GSF.Communication
         /// <returns>A <see cref="WindowsPrincipal"/> object.</returns>
         public bool TryGetClientPrincipal(Guid clientID, out WindowsPrincipal clientPrincipal)
         {
-            TcpClientInfo clientInfo;
-            bool clientExists = m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
+            bool clientExists = m_clientInfoLookup.TryGetValue(clientID, out TcpClientInfo clientInfo);
 
-            if (clientExists)
-                clientPrincipal = clientInfo.ClientPrincipal;
-            else
-                clientPrincipal = null;
+            clientPrincipal = clientExists ? clientInfo.ClientPrincipal : null;
 
             return clientExists;
         }
@@ -760,28 +644,21 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            TcpClientInfo clientInfo;
-            ConcurrentQueue<TcpServerPayload> sendQueue;
-            TcpServerPayload dequeuedPayload;
-
-            TcpServerPayload payload;
-            ManualResetEventSlim handle;
-
-            if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
+            if (!m_clientInfoLookup.TryGetValue(clientID, out TcpClientInfo clientInfo))
                 throw new InvalidOperationException($"No client found for ID {clientID}.");
 
-            sendQueue = clientInfo.SendQueue;
+            ConcurrentQueue<TcpServerPayload> sendQueue = clientInfo.SendQueue;
 
             // Execute operation to see if the client has reached the maximum send queue size.
             clientInfo.DumpPayloadsOperation.TryRun();
 
             // Prepare for payload-aware transmission.
-            if (m_payloadAware)
+            if (PayloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker, m_payloadEndianOrder);
 
             // Create payload and wait handle.
-            payload = FastObjectFactory<TcpServerPayload>.CreateObjectFunction();
-            handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
+            TcpServerPayload payload = FastObjectFactory<TcpServerPayload>.CreateObjectFunction();
+            ManualResetEventSlim handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
 
             payload.Data = data;
             payload.Offset = offset;
@@ -798,7 +675,7 @@ namespace GSF.Communication
                 // Send next queued payload.
                 if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
                 {
-                    if (sendQueue.TryDequeue(out dequeuedPayload))
+                    if (sendQueue.TryDequeue(out TcpServerPayload dequeuedPayload))
                         ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), dequeuedPayload);
                     else
                         Interlocked.Exchange(ref clientInfo.Sending, 0);
@@ -865,7 +742,7 @@ namespace GSF.Communication
                 // If acceptArgs was disposed, m_acceptArgs will either
                 // be null or another instance of SocketAsyncEventArgs.
                 // This check will tell us whether it's been disposed.
-                if ((object)acceptArgs != m_acceptArgs)
+                if (acceptArgs != m_acceptArgs)
                     return;
 
                 SocketError error = acceptArgs.SocketError;
@@ -876,7 +753,7 @@ namespace GSF.Communication
                     // Return to accepting new connections.
                     acceptArgs.AcceptSocket = null;
 
-                    if (!m_tcpServer.AcceptAsync(acceptArgs))
+                    if (!Server.AcceptAsync(acceptArgs))
                         ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
                 }
                 else
@@ -898,9 +775,9 @@ namespace GSF.Communication
                 receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                 receiveArgs.Completed += ReceiveHandler;
 
-#if !MONO
+            #if !MONO
                 // Authenticate the connected client Windows credentials.
-                if (m_integratedSecurity)
+                if (IntegratedSecurity)
                 {
                     NetworkStream socketStream = null;
                     NegotiateStream authenticationStream = null;
@@ -922,7 +799,7 @@ namespace GSF.Communication
                     }
                     catch (InvalidCredentialException)
                     {
-                        if (!m_ignoreInvalidCredentials)
+                        if (!IgnoreInvalidCredentials)
                             throw;
                     }
                     finally
@@ -932,7 +809,7 @@ namespace GSF.Communication
                         authenticationStream?.Dispose();
                     }
                 }
-#endif
+            #endif
 
                 if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                 {
@@ -954,23 +831,21 @@ namespace GSF.Communication
                     // Create operation to dump send queue payloads when the queue grows too large.
                     clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
                     {
-                        TcpServerPayload payload;
-
                         // Check to see if the client has reached the maximum send queue size.
-                        if (m_maxSendQueueSize > 0 && clientInfo.SendQueue.Count >= m_maxSendQueueSize)
-                        {
-                            for (int i = 0; i < m_maxSendQueueSize; i++)
-                            {
-                                if (clientInfo.SendQueue.TryDequeue(out payload))
-                                {
-                                    payload.WaitHandle.Set();
-                                    payload.WaitHandle.Dispose();
-                                    payload.WaitHandle = null;
-                                }
-                            }
+                        if (MaxSendQueueSize <= 0 || clientInfo.SendQueue.Count < MaxSendQueueSize)
+                            return;
 
-                            throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
+                        for (int i = 0; i < MaxSendQueueSize; i++)
+                        {
+                            if (clientInfo.SendQueue.TryDequeue(out TcpServerPayload payload))
+                            {
+                                payload.WaitHandle.Set();
+                                payload.WaitHandle.Dispose();
+                                payload.WaitHandle = null;
+                            }
                         }
+
+                        throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
                     }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
 
                     // Set up socket args.
@@ -982,7 +857,7 @@ namespace GSF.Communication
 
                     OnClientConnected(client.ID);
 
-                    if (!m_payloadAware)
+                    if (!PayloadAware)
                     {
                         receiveArgs.UserToken = client;
                     }
@@ -1007,7 +882,7 @@ namespace GSF.Communication
                 string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
                 OnClientConnectingException(new Exception(errorMessage, ex));
 
-                if ((object)receiveArgs != null)
+                if (receiveArgs != null)
                     TerminateConnection(client, receiveArgs, false);
             }
         }
@@ -1019,20 +894,18 @@ namespace GSF.Communication
         {
             TcpClientInfo clientInfo = null;
             TransportProvider<Socket> client = null;
-            SocketAsyncEventArgs args;
             //ManualResetEventSlim handle;
-            int copyLength;
 
             try
             {
                 clientInfo = payload.ClientInfo;
                 client = clientInfo.Client;
-                args = clientInfo.SendArgs;
+                SocketAsyncEventArgs args = clientInfo.SendArgs;
                 args.UserToken = payload;
                 //handle = payload.WaitHandle;
 
                 // Copy payload into send buffer.
-                copyLength = Math.Min(payload.Length, client.SendBufferSize);
+                int copyLength = Math.Min(payload.Length, client.SendBufferSize);
                 Buffer.BlockCopy(payload.Data, payload.Offset, client.SendBuffer, 0, copyLength);
 
                 // Set buffer and user token of send args.
@@ -1048,10 +921,10 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                if ((object)client != null)
+                if (client != null)
                     OnSendClientDataException(client.ID, ex);
 
-                if ((object)clientInfo != null)
+                if (clientInfo != null)
                 {
                     // Assume process send was not able
                     // to continue the asynchronous loop.
@@ -1069,7 +942,6 @@ namespace GSF.Communication
             TcpClientInfo clientInfo = null;
             TransportProvider<Socket> client = null;
             ConcurrentQueue<TcpServerPayload> sendQueue = null;
-            ManualResetEventSlim handle = null;
 
             try
             {
@@ -1077,7 +949,7 @@ namespace GSF.Communication
                 clientInfo = payload.ClientInfo;
                 client = clientInfo.Client;
                 sendQueue = clientInfo.SendQueue;
-                handle = payload.WaitHandle;
+                ManualResetEventSlim handle = payload.WaitHandle;
 
                 // Determine whether we are finished with this
                 // payload and, if so, set the wait handle.
@@ -1098,12 +970,12 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                if ((object)client != null)
+                if (client != null)
                     OnSendClientDataException(client.ID, ex);
             }
             finally
             {
-                if ((object)payload != null)
+                if (payload != null)
                 {
                     try
                     {
@@ -1112,7 +984,7 @@ namespace GSF.Communication
                             // Still more to send for this payload.
                             ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
                         }
-                        else if ((object)sendQueue != null)
+                        else if (sendQueue != null)
                         {
                             payload.WaitHandle = null;
                             payload.ClientInfo = null;
@@ -1122,7 +994,7 @@ namespace GSF.Communication
                             {
                                 ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
                             }
-                            else if ((object)clientInfo != null)
+                            else if (clientInfo != null)
                             {
                                 lock (clientInfo.SendLock)
                                 {
@@ -1138,10 +1010,10 @@ namespace GSF.Communication
                     {
                         string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
-                        if ((object)client != null)
+                        if (client != null)
                             OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
 
-                        if ((object)clientInfo != null)
+                        if (clientInfo != null)
                             Interlocked.Exchange(ref clientInfo.Sending, 0);
                     }
                 }
@@ -1157,7 +1029,7 @@ namespace GSF.Communication
             client.BytesReceived = 0;
 
             // Initiate receiving.
-            if (m_payloadAware)
+            if (PayloadAware)
             {
                 // Set user token to indicate we are waiting for payload header.
                 EventArgs<TransportProvider<Socket>, bool> userToken = (EventArgs<TransportProvider<Socket>, bool>)args.UserToken;
@@ -1343,11 +1215,9 @@ namespace GSF.Communication
         /// </summary>
         private void TerminateConnection(TransportProvider<Socket> client, SocketAsyncEventArgs args, bool raiseEvent)
         {
-            TcpClientInfo clientInfo;
-
             try
             {
-                if (m_clientInfoLookup.TryRemove(client.ID, out clientInfo))
+                if (m_clientInfoLookup.TryRemove(client.ID, out TcpClientInfo clientInfo))
                 {
                     client.Reset();
                     clientInfo.SendArgs.Dispose();

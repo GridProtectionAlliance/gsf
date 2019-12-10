@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using GSF.Diagnostics;
 
 namespace GSF.Communication
 {
@@ -127,29 +128,23 @@ namespace GSF.Communication
             // Make sure system can support specified stack
             if (stack == IPStack.IPv6 && !Socket.OSSupportsIPv6)
                 throw new NotSupportedException($"IPv6 stack is not available for socket creation on {hostNameOrAddress.ToNonNullNorWhiteSpace("localhost")}:{port}");
-#if !MONO
+        #if !MONO
             if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
                 throw new NotSupportedException($"IPv4 stack is not available for socket creation on {hostNameOrAddress.ToNonNullNorWhiteSpace("localhost")}:{port}");
 #endif
 
+            // No host name or IP address was specified, use local IPs
             if (string.IsNullOrWhiteSpace(hostNameOrAddress))
-            {
-                // No host name or IP address was specified, use local IPs
-                if (stack == IPStack.IPv6)
-                    return new IPEndPoint(IPAddress.IPv6Any, port);
+                return stack == IPStack.IPv6 ? new IPEndPoint(IPAddress.IPv6Any, port) : new IPEndPoint(IPAddress.Any, port);
 
-                return new IPEndPoint(IPAddress.Any, port);
-            }
-
-            IPAddress address;
             bool ipStackMismatch = false;
 
             // Attempt to parse provided address name as a literal IP address
-            if (IPAddress.TryParse(hostNameOrAddress, out address))
+            if (IPAddress.TryParse(hostNameOrAddress, out IPAddress address))
             {
                 // As long as desired IP stack matches format of specified IP address, return end point for address
-                if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
-                    (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
+                if (stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6 ||
+                    stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork)
                     return new IPEndPoint(address, port);
 
                 // User specified an IP address that is mismatch with the desired IP stack. If the DNS server
@@ -161,7 +156,7 @@ namespace GSF.Communication
             try
             {
                 // Handle "localhost" as a special case, returning proper loopback address for the desired IP stack
-                if (string.Compare(hostNameOrAddress, "localhost", true) == 0)
+                if (string.Compare(hostNameOrAddress, "localhost", StringComparison.OrdinalIgnoreCase) == 0)
                     return new IPEndPoint(stack == IPStack.IPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, port);
 
                 // Failed to parse an IP address for the desired stack - this may simply be that a host name was provided
@@ -173,8 +168,8 @@ namespace GSF.Communication
                     // Traverse address list looking for first match on desired IP stack
                     foreach (IPAddress dnsAddress in dnsAddressList)
                     {
-                        if ((stack == IPStack.IPv6 && dnsAddress.AddressFamily == AddressFamily.InterNetworkV6) ||
-                            (stack == IPStack.IPv4 && dnsAddress.AddressFamily == AddressFamily.InterNetwork))
+                        if (stack == IPStack.IPv6 && dnsAddress.AddressFamily == AddressFamily.InterNetworkV6 ||
+                            stack == IPStack.IPv4 && dnsAddress.AddressFamily == AddressFamily.InterNetwork)
                             return new IPEndPoint(dnsAddress, port);
                     }
 
@@ -214,12 +209,12 @@ namespace GSF.Communication
                 case ProtocolType.Tcp:
                     endpoint = CreateEndPoint(address, port, stack);
                     socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-#if !MONO
+                #if !MONO
                     // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                     // by setting the IPv6Only socket option to false
                     if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                         socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-#endif
+                #endif
                     // Associate the socket with the local endpoint
                     socket.Bind(endpoint);
 
@@ -230,12 +225,12 @@ namespace GSF.Communication
                     {
                         endpoint = CreateEndPoint(address, port, stack);
                         socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-#if !MONO
+                    #if !MONO
                         // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                         // by setting the IPv6Only socket option to false
                         if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-#endif
+                    #endif
                         socket.Bind(endpoint);
                     }
                     else
@@ -246,7 +241,7 @@ namespace GSF.Communication
                     }
                     break;
                 default:
-                    throw new NotSupportedException("Communications library does not support socket creation for protocol " + protocol);
+                    throw new NotSupportedException($"Communications library does not support socket creation for protocol {protocol}");
             }
             return socket;
         }
@@ -283,10 +278,11 @@ namespace GSF.Communication
 
                 // IP's are normally ordered with default IP stack first
                 if (hostEntry.AddressList.Length > 0)
-                    return (hostEntry.AddressList[0].AddressFamily == AddressFamily.InterNetworkV6 && Socket.OSSupportsIPv6 ? IPStack.IPv6 : IPStack.IPv4);
+                    return hostEntry.AddressList[0].AddressFamily == AddressFamily.InterNetworkV6 && Socket.OSSupportsIPv6 ? IPStack.IPv6 : IPStack.IPv4;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex, "DNS lookup failure for local machine");
             }
 
             // If default stack cannot be determined, assume IPv4
@@ -306,9 +302,7 @@ namespace GSF.Communication
         /// </remarks>
         public static IPStack GetInterfaceIPStack(Dictionary<string, string> connectionStringEntries)
         {
-            string ipAddress;
-
-            if (connectionStringEntries.TryGetValue("interface", out ipAddress))
+            if (connectionStringEntries.TryGetValue("interface", out string ipAddress))
                 return IsIPv6IP(ipAddress) ? IPStack.IPv6 : IPStack.IPv4;
 
             connectionStringEntries.Add("interface", string.Empty);
@@ -329,9 +323,7 @@ namespace GSF.Communication
             if (string.IsNullOrWhiteSpace(ipAddress))
                 throw new ArgumentNullException(nameof(ipAddress));
 
-            IPAddress address;
-
-            if (IPAddress.TryParse(ipAddress, out address))
+            if (IPAddress.TryParse(ipAddress, out IPAddress address))
                 return address.AddressFamily == AddressFamily.InterNetworkV6;
 
             return false;
@@ -355,10 +347,7 @@ namespace GSF.Communication
             int firstOctet = int.Parse(ipAddress.ToString().Split('.')[0]);
 
             // Check first octet to see if IP is a Class D multicast IP
-            if (firstOctet >= 224 && firstOctet <= 247)
-                return true;
-
-            return false;
+            return firstOctet >= 224 && firstOctet <= 247;
         }
 
         /// <summary>
@@ -368,19 +357,12 @@ namespace GSF.Communication
         /// <returns>True if the port number is valid.</returns>
         public static bool IsPortNumberValid(string port)
         {
-            int portNumber;
-
             // Check to see if the specified port is a valid integer value
-            if (int.TryParse(port, out portNumber))
-            {
-                // Check to see if the port number is within the valid range
-                if (portNumber >= PortRangeLow && portNumber <= PortRangeHigh)
-                    return true;
+            if (!int.TryParse(port, out int portNumber))
+                throw new ArgumentException("Specified port is not a valid number");
 
-                return false;
-            }
-
-            throw new ArgumentException("Specified port is not a valid number");
+            // Check to see if the port number is within the valid range
+            return portNumber >= PortRangeLow && portNumber <= PortRangeHigh;
         }
 
         /// <summary>
@@ -394,13 +376,13 @@ namespace GSF.Communication
             {
                 // Check if the target endpoint exists by sending empty data to it and waiting for a response,
                 // if the endpoint doesn't exist then we'll receive a ConnectionReset socket exception
-                EndPoint targetEndPoint = (EndPoint)targetIPEndPoint;
+                EndPoint targetEndPoint = targetIPEndPoint;
 
                 using (Socket targetChecker = new Socket(targetIPEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp))
                 {
                     targetChecker.ReceiveTimeout = 1;
-                    targetChecker.SendTo(new byte[] { }, targetEndPoint);
-                    targetChecker.ReceiveFrom(new byte[] { }, ref targetEndPoint);
+                    targetChecker.SendTo(Array.Empty<byte>(), targetEndPoint);
+                    targetChecker.ReceiveFrom(Array.Empty<byte>(), ref targetEndPoint);
                 }
 
             }
@@ -410,9 +392,10 @@ namespace GSF.Communication
                 if (ex.SocketErrorCode == SocketError.ConnectionReset)
                     return false;
             }
-            catch
+            catch (Exception ex)
             {
                 // We'll ignore any other exceptions we might encounter and assume destination is reachable
+                Logger.SwallowException(ex, "Failed while checking if IP end point destination is reachable via UDP");
             }
 
             return true;

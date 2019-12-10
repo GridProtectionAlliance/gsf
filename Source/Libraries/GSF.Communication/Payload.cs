@@ -117,10 +117,7 @@ namespace GSF.Communication
                 return -1;
 
             // Check to see if buffer has the payload marker
-            if (!HasHeader(buffer, marker))
-                return 0;
-
-            return endianOrder.ToInt32(buffer, marker.Length);
+            return !HasHeader(buffer, marker) ? 0 : endianOrder.ToInt32(buffer, marker.Length);
         }
     }
 }

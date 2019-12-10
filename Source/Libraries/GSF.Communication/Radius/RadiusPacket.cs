@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using GSF.Parsing;
@@ -122,10 +123,7 @@ namespace GSF.Communication.Radius
         #region [ Members ]
 
         // Fields
-        private PacketType m_type;
-        private byte m_identifier;
         private byte[] m_authenticator;
-        private readonly List<RadiusPacketAttribute> m_attributes;
 
         #endregion
 
@@ -136,20 +134,16 @@ namespace GSF.Communication.Radius
         /// </summary>
         public RadiusPacket()
         {
-            m_identifier = (byte)(Random.Between(0, 255));
+            Identifier = (byte)Random.Between(0, 255);
             m_authenticator = new byte[16];
-            m_attributes = new List<RadiusPacketAttribute>();
+            Attributes = new List<RadiusPacketAttribute>();
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RadiusPacket"/> class.
         /// </summary>
         /// <param name="type">Type of the <see cref="RadiusPacket"/>.</param>
-        public RadiusPacket(PacketType type)
-            : this()
-        {
-            m_type = type;
-        }
+        public RadiusPacket(PacketType type) : this() => Type = type;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RadiusPacket"/> class.
@@ -157,11 +151,7 @@ namespace GSF.Communication.Radius
         /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacket"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public RadiusPacket(byte[] binaryImage, int startIndex, int length)
-            : this()
-        {
-            ParseBinaryImage(binaryImage, startIndex, length);
-        }
+        public RadiusPacket(byte[] binaryImage, int startIndex, int length) : this() => ParseBinaryImage(binaryImage, startIndex, length);
 
         #endregion
 
@@ -170,32 +160,12 @@ namespace GSF.Communication.Radius
         /// <summary>
         /// Gets or sets the type of the <see cref="RadiusPacket"/>.
         /// </summary>
-        public PacketType Type
-        {
-            get
-            {
-                return m_type;
-            }
-            set
-            {
-                m_type = value;
-            }
-        }
+        public PacketType Type { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="RadiusPacket"/> identifier.
         /// </summary>
-        public byte Identifier
-        {
-            get
-            {
-                return m_identifier;
-            }
-            set
-            {
-                m_identifier = value;
-            }
-        }
+        public byte Identifier { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="RadiusPacket"/> authenticator.
@@ -204,13 +174,10 @@ namespace GSF.Communication.Radius
         /// <exception cref="ArgumentException">The value being assigned is not 16-bytes in length.</exception>
         public byte[] Authenticator
         {
-            get
-            {
-                return m_authenticator;
-            }
+            get => m_authenticator;
             set
             {
-                if ((object)value == null)
+                if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
                 if (value.Length != 16)
@@ -223,33 +190,13 @@ namespace GSF.Communication.Radius
         /// <summary>
         /// Gets a list of <see cref="RadiusPacketAttribute"/>s.
         /// </summary>
-        public List<RadiusPacketAttribute> Attributes
-        {
-            get
-            {
-                return m_attributes;
-            }
-        }
+        public List<RadiusPacketAttribute> Attributes { get; }
 
         /// <summary>
         /// Gets the length of the <see cref="RadiusPacket"/>.
         /// </summary>
-        public int BinaryLength
-        {
-            get
-            {
-                // 20 bytes are fixed + length of all attributes combined
-                int length = 20;
-
-                foreach (RadiusPacketAttribute attribute in m_attributes)
-                {
-                    if (attribute != null)
-                        length += attribute.BinaryLength;
-                }
-
-                return length;
-            }
-        }
+        // 20 bytes are fixed + length of all attributes combined
+        public int BinaryLength => 20 + Attributes.Where(attribute => attribute != null).Sum(attribute => attribute.BinaryLength);
 
         #endregion
 
@@ -265,35 +212,32 @@ namespace GSF.Communication.Radius
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if ((object)buffer == null)
+            if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
             int imageLength = BinaryLength;
 
-            if (length >= imageLength)
+            // Binary image does not have sufficient data.
+            if (length < imageLength)
+                return 0;
+
+            // Binary image has sufficient data.
+            Type = (PacketType)buffer[startIndex];
+            Identifier = buffer[startIndex + 1];
+            ushort size = EndianOrder.ToUInt16(buffer, startIndex + 2);
+            Buffer.BlockCopy(buffer, startIndex + 4, m_authenticator, 0, m_authenticator.Length);
+
+            // Parse all attributes in the packet.
+            int cursor = 20;
+
+            while (cursor < size)
             {
-                // Binary image has sufficient data.
-                UInt16 size;
-                m_type = (PacketType)(buffer[startIndex]);
-                m_identifier = buffer[startIndex + 1];
-                size = EndianOrder.ToUInt16(buffer, startIndex + 2);
-                Buffer.BlockCopy(buffer, startIndex + 4, m_authenticator, 0, m_authenticator.Length);
-
-                // Parse all attributes in the packet.
-                int cursor = 20;
-
-                while (cursor < size)
-                {
-                    RadiusPacketAttribute attribute = new RadiusPacketAttribute(buffer, startIndex + cursor, length);
-                    m_attributes.Add(attribute);
-                    cursor += attribute.BinaryLength;
-                }
-
-                return imageLength;
+                RadiusPacketAttribute attribute = new RadiusPacketAttribute(buffer, startIndex + cursor, length);
+                Attributes.Add(attribute);
+                cursor += attribute.BinaryLength;
             }
 
-            // Binary image does not have sufficient data.
-            return 0;
+            return imageLength;
         }
 
         /// <summary>
@@ -314,13 +258,13 @@ namespace GSF.Communication.Radius
             buffer.ValidateParameters(startIndex, length);
 
             // Populate the buffer
-            buffer[startIndex] = Convert.ToByte(m_type);
-            buffer[startIndex + 1] = m_identifier;
+            buffer[startIndex] = Convert.ToByte(Type);
+            buffer[startIndex + 1] = Identifier;
             Buffer.BlockCopy(EndianOrder.GetBytes((ushort)BinaryLength), 0, buffer, startIndex + 2, 2);
             Buffer.BlockCopy(m_authenticator, 0, buffer, startIndex + 4, m_authenticator.Length);
             startIndex += 20;
 
-            foreach (RadiusPacketAttribute attribute in m_attributes)
+            foreach (RadiusPacketAttribute attribute in Attributes)
             {
                 if (attribute != null)
                     startIndex += attribute.GenerateBinaryImage(buffer, startIndex);
@@ -336,12 +280,8 @@ namespace GSF.Communication.Radius
         /// <returns><see cref="RadiusPacketAttribute"/>.<see cref="RadiusPacketAttribute.Value"/> if <see cref="RadiusPacketAttribute"/> is present; otherwise null.</returns>
         public byte[] GetAttributeValue(AttributeType attributeType)
         {
-            RadiusPacketAttribute match = m_attributes.Find(attribute => attribute.Type == attributeType);
-
-            if (match == null)
-                return null;
-
-            return match.Value;
+            RadiusPacketAttribute match = Attributes.Find(attribute => attribute.Type == attributeType);
+            return match?.Value;
         }
 
         #endregion
@@ -376,7 +316,8 @@ namespace GSF.Communication.Radius
             byte[] secretBuffer = Encoding.GetBytes(sharedSecret);
             Random.GetBytes(randomBuffer);
 
-            return new MD5CryptoServiceProvider().ComputeHash(randomBuffer.Combine(secretBuffer));
+            using (MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider())
+                return md5Provider.ComputeHash(randomBuffer.Combine(secretBuffer));
         }
 
         /// <summary>
@@ -402,7 +343,8 @@ namespace GSF.Communication.Radius
             Buffer.BlockCopy(requestPacket.BinaryImage(), 4, buffer, 4, 16);
             Buffer.BlockCopy(sharedSecretBytes, 0, buffer, length, sharedSecretBytes.Length);
 
-            return new MD5CryptoServiceProvider().ComputeHash(buffer);
+            using (MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider())
+                return md5Provider.ComputeHash(buffer);
         }
 
         /// <summary>
@@ -421,21 +363,22 @@ namespace GSF.Communication.Radius
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.");
 
-            if ((object)requestAuthenticator == null)
+            if (requestAuthenticator == null)
                 throw new ArgumentException("Request authenticator cannot be null.");
 
             // Max length of the password can be 130 according to RFC 2865. Since 128 is the closest multiple
             // of 16 (password segment length), we allow the password to be no longer than 128 characters.
-            if (password.Length <= 128)
+            if (password.Length > 128)
+                throw new ArgumentException("Password can be a maximum of 128 characters in length.");
+
+            byte[] result;
+            byte[] xorBytes = null;
+            byte[] passwordBytes = Encoding.GetBytes(password);
+            byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
+            byte[] md5HashInputBytes = new byte[sharedSecretBytes.Length + 16];
+
+            using (MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider())
             {
-                byte[] result;
-                byte[] xorBytes = null;
-                byte[] passwordBytes = Encoding.GetBytes(password);
-                byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
-                byte[] md5HashInputBytes = new byte[sharedSecretBytes.Length + 16];
-
-                MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider();
-
                 if (passwordBytes.Length % 16 == 0)
                 {
                     // Length of password is a multiple of 16.
@@ -445,7 +388,7 @@ namespace GSF.Communication.Radius
                 {
                     // Length of password is not a multiple of 16, so we'll take the multiple of 16 that's next
                     // closest to the password's length and leave the empty space at the end as padding.
-                    result = new byte[((passwordBytes.Length / 16) * 16) + 16];
+                    result = new byte[passwordBytes.Length / 16 * 16 + 16];
                 }
 
                 // Copy the password to the result buffer where it'll be XORed.
@@ -460,7 +403,7 @@ namespace GSF.Communication.Radius
                 for (int i = 0; i <= result.Length - 1; i += 16)
                 {
                     // Perform XOR-based encryption of the password in 16-byte segments.
-                    if (i > 0 && (object)xorBytes != null)
+                    if (i > 0 && xorBytes != null)
                     {
                         // For passwords that are more than 16 characters in length, each consecutive 16-byte
                         // segment of the password is XORed with MD5 hash value that's computed as follows:
@@ -472,16 +415,12 @@ namespace GSF.Communication.Radius
                     xorBytes = md5Provider.ComputeHash(md5HashInputBytes);
 
                     // XOR the password bytes in the current segment with the XOR bytes.
-                    for (int j = i; j <= (i + 16) - 1; j++)
-                    {
+                    for (int j = i; j <= i + 16 - 1; j++)
                         result[j] = (byte)(result[j] ^ xorBytes[j]);
-                    }
                 }
-
-                return result;
             }
 
-            throw new ArgumentException("Password can be a maximum of 128 characters in length.");
+            return result;
         }
 
         #endregion

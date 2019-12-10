@@ -224,7 +224,6 @@ namespace GSF.Communication.Radius
         #region [ Members ]
 
         // Fields
-        private AttributeType m_type;
         private byte[] m_value;
 
         #endregion
@@ -244,8 +243,7 @@ namespace GSF.Communication.Radius
         /// </summary>
         /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
         /// <param name="value">Text value of the <see cref="RadiusPacketAttribute"/>.</param>
-        public RadiusPacketAttribute(AttributeType type, string value)
-            : this(type, RadiusPacket.Encoding.GetBytes(value))
+        public RadiusPacketAttribute(AttributeType type, string value) : this(type, RadiusPacket.Encoding.GetBytes(value))
         {
         }
 
@@ -254,8 +252,7 @@ namespace GSF.Communication.Radius
         /// </summary>
         /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
         /// <param name="value">32-bit unsigned integer value of the <see cref="RadiusPacketAttribute"/>.</param>
-        public RadiusPacketAttribute(AttributeType type, UInt32 value)
-            : this(type, RadiusPacket.EndianOrder.GetBytes(value))
+        public RadiusPacketAttribute(AttributeType type, uint value) : this(type, RadiusPacket.EndianOrder.GetBytes(value))
         {
         }
 
@@ -264,8 +261,7 @@ namespace GSF.Communication.Radius
         /// </summary>
         /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
         /// <param name="value">IP address value of the <see cref="RadiusPacketAttribute"/>.</param>
-        public RadiusPacketAttribute(AttributeType type, IPAddress value)
-            : this(type, value.GetAddressBytes())
+        public RadiusPacketAttribute(AttributeType type, IPAddress value) : this(type, value.GetAddressBytes())
         {
         }
 
@@ -276,8 +272,8 @@ namespace GSF.Communication.Radius
         /// <param name="value">Byte array value of the <see cref="RadiusPacketAttribute"/>.</param>
         public RadiusPacketAttribute(AttributeType type, byte[] value)
         {
-            this.Type = type;
-            this.Value = value;
+            Type = type;
+            Value = value;
         }
 
         /// <summary>
@@ -286,10 +282,7 @@ namespace GSF.Communication.Radius
         /// <param name="buffer">Buffer containing binary image to be used for initializing <see cref="RadiusPacketAttribute"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
-        public RadiusPacketAttribute(byte[] buffer, int startIndex, int length)
-        {
-            ParseBinaryImage(buffer, startIndex, length);
-        }
+        public RadiusPacketAttribute(byte[] buffer, int startIndex, int length) => ParseBinaryImage(buffer, startIndex, length);
 
         #endregion
 
@@ -298,17 +291,7 @@ namespace GSF.Communication.Radius
         /// <summary>
         /// Gets or sets the type of the <see cref="RadiusPacketAttribute"/>.
         /// </summary>
-        public AttributeType Type
-        {
-            get
-            {
-                return m_type;
-            }
-            set
-            {
-                m_type = value;
-            }
-        }
+        public AttributeType Type { get; set; }
 
         /// <summary>
         /// Gets or sets the value of the <see cref="RadiusPacketAttribute"/>.
@@ -316,14 +299,11 @@ namespace GSF.Communication.Radius
         /// <exception cref="ArgumentNullException">The value being assigned is null or zero-length byte array.</exception>
         public byte[] Value
         {
-            get
-            {
-                return m_value;
-            }
+            get => m_value;
             set
             {
                 // By definition, attribute value cannot be null or zero-length.
-                if ((object)value == null || value.Length == 0)
+                if (value == null || value.Length == 0)
                     throw new ArgumentNullException(nameof(value));
 
                 m_value = value;
@@ -333,17 +313,8 @@ namespace GSF.Communication.Radius
         /// <summary>
         /// Gets the length of the <see cref="RadiusPacketAttribute"/>.
         /// </summary>
-        public int BinaryLength
-        {
-            get
-            {
-                // 2 bytes are fixed + length of the value
-                if (m_value == null)
-                    return 2;
-                else
-                    return 2 + m_value.Length;
-            }
-        }
+        // 2 bytes are fixed + length of the value
+        public int BinaryLength => 2 + m_value?.Length ?? 0;
 
         #endregion
 
@@ -359,25 +330,21 @@ namespace GSF.Communication.Radius
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if ((object)buffer == null)
+            if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
             int imageLength = BinaryLength;
 
-            if (length >= imageLength)
-            {
-                // Binary image has sufficient data.
-                m_type = (AttributeType)(buffer[startIndex]);
-                m_value = new byte[Convert.ToInt16(buffer[startIndex + 1] - 2)];
-                Buffer.BlockCopy(buffer, startIndex + 2, m_value, 0, m_value.Length);
-
-                return imageLength;
-            }
-            else
-            {
-                // Binary image does not have sufficient data.
+            // Binary image does not have sufficient data.
+            if (length < imageLength)
                 return 0;
-            }
+
+            // Binary image has sufficient data.
+            Type = (AttributeType)buffer[startIndex];
+            m_value = new byte[Convert.ToInt16(buffer[startIndex + 1] - 2)];
+            Buffer.BlockCopy(buffer, startIndex + 2, m_value, 0, m_value.Length);
+
+            return imageLength;
         }
 
         /// <summary>
@@ -398,7 +365,7 @@ namespace GSF.Communication.Radius
             buffer.ValidateParameters(startIndex, length);
 
             // Populate the buffer
-            buffer[startIndex] = Convert.ToByte(m_type);
+            buffer[startIndex] = Convert.ToByte(Type);
             buffer[startIndex + 1] = (byte)length;
             Buffer.BlockCopy(m_value, 0, buffer, startIndex + 2, m_value.Length);
 

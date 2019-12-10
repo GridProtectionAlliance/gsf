@@ -60,13 +60,17 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using GSF.Configuration;
+using GSF.Diagnostics;
 using GSF.Units;
 
+// ReSharper disable VirtualMemberCallInConstructor
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 namespace GSF.Communication
 {
     /// <summary>
@@ -109,15 +113,15 @@ namespace GSF.Communication
         /// <summary>
         /// Occurs when the server is started.
         /// </summary>
-        [Category("Server"),
-        Description("Occurs when the server is started.")]
+        [Category("Server")]
+        [Description("Occurs when the server is started.")]
         public event EventHandler ServerStarted;
 
         /// <summary>
         /// Occurs when the server is stopped.
         /// </summary>
-        [Category("Server"),
-        Description("Occurs when the server is stopped.")]
+        [Category("Server")]
+        [Description("Occurs when the server is stopped.")]
         public event EventHandler ServerStopped;
 
         /// <summary>
@@ -126,8 +130,8 @@ namespace GSF.Communication
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that connected to the server.
         /// </remarks>
-        [Category("Client"),
-        Description("Occurs when a client connects to the server.")]
+        [Category("Client")]
+        [Description("Occurs when a client connects to the server.")]
         public event EventHandler<EventArgs<Guid>> ClientConnected;
 
         /// <summary>
@@ -136,8 +140,8 @@ namespace GSF.Communication
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the client that disconnected from the server.
         /// </remarks>
-        [Category("Client"),
-        Description("Occurs when a client disconnects from the server.")]
+        [Category("Client")]
+        [Description("Occurs when a client disconnects from the server.")]
         public event EventHandler<EventArgs<Guid>> ClientDisconnected;
 
         /// <summary>
@@ -146,8 +150,8 @@ namespace GSF.Communication
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when connecting to the client.
         /// </remarks>
-        [Category("Client"),
-        Description("Occurs when an Exception is encountered when connecting to a client.")]
+        [Category("Client")]
+        [Description("Occurs when an Exception is encountered when connecting to a client.")]
         public event EventHandler<EventArgs<Exception>> ClientConnectingException;
 
         /// <summary>
@@ -156,8 +160,8 @@ namespace GSF.Communication
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data is being sent.
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when data is being sent to a client.")]
+        [Category("Data")]
+        [Description("Occurs when data is being sent to a client.")]
         public event EventHandler<EventArgs<Guid>> SendClientDataStart;
 
         /// <summary>
@@ -166,8 +170,8 @@ namespace GSF.Communication
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the client to which the data has been sent.
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when data has been sent to a client.")]
+        [Category("Data")]
+        [Description("Occurs when data has been sent to a client.")]
         public event EventHandler<EventArgs<Guid>> SendClientDataComplete;
 
         /// <summary>
@@ -177,8 +181,8 @@ namespace GSF.Communication
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client to which the data was being sent.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when sending data to a client.
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when an Exception is encountered when sending data to a client.")]
+        [Category("Data")]
+        [Description("Occurs when an Exception is encountered when sending data to a client.")]
         public event EventHandler<EventArgs<Guid, Exception>> SendClientDataException;
 
         /// <summary>
@@ -196,8 +200,8 @@ namespace GSF.Communication
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the number of bytes received in the buffer from the client.
         /// </para>
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when unprocessed data has been received from a client.")]
+        [Category("Data")]
+        [Description("Occurs when unprocessed data has been received from a client.")]
         public event EventHandler<EventArgs<Guid, int>> ReceiveClientData;
 
         /// <summary>
@@ -208,8 +212,8 @@ namespace GSF.Communication
         /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is a new buffer containing post-processed data received from the client starting at index zero.<br/>
         /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of post-processed bytes received in the buffer from the client.
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when data received from a client has been processed and is ready for consumption.")]
+        [Category("Data")]
+        [Description("Occurs when data received from a client has been processed and is ready for consumption.")]
         public event EventHandler<EventArgs<Guid, byte[], int>> ReceiveClientDataComplete;
 
         /// <summary>
@@ -219,8 +223,8 @@ namespace GSF.Communication
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the client from which the data was being received.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when receiving data from a client.
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when an Exception is encountered when receiving data from a client.")]
+        [Category("Data")]
+        [Description("Occurs when an Exception is encountered when receiving data from a client.")]
         public event EventHandler<EventArgs<Guid, Exception>> ReceiveClientDataException;
 
         /// <summary>
@@ -229,8 +233,8 @@ namespace GSF.Communication
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> thrown by the user-defined function.
         /// </remarks>
-        [Category("User"),
-        Description("Occurs when an Exception is encountered when calling a user-defined function.")]
+        [Category("User")]
+        [Description("Occurs when an Exception is encountered when calling a user-defined function.")]
         public event EventHandler<EventArgs<Exception>> UnhandledUserException;
 
         // Fields
@@ -238,17 +242,11 @@ namespace GSF.Communication
         private int m_maxClientConnections;
         private int m_sendBufferSize;
         private int m_receiveBufferSize;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
         private Encoding m_textEncoding;
-        private ServerState m_currentState;
         private readonly TransportProtocol m_transportProtocol;
-        private readonly Guid m_serverID;
         private readonly ConcurrentDictionary<Guid, int> m_clientIDs;
         private Ticks m_stopTime;
         private Ticks m_startTime;
-        private bool m_initialized;
-        private bool m_disposed;
 
         #endregion
 
@@ -259,15 +257,15 @@ namespace GSF.Communication
         /// </summary>
         protected ServerBase()
         {
-            m_serverID = Guid.NewGuid();
+            ServerID = Guid.NewGuid();
             m_clientIDs = new ConcurrentDictionary<Guid, int>();
             m_textEncoding = Encoding.ASCII;
-            m_currentState = ServerState.NotRunning;
+            CurrentState = ServerState.NotRunning;
             m_maxClientConnections = DefaultMaxClientConnections;
             m_sendBufferSize = DefaultSendBufferSize;
             m_receiveBufferSize = DefaultReceiveBufferSize;
-            m_persistSettings = DefaultPersistSettings;
-            m_settingsCategory = DefaultSettingsCategory;
+            PersistSettings = DefaultPersistSettings;
+            Name = DefaultSettingsCategory;
         }
 
         /// <summary>
@@ -275,8 +273,7 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="transportProtocol">One of the <see cref="TransportProtocol"/> values.</param>
         /// <param name="configurationString">The data used by the server for initialization.</param>
-        protected ServerBase(TransportProtocol transportProtocol, string configurationString)
-            : this()
+        protected ServerBase(TransportProtocol transportProtocol, string configurationString) : this()
         {
             m_transportProtocol = transportProtocol;
             ConfigurationString = configurationString;
@@ -289,14 +286,11 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the data required by the server to initialize.
         /// </summary>
-        [Category("Settings"),
-        Description("The data that is required by the server to initialize.")]
+        [Category("Settings")]
+        [Description("The data that is required by the server to initialize.")]
         public virtual string ConfigurationString
         {
-            get
-            {
-                return m_configurationString;
-            }
+            get => m_configurationString;
             set
             {
                 ValidateConfigurationString(value);
@@ -312,37 +306,25 @@ namespace GSF.Communication
         /// <remarks>
         /// Set <see cref="MaxClientConnections"/> to -1 to allow infinite client connections.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxClientConnections),
-        Description("The maximum number of clients that can connect to the server. Set MaxClientConnections to -1 to allow infinite client connections.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxClientConnections)]
+        [Description("The maximum number of clients that can connect to the server. Set MaxClientConnections to -1 to allow infinite client connections.")]
         public virtual int MaxClientConnections
         {
-            get
-            {
-                return m_maxClientConnections;
-            }
-            set
-            {
-                if (value < 1)
-                    m_maxClientConnections = -1;
-                else
-                    m_maxClientConnections = value;
-            }
+            get => m_maxClientConnections;
+            set => m_maxClientConnections = value < 1 ? -1 : value;
         }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the server for sending data to the clients.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
-        [Category("Data"),
-        DefaultValue(DefaultSendBufferSize),
-        Description("The size of the buffer used by the server for receiving data from the clients.")]
+        [Category("Data")]
+        [DefaultValue(DefaultSendBufferSize)]
+        [Description("The size of the buffer used by the server for receiving data from the clients.")]
         public virtual int SendBufferSize
         {
-            get
-            {
-                return m_sendBufferSize;
-            }
+            get => m_sendBufferSize;
             set
             {
                 if (value < 1)
@@ -356,15 +338,12 @@ namespace GSF.Communication
         /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
-        [Category("Data"),
-        DefaultValue(DefaultReceiveBufferSize),
-        Description("The size of the buffer used by the server for receiving data from the clients.")]
+        [Category("Data")]
+        [DefaultValue(DefaultReceiveBufferSize)]
+        [Description("The size of the buffer used by the server for receiving data from the clients.")]
         public virtual int ReceiveBufferSize
         {
-            get
-            {
-                return m_receiveBufferSize;
-            }
+            get => m_receiveBufferSize;
             set
             {
                 if (value < 1)
@@ -377,40 +356,27 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the server settings are to be saved to the config file.
         /// </summary>
-        [Category("Persistence"),
-        DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the server settings are to be saved to the config file.")]
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
+        [Category("Persistence")]
+        [DefaultValue(DefaultPersistSettings)]
+        [Description("Indicates whether the server settings are to be saved to the config file.")]
+        public bool PersistSettings { get; set; }
 
         /// <summary>
         /// Gets or sets the category under which the server settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistence"),
-        DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the server settings are to be saved to the config file if the PersistSettings property is set to true.")]
+        [Category("Persistence")]
+        [DefaultValue(DefaultSettingsCategory)]
+        [Description("Category under which the server settings are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
-            get
-            {
-                return m_settingsCategory;
-            }
+            get => Name;
             set
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException(nameof(value));
 
-                m_settingsCategory = value;
+                Name = value;
             }
         }
 
@@ -421,14 +387,11 @@ namespace GSF.Communication
         /// Setting <see cref="Enabled"/> to true will start the server if it is not running, setting
         /// to false will stop the server if it is running.
         /// </remarks>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
-            get
-            {
-                return m_currentState == ServerState.Running;
-            }
+            get => CurrentState == ServerState.Running;
             set
             {
                 if (value && !Enabled)
@@ -441,80 +404,44 @@ namespace GSF.Communication
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual Encoding TextEncoding
         {
-            get
-            {
-                return m_textEncoding;
-            }
-            set
-            {
-                m_textEncoding = value;
-            }
+            get => m_textEncoding;
+            set => m_textEncoding = value;
         }
 
         /// <summary>
         /// Gets the current <see cref="ServerState"/>.
         /// </summary>
         [Browsable(false)]
-        public ServerState CurrentState
-        {
-            get
-            {
-                return m_currentState;
-            }
-        }
+        public ServerState CurrentState { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
         /// </summary>
         [Browsable(false)]
-        public virtual TransportProtocol TransportProtocol
-        {
-            get
-            {
-                return m_transportProtocol;
-            }
-        }
+        public virtual TransportProtocol TransportProtocol => m_transportProtocol;
 
         /// <summary>
         /// Gets the server's ID.
         /// </summary>
         [Browsable(false)]
-        public virtual Guid ServerID
-        {
-            get
-            {
-                return m_serverID;
-            }
-        }
+        public virtual Guid ServerID { get; }
 
         /// <summary>
         /// Gets the IDs of clients connected to the server.
         /// </summary>
         [Browsable(false)]
-        public virtual Guid[] ClientIDs
-        {
-            get
-            {
-                return m_clientIDs.Keys.ToArray();
-            }
-        }
+        public virtual Guid[] ClientIDs => m_clientIDs.Keys.ToArray();
 
         /// <summary>
         /// Gets the <see cref="Time"/> for which the server has been running.
@@ -528,12 +455,16 @@ namespace GSF.Communication
 
                 if (m_startTime > 0)
                 {
-                    if (m_currentState == ServerState.Running)
+                    if (CurrentState == ServerState.Running)
+                    {
                         // Server is running.
                         serverRunTime = (DateTime.UtcNow.Ticks - m_startTime).ToSeconds();
+                    }
                     else
+                    {
                         // Server is not running.
                         serverRunTime = (m_stopTime - m_startTime).ToSeconds();
+                    }
                 }
                 return serverRunTime;
             }
@@ -542,25 +473,13 @@ namespace GSF.Communication
         /// <summary>
         /// Gets current read indices for received data buffers incremented at each <see cref="Read"/> call.
         /// </summary>
-        protected ConcurrentDictionary<Guid, int> ReadIndicies
-        {
-            get
-            {
-                return m_clientIDs;
-            }
-        }
+        protected ConcurrentDictionary<Guid, int> ReadIndicies => m_clientIDs;
 
         /// <summary>
         /// Gets the unique identifier of the server.
         /// </summary>
         [Browsable(false)]
-        public string Name
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-        }
+        public string Name { get; private set; }
 
         /// <summary>
         /// Gets the descriptive status of the server.
@@ -573,10 +492,10 @@ namespace GSF.Communication
                 StringBuilder status = new StringBuilder();
 
                 status.Append("              Server state: ");
-                status.Append(m_currentState);
+                status.Append(CurrentState);
                 status.AppendLine();
                 status.Append("            Server runtime: ");
-                status.Append(RunTime.ToString());
+                status.Append(RunTime.ToString(CultureInfo.CurrentCulture));
                 status.AppendLine();
                 status.Append("         Connected clients: ");
                 status.Append(m_clientIDs.Count);
@@ -602,13 +521,7 @@ namespace GSF.Communication
         /// Gets a boolean value that indicates
         /// whether the server has been initialized.
         /// </summary>
-        protected bool Initialized
-        {
-            get
-            {
-                return m_initialized;
-            }
-        }
+        protected bool Initialized { get; private set; }
 
         #endregion
 
@@ -668,11 +581,11 @@ namespace GSF.Communication
         /// </remarks>
         public void Initialize()
         {
-            if (m_initialized)
+            if (Initialized)
                 return;
 
             LoadSettings();         // Load settings from the config file.
-            m_initialized = true;   // Initialize only once.
+            Initialized = true;   // Initialize only once.
         }
 
         /// <summary>
@@ -685,17 +598,6 @@ namespace GSF.Communication
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-            if (!DesignMode)
-            {
-                try
-                {
-                    // Nothing needs to be done before component is initialized.
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
         }
 
         /// <summary>
@@ -708,16 +610,16 @@ namespace GSF.Communication
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (!DesignMode)
+            if (DesignMode)
+                return;
+
+            try
             {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
+                Initialize();
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
             }
         }
 
@@ -727,21 +629,22 @@ namespace GSF.Communication
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!PersistSettings)
+                return;
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["ConfigurationString", true].Update(m_configurationString);
-                settings["MaxClientConnections", true].Update(m_maxClientConnections);
-                settings["SendBufferSize", true].Update(m_sendBufferSize);
-                settings["ReceiveBufferSize", true].Update(m_receiveBufferSize);
-                config.Save();
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(Name))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[Name];
+            settings["ConfigurationString", true].Update(m_configurationString);
+            settings["MaxClientConnections", true].Update(m_maxClientConnections);
+            settings["SendBufferSize", true].Update(m_sendBufferSize);
+            settings["ReceiveBufferSize", true].Update(m_receiveBufferSize);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -750,24 +653,25 @@ namespace GSF.Communication
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!PersistSettings)
+                return;
 
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("ConfigurationString", m_configurationString, "Data required by the server to initialize.");
-                settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
-                settings.Add("SendBufferSize", m_sendBufferSize, "Size of the buffer used by the server for sending data to the clients.");
-                settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
-                ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
-                MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
-                SendBufferSize = settings["SendBufferSize"].ValueAs(m_sendBufferSize);
-                ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(Name))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[Name];
+            settings.Add("ConfigurationString", m_configurationString, "Data required by the server to initialize.");
+            settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
+            settings.Add("SendBufferSize", m_sendBufferSize, "Size of the buffer used by the server for sending data to the clients.");
+            settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
+            
+            ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
+            MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
+            SendBufferSize = settings["SendBufferSize"].ValueAs(m_sendBufferSize);
+            ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
         }
 
         /// <summary>
@@ -775,30 +679,21 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="data">The plain-text data that is to be sent.</param>
-        public virtual void SendTo(Guid clientID, string data)
-        {
-            SendTo(clientID, m_textEncoding.GetBytes(data));
-        }
+        public virtual void SendTo(Guid clientID, string data) => SendTo(clientID, m_textEncoding.GetBytes(data));
 
         /// <summary>
         /// Sends data to the specified client synchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
-        public virtual void SendTo(Guid clientID, object serializableObject)
-        {
-            SendTo(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
-        }
+        public virtual void SendTo(Guid clientID, object serializableObject) => SendTo(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
         /// Sends data to the specified client synchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="data">The binary data that is to be sent.</param>
-        public virtual void SendTo(Guid clientID, byte[] data)
-        {
-            SendTo(clientID, data, 0, data.Length);
-        }
+        public virtual void SendTo(Guid clientID, byte[] data) => SendTo(clientID, data, 0, data.Length);
 
         /// <summary>
         /// Sends data to the specified client synchronously.
@@ -807,37 +702,25 @@ namespace GSF.Communication
         /// <param name="data">The buffer that contains the binary data to be sent.</param>
         /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
-        public virtual void SendTo(Guid clientID, byte[] data, int offset, int length)
-        {
-            SendToAsync(clientID, data, offset, length).WaitOne();
-        }
+        public virtual void SendTo(Guid clientID, byte[] data, int offset, int length) => SendToAsync(clientID, data, offset, length).WaitOne();
 
         /// <summary>
         /// Sends data to all of the connected clients synchronously.
         /// </summary>
         /// <param name="data">The plain-text data that is to be sent.</param>
-        public virtual void Multicast(string data)
-        {
-            Multicast(m_textEncoding.GetBytes(data));
-        }
+        public virtual void Multicast(string data) => Multicast(m_textEncoding.GetBytes(data));
 
         /// <summary>
         /// Sends data to all of the connected clients synchronously.
         /// </summary>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
-        public virtual void Multicast(object serializableObject)
-        {
-            Multicast(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
-        }
+        public virtual void Multicast(object serializableObject) => Multicast(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
         /// Sends data to all of the connected clients synchronously.
         /// </summary>
         /// <param name="data">The binary data that is to be sent.</param>
-        public virtual void Multicast(byte[] data)
-        {
-            Multicast(data, 0, data.Length);
-        }
+        public virtual void Multicast(byte[] data) => Multicast(data, 0, data.Length);
 
         /// <summary>
         /// Sends data to all of the connected clients synchronously.
@@ -861,9 +744,7 @@ namespace GSF.Communication
         public virtual void DisconnectAll()
         {
             foreach (Guid clientID in ClientIDs)
-            {
                 DisconnectOne(clientID);
-            }
         }
 
         /// <summary>
@@ -872,10 +753,7 @@ namespace GSF.Communication
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="data">The plain-text data that is to be sent.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public virtual WaitHandle SendToAsync(Guid clientID, string data)
-        {
-            return SendToAsync(clientID, m_textEncoding.GetBytes(data));
-        }
+        public virtual WaitHandle SendToAsync(Guid clientID, string data) => SendToAsync(clientID, m_textEncoding.GetBytes(data));
 
         /// <summary>
         /// Sends data to the specified client asynchronously.
@@ -883,10 +761,7 @@ namespace GSF.Communication
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public virtual WaitHandle SendToAsync(Guid clientID, object serializableObject)
-        {
-            return SendToAsync(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
-        }
+        public virtual WaitHandle SendToAsync(Guid clientID, object serializableObject) => SendToAsync(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
         /// Sends data to the specified client asynchronously.
@@ -894,10 +769,7 @@ namespace GSF.Communication
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="data">The binary data that is to be sent.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public virtual WaitHandle SendToAsync(Guid clientID, byte[] data)
-        {
-            return SendToAsync(clientID, data, 0, data.Length);
-        }
+        public virtual WaitHandle SendToAsync(Guid clientID, byte[] data) => SendToAsync(clientID, data, 0, data.Length);
 
         /// <summary>
         /// Sends data to the specified client asynchronously.
@@ -909,7 +781,7 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public virtual WaitHandle SendToAsync(Guid clientID, byte[] data, int offset, int length)
         {
-            if (m_currentState == ServerState.Running)
+            if (CurrentState == ServerState.Running)
                 return SendDataToAsync(clientID, data, offset, length);
 
             throw new InvalidOperationException("Server is not running");
@@ -920,30 +792,21 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="data">The plain-text data that is to be sent.</param>
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public virtual WaitHandle[] MulticastAsync(string data)
-        {
-            return MulticastAsync(m_textEncoding.GetBytes(data));
-        }
+        public virtual WaitHandle[] MulticastAsync(string data) => MulticastAsync(m_textEncoding.GetBytes(data));
 
         /// <summary>
         /// Sends data to all of the connected clients asynchronously.
         /// </summary>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public virtual WaitHandle[] MulticastAsync(object serializableObject)
-        {
-            return MulticastAsync(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
-        }
+        public virtual WaitHandle[] MulticastAsync(object serializableObject) => MulticastAsync(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
         /// Sends data to all of the connected clients asynchronously.
         /// </summary>
         /// <param name="data">The binary data that is to be sent.</param>
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public virtual WaitHandle[] MulticastAsync(byte[] data)
-        {
-            return MulticastAsync(data, 0, data.Length);
-        }
+        public virtual WaitHandle[] MulticastAsync(byte[] data) => MulticastAsync(data, 0, data.Length);
 
         /// <summary>
         /// Sends data to all of the connected clients asynchronously.
@@ -952,26 +815,14 @@ namespace GSF.Communication
         /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        public virtual WaitHandle[] MulticastAsync(byte[] data, int offset, int length)
-        {
-            List<WaitHandle> handles = new List<WaitHandle>();
-            foreach (Guid clientID in ClientIDs)
-            {
-                handles.Add(SendToAsync(clientID, data, offset, length));
-            }
-
-            return handles.ToArray();
-        }
+        public virtual WaitHandle[] MulticastAsync(byte[] data, int offset, int length) => ClientIDs.Select(clientID => SendToAsync(clientID, data, offset, length)).ToArray();
 
         /// <summary>
         /// Determines whether the given client is currently connected to the server.
         /// </summary>
         /// <param name="clientID">The ID of the client.</param>
         /// <returns>True if the client is connected; false otherwise.</returns>
-        public bool IsClientConnected(Guid clientID)
-        {
-            return m_clientIDs.ContainsKey(clientID);
-        }
+        public bool IsClientConnected(Guid clientID) => m_clientIDs.ContainsKey(clientID);
 
         /// <summary>
         /// Raises the <see cref="ServerStarted"/> event.
@@ -980,18 +831,17 @@ namespace GSF.Communication
         {
             try
             {
-                m_currentState = ServerState.Running;
+                CurrentState = ServerState.Running;
                 m_stopTime = 0;
 
                 // Save the time when server is started.
                 m_startTime = DateTime.UtcNow.Ticks;
 
-                if (ServerStarted != null)
-                    ServerStarted(this, EventArgs.Empty);
+                ServerStarted?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1002,17 +852,16 @@ namespace GSF.Communication
         {
             try
             {
-                m_currentState = ServerState.NotRunning;
+                CurrentState = ServerState.NotRunning;
 
                 // Save the time when server is stopped.
                 m_stopTime = DateTime.UtcNow.Ticks;
 
-                if (ServerStopped != null)
-                    ServerStopped(this, EventArgs.Empty);
+                ServerStopped?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1024,14 +873,12 @@ namespace GSF.Communication
         {
             try
             {
-                m_clientIDs.TryAdd(clientID, 0);
-
-                if (ClientConnected != null)
-                    ClientConnected(this, new EventArgs<Guid>(clientID));
+                if (m_clientIDs.TryAdd(clientID, 0))
+                    ClientConnected?.Invoke(this, new EventArgs<Guid>(clientID));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1043,15 +890,12 @@ namespace GSF.Communication
         {
             try
             {
-                int readIndex;
-                m_clientIDs.TryRemove(clientID, out readIndex);
-
-                if (ClientDisconnected != null)
-                    ClientDisconnected(this, new EventArgs<Guid>(clientID));
+                if (m_clientIDs.TryRemove(clientID, out int _))
+                    ClientDisconnected?.Invoke(this, new EventArgs<Guid>(clientID));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1063,12 +907,11 @@ namespace GSF.Communication
         {
             try
             {
-                if ((object)ClientConnectingException != null)
-                    ClientConnectingException(this, new EventArgs<Exception>(ex));
+                ClientConnectingException?.Invoke(this, new EventArgs<Exception>(ex));
             }
-            catch (Exception userException)
+            catch (Exception userEx)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(userEx);
             }
         }
 
@@ -1080,12 +923,11 @@ namespace GSF.Communication
         {
             try
             {
-                if (SendClientDataStart != null)
-                    SendClientDataStart(this, new EventArgs<Guid>(clientID));
+                SendClientDataStart?.Invoke(this, new EventArgs<Guid>(clientID));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1097,12 +939,11 @@ namespace GSF.Communication
         {
             try
             {
-                if (SendClientDataComplete != null)
-                    SendClientDataComplete(this, new EventArgs<Guid>(clientID));
+                SendClientDataComplete?.Invoke(this, new EventArgs<Guid>(clientID));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1115,12 +956,12 @@ namespace GSF.Communication
         {
             try
             {
-                if (!(ex is ObjectDisposedException) && SendClientDataException != null)
-                    SendClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
+                if (!(ex is ObjectDisposedException))
+                    SendClientDataException?.Invoke(this, new EventArgs<Guid, Exception>(clientID, ex));
             }
-            catch (Exception userException)
+            catch (Exception userEx)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(userEx);
             }
         }
 
@@ -1138,12 +979,11 @@ namespace GSF.Communication
         {
             try
             {
-                if (ReceiveClientData != null)
-                    ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
+                ReceiveClientData?.Invoke(this, new EventArgs<Guid, int>(clientID, size));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1161,20 +1001,16 @@ namespace GSF.Communication
                 m_clientIDs[clientID] = 0;
 
                 // Notify users of data ready
-                if (ReceiveClientData != null)
-                    ReceiveClientData(this, new EventArgs<Guid, int>(clientID, size));
+                ReceiveClientData?.Invoke(this, new EventArgs<Guid, int>(clientID, size));
 
-                if (ReceiveClientDataComplete != null)
-                {
-                    // Most inheritors of this class "reuse" an existing buffer, as such you cannot assume what the user is going to do
-                    // with the buffer provided, so we pass in a "copy" of the buffer for the user since they may assume control of and
-                    // possibly even cache the provided buffer (e.g., passing the buffer to a process queue)
-                    ReceiveClientDataComplete(this, new EventArgs<Guid, byte[], int>(clientID, data.BlockCopy(0, size), size));
-                }
+                // Most inheritors of this class "reuse" an existing buffer, as such you cannot assume what the user is going to do
+                // with the buffer provided, so we pass in a "copy" of the buffer for the user since they may assume control of and
+                // possibly even cache the provided buffer (e.g., passing the buffer to a process queue)
+                ReceiveClientDataComplete?.Invoke(this, new EventArgs<Guid, byte[], int>(clientID, data.BlockCopy(0, size), size));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1187,12 +1023,12 @@ namespace GSF.Communication
         {
             try
             {
-                if (!(ex is ObjectDisposedException) && ReceiveClientDataException != null)
-                    ReceiveClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
+                if (!(ex is ObjectDisposedException))
+                    ReceiveClientDataException?.Invoke(this, new EventArgs<Guid, Exception>(clientID, ex));
             }
-            catch (Exception userException)
+            catch (Exception userEx)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(userEx);
             }
         }
 
@@ -1204,13 +1040,13 @@ namespace GSF.Communication
         {
             try
             {
-                if ((object)UnhandledUserException != null)
-                    UnhandledUserException(this, new EventArgs<Exception>(ex));
+                UnhandledUserException?.Invoke(this, new EventArgs<Exception>(ex));
             }
-            catch
+            catch (Exception userEx)
             {
                 // Suppress unhandled exceptions in this handler.
                 // Handling them would defeat the purpose of this event.
+                Logger.SwallowException(userEx);
             }
         }
 
@@ -1220,23 +1056,23 @@ namespace GSF.Communication
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (IsDisposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.                  
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Stop();
-                        SaveSettings();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                // This will be done regardless of whether the object is finalized or disposed.                  
+                if (!disposing)
+                    return;
+
+                // This will be done only when the object is disposed by calling Dispose().
+                Stop();
+                SaveSettings();
+            }
+            finally
+            {
+                IsDisposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -1245,15 +1081,15 @@ namespace GSF.Communication
         /// </summary>
         protected void ReStart()
         {
-            if (m_currentState == ServerState.Running)
-            {
-                Stop();
-                while (m_currentState != ServerState.NotRunning)
-                {
-                    Thread.Sleep(100);
-                }
-                Start();
-            }
+            if (CurrentState != ServerState.Running)
+                return;
+
+            Stop();
+            
+            while (CurrentState != ServerState.NotRunning)
+                Thread.Sleep(100);
+
+            Start();
         }
 
         #endregion
@@ -1270,48 +1106,46 @@ namespace GSF.Communication
         /// <returns>A communications server.</returns>
         public static IServer Create(string configurationString)
         {
-            Dictionary<string, string> configurationSettings = configurationString.ParseKeyValuePairs();
+            Dictionary<string, string> settings = configurationString.ParseKeyValuePairs();
             IServer server;
-            string protocol;
 
-            if (configurationSettings.TryGetValue("protocol", out protocol))
+            if (settings.TryGetValue("protocol", out string protocol))
             {
-                configurationSettings.Remove("protocol");
-                StringBuilder settings = new StringBuilder();
+                settings.Remove("protocol");
+                StringBuilder protocolSettings = new StringBuilder();
 
-                foreach (string key in configurationSettings.Keys)
+                foreach (string key in settings.Keys)
                 {
-                    settings.Append(key);
-                    settings.Append("=");
-                    settings.Append(configurationSettings[key]);
-                    settings.Append(";");
+                    protocolSettings.Append(key);
+                    protocolSettings.Append("=");
+                    protocolSettings.Append(settings[key]);
+                    protocolSettings.Append(";");
                 }
 
                 // Create a server instance for the specified protocol.
                 switch (protocol.Trim().ToLower())
                 {
                     case "tls":
-                        server = new TlsServer(settings.ToString());
+                        server = new TlsServer(protocolSettings.ToString());
                         break;
                     case "tcp":
-                        server = new TcpServer(settings.ToString());
+                        server = new TcpServer(protocolSettings.ToString());
                         break;
                     case "udp":
-                        server = new UdpServer(settings.ToString());
+                        server = new UdpServer(protocolSettings.ToString());
                         break;
                     case "zeromq":
-                        server = new ZeroMQServer(settings.ToString());
+                        server = new ZeroMQServer(protocolSettings.ToString());
                         break;
                     default:
-                        throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid");
+                        throw new ArgumentException($"Transport protocol '{protocol}' is not valid");
                 }
 
                 // Apply server settings from the connection string to the client.
-                foreach (KeyValuePair<string, string> setting in configurationSettings)
+                foreach (KeyValuePair<string, string> setting in settings)
                 {
                     PropertyInfo property = server.GetType().GetProperty(setting.Key);
-                    if (property != null)
-                        property.SetValue(server, Convert.ChangeType(setting.Value, property.PropertyType), null);
+                    property?.SetValue(server, Convert.ChangeType(setting.Value, property.PropertyType), null);
                 }
             }
             else

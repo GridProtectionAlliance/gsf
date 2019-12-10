@@ -216,8 +216,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="TlsClient"/> class.
         /// </summary>
-        public TlsClient()
-            : this(DefaultConnectionString)
+        public TlsClient() : this(DefaultConnectionString)
         {
         }
 
@@ -225,8 +224,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="TlsClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="TlsClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public TlsClient(string connectString)
-            : base(TransportProtocol.Tcp, connectString)
+        public TlsClient(string connectString) : base(TransportProtocol.Tcp, connectString)
         {
             m_defaultCertificateChecker = new SimpleCertificateChecker();
             LocalCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
@@ -250,11 +248,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="TlsClient"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TlsClient"/>.</param>
-        public TlsClient(IContainer container)
-            : this()
-        {
-            container?.Add(this);
-        }
+        public TlsClient(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -263,9 +257,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the payload boundaries are to be preserved during transmission.
         /// </summary>
-        [Category("Data"),
-        DefaultValue(DefaultPayloadAware),
-        Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
+        [Category("Data")]
+        [DefaultValue(DefaultPayloadAware)]
+        [Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
         public bool PayloadAware { get; set; }
 
         /// <summary>
@@ -274,12 +268,12 @@ namespace GSF.Communication
         /// <remarks>
         /// Setting property to <c>null</c> will create a zero-length payload marker.
         /// </remarks>
-        [Browsable(false),
-         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] PayloadMarker
         {
             get => m_payloadMarker;
-            set => m_payloadMarker = value ?? new byte[0];
+            set => m_payloadMarker = value ?? Array.Empty<byte>();
         }
 
         /// <summary>
@@ -288,8 +282,8 @@ namespace GSF.Communication
         /// <remarks>
         /// Setting property to <c>null</c> will force use of little-endian encoding.
         /// </remarks>
-        [Browsable(false),
-         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EndianOrder PayloadEndianOrder
         {
             get => m_payloadEndianOrder;
@@ -302,9 +296,9 @@ namespace GSF.Communication
         /// <remarks>   
         /// This option is ignored under Mono deployments.
         /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultIntegratedSecurity),
-        Description("Indicates whether the current Windows account credentials are used for authentication.")]
+        [Category("Security")]
+        [DefaultValue(DefaultIntegratedSecurity)]
+        [Description("Indicates whether the current Windows account credentials are used for authentication.")]
         public bool IntegratedSecurity { get; set; }
 
         /// <summary>
@@ -315,33 +309,33 @@ namespace GSF.Communication
         /// This property should only be set to true if there is an alternative by which
         /// to authenticate the client when integrated security fails.
         /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultIgnoreInvalidCredentials),
-        Description("Indicates whether the client Windows account credentials are validated during authentication.")]
+        [Category("Security")]
+        [DefaultValue(DefaultIgnoreInvalidCredentials)]
+        [Description("Indicates whether the client Windows account credentials are validated during authentication.")]
         public bool IgnoreInvalidCredentials { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultAllowDualStackSocket),
-        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultAllowDualStackSocket)]
+        [Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
         public bool AllowDualStackSocket { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxSendQueueSize),
-        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxSendQueueSize)]
+        [Description("The maximum size for the send queue before payloads are dumped from the queue.")]
         public int MaxSendQueueSize { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if small packets are delivered to the remote host without delay.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultNoDelay),
-        Description("Determines if small packets are delivered to the remote host without delay.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultNoDelay)]
+        [Description("Determines if small packets are delivered to the remote host without delay.")]
         public bool NoDelay { get; set; }
 
         /// <summary>
@@ -366,8 +360,8 @@ namespace GSF.Communication
         /// Gets or sets network credential that is used when
         /// <see cref="IntegratedSecurity"/> is set to <c>true</c>.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NetworkCredential NetworkCredential { get; set; }
 
         /// <summary>
@@ -377,8 +371,8 @@ namespace GSF.Communication
         /// The certificate checker will only be used to validate certificates if
         /// the <see cref="RemoteCertificateValidationCallback"/> is set to null.
         /// </remarks>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ICertificateChecker CertificateChecker
         {
             get => m_certificateChecker ?? m_defaultCertificateChecker;
@@ -392,15 +386,15 @@ namespace GSF.Communication
         /// Setting this property overrides the validation
         /// callback in the <see cref="CertificateChecker"/>.
         /// </remarks>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
 
         /// <summary>
         /// Gets or sets the callback used to select a local certificate.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LocalCertificateSelectionCallback LocalCertificateSelectionCallback { get; set; }
 
         /// <summary>
@@ -413,15 +407,12 @@ namespace GSF.Communication
         /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
         /// </summary>
         /// <exception cref="SecurityException">Failed to write event log entry for security warning about use of less secure TLS/SSL protocols.</exception>
-        [Category("Settings"),
-        DefaultValue(SslProtocols.Tls12),
-        Description("The set of SSL protocols that are enabled for this client.")]
+        [Category("Settings")]
+        [DefaultValue(SslProtocols.Tls12)]
+        [Description("The set of SSL protocols that are enabled for this client.")]
         public SslProtocols EnabledSslProtocols
         {
-            get
-            {
-                return m_enabledSslProtocols;
-            }
+            get => m_enabledSslProtocols;
             set
             {
                 m_enabledSslProtocols = value;
@@ -429,37 +420,37 @@ namespace GSF.Communication
                 // As of July 2014, Tls12 is the latest and most secure TLS protocol - all other protocols
                 // represent a security risk when used, as such we log a security message when any of the
                 // older protocols are being used.
-                if (m_enabledSslProtocols != SslProtocols.Tls12)
+                if (m_enabledSslProtocols == SslProtocols.Tls12)
+                    return;
+
+                try
                 {
+                    string applicationName;
+
+                    // Get application name
                     try
                     {
-                        string applicationName;
-
-                        // Get application name
-                        try
-                        {
-                            // Attempt to retrieve application name as defined in common security settings - this name
-                            // is typically preconfigured as the desired event source for event log entries
-                            ConfigurationFile config = ConfigurationFile.Current;
-                            CategorizedSettingsElementCollection settings = config.Settings["SecurityProvider"];
-                            applicationName = settings["ApplicationName"].Value;
-                        }
-                        catch
-                        {
-                            applicationName = null;
-                        }
-
-                        // Fall back on running executable name
-                        if (string.IsNullOrWhiteSpace(applicationName))
-                            applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
-
-                        string message = $"One or more less secure TLS/SSL protocols \"{m_enabledSslProtocols}\" are being used by an instance of the TlsClient in {applicationName}";
-                        EventLog.WriteEntry(applicationName, message, EventLogEntryType.Warning, 1);
+                        // Attempt to retrieve application name as defined in common security settings - this name
+                        // is typically preconfigured as the desired event source for event log entries
+                        ConfigurationFile config = ConfigurationFile.Current;
+                        CategorizedSettingsElementCollection settings = config.Settings["SecurityProvider"];
+                        applicationName = settings["ApplicationName"].Value;
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        throw new SecurityException($"Failed to write event log entry for security warning about use of less secure TLS/SSL protocols \"{m_enabledSslProtocols}\": {ex.Message}", ex);
+                        applicationName = null;
                     }
+
+                    // Fall back on running executable name
+                    if (string.IsNullOrWhiteSpace(applicationName))
+                        applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+
+                    string message = $"One or more less secure TLS/SSL protocols \"{m_enabledSslProtocols}\" are being used by an instance of the TlsClient in {applicationName}";
+                    EventLog.WriteEntry(applicationName, message, EventLogEntryType.Warning, 1);
+                }
+                catch (Exception ex)
+                {
+                    throw new SecurityException($"Failed to write event log entry for security warning about use of less secure TLS/SSL protocols \"{m_enabledSslProtocols}\": {ex.Message}", ex);
                 }
             }
         }
@@ -467,53 +458,58 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that determines whether the certificate revocation list is checked during authentication.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(true),
-        Description("True if the certificate revocation list is to be checked during authentication, otherwise False.")]
+        [Category("Settings")]
+        [DefaultValue(true)]
+        [Description("True if the certificate revocation list is to be checked during authentication, otherwise False.")]
         public bool CheckCertificateRevocation { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the certificate used for authentication.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(null),
-        Description("Path to the certificate used by this client for authentication.")]
+        [Category("Settings")]
+        [DefaultValue(null)]
+        [Description("Path to the certificate used by this client for authentication.")]
         public string CertificateFile
         {
-            get
-            {
-                return m_certificateFile;
-            }
+            get => m_certificateFile;
             set
             {
-                m_certificateFile = value;
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    m_certificateFile = null;
+                    Certificate = null;
+                }
+                else
+                {
+                    m_certificateFile = FilePath.GetAbsolutePath(value);
 
-                if (File.Exists(value))
-                    Certificate = new X509Certificate2(value);
+                    if (File.Exists(m_certificateFile))
+                        Certificate = new X509Certificate2(m_certificateFile);
+                }
             }
         }
 
         /// <summary>
         /// Gets or sets the local certificate selected by the default <see cref="LocalCertificateSelectionCallback"/>.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public X509Certificate Certificate { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the directory containing the trusted certificates.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue("Trusted Certificates"),
-        Description("Path to the directory containing the trusted remote certificates.")]
+        [Category("Settings")]
+        [DefaultValue("Trusted Certificates")]
+        [Description("Path to the directory containing the trusted remote certificates.")]
         public string TrustedCertificatesPath { get; set; }
 
         /// <summary>
         /// Gets or sets the set of valid policy errors when validating remote certificates.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(SslPolicyErrors.None),
-        Description("Set of valid policy errors when validating remote certificates.")]
+        [Category("Settings")]
+        [DefaultValue(SslPolicyErrors.None)]
+        [Description("Set of valid policy errors when validating remote certificates.")]
         public SslPolicyErrors ValidPolicyErrors
         {
             get => m_defaultCertificateChecker.ValidPolicyErrors;
@@ -523,9 +519,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the set of valid chain flags used when validating remote certificates.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(X509ChainStatusFlags.NoError),
-        Description("Set of valid chain flags used when validating remote certificates.")]
+        [Category("Settings")]
+        [DefaultValue(X509ChainStatusFlags.NoError)]
+        [Description("Set of valid chain flags used when validating remote certificates.")]
         public X509ChainStatusFlags ValidChainFlags
         {
             get => m_defaultCertificateChecker.ValidChainFlags;
@@ -564,7 +560,7 @@ namespace GSF.Communication
 
                 if (sendState != null)
                 {
-                    statusBuilder.AppendFormat("           Queued payloads: {0}", sendState.SendQueue.Count);
+                    statusBuilder.AppendFormat("           Queued payloads: {0}", sendState.SendQueue?.Count ?? 0);
                     statusBuilder.AppendLine();
                 }
 
@@ -583,24 +579,25 @@ namespace GSF.Communication
         {
             base.SaveSettings();
 
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["EnabledSslProtocols", true].Update(m_enabledSslProtocols);
-                settings["CheckCertificateRevocation", true].Update(CheckCertificateRevocation);
-                settings["CertificateFile", true].Update(m_certificateFile);
-                settings["TrustedCertificatesPath", true].Update(TrustedCertificatesPath);
-                settings["ValidPolicyErrors", true].Update(ValidPolicyErrors);
-                settings["ValidChainFlags", true].Update(ValidChainFlags);
-                settings["PayloadAware", true].Update(PayloadAware);
-                settings["IntegratedSecurity", true].Update(IntegratedSecurity);
-                settings["AllowDualStackSocket", true].Update(AllowDualStackSocket);
-                settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
-                settings["NoDelay", true].Update(NoDelay);
-                config.Save();
-            }
+            if (!PersistSettings)
+                return;
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["EnabledSslProtocols", true].Update(m_enabledSslProtocols);
+            settings["CheckCertificateRevocation", true].Update(CheckCertificateRevocation);
+            settings["CertificateFile", true].Update(m_certificateFile);
+            settings["TrustedCertificatesPath", true].Update(TrustedCertificatesPath);
+            settings["ValidPolicyErrors", true].Update(ValidPolicyErrors);
+            settings["ValidChainFlags", true].Update(ValidChainFlags);
+            settings["PayloadAware", true].Update(PayloadAware);
+            settings["IntegratedSecurity", true].Update(IntegratedSecurity);
+            settings["AllowDualStackSocket", true].Update(AllowDualStackSocket);
+            settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
+            settings["NoDelay", true].Update(NoDelay);
+                
+            config.Save();
         }
 
         /// <summary>
@@ -664,73 +661,73 @@ namespace GSF.Communication
             ConnectState connectState = null;
 
             // If the client is already connecting or connected, there is nothing to do
-            if (CurrentState == ClientState.Disconnected && !m_disposed)
+            if (CurrentState != ClientState.Disconnected || m_disposed)
+                return m_connectWaitHandle;
+
+            try
             {
-                try
-                {
-                    // If we do not already have a wait handle to use
-                    // for connections, get one from the base class
-                    if (m_connectWaitHandle == null)
-                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                // If we do not already have a wait handle to use
+                // for connections, get one from the base class
+                if (m_connectWaitHandle == null)
+                    m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
-                    // Create state object for the asynchronous connection loop
-                    connectState = new ConnectState();
+                // Create state object for the asynchronous connection loop
+                connectState = new ConnectState();
 
-                    // Store connectState in m_connectState so that calls to Disconnect
-                    // and Dispose can dispose resources and cancel asynchronous loops
-                    m_connectState = connectState;
+                // Store connectState in m_connectState so that calls to Disconnect
+                // and Dispose can dispose resources and cancel asynchronous loops
+                m_connectState = connectState;
 
-                    // Prepare for connection attempt
-                    OnConnectionAttempt();
-                    m_connectWaitHandle.Reset();
+                // Prepare for connection attempt
+                OnConnectionAttempt();
+                m_connectWaitHandle.Reset();
 
-                    // Overwrite setting from the config file if integrated security exists in connection string
-                    if (m_connectData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
-                        IntegratedSecurity = integratedSecuritySetting.ParseBoolean();
+                // Overwrite setting from the config file if integrated security exists in connection string
+                if (m_connectData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
+                    IntegratedSecurity = integratedSecuritySetting.ParseBoolean();
 
-                #if MONO
-                    // Force integrated security to be False under Mono since it's not supported
-                    IntegratedSecurity = false;
-                #endif
+            #if MONO
+                // Force integrated security to be False under Mono since it's not supported
+                IntegratedSecurity = false;
+            #endif
 
-                    // Overwrite config file if no delay exists in connection string.
-                    if (m_connectData.TryGetValue("noDelay", out string noDelaySetting))
-                        NoDelay = noDelaySetting.ParseBoolean();
+                // Overwrite config file if no delay exists in connection string.
+                if (m_connectData.TryGetValue("noDelay", out string noDelaySetting))
+                    NoDelay = noDelaySetting.ParseBoolean();
 
-                    // Initialize state object for the asynchronous connection loop
-                    Match endpoint = Regex.Match(ServerList[m_serverIndex], Transport.EndpointFormatRegex);
-                    connectState.ConnectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    connectState.ConnectArgs.SocketFlags = SocketFlags.None;
-                    connectState.ConnectArgs.UserToken = connectState;
-                    connectState.ConnectArgs.Completed += (sender, args) => ProcessConnect((ConnectState)args.UserToken);
+                // Initialize state object for the asynchronous connection loop
+                Match endpoint = Regex.Match(ServerList[m_serverIndex], Transport.EndpointFormatRegex);
+                connectState.ConnectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                connectState.ConnectArgs.SocketFlags = SocketFlags.None;
+                connectState.ConnectArgs.UserToken = connectState;
+                connectState.ConnectArgs.Completed += (sender, args) => ProcessConnect((ConnectState)args.UserToken);
 
-                    // Create client socket
-                    connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, AllowDualStackSocket);
-                    connectState.Socket.NoDelay = NoDelay;
+                // Create client socket
+                connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, AllowDualStackSocket);
+                connectState.Socket.NoDelay = NoDelay;
 
-                    // Initiate the asynchronous connection loop
-                    ConnectAsync(connectState);
-                }
-                catch (Exception ex)
-                {
-                    // Log exception during connection attempt
-                    OnConnectionException(ex);
+                // Initiate the asynchronous connection loop
+                ConnectAsync(connectState);
+            }
+            catch (Exception ex)
+            {
+                // Log exception during connection attempt
+                OnConnectionException(ex);
 
-                    // Terminate the connection
-                    if (connectState != null)
-                        TerminateConnection(connectState.Token);
+                // Terminate the connection
+                if (connectState != null)
+                    TerminateConnection(connectState.Token);
 
-                    // Ensure that the wait handle is set so that operations waiting
-                    // for completion of the asynchronous connection loop can continue
-                    m_connectWaitHandle?.Set();
-                }
-                finally
-                {
-                    // If the operation was cancelled during execution,
-                    // make sure to dispose of erroneously allocated resources
-                    if (connectState != null && connectState.Token.Cancelled)
-                        connectState.Dispose();
-                }
+                // Ensure that the wait handle is set so that operations waiting
+                // for completion of the asynchronous connection loop can continue
+                m_connectWaitHandle?.Set();
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of erroneously allocated resources
+                if (connectState != null && connectState.Token.Cancelled)
+                    connectState.Dispose();
             }
 
             // Return the wait handle that signals completion
@@ -1177,21 +1174,16 @@ namespace GSF.Communication
         /// </summary>
         private void ReceivePayloadAwareAsync(ReceiveState receiveState)
         {
-            int length;
+            if (receiveState.Token.Cancelled)
+                return;
 
-            if (!receiveState.Token.Cancelled)
-            {
-                if (receiveState.PayloadLength < 0)
-                    length = m_payloadMarker.Length + Payload.LengthSegment;
-                else
-                    length = receiveState.PayloadLength;
+            int length = receiveState.PayloadLength < 0 ? m_payloadMarker.Length + Payload.LengthSegment : receiveState.PayloadLength;
 
-                receiveState.SslStream.BeginRead(receiveState.Buffer,
-                    receiveState.Offset,
-                    length - receiveState.Offset,
-                    ProcessReceivePayloadAware,
-                    receiveState);
-            }
+            receiveState.SslStream.BeginRead(receiveState.Buffer,
+                receiveState.Offset,
+                length - receiveState.Offset,
+                ProcessReceivePayloadAware,
+                receiveState);
         }
 
         /// <summary>
@@ -1200,7 +1192,6 @@ namespace GSF.Communication
         private void ProcessReceivePayloadAware(IAsyncResult asyncResult)
         {
             ReceiveState receiveState = null;
-            int bytesReceived;
 
             try
             {
@@ -1216,7 +1207,7 @@ namespace GSF.Communication
                     throw new SocketException((int)SocketError.Disconnecting);
 
                 // Update statistics and bytes received
-                bytesReceived = receiveState.SslStream.EndRead(asyncResult);
+                int bytesReceived = receiveState.SslStream.EndRead(asyncResult);
                 UpdateBytesReceived(bytesReceived);
                 receiveState.Offset += bytesReceived;
 
@@ -1294,14 +1285,14 @@ namespace GSF.Communication
         /// </summary>
         private void ReceivePayloadUnawareAsync(ReceiveState receiveState)
         {
-            if (!receiveState.Token.Cancelled)
-            {
-                receiveState.SslStream.BeginRead(receiveState.Buffer,
-                    0,
-                    receiveState.Buffer.Length,
-                    ProcessReceivePayloadUnaware,
-                    receiveState);
-            }
+            if (receiveState.Token.Cancelled)
+                return;
+
+            receiveState.SslStream.BeginRead(receiveState.Buffer,
+                0,
+                receiveState.Buffer.Length,
+                ProcessReceivePayloadUnaware,
+                receiveState);
         }
 
         /// <summary>
@@ -1310,7 +1301,6 @@ namespace GSF.Communication
         private void ProcessReceivePayloadUnaware(IAsyncResult asyncResult)
         {
             ReceiveState receiveState = null;
-            int bytesReceived;
 
             try
             {
@@ -1326,7 +1316,7 @@ namespace GSF.Communication
                     throw new SocketException((int)SocketError.Disconnecting);
 
                 // Update bytes received
-                bytesReceived = receiveState.SslStream.EndRead(asyncResult);
+                int bytesReceived = receiveState.SslStream.EndRead(asyncResult);
                 UpdateBytesReceived(bytesReceived);
                 receiveState.PayloadLength = bytesReceived;
 
@@ -1397,22 +1387,20 @@ namespace GSF.Communication
 
             buffer.ValidateParameters(startIndex, length);
 
-            if (receiveState.Buffer != null)
-            {
-                int sourceLength = receiveState.PayloadLength - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(receiveState.Buffer, ReadIndex, buffer, startIndex, readBytes);
+            if (receiveState.Buffer == null)
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
 
-                // Update read index for next call
-                ReadIndex += readBytes;
+            int sourceLength = receiveState.PayloadLength - ReadIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(receiveState.Buffer, ReadIndex, buffer, startIndex, readBytes);
 
-                if (ReadIndex >= receiveState.PayloadLength)
-                    ReadIndex = 0;
+            // Update read index for next call
+            ReadIndex += readBytes;
 
-                return readBytes;
-            }
+            if (ReadIndex >= receiveState.PayloadLength)
+                ReadIndex = 0;
 
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
+            return readBytes;
         }
 
         /// <summary>
@@ -1669,33 +1657,33 @@ namespace GSF.Communication
 
             try
             {
-                if (disposing)
+                if (!disposing)
+                    return;
+
+                if (m_connectState != null)
                 {
-                    if (m_connectState != null)
-                    {
-                        TerminateConnection(m_connectState.Token);
-                        m_connectState.Dispose();
-                        m_connectState = null;
-                    }
+                    TerminateConnection(m_connectState.Token);
+                    m_connectState.Dispose();
+                    m_connectState = null;
+                }
 
-                    if (m_receiveState != null)
-                    {
-                        m_receiveState.Dispose();
-                        m_receiveState = null;
-                    }
+                if (m_receiveState != null)
+                {
+                    m_receiveState.Dispose();
+                    m_receiveState = null;
+                }
 
-                    if (m_sendState != null)
-                    {
-                        m_sendState.Dispose();
-                        m_sendState = null;
-                    }
+                if (m_sendState != null)
+                {
+                    m_sendState.Dispose();
+                    m_sendState = null;
+                }
 
-                    if (m_connectWaitHandle != null)
-                    {
-                        m_connectWaitHandle.Set();
-                        m_connectWaitHandle.Dispose();
-                        m_connectWaitHandle = null;
-                    }
+                if (m_connectWaitHandle != null)
+                {
+                    m_connectWaitHandle.Set();
+                    m_connectWaitHandle.Dispose();
+                    m_connectWaitHandle = null;
                 }
             }
             finally
@@ -1789,22 +1777,22 @@ namespace GSF.Communication
                 return;
 
             // Check to see if the client has reached the maximum send queue size.
-            if (MaxSendQueueSize > 0 && sendState.SendQueue.Count >= MaxSendQueueSize)
+            if (MaxSendQueueSize <= 0 || sendState.SendQueue.Count < MaxSendQueueSize)
+                return;
+
+            for (int i = 0; i < MaxSendQueueSize; i++)
             {
-                for (int i = 0; i < MaxSendQueueSize; i++)
+                if (sendState.Token.Cancelled)
+                    return;
+
+                if (sendState.SendQueue.TryDequeue(out TlsClientPayload payload))
                 {
-                    if (sendState.Token.Cancelled)
-                        return;
-
-                    if (sendState.SendQueue.TryDequeue(out TlsClientPayload payload))
-                    {
-                        payload.WaitHandle.Set();
-                        payload.WaitHandle.Dispose();
-                    }
+                    payload.WaitHandle.Set();
+                    payload.WaitHandle.Dispose();
                 }
-
-                throw new InvalidOperationException($"TLS client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
             }
+
+            throw new InvalidOperationException($"TLS client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
         }
 
         /// <summary>
@@ -1844,14 +1832,15 @@ namespace GSF.Communication
         /// </summary>
         private void LoadTrustedCertificates()
         {
-            if ((object)RemoteCertificateValidationCallback == null && m_certificateChecker == null)
-            {
-                m_defaultCertificateChecker.TrustedCertificates.Clear();
-                string trustedCertificatesPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(TrustedCertificatesPath));
+            if (RemoteCertificateValidationCallback != null || m_certificateChecker != null)
+                return;
 
-                foreach (string fileName in FilePath.GetFileList(trustedCertificatesPath))
-                    m_defaultCertificateChecker.TrustedCertificates.Add(new X509Certificate2(fileName));
-            }
+            m_defaultCertificateChecker.TrustedCertificates.Clear();
+            
+            string trustedCertificatesPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(TrustedCertificatesPath));
+
+            foreach (string fileName in FilePath.GetFileList(trustedCertificatesPath))
+                m_defaultCertificateChecker.TrustedCertificates.Add(new X509Certificate2(fileName));
         }
 
         #endregion

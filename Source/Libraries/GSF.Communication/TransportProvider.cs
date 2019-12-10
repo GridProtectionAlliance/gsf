@@ -30,6 +30,7 @@
 //******************************************************************************************************
 
 using System;
+using GSF.Diagnostics;
 
 namespace GSF.Communication
 {
@@ -68,10 +69,6 @@ namespace GSF.Communication
         /// </summary>
         public byte[] MulticastMembershipAddresses;
 
-        // Internally managed I/O buffers
-        private byte[] m_sendBuffer;
-        private byte[] m_receiveBuffer;
-
         #endregion
 
         #region [ Constructors ]
@@ -95,24 +92,12 @@ namespace GSF.Communication
         /// <remarks>
         /// Use <see cref="SetSendBuffer"/> to reset and/or establish send buffer size.
         /// </remarks>
-        public byte[] SendBuffer
-        {
-            get
-            {
-                return m_sendBuffer;
-            }
-        }
+        public byte[] SendBuffer { get; private set; }
 
         /// <summary>
         /// Gets send buffer requested size.
         /// </summary>
-        public int SendBufferSize
-        {
-            get
-            {
-                return (object)m_sendBuffer != null ? m_sendBuffer.Length : 0;
-            }
-        }
+        public int SendBufferSize => SendBuffer?.Length ?? 0;
 
         /// <summary>
         /// Gets buffer used for receiving data.
@@ -120,24 +105,12 @@ namespace GSF.Communication
         /// <remarks>
         /// Use <see cref="SetReceiveBuffer"/> to reset and/or establish receive buffer size.
         /// </remarks>
-        public byte[] ReceiveBuffer
-        {
-            get
-            {
-                return m_receiveBuffer;
-            }
-        }
+        public byte[] ReceiveBuffer { get; private set; }
 
         /// <summary>
         /// Gets receive buffer requested size.
         /// </summary>
-        public int ReceiveBufferSize
-        {
-            get
-            {
-                return (object)m_receiveBuffer != null ? m_receiveBuffer.Length : 0;
-            }
-        }
+        public int ReceiveBufferSize => ReceiveBuffer?.Length ?? 0;
 
         #endregion
 
@@ -150,8 +123,8 @@ namespace GSF.Communication
         /// <returns>New send buffer.</returns>
         public byte[] SetSendBuffer(int size)
         {
-            m_sendBuffer = new byte[size];
-            return m_sendBuffer;
+            SendBuffer = new byte[size];
+            return SendBuffer;
         }
 
         /// <summary>
@@ -161,8 +134,8 @@ namespace GSF.Communication
         /// <returns>New receive buffer.</returns>
         public byte[] SetReceiveBuffer(int size)
         {
-            m_receiveBuffer = new byte[size];
-            return m_receiveBuffer;
+            ReceiveBuffer = new byte[size];
+            return ReceiveBuffer;
         }
 
         /// <summary>
@@ -170,8 +143,8 @@ namespace GSF.Communication
         /// </summary>
         public void Reset()
         {
-            m_receiveBuffer = null;
-            m_sendBuffer = null;
+            ReceiveBuffer = null;
+            SendBuffer = null;
 
             BytesReceived = -1;
 
@@ -181,12 +154,13 @@ namespace GSF.Communication
             // Cleanup the provider.
             try
             {
-                if ((object)Provider != null)
-                    ((IDisposable)Provider).Dispose();
+                if (Provider is IDisposable provider)
+                    provider.Dispose();
             }
-            catch
+            catch (Exception ex)
             {
                 // Ignore encountered exception during dispose.
+                Logger.SwallowException(ex);
             }
             finally
             {

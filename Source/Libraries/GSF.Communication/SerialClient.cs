@@ -154,10 +154,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="SerialClient"/>.</param>
-        public SerialClient(IContainer container) : this()
-        {
-            container?.Add(this);
-        }
+        public SerialClient(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -278,7 +275,11 @@ namespace GSF.Communication
             if (m_connectData.ContainsKey("rtsEnable"))
                 m_serialClient.Provider.RtsEnable = m_connectData["rtsEnable"].ParseBoolean();
 
-            m_connectionThread = new Thread(OpenPort);
+            m_connectionThread = new Thread(OpenPort)
+            {
+                IsBackground = true
+            };
+
             m_connectionThread.Start();
 
             return m_connectionHandle;

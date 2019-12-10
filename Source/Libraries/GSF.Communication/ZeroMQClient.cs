@@ -92,8 +92,6 @@ namespace GSF.Communication
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
         private Thread m_connectionThread;
-        private int m_maxSendQueueSize;
-        private int m_maxReceiveQueueSize;
         private readonly object m_sendLock;
         private bool m_disposed;
 
@@ -104,8 +102,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="ZeroMQClient"/> class.
         /// </summary>
-        public ZeroMQClient()
-            : this(DefaultConnectionString)
+        public ZeroMQClient() : this(DefaultConnectionString)
         {
         }
 
@@ -113,14 +110,13 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="ZeroMQClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="ZeroMQClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public ZeroMQClient(string connectString)
-            : base(TransportProtocol.Tcp, connectString)
+        public ZeroMQClient(string connectString) : base(TransportProtocol.Tcp, connectString)
         {
             m_zeroMQClient = new TransportProvider<ZSocket>();
             m_zeroMQTransportProtocol = ZeroMQTransportProtocol.Tcp;
             m_completedHandle = new ManualResetEventSlim(true);
-            m_maxSendQueueSize = DefaultMaxSendQueueSize;
-            m_maxReceiveQueueSize = DefaultMaxReceiveQueueSize;
+            MaxSendQueueSize = DefaultMaxSendQueueSize;
+            MaxReceiveQueueSize = DefaultMaxReceiveQueueSize;
             m_sendLock = new object();
         }
 
@@ -128,12 +124,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="ZeroMQClient"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="ZeroMQClient"/>.</param>
-        public ZeroMQClient(IContainer container)
-            : this()
-        {
-            if (container != null)
-                container.Add(this);
-        }
+        public ZeroMQClient(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -145,20 +136,10 @@ namespace GSF.Communication
         /// <remarks>
         /// Maps to ZeroMQ high water mark setting for outbound messages.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxSendQueueSize),
-        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
-        public int MaxSendQueueSize
-        {
-            get
-            {
-                return m_maxSendQueueSize;
-            }
-            set
-            {
-                m_maxSendQueueSize = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxSendQueueSize)]
+        [Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        public int MaxSendQueueSize { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size for the receive queue before payloads are dumped from the queue.
@@ -166,20 +147,10 @@ namespace GSF.Communication
         /// <remarks>
         /// Maps to ZeroMQ high water mark setting for inbound messages.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxReceiveQueueSize),
-        Description("The maximum size for the receive queue before payloads are dumped from the queue.")]
-        public int MaxReceiveQueueSize
-        {
-            get
-            {
-                return m_maxReceiveQueueSize;
-            }
-            set
-            {
-                m_maxReceiveQueueSize = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxReceiveQueueSize)]
+        [Description("The maximum size for the receive queue before payloads are dumped from the queue.")]
+        public int MaxReceiveQueueSize { get; set; }
 
         /// <summary>
         /// Gets the <see cref="GSF.Communication.TransportProtocol"/> used by the client for the transportation of data with the server.
@@ -202,44 +173,26 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the ZeroMQ transport protocol to use for the <see cref="ZeroMQClient"/>.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(ZeroMQTransportProtocol.Tcp),
-        Description("The ZeroMQ transport protocol to use for the connection.")]
+        [Category("Settings")]
+        [DefaultValue(ZeroMQTransportProtocol.Tcp)]
+        [Description("The ZeroMQ transport protocol to use for the connection.")]
         public ZeroMQTransportProtocol ZeroMQTransportProtocol
         {
-            get
-            {
-                return m_zeroMQTransportProtocol;
-            }
-            set
-            {
-                m_zeroMQTransportProtocol = value;
-            }
+            get => m_zeroMQTransportProtocol;
+            set => m_zeroMQTransportProtocol = value;
         }
 
         /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="ZeroMQClient"/>.
         /// </summary>
         [Browsable(false)]
-        public ZSocket Client
-        {
-            get
-            {
-                return m_zeroMQClient.Provider;
-            }
-        }
+        public ZSocket Client => m_zeroMQClient.Provider;
 
         /// <summary>
         /// Gets the server URI of the <see cref="ZeroMQClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri
-        {
-            get
-            {
-                return m_connectData["server"];
-            }
-        }
+        public override string ServerUri => m_connectData["server"];
 
         /// <summary>
         /// Gets the descriptive status of the client.
@@ -252,7 +205,7 @@ namespace GSF.Communication
 
                 ZSocket client = Client;
 
-                if ((object)client != null)
+                if (client != null)
                 {
                     try
                     {
@@ -292,15 +245,16 @@ namespace GSF.Communication
         {
             base.SaveSettings();
 
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
-                settings["MaxReceiveQueueSize", true].Update(m_maxReceiveQueueSize);
-                config.Save();
-            }
+            if (!PersistSettings)
+                return;
+            
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
+            settings["MaxReceiveQueueSize", true].Update(MaxReceiveQueueSize);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -308,27 +262,26 @@ namespace GSF.Communication
         /// </summary>
         public override void LoadSettings()
         {
-            int maxQueueSize;
-
             base.LoadSettings();
 
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
-                settings.Add("MaxReceiveQueueSize", m_maxReceiveQueueSize, "The maximum size of the receive queue before payloads are dumped from the queue.");
-                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
-                MaxReceiveQueueSize = settings["MaxReceiveQueueSize"].ValueAs(m_maxReceiveQueueSize);
+            if (!PersistSettings)
+                return;
 
-                // Overwrite config file if max send or receive queue size exists in connection string
-                if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out maxQueueSize))
-                    m_maxSendQueueSize = maxQueueSize;
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+            settings.Add("MaxReceiveQueueSize", MaxReceiveQueueSize, "The maximum size of the receive queue before payloads are dumped from the queue.");
+            
+            MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(MaxSendQueueSize);
+            MaxReceiveQueueSize = settings["MaxReceiveQueueSize"].ValueAs(MaxReceiveQueueSize);
 
-                if (m_connectData.ContainsKey("maxReceiveQueueSize") && int.TryParse(m_connectData["maxReceiveQueueSize"], out maxQueueSize))
-                    m_maxReceiveQueueSize = maxQueueSize;
-            }
+            // Overwrite config file if max send or receive queue size exists in connection string
+            if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out int maxQueueSize))
+                MaxSendQueueSize = maxQueueSize;
+
+            if (m_connectData.ContainsKey("maxReceiveQueueSize") && int.TryParse(m_connectData["maxReceiveQueueSize"], out maxQueueSize))
+                MaxReceiveQueueSize = maxQueueSize;
         }
 
         /// <summary>
@@ -342,8 +295,11 @@ namespace GSF.Communication
 
             m_zeroMQClient.SetReceiveBuffer(ReceiveBufferSize);
 
-            m_connectionThread = new Thread(OpenSocket);
-            m_connectionThread.IsBackground = true;
+            m_connectionThread = new Thread(OpenSocket)
+            {
+                IsBackground = true
+            };
+
             m_connectionThread.Start();
 
             return m_connectionHandle;
@@ -355,7 +311,7 @@ namespace GSF.Communication
 
             while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
             {
-                if ((object)m_zeroMQClient.Provider != null)
+                if (m_zeroMQClient.Provider != null)
                 {
                     // Disconnect any existing ZeroMQ socket
                     try
@@ -375,16 +331,20 @@ namespace GSF.Communication
                     OnConnectionAttempt();
 
                     // Create ZeroMQ Dealer socket - closest match to IClient implementation
-                    m_zeroMQClient.Provider = new ZSocket(ZContext.Create(), ZSocketType.DEALER);
-                    m_zeroMQClient.Provider.Identity = m_zeroMQClient.ID.ToByteArray();
-                    m_zeroMQClient.Provider.SendHighWatermark = m_maxSendQueueSize;
-                    m_zeroMQClient.Provider.ReceiveHighWatermark = m_maxReceiveQueueSize;
-                    m_zeroMQClient.Provider.Immediate = true;
+                    m_zeroMQClient.Provider = new ZSocket(ZContext.Create(), ZSocketType.DEALER)
+                    {
+                        Identity = m_zeroMQClient.ID.ToByteArray(), 
+                        SendHighWatermark = MaxSendQueueSize, 
+                        ReceiveHighWatermark = MaxReceiveQueueSize, 
+                        Immediate = true,
+                        IPv6 = Transport.GetDefaultIPStack() == IPStack.IPv6
+                    };
+
                     m_zeroMQClient.Provider.SetOption(ZSocketOption.LINGER, 0);
                     m_zeroMQClient.Provider.SetOption(ZSocketOption.SNDTIMEO, 1000);
                     m_zeroMQClient.Provider.SetOption(ZSocketOption.RCVTIMEO, -1);
                     m_zeroMQClient.Provider.SetOption(ZSocketOption.RECONNECT_IVL, -1);
-                    m_zeroMQClient.Provider.IPv6 = (Transport.GetDefaultIPStack() == IPStack.IPv6);
+                    
                     m_zeroMQClient.Provider.Connect(ServerUri);
 
                     m_connectionHandle.Set();
@@ -475,22 +435,20 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if ((object)m_zeroMQClient.ReceiveBuffer != null)
-            {
-                int sourceLength = m_zeroMQClient.BytesReceived - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(m_zeroMQClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
+            if (m_zeroMQClient.ReceiveBuffer == null)
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
 
-                // Update read index for next call
-                ReadIndex += readBytes;
+            int sourceLength = m_zeroMQClient.BytesReceived - ReadIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(m_zeroMQClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
 
-                if (ReadIndex >= m_zeroMQClient.BytesReceived)
-                    ReadIndex = 0;
+            // Update read index for next call
+            ReadIndex += readBytes;
 
-                return readBytes;
-            }
+            if (ReadIndex >= m_zeroMQClient.BytesReceived)
+                ReadIndex = 0;
 
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
+            return readBytes;
         }
 
         /// <summary>
@@ -507,7 +465,7 @@ namespace GSF.Communication
 
             try
             {
-                if ((object)m_zeroMQClient.Provider != null)
+                if (m_zeroMQClient.Provider != null)
                 {
                     using (ZMessage message = new ZMessage())
                     {
@@ -539,22 +497,22 @@ namespace GSF.Communication
         {
             try
             {
-                if (CurrentState != ClientState.Disconnected)
+                if (CurrentState == ClientState.Disconnected)
+                    return;
+
+                if (m_connectionThread != null)
                 {
-                    if ((object)m_connectionThread != null)
-                    {
-                        m_connectionThread.Abort();
-                        m_connectionThread = null;
-                    }
-
-                    if ((object)m_zeroMQClient.Provider != null)
-                    {
-                        m_zeroMQClient.Provider.Disconnect(ServerUri);
-                        m_zeroMQClient.Reset();
-                    }
-
-                    OnConnectionTerminated();
+                    m_connectionThread.Abort();
+                    m_connectionThread = null;
                 }
+
+                if (m_zeroMQClient.Provider != null)
+                {
+                    m_zeroMQClient.Provider.Disconnect(ServerUri);
+                    m_zeroMQClient.Reset();
+                }
+
+                OnConnectionTerminated();
             }
             catch (Exception ex)
             {
@@ -568,26 +526,26 @@ namespace GSF.Communication
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_completedHandle != null)
-                        {
-                            m_completedHandle.Set();
-                            m_completedHandle.Dispose();
-                        }
+            if (m_disposed)
+                return;
 
-                        m_zeroMQClient.Reset();
-                    }
-                }
-                finally
+            try
+            {
+                if (!disposing)
+                    return;
+
+                if (m_completedHandle != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_completedHandle.Set();
+                    m_completedHandle.Dispose();
                 }
+
+                m_zeroMQClient.Reset();
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -618,9 +576,7 @@ namespace GSF.Communication
             // For traditional style connection strings, also support a "zeroMQTransportProtocol" setting
             if (m_connectData.ContainsKey("zeroMQTransportProtocol"))
             {
-                ZeroMQTransportProtocol protocol;
-
-                if (Enum.TryParse(m_connectData["zeroMQTransportProtocol"].Trim(), true, out protocol))
+                if (Enum.TryParse(m_connectData["zeroMQTransportProtocol"].Trim(), true, out ZeroMQTransportProtocol protocol))
                     m_zeroMQTransportProtocol = protocol;
             }
 
@@ -672,15 +628,13 @@ namespace GSF.Communication
             if (ZeroMQServer.IsThreadAbortException(ex))
                 return;
 
-            if (CurrentState != ClientState.Disconnected)
-            {
-                ZException zmqex = ex as ZException;
+            if (CurrentState == ClientState.Disconnected)
+                return;
 
-                if ((object)zmqex != null && (zmqex.Error.Number == ZError.EAGAIN.Number || zmqex.Error.Number == ZError.ETERM.Number))
-                    ThreadPool.QueueUserWorkItem(state => Disconnect());
-                else
-                    base.OnSendDataException(ex);
-            }
+            if (ex is ZException zmqex && (zmqex.Error.Number == ZError.EAGAIN.Number || zmqex.Error.Number == ZError.ETERM.Number))
+                ThreadPool.QueueUserWorkItem(state => Disconnect());
+            else
+                base.OnSendDataException(ex);
         }
 
         /// <summary>

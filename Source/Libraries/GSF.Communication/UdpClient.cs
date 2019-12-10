@@ -70,6 +70,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
 
@@ -220,8 +221,8 @@ namespace GSF.Communication
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the number of bytes received in the buffer from the server.
         /// </para>
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when unprocessed data has been received from the server.")]
+        [Category("Data")]
+        [Description("Occurs when unprocessed data has been received from the server.")]
         public event EventHandler<EventArgs<EndPoint, IPPacketInformation, int>> ReceiveDataFrom;
 
         /// <summary>
@@ -232,8 +233,8 @@ namespace GSF.Communication
         /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is a new buffer containing post-processed data received from the server starting at index zero.<br/>
         /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the number of post-processed bytes received in the buffer from the server.
         /// </remarks>
-        [Category("Data"),
-        Description("Occurs when data received from the server has been processed and is ready for consumption.")]
+        [Category("Data")]
+        [Description("Occurs when data received from the server has been processed and is ready for consumption.")]
         public event EventHandler<EventArgs<EndPoint, IPPacketInformation, byte[], int>> ReceiveDataFromComplete;
 
         // Fields
@@ -241,16 +242,10 @@ namespace GSF.Communication
         private IPEndPoint m_udpServer;
         private TransportProvider<Socket> m_udpClient;
         private IPStack m_ipStack;
-        private bool m_allowDualStackSocket;
         private int m_maxPacketSize;
-        private int m_maxSendQueueSize;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
-#if ThreadTracking
-        private ManagedThread m_connectionThread;
-#else
         private Thread m_connectionThread;
-#endif
 
         private int m_sending;
         private int m_receiving;
@@ -272,8 +267,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="UdpClient"/> class.
         /// </summary>
-        public UdpClient()
-            : this(DefaultConnectionString)
+        public UdpClient() : this(DefaultConnectionString)
         {
         }
 
@@ -281,13 +275,12 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="UdpClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="UdpClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public UdpClient(string connectString)
-            : base(TransportProtocol.Udp, connectString)
+        public UdpClient(string connectString) : base(TransportProtocol.Udp, connectString)
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
             m_maxPacketSize = DefaultMaxPacketSize;
-            m_allowDualStackSocket = DefaultAllowDualStackSocket;
-            m_maxSendQueueSize = DefaultMaxSendQueueSize;
+            AllowDualStackSocket = DefaultAllowDualStackSocket;
+            MaxSendQueueSize = DefaultMaxSendQueueSize;
 
             m_sendLock = new object();
             m_sendQueue = new ConcurrentQueue<UdpClientPayload>();
@@ -300,12 +293,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="UdpClient"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="UdpClient"/>.</param>
-        public UdpClient(IContainer container)
-            : this()
-        {
-            if (container != null)
-                container.Add(this);
-        }
+        public UdpClient(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -314,62 +302,30 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultAllowDualStackSocket),
-        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
-        public bool AllowDualStackSocket
-        {
-            get
-            {
-                return m_allowDualStackSocket;
-            }
-            set
-            {
-                m_allowDualStackSocket = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultAllowDualStackSocket)]
+        [Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        public bool AllowDualStackSocket { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxSendQueueSize),
-        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
-        public int MaxSendQueueSize
-        {
-            get
-            {
-                return m_maxSendQueueSize;
-            }
-            set
-            {
-                m_maxSendQueueSize = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxSendQueueSize)]
+        [Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        public int MaxSendQueueSize { get; set; }
 
         /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="UdpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public Socket Client
-        {
-            get
-            {
-                return m_udpClient.Provider;
-            }
-        }
+        public Socket Client => m_udpClient.Provider;
 
         /// <summary>
         /// Gets the server URI of the <see cref="UdpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri
-        {
-            get
-            {
-                return $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
-            }
-        }
+        public override string ServerUri => $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.
@@ -377,15 +333,12 @@ namespace GSF.Communication
         /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
         public override int ReceiveBufferSize
         {
-            get
-            {
-                return base.ReceiveBufferSize;
-            }
+            get => base.ReceiveBufferSize;
             set
             {
                 base.ReceiveBufferSize = value;
 
-                if ((object)m_udpClient != null && (object)m_udpClient.Provider != null)
+                if (m_udpClient?.Provider != null)
                     m_udpClient.Provider.ReceiveBufferSize = value;
             }
         }
@@ -395,16 +348,12 @@ namespace GSF.Communication
         /// </summary>
         public int MaxPacketSize
         {
-            get
-            {
-                return m_maxPacketSize;
-            }
+            get => m_maxPacketSize;
             set
             {
                 m_maxPacketSize = value;
 
-                if ((object)m_udpClient != null)
-                    m_udpClient.SetReceiveBuffer(value);
+                m_udpClient?.SetReceiveBuffer(value);
             }
         }
 
@@ -421,30 +370,23 @@ namespace GSF.Communication
             }
             set
             {
-#if MONO
+            #if MONO
                 if (value)
                     throw new NotImplementedException("Not supported under Mono.");
 
                 m_receivePacketInfo = false;
-#else
+            #else
                 m_receivePacketInfo = value;
 
-                if ((object)m_udpClient != null && (object)m_udpClient.Provider != null)
-                    m_udpClient.Provider.SetSocketOption(m_udpClient.Provider.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, value);
-#endif
+                m_udpClient?.Provider?.SetSocketOption(m_udpClient.Provider.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, value);
+            #endif
             }
         }
 
         /// <summary>
         /// Determines whether the base class should track statistics.
         /// </summary>
-        protected override bool TrackStatistics
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool TrackStatistics => false;
 
         /// <summary>
         /// Gets the descriptive status of the client.
@@ -455,7 +397,7 @@ namespace GSF.Communication
             {
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
 
-                if ((object)m_sendQueue != null)
+                if (m_sendQueue != null)
                 {
                     statusBuilder.AppendFormat("           Queued payloads: {0}", m_sendQueue.Count);
                     statusBuilder.AppendLine();
@@ -490,22 +432,20 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if ((object)m_udpClient.ReceiveBuffer != null)
-            {
-                int sourceLength = m_udpClient.BytesReceived - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(m_udpClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
+            if (m_udpClient.ReceiveBuffer == null)
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
 
-                // Update read index for next call
-                ReadIndex += readBytes;
+            int sourceLength = m_udpClient.BytesReceived - ReadIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(m_udpClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
 
-                if (ReadIndex >= m_udpClient.BytesReceived)
-                    ReadIndex = 0;
+            // Update read index for next call
+            ReadIndex += readBytes;
 
-                return readBytes;
-            }
+            if (ReadIndex >= m_udpClient.BytesReceived)
+                ReadIndex = 0;
 
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
+            return readBytes;
         }
 
         /// <summary>
@@ -514,15 +454,16 @@ namespace GSF.Communication
         public override void SaveSettings()
         {
             base.SaveSettings();
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
-                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
-                config.Save();
-            }
+
+            if (!PersistSettings)
+                return;
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["AllowDualStackSocket", true].Update(AllowDualStackSocket);
+            settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -530,23 +471,22 @@ namespace GSF.Communication
         /// </summary>
         public override void LoadSettings()
         {
-            int maxSendQueueSize;
-
             base.LoadSettings();
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
-                settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
-                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
-                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
 
-                // Overwrite config file if max send queue size exists in connection string.
-                if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out maxSendQueueSize))
-                    m_maxSendQueueSize = maxSendQueueSize;
-            }
+            if (!PersistSettings)
+                return;
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings.Add("AllowDualStackSocket", AllowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+            settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+            AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(AllowDualStackSocket);
+            MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(MaxSendQueueSize);
+
+            // Overwrite config file if max send queue size exists in connection string.
+            if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out int maxSendQueueSize))
+                MaxSendQueueSize = maxSendQueueSize;
         }
 
         /// <summary>
@@ -554,31 +494,30 @@ namespace GSF.Communication
         /// </summary>
         public override void Disconnect()
         {
-            if (CurrentState != ClientState.Disconnected)
+            if (CurrentState == ClientState.Disconnected)
+                return;
+
+            try
             {
-                try
+                base.Disconnect();
+
+                if (m_udpServer != null && m_udpClient.Provider != null)
                 {
-                    base.Disconnect();
+                    // If the IP specified for the server is a multicast IP, unsubscribe from the specified multicast group.
+                    IPEndPoint serverEndpoint = m_udpServer;
 
-                    if ((object)m_udpServer != null && (object)m_udpClient.Provider != null)
-                    {
-                        // If the IP specified for the server is a multicast IP, unsubscribe from the specified multicast group.
-                        IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
-
-                        if (Transport.IsMulticastIP(serverEndpoint.Address))
-                            DropMulticastMembership(serverEndpoint.Address, null, m_udpClient.MulticastMembershipAddresses);
-                    }
+                    if (Transport.IsMulticastIP(serverEndpoint.Address))
+                        DropMulticastMembership(serverEndpoint.Address, null, m_udpClient.MulticastMembershipAddresses);
                 }
-                catch (Exception ex)
-                {
-                    OnSendDataException(new InvalidOperationException($"Failed to drop multicast membership: {ex.Message}", ex));
-                }
-
-                m_udpClient.Reset();
-
-                if ((object)m_connectionThread != null)
-                    m_connectionThread.Abort();
             }
+            catch (Exception ex)
+            {
+                OnSendDataException(new InvalidOperationException($"Failed to drop multicast membership: {ex.Message}", ex));
+            }
+
+            m_udpClient.Reset();
+
+            m_connectionThread?.Abort();
         }
 
         /// <summary>
@@ -615,12 +554,11 @@ namespace GSF.Communication
                 m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
             }
 
-#if ThreadTracking
-            m_connectionThread = new ManagedThread(OpenPort);
-            m_connectionThread.Name = "GSF.Communication.UdpClient.OpenPort()";
-#else
-            m_connectionThread = new Thread(OpenPort);
-#endif
+            m_connectionThread = new Thread(OpenPort)
+            {
+                IsBackground = true
+            };
+            
             m_connectionThread.Start();
 
             return m_connectionHandle;
@@ -631,21 +569,14 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="serverAddress">Multicast address to join.</param>
         /// <param name="sourceAddress">Address which defines the source of the data or null if the membership is not source-specific.</param>
-        public void AddMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress)
-        {
-            byte[] multicastMembershipAddresses;
-            AddMulticastMembership(serverAddress, sourceAddress, out multicastMembershipAddresses);
-        }
+        public void AddMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress) => AddMulticastMembership(serverAddress, sourceAddress, out _);
 
         /// <summary>
         /// Drops a multicast membership from the UDP socket.
         /// </summary>
         /// <param name="serverAddress">Multicast address to drop.</param>
         /// <param name="sourceAddress">Address which defines the source of the data or null if the membership is not source-specific.</param>
-        public void DropMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress)
-        {
-            DropMulticastMembership(serverAddress, sourceAddress, null);
-        }
+        public void DropMulticastMembership(IPAddress serverAddress, IPAddress sourceAddress) => DropMulticastMembership(serverAddress, sourceAddress, null);
 
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="UdpClient"/> and optionally releases the managed resources.
@@ -653,38 +584,36 @@ namespace GSF.Communication
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if ((object)m_connectionHandle != null)
-                        {
-                            m_connectionHandle.Dispose();
-                            m_connectionHandle = null;
-                        }
+                if (!disposing)
+                    return;
 
-                        if ((object)m_sendArgs != null)
-                        {
-                            m_sendArgs.Dispose();
-                            m_sendArgs = null;
-                        }
-
-                        if ((object)m_receiveArgs != null)
-                        {
-                            m_receiveArgs.Dispose();
-                            m_receiveArgs = null;
-                        }
-                    }
-                }
-                finally
+                if (m_connectionHandle != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_connectionHandle.Dispose();
+                    m_connectionHandle = null;
                 }
+
+                if (m_sendArgs != null)
+                {
+                    m_sendArgs.Dispose();
+                    m_sendArgs = null;
+                }
+
+                if (m_receiveArgs != null)
+                {
+                    m_receiveArgs.Dispose();
+                    m_receiveArgs = null;
+                }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -696,9 +625,6 @@ namespace GSF.Communication
         /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
         protected override void ValidateConnectionString(string connectionString)
         {
-            string setting;
-            int value;
-
             m_connectData = connectionString.ParseKeyValuePairs();
 
             // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
@@ -707,11 +633,11 @@ namespace GSF.Communication
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888; Port=8989
             // Old Format: Server=localhost; RemotePort=8888; LocalPort=8888
-            if (m_connectData.ContainsKey("localport") && !m_connectData.ContainsKey("port"))
-                m_connectData.Add("port", m_connectData["localport"]);
+            if (m_connectData.ContainsKey("localPort") && !m_connectData.ContainsKey("port"))
+                m_connectData.Add("port", m_connectData["localPort"]);
 
-            if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("remoteport"))
-                m_connectData["server"] = $"{m_connectData["server"]}:{m_connectData["remoteport"]}";
+            if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("remotePort"))
+                m_connectData["server"] = $"{m_connectData["server"]}:{m_connectData["remotePort"]}";
 
             // Check if 'port' property is missing.
             if (!m_connectData.ContainsKey("port"))
@@ -725,7 +651,7 @@ namespace GSF.Communication
                 m_connectData.Add("multicastTimeToLive", "10");
 
             // Make sure a valid multi-cast time-to-live value is defined in the connection string
-            if (!(m_connectData.TryGetValue("multicastTimeToLive", out setting) && int.TryParse(setting, out value)))
+            if (!(m_connectData.TryGetValue("multicastTimeToLive", out string setting) && int.TryParse(setting, out _)))
                 m_connectData["multicastTimeToLive"] = "10";
         }
 
@@ -742,50 +668,45 @@ namespace GSF.Communication
                 {
                     OnConnectionAttempt();
 
-                    m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
+                    m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, AllowDualStackSocket);
 
                     // Disable SocketError.ConnectionReset exception from being thrown when the endpoint is not listening.
-                    // Fix MONO bug with SIO_UDP_CONNRESET
+                    // Fixes MONO issue with SIO_UDP_CONNRESET
                     try
                     {
                         m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new[] { Convert.ToByte(false) }, null);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Logger.SwallowException(ex, "Failed to set SIO_UDP_CONNRESET operating mode on UDP socket");
                     }
 
                     m_udpClient.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                     // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
-                    IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
+                    IPEndPoint serverEndpoint = m_udpServer;
 
                     if (Transport.IsMulticastIP(serverEndpoint.Address))
                     {
-                        string multicastSource;
-                        byte[] multicastMembershipAddresses;
                         IPAddress sourceAddress = null;
 
-                        if (m_connectData.TryGetValue("multicastSource", out multicastSource))
+                        if (m_connectData.TryGetValue("multicastSource", out string multicastSource))
                             sourceAddress = IPAddress.Parse(multicastSource);
 
-                        AddMulticastMembership(serverEndpoint.Address, sourceAddress, out multicastMembershipAddresses);
+                        AddMulticastMembership(serverEndpoint.Address, sourceAddress, out byte[] multicastMembershipAddresses);
                         m_udpClient.MulticastMembershipAddresses = multicastMembershipAddresses;
                     }
 
-#if !MONO
+                #if !MONO
                     // If the client requires packet info when
                     // receiving data, set the socket option now.
                     if (m_receivePacketInfo)
-                    {
                         m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
-                    }
-#endif
+                #endif
 
                     // Listen for data to send.
                     using (SocketAsyncEventArgs sendArgs = m_sendArgs)
-                    {
                         m_sendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
-                    }
 
                     m_udpClient.SetSendBuffer(SendBufferSize);
                     m_sendArgs.SetBuffer(m_udpClient.SendBuffer, 0, m_udpClient.SendBufferSize);
@@ -835,10 +756,7 @@ namespace GSF.Communication
         /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
         /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
-        {
-            return SendDataToAsync(data, offset, length, m_udpServer);
-        }
+        protected override WaitHandle SendDataAsync(byte[] data, int offset, int length) => SendDataToAsync(data, offset, length, m_udpServer);
 
         /// <summary>
         /// Sends data to the server asynchronously.
@@ -850,10 +768,6 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public WaitHandle SendDataToAsync(byte[] data, int offset, int length, EndPoint destination)
         {
-            UdpClientPayload payload;
-            UdpClientPayload dequeuedPayload;
-            ManualResetEventSlim handle;
-
             if (CurrentState != ClientState.Connected)
                 throw new InvalidOperationException("Client is not connected");
 
@@ -861,8 +775,8 @@ namespace GSF.Communication
             m_dumpPayloadsOperation.TryRun();
 
             // Create payload and wait handle.
-            payload = FastObjectFactory<UdpClientPayload>.CreateObjectFunction();
-            handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
+            UdpClientPayload payload = FastObjectFactory<UdpClientPayload>.CreateObjectFunction();
+            ManualResetEventSlim handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
 
             payload.Destination = destination;
             payload.Data = data;
@@ -879,7 +793,7 @@ namespace GSF.Communication
                 // Send the next queued payload.
                 if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
                 {
-                    if (m_sendQueue.TryDequeue(out dequeuedPayload))
+                    if (m_sendQueue.TryDequeue(out UdpClientPayload dequeuedPayload))
                         ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), dequeuedPayload);
                     else
                         Interlocked.Exchange(ref m_sending, 0);
@@ -911,6 +825,8 @@ namespace GSF.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnSendDataException(ex);
+            else
+                Logger.SwallowException(ex, "UdpClient.cs: The client state was disconnected");
         }
 
         /// <summary>
@@ -921,6 +837,8 @@ namespace GSF.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnReceiveDataException(ex);
+            else
+                Logger.SwallowException(ex, "UdpClient.cs: The client state was disconnected");
         }
 
         /// <summary>
@@ -937,15 +855,13 @@ namespace GSF.Communication
         /// </summary>
         private void SendPayload(UdpClientPayload payload)
         {
-            int copyLength;
-
             try
             {
                 // Set the user token of the socket args.
                 m_sendArgs.UserToken = payload;
 
                 // Copy payload into send buffer.
-                copyLength = Math.Min(payload.Length, m_udpClient.SendBufferSize);
+                int copyLength = Math.Min(payload.Length, m_udpClient.SendBufferSize);
                 Buffer.BlockCopy(payload.Data, payload.Offset, m_udpClient.SendBuffer, 0, copyLength);
 
                 // Set buffer and end point of send args.
@@ -976,13 +892,12 @@ namespace GSF.Communication
         private void ProcessSend()
         {
             UdpClientPayload payload = null;
-            ManualResetEventSlim handle = null;
 
             try
             {
                 // Get the payload and its wait handle.
                 payload = (UdpClientPayload)m_sendArgs.UserToken;
-                handle = payload.WaitHandle;
+                ManualResetEventSlim handle = payload.WaitHandle;
 
                 // Determine whether we are finished with this
                 // payload and, if so, set the wait handle.
@@ -1008,7 +923,7 @@ namespace GSF.Communication
             }
             finally
             {
-                if ((object)payload != null)
+                if (payload != null)
                 {
                     try
                     {
@@ -1066,13 +981,11 @@ namespace GSF.Communication
                 if (!m_udpClient.Provider.ReceiveFromAsync(m_receiveArgs))
                     ThreadPool.QueueUserWorkItem(state => ProcessReceive());
             }
-#if !MONO
             else
             {
                 if (!m_udpClient.Provider.ReceiveMessageFromAsync(m_receiveArgs))
                     ThreadPool.QueueUserWorkItem(state => ProcessReceive());
             }
-#endif
         }
 
         /// <summary>
@@ -1143,7 +1056,7 @@ namespace GSF.Communication
 
                 SocketOptionLevel level = serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
 
-                if ((object)sourceAddress == null)
+                if (sourceAddress == null)
                 {
                     // Execute multicast subscribe for any source
                     m_udpClient.Provider.SetSocketOption(level, SocketOptionName.AddMembership, new MulticastOption(serverAddress));
@@ -1179,7 +1092,7 @@ namespace GSF.Communication
             }
             catch (SocketException ex)
             {
-                // TODO: Need to add comment as to why this is necessary...
+                // Need to add comment as to why this is necessary...
                 if (ex.SocketErrorCode != SocketError.InvalidArgument)
                     throw;
             }
@@ -1192,14 +1105,14 @@ namespace GSF.Communication
                 if (!Transport.IsMulticastIP(serverAddress))
                     throw new InvalidOperationException("Cannot drop multicast membership if server address is not a multicast IP.");
 
-                if ((object)sourceAddress == null && (object)multicastMembershipAddresses == null)
+                if (sourceAddress == null && multicastMembershipAddresses == null)
                 {
                     // Execute multicast unsubscribe for any source
                     m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropMembership, new MulticastOption(serverAddress));
                 }
                 else
                 {
-                    if ((object)multicastMembershipAddresses == null)
+                    if (multicastMembershipAddresses == null)
                     {
                         IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
 
@@ -1239,23 +1152,21 @@ namespace GSF.Communication
         /// </summary>
         private void DumpPayloads()
         {
-            UdpClientPayload payload;
-
             // Check to see if the client has reached the maximum send queue size.
-            if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
-            {
-                for (int i = 0; i < m_maxSendQueueSize; i++)
-                {
-                    if (m_sendQueue.TryDequeue(out payload))
-                    {
-                        payload.WaitHandle.Set();
-                        payload.WaitHandle.Dispose();
-                        payload.WaitHandle = null;
-                    }
-                }
+            if (MaxSendQueueSize <= 0 || m_sendQueue.Count < MaxSendQueueSize)
+                return;
 
-                throw new InvalidOperationException($"UDP client reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
+            for (int i = 0; i < MaxSendQueueSize; i++)
+            {
+                if (m_sendQueue.TryDequeue(out UdpClientPayload payload))
+                {
+                    payload.WaitHandle.Set();
+                    payload.WaitHandle.Dispose();
+                    payload.WaitHandle = null;
+                }
             }
+
+            throw new InvalidOperationException($"UDP client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
         }
 
         /// <summary>
@@ -1292,12 +1203,11 @@ namespace GSF.Communication
         {
             try
             {
-                if ((object)ReceiveDataFrom != null)
-                    ReceiveDataFrom(this, new EventArgs<EndPoint, IPPacketInformation, int>(remoteEndPoint, packetInformation, size));
+                ReceiveDataFrom?.Invoke(this, new EventArgs<EndPoint, IPPacketInformation, int>(remoteEndPoint, packetInformation, size));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 
@@ -1312,12 +1222,11 @@ namespace GSF.Communication
         {
             try
             {
-                if ((object)ReceiveDataFromComplete != null)
-                    ReceiveDataFromComplete(this, new EventArgs<EndPoint, IPPacketInformation, byte[], int>(remoteEndPoint, packetInformation, data, size));
+                ReceiveDataFromComplete?.Invoke(this, new EventArgs<EndPoint, IPPacketInformation, byte[], int>(remoteEndPoint, packetInformation, data, size));
             }
-            catch (Exception userException)
+            catch (Exception ex)
             {
-                OnUnhandledUserException(userException);
+                OnUnhandledUserException(ex);
             }
         }
 

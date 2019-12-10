@@ -94,8 +94,7 @@ namespace GSF.Communication.Radius
         /// </summary>
         /// <param name="serverName">Name or address of the RADIUS server.</param>
         /// <param name="sharedSecret">Shared secret used for encryption and authentication.</param>
-        public RadiusClient(string serverName, string sharedSecret)
-            : this(serverName, DefaultServerPort, sharedSecret)
+        public RadiusClient(string serverName, string sharedSecret) : this(serverName, DefaultServerPort, sharedSecret)
         {
         }
 
@@ -108,13 +107,13 @@ namespace GSF.Communication.Radius
         /// <remarks></remarks>
         public RadiusClient(string serverName, int serverPort, string sharedSecret)
         {
-            this.SharedSecret = sharedSecret;
-            this.RequestAttempts = 1;
-            this.ReponseTimeout = 15000;
-            this.NewPinModeMessage1 = DefaultNewPinModeMessage1;
-            this.NewPinModeMessage2 = DefaultNewPinModeMessage2;
-            this.NewPinModeMessage3 = DefaultNewPinModeMessage3;
-            this.NextTokenModeMessage = DefaultNextTokenModeMessage;
+            SharedSecret = sharedSecret;
+            RequestAttempts = 1;
+            ReponseTimeout = 15000;
+            NewPinModeMessage1 = DefaultNewPinModeMessage1;
+            NewPinModeMessage2 = DefaultNewPinModeMessage2;
+            NewPinModeMessage3 = DefaultNewPinModeMessage3;
+            NextTokenModeMessage = DefaultNextTokenModeMessage;
             m_udpClient = new UdpClient($"Server={serverName}; RemotePort={serverPort}; LocalPort=0");
             m_udpClient.ReceiveDataComplete += m_udpClient_ReceivedData;
             m_udpClient.Connect(); // Start the connection cycle.
@@ -131,10 +130,7 @@ namespace GSF.Communication.Radius
         /// <returns>Name or address of RADIUS server.</returns>
         public string ServerName
         {
-            get
-            {
-                return m_udpClient.ConnectionString.ParseKeyValuePairs()["server"];
-            }
+            get => m_udpClient.ConnectionString.ParseKeyValuePairs()["server"];
             set
             {
                 CheckDisposed();
@@ -159,10 +155,7 @@ namespace GSF.Communication.Radius
         /// <returns>Port number of the RADIUS server.</returns>
         public int ServerPort
         {
-            get
-            {
-                return Convert.ToInt32(m_udpClient.ConnectionString.ParseKeyValuePairs()["remoteport"]);
-            }
+            get => Convert.ToInt32(m_udpClient.ConnectionString.ParseKeyValuePairs()["remotePort"]);
             set
             {
                 CheckDisposed();
@@ -170,7 +163,7 @@ namespace GSF.Communication.Radius
                 if (value >= 0 && value <= 65535)
                 {
                     Dictionary<string, string> parts = m_udpClient.ConnectionString.ParseKeyValuePairs();
-                    parts["remoteport"] = value.ToString();
+                    parts["remotePort"] = value.ToString();
                     m_udpClient.ConnectionString = parts.JoinKeyValuePairs();
                 }
                 else
@@ -187,10 +180,7 @@ namespace GSF.Communication.Radius
         /// <returns>Number of time a request is to sent to the server until a valid response is received.</returns>
         public short RequestAttempts
         {
-            get
-            {
-                return m_requestAttempts;
-            }
+            get => m_requestAttempts;
             set
             {
                 CheckDisposed();
@@ -209,10 +199,7 @@ namespace GSF.Communication.Radius
         /// <returns>Time (in milliseconds) to wait for a response from server after sending a request.</returns>
         public int ReponseTimeout
         {
-            get
-            {
-                return m_reponseTimeout;
-            }
+            get => m_reponseTimeout;
             set
             {
                 CheckDisposed();
@@ -231,10 +218,7 @@ namespace GSF.Communication.Radius
         /// <returns>Shared secret used between the client and server for encryption and authentication.</returns>
         public string SharedSecret
         {
-            get
-            {
-                return m_sharedSecret;
-            }
+            get => m_sharedSecret;
             set
             {
                 CheckDisposed();
@@ -255,10 +239,7 @@ namespace GSF.Communication.Radius
         /// <returns>Text for "New Pin" mode's first message.</returns>
         public string NewPinModeMessage1
         {
-            get
-            {
-                return m_newPinModeMessage1;
-            }
+            get => m_newPinModeMessage1;
             set
             {
                 CheckDisposed();
@@ -279,10 +260,7 @@ namespace GSF.Communication.Radius
         /// <returns>Text for "New Pin" mode's second message.</returns>
         public string NewPinModeMessage2
         {
-            get
-            {
-                return m_newPinModeMessage2;
-            }
+            get => m_newPinModeMessage2;
             set
             {
                 CheckDisposed();
@@ -303,10 +281,7 @@ namespace GSF.Communication.Radius
         /// <returns>Text for "New Pin" mode's third message.</returns>
         public string NewPinModeMessage3
         {
-            get
-            {
-                return m_newPinModeMessage3;
-            }
+            get => m_newPinModeMessage3;
             set
             {
                 CheckDisposed();
@@ -326,10 +301,7 @@ namespace GSF.Communication.Radius
         /// <returns>Text for "Next Token" mode.</returns>
         public string NextTokenModeMessage
         {
-            get
-            {
-                return m_nextTokenModeMessage;
-            }
+            get => m_nextTokenModeMessage;
             set
             {
                 CheckDisposed();
@@ -362,14 +334,12 @@ namespace GSF.Communication.Radius
             RadiusPacket response = null;
 
             // We have a UDP socket we can use for exchanging packets.
-            DateTime stopTime;
-
             for (int i = 1; i <= m_requestAttempts; i++)
             {
                 m_responseBytes = null;
                 m_udpClient.Send(request.BinaryImage());
 
-                stopTime = DateTime.UtcNow.AddMilliseconds(m_reponseTimeout);
+                DateTime stopTime = DateTime.UtcNow.AddMilliseconds(m_reponseTimeout);
 
                 while (true)
                 {
@@ -378,11 +348,11 @@ namespace GSF.Communication.Radius
                     // Stay in the loop until:
                     // 1) We receive a response OR
                     // 2) We exceed the response timeout duration
-                    if ((object)m_responseBytes != null || DateTime.UtcNow > stopTime)
+                    if (m_responseBytes != null || DateTime.UtcNow > stopTime)
                         break;
                 }
 
-                if ((object)m_responseBytes != null)
+                if (m_responseBytes != null)
                 {
                     // The server sent a response.
                     response = new RadiusPacket(m_responseBytes, 0, m_responseBytes.Length);
@@ -413,9 +383,6 @@ namespace GSF.Communication.Radius
             if (string.IsNullOrEmpty(pin))
                 throw new ArgumentNullException(nameof(pin));
 
-            byte[] reply;
-            RadiusPacket response;
-
             // Step 1: Send username and token for password, receive a challenge response with reply
             //         message worded "Enter a new PIN". [Verification]
             // Step 2: Send username and new ping for password, receive a challenge response with reply
@@ -423,14 +390,14 @@ namespace GSF.Communication.Radius
             // Step 3: Send username and new ping for password, receive a challenge response with reply
             //         message worded "PIN Accepted".    [Attempt #2]
 
-            response = Authenticate(username, token);
+            RadiusPacket response = Authenticate(username, token);
 
             if (!IsUserInNewPinMode(response))
                 return false;
 
             // User account is really in "New Pin" mode.
             response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State));
-            reply = response.GetAttributeValue(AttributeType.ReplyMessage);
+            byte[] reply = response.GetAttributeValue(AttributeType.ReplyMessage);
 
             if (!RadiusPacket.Encoding.GetString(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage2.ToLower()))
                 return false; // New pin not accepted in attempt #1.
@@ -464,10 +431,7 @@ namespace GSF.Communication.Radius
         /// attribute.
         /// </para>
         /// </remarks>
-        public RadiusPacket Authenticate(string username, string password)
-        {
-            return Authenticate(username, password, null);
-        }
+        public RadiusPacket Authenticate(string username, string password) => Authenticate(username, password, null);
 
         /// <summary>
         /// Authenticates the username and password against the RADIUS server.
@@ -508,7 +472,7 @@ namespace GSF.Communication.Radius
             request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserPassword, RadiusPacket.EncryptPassword(password, m_sharedSecret, authenticator)));
 
             // State attribute is used when responding to a AccessChallenge response.
-            if ((object)state != null)
+            if (state != null)
                 request.Attributes.Add(new RadiusPacketAttribute(AttributeType.State, state));
 
             return ProcessRequest(request);
@@ -527,12 +491,12 @@ namespace GSF.Communication.Radius
         {
             CheckDisposed();
 
-            if ((object)response == null)
+            if (response == null)
                 throw new ArgumentNullException(nameof(response));
 
             byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
 
-            if ((object)messageBytes == null)
+            if (messageBytes == null)
                 throw new ArgumentException("ReplyMessage attribute is not present", nameof(response));
 
             // Unfortunately, the only way of determining whether or not a user account is in the
@@ -559,12 +523,12 @@ namespace GSF.Communication.Radius
         {
             CheckDisposed();
 
-            if ((object)response == null)
+            if (response == null)
                 throw new ArgumentNullException(nameof(response));
 
             byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
 
-            if ((object)messageBytes == null)
+            if (messageBytes == null)
                 throw new ArgumentException("ReplyMessage attribute is not present", nameof(response));
 
             // Unfortunately, the only way of determining whether or not a user account is in the
@@ -590,7 +554,7 @@ namespace GSF.Communication.Radius
         protected void CheckDisposed()
         {
             if (m_disposed)
-                throw new ObjectDisposedException(this.GetType().Name);
+                throw new ObjectDisposedException(GetType().Name);
         }
 
         /// <summary>
@@ -602,7 +566,7 @@ namespace GSF.Communication.Radius
             {
                 if (disposing)
                 {
-                    if ((object)m_udpClient != null)
+                    if (m_udpClient != null)
                     {
                         m_udpClient.ReceiveDataComplete -= m_udpClient_ReceivedData;
                         m_udpClient.Dispose();
@@ -612,10 +576,7 @@ namespace GSF.Communication.Radius
             m_disposed = true;
         }
 
-        private void m_udpClient_ReceivedData(object sender, EventArgs<byte[], int> e)
-        {
-            m_responseBytes = e.Argument1;
-        }
+        private void m_udpClient_ReceivedData(object sender, EventArgs<byte[], int> e) => m_responseBytes = e.Argument1;
 
         #endregion
     }

@@ -308,8 +308,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="TcpClient"/> class.
         /// </summary>
-        public TcpClient()
-            : this(DefaultConnectionString)
+        public TcpClient() : this(DefaultConnectionString)
         {
         }
 
@@ -317,8 +316,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="TcpClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="TcpClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public TcpClient(string connectString)
-            : base(TransportProtocol.Tcp, connectString)
+        public TcpClient(string connectString) : base(TransportProtocol.Tcp, connectString)
         {
             PayloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
@@ -335,11 +333,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="TcpClient"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TcpClient"/>.</param>
-        public TcpClient(IContainer container)
-            : this()
-        {
-            container?.Add(this);
-        }
+        public TcpClient(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -348,9 +342,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the payload boundaries are to be preserved during transmission.
         /// </summary>
-        [Category("Data"),
-        DefaultValue(DefaultPayloadAware),
-        Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
+        [Category("Data")]
+        [DefaultValue(DefaultPayloadAware)]
+        [Description("Indicates whether the payload boundaries are to be preserved during transmission.")]
         public bool PayloadAware { get; set; }
 
         /// <summary>
@@ -359,12 +353,12 @@ namespace GSF.Communication
         /// <remarks>
         /// Setting property to <c>null</c> will create a zero-length payload marker.
         /// </remarks>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] PayloadMarker
         {
             get => m_payloadMarker;
-            set => m_payloadMarker = value ?? new byte[0];
+            set => m_payloadMarker = value ?? Array.Empty<byte>();
         }
 
         /// <summary>
@@ -373,8 +367,8 @@ namespace GSF.Communication
         /// <remarks>
         /// Setting property to <c>null</c> will force use of little-endian encoding.
         /// </remarks>
-        [Browsable(false),
-         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public EndianOrder PayloadEndianOrder
         {
             get => m_payloadEndianOrder;
@@ -387,9 +381,9 @@ namespace GSF.Communication
         /// <remarks>   
         /// This option is ignored under Mono deployments.
         /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultIntegratedSecurity),
-        Description("Indicates whether the current Windows account credentials are used for authentication.")]
+        [Category("Security")]
+        [DefaultValue(DefaultIntegratedSecurity)]
+        [Description("Indicates whether the current Windows account credentials are used for authentication.")]
         public bool IntegratedSecurity { get; set; }
 
         /// <summary>
@@ -400,33 +394,33 @@ namespace GSF.Communication
         /// This property should only be set to true if there is an alternative by which
         /// to authenticate the client when integrated security fails.
         /// </remarks>
-        [Category("Security"),
-        DefaultValue(DefaultIgnoreInvalidCredentials),
-        Description("Indicates whether the client Windows account credentials are validated during authentication.")]
+        [Category("Security")]
+        [DefaultValue(DefaultIgnoreInvalidCredentials)]
+        [Description("Indicates whether the client Windows account credentials are validated during authentication.")]
         public bool IgnoreInvalidCredentials { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultAllowDualStackSocket),
-        Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultAllowDualStackSocket)]
+        [Description("Determines if dual-mode socket is allowed when endpoint address is IPv6.")]
         public bool AllowDualStackSocket { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size for the send queue before payloads are dumped from the queue.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxSendQueueSize),
-        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxSendQueueSize)]
+        [Description("The maximum size for the send queue before payloads are dumped from the queue.")]
         public int MaxSendQueueSize { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if small packets are delivered to the remote host without delay.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultNoDelay),
-        Description("Determines if small packets are delivered to the remote host without delay.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultNoDelay)]
+        [Description("Determines if small packets are delivered to the remote host without delay.")]
         public bool NoDelay { get; set; }
 
         /// <summary>
@@ -498,18 +492,19 @@ namespace GSF.Communication
         {
             base.SaveSettings();
 
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["PayloadAware", true].Update(PayloadAware);
-                settings["IntegratedSecurity", true].Update(IntegratedSecurity);
-                settings["AllowDualStackSocket", true].Update(AllowDualStackSocket);
-                settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
-                settings["NoDelay", true].Update(NoDelay);
-                config.Save();
-            }
+            if (!PersistSettings)
+                return;
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["PayloadAware", true].Update(PayloadAware);
+            settings["IntegratedSecurity", true].Update(IntegratedSecurity);
+            settings["AllowDualStackSocket", true].Update(AllowDualStackSocket);
+            settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
+            settings["NoDelay", true].Update(NoDelay);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -519,26 +514,27 @@ namespace GSF.Communication
         {
             base.LoadSettings();
 
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("PayloadAware", PayloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
-                settings.Add("IntegratedSecurity", IntegratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
-                settings.Add("AllowDualStackSocket", AllowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
-                settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
-                settings.Add("NoDelay", NoDelay, "True to disable Nagle so that small packets are delivered to the remote host without delay, otherwise False.");
-                PayloadAware = settings["PayloadAware"].ValueAs(PayloadAware);
-                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(IntegratedSecurity);
-                AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(AllowDualStackSocket);
-                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(MaxSendQueueSize);
-                NoDelay = settings["NoDelay"].ValueAs(NoDelay);
+            if (!PersistSettings)
+                return;
 
-                // Overwrite config file if max send queue size exists in connection string.
-                if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out int maxSendQueueSize))
-                    MaxSendQueueSize = maxSendQueueSize;
-            }
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings.Add("PayloadAware", PayloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+            settings.Add("IntegratedSecurity", IntegratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
+            settings.Add("AllowDualStackSocket", AllowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
+            settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+            settings.Add("NoDelay", NoDelay, "True to disable Nagle so that small packets are delivered to the remote host without delay, otherwise False.");
+            
+            PayloadAware = settings["PayloadAware"].ValueAs(PayloadAware);
+            IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(IntegratedSecurity);
+            AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(AllowDualStackSocket);
+            MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(MaxSendQueueSize);
+            NoDelay = settings["NoDelay"].ValueAs(NoDelay);
+
+            // Overwrite config file if max send queue size exists in connection string.
+            if (m_connectData.ContainsKey("maxSendQueueSize") && int.TryParse(m_connectData["maxSendQueueSize"], out int maxSendQueueSize))
+                MaxSendQueueSize = maxSendQueueSize;
         }
 
         /// <summary>
@@ -549,78 +545,77 @@ namespace GSF.Communication
         public override WaitHandle ConnectAsync()
         {
             ConnectState connectState = null;
-            Match endpoint;
 
-            if (CurrentState == ClientState.Disconnected && !m_disposed)
+            if (CurrentState != ClientState.Disconnected || m_disposed)
+                return m_connectWaitHandle;
+
+            try
             {
-                try
+                // If we do not already have a wait handle to use
+                // for connections, get one from the base class
+                if (m_connectWaitHandle == null)
+                    m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+
+                // Create state object for the asynchronous connection loop
+                connectState = new ConnectState();
+
+                // Store connectState in m_connectState so that calls to Disconnect
+                // and Dispose can dispose resources and cancel asynchronous loops
+                using (m_connectState)
                 {
-                    // If we do not already have a wait handle to use
-                    // for connections, get one from the base class
-                    if (m_connectWaitHandle == null)
-                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
-
-                    // Create state object for the asynchronous connection loop
-                    connectState = new ConnectState();
-
-                    // Store connectState in m_connectState so that calls to Disconnect
-                    // and Dispose can dispose resources and cancel asynchronous loops
-                    using (m_connectState)
-                    {
-                        m_connectState = connectState;
-                    }
-
-                    OnConnectionAttempt();
-                    m_connectWaitHandle.Reset();
-
-                    // Overwrite config file if integrated security exists in connection string
-                    if (m_connectData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
-                        IntegratedSecurity = integratedSecuritySetting.ParseBoolean();
-                
-                #if MONO
-                    // Force integrated security to be False under Mono since it's not supported
-                    IntegratedSecurity = false;
-                #endif
-
-                    // Overwrite config file if no delay exists in connection string.
-                    if (m_connectData.TryGetValue("noDelay", out string noDelaySetting))
-                        NoDelay = noDelaySetting.ParseBoolean();
-
-                    // Initialize state object for the asynchronous connection loop
-                    endpoint = Regex.Match(ServerList[m_serverIndex], Transport.EndpointFormatRegex);
-
-                    connectState.ConnectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    connectState.ConnectArgs.SocketFlags = SocketFlags.None;
-                    connectState.ConnectArgs.UserToken = connectState;
-                    connectState.ConnectArgs.Completed += (sender, args) => ProcessConnect((ConnectState)args.UserToken);
-
-                    // Create client socket
-                    connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, AllowDualStackSocket);
-                    connectState.Socket.NoDelay = NoDelay;
-
-                    // Initiate the asynchronous connection loop
-                    ConnectAsync(connectState);
+                    m_connectState = connectState;
                 }
-                catch (Exception ex)
-                {
-                    // Log exception during connection attempt
-                    OnConnectionException(ex);
 
-                    // Terminate the connection
-                    if (connectState != null)
-                        TerminateConnection(connectState.Token);
+                OnConnectionAttempt();
+                m_connectWaitHandle.Reset();
 
-                    // Ensure that the wait handle is set so that operations waiting
-                    // for completion of the asynchronous connection loop can continue
-                    m_connectWaitHandle?.Set();
-                }
-                finally
-                {
-                    // If the operation was cancelled during execution,
-                    // make sure to dispose of erroneously allocated resources
-                    if (connectState != null && connectState.Token.Cancelled)
-                        connectState.Dispose();
-                }
+                // Overwrite config file if integrated security exists in connection string
+                if (m_connectData.TryGetValue("integratedSecurity", out string integratedSecuritySetting))
+                    IntegratedSecurity = integratedSecuritySetting.ParseBoolean();
+
+            #if MONO
+                // Force integrated security to be False under Mono since it's not supported
+                IntegratedSecurity = false;
+            #endif
+
+                // Overwrite config file if no delay exists in connection string.
+                if (m_connectData.TryGetValue("noDelay", out string noDelaySetting))
+                    NoDelay = noDelaySetting.ParseBoolean();
+
+                // Initialize state object for the asynchronous connection loop
+                Match endpoint = Regex.Match(ServerList[m_serverIndex], Transport.EndpointFormatRegex);
+
+                connectState.ConnectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                connectState.ConnectArgs.SocketFlags = SocketFlags.None;
+                connectState.ConnectArgs.UserToken = connectState;
+                connectState.ConnectArgs.Completed += (sender, args) => ProcessConnect((ConnectState)args.UserToken);
+
+                // Create client socket
+                connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, AllowDualStackSocket);
+                connectState.Socket.NoDelay = NoDelay;
+
+                // Initiate the asynchronous connection loop
+                ConnectAsync(connectState);
+            }
+            catch (Exception ex)
+            {
+                // Log exception during connection attempt
+                OnConnectionException(ex);
+
+                // Terminate the connection
+                if (connectState != null)
+                    TerminateConnection(connectState.Token);
+
+                // Ensure that the wait handle is set so that operations waiting
+                // for completion of the asynchronous connection loop can continue
+                m_connectWaitHandle?.Set();
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of erroneously allocated resources
+                if (connectState != null && connectState.Token.Cancelled)
+                    connectState.Dispose();
             }
 
             // Return the wait handle that signals completion
@@ -1208,22 +1203,20 @@ namespace GSF.Communication
 
             buffer.ValidateParameters(startIndex, length);
 
-            if (receiveState.Buffer != null)
-            {
-                int sourceLength = receiveState.PayloadLength - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(receiveState.Buffer, ReadIndex, buffer, startIndex, readBytes);
+            if (receiveState.Buffer == null)
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
 
-                // Update read index for next call
-                ReadIndex += readBytes;
+            int sourceLength = receiveState.PayloadLength - ReadIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(receiveState.Buffer, ReadIndex, buffer, startIndex, readBytes);
 
-                if (ReadIndex >= receiveState.PayloadLength)
-                    ReadIndex = 0;
+            // Update read index for next call
+            ReadIndex += readBytes;
 
-                return readBytes;
-            }
+            if (ReadIndex >= receiveState.PayloadLength)
+                ReadIndex = 0;
 
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
+            return readBytes;
         }
 
         /// <summary>
@@ -1481,33 +1474,33 @@ namespace GSF.Communication
 
             try
             {
-                if (disposing)
+                if (!disposing)
+                    return;
+
+                if (m_connectState != null)
                 {
-                    if (m_connectState != null)
-                    {
-                        TerminateConnection(m_connectState.Token);
-                        m_connectState.Dispose();
-                        m_connectState = null;
-                    }
+                    TerminateConnection(m_connectState.Token);
+                    m_connectState.Dispose();
+                    m_connectState = null;
+                }
 
-                    if (m_receiveState != null)
-                    {
-                        m_receiveState.Dispose();
-                        m_receiveState = null;
-                    }
+                if (m_receiveState != null)
+                {
+                    m_receiveState.Dispose();
+                    m_receiveState = null;
+                }
 
-                    if (m_sendState != null)
-                    {
-                        m_sendState.Dispose();
-                        m_sendState = null;
-                    }
+                if (m_sendState != null)
+                {
+                    m_sendState.Dispose();
+                    m_sendState = null;
+                }
 
-                    if (m_connectWaitHandle != null)
-                    {
-                        m_connectWaitHandle.Set();
-                        m_connectWaitHandle.Dispose();
-                        m_connectWaitHandle = null;
-                    }
+                if (m_connectWaitHandle != null)
+                {
+                    m_connectWaitHandle.Set();
+                    m_connectWaitHandle.Dispose();
+                    m_connectWaitHandle = null;
                 }
             }
             finally
@@ -1604,22 +1597,22 @@ namespace GSF.Communication
                 return;
 
             // Check to see if the client has reached the maximum send queue size.
-            if (MaxSendQueueSize > 0 && sendState.SendQueue.Count >= MaxSendQueueSize)
+            if (MaxSendQueueSize <= 0 || sendState.SendQueue.Count < MaxSendQueueSize)
+                return;
+
+            for (int i = 0; i < MaxSendQueueSize; i++)
             {
-                for (int i = 0; i < MaxSendQueueSize; i++)
+                if (sendState.Token.Cancelled)
+                    return;
+
+                if (sendState.SendQueue.TryDequeue(out TcpClientPayload payload))
                 {
-                    if (sendState.Token.Cancelled)
-                        return;
-
-                    if (sendState.SendQueue.TryDequeue(out TcpClientPayload payload))
-                    {
-                        payload.WaitHandle.Set();
-                        payload.WaitHandle.Dispose();
-                    }
+                    payload.WaitHandle.Set();
+                    payload.WaitHandle.Dispose();
                 }
-
-                throw new InvalidOperationException($"TCP client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
             }
+
+            throw new InvalidOperationException($"TCP client reached maximum send queue size. {MaxSendQueueSize} payloads dumped from the queue.");
         }
 
         /// <summary>

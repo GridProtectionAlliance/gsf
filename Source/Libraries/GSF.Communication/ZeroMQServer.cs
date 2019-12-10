@@ -47,6 +47,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -102,17 +103,12 @@ namespace GSF.Communication
         /// </para>
         /// </remarks>
         public const string EndpointFormatRegex = @"(?<protocol>.+)\://(?<host>(\[.+\]|[^\:])+)(\:(?<port>\d+$))?";
-
-        // Fields
-        private ZSocket m_zeroMQServer;
         private ZeroMQTransportProtocol m_zeroMQTransportProtocol;
         private readonly ManualResetEventSlim m_completedHandle;
         private Dictionary<string, string> m_configData;
         private readonly ConcurrentDictionary<Guid, TransportProvider<DateTime>> m_clientInfoLookup;
         private readonly Timer m_activeClientTimer;
         private Thread m_receiveDataThread;
-        private int m_maxSendQueueSize;
-        private int m_maxReceiveQueueSize;
         private readonly object m_sendLock;
         private bool m_disposed;
 
@@ -123,8 +119,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="ZeroMQServer"/> class.
         /// </summary>
-        public ZeroMQServer()
-            : this(DefaultConfigurationString)
+        public ZeroMQServer() : this(DefaultConfigurationString)
         {
         }
 
@@ -132,13 +127,12 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="ZeroMQServer"/> class.
         /// </summary>
         /// <param name="configString">Config string of the <see cref="ZeroMQServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
-        public ZeroMQServer(string configString)
-            : base(TransportProtocol.Tcp, configString)
+        public ZeroMQServer(string configString) : base(TransportProtocol.Tcp, configString)
         {
             m_zeroMQTransportProtocol = ZeroMQTransportProtocol.Tcp;
             m_completedHandle = new ManualResetEventSlim(true);
-            m_maxSendQueueSize = DefaultMaxSendQueueSize;
-            m_maxReceiveQueueSize = DefaultMaxReceiveQueueSize;
+            MaxSendQueueSize = DefaultMaxSendQueueSize;
+            MaxReceiveQueueSize = DefaultMaxReceiveQueueSize;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TransportProvider<DateTime>>();
             m_activeClientTimer = new Timer(MonitorActiveClients, null, TimeSpan.FromMinutes(1.0D), TimeSpan.FromMinutes(1.0D));
             m_sendLock = new object();
@@ -148,12 +142,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="ZeroMQServer"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="ZeroMQServer"/>.</param>
-        public ZeroMQServer(IContainer container)
-            : this()
-        {
-            if (container != null)
-                container.Add(this);
-        }
+        public ZeroMQServer(IContainer container) : this() => container?.Add(this);
 
         #endregion
 
@@ -165,20 +154,10 @@ namespace GSF.Communication
         /// <remarks>
         /// Maps to ZeroMQ high water mark setting for outbound messages.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxSendQueueSize),
-        Description("The maximum size for the send queue before payloads are dumped from the queue.")]
-        public int MaxSendQueueSize
-        {
-            get
-            {
-                return m_maxSendQueueSize;
-            }
-            set
-            {
-                m_maxSendQueueSize = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxSendQueueSize)]
+        [Description("The maximum size for the send queue before payloads are dumped from the queue.")]
+        public int MaxSendQueueSize { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size for the receive queue before payloads are dumped from the queue.
@@ -186,20 +165,10 @@ namespace GSF.Communication
         /// <remarks>
         /// Maps to ZeroMQ high water mark setting for inbound messages.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultMaxReceiveQueueSize),
-        Description("The maximum size for the receive queue before payloads are dumped from the queue.")]
-        public int MaxReceiveQueueSize
-        {
-            get
-            {
-                return m_maxReceiveQueueSize;
-            }
-            set
-            {
-                m_maxReceiveQueueSize = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(DefaultMaxReceiveQueueSize)]
+        [Description("The maximum size for the receive queue before payloads are dumped from the queue.")]
+        public int MaxReceiveQueueSize { get; set; }
 
         /// <summary>
         /// Gets the <see cref="GSF.Communication.TransportProtocol"/> used by the server for the transportation of data with the clients.
@@ -222,32 +191,20 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the ZeroMQ transport protocol to use for the <see cref="ZeroMQServer"/>.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(ZeroMQTransportProtocol.Tcp),
-        Description("The ZeroMQ transport protocol to use for the connection.")]
+        [Category("Settings")]
+        [DefaultValue(ZeroMQTransportProtocol.Tcp)]
+        [Description("The ZeroMQ transport protocol to use for the connection.")]
         public ZeroMQTransportProtocol ZeroMQTransportProtocol
         {
-            get
-            {
-                return m_zeroMQTransportProtocol;
-            }
-            set
-            {
-                m_zeroMQTransportProtocol = value;
-            }
+            get => m_zeroMQTransportProtocol;
+            set => m_zeroMQTransportProtocol = value;
         }
 
         /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="ZeroMQServer"/>.
         /// </summary>
         [Browsable(false)]
-        public ZSocket Server
-        {
-            get
-            {
-                return m_zeroMQServer;
-            }
-        }
+        public ZSocket Server { get; private set; }
 
         /// <summary>
         /// Gets the descriptive status of the client.
@@ -258,18 +215,18 @@ namespace GSF.Communication
             {
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
 
-                if ((object)m_zeroMQServer != null)
+                if (Server != null)
                 {
                     try
                     {
-                        statusBuilder.AppendFormat("              0MQ Identity: {0}", new Guid(m_zeroMQServer.Identity));
+                        statusBuilder.AppendFormat("              0MQ Identity: {0}", new Guid(Server.Identity));
                     }
                     catch
                     {
-                        statusBuilder.AppendFormat("              0MQ Identity: {0}", m_zeroMQServer.IdentityString);
+                        statusBuilder.AppendFormat("              0MQ Identity: {0}", Server.IdentityString);
                     }
                     statusBuilder.AppendLine();
-                    statusBuilder.AppendFormat("         0MQ Last Endpoint: {0}", m_zeroMQServer.LastEndpoint);
+                    statusBuilder.AppendFormat("         0MQ Last Endpoint: {0}", Server.LastEndpoint);
                     statusBuilder.AppendLine();
                 }
 
@@ -294,32 +251,31 @@ namespace GSF.Communication
         /// Releases the unmanaged resources used by the <see cref="ZeroMQServer"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_activeClientTimer", Justification = "Field is properly disposed")]
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_completedHandle != null)
-                        {
-                            m_completedHandle.Set();
-                            m_completedHandle.Dispose();
-                        }
+                if (!disposing)
+                    return;
 
-                        if ((object)m_activeClientTimer != null)
-                            m_activeClientTimer.Dispose();
-
-                        if ((object)m_zeroMQServer != null)
-                            m_zeroMQServer.Dispose();
-                    }
-                }
-                finally
+                if (m_completedHandle != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_completedHandle.Set();
+                    m_completedHandle.Dispose();
                 }
+
+                m_activeClientTimer?.Dispose();
+
+                Server?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -348,32 +304,26 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            TransportProvider<DateTime> clientInfo;
+            if (!m_clientInfoLookup.TryGetValue(clientID, out TransportProvider<DateTime> clientInfo))
+                throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
 
-            if (m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
-            {
-                if ((object)clientInfo.ReceiveBuffer != null)
-                {
-                    int readIndex = ReadIndicies[clientID];
-                    int sourceLength = clientInfo.BytesReceived - readIndex;
-                    int readBytes = length > sourceLength ? sourceLength : length;
-                    Buffer.BlockCopy(clientInfo.ReceiveBuffer, readIndex, buffer, startIndex, readBytes);
-
-                    // Update read index for next call
-                    readIndex += readBytes;
-
-                    if (readIndex >= clientInfo.BytesReceived)
-                        readIndex = 0;
-
-                    ReadIndicies[clientID] = readIndex;
-
-                    return readBytes;
-                }
-
+            if (clientInfo.ReceiveBuffer == null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
-            }
 
-            throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
+            int readIndex = ReadIndicies[clientID];
+            int sourceLength = clientInfo.BytesReceived - readIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(clientInfo.ReceiveBuffer, readIndex, buffer, startIndex, readBytes);
+
+            // Update read index for next call
+            readIndex += readBytes;
+
+            if (readIndex >= clientInfo.BytesReceived)
+                readIndex = 0;
+
+            ReadIndicies[clientID] = readIndex;
+
+            return readBytes;
         }
 
         /// <summary>
@@ -383,15 +333,16 @@ namespace GSF.Communication
         {
             base.SaveSettings();
 
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
-                settings["MaxReceiveQueueSize", true].Update(m_maxReceiveQueueSize);
-                config.Save();
-            }
+            if (!PersistSettings)
+                return;
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["MaxSendQueueSize", true].Update(MaxSendQueueSize);
+            settings["MaxReceiveQueueSize", true].Update(MaxReceiveQueueSize);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -401,23 +352,24 @@ namespace GSF.Communication
         {
             base.LoadSettings();
 
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
-                settings.Add("MaxReceiveQueueSize", m_maxReceiveQueueSize, "The maximum size of the receive queue before payloads are dumped from the queue.");
-                MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
-                MaxReceiveQueueSize = settings["MaxReceiveQueueSize"].ValueAs(m_maxReceiveQueueSize);
+            if (!PersistSettings)
+                return;
 
-                // When transitioning from socket type to another, be sure to restore default values
-                if (MaxSendQueueSize == -1)
-                    MaxSendQueueSize = DefaultMaxSendQueueSize;
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
+            settings.Add("MaxReceiveQueueSize", MaxReceiveQueueSize, "The maximum size of the receive queue before payloads are dumped from the queue.");
+            
+            MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(MaxSendQueueSize);
+            MaxReceiveQueueSize = settings["MaxReceiveQueueSize"].ValueAs(MaxReceiveQueueSize);
 
-                if (MaxReceiveQueueSize == -1)
-                    MaxReceiveQueueSize = DefaultMaxReceiveQueueSize;
-            }
+            // When transitioning from socket type to another, be sure to restore default values
+            if (MaxSendQueueSize == -1)
+                MaxSendQueueSize = DefaultMaxSendQueueSize;
+
+            if (MaxReceiveQueueSize == -1)
+                MaxReceiveQueueSize = DefaultMaxReceiveQueueSize;
         }
 
         /// <summary>
@@ -425,23 +377,23 @@ namespace GSF.Communication
         /// </summary>
         public override void Stop()
         {
-            if (CurrentState == ServerState.Running)
+            if (CurrentState != ServerState.Running)
+                return;
+
+            if (m_receiveDataThread != null)
             {
-                if ((object)m_receiveDataThread != null)
-                {
-                    m_receiveDataThread.Abort();
-                    m_receiveDataThread = null;
-                }
-
-                if ((object)m_zeroMQServer != null)
-                {
-                    m_zeroMQServer.Dispose();
-                    m_zeroMQServer = null;
-                }
-
-                DisconnectAll();            // Disconnection all clients.
-                OnServerStopped();
+                m_receiveDataThread.Abort();
+                m_receiveDataThread = null;
             }
+
+            if (Server != null)
+            {
+                Server.Dispose();
+                Server = null;
+            }
+
+            DisconnectAll();            // Disconnection all clients.
+            OnServerStopped();
         }
 
         /// <summary>
@@ -450,46 +402,51 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Attempt is made to <see cref="Start()"/> the <see cref="ZeroMQServer"/> when it is running.</exception>
         public override void Start()
         {
-            if (CurrentState == ServerState.NotRunning)
+            if (CurrentState != ServerState.NotRunning)
+                return;
+
+            // Initialize if needed
+            if (!Initialized)
+                Initialize();
+
+            // Overwrite config file if max client connections exists in connection string.
+            if (m_configData.ContainsKey("maxClientConnections") && int.TryParse(m_configData["maxClientConnections"], out int maxClientConnections))
+                MaxClientConnections = maxClientConnections;
+
+            // Overwrite config file if max send queue size exists in connection string.
+            if (m_configData.ContainsKey("maxSendQueueSize") && int.TryParse(m_configData["maxSendQueueSize"], out int maxQueueSize))
+                MaxSendQueueSize = maxQueueSize;
+
+            // Overwrite config file if max receive queue size exists in connection string.
+            if (m_configData.ContainsKey("maxReceiveQueueSize") && int.TryParse(m_configData["maxReceiveQueueSize"], out maxQueueSize))
+                MaxReceiveQueueSize = maxQueueSize;
+
+            // Create ZeroMQ Router socket - closest match to IServer implementation
+            Server = new ZSocket(ZContext.Create(), ZSocketType.ROUTER)
             {
-                int maxClientConnections, maxQueueSize;
+                Identity = ServerID.ToByteArray(),
+                SendHighWatermark = MaxSendQueueSize,
+                ReceiveHighWatermark = MaxReceiveQueueSize,
+                Immediate = true,
+                IPv6 = Transport.GetDefaultIPStack() == IPStack.IPv6
+            };
 
-                // Initialize if needed
-                if (!Initialized)
-                    Initialize();
+            Server.SetOption(ZSocketOption.LINGER, 0);
+            Server.SetOption(ZSocketOption.SNDTIMEO, 1000);
+            Server.SetOption(ZSocketOption.RCVTIMEO, -1);
+            Server.SetOption(ZSocketOption.RECONNECT_IVL, -1);
+            
+            Server.Bind(m_configData["server"]);
 
-                // Overwrite config file if max client connections exists in connection string.
-                if (m_configData.ContainsKey("maxClientConnections") && int.TryParse(m_configData["maxClientConnections"], out maxClientConnections))
-                    MaxClientConnections = maxClientConnections;
+            // Notify that the server has been started successfully.
+            OnServerStarted();
 
-                // Overwrite config file if max send queue size exists in connection string.
-                if (m_configData.ContainsKey("maxSendQueueSize") && int.TryParse(m_configData["maxSendQueueSize"], out maxQueueSize))
-                    m_maxSendQueueSize = maxQueueSize;
+            m_receiveDataThread = new Thread(ReceiveDataHandler)
+            {
+                IsBackground = true
+            };
 
-                // Overwrite config file if max receive queue size exists in connection string.
-                if (m_configData.ContainsKey("maxReceiveQueueSize") && int.TryParse(m_configData["maxReceiveQueueSize"], out maxQueueSize))
-                    m_maxReceiveQueueSize = maxQueueSize;
-
-                // Create ZeroMQ Router socket - closest match to IServer implementation
-                m_zeroMQServer = new ZSocket(ZContext.Create(), ZSocketType.ROUTER);
-                m_zeroMQServer.Identity = ServerID.ToByteArray();
-                m_zeroMQServer.SendHighWatermark = m_maxSendQueueSize;
-                m_zeroMQServer.ReceiveHighWatermark = m_maxReceiveQueueSize;
-                m_zeroMQServer.Immediate = true;
-                m_zeroMQServer.SetOption(ZSocketOption.LINGER, 0);
-                m_zeroMQServer.SetOption(ZSocketOption.SNDTIMEO, 1000);
-                m_zeroMQServer.SetOption(ZSocketOption.RCVTIMEO, -1);
-                m_zeroMQServer.SetOption(ZSocketOption.RECONNECT_IVL, -1);
-                m_zeroMQServer.IPv6 = (Transport.GetDefaultIPStack() == IPStack.IPv6);
-                m_zeroMQServer.Bind(m_configData["server"]);
-
-                // Notify that the server has been started successfully.
-                OnServerStarted();
-
-                m_receiveDataThread = new Thread(ReceiveDataHandler);
-                m_receiveDataThread.IsBackground = true;
-                m_receiveDataThread.Start();
-            }
+            m_receiveDataThread.Start();
         }
 
         private void ReceiveDataHandler()
@@ -502,7 +459,7 @@ namespace GSF.Communication
                 try
                 {
                     // Receive data from the socket
-                    using (ZMessage message = m_zeroMQServer.ReceiveMessage())
+                    using (ZMessage message = Server.ReceiveMessage())
                     {
                         // Router socket should provide identity, delimiter and data payload frames
                         if (message.Count == 3)
@@ -531,7 +488,7 @@ namespace GSF.Communication
                     }
 
                     // Notify consumer of received data
-                    if ((object)clientInfo != null)
+                    if (clientInfo != null)
                         OnReceiveClientDataComplete(clientID, clientInfo.ReceiveBuffer, clientInfo.BytesReceived);
                 }
                 catch (Exception ex)
@@ -548,9 +505,7 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            TransportProvider<DateTime> clientInfo;
-
-            if (!m_clientInfoLookup.TryRemove(clientID, out clientInfo))
+            if (!m_clientInfoLookup.TryRemove(clientID, out TransportProvider<DateTime> clientInfo))
                 return;
 
             try
@@ -570,10 +525,7 @@ namespace GSF.Communication
         /// <param name="clientID">ID of the client.</param>
         /// <param name="clientInfo">Client information.</param>
         /// <returns><c>true</c> if client exists; otherwise, <c>false</c>.</returns>
-        public bool TryGetClient(Guid clientID, out TransportProvider<DateTime> clientInfo)
-        {
-            return m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
-        }
+        public bool TryGetClient(Guid clientID, out TransportProvider<DateTime> clientInfo) => m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
 
         // Get client info, creating it if it doesn't exist
         private TransportProvider<DateTime> GetClient(Guid clientID)
@@ -648,9 +600,7 @@ namespace GSF.Communication
                 // For traditional style connection strings, also support a "zeroMQTransportProtocol" setting
                 if (m_configData.ContainsKey("zeroMQTransportProtocol"))
                 {
-                    ZeroMQTransportProtocol protocol;
-
-                    if (Enum.TryParse(m_configData["zeroMQTransportProtocol"].Trim(), true, out protocol))
+                    if (Enum.TryParse(m_configData["zeroMQTransportProtocol"].Trim(), true, out ZeroMQTransportProtocol protocol))
                         m_zeroMQTransportProtocol = protocol;
                 }
 
@@ -677,7 +627,7 @@ namespace GSF.Communication
 
             try
             {
-                if ((object)m_zeroMQServer != null)
+                if (Server != null)
                 {
                     // Lookup client info, adding it if it doesn't exist
                     TransportProvider<DateTime> clientInfo = GetClient(clientID);
@@ -692,7 +642,7 @@ namespace GSF.Communication
 
                         // ZeroMQ send is asynchronous, but API call is not thread-safe
                         lock (m_sendLock)
-                            m_zeroMQServer.Send(message);
+                            Server.Send(message);
                     }
 
                     clientInfo.Statistics.UpdateBytesSent(length);
@@ -722,9 +672,7 @@ namespace GSF.Communication
 
             if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
             {
-                ZException zmqex = ex as ZException;
-
-                if ((object)zmqex != null && (zmqex.Error.Number == ZError.EAGAIN.Number || zmqex.Error.Number == ZError.ETERM.Number))
+                if (ex is ZException zmqex && (zmqex.Error.Number == ZError.EAGAIN.Number || zmqex.Error.Number == ZError.ETERM.Number))
                     ThreadPool.QueueUserWorkItem(state => DisconnectOne(clientID));
                 else
                     base.OnSendClientDataException(clientID, ex);
@@ -771,11 +719,10 @@ namespace GSF.Communication
 
         private void MonitorActiveClients(object state)
         {
-            if ((object)m_clientInfoLookup == null)
+            if (m_clientInfoLookup == null)
                 return;
 
             List<Guid> oldClients = new List<Guid>();
-            TransportProvider<DateTime> oldClient;
 
             // Maintain client info lookup table size by removing clients that haven't been active in the last minute
             foreach (TransportProvider<DateTime> clientInfo in m_clientInfoLookup.Values)
@@ -786,7 +733,7 @@ namespace GSF.Communication
 
             foreach (Guid client in oldClients)
             {
-                if (m_clientInfoLookup.TryRemove(client, out oldClient))
+                if (m_clientInfoLookup.TryRemove(client, out TransportProvider<DateTime> _))
                     OnClientDisconnected(client);
             }
         }
@@ -799,7 +746,7 @@ namespace GSF.Communication
 
         internal static bool IsThreadAbortException(Exception ex)
         {
-            while ((object)ex != null)
+            while (ex != null)
             {
                 if (ex is ThreadAbortException)
                     return true;
