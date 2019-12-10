@@ -125,13 +125,8 @@ namespace GSF.Communication
         // Fields
         private readonly TransportProvider<SerialPort> m_serialClient;
         private Dictionary<string, string> m_connectData;
-        private int m_receivedBytesThreshold;
         private ManualResetEvent m_connectionHandle;
-#if ThreadTracking
-        private ManagedThread m_connectionThread;
-#else
         private Thread m_connectionThread;
-#endif
         private bool m_disposed;
 
         #endregion
@@ -141,8 +136,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
         /// </summary>
-        public SerialClient()
-            : this(DefaultConnectionString)
+        public SerialClient() : this(DefaultConnectionString)
         {
         }
 
@@ -150,22 +144,19 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="SerialClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public SerialClient(string connectString)
-            : base(TransportProtocol.Serial, connectString)
+        public SerialClient(string connectString) : base(TransportProtocol.Serial, connectString)
         {
             m_serialClient = new TransportProvider<SerialPort>();
-            m_receivedBytesThreshold = 1;
+            ReceivedBytesThreshold = 1;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
         /// </summary>
         /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="SerialClient"/>.</param>
-        public SerialClient(IContainer container)
-            : this()
+        public SerialClient(IContainer container) : this()
         {
-            if (container != null)
-                container.Add(this);
+            container?.Add(this);
         }
 
         #endregion
@@ -176,25 +167,13 @@ namespace GSF.Communication
         /// Gets the <see cref="SerialPort"/> object for the <see cref="SerialClient"/>.
         /// </summary>
         [Browsable(false)]
-        public SerialPort Client
-        {
-            get
-            {
-                return m_serialClient.Provider;
-            }
-        }
+        public SerialPort Client => m_serialClient.Provider;
 
         /// <summary>
         /// Gets the server URI of the <see cref="SerialClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri
-        {
-            get
-            {
-                return $"{TransportProtocol}://{m_connectData["port"]}".ToLower();
-            }
-        }
+        public override string ServerUri => $"{TransportProtocol}://{m_connectData["port"]}".ToLower();
 
         /// <summary>
         /// Gets or sets the needed number of bytes in the internal input buffer before a <see cref="ClientBase.OnReceiveDataComplete"/> event occurs.
@@ -202,17 +181,7 @@ namespace GSF.Communication
         /// <remarks>
         /// This option is ignored under Mono deployments.
         /// </remarks>
-        public int ReceivedBytesThreshold
-        {
-            get
-            {
-                return m_receivedBytesThreshold;
-            }
-            set
-            {
-                m_receivedBytesThreshold = value;
-            }
-        }
+        public int ReceivedBytesThreshold { get; set; }
 
         #endregion
 
@@ -239,22 +208,21 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if ((object)m_serialClient.ReceiveBuffer != null)
-            {
-                int sourceLength = m_serialClient.BytesReceived - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(m_serialClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
+            if (m_serialClient.ReceiveBuffer == null)
+                throw new InvalidOperationException("No received data buffer has been defined to read.");
 
-                // Update read index for next call
-                ReadIndex += readBytes;
+            int sourceLength = m_serialClient.BytesReceived - ReadIndex;
+            int readBytes = length > sourceLength ? sourceLength : length;
+            Buffer.BlockCopy(m_serialClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
 
-                if (ReadIndex >= m_serialClient.BytesReceived)
-                    ReadIndex = 0;
+            // Update read index for next call
+            ReadIndex += readBytes;
 
-                return readBytes;
-            }
+            if (ReadIndex >= m_serialClient.BytesReceived)
+                ReadIndex = 0;
 
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
+            return readBytes;
+
         }
 
         /// <summary>
@@ -262,21 +230,20 @@ namespace GSF.Communication
         /// </summary>
         public override void Disconnect()
         {
-            if (CurrentState != ClientState.Disconnected)
+            if (CurrentState == ClientState.Disconnected)
+                return;
+
+            if (m_serialClient.Provider != null)
             {
-                if (m_serialClient.Provider != null)
-                {
-                    m_serialClient.Provider.DataReceived -= SerialPort_DataReceived;
-                    m_serialClient.Provider.ErrorReceived -= SerialPort_ErrorReceived;
-                }
-
-                m_serialClient.Reset();
-
-                if (m_connectionThread != null)
-                    m_connectionThread.Abort();
-
-                OnConnectionTerminated();
+                m_serialClient.Provider.DataReceived -= SerialPort_DataReceived;
+                m_serialClient.Provider.ErrorReceived -= SerialPort_ErrorReceived;
             }
+
+            m_serialClient.Reset();
+
+            m_connectionThread?.Abort();
+
+            OnConnectionTerminated();
         }
 
         /// <summary>
@@ -290,30 +257,28 @@ namespace GSF.Communication
 
             m_serialClient.SetReceiveBuffer(ReceiveBufferSize);
 
-            m_serialClient.Provider = new SerialPort();
+            m_serialClient.Provider = new SerialPort
+            {
 #if !MONO
-            m_serialClient.Provider.ReceivedBytesThreshold = m_receivedBytesThreshold;
+                ReceivedBytesThreshold = ReceivedBytesThreshold,
 #endif
+                PortName = m_connectData["port"],
+                BaudRate = int.Parse(m_connectData["baudRate"]),
+                DataBits = int.Parse(m_connectData["dataBits"]),
+                Parity = (Parity)Enum.Parse(typeof(Parity), m_connectData["parity"], true),
+                StopBits = (StopBits)Enum.Parse(typeof(StopBits), m_connectData["stopBits"], true)
+            };
+
             m_serialClient.Provider.DataReceived += SerialPort_DataReceived;
             m_serialClient.Provider.ErrorReceived += SerialPort_ErrorReceived;
-            m_serialClient.Provider.PortName = m_connectData["port"];
-            m_serialClient.Provider.BaudRate = int.Parse(m_connectData["baudrate"]);
-            m_serialClient.Provider.DataBits = int.Parse(m_connectData["databits"]);
-            m_serialClient.Provider.Parity = (Parity)(Enum.Parse(typeof(Parity), m_connectData["parity"], true));
-            m_serialClient.Provider.StopBits = (StopBits)(Enum.Parse(typeof(StopBits), m_connectData["stopbits"], true));
 
-            if (m_connectData.ContainsKey("dtrenable"))
-                m_serialClient.Provider.DtrEnable = m_connectData["dtrenable"].ParseBoolean();
+            if (m_connectData.ContainsKey("dtrEnable"))
+                m_serialClient.Provider.DtrEnable = m_connectData["dtrEnable"].ParseBoolean();
 
-            if (m_connectData.ContainsKey("rtsenable"))
-                m_serialClient.Provider.RtsEnable = m_connectData["rtsenable"].ParseBoolean();
+            if (m_connectData.ContainsKey("rtsEnable"))
+                m_serialClient.Provider.RtsEnable = m_connectData["rtsEnable"].ParseBoolean();
 
-#if ThreadTracking
-            m_connectionThread = new ManagedThread(OpenPort);
-            m_connectionThread.Name = "GSF.Communication.SerialClient.OpenPort()";
-#else
             m_connectionThread = new Thread(OpenPort);
-#endif
             m_connectionThread.Start();
 
             return m_connectionHandle;
@@ -325,23 +290,22 @@ namespace GSF.Communication
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if (m_connectionHandle != null)
-                            m_connectionHandle.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
+
+                // This will be done only when the object is disposed by calling Dispose().
+                m_connectionHandle?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -361,16 +325,16 @@ namespace GSF.Communication
             if (!m_connectData.ContainsKey("port"))
                 throw new ArgumentException($"Port property is missing (Example: {DefaultConnectionString})");
 
-            if (!m_connectData.ContainsKey("baudrate"))
+            if (!m_connectData.ContainsKey("baudRate"))
                 throw new ArgumentException($"BaudRate property is missing (Example: {DefaultConnectionString})");
 
             if (!m_connectData.ContainsKey("parity"))
                 throw new ArgumentException($"Parity property is missing (Example: {DefaultConnectionString})");
 
-            if (!m_connectData.ContainsKey("stopbits"))
+            if (!m_connectData.ContainsKey("stopBits"))
                 throw new ArgumentException($"StopBits property is missing (Example: {DefaultConnectionString})");
 
-            if (!m_connectData.ContainsKey("databits"))
+            if (!m_connectData.ContainsKey("dataBits"))
                 throw new ArgumentException($"DataBits property is missing (Example: {DefaultConnectionString})");
         }
 
@@ -383,10 +347,8 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
         {
-            WaitHandle handle;
-
             // Send data to the file asynchronously.
-            handle = m_serialClient.Provider.BaseStream.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
+            WaitHandle handle = m_serialClient.Provider.BaseStream.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
 
             // Notify that the send operation has started.
             m_serialClient.Statistics.UpdateBytesSent(length);
@@ -421,6 +383,7 @@ namespace GSF.Communication
         private void OpenPort()
         {
             int connectionAttempts = 0;
+
             while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
             {
                 try
@@ -454,11 +417,9 @@ namespace GSF.Communication
             {
                 int bytesRead = 0;
 
+                // Retrieve data from the port.
                 while (bytesRead < m_serialClient.Provider.BytesToRead)
-                {
-                    // Retrieve data from the port.
                     bytesRead += m_serialClient.Provider.Read(m_serialClient.ReceiveBuffer, bytesRead, m_serialClient.ReceiveBuffer.Length - bytesRead);
-                }
 
                 m_serialClient.BytesReceived = bytesRead;
                 m_serialClient.Statistics.UpdateBytesReceived(bytesRead);

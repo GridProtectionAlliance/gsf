@@ -1598,7 +1598,7 @@ namespace PhasorProtocolAdapters
                     }
 
                     string uptimeStats = $"Up for {upTime}, {totalDataErrors} errors";
-                    string runtimeStats = $" {(DateTime)m_lastReportTime:MM/dd/yyyy HH:mm:ss.fff} {m_frameParser.CalculatedFrameRate:0.00} fps";
+                    string runtimeStats = $" {m_lastReportTime:MM/dd/yyyy HH:mm:ss.fff} {m_frameParser.CalculatedFrameRate:0.00} fps";
 
                     uptimeStats = uptimeStats.TruncateRight(maxLength - runtimeStats.Length).PadLeft(maxLength - runtimeStats.Length, '\xA0');
 
