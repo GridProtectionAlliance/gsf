@@ -36,7 +36,7 @@ namespace GSF.Parsing
     /// Header implementations can extend this interface as necessary to accomodate protocol specific header images.
     /// </remarks>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
-    public interface ICommonHeader<TTypeIdentifier>
+    public interface ICommonHeader<out TTypeIdentifier>
     {
         /// <summary>
         /// Gets or sets the identifier used for identifying the <see cref="Type"/> to be parsed.

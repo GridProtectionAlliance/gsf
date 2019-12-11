@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -31,13 +32,9 @@ namespace GSF.Parsing
     /// </summary>
     public static class StringParser
     {
-        private const char quoteDoubleChar = '\"';
-        private const char quoteSingleChar = '\"';
-        private const char spaceChar = ' ';
-        private const char commaChar = ',';
-        private const string crLf = "\r\n";
-        private const int workingArraySize = 128;
-
+        private const char DoubleQuote = '\"';
+        private const char Comma = ',';
+        private const int WorkingArraySize = 128;
 
         /// <summary>
         /// Returns the string that is between two delimiter strings beginning the first startDelimiter found.
@@ -51,16 +48,15 @@ namespace GSF.Parsing
         /// <param name="includeTokensInReturn">set to TRUE for the return string to include the opening and closing tokens.</param>
         /// <param name="payloadIndex"></param>
         /// <returns>A string, and the string starting index (payload Index)</returns>
-        public static string GetBetweenDelimiters(string inString, out int payloadIndex, char startToken = ',', char endToken = ',',
-                             int startIndex = 0, bool matchCase = true, bool includeTokensInReturn = false)
+        public static string GetBetweenDelimiters(string inString, out int payloadIndex, char startToken = ',', char endToken = ',', int startIndex = 0, bool matchCase = true, bool includeTokensInReturn = false)
         {
             payloadIndex = -1;
 
             if (string.IsNullOrEmpty(inString))
-                return (null);
+                return null;
 
             if (startIndex > inString.Length - 1 || startIndex < 0)
-                return (null);
+                return null;
 
             string testString = inString;
 
@@ -72,45 +68,49 @@ namespace GSF.Parsing
             }
 
             int iStart = testString.IndexOf(startToken, startIndex);
+
             if (iStart > -1)
             {
                 iStart++;
                 int iEnd = testString.IndexOf(endToken, iStart);
+
                 if (iEnd > -1)
                 {
-
                     //Are there other open tokens in this range
                     int[] opentags = IndicesOfToken(testString.Substring(iStart, iEnd - iStart), startToken);
+
                     //If so, reach to the matching closing Token
                     if (opentags != null && opentags.Length > 0)
                     {
-
                         for (int i = 0; i < opentags.Length; i++)
                         {
                             iEnd++;
                             iEnd = testString.IndexOf(endToken, iEnd);
-                            if (iEnd < 0) break;
-                        }
-                        if (iEnd < 0) return (null);
 
+                            if (iEnd < 0)
+                                break;
+                        }
+
+                        if (iEnd < 0)
+                            return null;
                     }
 
                     if (includeTokensInReturn)
                     {
                         payloadIndex = iStart - 1;
+
                         return inString.Substring(payloadIndex, iEnd - iStart + 2);
                     }
 
                     payloadIndex = iStart;
+
                     return inString.Substring(payloadIndex, iEnd - iStart);
                 }
-                else
-                    // no end delimiter
-                    return (null);
+
+                return null;
             }
-            else
-                // no start delimiter
-                return (null);
+
+            return null;
         }
 
         /// <summary>
@@ -129,23 +129,26 @@ namespace GSF.Parsing
             if (startIndex > inString.Length - 1 || startIndex < 0)
                 return null;
 
-            int[] indices = new int[workingArraySize];
+            int[] indices = new int[WorkingArraySize];
 
             if (token == 0)
                 return null;
 
             int count = 0;
             int k = IndexOfNextToken(inString, token, startIndex, 1, matchCase);
+
             while (k > -1)
             {
                 indices[count++] = k;
                 k = IndexOfNextToken(inString, token, k + 1, 1, matchCase);
                 if (count >= indices.Length)
-                    Array.Resize(ref indices, indices.Length + workingArraySize);
+                    Array.Resize(ref indices, indices.Length + WorkingArraySize);
             }
+
             if (count == 0)
             {
                 Array.Resize(ref indices, 1);
+
                 return null;
             }
 
@@ -163,14 +166,13 @@ namespace GSF.Parsing
         /// <returns>null for no tokens found</returns>
         public static int[] IndicesOfToken(string inString, string token, int startIndex = 0, bool matchCase = true)
         {
-
             if (string.IsNullOrEmpty(inString))
                 return null;
 
             if (startIndex > inString.Length - 1 || startIndex < 0)
                 return null;
 
-            int[] indices = new int[workingArraySize];
+            int[] indices = new int[WorkingArraySize];
 
             if (string.IsNullOrEmpty(token))
                 return null;
@@ -183,15 +185,14 @@ namespace GSF.Parsing
                 indices[count++] = k;
                 k = IndexOfNextToken(inString, token, k + token.Length, 1, matchCase);
                 if (count >= indices.Length)
-                    Array.Resize(ref indices, indices.Length + workingArraySize);
+                    Array.Resize(ref indices, indices.Length + WorkingArraySize);
+            }
 
-            }
-            if (count > 0)
-            {
-                Array.Resize(ref indices, count);
-                return indices;
-            }
-            return null;
+            if (count <= 0)
+                return null;
+
+            Array.Resize(ref indices, count);
+            return indices;
         }
 
         /// <summary>
@@ -210,7 +211,7 @@ namespace GSF.Parsing
             if (startIndex > inString.Length - 1 || startIndex < 0)
                 return null;
 
-            int[] indices = new int[workingArraySize];
+            int[] indices = new int[WorkingArraySize];
 
             if (tokens == null || tokens[0] == 0)
                 return null;
@@ -223,7 +224,7 @@ namespace GSF.Parsing
                 indices[count++] = k;
                 k = IndexOfNextTokens(inString, tokens, k + 1, matchCase);
                 if (count >= indices.Length)
-                    Array.Resize(ref indices, indices.Length + workingArraySize);
+                    Array.Resize(ref indices, indices.Length + WorkingArraySize);
             }
 
             if (count == 0)
@@ -274,6 +275,7 @@ namespace GSF.Parsing
                 indexPos = inString.IndexOf(token, indexPos + 1);
                 count++;
             }
+
             return indexPos;
         }
 
@@ -315,9 +317,9 @@ namespace GSF.Parsing
                 indexPos = inString.IndexOf(token, indexPos + 1, StringComparison.Ordinal);
                 count++;
             }
+
             return indexPos;
         }
-
 
         /// <summary>
         ///  Finds the index of the "n" occurrence any one of the chars in the token array within a string
@@ -329,7 +331,6 @@ namespace GSF.Parsing
         /// <returns>Returns the starting index of the nth occurrence of a character.
         ///  Returns -1 if nth occurrence does not exist.</returns>
         public static int IndexOfNextTokens(string inString, char[] tokens, int startIndex = 0, bool matchCase = true)
-
         {
             if (string.IsNullOrEmpty(inString))
                 return -1;
@@ -348,6 +349,7 @@ namespace GSF.Parsing
             if (!matchCase)
             {
                 inString = inString.ToUpper();
+
                 foreach (char c in tokens)
                 {
                     tokens[i++] = c.ToUpper();
@@ -360,13 +362,14 @@ namespace GSF.Parsing
             foreach (char c in tokens)
             {
                 positions[i] = inString.IndexOf(c, startIndex);
+                
                 if (positions[i] < 0)
                     positions[i] = 32000;
+                
                 i++;
             }
 
             return positions.Min();
-
         }
 
         /// <summary>
@@ -397,7 +400,6 @@ namespace GSF.Parsing
             if (startIndex == 0)
                 startIndex = inString.Length - 1;
 
-
             if (!matchCase)
             {
                 inString = inString.ToUpper();
@@ -412,9 +414,9 @@ namespace GSF.Parsing
                 indexPos = inString.IndexOfPrevious(token, indexPos - 1);
                 count++;
             }
+
             return indexPos;
         }
-
 
         /// <summary>
         ///  Processing from RIGHT to LEFT, finds the index of the "n"occurrence of one string (a token) within a string
@@ -444,7 +446,6 @@ namespace GSF.Parsing
             if (startIndex == 0)
                 startIndex = inString.Length - 1;
 
-
             if (!matchCase)
             {
                 inString = inString.ToUpper();
@@ -459,6 +460,7 @@ namespace GSF.Parsing
                 indexPos = inString.IndexOfPrevious(token, indexPos - 1);
                 count++;
             }
+
             return indexPos;
         }
 
@@ -493,6 +495,7 @@ namespace GSF.Parsing
             }
 
             int openTokenIndex = inString.IndexOf(openToken, startIndex, StringComparison.Ordinal);
+
             if (openTokenIndex < 0)
                 return -1;
 
@@ -500,6 +503,7 @@ namespace GSF.Parsing
                 return -1;
 
             int closeTokenIndex = inString.IndexOf(closeToken, openTokenIndex + openToken.Length, StringComparison.Ordinal);
+
             if (closeTokenIndex < 0)
                 return -1;
 
@@ -507,8 +511,8 @@ namespace GSF.Parsing
 
             if (openCount < 2)
                 return closeTokenIndex;
-            return IndexOfNextToken(inString, closeToken, closeTokenIndex, openCount);
 
+            return IndexOfNextToken(inString, closeToken, closeTokenIndex, openCount);
         }
 
         /// <summary>
@@ -542,6 +546,7 @@ namespace GSF.Parsing
             }
 
             int openTokenIndex = inString.IndexOf(openToken, startIndex);
+
             if (openTokenIndex < 0)
                 return -1;
 
@@ -549,16 +554,14 @@ namespace GSF.Parsing
                 return -1;
 
             int closeTokenIndex = inString.IndexOf(closeToken, openTokenIndex + 1);
+
             if (closeTokenIndex < 0)
                 return -1;
 
             int openCount = inString.Substring(openTokenIndex, closeTokenIndex - openTokenIndex).CharCount(openToken);
-            if (openCount < 2)
-                return closeTokenIndex;
 
-            return IndexOfNextToken(inString, closeToken, closeTokenIndex, openCount);
+            return openCount < 2 ? closeTokenIndex : IndexOfNextToken(inString, closeToken, closeTokenIndex, openCount);
         }
-
 
         /// <summary>
         /// Parses a line based on a comma as the separator.  Commas wrapped in matched double quotes are not separators.  
@@ -577,13 +580,13 @@ namespace GSF.Parsing
             if (startIndex > inString.Length - 1)
                 return null;
 
-            int nextQ = IndexOfNextToken(inString, quoteDoubleChar, startIndex);
-            int nextD = IndexOfNextToken(inString, commaChar, startIndex);
+            int nextQ = IndexOfNextToken(inString, DoubleQuote, startIndex);
+            int nextD = IndexOfNextToken(inString, Comma, startIndex);
 
-            if (nextQ < 0 && nextD < 0)  //no quote, no delimiter
-                return new string[] { inString };
+            if (nextQ < 0 && nextD < 0) //no quote, no delimiter
+                return new[] {inString};
 
-            string[] parsedValues = new string[workingArraySize];
+            string[] parsedValues = new string[WorkingArraySize];
             int index = 0;
 
             while (true)
@@ -591,24 +594,22 @@ namespace GSF.Parsing
                 if (startIndex >= inString.Length)
                     break;
 
-                if (nextQ > -1 && nextD > -1)  //have a quote and delimiter remaining
+                if (nextQ > -1 && nextD > -1) //have a quote and delimiter remaining
                 {
-
-                    if (nextQ < nextD)  //quote is prior to delimiter (typical case)
+                    if (nextQ < nextD) //quote is prior to delimiter (typical case)
                     {
-
                         //find the close quote.
-                        int closeQ = inString.IndexOf(quoteDoubleChar, nextQ + 1);
+                        int closeQ = inString.IndexOf(DoubleQuote, nextQ + 1);
 
                         if (closeQ > -1)
                         {
                             //where is the next delimiter
-                            nextD = IndexOfNextToken(inString, commaChar, closeQ + 1);
+                            nextD = IndexOfNextToken(inString, Comma, closeQ + 1);
                         }
                         else
                         {
                             //ignore spurious open quote and move to the next delimiter.
-                            nextD = IndexOfNextToken(inString, commaChar, nextD + 1);
+                            nextD = IndexOfNextToken(inString, Comma, nextD + 1);
                         }
 
                         if (nextD < 0)
@@ -619,25 +620,24 @@ namespace GSF.Parsing
                                 parsedValues[index] = inString.Substring(startIndex);
 
                             Array.Resize(ref parsedValues, index + 1);
+
                             return parsedValues;
                         }
-                        else
-                        {
-                            if (removeResultQuotes)
-                                parsedValues[index] = inString.Substring(startIndex, nextD - startIndex).QuoteUnwrap();
-                            else
-                                parsedValues[index] = inString.Substring(startIndex, nextD - startIndex);
 
-                            startIndex = nextD + 1;
-                        }
+                        if (removeResultQuotes)
+                            parsedValues[index] = inString.Substring(startIndex, nextD - startIndex).QuoteUnwrap();
+                        else
+                            parsedValues[index] = inString.Substring(startIndex, nextD - startIndex);
+
+                        startIndex = nextD + 1;
                     }
-                    else  //delimiter prior to quote, parse it
+                    else //delimiter prior to quote, parse it
                     {
                         parsedValues[index] = inString.Substring(startIndex, nextD - startIndex);
                         startIndex = nextD + 1;
                     }
                 }
-                else if (nextD < 0 && nextQ < 0)  //we're done
+                else if (nextD < 0 && nextQ < 0) //we're done
                 {
                     if (removeResultQuotes)
                         parsedValues[index] = inString.Substring(startIndex).QuoteUnwrap();
@@ -645,6 +645,7 @@ namespace GSF.Parsing
                         parsedValues[index] = inString.Substring(startIndex);
 
                     Array.Resize(ref parsedValues, index + 1);
+
                     return parsedValues;
                 }
                 else if (nextD < 0) //no remaining delimiter, but have quote
@@ -655,6 +656,7 @@ namespace GSF.Parsing
                         parsedValues[index] = inString.Substring(startIndex);
 
                     Array.Resize(ref parsedValues, index + 1);
+
                     return parsedValues;
                 }
                 else //nextQ < 0, no remaining quote, at least one remaining delimiter
@@ -663,11 +665,11 @@ namespace GSF.Parsing
                     startIndex = nextD + 1;
                 }
 
-                nextQ = IndexOfNextToken(inString, quoteDoubleChar, startIndex);
-                nextD = IndexOfNextToken(inString, commaChar, startIndex);
+                nextQ = IndexOfNextToken(inString, DoubleQuote, startIndex);
+                nextD = IndexOfNextToken(inString, Comma, startIndex);
 
                 if (++index >= parsedValues.Length)
-                    Array.Resize(ref parsedValues, parsedValues.Length + workingArraySize);
+                    Array.Resize(ref parsedValues, parsedValues.Length + WorkingArraySize);
             }
 
             Array.Resize(ref parsedValues, index + 1);
@@ -688,7 +690,6 @@ namespace GSF.Parsing
         /// <remarks>The string.split method is about 12 times faster.</remarks>
         public static string[] ParseLine(string inString, char[] quoteChars, char[] delimiters, int startIndex = 0, bool removeResultQuotes = true)
         {
-
             if (string.IsNullOrEmpty(inString))
                 return null;
 
@@ -705,9 +706,9 @@ namespace GSF.Parsing
             int nextD = IndexOfNextTokens(inString, delimiters, startIndex);
 
             if (nextQ < 0 && nextD < 0)
-                return new string[] { inString };
+                return new[] {inString};
 
-            string[] p = new string[workingArraySize];
+            string[] p = new string[WorkingArraySize];
             int index = 0;
 
             while (true)
@@ -715,14 +716,13 @@ namespace GSF.Parsing
                 if (startIndex >= inString.Length)
                     break;
 
-                if (nextQ > -1 && nextD > -1)  //have a quote and delimiter remaining
+                if (nextQ > -1 && nextD > -1) //have a quote and delimiter remaining
                 {
-
-                    if (nextQ < nextD)  //quote is prior to delimiter (typical case)
+                    if (nextQ < nextD) //quote is prior to delimiter (typical case)
                     {
-
                         //find the close quote.
                         int closeQ = inString.IndexOf(inString[nextQ], nextQ + 1);
+
                         if (closeQ > -1)
                         {
                             //where is the next delimiter
@@ -742,6 +742,7 @@ namespace GSF.Parsing
                                 p[index] = inString.Substring(startIndex);
 
                             Array.Resize(ref p, index + 1);
+
                             return p;
                         }
                         else
@@ -754,7 +755,7 @@ namespace GSF.Parsing
                         }
                     }
                 }
-                else if (nextD < 0 && nextQ < 0)  //we're done
+                else if (nextD < 0 && nextQ < 0) //we're done
                 {
                     if (removeResultQuotes)
                         p[index] = inString.Substring(startIndex).QuoteUnwrap();
@@ -762,6 +763,7 @@ namespace GSF.Parsing
                         p[index] = inString.Substring(startIndex);
 
                     Array.Resize(ref p, index + 1);
+
                     return p;
                 }
                 else if (nextD < 0) //no remaining delimiter, but have quote
@@ -772,6 +774,7 @@ namespace GSF.Parsing
                         p[index] = inString.Substring(startIndex);
 
                     Array.Resize(ref p, index + 1);
+
                     return p;
                 }
                 else //nextQ < 0, no remaining quote, at least one remaining delimiter
@@ -784,7 +787,7 @@ namespace GSF.Parsing
                 nextD = IndexOfNextTokens(inString, delimiters, startIndex);
 
                 if (++index >= p.Length)
-                    Array.Resize(ref p, p.Length + workingArraySize);
+                    Array.Resize(ref p, p.Length + WorkingArraySize);
             }
 
             Array.Resize(ref p, index + 1);
@@ -811,190 +814,199 @@ namespace GSF.Parsing
 
             Array.Resize(ref values, parsedStrings.Length);
 
-            bool outcome = false;
             bool checkParse = true;
 
-            int i = 0;
-
-            foreach (string s in parsedStrings)
+            for (int i = 0; i < parsedStrings.Length; i++)
             {
                 switch (expectedTypeCodes[i])
                 {
                     case TypeCode.Boolean:
-                        bool result1;
-                        outcome = Boolean.TryParse(parsedStrings[i], out result1);
-                        if (outcome)
+                        if (bool.TryParse(parsedStrings[i], out bool result1))
+                        {
                             values[i] = result1;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Byte:
-                        byte result2;
-                        outcome = Byte.TryParse(parsedStrings[i], out result2);
-                        if (outcome)
+                        if (byte.TryParse(parsedStrings[i], out byte result2))
+                        {
                             values[i] = result2;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Char:
-                        Char result3;
-                        outcome = Char.TryParse(parsedStrings[i], out result3);
-                        if (outcome)
+                        if (char.TryParse(parsedStrings[i], out char result3))
+                        {
                             values[i] = result3;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.DateTime:
-                        DateTime result4;
-                        outcome = DateTime.TryParse(parsedStrings[i], out result4);
-                        if (outcome)
+                        if (DateTime.TryParse(parsedStrings[i], out DateTime result4))
+                        {
                             values[i] = result4;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Decimal:
-                        Decimal result5;
-                        outcome = Decimal.TryParse(parsedStrings[i], out result5);
-                        if (outcome)
+                        if (decimal.TryParse(parsedStrings[i], out decimal result5))
+                        {
                             values[i] = result5;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Double:
-                        Double result6;
-                        outcome = Double.TryParse(parsedStrings[i], out result6);
-                        if (outcome)
+                        if (double.TryParse(parsedStrings[i], out double result6))
+                        {
                             values[i] = result6;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Int16:
-                        Int16 result7;
-                        outcome = Int16.TryParse(parsedStrings[i], out result7);
-                        if (outcome)
+                        if (short.TryParse(parsedStrings[i], out short result7))
+                        {
                             values[i] = result7;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Int32:
-                        Int32 result8;
-                        outcome = Int32.TryParse(parsedStrings[i], out result8);
-                        if (outcome)
+                        if (int.TryParse(parsedStrings[i], out int result8))
+                        {
                             values[i] = result8;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Int64:
-                        Int64 result9;
-                        outcome = Int64.TryParse(parsedStrings[i], out result9);
-                        if (outcome)
+                        if (long.TryParse(parsedStrings[i], out long result9))
+                        {
                             values[i] = result9;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.SByte:
-                        SByte result10;
-                        outcome = SByte.TryParse(parsedStrings[i], out result10);
-                        if (outcome)
+                        if (sbyte.TryParse(parsedStrings[i], out sbyte result10))
+                        {
                             values[i] = result10;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.Single:
-                        Single result11;
-                        outcome = Single.TryParse(parsedStrings[i], out result11);
-                        if (outcome)
+                        if (float.TryParse(parsedStrings[i], out float result11))
+                        {
                             values[i] = result11;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.UInt16:
-                        UInt16 result12;
-                        outcome = UInt16.TryParse(parsedStrings[i], out result12);
-                        if (outcome)
+                        if (ushort.TryParse(parsedStrings[i], out ushort result12))
+                        {
                             values[i] = result12;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.UInt32:
-                        UInt32 result13;
-                        outcome = UInt32.TryParse(parsedStrings[i], out result13);
-                        if (outcome)
+                        if (uint.TryParse(parsedStrings[i], out uint result13))
+                        {
                             values[i] = result13;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     case TypeCode.UInt64:
-                        UInt64 result14;
-                        outcome = UInt64.TryParse(parsedStrings[i], out result14);
-                        if (outcome)
+                        if (ulong.TryParse(parsedStrings[i], out ulong result14))
+                        {
                             values[i] = result14;
+                        }
                         else
                         {
                             values[i] = null;
                             checkParse = false;
                         }
+
                         break;
 
                     default:
                         values[i] = parsedStrings[i];
+
                         break;
-
                 }
-
-                i++;
             }
 
             return checkParse;

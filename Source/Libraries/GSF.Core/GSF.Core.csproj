@@ -291,6 +291,7 @@
     <Compile Include="Parsing\ICommonHeader.cs" />
     <Compile Include="Parsing\IFrameImageParser.cs" />
     <Compile Include="Parsing\ISupportBinaryImage.cs" />
+    <Compile Include="Parsing\ISupportBinaryImageExtensions.cs" />
     <Compile Include="Parsing\ISupportFrameImage.cs" />
     <Compile Include="Parsing\ISupportSourceIdentifiableFrameImage.cs" />
     <Compile Include="Parsing\MultiSourceFrameImageParserBase.cs" />

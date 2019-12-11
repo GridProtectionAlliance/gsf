@@ -31,14 +31,15 @@
 //
 //******************************************************************************************************
 
-using System.Diagnostics.CodeAnalysis;
-#pragma warning disable 0809
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using GSF.Collections;
 
+#pragma warning disable 0809
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.Parsing
 {
     /// <summary>
@@ -103,11 +104,7 @@ namespace GSF.Parsing
             /// <summary>
             /// Gets or sets enabled state of <see cref="SourceIdentifiableBuffer"/>.
             /// </summary>
-            public bool Enabled
-            {
-                get;
-                set;
-            }
+            public bool Enabled { get; set; }
 
             /// <summary>
             /// Gets or sets valid number of bytes within the <see cref="Buffer"/>.
@@ -117,10 +114,7 @@ namespace GSF.Parsing
             /// </remarks>
             public int Count
             {
-                get
-                {
-                    return m_count;
-                }
+                get => m_count;
                 set
                 {
                     m_count = value;
@@ -159,8 +153,11 @@ namespace GSF.Parsing
         /// </summary>
         protected MultiSourceFrameImageParserBase()
         {
-            m_bufferQueue = new AsyncDoubleBufferedQueue<SourceIdentifiableBuffer>();
-            m_bufferQueue.ProcessItemsFunction = ParseQueuedBuffers;
+            m_bufferQueue = new AsyncDoubleBufferedQueue<SourceIdentifiableBuffer>
+            {
+                ProcessItemsFunction = ParseQueuedBuffers
+            };
+
             m_bufferQueue.ProcessException += ProcessExceptionHandler;
 
             if (ProtocolUsesSyncBytes)
@@ -177,13 +174,7 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets the total number of buffers that are currently queued for processing, if any.
         /// </summary>
-        public virtual int QueuedBuffers
-        {
-            get
-            {
-                return m_bufferQueue.Count;
-            }
-        }
+        public virtual int QueuedBuffers => m_bufferQueue.Count;
 
         #endregion
 
@@ -196,9 +187,7 @@ namespace GSF.Parsing
         {
             base.Start();
 
-            if ((object)m_sourceInitialized != null)
-                m_sourceInitialized.Clear();
-
+            m_sourceInitialized?.Clear();
             m_unparsedBuffers.Clear();
             m_parsedSourceData.Clear();
         }
@@ -211,9 +200,7 @@ namespace GSF.Parsing
         {
             base.Start(implementations);
 
-            if ((object)m_sourceInitialized != null)
-                m_sourceInitialized.Clear();
-
+            m_sourceInitialized?.Clear();
             m_unparsedBuffers.Clear();
             m_parsedSourceData.Clear();
         }
@@ -225,7 +212,7 @@ namespace GSF.Parsing
         /// <param name="buffer">An array of bytes to queue for parsing</param>
         public virtual void Parse(TSourceIdentifier source, byte[] buffer)
         {
-            if ((object)buffer == null)
+            if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
             Parse(source, buffer, 0, buffer.Length);
@@ -243,38 +230,38 @@ namespace GSF.Parsing
         /// </remarks>
         public virtual void Parse(TSourceIdentifier source, byte[] buffer, int offset, int count)
         {
-            SourceIdentifiableBuffer identifiableBuffer = null;
+            SourceIdentifiableBuffer identifiableBuffer;
 
             buffer.ValidateParameters(offset, count);
 
-            if (count > 0)
+            if (count <= 0)
+                return;
+
+            // Get an identifiable buffer object
+            identifiableBuffer = FastObjectFactory<SourceIdentifiableBuffer>.CreateObjectFunction();
+            identifiableBuffer.Source = source;
+            identifiableBuffer.Count = count;
+
+            // Copy buffer data for processing
+            Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
+
+            // Add buffer to the queue for parsing. Note that buffer is queued for parsing instead 
+            // of handling parse on this thread - this has become necessary to reduce UDP data loss
+            // that can happen in-process when system has UDP buffers building up for processing.
+            if (OptimizationOptions.DisableAsyncQueueInProtocolParsing)
             {
-                // Get an identifiable buffer object
-                identifiableBuffer = FastObjectFactory<SourceIdentifiableBuffer>.CreateObjectFunction();
-                identifiableBuffer.Source = source;
-                identifiableBuffer.Count = count;
-
-                // Copy buffer data for processing
-                Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
-
-                // Add buffer to the queue for parsing. Note that buffer is queued for parsing instead 
-                // of handling parse on this thread - this has become necessary to reduce UDP data loss
-                // that can happen in-process when system has UDP buffers building up for processing.
-                if (OptimizationOptions.DisableAsyncQueueInProtocolParsing)
+                try
                 {
-                    try
-                    {
-                        ParseQueuedBuffers(new[] { identifiableBuffer });
-                    }
-                    catch (Exception ex)
-                    {
-                        ProcessExceptionHandler(this, new EventArgs<Exception>(ex));
-                    }
+                    ParseQueuedBuffers(new[] { identifiableBuffer });
                 }
-                else
+                catch (Exception ex)
                 {
-                    m_bufferQueue.Enqueue(new[] { identifiableBuffer });
-                }                
+                    ProcessExceptionHandler(this, new EventArgs<Exception>(ex));
+                }
+            }
+            else
+            {
+                m_bufferQueue.Enqueue(new[] { identifiableBuffer });
             }
         }
 
@@ -286,10 +273,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
         /// </remarks>
-        public virtual void Parse(TSourceIdentifier source, ISupportBinaryImage image)
-        {
-            Parse(source, image.BinaryImage());
-        }
+        public virtual void Parse(TSourceIdentifier source, ISupportBinaryImage image) => Parse(source, image.BinaryImage());
 
         /// <summary>
         /// Clears the internal buffer of unparsed data received from the specified <paramref name="source"/>.
@@ -298,11 +282,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method can be used to ensure that partial data received from the <paramref name="source"/> is not kept in memory indefinitely.
         /// </remarks>
-        public virtual void PurgeBuffer(TSourceIdentifier source)
-        {
-            byte[] buffer;
-            m_unparsedBuffers.TryRemove(source, out buffer);
-        }
+        public virtual void PurgeBuffer(TSourceIdentifier source) => m_unparsedBuffers.TryRemove(source, out _);
 
         /// <summary>
         /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source source ID gets tracked with data buffer.
@@ -331,44 +311,42 @@ namespace GSF.Parsing
         // This method is used to process all queued data buffers.
         private void ParseQueuedBuffers(IList<SourceIdentifiableBuffer> buffers)
         {
-            if (Enabled)
+            if (!Enabled)
+                return;
+
+            try
             {
-                try
+                // Process all queued data buffers...
+                foreach (SourceIdentifiableBuffer buffer in buffers)
                 {
-                    // Process all queued data buffers...
-                    foreach (SourceIdentifiableBuffer buffer in buffers)
-                    {
-                        // Track current buffer source
-                        m_source = buffer.Source;
+                    // Track current buffer source
+                    m_source = buffer.Source;
 
-                        // Check to see if this data source has been initialized
-                        if ((object)m_sourceInitialized != null)
-                            StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, true);
+                    // Check to see if this data source has been initialized
+                    if (m_sourceInitialized != null)
+                        StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, false);
 
-                        // Restore any unparsed buffers for this data source, if any
-                        UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
+                    // Restore any unparsed buffers for this data source, if any
+                    UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
 
-                        // Start parsing sequence for this buffer - this will begin publication of new parsed outputs
-                        base.Write(buffer.Buffer, 0, buffer.Count);
+                    // Start parsing sequence for this buffer - this will begin publication of new parsed outputs
+                    base.Write(buffer.Buffer, 0, buffer.Count);
 
-                        // Track last unparsed buffer for this data source
-                        m_unparsedBuffers[m_source] = UnparsedBuffer;
-                    }
+                    // Track last unparsed buffer for this data source
+                    m_unparsedBuffers[m_source] = UnparsedBuffer;
                 }
-                finally
+            }
+            finally
+            {
+                // If user has attached to SourceDataParsed event, expose list of parsed data per source
+                if (SourceDataParsed != null)
                 {
-                    // If user has attached to SourceDataParsed event, expose list of parsed data per source
-                    if ((object)SourceDataParsed != null)
-                    {
-                        foreach (KeyValuePair<TSourceIdentifier, List<TOutputType>> parsedData in m_parsedSourceData)
-                        {
-                            OnSourceDataParsed(parsedData.Key, parsedData.Value);
-                        }
+                    foreach (KeyValuePair<TSourceIdentifier, List<TOutputType>> parsedData in m_parsedSourceData)
+                        OnSourceDataParsed(parsedData.Key, parsedData.Value);
 
-                        // Clear parsed data dictionary for next pass - note that this does not contend with
-                        // OnDataParsed override since the event called synchronously via base.Write above.
-                        m_parsedSourceData.Clear();
-                    }
+                    // Clear parsed data dictionary for next pass - note that this does not contend with
+                    // OnDataParsed override since the event called synchronously via base.Write above.
+                    m_parsedSourceData.Clear();
                 }
             }
         }
@@ -384,12 +362,12 @@ namespace GSF.Parsing
 
             base.OnDataParsed(output);
 
+            if (SourceDataParsed == null)
+                return;
+
             // If user has attached to SourceDataParsed event, track parsed data per source
-            if ((object)SourceDataParsed != null)
-            {
-                List<TOutputType> sourceData = m_parsedSourceData.GetOrAdd(output.Source, id => new List<TOutputType>());
-                sourceData.Add(output);
-            }
+            List<TOutputType> sourceData = m_parsedSourceData.GetOrAdd(output.Source, id => new List<TOutputType>());
+            sourceData.Add(output);
         }
 
         /// <summary>
@@ -397,11 +375,7 @@ namespace GSF.Parsing
         /// </summary>
         /// <param name="source">Identifier for the data source.</param>
         /// <param name="output">The objects that were deserialized from binary images from the <paramref name="source"/> data stream.</param>
-        protected virtual void OnSourceDataParsed(TSourceIdentifier source, IList<TOutputType> output)
-        {
-            if ((object)SourceDataParsed != null)
-                SourceDataParsed(this, new EventArgs<TSourceIdentifier, IList<TOutputType>>(source, output));
-        }
+        protected virtual void OnSourceDataParsed(TSourceIdentifier source, IList<TOutputType> output) => SourceDataParsed?.Invoke(this, new EventArgs<TSourceIdentifier, IList<TOutputType>>(source, output));
 
         /// <summary>
         /// Raises the <see cref="BinaryImageParserBase.DataDiscarded"/> event.
@@ -410,17 +384,14 @@ namespace GSF.Parsing
         protected override void OnDataDiscarded(byte[] buffer)
         {
             // If an error occurs during parsing from a data source, we reset its initialization state
-            if ((object)m_sourceInitialized != null)
+            if (m_sourceInitialized != null)
                 m_sourceInitialized[m_source] = false;
 
             base.OnDataDiscarded(buffer);
         }
 
         // We just bubble any exceptions captured in process queue out to parsing exception event...
-        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
-        {
-            OnParsingException(e.Argument);
-        }
+        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e) => OnParsingException(e.Argument);
 
         #endregion
     }

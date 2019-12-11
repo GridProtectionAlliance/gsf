@@ -97,8 +97,7 @@ namespace GSF.Parsing
         /// <summary>
         /// Creates a new <see cref="TemplatedExpressionParser"/>.
         /// </summary>
-        public TemplatedExpressionParser() :
-            this('{', '}', '[', ']')
+        public TemplatedExpressionParser() : this('{', '}', '[', ']')
         {
         }
 
@@ -333,9 +332,6 @@ namespace GSF.Parsing
                 {
                     if (capture.Value.StartsWith($"{StartExpressionDelimiter}?", StringComparison.Ordinal))
                     {
-                        int result;
-                        bool evaluation;
-
                         // Found binary operation expression
                         depth++;
                         completeExpression.Append(capture.Value);
@@ -350,7 +346,7 @@ namespace GSF.Parsing
                         CodeBinaryOperatorExpression expression = ParseBinaryOperatorExpression(capture.Value.Substring(2), out TypeCode expressionType);
 
                         // Evaluate binary expression
-                        if ((object)expression != null)
+                        if (expression != null)
                         {
                             IComparer comparer;
 
@@ -371,9 +367,11 @@ namespace GSF.Parsing
                             }
 
                             // Compare operands
-                            result = comparer.Compare(((CodePrimitiveExpression)expression.Left).Value, ((CodePrimitiveExpression)expression.Right).Value);
+                            int result = comparer.Compare(((CodePrimitiveExpression)expression.Left).Value, ((CodePrimitiveExpression)expression.Right).Value);
 
                             // Evaluate comparison result
+                            bool evaluation;
+
                             switch (expression.Operator)
                             {
                                 case CodeBinaryOperatorType.IdentityEquality:
@@ -431,12 +429,12 @@ namespace GSF.Parsing
 
                             // Reset for next expression
                             completeExpression.Clear();
-                            
-                            if (depth <= 0)
-                            {
-                                evaluations.Clear();
-                                depth = 0;
-                            }
+
+                            if (depth > 0)
+                                continue;
+
+                            evaluations.Clear();
+                            depth = 0;
                         }
                         else
                         {
@@ -516,7 +514,7 @@ namespace GSF.Parsing
         {
             List<ParsedEvaluation> parsedEvaluations = new List<ParsedEvaluation>();
 
-            #if DNF46
+        #if DNF46
 
             MatchCollection matches = m_evaluationParser.Matches(fieldReplacedTemplatedExpression);
 
@@ -527,7 +525,7 @@ namespace GSF.Parsing
                 parsedEvaluations.Add(new ParsedEvaluation(source, result));
             }
 
-            #endif
+        #endif
 
             return parsedEvaluations;
         }

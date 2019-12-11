@@ -63,15 +63,12 @@ namespace GSF.Parsing
             /// Creates a new instance of the <see cref="Variable"/> class.
             /// </summary>
             /// <param name="identifier">The identifier used to refer to the variable.</param>
-            public Variable(string identifier)
-            {
-                Identifier = identifier;
-            }
+            public Variable(string identifier) => Identifier = identifier;
         }
 
         // Fields
-        private Dictionary<string, Variable> m_variables;
-        private Func<bool> m_evaluate;
+        private readonly Dictionary<string, Variable> m_variables;
+        private readonly Func<bool> m_evaluate;
 
         #endregion
 
@@ -84,8 +81,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// The default comparer for identifiers is <see cref="StringComparer.OrdinalIgnoreCase"/>.
         /// </remarks>
-        public BooleanExpression(string expressionText)
-            : this(expressionText, StringComparer.OrdinalIgnoreCase)
+        public BooleanExpression(string expressionText) : this(expressionText, StringComparer.OrdinalIgnoreCase)
         {
         }
 
@@ -96,12 +92,9 @@ namespace GSF.Parsing
         /// <param name="identifierComparer">Comparer used to compare identifiers.</param>
         public BooleanExpression(string expressionText, IEqualityComparer<string> identifierComparer)
         {
-            StringBuilder builder;
-            Expression expression;
-
-            m_variables = new Dictionary<string, Variable>(StringComparer.OrdinalIgnoreCase);
-            builder = new StringBuilder(expressionText);
-            expression = ParseExpression(builder);
+            m_variables = new Dictionary<string, Variable>(identifierComparer);
+            StringBuilder builder = new StringBuilder(expressionText);
+            Expression expression = ParseExpression(builder);
 
             if (builder.Length > 0)
                 throw new FormatException($"Unexpected character '{builder[0]}' in expression. Expected end of expression.");
@@ -116,26 +109,14 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets the list of variables found while parsing the boolean expression.
         /// </summary>
-        public List<Variable> Variables
-        {
-            get
-            {
-                return m_variables.Values.ToList();
-            }
-        }
+        public List<Variable> Variables => m_variables.Values.ToList();
 
         /// <summary>
         /// Gets the variable identified by the given identifier.
         /// </summary>
         /// <param name="identifier">The identifier used to refer to the variable.</param>
         /// <returns>The variable identified by the given identifier.</returns>
-        public Variable this[string identifier]
-        {
-            get
-            {
-                return m_variables[identifier];
-            }
-        }
+        public Variable this[string identifier] => m_variables[identifier];
 
         #endregion
 
@@ -146,76 +127,63 @@ namespace GSF.Parsing
         /// current values of the variables.
         /// </summary>
         /// <returns>The result of the evalulation.</returns>
-        public bool Evaluate()
-        {
-            return m_evaluate();
-        }
-        
+        public bool Evaluate() => m_evaluate();
+
         /// <summary>
         /// Attempts to get the variable identified by the given identifier.
         /// </summary>
         /// <param name="identifier">The identifier used to refer to the variable.</param>
         /// <param name="variable">The variable identified by the given identifier.</param>
         /// <returns>True if the variable is present in the expression; false otherwise.</returns>
-        public bool TryGetVariable(string identifier, out Variable variable)
-        {
-            return m_variables.TryGetValue(identifier, out variable);
-        }
+        public bool TryGetVariable(string identifier, out Variable variable) => m_variables.TryGetValue(identifier, out variable);
 
         private Expression ParseExpression(StringBuilder builder)
         {
-            Expression subexpression;
-            char binaryOp;
-
-            subexpression = ParseSubexpression(builder);
+            Expression subexpression = ParseSubexpression(builder);
             ShedWhitespace(builder);
 
-            if (builder.Length > 0)
+            if (builder.Length <= 0)
+                return subexpression;
+
+            char binaryOp = builder[0];
+
+            if (binaryOp == ')')
+                return subexpression;
+
+            builder.Remove(0, 1);
+            ShedWhitespace(builder);
+
+            switch (binaryOp)
             {
-                binaryOp = builder[0];
+                case '&':
+                    return Expression.And(subexpression, ParseExpression(builder));
 
-                if (binaryOp == ')')
-                    return subexpression;
+                case '|':
+                    return Expression.Or(subexpression, ParseExpression(builder));
 
-                builder.Remove(0, 1);
-                ShedWhitespace(builder);
+                case '^':
+                    return Expression.ExclusiveOr(subexpression, ParseExpression(builder));
 
-                switch (binaryOp)
-                {
-                    case '&':
-                        return Expression.And(subexpression, ParseExpression(builder));
-
-                    case '|':
-                        return Expression.Or(subexpression, ParseExpression(builder));
-
-                    case '^':
-                        return Expression.ExclusiveOr(subexpression, ParseExpression(builder));
-
-                    default:
-                        throw new FormatException($"Unexpected character '{binaryOp}' in expression. Expected: '&', '|', or '^'.");
-                }
+                default:
+                    throw new FormatException($"Unexpected character '{binaryOp}' in expression. Expected: '&', '|', or '^'.");
             }
-
-            return subexpression;
         }
 
         private Expression ParseSubexpression(StringBuilder builder)
         {
-            Expression expression;
-
             ShedWhitespace(builder);
 
             if (builder.Length == 0)
-                throw new FormatException($"Unexpected end of expression. Expected: '(', '!', '~', or identifier.");
+                throw new FormatException("Unexpected end of expression. Expected: '(', '!', '~', or identifier.");
 
             switch (builder[0])
             {
                 case '(':
                     builder.Remove(0, 1);
-                    expression = ParseExpression(builder);
+                    Expression expression = ParseExpression(builder);
 
                     if (builder.Length == 0)
-                        throw new FormatException($"Unexpected end of expression. Expected: ')'.");
+                        throw new FormatException("Unexpected end of expression. Expected: ')'.");
 
                     if (builder[0] != ')')
                         throw new FormatException($"Unexpected character '{builder[0]}' in expression. Expected: ')'.");
@@ -235,9 +203,7 @@ namespace GSF.Parsing
 
         private Expression ParseIdentifier(StringBuilder builder)
         {
-            Variable identifier;
             StringBuilder nameBuilder = new StringBuilder();
-            string name;
 
             while (builder.Length > 0 && char.IsLetterOrDigit(builder[0]))
             {
@@ -248,8 +214,8 @@ namespace GSF.Parsing
             if (nameBuilder.Length == 0)
                 throw new FormatException($"Unexpected character '{builder[0]}' in expression. Expected identifier.");
 
-            name = nameBuilder.ToString();
-            identifier = m_variables.GetOrAdd(name, key => new Variable(key));
+            string name = nameBuilder.ToString();
+            Variable identifier = m_variables.GetOrAdd(name, key => new Variable(key));
 
             return ((Expression<Func<bool>>)(() => identifier.Value)).Body;
         }

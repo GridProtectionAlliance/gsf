@@ -51,11 +51,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// If used, this will need to be set before call to <see cref="ISupportBinaryImage.ParseBinaryImage"/>.
         /// </remarks>
-        ICommonHeader<TTypeIdentifier> CommonHeader
-        {
-            get;
-            set;
-        }
+        ICommonHeader<TTypeIdentifier> CommonHeader { get; set; }
 
         /// <summary>
         /// Gets the identifier that can be used for identifying the <see cref="Type"/>.
@@ -68,10 +64,7 @@ namespace GSF.Parsing
         /// Output types implement this class so they have a consistently addressable identification property.
         /// </para>
         /// </remarks>
-        TTypeIdentifier TypeID
-        {
-            get;
-        }
+        TTypeIdentifier TypeID { get; }
 
         /// <summary>
         /// Gets flag that determines if frame image can queued for publication or should be processed immediately.
@@ -81,9 +74,6 @@ namespace GSF.Parsing
         /// case, these types of frames should be published immediately so that subsequent frame parsing can have
         /// access to needed critical information.
         /// </remarks>
-        bool AllowQueuedPublication
-        {
-            get;
-        }
+        bool AllowQueuedPublication { get; }
     }
 }

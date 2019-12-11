@@ -51,37 +51,14 @@ namespace GSF.Parsing
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     public abstract class CommonHeaderBase<TTypeIdentifier> : ICommonHeader<TTypeIdentifier>
     {
-        private TTypeIdentifier m_typeID;
-        private object m_state;
-        
         /// <summary>
         /// Gets or sets the identifier used for identifying the <see cref="Type"/> to be parsed.
         /// </summary>
-        public virtual TTypeIdentifier TypeID
-        {
-            get
-            {
-                return m_typeID;
-            }
-            set
-            {
-                m_typeID = value;
-            }
-        }
+        public virtual TTypeIdentifier TypeID { get; set; }
 
         /// <summary>
         /// Gets or sets any additional state information that might be needed for parsing.
         /// </summary>
-        public object State
-        {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
-        }
+        public object State { get; set; }
     }
 }

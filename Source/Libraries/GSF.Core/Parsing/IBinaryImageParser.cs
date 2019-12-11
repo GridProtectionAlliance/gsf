@@ -63,19 +63,12 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the data parser is currently enabled.
         /// </summary>
-        bool Enabled
-        {
-            get;
-            set;
-        }
+        bool Enabled { get; set; }
 
         /// <summary>
         /// Gets the total number of buffer images processed so far.
         /// </summary>
-        long TotalProcessedBuffers
-        {
-            get;
-        }
+        long TotalProcessedBuffers { get; }
 
         /// <summary>
         /// Writes a sequence of bytes onto the <see cref="IBinaryImageParser"/> stream for parsing.

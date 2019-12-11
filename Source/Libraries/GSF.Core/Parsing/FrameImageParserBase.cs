@@ -135,26 +135,14 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets the total number of parsed outputs that are currently queued for publication, if any.
         /// </summary>
-        public virtual int QueuedOutputs
-        {
-            get
-            {
-                if ((object)m_outputQueue != null)
-                    return m_outputQueue.Count;
-
-                return 0;
-            }
-        }
+        public virtual int QueuedOutputs => m_outputQueue?.Count ?? 0;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the frame image parser is currently enabled.
         /// </summary>
         public override bool Enabled
         {
-            get
-            {
-                return base.Enabled;
-            }
+            get => base.Enabled;
             set
             {
                 base.Enabled = value;
@@ -192,29 +180,27 @@ namespace GSF.Parsing
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_outputTypes != null)
-                        {
-                            foreach (KeyValuePair<TTypeIdentifier, TypeInfo> item in m_outputTypes)
-                            {
-                                item.Value.CreateNew = null;
-                            }
+            if (m_disposed)
+                return;
 
-                            m_outputTypes.Clear();
-                        }
-                        m_outputTypes = null;
-                    }
-                }
-                finally
+            try
+            {
+                if (!disposing)
+                    return;
+
+                if (m_outputTypes != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    foreach (KeyValuePair<TTypeIdentifier, TypeInfo> item in m_outputTypes)
+                        item.Value.CreateNew = null;
+
+                    m_outputTypes.Clear();
                 }
+                m_outputTypes = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -224,10 +210,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This overload loads public types from assemblies in the application binaries directory that implement the parser's output type.
         /// </remarks>
-        public override void Start()
-        {
-            Start(typeof(TOutputType).LoadImplementations());
-        }
+        public override void Start() => Start(typeof(TOutputType).LoadImplementations());
 
         /// <summary>
         /// Starts the data parser given the specified type implementations.
@@ -238,21 +221,20 @@ namespace GSF.Parsing
             // Call base class start method
             base.Start();
 
-            ConstructorInfo typeCtor;
             List<TypeInfo> outputTypes = new List<TypeInfo>();  // Temporarily hold output types until their IDs are determined.
 
             foreach (Type type in implementations)
             {
                 // See if a parameterless constructor is available for this type
-                typeCtor = type.GetConstructor(Type.EmptyTypes);
+                ConstructorInfo typeCtor = type.GetConstructor(Type.EmptyTypes);
 
                 // Since user can call this overload with any list of types, we double check the type criteria.
                 // If output type is a class, see if current type derives from it, else if output type is an
                 // interface, see if current type implements it.
-                if ((object)typeCtor != null && !type.IsAbstract &&
+                if (typeCtor != null && !type.IsAbstract &&
                 (
-                   (typeof(TOutputType).IsClass && type.IsSubclassOf(typeof(TOutputType))) ||
-                   (typeof(TOutputType).IsInterface && (object)type.GetInterface(typeof(TOutputType).Name) != null))
+                   typeof(TOutputType).IsClass && type.IsSubclassOf(typeof(TOutputType)) ||
+                   typeof(TOutputType).IsInterface && (object)type.GetInterface(typeof(TOutputType).Name) != null)
                 )
                 {
                     // The type meets the following criteria:
@@ -261,12 +243,14 @@ namespace GSF.Parsing
                     //      - type is related to class or interface specified for the output
                     TypeInfo outputType = new TypeInfo
                     {
-                        RuntimeType = type
+                        RuntimeType = type,
+
+                        // If class implementation supports life cycle, automatically dispose of objects when we are done with them
+                        SupportsLifecycle = type.GetInterface("GSF.ISupportLifecycle") != null, 
+                        
+                        CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(type)
                     };
 
-                    // If class implementation supports life cycle, automatically dispose of objects when we are done with them
-                    outputType.SupportsLifecycle = (object)type.GetInterface("GSF.ISupportLifecycle") != null;
-                    outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(type);
 
                     // We'll hold all of the matching types in this list temporarily until their IDs are determined.
                     outputTypes.Add(outputType);
@@ -300,25 +284,22 @@ namespace GSF.Parsing
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFrame(byte[] buffer, int offset, int length)
         {
-            ICommonHeader<TTypeIdentifier> commonHeader;
-            TypeInfo outputType;
-            TOutputType instance;
             int parsedLength;
 
             // Extract the common header from the buffer image which includes the output type ID.
             // For any protocol data that is represented as frames of data in a stream, there will
             // be some set of common identification properties in the frame image, usually at the
             // top, that is common for all frame types.
-            commonHeader = ParseCommonHeader(buffer, offset, length);
+            ICommonHeader<TTypeIdentifier> commonHeader = ParseCommonHeader(buffer, offset, length);
 
             // See if there was enough buffer to parse common header, if not exit and wait for more data
-            if ((object)commonHeader == null)
+            if (commonHeader == null)
                 return 0;
 
             // Lookup TypeID to see if it is a known type
-            if (m_outputTypes.TryGetValue(commonHeader.TypeID, out outputType))
+            if (m_outputTypes.TryGetValue(commonHeader.TypeID, out TypeInfo outputType))
             {
-                instance = outputType.CreateNew();
+                TOutputType instance = outputType.CreateNew();
                 instance.CommonHeader = commonHeader;
                 parsedLength = instance.ParseBinaryImage(buffer, offset, length);
 
@@ -381,22 +362,22 @@ namespace GSF.Parsing
         /// <param name="output">The object that was deserialized from binary image.</param>
         protected virtual void OnDataParsed(TOutputType output)
         {
-            if ((object)DataParsed != null)
-            {
-                // Get a reusable event args object to publish output
-                EventArgs<TOutputType> outputArgs = FastObjectFactory<EventArgs<TOutputType>>.CreateObjectFunction();
-                outputArgs.Argument = output;
+            if (DataParsed == null)
+                return;
 
-                if (output.AllowQueuedPublication && !OptimizationOptions.DisableAsyncQueueInProtocolParsing)
-                {
-                    // Queue-up parsed output for publication
-                    m_outputQueue.Enqueue(outputArgs);
-                }
-                else
-                {
-                    // Publish parsed output immediately
-                    DataParsed?.Invoke(this, outputArgs);
-                }
+            // Get a reusable event args object to publish output
+            EventArgs<TOutputType> outputArgs = FastObjectFactory<EventArgs<TOutputType>>.CreateObjectFunction();
+            outputArgs.Argument = output;
+
+            if (output.AllowQueuedPublication && !OptimizationOptions.DisableAsyncQueueInProtocolParsing)
+            {
+                // Queue-up parsed output for publication
+                m_outputQueue.Enqueue(outputArgs);
+            }
+            else
+            {
+                // Publish parsed output immediately
+                DataParsed?.Invoke(this, outputArgs);
             }
         }
 
@@ -404,38 +385,23 @@ namespace GSF.Parsing
         /// <see cref="AsyncQueue{T}"/> handler used to publish queued outputs.
         /// </summary>
         /// <param name="outputArgs">Event args containing new output to publish.</param>
-        protected virtual void PublishParsedOutput(EventArgs<TOutputType> outputArgs)
-        {
-            if ((object)DataParsed != null)
-                DataParsed(this, outputArgs);
-        }
+        protected virtual void PublishParsedOutput(EventArgs<TOutputType> outputArgs) => DataParsed?.Invoke(this, outputArgs);
 
         /// <summary>
         /// Raises the <see cref="OutputTypeNotFound"/> event.
         /// </summary>
         /// <param name="id">The ID of the output type that was not found.</param>
-        protected virtual void OnOutputTypeNotFound(TTypeIdentifier id)
-        {
-            if ((object)OutputTypeNotFound != null)
-                OutputTypeNotFound(this, new EventArgs<TTypeIdentifier>(id));
-        }
+        protected virtual void OnOutputTypeNotFound(TTypeIdentifier id) => OutputTypeNotFound?.Invoke(this, new EventArgs<TTypeIdentifier>(id));
 
         /// <summary>
         /// Raises the <see cref="DuplicateTypeHandlerEncountered"/> event.
         /// </summary>
         /// <param name="duplicateType">The <see cref="Type"/> that defines a type ID that has already been defined.</param>
         /// <param name="id">The ID of the output type that was defined more than once.</param>
-        protected virtual void OnDuplicateTypeHandlerEncountered(Type duplicateType, TTypeIdentifier id)
-        {
-            if ((object)DuplicateTypeHandlerEncountered != null)
-                DuplicateTypeHandlerEncountered(this, new EventArgs<Type, TTypeIdentifier>(duplicateType, id));
-        }
+        protected virtual void OnDuplicateTypeHandlerEncountered(Type duplicateType, TTypeIdentifier id) => DuplicateTypeHandlerEncountered?.Invoke(this, new EventArgs<Type, TTypeIdentifier>(duplicateType, id));
 
         // Expose exceptions encountered via async queue processing to parsing exception event
-        private void m_parsedOutputQueue_ProcessException(object sender, EventArgs<Exception> e)
-        {
-            OnParsingException(e.Argument);
-        }
+        private void m_parsedOutputQueue_ProcessException(object sender, EventArgs<Exception> e) => OnParsingException(e.Argument);
 
         #endregion
     }

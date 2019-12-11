@@ -40,10 +40,6 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets or sets the data source identifier of the frame image.
         /// </summary>
-        TSourceIdentifier Source
-        {
-            get;
-            set;
-        }
+        TSourceIdentifier Source { get; set; }
     }
 }

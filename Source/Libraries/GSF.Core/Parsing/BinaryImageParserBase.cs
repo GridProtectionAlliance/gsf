@@ -306,8 +306,8 @@ namespace GSF.Parsing
 
                 if (syncBytesPosition > -1)
                 {
-                    StreamInitialized = true;
                     ParseBuffer(buffer, syncBytesPosition, count - (syncBytesPosition - offset));
+                    StreamInitialized = true;
                 }
             }
 

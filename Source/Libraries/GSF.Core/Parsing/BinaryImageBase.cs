@@ -45,13 +45,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This property is not typically overridden since it is the sum of the header, body and footer lengths.
         /// </remarks>
-        public virtual int BinaryLength
-        {
-            get
-            {
-                return HeaderLength + BodyLength + FooterLength;
-            }
-        }
+        public virtual int BinaryLength => HeaderLength + BodyLength + FooterLength;
 
         /// <summary>
         /// Gets the length of the header portion of the <see cref="BinaryImageBase"/> object.
@@ -59,13 +53,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int HeaderLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        protected virtual int HeaderLength => 0;
 
         /// <summary>
         /// Gets the length of the body portion of the <see cref="BinaryImageBase"/> object.
@@ -73,13 +61,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int BodyLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        protected virtual int BodyLength => 0;
 
         /// <summary>
         /// Gets the length of the footer portion of the <see cref="BinaryImageBase"/> object.
@@ -87,13 +69,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int FooterLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        protected virtual int FooterLength => 0;
 
         #endregion
 
@@ -125,7 +101,7 @@ namespace GSF.Parsing
             index += ParseBodyImage(buffer, index, length - (index - startIndex));
             index += ParseFooterImage(buffer, index, length - (index - startIndex));
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -138,10 +114,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int ParseHeaderImage(byte[] buffer, int startIndex, int length)
-        {
-            return 0;
-        }
+        protected virtual int ParseHeaderImage(byte[] buffer, int startIndex, int length) => 0;
 
         /// <summary>
         /// Parses the binary body image.
@@ -153,10 +126,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int ParseBodyImage(byte[] buffer, int startIndex, int length)
-        {
-            return 0;
-        }
+        protected virtual int ParseBodyImage(byte[] buffer, int startIndex, int length) => 0;
 
         /// <summary>
         /// Parses the binary footer image.
@@ -168,10 +138,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int ParseFooterImage(byte[] buffer, int startIndex, int length)
-        {
-            return 0;
-        }
+        protected virtual int ParseFooterImage(byte[] buffer, int startIndex, int length) => 0;
 
         /// <summary>
         /// Generates binary image of the object and copies it into the given buffer, for <see cref="ISupportBinaryImage.BinaryLength"/> bytes.
@@ -198,7 +165,7 @@ namespace GSF.Parsing
             index += GenerateBodyImage(buffer, index);
             index += GenerateFooterImage(buffer, index);
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -210,10 +177,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int GenerateHeaderImage(byte[] buffer, int startIndex)
-        {
-            return 0;
-        }
+        protected virtual int GenerateHeaderImage(byte[] buffer, int startIndex) => 0;
 
         /// <summary>
         /// Generates the binary body image and copies it into the given buffer, for <see cref="BodyLength"/> bytes.
@@ -224,10 +188,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int GenerateBodyImage(byte[] buffer, int startIndex)
-        {
-            return 0;
-        }
+        protected virtual int GenerateBodyImage(byte[] buffer, int startIndex) => 0;
 
         /// <summary>
         /// Generates the binary footer image and copies it into the given buffer, for <see cref="FooterLength"/> bytes.
@@ -238,10 +199,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual int GenerateFooterImage(byte[] buffer, int startIndex)
-        {
-            return 0;
-        }
+        protected virtual int GenerateFooterImage(byte[] buffer, int startIndex) => 0;
 
         #endregion
     }
