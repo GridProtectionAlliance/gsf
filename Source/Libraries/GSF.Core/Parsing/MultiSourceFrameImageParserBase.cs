@@ -324,7 +324,7 @@ namespace GSF.Parsing
 
                     // Check to see if this data source has been initialized
                     if (m_sourceInitialized != null)
-                        StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, false);
+                        StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, true);
 
                     // Restore any unparsed buffers for this data source, if any
                     UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
