@@ -70,6 +70,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Ports;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -3238,7 +3239,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             // For some serially connected devices, a frame exception on initial connection is very common - so we ignore this during startup
-            if (m_initiatingSerialConnection && string.CompareOrdinal(ex.Message, "The hardware detected a framing error.") == 0)
+            if (m_initiatingSerialConnection && ex is SerialException serialEx && serialEx.SerialError == SerialError.Frame)
             {
                 m_initiatingSerialConnection = false;
                 return;

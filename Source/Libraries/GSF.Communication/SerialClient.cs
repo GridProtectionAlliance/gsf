@@ -443,27 +443,7 @@ namespace GSF.Communication
         /// <summary>
         /// Receive (read) error data from the <see cref="SerialPort"/> (.NET serial port class raises this event when error occurs).
         /// </summary>
-        private void SerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
-        {
-            switch (e.EventType)
-            {
-                case SerialError.Frame:
-                    OnReceiveDataException(new ApplicationException("The hardware detected a framing error."));
-                    break;
-                case SerialError.Overrun:
-                    OnReceiveDataException(new ApplicationException("A character-buffer overrun has occurred. The next character is lost."));
-                    break;
-                case SerialError.RXOver:
-                    OnReceiveDataException(new ApplicationException("An input buffer overflow has occurred. There is either no room in the input buffer, or a character was received after the end-of-file (EOF) character."));
-                    break;
-                case SerialError.RXParity:
-                    OnReceiveDataException(new ApplicationException("The hardware detected a parity error."));
-                    break;
-                case SerialError.TXFull:
-                    OnReceiveDataException(new ApplicationException("The application tried to transmit a character, but the output buffer was full."));
-                    break;
-            }
-        }
+        private void SerialPort_ErrorReceived(object sender, SerialErrorReceivedEventArgs e) => OnReceiveDataException(new SerialException(e.EventType));
 
         /// <summary>
         /// Raises the <see cref="ClientBase.ConnectionException"/> event.
