@@ -899,7 +899,12 @@ namespace GrafanaAdapters
             }
         }
 
-        private static string GetShortElapsedTimeString(Ticks span)
+        /// <summary>
+        /// Get short elapsed time string for specified <paramref name="span"/>.
+        /// </summary>
+        /// <param name="span"><see cref="Ticks"/> representing time span.</param>
+        /// <returns>Short elapsed time string.</returns>
+        public static string GetShortElapsedTimeString(Ticks span)
         {
             double days = span.ToDays();
 
