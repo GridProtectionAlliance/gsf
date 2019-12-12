@@ -63,24 +63,14 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            IPrincipal servicePrincipal;
-            string serviceAccount;
-            string servicePassword;
-
-            string[] splitServiceAccount;
             string serviceDomain = string.Empty;
             string serviceUser = string.Empty;
 
-            bool isSystemAccount;
-            bool isManagedServiceAccount;
-            bool isManagedServiceAccountValid;
-
             logger.Log("Begin AuthenticateServiceAccountAction");
 
-            serviceAccount = GetPropertyValue(session, "ServiceAccount");
-            servicePassword = GetPropertyValue(session, "ServicePassword");
-
-            splitServiceAccount = serviceAccount.Split('\\');
+            string serviceAccount = GetPropertyValue(session, "ServiceAccount");
+            string servicePassword = GetPropertyValue(session, "ServicePassword");
+            string[] splitServiceAccount = serviceAccount.Split('\\');
 
             switch (splitServiceAccount.Length)
             {
@@ -95,12 +85,12 @@ namespace GSF.InstallerActions
                     break;
             }
 
-            isSystemAccount =
+            bool isSystemAccount = 
                 serviceAccount.Equals("LocalSystem", StringComparison.OrdinalIgnoreCase) ||
                 serviceAccount.StartsWith(@"NT AUTHORITY\", StringComparison.OrdinalIgnoreCase) ||
                 serviceAccount.StartsWith(@"NT SERVICE\", StringComparison.OrdinalIgnoreCase);
 
-            isManagedServiceAccount = serviceAccount.EndsWith("$", StringComparison.Ordinal);
+            bool isManagedServiceAccount = serviceAccount.EndsWith("$", StringComparison.Ordinal);
 
             if (isSystemAccount)
             {
@@ -111,10 +101,11 @@ namespace GSF.InstallerActions
             {
                 using (UserInfo serviceAccountInfo = new UserInfo(serviceAccount))
                 {
-                    isManagedServiceAccountValid = serviceAccountInfo.Exists &&
-                                                   !serviceAccountInfo.AccountIsDisabled &&
-                                                   !serviceAccountInfo.AccountIsLockedOut &&
-                                                   serviceAccountInfo.GetUserPropertyValue("msDS-HostServiceAccountBL").Split(',')[0].Equals("CN=" + Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
+                    bool isManagedServiceAccountValid = serviceAccountInfo.Exists &&
+                                                        !serviceAccountInfo.AccountIsDisabled &&
+                                                        !serviceAccountInfo.AccountIsLockedOut &&
+                                                        serviceAccountInfo.GetUserPropertyValue("msDS-HostServiceAccountBL").Split(',')[0].
+                                                            Equals("CN=" + Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
 
                     if (isManagedServiceAccountValid)
                     {
@@ -129,12 +120,8 @@ namespace GSF.InstallerActions
             }
             else
             {
-                servicePrincipal = UserInfo.AuthenticateUser(serviceDomain, serviceUser, servicePassword);
-
-                if ((object)servicePrincipal != null && servicePrincipal.Identity.IsAuthenticated)
-                    session["SERVICEAUTHENTICATED"] = "yes";
-                else
-                    session["SERVICEAUTHENTICATED"] = null;
+                IPrincipal servicePrincipal = UserInfo.AuthenticateUser(serviceDomain, serviceUser, servicePassword);
+                session["SERVICEAUTHENTICATED"] = servicePrincipal?.Identity.IsAuthenticated == true ? "yes" : null;
             }
 
             logger.Log("End AuthenticateServiceAccountAction");
@@ -152,18 +139,15 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string filePath;
-            string mode;
-            string mappings;
-
             logger.Log("Begin XmlFileAction");
 
-            filePath = GetPropertyValue(session, "FilePath");
-            mode = GetPropertyValue(session, "Mode").ToUpper();
-            mappings = GetPropertyValue(session, "PropertyMappings");
+            string filePath = GetPropertyValue(session, "FilePath");
+            string mode = GetPropertyValue(session, "Mode").ToUpper();
+            string mappings = GetPropertyValue(session, "PropertyMappings");
 
             if (File.Exists(filePath))
             {
+                // ReSharper disable PossibleMultipleEnumeration
                 try
                 {
                     XDocument document = XDocument.Load(filePath);
@@ -204,7 +188,7 @@ namespace GSF.InstallerActions
                 }
                 catch (Exception ex)
                 {
-                    string action = (mode == "WRITE") ? "update" : "read";
+                    string action = mode == "WRITE" ? "update" : "read";
                     string message = $"Failed to {action} XML file: {ex.Message}";
                     logger.Log(InstallMessage.Error, message);
                     logger.Log(EventLogEntryType.Error, ex);
@@ -212,6 +196,7 @@ namespace GSF.InstallerActions
                     logger.Log($"PropertyMappings = {mappings}");
                     return ActionResult.Failure;
                 }
+                // ReSharper restore PossibleMultipleEnumeration
             }
 
             logger.Log("End XmlFileAction");
@@ -224,26 +209,62 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            Dictionary<string, string> settings;
-            string connectionString;
-            string mappings;
-            string setting;
-
             logger.Log("Begin ConnectionStringAction");
 
-            connectionString = GetPropertyValue(session, "ConnectionString");
-            mappings = GetPropertyValue(session, "PropertyMappings");
-            settings = connectionString.ParseKeyValuePairs();
+            string connectionString = GetPropertyValue(session, "ConnectionString");
+            string mappings = GetPropertyValue(session, "PropertyMappings");
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             foreach (KeyValuePair<string, string> kvp in mappings.ParseKeyValuePairs())
             {
-                if (settings.TryGetValue(kvp.Value, out setting))
+                if (settings.TryGetValue(kvp.Value, out string setting))
                     session[kvp.Key] = setting;
                 else
                     session[kvp.Key] = null;
             }
 
             logger.Log("End ConnectionStringAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to load any previously defined CompanyName and CompanyAcronym settings from the configuration file of an installed service.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult LoadExistingCompanyInfoAction(Session session)
+        {
+            Logger logger = new Logger(session);
+
+            logger.Log("Begin LoadExistingCompanyInfoAction");
+
+            string serviceName = GetPropertyValue(session, "SERVICENAME");
+            string configPath = Path.Combine(GetPropertyValue(session, "INSTALLFOLDER"), $"{serviceName}.exe.config");
+
+            void setPropertyValue(XElement systemSettings, string settingName, string propertyName)
+            {
+                XElement setting = systemSettings.Elements("add").FirstOrDefault(element => string.Compare(element.Attributes("name").FirstOrDefault()?.Value, settingName, StringComparison.OrdinalIgnoreCase) == 0);
+                string value = setting?.Attributes("value").FirstOrDefault()?.Value;
+
+                if (!string.IsNullOrWhiteSpace(value))
+                    session[propertyName] = value;
+            }
+
+            if (File.Exists(configPath))
+            {
+                XDocument config = XDocument.Load(configPath);
+                XElement systemSettings = config.Descendants("systemSettings").FirstOrDefault();
+
+                if (systemSettings != null)
+                {
+                    setPropertyValue(systemSettings, "CompanyName", "COMPANYNAME");
+                    setPropertyValue(systemSettings, "CompanyAcronym", "COMPANYACRONYM");
+                }
+            }
+
+            logger.Log("End LoadExistingCompanyInfoAction");
 
             return ActionResult.Success;
         }
@@ -258,31 +279,27 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string serviceName;
-            string configPath;
-            XDocument config;
-
             logger.Log("Begin CompanyInfoAction");
 
-            serviceName = GetPropertyValue(session, "SERVICENAME");
-            configPath = Path.Combine(GetPropertyValue(session, "INSTALLDIR"), $"{serviceName}.exe.config");
+            string serviceName = GetPropertyValue(session, "SERVICENAME");
+            string configPath = Path.Combine(GetPropertyValue(session, "INSTALLDIR"), $"{serviceName}.exe.config");
 
             if (File.Exists(configPath))
             {
-                config = XDocument.Load(configPath);
+                XDocument config = XDocument.Load(configPath);
 
                 foreach (XElement systemSettings in config.Descendants("systemSettings"))
                 {
                     // Search for existing CompanyName settings and update their values
-                    foreach (XElement companyNameElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyName", true) == 0)))
+                    foreach (XElement companyNameElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyName", StringComparison.OrdinalIgnoreCase) == 0)))
                         companyNameElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "COMPANYNAME"));
 
                     // Search for existing CompanyAcronym settings and update their values
-                    foreach (XElement companyAcronymElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyAcronym", true) == 0)))
+                    foreach (XElement companyAcronymElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyAcronym", StringComparison.OrdinalIgnoreCase) == 0)))
                         companyAcronymElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "COMPANYACRONYM"));
 
                     // Add CompanyName setting if no such setting exists
-                    if (!systemSettings.Elements("add").Any(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyName", true) == 0)))
+                    if (!systemSettings.Elements("add").Any(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyName", StringComparison.OrdinalIgnoreCase) == 0)))
                     {
                         systemSettings.Add(new XElement("add",
                             new XAttribute("name", "CompanyName"),
@@ -293,7 +310,7 @@ namespace GSF.InstallerActions
                     }
 
                     // Add CompanyAcronym setting if no such setting exists
-                    if (!systemSettings.Elements("add").Any(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyAcronym", true) == 0)))
+                    if (!systemSettings.Elements("add").Any(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyAcronym", StringComparison.OrdinalIgnoreCase) == 0)))
                     {
                         systemSettings.Add(new XElement("add",
                             new XAttribute("name", "CompanyAcronym"),
@@ -325,6 +342,7 @@ namespace GSF.InstallerActions
             logger.Log("Begin ConfigureServiceAction");
             UpdateServiceConfig(session, logger);
             logger.Log("End ConfigureServiceAction");
+
             return ActionResult.Success;
         }
 
@@ -338,50 +356,88 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-
             logger.Log("Begin ServiceAccountAction");
 
             // Get properties from the installer session
             string serviceName = GetPropertyValue(session, "SERVICENAME");
             string serviceAccount = GetPropertyValue(session, "SERVICEACCOUNT");
             string servicePorts = GetPropertyValue(session, "HTTPSERVICEPORTS");
-            string groupName = $"{serviceName} Admins";
+            string serviceAdminsGroupName = $"{serviceName} Admins";
 
-            // Determine if we're dealing with the local system account
-            bool isLocalSystem = (serviceAccount == "LocalSystem");
-
-            // Create service admins group and add service account to that group as well as the Performance Log Users group
+            // Create service admins group
             try
             {
-                const string PerformanceLogUsersGroup = "Performance Log Users";
-                const string PerformanceMonitorUsersGroup = "Performance Monitor Users";
-
-                logger.Log($"Adding {serviceAccount} user to {groupName} group...");
-                UserInfo.CreateLocalGroup(groupName, $"Members in this group have the necessary rights to administrate the {serviceName} service.");
-
-                // Don't attempt grant rights to the local system account because it already has them
-                if (!isLocalSystem)
-                {
-                    UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
-                    UserInfo.AddUserToLocalGroup(PerformanceLogUsersGroup, serviceAccount);
-                    UserInfo.AddUserToLocalGroup(PerformanceMonitorUsersGroup, serviceAccount);
-                    AddPrivileges(serviceAccount, "SeServiceLogonRight");
-                }
-
-                logger.Log($"Done adding {serviceAccount} user to {groupName} group.");
+                logger.Log($"Creating {serviceAdminsGroupName} group...");
+                UserInfo.CreateLocalGroup(serviceAdminsGroupName, $"Members in this group have the necessary rights to administrate the {serviceName} service.");
+                logger.Log($"Done creating {serviceAdminsGroupName} group...");
             }
             catch (Exception ex)
             {
-                string message = $"Failed to add {serviceAccount} user to {groupName} group!";
-                logger.Log(InstallMessage.Error, message);
+                logger.Log(InstallMessage.Error, $"Failed to create {serviceAdminsGroupName} group!");
                 logger.Log(EventLogEntryType.Error, ex);
+            }
+
+            void addServiceAccountToGroup(string groupName)
+            {
+                try
+                {
+                    logger.Log($"Adding {serviceAccount} user to {groupName} group...");
+                    UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
+                    logger.Log($"Done adding {serviceAccount} user to {groupName} group.");
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // This exception is thrown when group doesn't exist, just treat this as a warning
+                    logger.Log(EventLogEntryType.Warning, ex);
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(InstallMessage.Error, $"Failed to add {serviceAccount} user to {groupName} group!");
+                    logger.Log(EventLogEntryType.Error, ex);
+                }
+            }
+
+            // Determine if we're dealing with the local system account
+            bool isLocalSystem = serviceAccount == "LocalSystem";
+
+            // Don't attempt grant rights to the local system account because it already has them
+            if (!isLocalSystem)
+            {
+                // Create service admins group and add service account to that group as well as the Performance Log Users group
+                addServiceAccountToGroup(serviceAdminsGroupName);
+                addServiceAccountToGroup("Performance Monitor Users");
+                addServiceAccountToGroup("Performance Log Users");
+
+                try
+                {
+                    logger.Log($"Adding {serviceAccount} user right to logon as a service...");
+                    AddPrivileges(serviceAccount, WindowsApi.SE_SERVICE_LOGON_NAME);
+                    logger.Log($"Done adding {serviceAccount} user right to logon as a service...");
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(InstallMessage.Error, $"Failed to add {serviceAccount} user right to logon as a service!");
+                    logger.Log(EventLogEntryType.Error, ex);
+                }
+
+                try
+                {
+                    logger.Log($"Adding {serviceAccount} user right to change system time...");
+                    AddPrivileges(serviceAccount, WindowsApi.SE_SYSTEMTIME_NAME);
+                    logger.Log($"Done adding {serviceAccount} user right to change system time...");
+                }
+                catch (Exception ex)
+                {
+                    // This right is only needed for updating system clock, so its treat as a warning
+                    logger.Log(EventLogEntryType.Warning, ex);
+                }
             }
 
             // Attempt to grant rights to start and stop the service
             try
             {
                 string accountSID = UserInfo.UserNameToSID(serviceAccount);
-                string groupSID = UserInfo.GroupNameToSID(groupName);
+                string groupSID = UserInfo.GroupNameToSID(serviceAdminsGroupName);
                 string acl;
 
                 using (Process process = new Process())
@@ -390,6 +446,7 @@ namespace GSF.InstallerActions
                     process.StartInfo.Arguments = $"sdshow {serviceName}";
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     process.Start();
 
                     acl = process.StandardOutput.ReadToEnd().Trim();
@@ -399,7 +456,7 @@ namespace GSF.InstallerActions
                         throw new Exception($"Non-zero exit code ({process.ExitCode}) returned from 'sc sdshow {serviceName}'.");
                 }
 
-                int index = acl.IndexOf("S:");
+                int index = acl.IndexOf("S:", StringComparison.Ordinal);
 
                 // Don't attempt grant rights to the local system account because it already has them
                 if (!isLocalSystem && accountSID.StartsWith("S-") && !acl.Contains(accountSID))
@@ -410,6 +467,9 @@ namespace GSF.InstallerActions
 
                 using (Process process = Process.Start("sc", $"sdset {serviceName} \"{acl}\""))
                 {
+                    if (process == null)
+                        throw new Exception($"Process start failed for 'sc sdset {serviceName} \"{acl}\"'.");
+
                     process.WaitForExit();
 
                     if (process.ExitCode != 0)
@@ -496,6 +556,7 @@ namespace GSF.InstallerActions
             logger.Log("Begin CheckFileExistenceAction");
             session["FILEEXISTS"] = File.Exists(GetPropertyValue(session, "FILEPATH")) ? "yes" : null;
             logger.Log("End CheckFileExistenceAction");
+
             return ActionResult.Success;
         }
 
@@ -509,33 +570,25 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string zipFile;
-            string sourceDir;
-            string destinationDir;
-
-            ZipArchive archive;
-            string directoryPath;
-            string filePath;
-
             logger.Log("Begin UnzipAction");
 
-            zipFile = GetPropertyValue(session, "ZIPFILE");
-            sourceDir = GetPropertyValue(session, "SOURCEDIR") ?? string.Empty;
-            destinationDir = GetPropertyValue(session, "DESTINATIONDIR") ?? string.Empty;
+            string zipFile = GetPropertyValue(session, "ZIPFILE");
+            string sourceDir = GetPropertyValue(session, "SOURCEDIR") ?? string.Empty;
+            string destinationDir = GetPropertyValue(session, "DESTINATIONDIR") ?? string.Empty;
 
             sourceDir = sourceDir.Replace('\\', '/').EnsureEnd('/');
 
-            archive = ZipFile.OpenRead(zipFile);
+            ZipArchive archive = ZipFile.OpenRead(zipFile);
 
             foreach (ZipArchiveEntry entry in archive.Entries.Where(entry => entry.FullName.StartsWith(sourceDir)))
             {
                 if (entry.FullName.EndsWith("/"))
                     continue;
 
-                filePath = Path.Combine(destinationDir, entry.FullName.Substring(sourceDir.Length).Replace('/', '\\'));
-                directoryPath = Path.GetDirectoryName(filePath);
+                string filePath = Path.Combine(destinationDir, entry.FullName.Substring(sourceDir.Length).Replace('/', '\\'));
+                string directoryPath = Path.GetDirectoryName(filePath);
 
-                if ((object)directoryPath == null)
+                if (string.IsNullOrWhiteSpace(directoryPath))
                     continue;
 
                 if (!Directory.Exists(directoryPath))
@@ -563,11 +616,9 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            int passwordLength;
-
             logger.Log("Begin PasswordGenerationAction");
 
-            if (int.TryParse(GetPropertyValue(session, "GenPasswordLength"), out passwordLength))
+            if (int.TryParse(GetPropertyValue(session, "GenPasswordLength"), out int passwordLength))
                 session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword(passwordLength);
             else
                 session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword();
@@ -587,14 +638,11 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string connectionString;
-            string dataProviderString;
-
             logger.Log("Begin TestDatabaseConnectionAction");
 
             // Get properties from the installer session
-            connectionString = GetPropertyValue(session, "ConnectionString");
-            dataProviderString = GetPropertyValue(session, "DataProviderString");
+            string connectionString = GetPropertyValue(session, "ConnectionString");
+            string dataProviderString = GetPropertyValue(session, "DataProviderString");
 
             try
             {
@@ -628,34 +676,30 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string connectionString;
-            string dataProviderString;
-            string query;
             string dllPath;
 
             logger.Log("Begin DatabaseQueryAction");
 
             // Get properties from the installer session
-            connectionString = GetPropertyValue(session, "CONNECTIONSTRING");
-            dataProviderString = GetPropertyValue(session, "DATAPROVIDERSTRING");
-            query = GetPropertyValue(session, "DBQUERY");
+            string connectionString = GetPropertyValue(session, "CONNECTIONSTRING");
+            string dataProviderString = GetPropertyValue(session, "DATAPROVIDERSTRING");
+            string query = GetPropertyValue(session, "DBQUERY");
 
             try
             {
                 dllPath = GetPropertyValue(session, "LIBPATH");
             }
-            catch (Exception ex)
+            catch
             {
                 dllPath = "";
             }
 
             try
             {
-                //Load the DLL for a data connetcion if neccesary
-                if (dllPath != "")
-                {
+                // Load the DLL for a data connection if neccesary
+                if (!string.IsNullOrWhiteSpace(dllPath))
                     Assembly.Load(File.ReadAllBytes(dllPath));
-                }
+
                 // Execute the database script
                 using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
                 {
@@ -693,16 +737,12 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string connectionString;
-            string dataProviderString;
-            string scriptPath;
-
             logger.Log("Begin DatabaseScriptAction");
 
             // Get properties from the installer session
-            connectionString = GetPropertyValue(session, "CONNECTIONSTRING");
-            dataProviderString = GetPropertyValue(session, "DATAPROVIDERSTRING");
-            scriptPath = GetPropertyValue(session, "SCRIPTPATH");
+            string connectionString = GetPropertyValue(session, "CONNECTIONSTRING");
+            string dataProviderString = GetPropertyValue(session, "DATAPROVIDERSTRING");
+            string scriptPath = GetPropertyValue(session, "SCRIPTPATH");
 
             try
             {
@@ -742,27 +782,23 @@ namespace GSF.InstallerActions
         {
             Logger logger = new Logger(session);
 
-            string processStartInfo;
             Dictionary<string, string> infoLookup;
-            Action<string, Action<string>> findAndExecute;
             ProcessStartInfo info;
 
             logger.Log("Begin StartProcessAction");
 
             // Get properties from the installer session
-            processStartInfo = GetPropertyValue(session, "ProcessStartInfo");
+            string processStartInfo = GetPropertyValue(session, "ProcessStartInfo");
 
             try
             {
                 infoLookup = processStartInfo.ParseKeyValuePairs();
 
-                findAndExecute = (key, action) =>
+                void findAndExecute(string key, Action<string> action)
                 {
-                    string value;
-
-                    if (infoLookup.TryGetValue(key, out value))
+                    if (infoLookup.TryGetValue(key, out string value))
                         action(value);
-                };
+                }
 
                 info = new ProcessStartInfo();
 
@@ -780,8 +816,12 @@ namespace GSF.InstallerActions
                 // Start the process
                 using (Process process = Process.Start(info))
                 {
+                    if (process == null)
+                        throw new Exception($"Failed to start process \"{info.FileName}\".");
+
                     findAndExecute("WaitForExit", value =>
                     {
+                        // ReSharper disable AccessToDisposedClosure
                         process.OutputDataReceived += (sender, args) => logger.Log(args.Data);
 
                         process.ErrorDataReceived += (sender, args) =>
@@ -792,6 +832,7 @@ namespace GSF.InstallerActions
                         };
 
                         process.WaitForExit();
+                        // ReSharper restore AccessToDisposedClosure
                     });
                 }
             }
@@ -819,13 +860,10 @@ namespace GSF.InstallerActions
         // Create an http namespace reservation
         private static void AddHttpNamespaceReservation(string serviceAccount, string endPoint)
         {
-            ProcessStartInfo psi;
-            string parameters;
-
             // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
-            parameters = $@"http add urlacl url=http://{endPoint}/ user=""{serviceAccount}""";
+            string parameters = $@"http add urlacl url=http://{endPoint}/ user=""{serviceAccount}""";
 
-            psi = new ProcessStartInfo("netsh", parameters)
+            ProcessStartInfo psi = new ProcessStartInfo("netsh", parameters)
             {
                 Verb = "runas",
                 CreateNoWindow = true,
@@ -836,7 +874,7 @@ namespace GSF.InstallerActions
 
             using (Process shell = Process.Start(psi))
             {
-                if ((object)shell != null && !shell.WaitForExit(5000))
+                if (shell != null && !shell.WaitForExit(5000))
                     shell.Kill();
             }
         }
@@ -844,13 +882,10 @@ namespace GSF.InstallerActions
         // Delete an http namespace reservation
         private static void RemoveHttpNamespaceReservation(string endPoint)
         {
-            ProcessStartInfo psi;
-            string parameters;
-
             // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
-            parameters = $@"http delete urlacl url=http://{endPoint}";
+            string parameters = $@"http delete urlacl url=http://{endPoint}";
 
-            psi = new ProcessStartInfo("netsh", parameters)
+            ProcessStartInfo psi = new ProcessStartInfo("netsh", parameters)
             {
                 Verb = "runas",
                 CreateNoWindow = true,
@@ -861,7 +896,7 @@ namespace GSF.InstallerActions
 
             using (Process shell = Process.Start(psi))
             {
-                if ((object)shell != null && !shell.WaitForExit(5000))
+                if (shell != null && !shell.WaitForExit(5000))
                     shell.Kill();
             }
         }
@@ -869,15 +904,10 @@ namespace GSF.InstallerActions
         // Method to get the value of a property
         private static string GetPropertyValue(Session session, string name)
         {
-            string value;
-
-            if (session.CustomActionData.TryGetValue(name, out value))
+            if (session.CustomActionData.TryGetValue(name, out string value))
                 return value;
 
-            if (!string.IsNullOrEmpty(session[name]))
-                return session[name];
-
-            return session[name.ToUpper()];
+            return !string.IsNullOrEmpty(session[name]) ? session[name] : session[name.ToUpper()];
         }
 
         // Method to determine whether the custom action is immediate
@@ -891,9 +921,9 @@ namespace GSF.InstallerActions
 
         private class Logger
         {
-            private Session m_session;
-            private string m_serviceName;
-            private bool m_isImmediate;
+            private readonly Session m_session;
+            private readonly string m_serviceName;
+            private readonly bool m_isImmediate;
 
             public Logger(Session session)
             {
@@ -902,10 +932,7 @@ namespace GSF.InstallerActions
                 m_isImmediate = IsImmediate(session);
             }
 
-            public void Log(string message)
-            {
-                Log(InstallMessage.Info, message);
-            }
+            public void Log(string message) => Log(InstallMessage.Info, message);
 
             public void Log(InstallMessage messageType, string message)
             {
@@ -924,10 +951,7 @@ namespace GSF.InstallerActions
                 }
             }
 
-            public void Log(EventLogEntryType messageType, Exception ex)
-            {
-                Log(messageType, ex.ToString());
-            }
+            public void Log(EventLogEntryType messageType, Exception ex) => Log(messageType, ex.ToString());
 
             public void Log(EventLogEntryType messageType, string message)
             {
@@ -960,7 +984,7 @@ namespace GSF.InstallerActions
             List<WindowsApi.SC_ACTION> failureActionsList = new List<WindowsApi.SC_ACTION>
             {
                 new WindowsApi.SC_ACTION { Type = (WindowsApi.SC_ACTION_TYPE)(uint)RecoverAction.Restart, Delay = 2000 },
-                new WindowsApi.SC_ACTION { Type = (WindowsApi.SC_ACTION_TYPE)(uint)RecoverAction.None, Delay = 2000 }
+                new WindowsApi.SC_ACTION { Type = (uint)RecoverAction.None, Delay = 2000 }
             };
 
             // We've got work to do
@@ -973,9 +997,6 @@ namespace GSF.InstallerActions
             // Name of the service
             string serviceName = GetPropertyValue(session, "SERVICENAME");
 
-            // Err check var
-            bool result;
-
             // Place all our code in a try block
             try
             {
@@ -984,7 +1005,7 @@ namespace GSF.InstallerActions
 
                 if (serviceManagerHandle.ToInt32() <= 0)
                 {
-                    string message = "UpdateServiceConfig: Failed to Open Service Control Manager";
+                    const string message = "UpdateServiceConfig: Failed to Open Service Control Manager";
                     logger.Log(InstallMessage.Error, message);
                     logger.Log(EventLogEntryType.Error, message);
                     return;
@@ -995,7 +1016,7 @@ namespace GSF.InstallerActions
 
                 if (serviceLockHandle.ToInt32() <= 0)
                 {
-                    string message = "UpdateServiceConfig: Failed to Lock Service Database for Write";
+                    const string message = "UpdateServiceConfig: Failed to Lock Service Database for Write";
                     logger.Log(InstallMessage.Error, message);
                     logger.Log(EventLogEntryType.Error, message);
                     return;
@@ -1006,7 +1027,7 @@ namespace GSF.InstallerActions
 
                 if (serviceHandle.ToInt32() <= 0)
                 {
-                    string message = "UpdateServiceConfig: Failed to Open Service";
+                    const string message = "UpdateServiceConfig: Failed to Open Service";
                     logger.Log(InstallMessage.Error, message);
                     logger.Log(EventLogEntryType.Error, message);
                     return;
@@ -1028,29 +1049,32 @@ namespace GSF.InstallerActions
                 for (int i = 0; i < failureActionsList.Count; i++)
                 {
                     // Handle pointer math as 64-bit, cast will convert back to 32-bit if needed
-                    Marshal.StructureToPtr(failureActionsList[i], (IntPtr)((Int64)actionsPtr + i * scActionSize), false);
+                    Marshal.StructureToPtr(failureActionsList[i], (IntPtr)((long)actionsPtr + i * scActionSize), false);
 
                     if (failureActionsList[i].Type == WindowsApi.SC_ACTION_TYPE.SC_ACTION_REBOOT)
                         needShutdownPrivilege = true;
                 }
 
-
                 // If we need shutdown privilege, then grant it to this process
+                bool result;
+
                 if (needShutdownPrivilege)
                 {
-                    result = GrantShutdownPrivilege(session, logger);
+                    result = GrantShutdownPrivilege(logger);
 
                     if (!result)
                         return;
                 }
 
                 // Set up the failure actions
-                WindowsApi.SERVICE_FAILURE_ACTIONS failureActions = new WindowsApi.SERVICE_FAILURE_ACTIONS();
-                failureActions.cActions = failureActionsList.Count;
-                failureActions.dwResetPeriod = 120;
-                failureActions.lpCommand = null;
-                failureActions.lpRebootMsg = null;
-                failureActions.lpsaActions = actionsPtr;
+                WindowsApi.SERVICE_FAILURE_ACTIONS failureActions = new WindowsApi.SERVICE_FAILURE_ACTIONS
+                {
+                    cActions = failureActionsList.Count,
+                    dwResetPeriod = 120,
+                    lpCommand = null,
+                    lpRebootMsg = null,
+                    lpsaActions = actionsPtr
+                };
 
                 failureActionsPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(WindowsApi.SERVICE_FAILURE_ACTIONS)));
                 Marshal.StructureToPtr(failureActions, failureActionsPtr, false);
@@ -1114,18 +1138,17 @@ namespace GSF.InstallerActions
 
         // This code mimics the MSDN defined way to adjust privilege for shutdown
         // https://msdn.microsoft.com/en-us/library/windows/desktop/aa376871(v=vs.85).aspx
-        private static bool GrantShutdownPrivilege(Session session, Logger logger)
+        private static bool GrantShutdownPrivilege(Logger logger)
         {
             bool grantSuccess = false;
             IntPtr processToken = IntPtr.Zero;
-            IntPtr processHandle;
             WindowsApi.TOKEN_PRIVILEGES tokenPrivileges = new WindowsApi.TOKEN_PRIVILEGES();
             long luid = 0;
             int returnLen = 0;
 
             try
             {
-                processHandle = WindowsApi.GetCurrentProcess();
+                IntPtr processHandle = WindowsApi.GetCurrentProcess();
 
                 bool result = WindowsApi.OpenProcessToken(processHandle, WindowsApi.TOKEN_ADJUST_PRIVILEGES | WindowsApi.TOKEN_QUERY, ref processToken);
 
@@ -1163,8 +1186,6 @@ namespace GSF.InstallerActions
 
         private static void AddPrivileges(string account, string privilege)
         {
-            uint result;
-
             // Pointer and size for the SID
             IntPtr sid = IntPtr.Zero;
             int sidSize = 0;
@@ -1189,14 +1210,11 @@ namespace GSF.InstallerActions
                 // Initialize an empty Unicode-string
                 WindowsApi.LSA_UNICODE_STRING systemName = new WindowsApi.LSA_UNICODE_STRING();
 
-                // Initialize a pointer for the policy handle
-                IntPtr policyHandle;
-
                 // These attributes are not used, but LsaOpenPolicy wants them to exist
                 WindowsApi.LSA_OBJECT_ATTRIBUTES objectAttributes = new WindowsApi.LSA_OBJECT_ATTRIBUTES();
 
                 // Get a policy handle
-                result = WindowsApi.LsaOpenPolicy(ref systemName, ref objectAttributes, (int)WindowsApi.LsaAccess.POLICY_ALL_ACCESS, out policyHandle);
+                uint result = WindowsApi.LsaOpenPolicy(ref systemName, ref objectAttributes, (int)WindowsApi.LsaAccess.POLICY_ALL_ACCESS, out IntPtr policyHandle);
 
                 if (result == 0)
                 {
@@ -1205,8 +1223,8 @@ namespace GSF.InstallerActions
 
                     userRights[0] = new WindowsApi.LSA_UNICODE_STRING();
                     userRights[0].Buffer = Marshal.StringToHGlobalUni(privilege);
-                    userRights[0].Length = (UInt16)(privilege.Length * UnicodeEncoding.CharSize);
-                    userRights[0].MaximumLength = (UInt16)((privilege.Length + 1) * UnicodeEncoding.CharSize);
+                    userRights[0].Length = (ushort)(privilege.Length * UnicodeEncoding.CharSize);
+                    userRights[0].MaximumLength = (ushort)((privilege.Length + 1) * UnicodeEncoding.CharSize);
 
                     // Add the privilege to the account 
                     WindowsApi.LsaAddAccountRights(policyHandle, sid, userRights, 1);

@@ -101,6 +101,8 @@ namespace GSF.Interop
         public const int CRYPT_INSTALL_OID_INFO_BEFORE_FLAG = 1;
 
         [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
+        public const string SE_SERVICE_LOGON_NAME = "SeServiceLogonRight";
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         public const string SE_ASSIGNPRIMARYTOKEN_NAME = "SeAssignPrimaryTokenPrivilege";
         [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores")]
         public const string SE_AUDIT_NAME = "SeAuditPrivilege";
