@@ -428,7 +428,7 @@ namespace GSF.InstallerActions
                 }
                 catch (Exception ex)
                 {
-                    // This right is only needed for updating system clock, so its treat as a warning
+                    // This right is only needed for updating system clock, so its treated as a warning
                     logger.Log(EventLogEntryType.Warning, ex);
                 }
             }
@@ -852,10 +852,7 @@ namespace GSF.InstallerActions
 
         // Optionally port specification can include interface, e.g.: 127.0.0.1:8005 or +:8181,
         // when only a port is specified, "+" is assumed meaning bind to all interfaces
-        private static string GetEndPoint(string servicePort)
-        {
-            return servicePort.IndexOf(':') == -1 ? $"+:{servicePort}" : servicePort;
-        }
+        private static string GetEndPoint(string servicePort) => servicePort.IndexOf(':') == -1 ? $"+:{servicePort}" : servicePort;
 
         // Create an http namespace reservation
         private static void AddHttpNamespaceReservation(string serviceAccount, string endPoint)
@@ -907,7 +904,17 @@ namespace GSF.InstallerActions
             if (session.CustomActionData.TryGetValue(name, out string value))
                 return value;
 
-            return !string.IsNullOrEmpty(session[name]) ? session[name] : session[name.ToUpper()];
+            try
+            {
+                return !string.IsNullOrEmpty(session[name]) ? session[name] : session[name.ToUpper()];
+            }
+            catch (Exception ex)
+            {
+                Logger logger = new Logger(session);
+                logger.Log(EventLogEntryType.Warning, ex);
+            }
+
+            return null;
         }
 
         // Method to determine whether the custom action is immediate
