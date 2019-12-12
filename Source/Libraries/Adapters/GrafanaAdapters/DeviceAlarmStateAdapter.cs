@@ -34,20 +34,17 @@ using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
-//using openPDC.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Timers;
-
-
 using AlarmStateRecord = GrafanaAdapters.AlarmState;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
-
 
 namespace GrafanaAdapters
 {
@@ -55,7 +52,7 @@ namespace GrafanaAdapters
     /// Represents an adapter that will monitor and report device alarm states.
     /// </summary>
     [Description("Device Alarm State: Monitors and updates alarm states for devices")]
-    public class GSFDeviceAlarmStateAdapter : FacileActionAdapterBase
+    public class DeviceAlarmStateAdapter : FacileActionAdapterBase
     {
         #region [ Members ]
 
@@ -118,9 +115,9 @@ namespace GrafanaAdapters
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="GSFDeviceAlarmStateAdapter"/>.
+        /// Creates a new <see cref="DeviceAlarmStateAdapter"/>.
         /// </summary>
-        public GSFDeviceAlarmStateAdapter()
+        public DeviceAlarmStateAdapter()
         {
             m_alarmTime = TimeSpan.FromMinutes(DefaultAlarmMinutes).Ticks;
         }
@@ -374,37 +371,38 @@ namespace GrafanaAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="GSFDeviceAlarmStateAdapter"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="DeviceAlarmStateAdapter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_lastDeviceStateChange", Justification = "Object is disposed")]
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_monitoringTimer != null)
-                        {
-                            m_monitoringTimer.Enabled = false;
-                            m_monitoringTimer.Elapsed -= MonitoringTimer_Elapsed;
-                            m_monitoringTimer.Dispose();
-                        }
+            if (m_disposed)
+                return;
 
-                        m_lastDeviceStateChange?.Dispose();
-                    }
-                }
-                finally
+            try
+            {
+                if (!disposing)
+                    return;
+
+                if (m_monitoringTimer != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_monitoringTimer.Enabled = false;
+                    m_monitoringTimer.Elapsed -= MonitoringTimer_Elapsed;
+                    m_monitoringTimer.Dispose();
                 }
+
+                m_lastDeviceStateChange?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
         /// <summary>
-        /// Initializes <see cref="GSFDeviceAlarmStateAdapter" />.
+        /// Initializes <see cref="DeviceAlarmStateAdapter" />.
         /// </summary>
         public override void Initialize()
         {
@@ -510,7 +508,7 @@ namespace GrafanaAdapters
                     MeasurementKey[] keys = null;
                     DataRow metadata = connection.RetrieveRow("SELECT * FROM Device WHERE ID = {0}", alarmDevice.DeviceID);
 
-                    if ((object)metadata != null)
+                    if (metadata != null)
                     {
                         // Querying from MeasurementDetail because we also want to include disabled device measurements
                         string measurementSQL = TargetParentDevices ?
@@ -747,7 +745,7 @@ namespace GrafanaAdapters
                             if (!m_alarmStateIDs.TryGetValue(alarmDevice.StateID, out AlarmState state))
                                 state = AlarmState.NotAvailable;
 
-                            if ((object)alarmedDeviceMetadata == null)
+                            if (alarmedDeviceMetadata == null)
                                 alarmedDeviceMetadata = metadata;
 
                             if (ExternalDatabaseReportSingleCompositeState)
@@ -831,7 +829,7 @@ namespace GrafanaAdapters
                 substitutions["{MappedAlarmState}"] = "0";
 
             // Use device metadata columns as possible substitution parameters
-            if ((object)metadata != null)
+            if (metadata != null)
             {
                 foreach (DataColumn column in metadata.Table.Columns)
                     substitutions[$"{{Device.{column.ColumnName}}}"] = metadata[column.ColumnName].ToString();
@@ -888,7 +886,7 @@ namespace GrafanaAdapters
 
         private static string GetOutOfServiceTime(DataRow deviceRow)
         {
-            if ((object)deviceRow == null)
+            if (deviceRow == null)
                 return "U/A";
 
             try
@@ -901,7 +899,7 @@ namespace GrafanaAdapters
             }
         }
 
-        public static string GetShortElapsedTimeString(Ticks span)
+        private static string GetShortElapsedTimeString(Ticks span)
         {
             double days = span.ToDays();
 
