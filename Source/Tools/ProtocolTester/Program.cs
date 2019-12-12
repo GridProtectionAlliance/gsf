@@ -126,6 +126,9 @@ namespace ProtocolTester
             if (settings.TryGetValue("skipDisableRealTimeData", out setting))
                 parser.SkipDisableRealTimeData = setting.ParseBoolean();
 
+            if (settings.TryGetValue("disableRealTimeDataOnStop", out setting))
+                parser.DisableRealTimeDataOnStop = setting.ParseBoolean();
+
             // When connecting to a file based resource you may want to loop the data
             parser.AutoRepeatCapturedPlayback = true;
 

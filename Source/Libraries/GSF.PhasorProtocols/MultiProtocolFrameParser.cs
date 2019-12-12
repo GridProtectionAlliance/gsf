@@ -1258,6 +1258,16 @@ namespace GSF.PhasorProtocols
         public const bool DefaultAutoStartDataParsingSequence = true;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="SkipDisableRealTimeData"/> property.
+        /// </summary>
+        public const bool DefaultSkipDisableRealTimeData = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="DisableRealTimeDataOnStop"/> property.
+        /// </summary>
+        public const bool DefaultDisableRealTimeDataOnStop = true;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AllowedParsingExceptions"/> property.
         /// </summary>
         public const int DefaultAllowedParsingExceptions = 10;
@@ -1266,6 +1276,16 @@ namespace GSF.PhasorProtocols
         /// Specifies the default value for the <see cref="ParsingExceptionWindow"/> property.
         /// </summary>
         public const long DefaultParsingExceptionWindow = 50000000L; // 5 seconds
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="TrustHeaderLength"/> property.
+        /// </summary>
+        public const bool DefaultTrustHeaderLength = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="KeepCommandChannelOpen"/> property.
+        /// </summary>
+        public const bool DefaultKeepCommandChannelOpen = true;
 
         // Events
 
@@ -1417,19 +1437,12 @@ namespace GSF.PhasorProtocols
         private IConfigurationFrame m_configurationFrame;
         private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
         private long m_dataStreamStartTime;
-        private long m_totalFramesReceived;
-        private long m_totalMissingFrames;
         private long m_missingFramesOverflow;
-        private long m_totalCrcExceptions;
-        private long m_totalBytesReceived;
-        private double m_calculatedFrameRate;
-        private double m_calculatedByteRate;
         private long m_lastFrameReceivedTime;
         private volatile int m_frameRateTotal;
         private volatile int m_byteRateTotal;
         private volatile int m_parsingExceptionCount;
         private long m_lastParsingExceptionTime;
-        private int m_configuredFrameRate;
         private int m_definedFrameRate;
         private bool m_initiatingDataStream;
         private long m_initialBytesReceived;
@@ -1455,13 +1468,6 @@ namespace GSF.PhasorProtocols
             m_transportProtocol = TransportProtocol.Tcp;
             m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
 
-            DeviceID = 1;
-            AutoStartDataParsingSequence = DefaultAutoStartDataParsingSequence;
-            AllowedParsingExceptions = DefaultAllowedParsingExceptions;
-            ParsingExceptionWindow = DefaultParsingExceptionWindow;
-            TrustHeaderLength = true;
-            KeepCommandChannelOpen = true;
-            
             // Set default frame rate, this calculates milliseconds for each frame
             DefinedFrameRate = DefaultDefinedFrameRate;
 
@@ -1579,10 +1585,10 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets flag that determines whether to keep the
-        /// command channel open after the initial startup sequence.
+        /// Gets or sets flag that determines whether to keep the command channel open after the initial startup sequence.
+        /// Defaults to <see cref="DefaultKeepCommandChannelOpen"/>.
         /// </summary>
-        public bool KeepCommandChannelOpen { get; set; }
+        public bool KeepCommandChannelOpen { get; set; } = DefaultKeepCommandChannelOpen;
 
         /// <summary>
         /// Gets or sets flag that determines if a device supports commands.
@@ -1597,9 +1603,9 @@ namespace GSF.PhasorProtocols
         /// Gets or sets the device identification code often needed to establish a connection.
         /// </summary>
         /// <remarks>
-        /// Most devices validate this ID when sending commands, so it must be correct in order to start parsing sequence.
+        /// Many devices validate this ID when sending commands, so it may need to be correct in order to start parsing sequence.
         /// </remarks>
-        public ushort DeviceID { get; set; }
+        public ushort DeviceID { get; set; } = 1;
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the <see cref="MultiProtocolFrameParser"/> for sending and receiving data from a device.
@@ -1619,6 +1625,7 @@ namespace GSF.PhasorProtocols
 
         /// <summary>
         /// Gets or sets the maximum number of times the <see cref="MultiProtocolFrameParser"/> will attempt to connect to a device.
+        /// Defaults to <see cref="DefaultMaximumConnectionAttempts"/>.
         /// </summary>
         /// <remarks>Set to -1 for infinite connection attempts.</remarks>
         public int MaximumConnectionAttempts
@@ -1642,29 +1649,43 @@ namespace GSF.PhasorProtocols
 
         /// <summary>
         /// Gets or sets flag to automatically send the ConfigFrame2 and EnableRealTimeData command frames used to start a typical data parsing sequence.
+        /// Defaults to <see cref="DefaultAutoStartDataParsingSequence"/>.
         /// </summary>
         /// <remarks>
         /// For devices that support IEEE commands, setting this property to true will automatically start the data parsing sequence.
         /// </remarks>
-        public bool AutoStartDataParsingSequence { get; set; }
+        public bool AutoStartDataParsingSequence { get; set; } = DefaultAutoStartDataParsingSequence;
 
         /// <summary>
         /// Gets or sets flag to skip automatic disabling of the real-time data stream on shutdown or startup.
+        /// Defaults to <see cref="DefaultSkipDisableRealTimeData"/>.
         /// </summary>
         /// <remarks>
         /// This flag may important when using UDP multicast with several subscribed clients.
         /// </remarks>
-        public bool SkipDisableRealTimeData { get; set; }
+        public bool SkipDisableRealTimeData { get; set; } = DefaultSkipDisableRealTimeData;
+
+        /// <summary>
+        /// Gets or sets flag to disable real-time data on stop.
+        /// Defaults to <see cref="DefaultDisableRealTimeDataOnStop"/>.
+        /// </summary>
+        /// <remarks>
+        /// If <c>false</c>, disable real-time command will not be sent when parser is stopped regardless
+        /// of <see cref="SkipDisableRealTimeData"/> value.
+        /// </remarks>
+        public bool DisableRealTimeDataOnStop { get; set; } = DefaultDisableRealTimeDataOnStop;
 
         /// <summary>
         /// Gets or sets number of parsing exceptions allowed during <see cref="ParsingExceptionWindow"/> before connection is reset.
+        /// Defaults to <see cref="DefaultAllowedParsingExceptions"/>.
         /// </summary>
-        public int AllowedParsingExceptions { get; set; }
+        public int AllowedParsingExceptions { get; set; } = DefaultAllowedParsingExceptions;
 
         /// <summary>
         /// Gets or sets time duration, in <see cref="Ticks"/>, to monitor parsing exceptions.
+        /// Defaults to <see cref="DefaultParsingExceptionWindow"/>.
         /// </summary>
-        public Ticks ParsingExceptionWindow { get; set; }
+        public Ticks ParsingExceptionWindow { get; set; } = DefaultParsingExceptionWindow;
 
         /// <summary>
         /// Gets or sets a descriptive name for a device connection.
@@ -1694,6 +1715,7 @@ namespace GSF.PhasorProtocols
 
         /// <summary>
         /// Gets or sets desired frame rate to use for maintaining captured frame replay timing.
+        /// Defaults to <see cref="DefaultDefinedFrameRate"/>.
         /// </summary>
         /// <remarks>
         /// This is only applicable when connection is made to a file for replay purposes.
@@ -1789,11 +1811,12 @@ namespace GSF.PhasorProtocols
 
         /// <summary>
         /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
+        /// Defaults to <see cref="DefaultTrustHeaderLength"/>.
         /// </summary>
         /// <remarks>
         /// It is expected that this will normally be left as <c>true</c>.
         /// </remarks>
-        public bool TrustHeaderLength { get; set; }
+        public bool TrustHeaderLength { get; set; } = DefaultTrustHeaderLength;
 
         /// <summary>
         /// Gets the number of redundant frames in each packet.
@@ -1991,42 +2014,42 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets total number of frames that have been received from a device so far.
         /// </summary>
-        public long TotalFramesReceived => m_totalFramesReceived;
+        public long TotalFramesReceived { get; private set; }
 
         /// <summary>
         /// Gets total number of bytes that have been received from a device so far.
         /// </summary>
-        public long TotalBytesReceived => m_totalBytesReceived;
+        public long TotalBytesReceived { get; private set; }
 
         /// <summary>
         /// Gets total number of frames that were missing from device so far.
         /// </summary>
-        public long TotalMissingFrames => m_totalMissingFrames;
+        public long TotalMissingFrames { get; private set; }
 
         /// <summary>
         /// Gets total number of CRC exceptions encountered from device so far.
         /// </summary>
-        public long TotalCrcExceptions => m_totalCrcExceptions;
+        public long TotalCrcExceptions { get; private set; }
 
         /// <summary>
         /// Gets the configured frame rate as reported by the connected device.
         /// </summary>
-        public int ConfiguredFrameRate => m_configuredFrameRate;
+        public int ConfiguredFrameRate { get; private set; }
 
         /// <summary>
         /// Gets the calculated frame rate (i.e., frames per second) based on data received from device connection.
         /// </summary>
-        public double CalculatedFrameRate => m_calculatedFrameRate;
+        public double CalculatedFrameRate { get; private set; }
 
         /// <summary>
         /// Gets the calculated byte rate (i.e., bytes per second) based on data received from device connection.
         /// </summary>
-        public double ByteRate => m_calculatedByteRate;
+        public double ByteRate { get; private set; }
 
         /// <summary>
         /// Gets the calculated bit rate (i.e., bits per second (bps)) based on data received from device connection.
         /// </summary>
-        public double BitRate => m_calculatedByteRate * 8.0D;
+        public double BitRate => ByteRate * 8.0D;
 
         /// <summary>
         /// Gets the calculated megabits per second (Mbps) rate based on data received from device connection.
@@ -2070,15 +2093,15 @@ namespace GSF.PhasorProtocols
                 status.AppendLine();
                 status.AppendFormat("               Buffer size: {0}", m_bufferSize);
                 status.AppendLine();
-                status.AppendFormat("     Total frames received: {0}", m_totalFramesReceived);
+                status.AppendFormat("     Total frames received: {0}", TotalFramesReceived);
                 status.AppendLine();
-                status.AppendFormat("      Total missing frames: {0}", m_totalMissingFrames);
+                status.AppendFormat("      Total missing frames: {0}", TotalMissingFrames);
                 status.AppendLine();
-                status.AppendFormat("      Total CRC exceptions: {0}", m_totalCrcExceptions);
+                status.AppendFormat("      Total CRC exceptions: {0}", TotalCrcExceptions);
                 status.AppendLine();
-                status.AppendFormat("     Calculated frame rate: {0}", m_calculatedFrameRate);
+                status.AppendFormat("     Calculated frame rate: {0}", CalculatedFrameRate);
                 status.AppendLine();
-                status.AppendFormat("      Calculated data rate: {0:0.0} bytes/sec, {1:0.0000} Mbps", m_calculatedByteRate, MegaBitRate);
+                status.AppendFormat("      Calculated data rate: {0:0.0} bytes/sec, {1:0.0000} Mbps", ByteRate, MegaBitRate);
                 status.AppendLine();
                 status.AppendFormat("Allowed parsing exceptions: {0}", AllowedParsingExceptions);
                 status.AppendLine();
@@ -2221,14 +2244,14 @@ namespace GSF.PhasorProtocols
             Stop();
 
             // Reset statistics...
-            m_totalFramesReceived = 0L;
-            m_totalMissingFrames = 0L;
-            m_totalCrcExceptions = 0L;
+            TotalFramesReceived = 0L;
+            TotalMissingFrames = 0L;
+            TotalCrcExceptions = 0L;
             m_frameRateTotal = 0;
             m_byteRateTotal = 0;
-            m_totalBytesReceived = 0L;
-            m_calculatedFrameRate = 0.0D;
-            m_calculatedByteRate = 0.0D;
+            TotalBytesReceived = 0L;
+            CalculatedFrameRate = 0.0D;
+            ByteRate = 0.0D;
             m_lastParsingExceptionTime = 0L;
             m_parsingExceptionCount = 0;
 
@@ -2643,7 +2666,7 @@ namespace GSF.PhasorProtocols
             m_configurationFrame = null;
 
             // Make sure data stream is disabled
-            if (!SkipDisableRealTimeData)
+            if (!SkipDisableRealTimeData && DisableRealTimeDataOnStop)
             {
                 WaitHandle commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);
                 commandWaitHandle?.WaitOne(1000);
@@ -2889,7 +2912,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Resets the value for the <see cref="TotalBytesReceived"/> statistic.
         /// </summary>
-        public void ResetTotalBytesReceived() => m_totalBytesReceived = 0L;
+        public void ResetTotalBytesReceived() => TotalBytesReceived = 0L;
 
         /// <summary>
         /// Raises the <see cref="ParsingException"/> event.
@@ -3068,17 +3091,17 @@ namespace GSF.PhasorProtocols
         {
             double time = Ticks.ToSeconds(DateTime.UtcNow.Ticks - m_dataStreamStartTime);
 
-            m_calculatedFrameRate = m_frameRateTotal / time;
-            m_calculatedByteRate = m_byteRateTotal / time;
+            CalculatedFrameRate = m_frameRateTotal / time;
+            ByteRate = m_byteRateTotal / time;
 
             // Since rate calculation timer is not precise, the missing frames calculation can be calculated out
             // of sequence with the total frames. If there is a negative balance, we cache the value so it can
             // be applied to the next calculation to keep calculation more accurate.
-            long missingFrames = (long)(m_configuredFrameRate * m_rateCalcTimer.Interval * SI.Milli * (RedundantFramesPerPacket + 1)) - m_frameRateTotal;
+            long missingFrames = (long)(ConfiguredFrameRate * m_rateCalcTimer.Interval * SI.Milli * (RedundantFramesPerPacket + 1)) - m_frameRateTotal;
 
             if (missingFrames > 0)
             {
-                m_totalMissingFrames += missingFrames + m_missingFramesOverflow;
+                TotalMissingFrames += missingFrames + m_missingFramesOverflow;
                 m_missingFramesOverflow = 0;
             }
             else
@@ -3086,8 +3109,8 @@ namespace GSF.PhasorProtocols
                 m_missingFramesOverflow = missingFrames;
             }
 
-            m_totalFramesReceived += m_frameRateTotal;
-            m_totalBytesReceived += m_byteRateTotal;
+            TotalFramesReceived += m_frameRateTotal;
+            TotalBytesReceived += m_byteRateTotal;
 
             m_frameRateTotal = 0;
             m_byteRateTotal = 0;
@@ -3420,7 +3443,7 @@ namespace GSF.PhasorProtocols
                 ReceivedConfigurationFrame?.Invoke(this, e);
 
                 if (m_configurationFrame != null)
-                    m_configuredFrameRate = m_configurationFrame.FrameRate;
+                    ConfiguredFrameRate = m_configurationFrame.FrameRate;
             }
             catch (Exception ex)
             {
@@ -3553,7 +3576,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (ex is CrcException)
-                m_totalCrcExceptions++;
+                TotalCrcExceptions++;
 
             OnParsingException(ex);
         }
