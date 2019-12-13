@@ -280,7 +280,7 @@ namespace GSF.Web.Model.Handlers
 
             table = dataContext.Table(modelType);
 
-            fieldNames = table.GetFieldNames(false).Where(field =>  (!(table.FieldHasAttribute<GSF.Data.Model.CSVExcludeField>(field)))).ToArray();
+            fieldNames = table.GetFieldNames(false).Where(field =>  (!(table.FieldHasAttribute<GSF.Data.Model.CSVExcludeFieldAttribute>(field)))).ToArray();
            
             hasDeletedField = !string.IsNullOrEmpty(dataContext.GetIsDeletedFlag(modelType));
 
