@@ -41,6 +41,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO.Ports;
+using System.Text;
 using System.Threading;
 
 namespace GSF.Communication
@@ -181,6 +182,42 @@ namespace GSF.Communication
         /// </remarks>
         [DefaultValue(DefaultReceivedBytesThreshold)]
         public int ReceivedBytesThreshold { get; set; } = DefaultReceivedBytesThreshold;
+
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="SerialClient"/>.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                if (m_connectData == null)
+                    return base.Status;
+
+                StringBuilder status = new StringBuilder();
+
+                status.Append(base.Status);
+
+                if (m_connectData.TryGetValue("port", out string value))
+                    status.AppendLine($"                  COM port: {value}");
+
+                if (m_connectData.TryGetValue("baudRate", out value))
+                    status.AppendLine($"                 Baud rate: {value}bps");
+
+                if (m_connectData.TryGetValue("parity", out value))
+                    status.AppendLine($"                    Parity: {value}");
+
+                if (m_connectData.TryGetValue("stopBits", out value))
+                    status.AppendLine($"                 Stop bits: {value}");
+
+                if (m_connectData.TryGetValue("dataBits", out value))
+                    status.AppendLine($"                 Data bits: {value}");
+
+                if (m_connectData.TryGetValue("receivedBytesThreshold", out value))
+                    status.AppendLine($"  Received bytes threshold: {value}");
+
+                return status.ToString();
+            }
+        }
 
         #endregion
 
