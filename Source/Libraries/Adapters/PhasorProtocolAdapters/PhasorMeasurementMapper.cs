@@ -1093,10 +1093,6 @@ namespace PhasorProtocolAdapters
             // Load active device measurements associated with this connection
             LoadDeviceMeasurements();
 
-            // Load specific configuration file if one was specified
-            if (settings.TryGetValue("configurationFile", out setting))
-                LoadConfiguration(setting);
-
             // Register with the statistics engine
             StatisticsEngine.Register(this, "InputStream", "IS");
             StatisticsEngine.Calculated += (sender, args) => ResetLatencyCounters();
@@ -1490,6 +1486,19 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Attempts to load the specified configuration.", "Administrator", "Editor")]
         public void LoadConfiguration(string configurationFileName)
         {
+            if (string.IsNullOrWhiteSpace(configurationFileName))
+                return;
+
+            configurationFileName = configurationFileName.Trim();
+
+            if (configurationFileName.Equals("LoadFromCache", StringComparison.OrdinalIgnoreCase))
+            {
+                LoadCachedConfiguration();
+                return;
+            }
+
+            configurationFileName = FilePath.GetAbsolutePath(configurationFileName);
+
             lock (m_configurationOperationLock)
             {
                 try
@@ -1516,7 +1525,6 @@ namespace PhasorProtocolAdapters
                         }
 
                         StartMeasurementCounter();
-
                         CheckForConfigurationChanges();
                     }
                     else
@@ -1577,7 +1585,7 @@ namespace PhasorProtocolAdapters
                 }
                 else
                 {
-                    status.AppendFormat("  ** No data mapped, check configuration - {0} bytes received", m_frameParser.TotalBytesReceived);
+                    status.AppendFormat("  ** No data parsed yet. Check mapping configuration - {0} bytes received", m_frameParser.TotalBytesReceived);
                 }
             }
             else
@@ -1598,6 +1606,10 @@ namespace PhasorProtocolAdapters
             OutOfOrderFrames = 0L;
             m_receivedConfigFrame = false;
             m_cachedConfigLoadAttempted = false;
+
+            // Load specific configuration file if one was specified
+            if (Settings.TryGetValue("configurationFile", out string setting))
+                LoadConfiguration(setting);
 
             // Start publication server
             m_publishChannel?.Start();
