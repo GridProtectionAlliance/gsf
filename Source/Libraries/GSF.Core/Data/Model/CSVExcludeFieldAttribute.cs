@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  CSVExcludeAttribute.cs - Gbtc
+//  CSVExcludeFieldAttribute.cs - Gbtc
 //
 //  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -29,7 +29,7 @@ namespace GSF.Data.Model
     /// Defines an attribute that will exclude this Field in any CSV exports.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public sealed class CSVExcludeField : Attribute
+    public sealed class CSVExcludeFieldAttribute : Attribute
     {
         //Note No Content Neccesarrry since the logic is in the CSV creation
     }
