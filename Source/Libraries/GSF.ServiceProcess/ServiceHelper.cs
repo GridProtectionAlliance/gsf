@@ -1258,7 +1258,7 @@ namespace GSF.ServiceProcess
                 // Show the uptime for the windows service.
                 if ((object)m_remotingServer != null)
                 {
-                    status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime);
+                    status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime.ToString(2));
                     status.AppendLine();
                     status.AppendLine();
                 }
