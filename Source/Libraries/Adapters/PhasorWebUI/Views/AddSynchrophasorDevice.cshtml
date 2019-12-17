@@ -361,6 +361,7 @@
 @functions {
     private static Dictionary<string, object> s_appModelGlobal;
     private static Guid s_nodeID;
+    private static string s_companyAcronym;
     private static double s_defaultCalculationLagTime;
     private static double s_defaultCalculationLeadTime;
     private static int s_nominalFrequency;
@@ -393,6 +394,14 @@
         get
         {
             return s_nodeID != default(Guid) ? s_nodeID : s_nodeID = (Guid)AppModelGlobal["NodeID"];
+        }
+    }
+
+    private string CompanyAcronym
+    {
+        get
+        {
+            return !string.IsNullOrWhiteSpace(s_companyAcronym) ? s_companyAcronym : s_companyAcronym = (string)AppModelGlobal["CompanyAcronym"];
         }
     }
 
@@ -4047,7 +4056,7 @@
                     </div>
                     <div class="form-group">
                         <div class="checkbox">
-                            <label><input type="checkbox" id="includeCompanyAcronym"> Include Company Acronym "@Model.Global.CompanyAcronym"</label>
+                            <label><input type="checkbox" id="includeCompanyAcronym"> Include Company Acronym "@CompanyAcronym"</label>
                         </div>
                     </div>
                 </form>
