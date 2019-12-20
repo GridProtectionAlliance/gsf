@@ -439,7 +439,7 @@ namespace GSF.Communication
             // Load settings from the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-            settings.Add("IdentifyClienstBy", ClientIdentificationMode, "Specifies how to identify clients when receiving data. Can be IP, Port, or EndPoint.");
+            settings.Add("IdentifyClientsBy", ClientIdentificationMode, "Specifies how to identify clients when receiving data. Can be IP, Port, or EndPoint.");
             settings.Add("AllowDualStackSocket", AllowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
             settings.Add("DynamicClientEndPoints", m_dynamicClientEndPoints, "True if UDP server sends data to the same port it receives data from.");
             settings.Add("MaxSendQueueSize", MaxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
