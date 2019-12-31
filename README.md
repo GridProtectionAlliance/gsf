@@ -1,3 +1,8 @@
+### NEW: The GSF libraries are being migrated to .NET Core as the [Gemstone Libraries](https://github.com/gemstone)
+
+[<img src ="https://github.com/gemstone/gemtem/raw/master/docs/img/gemstone-wide-600.png" width="300" height="66" align="right">](https://github.com/gemstone)
+<br/>
+
 ![GSF](http://www.gridprotectionalliance.org/images/technology/GSF.png)
 # Grid Solutions Framework
 
