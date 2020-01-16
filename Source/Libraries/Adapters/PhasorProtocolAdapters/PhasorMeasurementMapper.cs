@@ -1061,9 +1061,6 @@ namespace PhasorProtocolAdapters
             frameParser.DeviceID = AccessID;
             frameParser.SourceName = Name;
 
-            // Assign reference to frame parser for this connection and attach to needed events
-            FrameParser = frameParser;
-
             // Check for forwarding settings which will establish a data forwarding channel (also supporting proxySettings parameter as used by stream splitter application)
             if ((settings.TryGetValue("forwardingSettings", out string forwardingSettings) || settings.TryGetValue("proxySettings", out forwardingSettings))  && !string.IsNullOrWhiteSpace(forwardingSettings))
             {
@@ -1083,6 +1080,11 @@ namespace PhasorProtocolAdapters
                     UdpPublishChannel = publicationServer as UdpServer;
                 }
             }
+
+            // Assign reference to frame parser for this connection and attach to needed events, this needs to
+            // happen after establishing any forwarding operations so that frame parser can attach to needed
+            // data parsing events
+            FrameParser = frameParser;
 
             if (settings.TryGetValue("forwardOnly", out setting))
                 m_forwardOnly = setting.ParseBoolean();
