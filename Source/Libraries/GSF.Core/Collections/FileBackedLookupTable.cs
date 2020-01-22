@@ -486,6 +486,12 @@ namespace GSF.Collections
                 else
                     count = m_headerNode.Count + 1;
 
+                if (count > m_headerNode.Capacity * MaximumLoadFactor)
+                {
+                    Grow();
+                    Find(key, out lookupPointer, out itemPointer);
+                }
+
                 itemNode = new ItemNode();
                 itemNode.LookupPointer = lookupPointer;
                 itemNode.HashCode = m_keyComparer.GetHashCode(key);
