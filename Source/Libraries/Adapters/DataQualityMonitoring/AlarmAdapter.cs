@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
@@ -80,6 +81,9 @@ namespace DataQualityMonitoring
         private int m_dataSourceState;
 
         private Dictionary<Guid, SignalAlarms> m_alarmLookup;
+
+        private static ReadOnlyDictionary<Guid, SignalAlarms> m_staticAlarmLookup;
+
         private AlarmService m_alarmService;
         private long m_eventCount;
 
@@ -103,6 +107,7 @@ namespace DataQualityMonitoring
         {
             m_alarmLock = new object();
             m_alarmLookup = new Dictionary<Guid, SignalAlarms>();
+            m_staticAlarmLookup = new ReadOnlyDictionary<Guid, SignalAlarms>(m_alarmLookup);
 
             m_measurementQueue = new DoubleBufferedQueue<IMeasurement>();
             m_processMeasurementsOperation = new MixedSynchronizedOperation(ProcessMeasurements, ex => OnProcessException(MessageLevel.Warning, ex));
@@ -307,16 +312,14 @@ namespace DataQualityMonitoring
         /// </summary>
         /// <returns>A collection containing all the raised alarms.</returns>
         [AdapterCommand("Gets a collection containing all the raised alarms in the system.", "Administrator", "Editor", "Viewer")]
-        public ICollection<Alarm> GetRaisedAlarms()
+        public static ICollection<Alarm> GetRaisedAlarms()
         {
-            lock (m_alarmLock)
-            {
-                return m_alarmLookup
+            return m_staticAlarmLookup
                     .SelectMany(kvp => kvp.Value.Alarms)
                     .Where(alarm => alarm.State == AlarmState.Raised)
                     .Select(alarm => alarm.Clone())
                     .ToList();
-            }
+            
         }
 
         /// <summary>
@@ -324,16 +327,15 @@ namespace DataQualityMonitoring
         /// </summary>
         /// <returns>A collection containing all the highest severity raised alarms.</returns>
         [AdapterCommand("Gets a collection containing raised alarms with the highest severity for each signal in the system.", "Administrator", "Editor", "Viewer")]
-        public ICollection<Alarm> GetHighestSeverityAlarms()
+        public static ICollection<Alarm> GetHighestSeverityAlarms()
         {
-            lock (m_alarmLock)
-            {
-                return m_alarmLookup
+           
+                return m_staticAlarmLookup
                     .Select(kvp => kvp.Value.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised))
                     .Where(alarm => (object)alarm != null)
                     .Select(alarm => alarm.Clone())
                     .ToList();
-            }
+            
         }
 
         /// <summary>
