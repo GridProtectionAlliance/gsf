@@ -131,6 +131,18 @@ namespace GrafanaAdapters
 
             return await m_dataSource.Annotations(request, m_cancellationSource.Token);
         }
+
+        /// <summary>
+        /// Queries openHistorian location data for Grafana offsetting duplicate coordinates using a radial distribution.
+        /// </summary>
+        /// <param name="request"> Query request.</param>
+        /// <returns>JSON serialized location metadata for specified targets.</returns>
+        public async Task<string> GetLocationData(LocationRequest request)
+        {
+            return await LocationData.GetLocationData(request.radius, request.zoom, request.request, m_cancellationSource.Token);
+        }
+
+
     }
 }
 

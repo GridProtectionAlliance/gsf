@@ -85,6 +85,7 @@
     <Compile Include="Range.cs" />
     <Compile Include="RangeRaw.cs" />
     <Compile Include="Table.cs" />
+    <Compile Include="LocationRequest.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="TargetCache.cs" />
     <Compile Include="DataSourceValue.cs" />

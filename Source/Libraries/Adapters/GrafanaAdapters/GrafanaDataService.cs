@@ -68,6 +68,8 @@ namespace GrafanaAdapters
         private readonly HistorianDataSource m_dataSource;
         private CancellationTokenSource m_cancellationSource;
         private bool m_disposed;
+        private LocationData m_locationData;
+
 
         #endregion
 
@@ -134,6 +136,11 @@ namespace GrafanaAdapters
                     Archive_MetadataUpdated(this, EventArgs.Empty);
             }
         }
+
+        /// <summary>
+        /// Gets the <see cref="LocationData"/> used by the web service to get geographic information for Phasors.
+        /// </summary>
+        private LocationData LocationData => m_locationData ?? (m_locationData = new LocationData { DataSource = m_dataSource });
 
         #endregion
 
