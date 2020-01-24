@@ -82,7 +82,6 @@ namespace DataQualityMonitoring
 
         private Dictionary<Guid, SignalAlarms> m_alarmLookup;
 
-        private static ReadOnlyDictionary<Guid, SignalAlarms> m_staticAlarmLookup;
 
         private AlarmService m_alarmService;
         private long m_eventCount;
@@ -107,7 +106,6 @@ namespace DataQualityMonitoring
         {
             m_alarmLock = new object();
             m_alarmLookup = new Dictionary<Guid, SignalAlarms>();
-            m_staticAlarmLookup = new ReadOnlyDictionary<Guid, SignalAlarms>(m_alarmLookup);
 
             m_measurementQueue = new DoubleBufferedQueue<IMeasurement>();
             m_processMeasurementsOperation = new MixedSynchronizedOperation(ProcessMeasurements, ex => OnProcessException(MessageLevel.Warning, ex));
@@ -312,13 +310,16 @@ namespace DataQualityMonitoring
         /// </summary>
         /// <returns>A collection containing all the raised alarms.</returns>
         [AdapterCommand("Gets a collection containing all the raised alarms in the system.", "Administrator", "Editor", "Viewer")]
-        public static ICollection<Alarm> GetRaisedAlarms()
+        public ICollection<Alarm> GetRaisedAlarms()
         {
-            return m_staticAlarmLookup
+            lock (m_alarmLock)
+            {
+                return m_alarmLookup
                     .SelectMany(kvp => kvp.Value.Alarms)
                     .Where(alarm => alarm.State == AlarmState.Raised)
                     .Select(alarm => alarm.Clone())
                     .ToList();
+            }
             
         }
 
@@ -327,14 +328,16 @@ namespace DataQualityMonitoring
         /// </summary>
         /// <returns>A collection containing all the highest severity raised alarms.</returns>
         [AdapterCommand("Gets a collection containing raised alarms with the highest severity for each signal in the system.", "Administrator", "Editor", "Viewer")]
-        public static ICollection<Alarm> GetHighestSeverityAlarms()
+        public ICollection<Alarm> GetHighestSeverityAlarms()
         {
-           
-                return m_staticAlarmLookup
+            lock (m_alarmLock)
+            {
+                return m_alarmLookup
                     .Select(kvp => kvp.Value.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised))
                     .Where(alarm => (object)alarm != null)
                     .Select(alarm => alarm.Clone())
                     .ToList();
+            }
             
         }
 
