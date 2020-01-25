@@ -642,76 +642,78 @@ namespace GrafanaAdapters
             {
                 return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
                 {
-                    // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
-                    if (ParseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
+                    if (!(request.target is null))
                     {
-                        DataTableCollection tables = Metadata.Tables;
-                        List<string> results = new List<string>();
-
-                        if (tables.Contains(tableName))
+                        // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
+                        if (ParseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                         {
-                            DataTable table = tables[tableName];
-                            List<string> validFieldNames = new List<string>();
+                            DataTableCollection tables = Metadata.Tables;
+                            List<string> results = new List<string>();
 
-                            for (int i = 0; i < fieldNames?.Length; i++)
+                            if (tables.Contains(tableName))
                             {
-                                string fieldName = fieldNames[i].Trim();
+                                DataTable table = tables[tableName];
+                                List<string> validFieldNames = new List<string>();
 
-                                if (table.Columns.Contains(fieldName))
-                                    validFieldNames.Add(fieldName);
-                            }
-
-                            fieldNames = validFieldNames.ToArray();
-
-                            if (fieldNames.Length == 0)
-                                fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
-
-                            // If no filter expression or take count was specified, limit search target results - user can
-                            // still request larger results sets by specifying desired TOP count.
-                            if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
-                                takeCount = MaximumSearchTargetsPerRequest;
-
-                            void executeSelect(IEnumerable<DataRow> queryOperation)
-                            {
-                                results.AddRange(queryOperation.Take(takeCount).Select(row => string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
-                            }
-
-                            if (string.IsNullOrWhiteSpace(expression))
-                            {
-                                if (string.IsNullOrWhiteSpace(sortField))
+                                for (int i = 0; i < fieldNames?.Length; i++)
                                 {
-                                    executeSelect(table.Select());
+                                    string fieldName = fieldNames[i].Trim();
+
+                                    if (table.Columns.Contains(fieldName))
+                                        validFieldNames.Add(fieldName);
                                 }
-                                else
-                                {
-                                    if (Common.IsNumericType(table.Columns[sortField].DataType))
-                                    {
-                                        decimal parseAsNumeric(DataRow row)
-                                        {
-                                            decimal.TryParse(row[sortField].ToString(), out decimal result);
-                                            return result;
-                                        }
 
-                                        executeSelect(table.Select().OrderBy(parseAsNumeric));
+                                fieldNames = validFieldNames.ToArray();
+
+                                if (fieldNames.Length == 0)
+                                    fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+                                // If no filter expression or take count was specified, limit search target results - user can
+                                // still request larger results sets by specifying desired TOP count.
+                                if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
+                                    takeCount = MaximumSearchTargetsPerRequest;
+
+                                void executeSelect(IEnumerable<DataRow> queryOperation)
+                                {
+                                    results.AddRange(queryOperation.Take(takeCount).Select(row => string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
+                                }
+
+                                if (string.IsNullOrWhiteSpace(expression))
+                                {
+                                    if (string.IsNullOrWhiteSpace(sortField))
+                                    {
+                                        executeSelect(table.Select());
                                     }
                                     else
                                     {
-                                        executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
+                                        if (Common.IsNumericType(table.Columns[sortField].DataType))
+                                        {
+                                            decimal parseAsNumeric(DataRow row)
+                                            {
+                                                decimal.TryParse(row[sortField].ToString(), out decimal result);
+                                                return result;
+                                            }
+
+                                            executeSelect(table.Select().OrderBy(parseAsNumeric));
+                                        }
+                                        else
+                                        {
+                                            executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
+                                        }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                executeSelect(table.Select(expression, sortField));
+                                else
+                                {
+                                    executeSelect(table.Select(expression, sortField));
+                                }
+
+                                foreach (DataRow row in table.Select(expression, sortField).Take(takeCount))
+                                    results.Add(string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString())));
                             }
 
-                            foreach (DataRow row in table.Select(expression, sortField).Take(takeCount))
-                                results.Add(string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString())));
+                            return results.ToArray();
                         }
-
-                        return results.ToArray();
                     }
-
                     // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
                     return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
                 });
@@ -821,6 +823,39 @@ namespace GrafanaAdapters
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
                     return new TableOperations<AlarmDeviceStateView>(connection).QueryRecords("Name");
+                }
+            },
+            cancellationToken);
+        }
+
+        /// <summary>
+        /// Query Current Alarms Based on list of Points.
+        /// </summary>
+        /// <param name="request">Alarm request.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns> Queried device alarm states.</returns>
+        public Task<List<GrafanaAlarm>> GetAlarms(QueryRequest request, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+               
+                const string SignalIDQuery = "SELECT TOP 1 SignalID FROM ActiveMeasurement WHERE PointTag = '{0}'";
+
+                foreach (Target target in request.targets)
+                    target.target = target.target?.Trim() ?? "";
+
+                if (request.targets.Where(item => item.target != "").Count() < 1)
+                    return new List<GrafanaAlarm>();
+
+                List<string> pointTags = request.targets.Select(item => item.target.Split(';').ToList()).Aggregate((acc, list) => { return acc.Concat(list).ToList(); });
+                string query = string.Join("),(", pointTags.Select(item => string.Format(SignalIDQuery, item)));
+
+                query = "((" + query + "))";
+
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    query = string.Format("SignalID in {0}", query);
+                    return new TableOperations<GrafanaAlarm>(connection).QueryRecordsWhere(query).ToList();
                 }
             },
             cancellationToken);

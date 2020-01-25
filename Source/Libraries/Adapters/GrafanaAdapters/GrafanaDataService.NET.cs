@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using GSF.Historian.DataServices;
+using GSF.TimeSeries;
 using Newtonsoft.Json;
 
 namespace GrafanaAdapters
@@ -61,6 +62,17 @@ namespace GrafanaAdapters
             return await m_dataSource.GetAlarmState(request, m_cancellationSource.Token);
         }
 
+        /// <summary>
+        /// Queries openPDC Alarms as a Grafana alarm data source.
+        /// </summary>
+        /// <param name="request">Query request.</param>
+        public async Task<IEnumerable<GrafanaAlarm>> GetAlarms(QueryRequest request)
+        {
+            // Abort if services are not enabled
+            if (!Enabled || (object)Archive == null)
+                return null;
+            return await m_dataSource.GetAlarms(request, m_cancellationSource.Token);
+        }
 
         /// <summary>
         /// Queries openHistorian as a Grafana Metadata source.
@@ -139,7 +151,10 @@ namespace GrafanaAdapters
         /// <returns>JSON serialized location metadata for specified targets.</returns>
         public async Task<string> GetLocationData(LocationRequest request)
         {
-            return await LocationData.GetLocationData(request.radius, request.zoom, request.request, m_cancellationSource.Token);
+            if (request.zoom is null || request.radius is null)
+                return await LocationData.GetLocationData(request.request, m_cancellationSource.Token);
+
+            return await LocationData.GetLocationData((double)request.radius, (double)request.zoom, request.request, m_cancellationSource.Token);
         }
 
 

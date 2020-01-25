@@ -80,6 +80,7 @@
     <Compile Include="IGrafanaDataServiceMono.cs" />
     <Compile Include="IGrafanaDataService.cs" />
     <Compile Include="LocationData.cs" />
+    <Compile Include="GrafanaAlarm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryRequest.cs" />
     <Compile Include="Range.cs" />
