@@ -33,12 +33,12 @@ namespace GrafanaAdapters
         /// <summary>
         /// Radius of overlapping coordinate distribution.
         /// </summary>
-        public double radius { get; set; }
+        public double? radius { get; set; }
 
         /// <summary>
         /// Zoom level.
         /// </summary>
-        public double zoom { get; set; }
+        public double? zoom { get; set; }
 
         /// <summary>
         /// Query request.

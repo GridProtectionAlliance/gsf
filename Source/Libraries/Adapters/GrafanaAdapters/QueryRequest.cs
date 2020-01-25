@@ -36,6 +36,11 @@ namespace GrafanaAdapters
         public int panelId { get; set; }
 
         /// <summary>
+        /// Panel ID of request.
+        /// </summary>
+        public int dashboardId { get; set; }
+
+        /// <summary>
         /// Request range.
         /// </summary>
         public Range range { get; set; }
