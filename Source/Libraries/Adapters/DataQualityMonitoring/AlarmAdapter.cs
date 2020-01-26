@@ -342,6 +342,27 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
+        /// Gets Status of an Alarm Based on PointID. 
+        /// </summary>
+        /// <param name="PointID"> PointID of the point the alarm is for. </param>
+        /// <returns>A List of <see cref="Alarm"/> object including the state for a specific PointID.</returns>
+        public ICollection<Alarm> GetAlarmStatus(Guid PointID)
+        {
+            lock (m_alarmLock)
+            {
+                if (m_alarmLookup.ContainsKey(PointID))
+                    return m_alarmLookup
+                        .Where(kvp => kvp.Key == PointID).Select(kvp => kvp.Value.Alarms)
+                        .Where(alarm => (object)alarm != null).First()
+                        .Select(alarm => alarm.Clone())
+                        .ToList();
+                else
+                    return new List<Alarm>();
+            }
+
+        }
+
+        /// <summary>
         /// Releases the unmanaged resources used by the <see cref="AlarmAdapter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
