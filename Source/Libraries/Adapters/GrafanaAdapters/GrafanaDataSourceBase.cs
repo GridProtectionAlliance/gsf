@@ -848,7 +848,7 @@ namespace GrafanaAdapters
                     return new List<GrafanaAlarm>();
 
                 List<string> pointTags = request.targets.Select(item => item.target.Split(';').ToList()).Aggregate((acc, list) => { return acc.Concat(list).ToList(); });
-                string query = string.Join("),(", pointTags.Select(item => string.Format(SignalIDQuery, item)));
+                string query = string.Join("),(", pointTags.Select(item => string.Format(SignalIDQuery, item.Trim())));
 
                 query = "((" + query + "))";
 
