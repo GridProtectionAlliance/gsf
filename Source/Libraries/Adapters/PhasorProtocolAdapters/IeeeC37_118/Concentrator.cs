@@ -214,6 +214,14 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - type 2 config frame was returned.");
                             }
                             break;
+                        case DeviceCommand.SendConfigurationFrame3:
+                            if (commandChannel != null)
+                            {
+                                ConfigurationFrame3 configFrame3 = CastToConfigurationFrame3(m_configurationFrame);
+                                commandChannel.SendToAsync(clientID, configFrame3.BinaryImage, 0, configFrame3.BinaryLength);
+                                OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - type 3 config frame was returned.");
+                            }
+                            break;
                         case DeviceCommand.SendHeaderFrame:
                             if (commandChannel != null)
                             {
@@ -401,6 +409,64 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                 // Create equivalent derived frequency definition
                 FrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition as FrequencyDefinition;            
+                derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency?.Label);
+
+                // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
+                foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
+                    derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
+
+                // Create equivalent derived digital definitions
+                foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
+                    derivedCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
+
+                // Add cell to frame
+                derivedFrame.Cells.Add(derivedCell);
+            }
+
+            return derivedFrame;
+        }
+
+        /// <summary>
+        /// Converts given IEEE C37.118 type 2 <paramref name="sourceFrame"/> into a type 3 configuration frame.
+        /// </summary>
+        /// <param name="sourceFrame">Source configuration frame.</param>
+        /// <returns>New <see cref="ConfigurationFrame3"/> frame based on source configuration.</returns>
+        /// <remarks>
+        /// This function allow an explicit downcast of a typical IEEE C37.118 configuration type 2 frame to a type 3 frame.
+        /// </remarks>
+        public static ConfigurationFrame3 CastToConfigurationFrame3(ConfigurationFrame2 sourceFrame)
+        {
+            ConfigurationFrame3 derivedFrame;
+
+            // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
+            derivedFrame = new ConfigurationFrame3(sourceFrame.Timebase, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+
+            foreach (ConfigurationCell sourceCell in sourceFrame.Cells)
+            {
+                // Create new derived configuration cell
+                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+
+                string stationName = sourceCell.StationName;
+                string idLabel = sourceCell.IDLabel;
+
+                if (!string.IsNullOrWhiteSpace(stationName))
+                    derivedCell.StationName = stationName.TruncateLeft(derivedCell.MaximumStationNameLength);
+
+                if (!string.IsNullOrWhiteSpace(idLabel))
+                    derivedCell.IDLabel = idLabel.TruncateLeft(derivedCell.IDLabelLength);
+
+                derivedCell.PhasorCoordinateFormat = sourceCell.PhasorCoordinateFormat;
+                derivedCell.PhasorAngleFormat = sourceCell.PhasorAngleFormat;
+                derivedCell.PhasorDataFormat = sourceCell.PhasorDataFormat;
+                derivedCell.FrequencyDataFormat = sourceCell.FrequencyDataFormat;
+                derivedCell.AnalogDataFormat = sourceCell.AnalogDataFormat;
+
+                // Create equivalent derived phasor definitions
+                foreach (PhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
+                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
+
+                // Create equivalent derived frequency definition
+                FrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition as FrequencyDefinition;
                 derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency?.Label);
 
                 // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
