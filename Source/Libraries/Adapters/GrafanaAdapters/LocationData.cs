@@ -173,11 +173,11 @@ namespace GrafanaAdapters
             ConcurrentBag<DataRow> matchingRows = new ConcurrentBag<DataRow>();
             ParallelOptions options = new ParallelOptions { CancellationToken = cancellationToken };
 
-            // Optimizing search by making a single pass through metadata with parallel processing
-            Parallel.ForEach(activeMeasurements.AsEnumerable(), options, row =>
+            // Optimizing search by making a single pass through metadata with parallel processing           
+            foreach(DataRow row in activeMeasurements.AsEnumerable())
             {
                 if (!pointTags.Contains(row["PointTag"].ToString()))
-                    return;
+                    continue;
 
                 DataRow newRow = targetMeasurements.NewRow();
 
@@ -185,9 +185,9 @@ namespace GrafanaAdapters
                     newRow[x] = row[columnMap[x]];
 
                 matchingRows.Add(newRow);
-                options.CancellationToken.ThrowIfCancellationRequested();
-            });
-
+            };
+            
+            
             if (orderByCoordinates)
             {
                 int longitude = targetMeasurements.Columns["Longitude"].Ordinal;
