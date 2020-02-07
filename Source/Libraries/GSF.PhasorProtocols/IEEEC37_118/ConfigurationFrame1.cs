@@ -43,11 +43,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Members ]
 
         // Constants
-        private const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6;
+        protected const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6;
 
         // Fields
         private CommonFrameHeader m_frameHeader;
-        private uint m_timebase;
+
+        protected uint m_timebase;
 
         #endregion
 

@@ -36,6 +36,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     [Serializable]
     public class ConfigurationFrame3 : ConfigurationFrame1
     {
+        new private const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6 + 2;
+        private int m_contIDX = 0;
+
         #region [ Constructors ]
 
         /// <summary>
@@ -78,18 +81,32 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         #region [ Methods ]
 
-        /*
-        protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
-        {
-            // Skip past header that was already parsed...
-            startIndex += CommonFrameHeader.FixedLength;
-            // State.CONT_IDX = BigEndian.ToInt16(buffer, startIndex); FIXME: For now, this is completely ignored
-            m_timebase = BigEndian.ToUInt32(buffer, startIndex + 2) & ~Common.TimeQualityFlagsMask;
-            State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 6);
 
-            return FixedHeaderLength;
+        /// <summary>
+        /// Gets the binary header image of the <see cref="ConfigurationFrame3"/> object.
+        /// </summary>
+        protected override byte[] HeaderImage
+        {
+            get
+            {
+                // Make sure to provide proper frame length for use in the common header image
+                unchecked
+                {
+                    CommonHeader.FrameLength = (ushort)BinaryLength;
+                }
+
+                byte[] buffer = new byte[FixedHeaderLength];
+                int index = 0;
+
+                CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
+                BigEndian.CopyBytes(m_contIDX, buffer, index);
+                BigEndian.CopyBytes(m_timebase, buffer, index + 2);
+                BigEndian.CopyBytes((ushort)Cells.Count, buffer, index + 6);
+
+                return buffer;
+            }
         }
-        */
+
 
         #endregion
 
