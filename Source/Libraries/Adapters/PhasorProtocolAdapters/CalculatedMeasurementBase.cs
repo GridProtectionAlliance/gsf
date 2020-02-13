@@ -76,7 +76,13 @@ namespace PhasorProtocolAdapters
             {
                 base.InputMeasurementKeys = value;
 
-                m_inputMeasurementKeyTypes = new SignalType[value.Length];
+                if (value == null)
+                {
+                    m_inputMeasurementKeyTypes = Array.Empty<SignalType>();
+                    return;
+                }
+
+                m_inputMeasurementKeyTypes = new SignalType[value.Length]; 
 
                 for (int i = 0; i < m_inputMeasurementKeyTypes.Length; i++)
                     m_inputMeasurementKeyTypes[i] = LookupSignalType(value[i]);
@@ -96,6 +102,12 @@ namespace PhasorProtocolAdapters
             set
             {
                 base.OutputMeasurements = value;
+
+                if (value == null)
+                {
+                    m_outputMeasurementTypes = Array.Empty<SignalType>();
+                    return;
+                }
 
                 m_outputMeasurementTypes = new SignalType[value.Length];
 
