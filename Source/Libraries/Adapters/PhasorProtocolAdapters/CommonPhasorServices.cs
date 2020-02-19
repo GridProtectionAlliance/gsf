@@ -31,6 +31,7 @@ using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
@@ -51,6 +52,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using PhasorProtocolAdapters.Model;
 
 namespace PhasorProtocolAdapters
 {
@@ -283,6 +285,32 @@ namespace PhasorProtocolAdapters
         {
             m_cancelConfigurationFrameRequest = true;
             m_configurationWaitHandle.Set();
+        }
+
+        /// <summary>
+        /// Initiates a full point-tag rename based on the currently configured \"PointTagNameExpression\" as defined in the &lt;systemSettings&gt; section of the local configuration file.
+        /// </summary>
+        [AdapterCommand("Initiates a full point-tag rename based on the currently configured \"PointTagNameExpression\" as defined in the <systemSettings> section of the local configuration file.", "Administrator")]
+        public void RenameAllPointTags()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                string filterExpression = $"MethodName = '{nameof(PhasorDataSourceValidation)}'";
+                TableOperations<DataOperation> dataOperationTable = new TableOperations<DataOperation>(connection);
+                DataOperation record = dataOperationTable.QueryRecordWhere(filterExpression);
+
+                if (record == null)
+                {
+                    OnProcessException(MessageLevel.Warning, new Exception($"Failed to find DataOperation record with {filterExpression}."));
+                    return;
+                }
+
+                record.Arguments = "renameAllPointTags=true";
+                dataOperationTable.UpdateRecordWhere(record, filterExpression);
+
+                // Inform IoanSession of change to invoke ReloadConfig
+                OnInputMeasurementKeysUpdated();
+            }
         }
 
         /// <summary>
