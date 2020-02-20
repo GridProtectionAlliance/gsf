@@ -343,6 +343,7 @@
     <EmbeddedResource Include="Shared\Scripts\default.polyfill.min.js" />
     <EmbeddedResource Include="Shared\Content\select2.css" />
     <EmbeddedResource Include="Shared\Content\select2-bootstrap.css" />
+    <Content Include="Shared\Scripts\default.ployfill.js" />
     <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
