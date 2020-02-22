@@ -461,6 +461,8 @@ namespace GSF.PhasorProtocols
                 baseAttributes.Add("Data Sorting Type", Enum.GetName(typeof(DataSortingType), DataSortingType));
                 baseAttributes.Add("Device Error", DeviceError.ToString());
                 baseAttributes.Add("Data Discarded", m_isDiscarded.ToString());
+                baseAttributes.Add("Frequency Value", m_frequencyValue?.Frequency.ToString());
+                baseAttributes.Add("dF/dt Value", m_frequencyValue?.DfDt.ToString());
                 baseAttributes.Add("Total Phasor Values", PhasorValues.Count.ToString());
                 baseAttributes.Add("Total Analog Values", AnalogValues.Count.ToString());
                 baseAttributes.Add("Total Digital Values", DigitalValues.Count.ToString());
