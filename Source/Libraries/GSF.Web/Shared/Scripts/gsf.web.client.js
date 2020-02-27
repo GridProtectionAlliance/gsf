@@ -850,6 +850,14 @@ function delayedPromise(timeout) {
     return $d.promise();
 }
 
+// Takes a query string from a uri and returns a json object representation
+function ParseQueryString(queryString) {
+    var obj = {}
+    decodeURI(queryString).replace(new RegExp("([^?=&]+)(=([^&]*))?", "g"), function ($0, $1, $2, $3) { return obj[$1] = $3 });
+    return obj;
+}
+
+
 // jQuery extensions
 $.fn.enable = function() {
     return this.each(function() {
