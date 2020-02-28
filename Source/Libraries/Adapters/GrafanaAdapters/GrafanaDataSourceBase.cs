@@ -1217,9 +1217,9 @@ namespace GrafanaAdapters
                 }
 
                 // Verify that all series labels are unique
-                if (seriesLabels.Length > 0 && seriesLabels.All(seriesLabel => seriesLabel.Equals(seriesLabels[0], StringComparison.OrdinalIgnoreCase)))
+                if (seriesLabels.Length > 1 && seriesLabels.All(seriesLabel => seriesLabel.Equals(seriesLabels[0], StringComparison.OrdinalIgnoreCase)))
                 {
-                    for (int i = 0; i < seriesLabels.Length; i++)
+                    for (int i = 1; i < seriesLabels.Length; i++)
                         seriesLabels[i] = $"{seriesLabels[i]}{new string('\u00A0', i)}";
                 }
 
