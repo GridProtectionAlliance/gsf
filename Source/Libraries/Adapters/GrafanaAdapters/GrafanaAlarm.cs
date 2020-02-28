@@ -32,6 +32,7 @@ namespace GrafanaAdapters
 	[TableName("Alarm")]
 	public class GrafanaAlarm
 	{
+		#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		public Guid NodeID { get; set; }
 
 		[PrimaryKey]
@@ -59,5 +60,8 @@ namespace GrafanaAdapters
 		public string CreatedBy { get; set; }
 		public DateTime UpdatedOn { get; set; }
 		public string UpdatedBy { get; set; }
+
+		#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
 	}
 }
