@@ -30,13 +30,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
 using System.Text;
 using GSF;
-using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Data;
 using GSF.Units.EE;
 
 namespace PhasorProtocolAdapters
@@ -53,8 +52,6 @@ namespace PhasorProtocolAdapters
         #region [ Members ]
 
         // Fields
-        private SignalType[] m_inputMeasurementKeyTypes;
-        private SignalType[] m_outputMeasurementTypes;
         private string m_configurationSection;
         private bool m_supportsTemporalProcessing;
 
@@ -75,17 +72,7 @@ namespace PhasorProtocolAdapters
             set
             {
                 base.InputMeasurementKeys = value;
-
-                if (value == null)
-                {
-                    m_inputMeasurementKeyTypes = Array.Empty<SignalType>();
-                    return;
-                }
-
-                m_inputMeasurementKeyTypes = new SignalType[value.Length]; 
-
-                for (int i = 0; i < m_inputMeasurementKeyTypes.Length; i++)
-                    m_inputMeasurementKeyTypes[i] = LookupSignalType(value[i]);
+                InputMeasurementKeyTypes = DataSource.GetSignalTypes(value);
             }
         }
 
@@ -102,29 +89,19 @@ namespace PhasorProtocolAdapters
             set
             {
                 base.OutputMeasurements = value;
-
-                if (value == null)
-                {
-                    m_outputMeasurementTypes = Array.Empty<SignalType>();
-                    return;
-                }
-
-                m_outputMeasurementTypes = new SignalType[value.Length];
-
-                for (int i = 0; i < m_outputMeasurementTypes.Length; i++)
-                    m_outputMeasurementTypes[i] = LookupSignalType(value[i].Key);
+                OutputMeasurementTypes = DataSource.GetSignalTypes(value);
             }
         }
 
         /// <summary>
         /// Gets or sets input measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.InputMeasurementKeys"/>, if any.
         /// </summary>
-        public virtual SignalType[] InputMeasurementKeyTypes => m_inputMeasurementKeyTypes;
+        public virtual SignalType[] InputMeasurementKeyTypes { get; private set; }
 
         /// <summary>
         /// Gets or sets output measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.OutputMeasurements"/>, if any.
         /// </summary>
-        public virtual SignalType[] OutputMeasurementTypes => m_outputMeasurementTypes;
+        public virtual SignalType[] OutputMeasurementTypes { get; private set; }
 
         /// <summary>
         /// Gets or sets the configuration section to use for this <see cref="CalculatedMeasurementBase"/>.
@@ -218,24 +195,6 @@ namespace PhasorProtocolAdapters
                 m_configurationSection = Name;
 
             m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out string setting) && setting.ParseBoolean();
-        }
-
-        // Lookup signal type for given measurement key
-        private SignalType LookupSignalType(MeasurementKey key)
-        {
-            try
-            {
-                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select($"ID = '{key}'");
-
-                if (filteredRows.Length > 0)
-                    return (SignalType)Enum.Parse(typeof(SignalType), filteredRows[0]["SignalType"].ToString(), true);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to lookup signal type for measurement {key}: {ex.Message}", ex));
-            }
-
-            return SignalType.NONE;
         }
 
         #endregion

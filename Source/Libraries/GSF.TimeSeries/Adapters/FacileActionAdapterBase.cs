@@ -374,7 +374,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets the the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
+        /// Gets the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
         /// this function will return <see cref="DateTime.UtcNow"/>. Otherwise, this function will return the timestamp of the
         /// most recent measurement.
         /// </summary>

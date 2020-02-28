@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using GSF.Diagnostics;
+using GSF.Units.EE;
 
 namespace GSF.TimeSeries.Data
 {
@@ -44,11 +45,10 @@ namespace GSF.TimeSeries.Data
         /// <returns>Lookup cache for the provided dataset.</returns>
         public static DataSourceLookupCache GetLookupCache(DataSet dataSet)
         {
-            if ((object)dataSet == null)
+            if (dataSet == null)
                 throw new ArgumentNullException(nameof(dataSet));
 
-            //Since adding datasets will be rare, the penalty associated with a lock on the entire
-            //set will be minor.
+            // Since adding datasets will be rare, the penalty associated with a lock on the entire set will be minor.
             lock (s_dataSetLookups)
             {
                 DataSourceLookupCache target;
@@ -86,9 +86,89 @@ namespace GSF.TimeSeries.Data
         /// </summary>
         /// <param name="dataSet"></param>
         /// <returns><see cref="ActiveMeasurementsTableLookup"/> for the provided dataset.</returns>
-        public static ActiveMeasurementsTableLookup ActiveMeasurements(DataSet dataSet)
+        public static ActiveMeasurementsTableLookup ActiveMeasurements(DataSet dataSet) => GetLookupCache(dataSet).ActiveMeasurements;
+
+        /// <summary>
+        /// Lookups up metadata record from provided <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <param name="dataSource">Target <see cref="DataSet"/>.</param>
+        /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
+        /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+        /// <returns>Metadata data row, if found; otherwise, <c>null</c>.</returns>
+        public static DataRow LookupMetadata(this DataSet dataSource, Guid signalID, string measurementTable = "ActiveMeasurements")
         {
-            return GetLookupCache(dataSet).ActiveMeasurements;
+            if (dataSource == null)
+                throw new ArgumentNullException(nameof(dataSource));
+
+            DataRow[] records = dataSource.Tables[measurementTable].Select($"SignalID = '{signalID}'");
+            
+            return records.Length > 0 ? records[0] : null;
+        }
+
+        /// <summary>
+        /// Gets signal type for given measurement key
+        /// </summary>
+        /// <param name="dataSource">Target <see cref="DataSet"/>.</param>
+        /// <param name="key">Source <see cref="MeasurementKey"/>.</param>
+        /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+        /// <returns><see cref="SignalType"/> as defined for measurement key in data source.</returns>
+        public static SignalType GetSignalType(this DataSet dataSource, MeasurementKey key, string measurementTable = "ActiveMeasurements")
+        {
+            if (dataSource == null)
+                throw new ArgumentNullException(nameof(dataSource));
+
+            DataRow record = dataSource.LookupMetadata(key.SignalID, measurementTable);
+
+            if (record != null && Enum.TryParse(record["SignalType"].ToString(), out SignalType signalType))
+                return signalType;
+
+            return SignalType.NONE;
+        }
+
+        /// <summary>
+        /// Gets signal types for given measurement keys.
+        /// </summary>
+        /// <param name="dataSource">Target <see cref="DataSet"/>.</param>
+        /// <param name="keys">Source set of <see cref="MeasurementKey"/> values.</param>
+        /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+        /// <returns><see cref="SignalType"/> values for each defined measurement key as configured in data source.</returns>
+        public static SignalType[] GetSignalTypes(this DataSet dataSource, MeasurementKey[] keys, string measurementTable = "ActiveMeasurements")
+        {
+            if (dataSource == null)
+                throw new ArgumentNullException(nameof(dataSource));
+
+            if (keys == null || keys.Length == 0)
+                return Array.Empty<SignalType>();
+
+            SignalType[] signalTypes = new SignalType[keys.Length];
+
+            for (int i = 0; i < signalTypes.Length; i++)
+                signalTypes[i] = dataSource.GetSignalType(keys[i], measurementTable);
+
+            return signalTypes;
+        }
+
+        /// <summary>
+        /// Gets signal types for given measurement keys.
+        /// </summary>
+        /// <param name="dataSource">Target <see cref="DataSet"/>.</param>
+        /// <param name="measurements">Source set of <see cref="IMeasurement"/> values.</param>
+        /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+        /// <returns><see cref="SignalType"/> values for each defined measurement key as configured in data source.</returns>
+        public static SignalType[] GetSignalTypes(this DataSet dataSource, IMeasurement[] measurements, string measurementTable = "ActiveMeasurements")
+        {
+            if (dataSource == null)
+                throw new ArgumentNullException(nameof(dataSource));
+
+            if (measurements == null || measurements.Length == 0)
+                return Array.Empty<SignalType>();
+
+            SignalType[] signalTypes = new SignalType[measurements.Length];
+
+            for (int i = 0; i < signalTypes.Length; i++)
+                signalTypes[i] = dataSource.GetSignalType(measurements[i].Key, measurementTable);
+
+            return signalTypes;
         }
     }
 }

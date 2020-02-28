@@ -58,6 +58,7 @@
       <HintPath>..\..\Dependencies\Postgres\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
@@ -81,8 +82,15 @@
     <Compile Include="Adapters\FilterAdapterCollection.cs" />
     <Compile Include="Adapters\IaonSession.cs" />
     <Compile Include="Adapters\IFilterAdapter.cs" />
+    <Compile Include="Adapters\IIndependentAdapterManager.cs" />
+    <Compile Include="Adapters\IndependentActionAdapterManagerBase.cs" />
+    <Compile Include="Adapters\IndependentAdapterManagerExtensions.cs" />
+    <Compile Include="Adapters\IndependentAdapterManagerHandlers.cs" />
+    <Compile Include="Adapters\IndependentInputAdapterManagerBase.cs" />
+    <Compile Include="Adapters\IndependentOutputAdapterManagerBase.cs" />
     <Compile Include="Adapters\IOptimizedRoutingConsumer.cs" />
     <Compile Include="Adapters\IRouteMappingTables.cs" />
+    <Compile Include="Adapters\OneSecondDataWindowAdapterBase.cs" />
     <Compile Include="Adapters\RoutingPassthroughMethod.cs" />
     <Compile Include="Adapters\RouteMappingDoubleBufferQueue.cs" />
     <Compile Include="Adapters\RoutingTablesAdaptersList.cs" />
@@ -92,6 +100,7 @@
     <Compile Include="Common.cs" />
     <Compile Include="Configuration\ConfigurationLoaderBase.cs" />
     <Compile Include="ConnectionException.cs" />
+    <Compile Include="DeriveQualityFlags.cs" />
     <Compile Include="MeasurementMetadata.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Configuration\BinaryFileConfigurationLoader.cs" />
@@ -104,6 +113,11 @@
     <Compile Include="Data\DataSourceLookup.cs" />
     <Compile Include="Data\DataSourceLookupCache.cs" />
     <Compile Include="IMeasurementExtensions.cs" />
+    <Compile Include="Model\Device.cs" />
+    <Compile Include="Model\Historian.cs" />
+    <Compile Include="Model\Measurement.cs" />
+    <Compile Include="Model\Phasor.cs" />
+    <Compile Include="Model\SignalType.cs" />
     <Compile Include="Reports\CorrectnessReportingProcess.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
