@@ -861,8 +861,6 @@ namespace GrafanaAdapters
             cancellationToken);
         }
 
-
-
         /// <summary>
         /// Queries data source returning data as Grafana time-series data set.
         /// </summary>
@@ -1257,14 +1255,17 @@ namespace GrafanaAdapters
                         parameters = parameters.Skip(1).ToArray();
 
                         // Flatten all series into a single enumerable
-                        yield return new DataSourceValueGroup
+                        foreach (DataSourceValueGroup seriesResult in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters))
                         {
-                            Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
-                            RootTarget = queryExpression,
-                            SourceTarget = sourceTarget,
-                            Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters),
-                            DropEmptySeries = dropEmptySeries
-                        };
+                            yield return new DataSourceValueGroup
+                            {
+                                Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{seriesResult.Target ?? queryExpression})",
+                                RootTarget = seriesResult.Target ?? queryExpression,
+                                SourceTarget = sourceTarget,
+                                Source = seriesResult.Source,
+                                DropEmptySeries = dropEmptySeries
+                            };
+                        }
 
                         break;
                     default:
@@ -1782,11 +1783,26 @@ namespace GrafanaAdapters
         }
 
         // Execute series function over a set of points from each series at the same time-slice
-        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
+        private static IEnumerable<DataSourceValueGroup> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
         {
+            Dictionary<string, DataSourceValueGroup> results = new Dictionary<string, DataSourceValueGroup>();
+
             while (!scanner.DataReadComplete)
+            {
                 foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
-                    yield return dataValue;
+                {
+                    DataSourceValueGroup result = results.GetOrAdd(dataValue.Target, _ => new DataSourceValueGroup
+                    {
+                        Target = dataValue.Target,
+                        RootTarget = dataValue.Target,
+                        Source = new List<DataSourceValue>()
+                    });
+
+                    (result.Source as List<DataSourceValue>)?.Add(dataValue);
+                }                    
+            }
+
+            return results.Values;
         }
 
         // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
