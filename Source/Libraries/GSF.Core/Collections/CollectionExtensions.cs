@@ -74,6 +74,19 @@ namespace GSF.Collections
     public static class CollectionExtensions
     {
         /// <summary>
+        /// Gets a column of data out of a 2-dimensional array.
+        /// </summary>
+        /// <typeparam name="T">Type of array.</typeparam>
+        /// <param name="source">Source array.</param>
+        /// <param name="columnIndex">Column index to retrieve.</param>
+        /// <returns>Values from specified <paramref name="columnIndex"/>.</returns>
+        public static IEnumerable<T> GetColumn<T>(this T[,] source, int columnIndex)
+        {
+            for (int i = 0; i < source.GetLength(1); i++)
+                yield return source[columnIndex, i];
+        }
+
+        /// <summary>
         /// Gets a <see cref="PagedList{T}"/> to paginate <paramref name="source"/> enumeration for
         /// a given <paramref name="page"/> and specified <paramref name="pageSize"/>.
         /// </summary>
@@ -171,9 +184,7 @@ namespace GSF.Collections
         /// <returns>The value of the key in the dictionary or the default value if no such value exists.</returns>
         public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> defaultValueFactory)
         {
-            TValue value;
-
-            if (!dictionary.TryGetValue(key, out value))
+            if (!dictionary.TryGetValue(key, out TValue value))
                 value = defaultValueFactory(key);
 
             return value;
@@ -190,9 +201,7 @@ namespace GSF.Collections
         /// <returns>The value of the key in the dictionary.</returns>
         public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueFactory)
         {
-            TValue value;
-
-            if (!dictionary.TryGetValue(key, out value))
+            if (!dictionary.TryGetValue(key, out TValue value))
             {
                 value = valueFactory(key);
                 dictionary.Add(key, value);
@@ -212,9 +221,7 @@ namespace GSF.Collections
         /// <returns>The value of the key in the dictionary.</returns>
         public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
         {
-            TValue tryGetValue;
-
-            if (!dictionary.TryGetValue(key, out tryGetValue))
+            if (!dictionary.TryGetValue(key, out TValue tryGetValue))
             {
                 tryGetValue = value;
                 dictionary.Add(key, tryGetValue);
@@ -234,9 +241,7 @@ namespace GSF.Collections
         /// <returns>The new value for the key. This will be either be the result of addValueFactory (if the key was absent) or the result of updateValueFactory (if the key was present).</returns>
         public static TValue AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory)
         {
-            TValue value;
-
-            if (dictionary.TryGetValue(key, out value))
+            if (dictionary.TryGetValue(key, out TValue value))
                 value = updateValueFactory(key, value);
             else
                 value = addValueFactory(key);
@@ -257,9 +262,7 @@ namespace GSF.Collections
         /// <returns>The new value for the key. This will be either be the result of addValueFactory (if the key was absent) or the result of updateValueFactory (if the key was present).</returns>
         public static TValue AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory)
         {
-            TValue value;
-
-            if (dictionary.TryGetValue(key, out value))
+            if (dictionary.TryGetValue(key, out TValue value))
                 value = updateValueFactory(key, value);
             else
                 value = addValue;
@@ -347,10 +350,10 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="source" /> or <paramref name="predicate" /> is <c>null</c>.</exception>
         public static bool AllParallel<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate, ParallelOptions options = null)
         {
-            if ((object)source == null)
+            if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            if ((object)predicate == null)
+            if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
             bool succeeded = true;
@@ -379,7 +382,7 @@ namespace GSF.Collections
         /// <returns>The median item(s) from an enumeration, or <c>null</c> if <paramref name="source"/> is <c>null</c>.</returns>
         public static T[] Median<T>(this IEnumerable<T> source)
         {
-            if ((object)source == null)
+            if (source == null)
                 return null;
 
             T[] values = source as T[] ?? source.ToArray();
@@ -430,7 +433,7 @@ namespace GSF.Collections
         {
             TSource majority = defaultValue;
 
-            if ((object)source == null)
+            if (source == null)
                 return majority;
 
             TSource[] values;
@@ -447,10 +450,9 @@ namespace GSF.Collections
                 // Count each number of items in the list
                 foreach (TSource value in values)
                 {
-                    Tuple<int, TSource> valueCount;
                     TKey key = keySelector(value);
 
-                    if (itemCounts.TryGetValue(key, out valueCount))
+                    if (itemCounts.TryGetValue(key, out Tuple<int, TSource> valueCount))
                     {
                         int count = valueCount.Item1 + 1;
                         itemCounts[key] = new Tuple<int, TSource>(count, valueCount.Item2);
@@ -498,7 +500,7 @@ namespace GSF.Collections
         {
             T majority = defaultValue;
 
-            if ((object)source == null)
+            if (source == null)
                 return majority;
 
             T[] values;
@@ -515,9 +517,7 @@ namespace GSF.Collections
                 // Count each number of items in the list
                 foreach (T item in values)
                 {
-                    int count;
-
-                    if (itemCounts.TryGetValue(item, out count))
+                    if (itemCounts.TryGetValue(item, out int count))
                     {
                         count++;
                         itemCounts[item] = count;
@@ -569,7 +569,7 @@ namespace GSF.Collections
         {
             TSource minority = defaultValue;
 
-            if ((object)source == null)
+            if (source == null)
                 return minority;
 
             TSource[] values;
@@ -586,10 +586,9 @@ namespace GSF.Collections
                 // Count each number of items in the list
                 foreach (TSource value in values)
                 {
-                    Tuple<int, TSource> valueCount;
                     TKey key = keySelector(value);
 
-                    if (itemCounts.TryGetValue(key, out valueCount))
+                    if (itemCounts.TryGetValue(key, out Tuple<int, TSource> valueCount))
                     {
                         int count = valueCount.Item1 + 1;
                         itemCounts[key] = new Tuple<int, TSource>(count, valueCount.Item2);
@@ -635,7 +634,7 @@ namespace GSF.Collections
         {
             T minority = defaultValue;
 
-            if ((object)source == null)
+            if (source == null)
                 return minority;
 
             T[] values;
@@ -652,9 +651,7 @@ namespace GSF.Collections
                 // Count each number of items in the list
                 foreach (T item in values)
                 {
-                    int count;
-
-                    if (itemCounts.TryGetValue(item, out count))
+                    if (itemCounts.TryGetValue(item, out int count))
                     {
                         count++;
                         itemCounts[item] = count;
@@ -781,21 +778,22 @@ namespace GSF.Collections
             TSource minItem = default(TSource);
             TKey minKey, nextKey;
 
-            IEnumerator<TSource> enumerator = source.GetEnumerator();
-
-            if (enumerator.MoveNext())
+            using (IEnumerator<TSource> enumerator = source.GetEnumerator())
             {
-                minItem = enumerator.Current;
-                minKey = keySelector(minItem);
-
-                while (enumerator.MoveNext())
+                if (enumerator.MoveNext())
                 {
-                    nextKey = keySelector(enumerator.Current);
+                    minItem = enumerator.Current;
+                    minKey = keySelector(minItem);
 
-                    if (nextKey.CompareTo(minKey) < 0)
+                    while (enumerator.MoveNext())
                     {
-                        minItem = enumerator.Current;
-                        minKey = nextKey;
+                        nextKey = keySelector(enumerator.Current);
+
+                        if (nextKey.CompareTo(minKey) < 0)
+                        {
+                            minItem = enumerator.Current;
+                            minKey = nextKey;
+                        }
                     }
                 }
             }
@@ -812,16 +810,17 @@ namespace GSF.Collections
         {
             TSource minItem = default(TSource);
 
-            IEnumerator<TSource> enumerator = source.GetEnumerator();
-
-            if (enumerator.MoveNext())
+            using (IEnumerator<TSource> enumerator = source.GetEnumerator())
             {
-                minItem = enumerator.Current;
-
-                while (enumerator.MoveNext())
+                if (enumerator.MoveNext())
                 {
-                    if (comparer(enumerator.Current, minItem) < 0)
-                        minItem = enumerator.Current;
+                    minItem = enumerator.Current;
+
+                    while (enumerator.MoveNext())
+                    {
+                        if (comparer(enumerator.Current, minItem) < 0)
+                            minItem = enumerator.Current;
+                    }
                 }
             }
 
@@ -849,21 +848,22 @@ namespace GSF.Collections
             TSource maxItem = default(TSource);
             TKey maxKey, nextKey;
 
-            IEnumerator<TSource> enumerator = source.GetEnumerator();
-
-            if (enumerator.MoveNext())
+            using (IEnumerator<TSource> enumerator = source.GetEnumerator())
             {
-                maxItem = enumerator.Current;
-                maxKey = keySelector(maxItem);
-
-                while (enumerator.MoveNext())
+                if (enumerator.MoveNext())
                 {
-                    nextKey = keySelector(enumerator.Current);
+                    maxItem = enumerator.Current;
+                    maxKey = keySelector(maxItem);
 
-                    if (nextKey.CompareTo(maxKey) > 0)
+                    while (enumerator.MoveNext())
                     {
-                        maxItem = enumerator.Current;
-                        maxKey = nextKey;
+                        nextKey = keySelector(enumerator.Current);
+
+                        if (nextKey.CompareTo(maxKey) > 0)
+                        {
+                            maxItem = enumerator.Current;
+                            maxKey = nextKey;
+                        }
                     }
                 }
             }
@@ -880,16 +880,17 @@ namespace GSF.Collections
         {
             TSource maxItem = default(TSource);
 
-            IEnumerator<TSource> enumerator = source.GetEnumerator();
-
-            if (enumerator.MoveNext())
+            using (IEnumerator<TSource> enumerator = source.GetEnumerator())
             {
-                maxItem = enumerator.Current;
-
-                while (enumerator.MoveNext())
+                if (enumerator.MoveNext())
                 {
-                    if (comparer(enumerator.Current, maxItem) > 0)
-                        maxItem = enumerator.Current;
+                    maxItem = enumerator.Current;
+
+                    while (enumerator.MoveNext())
+                    {
+                        if (comparer(enumerator.Current, maxItem) > 0)
+                            maxItem = enumerator.Current;
+                    }
                 }
             }
 
@@ -917,17 +918,16 @@ namespace GSF.Collections
         /// <returns>The elements from <paramref name="source"/> whose keys are distinct.</returns>
         public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, bool forwardSearch = true)
         {
-            if (forwardSearch)
-                return source
+            return forwardSearch ?
+                source
                     .Select(obj => new DistinctByWrapper<TKey, TSource>(keySelector(obj), obj))
                     .Distinct()
+                    .Select(wrapper => wrapper.Value) :
+                source
+                    .Select(obj => new DistinctByWrapper<TKey, TSource>(keySelector(obj), obj))
+                    .Reverse()
+                    .Distinct()
                     .Select(wrapper => wrapper.Value);
-
-            return source
-                .Select(obj => new DistinctByWrapper<TKey, TSource>(keySelector(obj), obj))
-                .Reverse()
-                .Distinct()
-                .Select(wrapper => wrapper.Value);
         }
 
         /// <summary>Converts an enumeration to a string, using the default delimiter ("|") that can later be
@@ -935,10 +935,7 @@ namespace GSF.Collections
         /// <typeparam name="TSource">The generic type used.</typeparam>
         /// <param name="source">The source object to be converted into a delimited string.</param>
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by the '|' character.</returns>
-        public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source)
-        {
-            return source.ToDelimitedString('|');
-        }
+        public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source) => source.ToDelimitedString('|');
 
         /// <summary>Converts an enumeration to a string that can later be converted back to a list using
         /// LoadDelimitedString.</summary>
@@ -946,10 +943,7 @@ namespace GSF.Collections
         /// <param name="source">The source object to be converted into a delimited string.</param>
         /// <param name="delimiter">The delimiting character used.</param>
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
-        public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source, char delimiter)
-        {
-            return ToDelimitedString<TSource, char>(source, delimiter);
-        }
+        public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source, char delimiter) => ToDelimitedString<TSource, char>(source, delimiter);
 
         /// <summary>Converts an enumeration to a string that can later be converted back to a list using
         /// LoadDelimitedString.</summary>
@@ -957,10 +951,7 @@ namespace GSF.Collections
         /// <param name="source">The source object to be converted into a delimited string.</param>
         /// <param name="delimiter">The delimiting <see cref="string"/> used.</param>
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
-        public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source, string delimiter)
-        {
-            return ToDelimitedString<TSource, string>(source, delimiter);
-        }
+        public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source, string delimiter) => ToDelimitedString<TSource, string>(source, delimiter);
 
         /// <summary>Converts an enumeration to a string that can later be converted back to a list using
         /// LoadDelimitedString.</summary>
@@ -971,7 +962,7 @@ namespace GSF.Collections
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         private static string ToDelimitedString<TSource, TDelimiter>(IEnumerable<TSource> source, TDelimiter delimiter)
         {
-            if (Common.IsReference(delimiter) && (object)delimiter == null)
+            if (Common.IsReference(delimiter) && delimiter == null)
                 throw new ArgumentNullException(nameof(delimiter), "delimiter cannot be null");
 
             StringBuilder delimitedString = new StringBuilder();
@@ -994,10 +985,7 @@ namespace GSF.Collections
         /// <param name="destination">The list we are adding items to.</param>
         /// <param name="delimitedString">The delimited string to parse for items.</param>
         /// <param name="convertFromString">Delegate that takes one parameter and converts from string to type TSource.</param>
-        public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, Func<string, TSource> convertFromString)
-        {
-            destination.LoadDelimitedString(delimitedString, '|', convertFromString);
-        }
+        public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, Func<string, TSource> convertFromString) => destination.LoadDelimitedString(delimitedString, '|', convertFromString);
 
         /// <summary>Appends items parsed from delimited string, created with ToDelimitedString, into the given list.</summary>
         /// <remarks>Items that are converted are added to list. The list is not cleared in advance.</remarks>
@@ -1008,7 +996,7 @@ namespace GSF.Collections
         /// <param name="convertFromString">Delegate that takes one parameter and converts from string to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, char delimiter, Func<string, TSource> convertFromString)
         {
-            if ((object)delimitedString == null)
+            if (delimitedString == null)
                 throw new ArgumentNullException(nameof(delimitedString), "delimitedString cannot be null");
 
             if (destination.IsReadOnly)
@@ -1029,19 +1017,17 @@ namespace GSF.Collections
         /// <param name="convertFromString">Delegate that takes a <see cref="String"/> and converts to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, string[] delimiters, Func<string, TSource> convertFromString)
         {
-            if ((object)delimiters == null)
+            if (delimiters == null)
                 throw new ArgumentNullException(nameof(delimiters), "delimiters cannot be null");
 
-            if ((object)delimitedString == null)
+            if (delimitedString == null)
                 throw new ArgumentNullException(nameof(delimitedString), "delimitedString cannot be null");
 
             if (destination.IsReadOnly)
                 throw new ArgumentException("Cannot add items to a read only list");
 
             foreach (string item in delimitedString.Split(delimiters, StringSplitOptions.None))
-            {
                 destination.Add(convertFromString(item.Trim()));
-            }
         }
 
         /// <summary>
@@ -1055,19 +1041,16 @@ namespace GSF.Collections
             if (source.IsReadOnly && !(source is TSource[]))
                 throw new ArgumentException("Cannot modify items in a read only list");
 
-            int x, y;
-            TSource currentItem;
-
             // Mixes up the data in random order.
-            for (x = 0; x < source.Count; x++)
+            for (int x = 0; x < source.Count; x++)
             {
                 // Calls random function from GSF namespace.
-                y = Random.Int32Between(0, source.Count - 1);
+                int y = Random.Int32Between(0, source.Count - 1);
 
                 if (x != y)
                 {
                     // Swaps items
-                    currentItem = source[x];
+                    TSource currentItem = source[x];
                     source[x] = source[y];
                     source[y] = currentItem;
                 }
@@ -1087,19 +1070,18 @@ namespace GSF.Collections
                 throw new ArgumentException("Cannot modify items in a read only list");
 
             System.Random random = new System.Random(seed);
-            int x, y, count = source.Count;
-            TSource currentItem;
+            int count = source.Count;
 
             // Mixes up the data in random order.
-            for (x = 0; x < count; x++)
+            for (int x = 0; x < count; x++)
             {
                 // Calls random function from System namespace.
-                y = random.Next(count);
+                int y = random.Next(count);
 
                 if (x != y)
                 {
                     // Swaps items
-                    currentItem = source[x];
+                    TSource currentItem = source[x];
                     source[x] = source[y];
                     source[y] = currentItem;
                 }
@@ -1119,28 +1101,24 @@ namespace GSF.Collections
 
             System.Random random = new System.Random(seed);
             List<int> sequence = new List<int>();
-            int x, y, count = source.Count;
-            TSource currentItem;
+            int count = source.Count;
 
             // Generate original scramble sequence.
-            for (x = 0; x < count; x++)
-            {
-                // Calls random function from System namespace.
-                sequence.Add(random.Next(count));
-            }
+            for (int x = 0; x < count; x++)
+                sequence.Add(random.Next(count)); // Calls random function from System namespace
 
-            // Unmix the data order (traverse same sequence in reverse order).
-            for (x = count - 1; x >= 0; x--)
+            // Unmix the data order (traverse same sequence in reverse order)
+            for (int x = count - 1; x >= 0; x--)
             {
-                y = sequence[x];
+                int y = sequence[x];
 
-                if (x != y)
-                {
-                    // Swaps items
-                    currentItem = source[x];
-                    source[x] = source[y];
-                    source[y] = currentItem;
-                }
+                if (x == y)
+                    continue;
+
+                // Swaps items
+                TSource currentItem = source[x];
+                source[x] = source[y];
+                source[y] = currentItem;
             }
         }
 
@@ -1151,10 +1129,7 @@ namespace GSF.Collections
         /// <returns>An <see cref="int"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
         /// <typeparam name="TSource">The generic type of the array.</typeparam>
         /// <exception cref="ArgumentException">Cannot compare multidimensional arrays.</exception>
-        public static int CompareTo<TSource>(this TSource[] array1, TSource[] array2, bool orderIsImportant = true)
-        {
-            return CompareTo(array1, array2, Comparer<TSource>.Default, orderIsImportant);
-        }
+        public static int CompareTo<TSource>(this TSource[] array1, TSource[] array2, bool orderIsImportant = true) => CompareTo(array1, array2, Comparer<TSource>.Default, orderIsImportant);
 
         /// <summary>Compares two arrays.</summary>
         /// <param name="array1">The first <see cref="Array"/> to compare to.</param>
@@ -1166,16 +1141,16 @@ namespace GSF.Collections
         /// <exception cref="ArgumentException">Cannot compare multidimensional arrays.</exception>
         private static int CompareTo(this Array array1, Array array2, IComparer comparer, bool orderIsImportant = true)
         {
-            if ((object)comparer == null)
+            if (comparer == null)
                 throw new ArgumentNullException(nameof(comparer));
 
-            if ((object)array1 == null && (object)array2 == null)
+            if (array1 == null && array2 == null)
                 return 0;
 
-            if ((object)array1 == null)
+            if (array1 == null)
                 return -1;
 
-            if ((object)array2 == null)
+            if (array2 == null)
                 return 1;
 
             if (array1.Rank != 1 || array2.Rank != 1)
@@ -1210,63 +1185,27 @@ namespace GSF.Collections
 
         private class DistinctByWrapper<TKey, TValue> : IEquatable<DistinctByWrapper<TKey, TValue>>
         {
-            #region [ Members ]
-
-            // Fields
-            private readonly TKey m_key;
-            private readonly TValue m_value;
-
-            #endregion
-
-            #region [ Constructors ]
-
             public DistinctByWrapper(TKey key, TValue value)
             {
-                m_key = key;
-                m_value = value;
+                Key = key;
+                Value = value;
             }
 
-            #endregion
+            public TKey Key { get; }
+            public TValue Value { get; }
 
-            #region [ Properties ]
-
-            public TValue Value
-            {
-                get
-                {
-                    return m_value;
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            public bool Equals(DistinctByWrapper<TKey, TValue> other)
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                return Equals(m_key, other.m_key);
-            }
+            // ReSharper disable once PossibleNullReferenceException
+            public bool Equals(DistinctByWrapper<TKey, TValue> other) => Equals(Key, other.Key);
 
             public override bool Equals(object obj)
             {
-                DistinctByWrapper<TKey, TValue> wrapper = obj as DistinctByWrapper<TKey, TValue>;
-
-                if ((object)wrapper != null)
+                if (obj is DistinctByWrapper<TKey, TValue> wrapper)
                     return Equals(wrapper);
 
                 return false;
             }
 
-            public override int GetHashCode()
-            {
-                if ((object)m_key == null)
-                    return 0;
-
-                return m_key.GetHashCode();
-            }
-
-            #endregion
+            public override int GetHashCode() => Key == null ? 0 : Key.GetHashCode();
         }
     }
 }
