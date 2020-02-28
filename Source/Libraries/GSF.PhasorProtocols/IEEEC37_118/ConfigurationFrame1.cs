@@ -42,12 +42,18 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     {
         #region [ Members ]
 
-        // Constants
+        /// <summary>
+        /// Represents the Length of the fixed part of this header
+        /// (total length - length of point definitions).
+        /// </summary>
         protected const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6;
 
         // Fields
         private CommonFrameHeader m_frameHeader;
 
+        /// <summary>
+        /// Represents the TimeBase of the configuration frame.
+        /// </summary>
         protected uint m_timebase;
 
         #endregion
