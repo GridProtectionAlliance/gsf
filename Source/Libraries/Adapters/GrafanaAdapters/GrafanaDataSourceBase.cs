@@ -1242,7 +1242,7 @@ namespace GrafanaAdapters
                         };
 
                         // Handle edge-case set operations - for these functions there is data in the target series as well
-                        if (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum || seriesFunction == SeriesFunction.Median || seriesFunction == SeriesFunction.Mode)
+                        if (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum || seriesFunction == SeriesFunction.Median)
                         {
                             DataSourceValue dataValue = result.Source.First();
                             result.Target = $"Set{seriesFunction} = {dataValue.Target}";
