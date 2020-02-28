@@ -1171,19 +1171,20 @@ namespace GrafanaAdapters
             // Handle label function as a special edge case - group operations on label are ignored
             if (seriesFunction == SeriesFunction.Label)
             {
-                // Derive label
+                // Derive labels
                 string label = parameters[0];
 
                 if (label.StartsWith("\"") || label.StartsWith("'"))
                     label = label.Substring(1, label.Length - 2);
 
                 DataSourceValueGroup[] groups = dataset.ToArray();
+                string[] seriesLabels = new string[groups.Length];
 
                 for (int i = 0; i < groups.Length; i++)
                 {
                     string target = groups[i].RootTarget;
 
-                    string seriesLabel = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
+                    seriesLabels[i] = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
                     {
                         string table, derivedLabel;
                         string[] components = label.Split('.');
@@ -1201,7 +1202,7 @@ namespace GrafanaAdapters
 
                         DataRow record = target.MetadataRecordFromTag(Metadata, table);
 
-                        if ((object)record != null && derivedLabel.IndexOf('{') >= 0)
+                        if (record != null && derivedLabel.IndexOf('{') >= 0)
                         {
                             foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
                                 derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
@@ -1213,11 +1214,21 @@ namespace GrafanaAdapters
 
                         return derivedLabel;
                     });
-                                                              
+                }
+
+                // Verify that all series labels are unique
+                if (seriesLabels.Length > 0 && seriesLabels.All(seriesLabel => seriesLabel.Equals(seriesLabels[0], StringComparison.OrdinalIgnoreCase)))
+                {
+                    for (int i = 0; i < seriesLabels.Length; i++)
+                        seriesLabels[i] = $"{seriesLabels[i]}{new string('\u00A0', i)}";
+                }
+
+                for (int i = 0; i < groups.Length; i++)
+                {
                     yield return new DataSourceValueGroup
                     {
-                        Target = seriesLabel,
-                        RootTarget = target,
+                        Target = seriesLabels[i],
+                        RootTarget = groups[i].RootTarget,
                         SourceTarget = sourceTarget,
                         Source = groups[i].Source,
                         DropEmptySeries = dropEmptySeries
