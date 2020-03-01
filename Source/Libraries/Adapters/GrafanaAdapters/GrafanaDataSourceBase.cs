@@ -838,23 +838,22 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-               
                 const string SignalIDQuery = "SELECT TOP 1 SignalID FROM ActiveMeasurement WHERE PointTag = '{0}'";
 
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
-                if (request.targets.Where(item => item.target != "").Count() < 1)
+                if (request.targets.All(item => string.IsNullOrWhiteSpace(item.target)))
                     return new List<GrafanaAlarm>();
 
-                List<string> pointTags = request.targets.Select(item => item.target.Split(';').ToList()).Aggregate((acc, list) => { return acc.Concat(list).ToList(); });
+                List<string> pointTags = request.targets.Select(item => item.target.Split(';').ToList()).Aggregate((acc, list) => acc.Concat(list).ToList());
                 string query = string.Join("),(", pointTags.Select(item => string.Format(SignalIDQuery, item.Trim())));
 
                 query = "((" + query + "))";
 
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    query = string.Format("SignalID in {0}", query);
+                    query = $"SignalID in {query}";
                     return new TableOperations<GrafanaAlarm>(connection).QueryRecordsWhere(query).ToList();
                 }
             },
@@ -1177,12 +1176,12 @@ namespace GrafanaAdapters
                 if (label.StartsWith("\"") || label.StartsWith("'"))
                     label = label.Substring(1, label.Length - 2);
 
-                DataSourceValueGroup[] groups = dataset.ToArray();
-                string[] seriesLabels = new string[groups.Length];
+                DataSourceValueGroup[] valueGroups = dataset.ToArray();
+                string[] seriesLabels = new string[valueGroups.Length];
 
-                for (int i = 0; i < groups.Length; i++)
+                for (int i = 0; i < valueGroups.Length; i++)
                 {
-                    string target = groups[i].RootTarget;
+                    string target = valueGroups[i].RootTarget;
 
                     seriesLabels[i] = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
                     {
@@ -1210,27 +1209,34 @@ namespace GrafanaAdapters
 
                         // ReSharper disable once AccessToModifiedClosure
                         if (derivedLabel.Equals(label, StringComparison.Ordinal))
-                            derivedLabel = $"{label}{(groups.Length > 1 ? $" {i + 1}" : "")}";
+                            derivedLabel = $"{label}{(valueGroups.Length > 1 ? $" {i + 1}" : "")}";
 
                         return derivedLabel;
                     });
                 }
 
                 // Verify that all series labels are unique
-                if (seriesLabels.Length > 1 && seriesLabels.All(seriesLabel => seriesLabel.Equals(seriesLabels[0], StringComparison.OrdinalIgnoreCase)))
+                if (seriesLabels.Length > 1)
                 {
-                    for (int i = 1; i < seriesLabels.Length; i++)
-                        seriesLabels[i] = $"{seriesLabels[i]}{new string('\u00A0', i)}";
+                    HashSet<string> uniqueLabelSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    for (int i = 0; i < seriesLabels.Length; i++)
+                    {
+                        while (uniqueLabelSet.Contains(seriesLabels[i]))
+                            seriesLabels[i] = $"{seriesLabels[i]}\u00A0";
+
+                        uniqueLabelSet.Add(seriesLabels[i]);
+                    }
                 }
 
-                for (int i = 0; i < groups.Length; i++)
+                for (int i = 0; i < valueGroups.Length; i++)
                 {
                     yield return new DataSourceValueGroup
                     {
                         Target = seriesLabels[i],
-                        RootTarget = groups[i].RootTarget,
+                        RootTarget = valueGroups[i].RootTarget,
                         SourceTarget = sourceTarget,
-                        Source = groups[i].Source,
+                        Source = valueGroups[i].Source,
                         DropEmptySeries = dropEmptySeries
                     };
                 }
@@ -1241,7 +1247,7 @@ namespace GrafanaAdapters
                 {
                     case GroupOperation.Set:
                         // Flatten all series into a single enumerable
-                        DataSourceValueGroup result = new DataSourceValueGroup
+                        DataSourceValueGroup setValueGroup = new DataSourceValueGroup
                         {
                             Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
                             RootTarget = queryExpression,
@@ -1253,12 +1259,12 @@ namespace GrafanaAdapters
                         // Handle edge-case set operations - for these functions there is data in the target series as well
                         if (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum || seriesFunction == SeriesFunction.Median)
                         {
-                            DataSourceValue dataValue = result.Source.First();
-                            result.Target = $"Set{seriesFunction} = {dataValue.Target}";
-                            result.RootTarget = dataValue.Target;
+                            DataSourceValue dataValue = setValueGroup.Source.First();
+                            setValueGroup.Target = $"Set{seriesFunction} = {dataValue.Target}";
+                            setValueGroup.RootTarget = dataValue.Target;
                         }
 
-                        yield return result;
+                        yield return setValueGroup;
 
                         break;
                     case GroupOperation.Slice:
@@ -1266,27 +1272,27 @@ namespace GrafanaAdapters
                         parameters = parameters.Skip(1).ToArray();
 
                         // Flatten all series into a single enumerable
-                        foreach (DataSourceValueGroup seriesResult in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters))
+                        foreach (DataSourceValueGroup sliceValueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters))
                         {
                             yield return new DataSourceValueGroup
                             {
-                                Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{seriesResult.Target ?? queryExpression})",
-                                RootTarget = seriesResult.Target ?? queryExpression,
+                                Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{sliceValueGroup.Target ?? queryExpression})",
+                                RootTarget = sliceValueGroup.Target ?? queryExpression,
                                 SourceTarget = sourceTarget,
-                                Source = seriesResult.Source,
+                                Source = sliceValueGroup.Source,
                                 DropEmptySeries = dropEmptySeries
                             };
                         }
 
                         break;
                     default:
-                        foreach (DataSourceValueGroup dataValues in dataset)
+                        foreach (DataSourceValueGroup valueGroup in dataset)
                             yield return new DataSourceValueGroup
                             {
-                                Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
-                                RootTarget = dataValues.RootTarget ?? dataValues.Target,
+                                Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                                RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
                                 SourceTarget = sourceTarget,
-                                Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters),
+                                Source = ExecuteSeriesFunctionOverSource(valueGroup.Source, seriesFunction, parameters),
                                 DropEmptySeries = dropEmptySeries
                             };
 
