@@ -602,6 +602,9 @@ namespace GrafanaAdapters
             }
         }
 
+        // Constants
+        private const string DropEmptySeriesCommand = "dropemptyseries";
+
         #endregion
 
         #region [ Properties ]
@@ -962,12 +965,10 @@ namespace GrafanaAdapters
 
         private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool decimate, bool dropEmptySeries, CancellationToken cancellationToken)
         {
-            const string DropEmptySeries = "dropemptyseries";
-
-            if (queryExpression.ToLowerInvariant().Contains(DropEmptySeries))
+            if (queryExpression.ToLowerInvariant().Contains(DropEmptySeriesCommand))
             {
                 dropEmptySeries = true;
-                queryExpression = queryExpression.ReplaceCaseInsensitive(DropEmptySeries, "");
+                queryExpression = queryExpression.ReplaceCaseInsensitive(DropEmptySeriesCommand, "");
             }
 
             // A single target might look like the following:
@@ -1067,11 +1068,9 @@ namespace GrafanaAdapters
                     }
                 }
 
-                long readCount = 0;
-
                 // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
                 List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, interval, decimate, targetMap)
-                    .TakeWhile(dataValue => readCount++ % 10000 != 0 || !cancellationToken.IsCancellationRequested).ToList();
+                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
 
                 foreach (KeyValuePair<ulong, string> target in targetMap)
                     yield return new DataSourceValueGroup
@@ -1272,7 +1271,7 @@ namespace GrafanaAdapters
                         parameters = parameters.Skip(1).ToArray();
 
                         // Flatten all series into a single enumerable
-                        foreach (DataSourceValueGroup sliceValueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters))
+                        foreach (DataSourceValueGroup sliceValueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters, cancellationToken))
                         {
                             yield return new DataSourceValueGroup
                             {
@@ -1287,6 +1286,7 @@ namespace GrafanaAdapters
                         break;
                     default:
                         foreach (DataSourceValueGroup valueGroup in dataset)
+                        {
                             yield return new DataSourceValueGroup
                             {
                                 Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
@@ -1295,6 +1295,7 @@ namespace GrafanaAdapters
                                 Source = ExecuteSeriesFunctionOverSource(valueGroup.Source, seriesFunction, parameters),
                                 DropEmptySeries = dropEmptySeries
                             };
+                        }
 
                         break;
                 }
@@ -1800,11 +1801,11 @@ namespace GrafanaAdapters
         }
 
         // Execute series function over a set of points from each series at the same time-slice
-        private static IEnumerable<DataSourceValueGroup> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
+        private static IEnumerable<DataSourceValueGroup> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters, CancellationToken cancellationToken)
         {
             Dictionary<string, DataSourceValueGroup> results = new Dictionary<string, DataSourceValueGroup>();
 
-            while (!scanner.DataReadComplete)
+            while (!scanner.DataReadComplete && !cancellationToken.IsCancellationRequested)
             {
                 foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
                 {
