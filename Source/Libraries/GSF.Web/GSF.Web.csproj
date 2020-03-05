@@ -294,6 +294,7 @@
     <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Shared\Scripts\leaflet.js" />
     <EmbeddedResource Include="Shared\Scripts\knockout-select2.js" />
     <EmbeddedResource Include="Shared\Scripts\select2.js" />
     <EmbeddedResource Include="Shared\Scripts\react-dom.development.js" />
@@ -343,6 +344,7 @@
     <EmbeddedResource Include="Shared\Scripts\default.polyfill.min.js" />
     <EmbeddedResource Include="Shared\Content\select2.css" />
     <EmbeddedResource Include="Shared\Content\select2-bootstrap.css" />
+    <Content Include="Shared\Content\leaflet.css" />
     <Content Include="Shared\Scripts\default.ployfill.js" />
     <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
