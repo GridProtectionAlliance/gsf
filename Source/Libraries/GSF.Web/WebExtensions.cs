@@ -459,20 +459,32 @@ namespace GSF.Web
         /// <returns>Stream to embedded resource if found; otherwise, <c>null</c>.</returns>
         public static Stream OpenEmbeddedResourceStream(string resourceName)
         {
+            Stream resourceStream = null;
+
             if (s_executingAssemblyResources.Contains(resourceName))
-                return Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+                resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+
+            if (resourceStream != null)
+                return resourceStream;
 
             if (s_callingAssemblyResources.Contains(resourceName))
-                return Assembly.GetCallingAssembly().GetManifestResourceStream(resourceName);
+                resourceStream = Assembly.GetCallingAssembly().GetManifestResourceStream(resourceName);
+
+            if (resourceStream != null)
+                return resourceStream;
 
             if (s_entryAssemblyResources.Contains(resourceName))
-                return Assembly.GetEntryAssembly()?.GetManifestResourceStream(resourceName);
+                resourceStream = Assembly.GetEntryAssembly()?.GetManifestResourceStream(resourceName);
+
+            if (resourceStream != null)
+                return resourceStream;
 
             foreach (KeyValuePair<Assembly, HashSet<string>> resources in s_embeddedResourceAssemblies)
             {
                 Assembly assembly = resources.Key;
+                HashSet<string> resourceNames = resources.Value;
 
-                if (resourceName.Contains(resourceName))
+                if (resourceNames.Contains(resourceName))
                     return assembly.GetManifestResourceStream(resourceName);
             }
 
