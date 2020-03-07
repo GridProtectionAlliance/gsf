@@ -180,7 +180,7 @@ namespace GSF.TimeSeries.Adapters
         /// Waits for <paramref name="signalIDs"/> to be loaded in system configuration.
         /// </summary>
         /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
-        /// <param name="signalIDs"></param>
+        /// <param name="signalIDs">Signal IDs to wait for.</param>
         /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
         public static void WaitForSignalsToLoad(this IIndependentAdapterManager instance, Guid[] signalIDs, string measurementTable = "ActiveMeasurements")
         {

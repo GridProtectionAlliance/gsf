@@ -44,6 +44,13 @@ namespace GSF.TimeSeries.Adapters
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Defines the default value for the <see cref="SourceMeasurementTable"/>.
+        /// </summary>
+        public const string DefaultSourceMeasurementTable = "ActiveMeasurements";
+
         // Fields
         private readonly ConcurrentDictionary<long, IMeasurement[,]> m_dataWindows = new ConcurrentDictionary<long, IMeasurement[,]>();
         private readonly Dictionary<MeasurementKey, int> m_keyIndexes = new Dictionary<MeasurementKey, int>();
@@ -87,7 +94,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 base.InputMeasurementKeys = value;
-                InputMeasurementKeyTypes = DataSource.GetSignalTypes(value);
+                InputMeasurementKeyTypes = DataSource.GetSignalTypes(value, SourceMeasurementTable);
 
                 for (int i = 0; i < value?.Length; i++)
                     m_keyIndexes[value[i]] = i;
@@ -107,9 +114,17 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 base.OutputMeasurements = value;
-                OutputMeasurementTypes = DataSource.GetSignalTypes(value);
+                OutputMeasurementTypes = DataSource.GetSignalTypes(value, SourceMeasurementTable);
             }
         }
+
+        /// <summary>
+        /// Gets or sets the source measurement table to use for configuration.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the source measurement table to use for configuration.")]
+        [DefaultValue(DefaultSourceMeasurementTable)]
+        public virtual string SourceMeasurementTable { get; set; } = DefaultSourceMeasurementTable;
 
         /// <summary>
         /// Gets or sets input measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.InputMeasurementKeys"/>, if any.
@@ -140,6 +155,8 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendFormat("      Last Frame Timestamp: {0:yyyy-MM-dd HH:mm:ss}", new DateTime(Interlocked.Read(ref m_lastFrameTimestamp)));
                 status.AppendLine();
                 status.AppendFormat("    Processed Data Windows: {0:N0}", Interlocked.Read(ref m_processedDataWindows));
+                status.AppendLine();
+                status.AppendFormat("  Source Measurement Table: {0}", SourceMeasurementTable);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -192,11 +209,25 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public override void Initialize()
         {
+            string setting;
+
             // Parse all properties marked with ConnectionStringParameterAttribute from provided ConnectionString value
             ConnectionStringParser parser = new ConnectionStringParser();
             parser.ParseConnectionString(ConnectionString, this);
 
             base.Initialize();
+
+            // Reparse configured inputs and outputs if a non-standard source measurement table is being used
+            if (!SourceMeasurementTable.Equals(DefaultSourceMeasurementTable, StringComparison.OrdinalIgnoreCase))
+            {
+                Dictionary<string, string> settings = Settings;
+
+                if (settings.TryGetValue("inputMeasurementKeys", out setting))
+                    InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, setting, SourceMeasurementTable);
+
+                if (settings.TryGetValue("outputMeasurements", out setting))
+                    OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, true, setting, SourceMeasurementTable);
+            }
 
             int configuredInputCount = InputMeasurementKeys?.Length ?? 0;
             int configuredOutputCount = OutputMeasurements?.Length ?? 0;
@@ -205,12 +236,12 @@ namespace GSF.TimeSeries.Adapters
                 throw new InvalidOperationException("No inputs specified. Cannot initialize adapter.");
 
             if (configuredInputCount != InputCount)
-                throw new InvalidOperationException($"Expected {InputCount} input measurements, there are {configuredInputCount} defined. Cannot initialize adapter.");
+                throw new InvalidOperationException($"Expected {InputCount:N0} input measurements, there are {configuredInputCount:N0} defined. Cannot initialize adapter.");
 
             if (configuredOutputCount != OutputCount)
-                throw new InvalidOperationException($"Expected {OutputCount} output measurements, there are {configuredOutputCount} defined. Cannot initialize adapter.");
+                throw new InvalidOperationException($"Expected {OutputCount:N0} output measurements, there are {configuredOutputCount:N0} defined. Cannot initialize adapter.");
 
-            m_supportsTemporalProcessing = Settings.TryGetValue("supportsTemporalProcessing", out string setting) && setting.ParseBoolean();
+            m_supportsTemporalProcessing = Settings.TryGetValue("supportsTemporalProcessing", out setting) && setting.ParseBoolean();
 
             SubsecondOffsets = Ticks.SubsecondDistribution(FramesPerSecond);
 

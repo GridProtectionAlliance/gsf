@@ -173,6 +173,8 @@ namespace GSF.TimeSeries.Adapters
             status.AppendLine();
             status.AppendFormat("  Target Historian Acronym: {0}", instance.TargetHistorianAcronym);
             status.AppendLine();
+            status.AppendFormat("  Source Measurement Table: {0}", instance.SourceMeasurementTable);
+            status.AppendLine();
             status.AppendFormat("        Inputs per Adapter: {0:N0}", instance.PerAdapterInputCount);
             status.AppendLine();
             status.AppendFormat(" Input Index Used for Name: {0:N0}", instance.InputMeasurementIndexUsedForName);
