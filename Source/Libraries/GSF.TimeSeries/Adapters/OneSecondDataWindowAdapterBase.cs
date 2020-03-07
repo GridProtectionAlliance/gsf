@@ -222,10 +222,10 @@ namespace GSF.TimeSeries.Adapters
             {
                 Dictionary<string, string> settings = Settings;
 
-                if (settings.TryGetValue("inputMeasurementKeys", out setting))
+                if (settings.TryGetValue(nameof(InputMeasurementKeys), out setting))
                     InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, setting, SourceMeasurementTable);
 
-                if (settings.TryGetValue("outputMeasurements", out setting))
+                if (settings.TryGetValue(nameof(OutputMeasurements), out setting))
                     OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, true, setting, SourceMeasurementTable);
             }
 
