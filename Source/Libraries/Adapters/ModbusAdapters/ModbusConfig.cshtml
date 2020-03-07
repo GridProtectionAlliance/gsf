@@ -210,9 +210,9 @@
                 margin-top: -15px;
             }
 
-                span.sequence-record-count span {
-                    margin-left: 155px;
-                }
+            span.sequence-record-count span {
+                margin-left: 155px;
+            }
         }
 
         @@media screen and (min-width: 768px) {
@@ -225,9 +225,9 @@
                 margin-top: 3px;
             }
 
-                span.sequence-record-count span {
-                    margin-left: 45px;
-                }
+            span.sequence-record-count span {
+                margin-left: 40px;
+            }
         }
 
         @@supports (-ms-accelerator:true) {
@@ -236,9 +236,9 @@
                 margin-top: 3px;
             }
 
-                span.sequence-record-count span {
-                    margin-left: 15px;
-                }
+            span.sequence-record-count span {
+                margin-left: 15px;
+            }
         }
 
         @@supports (-ms-accelerator:true) and (min-width: 768px) {
@@ -247,9 +247,9 @@
                 margin-top: 21px;
             }
 
-                span.sequence-record-count span {
-                    margin-left: -95px;
-                }
+            span.sequence-record-count span {
+                margin-left: -95px;
+            }
         }
 
         @@media all and (-ms-high-contrast:none) {
@@ -258,9 +258,9 @@
                 margin-top: 3px;
             }
 
-                span.sequence-record-count span {
-                    margin-left: 15px;
-                }
+            span.sequence-record-count span {
+                margin-left: 15px;
+            }
         }
 
         @@media all and (-ms-high-contrast:none) and (min-width: 768px) {
@@ -269,9 +269,9 @@
                 margin-top: 21px;
             }
 
-                span.sequence-record-count span {
-                    margin-left: -95px;
-                }
+            span.sequence-record-count span {
+                margin-left: -95px;
+            }
         }
 
         .panel {
@@ -1846,7 +1846,7 @@
                 <div class="form-group" data-bind="css: {'has-error': isEmpty(sequenceName()), 'has-feedback': isEmpty(sequenceName())}">
                     <label data-bind="attr: { 'for': 'sequenceName' + domIndex }">
                         <a class="move-sequence-up" title="Move Sequence Order Up" onclick="moveSequenceUp(this)"><span class="glyphicon glyphicon-menu-up"></span></a>
-                        <span class="badge"></span>&nbsp;&nbsp;<span data-bind="text: sequenceTypeDescription"></span> Sequence:
+                        <span class="badge"></span>&nbsp;&nbsp;<span data-bind="text: sequenceTypeDescription"></span> Sequence:<br/>
                         <span class="sequence-record-count"><span data-bind="text: 'Record&nbsp;Count:&nbsp;' + sequenceRecords().length"></span></span>
                         <a class="move-sequence-down" title="Move Sequence Order Down" onclick="moveSequenceDown(this)"><span class="glyphicon glyphicon-menu-down"></span></a>
                     </label>
