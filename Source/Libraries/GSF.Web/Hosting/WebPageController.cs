@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -97,6 +98,21 @@ namespace GSF.Web.Hosting
         public Task<HttpResponseMessage> GetPage(string pageName, CancellationToken cancellationToken)
         {
             return WebServer.RenderResponse(Request, pageName, cancellationToken, Model, ModelType);
+        }
+
+        /// <summary>
+        /// Common page post handler.
+        /// </summary>
+        /// <param name="pageName">Page name to render.</param>
+        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
+        /// <returns>Rendered page result for given page.</returns>
+        [HttpPost]
+        [ActionName("GetPage")]
+        [ValidateRequestVerificationToken(FormValidation = true)]
+        [SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        public Task<HttpResponseMessage> PostPage(string pageName, CancellationToken cancellationToken)
+        {
+            return GetPage(pageName, cancellationToken);
         }
 
         #endregion
