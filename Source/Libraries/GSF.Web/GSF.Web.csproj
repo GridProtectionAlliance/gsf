@@ -294,7 +294,12 @@
     <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Shared\Scripts\leaflet.js" />
+    <EmbeddedResource Include="Shared\Content\Images\layers-2x.png" />
+    <EmbeddedResource Include="Shared\Content\Images\layers.png" />
+    <EmbeddedResource Include="Shared\Content\Images\marker-icon-2x.png" />
+    <EmbeddedResource Include="Shared\Content\Images\marker-icon.png" />
+    <EmbeddedResource Include="Shared\Content\Images\marker-shadow.png" />
+    <EmbeddedResource Include="Shared\Scripts\leaflet.js" />
     <EmbeddedResource Include="Shared\Scripts\knockout-select2.js" />
     <EmbeddedResource Include="Shared\Scripts\select2.js" />
     <EmbeddedResource Include="Shared\Scripts\react-dom.development.js" />
@@ -334,18 +339,18 @@
     <Content Include="Readme.txt" />
     <EmbeddedResource Include="Security\Scripts\Login.js" />
     <EmbeddedResource Include="Shared\Content\bootstrap4.css" />
-    <Content Include="Shared\Content\Images\ui-icons_444444_256x240.png" />
-    <Content Include="Shared\Content\Images\ui-icons_555555_256x240.png" />
-    <Content Include="Shared\Content\Images\ui-icons_777620_256x240.png" />
-    <Content Include="Shared\Content\Images\ui-icons_777777_256x240.png" />
-    <Content Include="Shared\Content\Images\ui-icons_cc0000_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_444444_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_555555_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_777620_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_777777_256x240.png" />
+    <EmbeddedResource Include="Shared\Content\Images\ui-icons_cc0000_256x240.png" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.rangeselection.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.dashes.js" />
     <EmbeddedResource Include="Shared\Scripts\default.polyfill.min.js" />
     <EmbeddedResource Include="Shared\Content\select2.css" />
     <EmbeddedResource Include="Shared\Content\select2-bootstrap.css" />
-    <Content Include="Shared\Content\leaflet.css" />
-    <Content Include="Shared\Scripts\default.ployfill.js" />
+    <EmbeddedResource Include="Shared\Content\leaflet.css" />
+    <EmbeddedResource Include="Shared\Scripts\default.ployfill.js" />
     <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
