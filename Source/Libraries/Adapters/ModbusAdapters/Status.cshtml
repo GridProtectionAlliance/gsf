@@ -364,7 +364,7 @@
                 }
             });
 
-            ko.applyBindings(viewModel);
+            ko.applyBindings(viewModel, document.getElementsByTagName("body")[0]);
         });
 
         $(window).on("hubConnected", function (event) {
