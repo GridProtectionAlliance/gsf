@@ -95,6 +95,11 @@ namespace GrafanaAdapters
         /// Additional data to be displayed.
         /// </summary>
         public string DisplayData { get; set; }
+
+        /// <summary>
+        /// Device ID of the Alarmed Device.
+        /// </summary>
+        public int DeviceID { get; set; }
     }
 }
 
