@@ -832,11 +832,47 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Query Current Alarms Based on list of Points.
+        /// Queries All Available Device Alarm states.
         /// </summary>
         /// <param name="request">Alarm request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns> Queried device alarm states.</returns>
+        public Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<AlarmState>(connection).QueryRecords("ID");
+                }
+            },
+            cancellationToken);
+        }
+
+        /// <summary>
+        /// Queries All Available Device Groups.
+        /// </summary>
+        /// <param name="request">request.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns> List of Device Groups.</returns>
+        public Task<IEnumerable<AlarmState>> GetDeviceGroups(QueryRequest request, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    return new TableOperations<AlarmState>(connection).QueryRecords("Name");
+                }
+            },
+            cancellationToken);
+        }
+
+        /// <summary>
+        /// Query Current Alarms Based on list of Points.
+        /// </summary>
+        /// <param name="request">Alarm request.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns> Queried alarm states.</returns>
         public Task<List<GrafanaAlarm>> GetAlarms(QueryRequest request, CancellationToken cancellationToken)
         {
             return Task.Factory.StartNew(() =>

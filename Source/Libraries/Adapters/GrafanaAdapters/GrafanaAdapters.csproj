@@ -71,6 +71,7 @@
     <Compile Include="Column.cs" />
     <Compile Include="DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
+    <Compile Include="DeviceGroupModel.cs" />
     <Compile Include="DeviceStateModels.cs" />
     <Compile Include="GrafanaDataService.NET.cs" />
     <Compile Include="GrafanaDataServiceMono.cs" />
