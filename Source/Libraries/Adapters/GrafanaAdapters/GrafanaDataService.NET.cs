@@ -74,7 +74,18 @@ namespace GrafanaAdapters
             return await m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token);
         }
 
-
+        /// <summary>
+        /// Queries openHistorian Device Groups.
+        /// </summary>
+        /// <param name="request">Query request.</param>
+        public async Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request)
+        {
+            // Abort if services are not enabled
+            if (!Enabled || (object)Archive == null)
+                return null;
+            return await m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
+        }
+ 
         /// <summary>
         /// Queries openPDC Alarms as a Grafana alarm data source.
         /// </summary>

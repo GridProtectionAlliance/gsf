@@ -855,16 +855,38 @@ namespace GrafanaAdapters
         /// <param name="request">request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns> List of Device Groups.</returns>
-        public Task<IEnumerable<AlarmState>> GetDeviceGroups(QueryRequest request, CancellationToken cancellationToken)
+        public Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request, CancellationToken cancellationToken)
         {
             return Task.Factory.StartNew(() =>
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    return new TableOperations<AlarmState>(connection).QueryRecords("Name");
+                    IEnumerable<GSF.TimeSeries.Model.Device> groups = (new TableOperations<GSF.TimeSeries.Model.Device>(connection)).QueryRecordsWhere("AccessID = -99999");
+
+                    return groups.Select(item => {
+                        return new DeviceGroup()
+                        {
+                            ID = item.ID,
+                            Name = item.Name,
+                            Devices = ProcessDeviceGroup(item.ConnectionString).ToList()
+
+                        };
+                    });
+                    
                 }
             },
             cancellationToken);
+        }
+
+        private IEnumerable<int> ProcessDeviceGroup(string connectionString)
+        {
+            // Parse the connection string into a dictionary of key-value pairs for easy lookups
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs(';', '=', '{', '}');
+
+            if (!settings.ContainsKey("DeviceIDs"))
+                return new List<int>();
+
+            return settings["DeviceIDs"].Split(',').Select(item => { return ParseInt(item); });
         }
 
         /// <summary>
