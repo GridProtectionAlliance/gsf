@@ -1223,7 +1223,12 @@ namespace GSF.TimeSeries
             }
         }
 
-        private bool PropagateDataSource(DataSet dataSource)
+        /// <summary>
+        /// Handle assignment of data source to Iaon session.
+        /// </summary>
+        /// <param name="dataSource">New data source to assign.</param>
+        /// <returns><c>true</c> if data source was assigned; otherwise, <c>false</c>.</returns>
+        protected virtual bool PropagateDataSource(DataSet dataSource)
         {
             try
             {
