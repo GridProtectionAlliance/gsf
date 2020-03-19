@@ -641,89 +641,10 @@ namespace PhasorWebUI
 
         public ConfigurationFrame LoadConfigurationFrame(string sourceData)
         {
-            string connectionString = "";
-
-            IConfigurationFrame GetConfigurationFrame()
-            {
-                try
-                {
-                    ConnectionSettings connectionSettings;
-                    SoapFormatter formatter = new SoapFormatter
-                    {
-                        AssemblyFormat = FormatterAssemblyStyle.Simple,
-                        TypeFormat = FormatterTypeStyle.TypesWhenNeeded,
-                        Binder = Serialization.LegacyBinder
-                    };
-
-                    using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
-                        connectionSettings = formatter.Deserialize(source) as ConnectionSettings;
-
-                    if ((object)connectionSettings != null)
-                    {
-                        connectionString = connectionSettings.ConnectionString;
-
-                        Dictionary<string, string> connectionStringKeyValues = connectionString.ParseKeyValuePairs();
-
-                        connectionString = "transportProtocol=" + connectionSettings.TransportProtocol + ";" + connectionStringKeyValues.JoinKeyValuePairs();
-
-                        if ((object)connectionSettings.ConnectionParameters != null)
-                        {
-                            switch (connectionSettings.PhasorProtocol)
-                            {
-                                case PhasorProtocol.BPAPDCstream:
-                                    GSF.PhasorProtocols.BPAPDCstream.ConnectionParameters bpaParameters = connectionSettings.ConnectionParameters as GSF.PhasorProtocols.BPAPDCstream.ConnectionParameters;
-                                    if ((object)bpaParameters != null)
-                                        connectionString += "; iniFileName=" + bpaParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + bpaParameters.RefreshConfigurationFileOnChange + "; parseWordCountFromByte=" + bpaParameters.ParseWordCountFromByte;
-                                    break;
-                                case PhasorProtocol.FNET:
-                                    GSF.PhasorProtocols.FNET.ConnectionParameters fnetParameters = connectionSettings.ConnectionParameters as GSF.PhasorProtocols.FNET.ConnectionParameters;
-                                    if ((object)fnetParameters != null)
-                                        connectionString += "; timeOffset=" + fnetParameters.TimeOffset + "; stationName=" + fnetParameters.StationName + "; frameRate=" + fnetParameters.FrameRate + "; nominalFrequency=" + (int)fnetParameters.NominalFrequency;
-                                    break;
-                                case PhasorProtocol.SelFastMessage:
-                                    GSF.PhasorProtocols.SelFastMessage.ConnectionParameters selParameters = connectionSettings.ConnectionParameters as GSF.PhasorProtocols.SelFastMessage.ConnectionParameters;
-                                    if ((object)selParameters != null)
-                                        connectionString += "; messagePeriod=" + selParameters.MessagePeriod;
-                                    break;
-                                case PhasorProtocol.IEC61850_90_5:
-                                    GSF.PhasorProtocols.IEC61850_90_5.ConnectionParameters iecParameters = connectionSettings.ConnectionParameters as GSF.PhasorProtocols.IEC61850_90_5.ConnectionParameters;
-                                    if ((object)iecParameters != null)
-                                        connectionString += "; useETRConfiguration=" + iecParameters.UseETRConfiguration + "; guessConfiguration=" + iecParameters.GuessConfiguration + "; parseRedundantASDUs=" + iecParameters.ParseRedundantASDUs + "; ignoreSignatureValidationFailures=" + iecParameters.IgnoreSignatureValidationFailures + "; ignoreSampleSizeValidationFailures=" + iecParameters.IgnoreSampleSizeValidationFailures;
-                                    break;
-                                case PhasorProtocol.Macrodyne:
-                                    GSF.PhasorProtocols.Macrodyne.ConnectionParameters macrodyneParameters = connectionSettings.ConnectionParameters as GSF.PhasorProtocols.Macrodyne.ConnectionParameters;
-                                    if ((object)macrodyneParameters != null)
-                                        connectionString += "; protocolVersion=" + macrodyneParameters.ProtocolVersion + "; iniFileName=" + macrodyneParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + macrodyneParameters.RefreshConfigurationFileOnChange + "; deviceLabel=" + macrodyneParameters.DeviceLabel;
-                                    break;
-                            }
-                        }
-
-                        connectionString += "; accessID=" + connectionSettings.PmuID;
-                        connectionString += "; phasorProtocol=" + connectionSettings.PhasorProtocol;
-
-                        using (CommonPhasorServices phasorServices = new CommonPhasorServices())
-                        {
-                            phasorServices.StatusMessage += (sender, e) => LogStatusMessage(e.Argument.Replace("**", ""));
-                            phasorServices.ProcessException += (sender, e) => LogException(e.Argument);
-                            return phasorServices.RequestDeviceConfiguration(connectionString);
-                        }
-                    }
-
-                    using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
-                        return formatter.Deserialize(source) as IConfigurationFrame;
-                }
-                catch
-                {
-                    return new ConfigurationErrorFrame();
-                }
-            }
-
-            IConfigurationFrame sourceFrame = GetConfigurationFrame();
+            IConfigurationFrame sourceFrame = GetConfigurationFrame(sourceData, out string connectionString);
 
             if (sourceFrame is ConfigurationErrorFrame)
                 return new ConfigurationFrame();
-
-            ConfigurationFrame derivedFrame;
 
             // Create a new simple concrete configuration frame for JSON serialization converted from equivalent configuration information
             int protocolID = 0, deviceID = 0, phasorID = -1; // Start phasor ID's at less than -1 since associated voltage == -1 is reserved as unselected
@@ -734,7 +655,7 @@ namespace PhasorWebUI
                 protocolID = GetProtocolID(settings["phasorProtocol"]);
             }
 
-            derivedFrame = new ConfigurationFrame
+            ConfigurationFrame derivedFrame = new ConfigurationFrame
             {
                 IDCode = sourceFrame.IDCode,
                 FrameRate = sourceFrame.FrameRate,
@@ -781,6 +702,96 @@ namespace PhasorWebUI
             derivedFrame.IsConcentrator = derivedFrame.Cells.Count > 1;
 
             return derivedFrame;
+        }
+
+        private IConfigurationFrame GetConfigurationFrame(string sourceData, out string connectionString)
+        {
+            connectionString = "";
+
+            try
+            {
+                SoapFormatter formatter = new SoapFormatter
+                {
+                    AssemblyFormat = FormatterAssemblyStyle.Simple,
+                    TypeFormat = FormatterTypeStyle.TypesWhenNeeded,
+                    Binder = Serialization.LegacyBinder
+                };
+
+                // Try deseralizing input as connection settings
+                ConnectionSettings connectionSettings;
+
+                using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
+                    connectionSettings = formatter.Deserialize(source) as ConnectionSettings;
+
+                if (connectionSettings != null)
+                {
+                    // If provided input was a connection settings object, get a valid connection string
+                    connectionString = connectionSettings.ConnectionString;
+
+                    Dictionary<string, string> connectionStringKeyValues = connectionString.ParseKeyValuePairs();
+
+                    connectionString = "transportProtocol=" + connectionSettings.TransportProtocol + ";" + connectionStringKeyValues.JoinKeyValuePairs();
+
+                    if (connectionSettings.ConnectionParameters != null)
+                    {
+                        switch (connectionSettings.PhasorProtocol)
+                        {
+                            case PhasorProtocol.BPAPDCstream:
+                                if (connectionSettings.ConnectionParameters is GSF.PhasorProtocols.BPAPDCstream.ConnectionParameters bpaParameters)
+                                    connectionString += "; iniFileName=" + bpaParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + bpaParameters.RefreshConfigurationFileOnChange + "; parseWordCountFromByte=" + bpaParameters.ParseWordCountFromByte;
+                                break;
+                            case PhasorProtocol.FNET:
+                                if (connectionSettings.ConnectionParameters is GSF.PhasorProtocols.FNET.ConnectionParameters fnetParameters)
+                                    connectionString += "; timeOffset=" + fnetParameters.TimeOffset + "; stationName=" + fnetParameters.StationName + "; frameRate=" + fnetParameters.FrameRate + "; nominalFrequency=" + (int)fnetParameters.NominalFrequency;
+                                break;
+                            case PhasorProtocol.SelFastMessage:
+                                if (connectionSettings.ConnectionParameters is GSF.PhasorProtocols.SelFastMessage.ConnectionParameters selParameters)
+                                    connectionString += "; messagePeriod=" + selParameters.MessagePeriod;
+                                break;
+                            case PhasorProtocol.IEC61850_90_5:
+                                if (connectionSettings.ConnectionParameters is GSF.PhasorProtocols.IEC61850_90_5.ConnectionParameters iecParameters)
+                                    connectionString += "; useETRConfiguration=" + iecParameters.UseETRConfiguration + "; guessConfiguration=" + iecParameters.GuessConfiguration + "; parseRedundantASDUs=" + iecParameters.ParseRedundantASDUs + "; ignoreSignatureValidationFailures=" + iecParameters.IgnoreSignatureValidationFailures + "; ignoreSampleSizeValidationFailures=" + iecParameters.IgnoreSampleSizeValidationFailures;
+                                break;
+                            case PhasorProtocol.Macrodyne:
+                                if (connectionSettings.ConnectionParameters is GSF.PhasorProtocols.Macrodyne.ConnectionParameters macrodyneParameters)
+                                    connectionString += "; protocolVersion=" + macrodyneParameters.ProtocolVersion + "; iniFileName=" + macrodyneParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + macrodyneParameters.RefreshConfigurationFileOnChange + "; deviceLabel=" + macrodyneParameters.DeviceLabel;
+                                break;
+                        }
+                    }
+
+                    connectionString += "; accessID=" + connectionSettings.PmuID;
+                    connectionString += "; phasorProtocol=" + connectionSettings.PhasorProtocol;
+
+                    // Parse connection string and return retrieved configuration frame
+                    return RequestConfigurationFrame(connectionString);
+                }
+
+                // Try deseralizing input as a configuration frame
+                IConfigurationFrame configurationFrame;
+
+                using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
+                    configurationFrame = formatter.Deserialize(source) as IConfigurationFrame;
+
+                if (configurationFrame != null)
+                    return configurationFrame;
+
+                // Finally, assume input is simply a connection string and attempt to return retrieved configuration frame
+                return RequestConfigurationFrame(sourceData);
+            }
+            catch
+            {
+                return new ConfigurationErrorFrame();
+            }
+        }
+
+        private IConfigurationFrame RequestConfigurationFrame(string connectionString)
+        {
+            using (CommonPhasorServices phasorServices = new CommonPhasorServices())
+            {
+                phasorServices.StatusMessage += (sender, e) => LogStatusMessage(e.Argument.Replace("**", ""));
+                phasorServices.ProcessException += (sender, e) => LogException(e.Argument);
+                return phasorServices.RequestDeviceConfiguration(connectionString);
+            }
         }
 
         public IEnumerable<string> GetTemplateTypes()
