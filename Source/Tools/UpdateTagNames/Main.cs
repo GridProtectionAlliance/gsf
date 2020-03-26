@@ -70,9 +70,9 @@ namespace UpdateTagNames
             {
                 m_log.Publish(MessageLevel.Error, "FormLoad", "Failed while loading settings", exception: ex);
 
-#if DEBUG
+            #if DEBUG
                 throw;
-#endif
+            #endif
             }
         }
 
@@ -92,15 +92,28 @@ namespace UpdateTagNames
             {
                 m_log.Publish(MessageLevel.Error, "FormClosing", "Failed while saving settings", exception: ex);
 
-#if DEBUG
+            #if DEBUG
                 throw;
-#endif
+            #endif
             }
         }
 
         private void Main_FormClosed(object sender, FormClosedEventArgs e)
         {
             m_settings?.Dispose();
+        }
+
+        private void FormElementChanged(object sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<object, EventArgs>(FormElementChanged), sender, e);
+            }
+            else
+            {
+                if (Visible && m_formLoaded)
+                    m_settings?.UpdateProperties();
+            }
         }
 
         private void buttonApply_Click(object sender, EventArgs e)
@@ -253,7 +266,7 @@ namespace UpdateTagNames
                 if (value != null)
                 {
                     value.Value = textBoxExpression.Text;
-                    serviceConfig.Save(managerConfigFile);
+                    managerConfig.Save(managerConfigFile);
                 }
 
                 if (checkBoxSetPortNumber.Checked)
@@ -278,6 +291,8 @@ namespace UpdateTagNames
 
                 // Attempt to restart Windows service...
                 serviceController.Start();
+
+                Application.Exit();
             }
             catch (Exception ex)
             {
