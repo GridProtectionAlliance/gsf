@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2015
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29905.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
 EndProject
@@ -532,6 +532,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhasorWebUI", "Libraries\Adapters\PhasorWebUI\PhasorWebUI.csproj", "{FC17F2AE-E54A-4F0D-AD64-7B2325D9A723}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceStatAdapters", "Libraries\Adapters\DeviceStatAdapters\DeviceStatAdapters.csproj", "{07756C10-3383-48C8-9A6D-B1D7F3A3B205}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateTagNames", "Tools\UpdateTagNames\UpdateTagNames.csproj", "{4DFA5A53-6BCC-4701-8221-8C158F6E7740}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -3068,6 +3070,30 @@ Global
 		{07756C10-3383-48C8-9A6D-B1D7F3A3B205}.Release|x64.Build.0 = Release|Any CPU
 		{07756C10-3383-48C8-9A6D-B1D7F3A3B205}.Release|x86.ActiveCfg = Release|Any CPU
 		{07756C10-3383-48C8-9A6D-B1D7F3A3B205}.Release|x86.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Analysis|Any CPU.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Analysis|Any CPU.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Analysis|x64.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Analysis|x64.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Analysis|x86.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Analysis|x86.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Debug|x64.Build.0 = Debug|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Debug|x86.Build.0 = Debug|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Mono|x64.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Mono|x64.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Mono|x86.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Mono|x86.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Release|x64.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Release|x64.Build.0 = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Release|x86.ActiveCfg = Release|Any CPU
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -3228,6 +3254,7 @@ Global
 		{FFD6994F-B35C-4C2A-BCFF-8B0F697B6591} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{FC17F2AE-E54A-4F0D-AD64-7B2325D9A723} = {51797AFD-D313-4E14-A3E9-531F28C698C2}
 		{07756C10-3383-48C8-9A6D-B1D7F3A3B205} = {51797AFD-D313-4E14-A3E9-531F28C698C2}
+		{4DFA5A53-6BCC-4701-8221-8C158F6E7740} = {1B63485E-46C7-4185-B968-216A02396B88}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C14640B-0B31-4754-AD2D-FA804719D3BE}
