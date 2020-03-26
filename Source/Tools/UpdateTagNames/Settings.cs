@@ -62,7 +62,7 @@ namespace UpdateTagNames
         /// </summary>
         [TypeConvertedValueExpression("Form.textBoxConfigFile.Text")]
         [Description("Target config file name.")]
-        [UserScopedSetting]
+        [ApplicationScopedSetting]
         public string TargetConfigFile { get; set; }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace UpdateTagNames
         /// </summary>
         [TypeConvertedValueExpression("Form.textBoxExpression.Text")]
         [Description("Point tag name expression.")]
-        [UserScopedSetting]
+        [ApplicationScopedSetting]
         public string Expression { get; set; }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace UpdateTagNames
         /// </summary>
         [TypeConvertedValueExpression("Form.checkBoxSetPortNumber.Checked")]
         [Description("Flag that determines if STTP port number should be set.")]
-        [UserScopedSetting]
+        [ApplicationScopedSetting]
         public bool SetPortNumber { get; set; }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace UpdateTagNames
         /// </summary>
         [TypeConvertedValueExpression("Form.maskedTextBoxPortNumber.Text")]
         [Description("Target STTP port number.")]
-        [UserScopedSetting]
+        [ApplicationScopedSetting]
         public int PortNumber { get; set; }
     }
 }
