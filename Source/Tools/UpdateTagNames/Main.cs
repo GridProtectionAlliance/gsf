@@ -120,12 +120,12 @@ namespace UpdateTagNames
             {
                 XDocument serviceConfig = XDocument.Load(serviceConfigFile);
 
-                Guid nodeID = Guid.Parse(serviceConfig
-                    .Descendants("systemSettings")
-                    .SelectMany(systemSettings => systemSettings.Elements("add"))
-                    .Where(element => "NodeID".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                    .Select(element => (string)element.Attribute("value"))
-                    .FirstOrDefault() ?? Guid.Empty.ToString());
+                //Guid nodeID = Guid.Parse(serviceConfig
+                //    .Descendants("systemSettings")
+                //    .SelectMany(systemSettings => systemSettings.Elements("add"))
+                //    .Where(element => "NodeID".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                //    .Select(element => (string)element.Attribute("value"))
+                //    .FirstOrDefault() ?? Guid.Empty.ToString());
 
                 string connectionString = serviceConfig
                     .Descendants("systemSettings")
