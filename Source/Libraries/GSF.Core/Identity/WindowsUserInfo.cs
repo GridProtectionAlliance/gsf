@@ -34,6 +34,7 @@ using System.Security;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.Interop;
 using GSF.IO;
@@ -59,6 +60,7 @@ namespace GSF.Identity
         private DirectoryEntry m_userEntry;
         private bool m_domainRespondsForUser;
         private bool m_isLocalAccount;
+        private bool m_useLegacyGroupLookups;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -80,6 +82,19 @@ namespace GSF.Identity
             {
                 // This event will not be raised when running from a Windows service since
                 // a service does not establish a message loop.
+            }
+
+            // Attempt to get configuration flag for using legacy group lookups
+            try
+            {
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_parent.SettingsCategory];
+                settings.Add("UseLegacyGroupLookups", m_useLegacyGroupLookups, "Flag that determines if group based lookups for local users should use legacy algorithm. Enabling may speed up authentication when using local accounts.");
+                m_useLegacyGroupLookups = settings["UseLegacyGroupLookups"].ValueAs(m_useLegacyGroupLookups);
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex, "Failed while checking configuration for legacy group lookups");
             }
         }
 
@@ -378,6 +393,9 @@ namespace GSF.Identity
             #if !MONO
                 if (!m_enabled)
                     return Array.Empty<string>();
+                
+                if (m_isLocalAccount && m_useLegacyGroupLookups)
+                    return OldGetGroups();
 
                 try
                 {
@@ -411,6 +429,9 @@ namespace GSF.Identity
             #if !MONO
                 if (!m_enabled)
                     return Array.Empty<string>();
+
+                if (m_isLocalAccount && m_useLegacyGroupLookups)
+                    return OldGetLocalGroups();
 
                 try
                 {
