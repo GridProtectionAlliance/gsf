@@ -375,7 +375,7 @@ namespace GSF.Identity
         {
             get
             {
-#if !MONO
+            #if !MONO
                 if (!m_enabled)
                     return Array.Empty<string>();
 
@@ -398,9 +398,9 @@ namespace GSF.Identity
                     // identities via System.DirectoryServices.AccountManagement
                     return OldGetGroups();
                 }
-#else
+            #else
                 return OldGetGroups();
-#endif
+            #endif
             }
         }
 
@@ -408,7 +408,7 @@ namespace GSF.Identity
         {
             get
             {
-#if !MONO
+            #if !MONO
                 if (!m_enabled)
                     return Array.Empty<string>();
 
@@ -433,9 +433,9 @@ namespace GSF.Identity
                     // identities via System.DirectoryServices.AccountManagement
                     return OldGetLocalGroups();
                 }
-#else
+            #else
                 return OldGetLocalGroups();
-#endif
+            #endif
             }
         }
 
@@ -460,9 +460,9 @@ namespace GSF.Identity
             }
         }
 
-#endregion
+        #endregion
 
-#region [ Methods ]
+        #region [ Methods ]
 
         /// <summary>
         /// Releases all the resources used by the <see cref="WindowsUserInfo"/> object.
@@ -716,9 +716,9 @@ namespace GSF.Identity
             return (long)highPart << 32 | (uint)lowPart;
         }
 
-#endregion
+        #endregion
 
-#region [ Static ]
+        #region [ Static ]
 
         // Static Fields
         private static readonly string[] s_builtInLocalGroups;
@@ -824,7 +824,7 @@ namespace GSF.Identity
                     WindowsApi.CloseHandle(tokenHandle);
             }
 
-#region [ Alternate User Authentication Method ]
+            #region [ Alternate User Authentication Method ]
 
             // This requires reference to System.DirectoryServices.AccountManagement.
             // Note that these account management methods are not enabled under Mono...
@@ -856,7 +856,7 @@ namespace GSF.Identity
 
             //return null;
 
-#endregion
+            #endregion
         }
 
         public static WindowsImpersonationContext ImpersonateUser(string domain, string userName, string password)
@@ -1472,7 +1472,7 @@ namespace GSF.Identity
             return sid;
         }
 
-#region [ Old Group Lookup Functions ]
+        #region [ Old Group Lookup Functions ]
 
         private string[] OldGetGroups()
         {
@@ -1573,8 +1573,8 @@ namespace GSF.Identity
 
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(WindowsUserInfo), MessageClass.Component);
 
-#endregion
+        #endregion
 
-#endregion
+        #endregion
     }
 }
