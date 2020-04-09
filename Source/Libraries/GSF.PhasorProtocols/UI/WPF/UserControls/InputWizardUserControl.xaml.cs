@@ -67,7 +67,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (device != null)
             {
                 m_dataContext.SkipDisableRealTimeData = device.SkipDisableRealTimeData;
-
                 m_dataContext.ConnectionString = device.ConnectionString;
                 m_dataContext.AlternateCommandChannel = device.AlternateCommandChannel;
                 m_dataContext.AccessID = device.AccessID;
@@ -75,8 +74,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_dataContext.CompanyID = device.CompanyID ?? 0;
                 m_dataContext.HistorianID = device.HistorianID ?? 0;
                 m_dataContext.InterconnectionID = device.InterconnectionID ?? 0;
-                m_dataContext.DeviceID = device.ID;
-                m_dataContext.DeviceAcronym = device.Acronym;
 
                 if (device.IsConcentrator)
                 {
@@ -84,6 +81,15 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     m_dataContext.PdcAcronym = device.Acronym;
                     m_dataContext.PdcName = device.Name;
                     m_dataContext.PdcVendorDeviceID = device.VendorDeviceID ?? 0;
+
+                    ObservableCollection<Device> devices = Device.GetDevices(null, "WHERE ParentID = " + device.ID);
+                    m_dataContext.DeviceIDs = devices.Select(childDevice => childDevice.ID).ToArray();
+                    m_dataContext.DeviceAcronyms = devices.Select(childDevice => childDevice.Acronym).ToArray();
+                }
+                else
+                {
+                    m_dataContext.DeviceIDs = new[] { device.ID };
+                    m_dataContext.DeviceAcronyms = new[] { device.Acronym };
                 }
 
                 m_dataContext.StepTwoExpanded = true;

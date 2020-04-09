@@ -277,7 +277,7 @@
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Background="{tsfBinding:Column Path=StatusColor, Converter={StaticResource StringToStatusColorConverter}}">
-                                        <TextBox Text="{tsfBinding:Column Path=Acronym}" Margin="25,0,0,0" Width="{StaticResource ItemSize}" MaxLength="200"/>
+                                        <TextBox Text="{tsfBinding:Column Path=Acronym}" ToolTip="{Binding Path=ConfigAcronym}" Margin="25,0,0,0" Width="{StaticResource ItemSize}" MaxLength="200"/>
                                         <TextBlock Text="*" Foreground="White" FontWeight="Bold" Margin="2"
                                             Visibility="{tsfBinding:Column Path=Existing, Converter={StaticResource ObjectToVisibilityConverter}}"/>
                                     </StackPanel>
@@ -287,7 +287,7 @@
                         <sdk:DataGridTemplateColumn Header="Name" Width="4*">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{tsfBinding:Column Path=Name}" Margin="0" Width="{StaticResource ItemSize}" MaxLength="200"/>
+                                    <TextBox Text="{tsfBinding:Column Path=Name}" ToolTip="{Binding Path=ConfigName}" Margin="0" Width="{StaticResource ItemSize}" MaxLength="200"/>
                                 </DataTemplate>
                             </sdk:DataGridTemplateColumn.CellTemplate>
                         </sdk:DataGridTemplateColumn>
@@ -329,14 +329,14 @@
                                     <sdk:DataGridTemplateColumn Header="Label" Width="5*">
                                         <sdk:DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=Label}" Margin="0" Width="{StaticResource XXLargeItemSize}" MaxLength="200"/>
+                                                <TextBox Text="{tsfBinding:Column Path=Label}" ToolTip="{Binding Path=ConfigLabel}" Margin="0" Width="{StaticResource XXLargeItemSize}" MaxLength="200"/>
                                             </DataTemplate>
                                         </sdk:DataGridTemplateColumn.CellTemplate>
                                     </sdk:DataGridTemplateColumn>
                                     <sdk:DataGridTemplateColumn Header="Type" Width="2*">
                                         <sdk:DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=Type}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
+                                                <TextBox Text="{tsfBinding:Column Path=Type}" ToolTip="{Binding Path=ConfigType}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
                                             </DataTemplate>
                                         </sdk:DataGridTemplateColumn.CellTemplate>
                                     </sdk:DataGridTemplateColumn>

@@ -81,8 +81,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private string m_connectionString;
         private string m_alternateCommandChannel;
         private int m_accessID;
-        private int m_deviceID;
-        private string m_deviceAcronym;
+        private int[] m_deviceIDs;
+        private string[] m_deviceAcronyms;
         private int m_protocolID;
         private string m_protocolAcronym;
         private bool m_connectToConcentrator;
@@ -394,34 +394,34 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets device ID.
+        /// Gets or sets device IDs.
         /// </summary>
-        public int DeviceID
+        public int[] DeviceIDs
         {
             get
             {
-                return m_deviceID;
+                return m_deviceIDs ?? (m_deviceIDs = Array.Empty<int>());
             }
             set
             {
-                m_deviceID = value;
-                OnPropertyChanged(nameof(DeviceID));
+                m_deviceIDs = value;
+                OnPropertyChanged(nameof(DeviceIDs));
             }
         }
 
         /// <summary>
-        /// Gets or sets device acronym.
+        /// Gets or sets device acronyms.
         /// </summary>
-        public string DeviceAcronym
+        public string[] DeviceAcronyms
         {
             get
             {
-                return m_deviceAcronym;
+                return m_deviceAcronyms ?? (m_deviceAcronyms = Array.Empty<string>());
             }
             set
             {
-                m_deviceAcronym = value;
-                OnPropertyChanged(nameof(DeviceAcronym));
+                m_deviceAcronyms = value;
+                OnPropertyChanged(nameof(DeviceAcronyms));
             }
         }
 
@@ -1122,14 +1122,17 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 PdcFrameRate = m_configurationFrame.FrameRate;
 
-                foreach (IConfigurationCell cell in m_configurationFrame.Cells)
+                for (int i = 0; i < m_configurationFrame.Cells.Count; i++)
                 {
+                    IConfigurationCell cell = m_configurationFrame.Cells[i];
                     Device existingDevice = null;
                     string stationAcronym = cell.StationName?.Replace(" ", "_").Replace("'", "").ToUpper() ?? "UNDEFINED";
-                    string deviceAcronym = string.IsNullOrWhiteSpace(DeviceAcronym) ? stationAcronym : DeviceAcronym;
+                    string stationName = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName?.ToLower() ?? stationAcronym);
+                    string deviceAcronym = i < DeviceAcronyms.Length ? DeviceAcronyms[i] : stationAcronym;
+                    int deviceID = i < DeviceIDs.Length ? DeviceIDs[i] : 0;
 
-                    if (DeviceID > 0)
-                        existingDevice = Device.GetDevice(null, $"WHERE ID = {DeviceID}");
+                    if (deviceID > 0)
+                        existingDevice = Device.GetDevice(null, $"WHERE ID = {deviceID}");
 
                     if (existingDevice == null)
                         existingDevice = Device.GetDevice(null, $"WHERE Acronym = '{deviceAcronym}'");
@@ -1171,23 +1174,17 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     string guessBaseKV(string baseKV, string phasorLabel, string deviceLabel)
                     {
                         if (!string.IsNullOrWhiteSpace(baseKV) && int.TryParse(baseKV, out int value) && value > 0)
-                            return baseKV;
-
-                        string[] commonVoltageLevels = { "69", "115", "230", "345", "500", "765" };
+                            return baseKV;                        
 
                         // Check phasor label before device
-                        for (int i = 0; i < commonVoltageLevels.Length; i++)
+                        foreach (string voltageLevel in s_commonVoltageLevels)
                         {
-                            string voltageLevel = commonVoltageLevels[i];
-
                             if (phasorLabel.IndexOf(voltageLevel) > -1)
                                 return voltageLevel;
                         }
 
-                        for (int i = 0; i < commonVoltageLevels.Length; i++)
+                        foreach (string voltageLevel in s_commonVoltageLevels)
                         {
-                            string voltageLevel = commonVoltageLevels[i];
-
                             if (deviceLabel.IndexOf(voltageLevel) > -1)
                                 return voltageLevel;
                         }
@@ -1205,13 +1202,17 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                     string getPhasorBaseKV(IPhasorDefinition phasor) => guessBaseKV(phasorExists(phasor) ? existingPhasors?[phasor.Index].BaseKV.ToString() : "0", phasor.Label, string.IsNullOrWhiteSpace(existingDevice?.Name) ? existingDevice?.Acronym ?? "" : existingDevice?.Name);
 
+                    string deviceIndex = m_configurationFrame.Cells.Count > 1 ? $" {i + 1:N0}" : "";
+
                     wizardDeviceList.Add(new InputWizardDevice()
                     {
                         Acronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? stationAcronym : existingDevice.Acronym,
-                        Name = string.IsNullOrWhiteSpace(existingDevice?.Name) ? CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName?.ToLower() ?? stationAcronym) : existingDevice.Name,
-                        Longitude = existingDevice == null ? -98.6m : existingDevice.Longitude == null ? -98.6m : (decimal)existingDevice.Longitude,
-                        Latitude = existingDevice == null ? 37.5m : existingDevice.Latitude == null ? 37.5m : (decimal)existingDevice.Latitude,
-                        VendorDeviceID = existingDevice == null ? (int?)null : existingDevice.VendorDeviceID,
+                        Name = string.IsNullOrWhiteSpace(existingDevice?.Name) ? stationName : existingDevice.Name,
+                        ConfigAcronym = $"Device{deviceIndex} label from config: {stationAcronym}{(string.IsNullOrWhiteSpace(cell.IDLabel) ? "" : $" ({cell.IDLabel})")}",
+                        ConfigName = $"Device{deviceIndex} name derived from config: {stationName}",
+                        Longitude = existingDevice?.Longitude ?? -98.6m,
+                        Latitude = existingDevice?.Latitude ?? 37.5m,
+                        VendorDeviceID = existingDevice?.VendorDeviceID,
                         AccessID = cell.IDCode,
                         ParentAccessID = m_configurationFrame.IDCode,
                         Include = true,
@@ -1219,7 +1220,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         AnalogCount = cell.AnalogDefinitions.Count,
                         AddDigitals = cell.DigitalDefinitions.Count > 0,
                         AddAnalogs = cell.AnalogDefinitions.Count > 0,
-                        Existing = (object)existingDevice != null,
+                        Existing = existingDevice != null,
                         DigitalLabels = GetAnalogOrDigitalLables(cell.DigitalDefinitions),
                         AnalogLabels = GetAnalogOrDigitalLables(cell.AnalogDefinitions),
                         PhasorList = new ObservableCollection<InputWizardDevicePhasor>((from phasor in cell.PhasorDefinitions
@@ -1227,6 +1228,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                                                                         {
                                                                                             Label = getPhasorLabel(phasor),
                                                                                             Type = getPhasorType(phasor),
+                                                                                            ConfigLabel = $"Phasor {phasor.Index + 1:N0} label from config: {phasor.Label}",
+                                                                                            ConfigType = $"Phasor {phasor.Index + 1:N0} type from config: {phasor.PhasorType}",
                                                                                             Phase = getPhasorPhase(phasor),
                                                                                             BaseKVInput = getPhasorBaseKV(phasor),
                                                                                             Include = true
@@ -1956,6 +1959,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         // Fields
         private static ManualResetEvent s_responseWaitHandle;
+        private static readonly string[] s_commonVoltageLevels = { "69", "115", "138", "230", "345", "500", "765" };
 
         #endregion
     }

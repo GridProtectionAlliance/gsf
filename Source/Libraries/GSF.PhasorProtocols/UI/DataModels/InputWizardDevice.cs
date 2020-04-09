@@ -41,6 +41,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Fields
         private string m_acronym;
         private string m_name;
+        private string m_configAcronym;
+        private string m_configName;
         private decimal m_longitude;
         private decimal m_latitude;
         private int? m_vendorDeviceId;
@@ -103,6 +105,38 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     m_name = value;
 
                 OnPropertyChanged(nameof(Name));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets acronym from configuration frame.
+        /// </summary>
+        public string ConfigAcronym
+        {
+            get
+            {
+                return m_configAcronym;
+            }
+            set
+            {
+                m_configAcronym = value;
+                OnPropertyChanged(nameof(ConfigAcronym));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets name from configuration frame.
+        /// </summary>
+        public string ConfigName
+        {
+            get
+            {
+                return m_configName;
+            }
+            set
+            {
+                m_configName = value;
+                OnPropertyChanged(nameof(ConfigName));
             }
         }
 
@@ -409,6 +443,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Fields
         private string m_label;
         private string m_type;
+        private string m_configLabel;
+        private string m_configType;
         private string m_phase;
         private string m_baseKVInput;
         //private string m_destinationLabel;
@@ -455,6 +491,38 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_type = value;
                 OnPropertyChanged("Type");
+            }
+        }
+        
+        /// <summary>
+        /// Gets or sets label from configuration frame.
+        /// </summary>
+        public string ConfigLabel
+        {
+            get
+            {
+                return m_configLabel;
+            }
+            set
+            {
+                m_configLabel = value;
+                OnPropertyChanged(nameof(ConfigLabel));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets type from configuration frame.
+        /// </summary>
+        public string ConfigType
+        {
+            get
+            {
+                return m_configType;
+            }
+            set
+            {
+                m_configType = value;
+                OnPropertyChanged(nameof(ConfigType));
             }
         }
 
