@@ -410,6 +410,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_label;
         private string m_type;
         private string m_phase;
+        private int m_baseKV;
         //private string m_destinationLabel;
         private bool m_include;
 
@@ -472,6 +473,23 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_phase = value;
                 OnPropertyChanged("Phase");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets nominal voltage level of line/bus associated with phasor.
+        /// </summary>
+        [DefaultValue(0)]
+        public int BaseKV
+        {
+            get
+            {
+                return m_baseKV;
+            }
+            set
+            {
+                m_baseKV = value;
+                OnPropertyChanged("BaseKV");
             }
         }
 
