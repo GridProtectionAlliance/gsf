@@ -53,7 +53,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Creates an instance of <see cref="Phasors"/> class.
         /// </summary>
-        /// <param name="deviceID">ID of teh device to fileter phasors.</param>
+        /// <param name="deviceID">ID of the device to filter phasors.</param>
         /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
         /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
         public Phasors(int deviceID, int itemsPerPage, bool autoSave = true)
@@ -70,6 +70,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             m_phaseLookupList.Add("B", "Phase B");
             m_phaseLookupList.Add("C", "Phase C");
             m_phaseLookupList.Add("L", "Line-to-line");
+            m_phaseLookupList.Add("N", "Neutral");
 
             m_typeLookupList = new Dictionary<string, string>();
             m_typeLookupList.Add("V", "Voltage");
