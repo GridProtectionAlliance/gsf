@@ -831,7 +831,38 @@ namespace PhasorWebUI
 
         public int GetProtocolID(string protocolAcronym)
         {
-            return DataContext.Table<Protocol>().QueryRecordWhere("Acronym = {0}", protocolAcronym).ID;
+            if (Enum.TryParse(protocolAcronym, out PhasorProtocol protocol))
+                return DataContext.Table<Protocol>().QueryRecordWhere("Acronym = {0}", protocol.ToString())?.ID ??
+                       DataContext.Table<Protocol>().QueryRecordWhere("Acronym = {0}", GetOldProtocolName(protocol))?.ID ?? 0;
+
+            return 0;
+        }
+
+        private static string GetOldProtocolName(PhasorProtocol protocol)
+        {
+            switch (protocol)
+            {
+                case PhasorProtocol.IEEEC37_118V2:
+                    return "IeeeC37_118V2";
+                case PhasorProtocol.IEEEC37_118V1:
+                    return "IeeeC37_118V1";
+                case PhasorProtocol.IEEEC37_118D6:
+                    return "IeeeC37_118D6";
+                case PhasorProtocol.IEEE1344:
+                    return "Ieee1344";
+                case PhasorProtocol.BPAPDCstream:
+                    return "BpaPdcStream";
+                case PhasorProtocol.FNET:
+                    return "FNet";
+                case PhasorProtocol.SelFastMessage:
+                    return "SelFastMessage";
+                case PhasorProtocol.Macrodyne:
+                    return "Macrodyne";
+                case PhasorProtocol.IEC61850_90_5:
+                    return "Iec61850_90_5";
+                default:
+                    return protocol.ToString();
+            }
         }
 
         public string GetProtocolCategory(int protocolID)
