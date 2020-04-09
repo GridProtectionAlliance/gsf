@@ -81,6 +81,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private string m_connectionString;
         private string m_alternateCommandChannel;
         private int m_accessID;
+        private int m_deviceID;
+        private string m_deviceAcronym;
         private int m_protocolID;
         private string m_protocolAcronym;
         private bool m_connectToConcentrator;
@@ -388,6 +390,38 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 m_accessID = value;
                 OnPropertyChanged(nameof(AccessID));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets device ID.
+        /// </summary>
+        public int DeviceID
+        {
+            get
+            {
+                return m_deviceID;
+            }
+            set
+            {
+                m_deviceID = value;
+                OnPropertyChanged(nameof(DeviceID));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets device acronym.
+        /// </summary>
+        public string DeviceAcronym
+        {
+            get
+            {
+                return m_deviceAcronym;
+            }
+            set
+            {
+                m_deviceAcronym = value;
+                OnPropertyChanged(nameof(DeviceAcronym));
             }
         }
 
@@ -1090,12 +1124,91 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 foreach (IConfigurationCell cell in m_configurationFrame.Cells)
                 {
-                    Device existingDevice = Device.GetDevice(null, "WHERE Acronym = '" + cell.StationName.Replace(" ", "_").Replace("'", "").ToUpper() + "'");
+                    Device existingDevice = null;
+                    string stationAcronym = cell.StationName?.Replace(" ", "_").Replace("'", "").ToUpper() ?? "UNDEFINED";
+                    string deviceAcronym = string.IsNullOrWhiteSpace(DeviceAcronym) ? stationAcronym : DeviceAcronym;
+
+                    if (DeviceID > 0)
+                        existingDevice = Device.GetDevice(null, $"WHERE ID = {DeviceID}");
+
+                    if (existingDevice == null)
+                        existingDevice = Device.GetDevice(null, $"WHERE Acronym = '{deviceAcronym}'");
+
+                    Dictionary<int, Phasor> existingPhasors = null;
+
+                    if (existingDevice?.ID > 0)
+                        existingPhasors = Phasor.Load(null, Phasor.LoadKeys(null, existingDevice.ID)).ToDictionary(phasor => phasor.SourceIndex - 1, phasor => phasor);
+
+                    string guessPhase(string phase, string phasorLabel)
+                    {
+                        if (!string.IsNullOrWhiteSpace(phase) && phase != "+")
+                            return phase;
+
+                        if (phasorLabel.IndexOf("_VA") > -1 || phasorLabel.IndexOf("_IA") > -1 || phasorLabel.IndexOf(" A ") > -1 || phasorLabel.IndexOf(" APV") > -1 || phasorLabel.IndexOf(" API") > -1 || phasorLabel.IndexOf("VA ") > -1 || phasorLabel.IndexOf("IA ") > -1 || phasorLabel.IndexOf("VAPM") > -1 || phasorLabel.IndexOf("IAPM") > -1 || phasorLabel.IndexOf(".AV") > -1 || phasorLabel.IndexOf(".AI") > -1)
+                            return "A";
+
+                        if (phasorLabel.IndexOf("_VB") > -1 || phasorLabel.IndexOf("_IB") > -1 || phasorLabel.IndexOf(" B ") > -1 || phasorLabel.IndexOf(" BPV") > -1 || phasorLabel.IndexOf(" BPI") > -1 || phasorLabel.IndexOf("VB ") > -1 || phasorLabel.IndexOf("IB ") > -1 || phasorLabel.IndexOf("VBPM") > -1 || phasorLabel.IndexOf("IBPM") > -1 || phasorLabel.IndexOf(".BV") > -1 || phasorLabel.IndexOf(".BI") > -1)
+                            return "B";
+
+                        if (phasorLabel.IndexOf("_VC") > -1 || phasorLabel.IndexOf("_IC") > -1 || phasorLabel.IndexOf(" C ") > -1 || phasorLabel.IndexOf(" CPV") > -1 || phasorLabel.IndexOf(" CPI") > -1 || phasorLabel.IndexOf("VC ") > -1 || phasorLabel.IndexOf("IC ") > -1 || phasorLabel.IndexOf("VCPM") > -1 || phasorLabel.IndexOf("ICPM") > -1 || phasorLabel.IndexOf(".CV") > -1 || phasorLabel.IndexOf(".CI") > -1)
+                            return "C";
+
+                        if (phasorLabel.IndexOf("_VN") > -1 || phasorLabel.IndexOf("_IN") > -1 || phasorLabel.IndexOf(" NEUT ") > -1 || phasorLabel.IndexOf(" NPV") > -1 || phasorLabel.IndexOf(" NPI") > -1 || phasorLabel.IndexOf("VN ") > -1 || phasorLabel.IndexOf("IN ") > -1 || phasorLabel.IndexOf("VNPM") > -1 || phasorLabel.IndexOf("INPM") > -1 || phasorLabel.IndexOf(".NV") > -1 || phasorLabel.IndexOf(".NI") > -1)
+                            return "N";
+
+                        if (phasorLabel.IndexOf("_V0") > -1 || phasorLabel.IndexOf("_I0") > -1 || phasorLabel.IndexOf(" ZERO ") > -1 || phasorLabel.IndexOf(" ZPV") > -1 || phasorLabel.IndexOf(" ZPI") > -1 || phasorLabel.IndexOf("VZ ") > -1 || phasorLabel.IndexOf("IZ ") > -1 || phasorLabel.IndexOf("VZPM") > -1 || phasorLabel.IndexOf("IZPM") > -1 || phasorLabel.IndexOf(".ZV") > -1 || phasorLabel.IndexOf(".ZI") > -1 || phasorLabel.IndexOf("_ZS") > -1)
+                            return "0";
+
+                        if (phasorLabel.IndexOf("_V2") > -1 || phasorLabel.IndexOf("_I2") > -1 || phasorLabel.IndexOf(" NEG ") > -1 || phasorLabel.IndexOf(" -SV") > -1 || phasorLabel.IndexOf(" -SI") > -1 || phasorLabel.IndexOf("V2 ") > -1 || phasorLabel.IndexOf("I2 ") > -1 || phasorLabel.IndexOf("V2PM") > -1 || phasorLabel.IndexOf("I2PM") > -1 || phasorLabel.IndexOf(".-V") > -1 || phasorLabel.IndexOf(".-I") > -1 || phasorLabel.IndexOf("_NS") > -1)
+                            return "-";
+
+                        if (phasorLabel.IndexOf("_V1") > -1 || phasorLabel.IndexOf("_I1") > -1 || phasorLabel.IndexOf(" POS ") > -1 || phasorLabel.IndexOf(" +SV") > -1 || phasorLabel.IndexOf(" +SI") > -1 || phasorLabel.IndexOf(" SI") > -1 || phasorLabel.IndexOf("V1 ") > -1 || phasorLabel.IndexOf("I1 ") > -1 || phasorLabel.IndexOf("V1PM") > -1 || phasorLabel.IndexOf("I1PM") > -1 || phasorLabel.IndexOf(".+V") > -1 || phasorLabel.IndexOf(".+I") > -1 || phasorLabel.IndexOf("_PS") > -1)
+                            return "+";
+
+                        return string.IsNullOrWhiteSpace(phase) ? "?" : phase;
+                    }
+
+                    string guessBaseKV(string baseKV, string phasorLabel, string deviceLabel)
+                    {
+                        if (!string.IsNullOrWhiteSpace(baseKV) && int.TryParse(baseKV, out int value) && value > 0)
+                            return baseKV;
+
+                        string[] commonVoltageLevels = { "69", "115", "230", "345", "500", "765" };
+
+                        // Check phasor label before device
+                        for (int i = 0; i < commonVoltageLevels.Length; i++)
+                        {
+                            string voltageLevel = commonVoltageLevels[i];
+
+                            if (phasorLabel.IndexOf(voltageLevel) > -1)
+                                return voltageLevel;
+                        }
+
+                        for (int i = 0; i < commonVoltageLevels.Length; i++)
+                        {
+                            string voltageLevel = commonVoltageLevels[i];
+
+                            if (deviceLabel.IndexOf(voltageLevel) > -1)
+                                return voltageLevel;
+                        }
+
+                        return "0";
+                    }
+
+                    bool phasorExists(IPhasorDefinition phasor) => phasor != null && (existingPhasors?.ContainsKey(phasor.Index) ?? false);
+
+                    string getPhasorLabel(IPhasorDefinition phasor) => phasorExists(phasor) ? existingPhasors?[phasor.Index].Label : phasor.Label;
+
+                    string getPhasorType(IPhasorDefinition phasor) => phasorExists(phasor) ? existingPhasors?[phasor.Index].Type : phasor.PhasorType == PhasorType.Current ? "I" : "V";
+
+                    string getPhasorPhase(IPhasorDefinition phasor) => guessPhase(phasorExists(phasor) ? existingPhasors?[phasor.Index].Phase : "+", phasor.Label);
+
+                    string getPhasorBaseKV(IPhasorDefinition phasor) => guessBaseKV(phasorExists(phasor) ? existingPhasors?[phasor.Index].BaseKV.ToString() : "0", phasor.Label, string.IsNullOrWhiteSpace(existingDevice?.Name) ? existingDevice?.Acronym ?? "" : existingDevice?.Name);
 
                     wizardDeviceList.Add(new InputWizardDevice()
                     {
-                        Acronym = cell.StationName.Replace(" ", "_").Replace("'", "").ToUpper(),
-                        Name = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName.ToLower()),
+                        Acronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? stationAcronym : existingDevice.Acronym,
+                        Name = string.IsNullOrWhiteSpace(existingDevice?.Name) ? CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName?.ToLower() ?? stationAcronym) : existingDevice.Name,
                         Longitude = existingDevice == null ? -98.6m : existingDevice.Longitude == null ? -98.6m : (decimal)existingDevice.Longitude,
                         Latitude = existingDevice == null ? 37.5m : existingDevice.Latitude == null ? 37.5m : (decimal)existingDevice.Latitude,
                         VendorDeviceID = existingDevice == null ? (int?)null : existingDevice.VendorDeviceID,
@@ -1112,10 +1225,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         PhasorList = new ObservableCollection<InputWizardDevicePhasor>((from phasor in cell.PhasorDefinitions
                                                                                         select new InputWizardDevicePhasor()
                                                                                         {
-                                                                                            Label = phasor.Label,
-                                                                                            Type = phasor.PhasorType == PhasorType.Current ? "I" : "V",
-                                                                                            Phase = "+",
-                                                                                            //DestinationLabel = "",
+                                                                                            Label = getPhasorLabel(phasor),
+                                                                                            Type = getPhasorType(phasor),
+                                                                                            Phase = getPhasorPhase(phasor),
+                                                                                            BaseKVInput = getPhasorBaseKV(phasor),
                                                                                             Include = true
                                                                                         }).ToList())
                     });
@@ -1626,6 +1739,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 oldPhasor.SourceIndex = index + 1;
                                 oldPhasor.Type = inputPhasor.Type;
                                 oldPhasor.Phase = inputPhasor.Phase;
+                                oldPhasor.BaseKV = inputPhasor.BaseKV;
                                 Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
 
                                 // Remove phasor from the sets of unsaved phasors
@@ -1651,6 +1765,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                     oldPhasor.Label = inputPhasor.Label;
                                     oldPhasor.Type = inputPhasor.Type;
                                     oldPhasor.Phase = inputPhasor.Phase;
+                                    oldPhasor.BaseKV = inputPhasor.BaseKV;
                                     Phasor.Save(database, oldPhasor);
 
                                     // Remove phasor from the sets of unsaved phasors
@@ -1675,6 +1790,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             oldPhasor.Label = inputPhasor.Label;
                             oldPhasor.Type = inputPhasor.Type;
                             oldPhasor.Phase = inputPhasor.Phase;
+                            oldPhasor.BaseKV = inputPhasor.BaseKV;
                             Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
 
                             // Remove phasor from the sets of unsaved phasors
@@ -1701,6 +1817,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 oldPhasor.Label = inputPhasor.Label;
                                 oldPhasor.Type = inputPhasor.Type;
                                 oldPhasor.Phase = inputPhasor.Phase;
+                                oldPhasor.BaseKV = inputPhasor.BaseKV;
                                 Phasor.Save(database, oldPhasor);
                             }
                         }

@@ -410,7 +410,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_label;
         private string m_type;
         private string m_phase;
-        private int m_baseKV;
+        private string m_baseKVInput;
         //private string m_destinationLabel;
         private bool m_include;
 
@@ -477,19 +477,31 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets nominal voltage level of line/bus associated with phasor.
+        /// Gets base kV integer value, i.e., nominal voltage level of line/bus associated with phasor.
         /// </summary>
-        [DefaultValue(0)]
-        public int BaseKV
+        public int BaseKV { get; private set; }
+
+        /// <summary>
+        /// Gets or sets basekV string based binding value.
+        /// </summary>
+        [DefaultValue("0")]
+        [RegularExpression("^[0-9]*$", ErrorMessage = "Base kV must be an integer")]
+        public string BaseKVInput
         {
             get
             {
-                return m_baseKV;
+                return m_baseKVInput;
             }
             set
             {
-                m_baseKV = value;
-                OnPropertyChanged("BaseKV");
+                if (int.TryParse(value, out int baseKV))
+                    BaseKV = baseKV;
+                else
+                    BaseKV = 0;
+
+                m_baseKVInput = value;
+
+                OnPropertyChanged("BaseKVInput");
             }
         }
 

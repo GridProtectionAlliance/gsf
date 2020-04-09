@@ -75,6 +75,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_dataContext.CompanyID = device.CompanyID ?? 0;
                 m_dataContext.HistorianID = device.HistorianID ?? 0;
                 m_dataContext.InterconnectionID = device.InterconnectionID ?? 0;
+                m_dataContext.DeviceID = device.ID;
+                m_dataContext.DeviceAcronym = device.Acronym;
 
                 if (device.IsConcentrator)
                 {

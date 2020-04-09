@@ -347,6 +347,13 @@
                                             </DataTemplate>
                                         </sdk:DataGridTemplateColumn.CellTemplate>
                                     </sdk:DataGridTemplateColumn>
+                                    <sdk:DataGridTemplateColumn Header="Base kV" Width="3*">
+                                        <sdk:DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{tsfBinding:Column Path=BaseKVInput}" Margin="0" Width="{StaticResource XXSmallItemSize}" MaxLength="4"/>
+                                            </DataTemplate>
+                                        </sdk:DataGridTemplateColumn.CellTemplate>
+                                    </sdk:DataGridTemplateColumn>
                                 </sdk:DataGrid.Columns>
                             </sdk:DataGrid>
                         </DataTemplate>
