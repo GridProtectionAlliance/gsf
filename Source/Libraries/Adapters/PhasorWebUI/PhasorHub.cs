@@ -831,7 +831,7 @@ namespace PhasorWebUI
 
         public int GetProtocolID(string protocolAcronym)
         {
-            if (Enum.TryParse(protocolAcronym, out PhasorProtocol protocol))
+            if (Enum.TryParse(protocolAcronym, true, out PhasorProtocol protocol))
                 return DataContext.Table<Protocol>().QueryRecordWhere("Acronym = {0}", protocol.ToString())?.ID ??
                        DataContext.Table<Protocol>().QueryRecordWhere("Acronym = {0}", GetOldProtocolName(protocol))?.ID ?? 0;
 
