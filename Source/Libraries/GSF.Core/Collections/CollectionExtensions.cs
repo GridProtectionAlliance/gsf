@@ -78,14 +78,14 @@ namespace GSF.Collections
         /// </summary>
         /// <typeparam name="T">Type of array.</typeparam>
         /// <param name="source">Source array.</param>
-        /// <param name="columnIndex">Column index, 0 or 1, to retrieve.</param>
+        /// <param name="columnIndex">Column index, i.e., dimension zero value, to retrieve.</param>
         /// <returns>Values from specified <paramref name="columnIndex"/>.</returns>
         public static IEnumerable<T> GetColumn<T>(this T[,] source, int columnIndex)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            if (columnIndex < 0 || columnIndex > 1)
+            if (columnIndex < 0 || source.GetLength(0) > 1)
                 throw new ArgumentOutOfRangeException(nameof(columnIndex));
             
             int length = source.GetLength(1);
