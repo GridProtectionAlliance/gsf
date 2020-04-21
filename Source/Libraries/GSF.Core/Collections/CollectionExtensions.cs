@@ -74,24 +74,45 @@ namespace GSF.Collections
     public static class CollectionExtensions
     {
         /// <summary>
+        /// Gets a row of data out of a 2-dimensional array.
+        /// </summary>
+        /// <typeparam name="T">Type of array.</typeparam>
+        /// <param name="source">Source array.</param>
+        /// <param name="rowIndex">Row index, i.e., dimension zero value, to retrieve.</param>
+        /// <returns>Values from specified <paramref name="rowIndex"/>.</returns>
+        public static IEnumerable<T> GetRow<T>(this T[,] source, int rowIndex)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (rowIndex < 0 || source.GetLength(0) > 1)
+                throw new ArgumentOutOfRangeException(nameof(rowIndex));
+
+            int length = source.GetLength(1);
+
+            for (int i = 0; i < length; i++)
+                yield return source[rowIndex, i];
+        }
+
+        /// <summary>
         /// Gets a column of data out of a 2-dimensional array.
         /// </summary>
         /// <typeparam name="T">Type of array.</typeparam>
         /// <param name="source">Source array.</param>
-        /// <param name="columnIndex">Column index, i.e., dimension zero value, to retrieve.</param>
+        /// <param name="columnIndex">Column index, i.e., dimension one value, to retrieve.</param>
         /// <returns>Values from specified <paramref name="columnIndex"/>.</returns>
         public static IEnumerable<T> GetColumn<T>(this T[,] source, int columnIndex)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            if (columnIndex < 0 || source.GetLength(0) > 1)
+            if (columnIndex < 0 || source.GetLength(1) > 1)
                 throw new ArgumentOutOfRangeException(nameof(columnIndex));
             
-            int length = source.GetLength(1);
+            int length = source.GetLength(0);
 
             for (int i = 0; i < length; i++)
-                yield return source[columnIndex, i];
+                yield return source[i, columnIndex];
         }
 
         /// <summary>
