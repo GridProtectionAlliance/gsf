@@ -170,13 +170,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets flag that determines if <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/> is a new record.
         /// </summary>
-        public override bool IsNewRecord
-        {
-            get
-            {
-                return string.IsNullOrEmpty(CurrentItem.Acronym);
-            }
-        }
+        public override bool IsNewRecord => CurrentItem.ID == 0; // string.IsNullOrEmpty(CurrentItem.Acronym);
 
         /// <summary>
         /// Gets or sets flag that determines whether the wizard steps are enabled.
@@ -293,57 +287,27 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Company"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> CompanyLookupList
-        {
-            get
-            {
-                return m_companyLookupList;
-            }
-        }
+        public Dictionary<int, string> CompanyLookupList => m_companyLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Historian"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> HistorianLookupList
-        {
-            get
-            {
-                return m_historianLookupList;
-            }
-        }
+        public Dictionary<int, string> HistorianLookupList => m_historianLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Interconnection"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> InterconnectionLookupList
-        {
-            get
-            {
-                return m_interconnectionLookupList;
-            }
-        }
+        public Dictionary<int, string> InterconnectionLookupList => m_interconnectionLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Protocol"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> ProtocolLookupList
-        {
-            get
-            {
-                return m_protocolLookupList;
-            }
-        }
+        public Dictionary<int, string> ProtocolLookupList => m_protocolLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="VendorDevice"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> VendorDeviceLookupList
-        {
-            get
-            {
-                return m_vendorDeviceLookupList;
-            }
-        }
+        public Dictionary<int, string> VendorDeviceLookupList => m_vendorDeviceLookupList;
 
         /// <summary>
         /// Gets or sets connection string to backend service.
@@ -693,112 +657,52 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets <see cref="ICommand"/> to launch the wizard walkthrough.
         /// </summary>
-        public ICommand LaunchWalkthroughCommand
-        {
-            get
-            {
-                return m_launchWalkthroughCommand ?? (m_launchWalkthroughCommand = new RelayCommand(LaunchWalkthrough));
-            }
-        }
+        public ICommand LaunchWalkthroughCommand => m_launchWalkthroughCommand ?? (m_launchWalkthroughCommand = new RelayCommand(LaunchWalkthrough));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to connection file.
         /// </summary>
-        public ICommand BrowseConnectionFileCommand
-        {
-            get
-            {
-                return m_browseConnectionFileCommand ?? (m_browseConnectionFileCommand = new RelayCommand(BrowseConnectionFile, () => CanSave));
-            }
-        }
+        public ICommand BrowseConnectionFileCommand => m_browseConnectionFileCommand ?? (m_browseConnectionFileCommand = new RelayCommand(BrowseConnectionFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to build connection string.
         /// </summary>
-        public ICommand BuildConnectionStringCommand
-        {
-            get
-            {
-                return m_buildConnectionStringCommand ?? (m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, () => CanSave));
-            }
-        }
+        public ICommand BuildConnectionStringCommand => m_buildConnectionStringCommand ?? (m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to build alternate command channel.
         /// </summary>
-        public ICommand BuildAlternateCommandChannelCommand
-        {
-            get
-            {
-                return m_buildAlternateCommandChannelCommand ?? (m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, () => CanSave));
-            }
-        }
+        public ICommand BuildAlternateCommandChannelCommand => m_buildAlternateCommandChannelCommand ?? (m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to INI file.
         /// </summary>
-        public ICommand BrowseIniFileCommand
-        {
-            get
-            {
-                return m_browseIniFileCommand ?? (m_browseIniFileCommand = new RelayCommand(BrowseIniFile, () => CanSave));
-            }
-        }
+        public ICommand BrowseIniFileCommand => m_browseIniFileCommand ?? (m_browseIniFileCommand = new RelayCommand(BrowseIniFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to configuration file.
         /// </summary>
-        public ICommand BrowseConfigurationFileCommand
-        {
-            get
-            {
-                return m_browseConfigurationFileCommand ?? (m_browseConfigurationFileCommand = new RelayCommand(BrowseConfigurationFile, () => CanSave));
-            }
-        }
+        public ICommand BrowseConfigurationFileCommand => m_browseConfigurationFileCommand ?? (m_browseConfigurationFileCommand = new RelayCommand(BrowseConfigurationFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to request configuration frame from backed service.
         /// </summary>
-        public ICommand RequestConfigurationCommand
-        {
-            get
-            {
-                return m_requestConfigurationCommand ?? (m_requestConfigurationCommand = new RelayCommand(RequestConfiguration, () => CanSave));
-            }
-        }
+        public ICommand RequestConfigurationCommand => m_requestConfigurationCommand ?? (m_requestConfigurationCommand = new RelayCommand(RequestConfiguration, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to cancel a configuration frame request.
         /// </summary>
-        public ICommand CancelConfigurationRequestCommand
-        {
-            get
-            {
-                return m_cancelConfigurationRequestCommand ?? (m_cancelConfigurationRequestCommand = new RelayCommand(CancelConfigurationRequest));
-            }
-        }
+        public ICommand CancelConfigurationRequestCommand => m_cancelConfigurationRequestCommand ?? (m_cancelConfigurationRequestCommand = new RelayCommand(CancelConfigurationRequest));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to save current configuration to XML file.
         /// </summary>
-        public ICommand SaveConfigurationFileCommand
-        {
-            get
-            {
-                return m_saveConfigurationFileCommand ?? (m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, () => CanSave));
-            }
-        }
+        public ICommand SaveConfigurationFileCommand => m_saveConfigurationFileCommand ?? (m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to create or update configuration manually.
         /// </summary>
-        public ICommand ManualConfigurationCommand
-        {
-            get
-            {
-                return m_manualConfigurationCommand ?? (m_manualConfigurationCommand = new RelayCommand(ManualConfiguration, () => CanSave));
-            }
-        }
+        public ICommand ManualConfigurationCommand => m_manualConfigurationCommand ?? (m_manualConfigurationCommand = new RelayCommand(ManualConfiguration, () => CanSave));
 
         /// <summary>
         /// Gets or sets summary message to be displayed on UI after parsing configuration file or frame.
@@ -819,13 +723,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets boolean flag indicating if configuration can be saved or not.
         /// </summary>
-        public override bool CanSave
-        {
-            get
-            {
-                return CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor");
-            }
-        }
+        public override bool CanSave => CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor");
 
         /// <summary>
         /// Gets or sets ID of the device in case where configuration is being updated.
@@ -845,13 +743,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets a flag indicating if current device was disconnected before requesting configuration.
         /// </summary>
-        public bool DisconnectedCurrentDevice
-        {
-            get
-            {
-                return m_disconnectedCurrentDevice;
-            }
-        }
+        public bool DisconnectedCurrentDevice => m_disconnectedCurrentDevice;
 
         /// <summary>
         /// Gets or sets a flag indicating whether the wizard was launched in
@@ -1170,6 +1062,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                     wizardDeviceList.Add(new InputWizardDevice()
                     {
+                        ID = deviceID,
                         Acronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? stationAcronym : existingDevice.Acronym,
                         Name = string.IsNullOrWhiteSpace(existingDevice?.Name) ? stationName : existingDevice.Name,
                         ConfigAcronym = $"Device{deviceIndex} label from config: {stationAcronym}{(string.IsNullOrWhiteSpace(cell.IDLabel) ? "" : $" ({cell.IDLabel})")}",
@@ -1581,21 +1474,24 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 if (ConnectToConcentrator && (PdcID == null || PdcID == 0))
                 {
-                    Device device = new Device();
-                    device.IsConcentrator = true;
-                    device.Acronym = PdcAcronym.ToUpper();
-                    device.Name = PdcName;
-                    device.ParentID = null;
-                    device.AccessID = AccessID;
-                    device.CompanyID = CompanyID == 0 ? (int?)null : CompanyID;
-                    device.HistorianID = HistorianID == 0 ? (int?)null : HistorianID;
-                    device.ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID;
-                    device.InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID;
-                    device.VendorDeviceID = PdcVendorDeviceID == 0 ? (int?)null : PdcVendorDeviceID;
-                    device.FramesPerSecond = PdcFrameRate;
-                    device.SkipDisableRealTimeData = SkipDisableRealTimeData;
-                    device.ConnectionString = GenerateConnectionString();
-                    device.Enabled = true;
+                    Device device = new Device
+                    {
+                        IsConcentrator = true,
+                        Acronym = PdcAcronym.ToUpper(),
+                        Name = PdcName,
+                        ParentID = null,
+                        AccessID = AccessID,
+                        CompanyID = CompanyID == 0 ? (int?)null : CompanyID,
+                        HistorianID = HistorianID == 0 ? (int?)null : HistorianID,
+                        ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID,
+                        InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID,
+                        VendorDeviceID = PdcVendorDeviceID == 0 ? (int?)null : PdcVendorDeviceID,
+                        FramesPerSecond = PdcFrameRate,
+                        SkipDisableRealTimeData = SkipDisableRealTimeData,
+                        ConnectionString = GenerateConnectionString(),
+                        Enabled = true
+                    };
+
                     Device.SaveWithAnalogsDigitals(null, device, false, 0, 0);
 
                     device = Device.GetDevice(null, $"WHERE Acronym = '{PdcAcronym.ToUpper()}'");
@@ -1630,13 +1526,18 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     if (inputWizardDevice.Include)
                     {
                         // Included NodeID to find devices
-                        Device device = Device.GetDevice(database, $"WHERE Acronym = '{inputWizardDevice.Acronym.ToUpper()}' and NodeID = '{database.CurrentNodeID()}'");
+                        Device device = null;
+
+                        if (inputWizardDevice.ID > 0)
+                            device = Device.GetDevice(database, $"WHERE ID = {inputWizardDevice.ID}");
 
                         if (device == null)
-                        {
-                            device = new Device();
+                            device = Device.GetDevice(database, $"WHERE Acronym = '{inputWizardDevice.Acronym.ToUpper()}' AND NodeID = '{database.CurrentNodeID()}'");
+                        else
                             device.Acronym = inputWizardDevice.Acronym.ToUpper();
-                        }
+
+                        if (device == null)
+                            device = new Device { Acronym = inputWizardDevice.Acronym.ToUpper() };
 
                         device.Name = inputWizardDevice.Name;
                         device.CompanyID = CompanyID == 0 ? (int?)null : CompanyID;
@@ -1675,7 +1576,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         }
 
                         if (device.ID == 0)
+                        {
                             device.ID = Device.GetDevice(database, $"WHERE Acronym = '{inputWizardDevice.Acronym.ToUpper()}'").ID;
+                            inputWizardDevice.ID = device.ID;
+                        }
 
                         IList<InputWizardDevicePhasor> inputPhasorList = inputWizardDevice.PhasorList;
                         HashSet<InputWizardDevicePhasor> unsavedInputPhasorSet = new HashSet<InputWizardDevicePhasor>(inputWizardDevice.PhasorList);
