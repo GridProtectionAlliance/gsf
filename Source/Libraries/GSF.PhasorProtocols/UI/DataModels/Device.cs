@@ -47,7 +47,9 @@ using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using GSF.ComponentModel.DataAnnotations;
+using GSF.Configuration;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.TimeSeries.UI;
 using PhasorProtocolAdapters;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
@@ -153,10 +155,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Device node ID is a required field, please provide value.")]
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -170,14 +169,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
+            get => m_id;
+            set => m_id = value;
         }
 
         /// <summary>
@@ -186,10 +179,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public int? ParentID
         {
-            get
-            {
-                return m_parentID;
-            }
+            get => m_parentID;
             set
             {
                 m_parentID = value;
@@ -202,10 +192,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public Guid UniqueID
         {
-            get
-            {
-                return m_uniqueID;
-            }
+            get => m_uniqueID;
             set
             {
                 m_uniqueID = value;
@@ -221,10 +208,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [AcronymValidation]
         public string Acronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value.Replace("'", "").Replace(" ", "_").ToUpper();
@@ -241,10 +225,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Device Name cannot exceed 200 characters.")]
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 if ((object)value != null && value.Length > 200)
@@ -258,13 +239,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets <see cref="Device"/> Original Source.
         /// </summary>        
-        public string OriginalSource
-        {
-            get
-            {
-                return m_originalSource;
-            }
-        }
+        public string OriginalSource => m_originalSource;
 
         /// <summary>
         ///  Gets or sets <see cref="Device"/> IsConcenttrator.
@@ -272,10 +247,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(false)]
         public bool IsConcentrator
         {
-            get
-            {
-                return m_isConcentrator;
-            }
+            get => m_isConcentrator;
             set
             {
                 m_isConcentrator = value;
@@ -291,10 +263,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public int? CompanyID
         {
-            get
-            {
-                return m_companyID;
-            }
+            get => m_companyID;
             set
             {
                 m_companyID = value;
@@ -308,10 +277,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public int? HistorianID
         {
-            get
-            {
-                return m_historianID;
-            }
+            get => m_historianID;
             set
             {
                 m_historianID = value;
@@ -326,10 +292,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(0)]
         public int AccessID
         {
-            get
-            {
-                return m_accessID;
-            }
+            get => m_accessID;
             set
             {
                 m_accessID = value;
@@ -343,10 +306,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public int? VendorDeviceID
         {
-            get
-            {
-                return m_vendorDeviceID;
-            }
+            get => m_vendorDeviceID;
             set
             {
                 m_vendorDeviceID = value;
@@ -360,10 +320,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public int? ProtocolID
         {
-            get
-            {
-                return m_protocolID;
-            }
+            get => m_protocolID;
             set
             {
                 m_protocolID = value;
@@ -378,10 +335,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
         public decimal? Longitude
         {
-            get
-            {
-                return m_longitude;
-            }
+            get => m_longitude;
             set
             {
                 m_longitude = value?.Normalize();
@@ -396,10 +350,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
         public decimal? Latitude
         {
-            get
-            {
-                return m_latitude;
-            }
+            get => m_latitude;
             set
             {
                 m_latitude = value?.Normalize();
@@ -413,10 +364,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public int? InterconnectionID
         {
-            get
-            {
-                return m_interconnectionID;
-            }
+            get => m_interconnectionID;
             set
             {
                 m_interconnectionID = value;
@@ -430,10 +378,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public string ConnectionString
         {
-            get
-            {
-                return m_connectionString;
-            }
+            get => m_connectionString;
             set
             {
                 m_connectionString = value;
@@ -447,10 +392,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Device Time Zone cannot exceed 200 characters.")]
         public string TimeZone
         {
-            get
-            {
-                return m_timeZone;
-            }
+            get => m_timeZone;
             set
             {
                 m_timeZone = value;
@@ -464,10 +406,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(30)]
         public int? FramesPerSecond
         {
-            get
-            {
-                return m_framesPerSecond;
-            }
+            get => m_framesPerSecond;
             set
             {
                 m_framesPerSecond = value;
@@ -482,10 +421,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(0L)]
         public long TimeAdjustmentTicks
         {
-            get
-            {
-                return m_timeAdjustmentTicks;
-            }
+            get => m_timeAdjustmentTicks;
             set
             {
                 m_timeAdjustmentTicks = value;
@@ -500,10 +436,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(typeof(double), "5")]
         public double DataLossInterval
         {
-            get
-            {
-                return m_dataLossInterval;
-            }
+            get => m_dataLossInterval;
             set
             {
                 m_dataLossInterval = value;
@@ -518,10 +451,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(false)]
         public bool ConnectOnDemand
         {
-            get
-            {
-                return m_connectOnDemand;
-            }
+            get => m_connectOnDemand;
             set
             {
                 m_connectOnDemand = value;
@@ -535,10 +465,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public string ContactList
         {
-            get
-            {
-                return m_contactList;
-            }
+            get => m_contactList;
             set
             {
                 m_contactList = value;
@@ -552,10 +479,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public int? MeasuredLines
         {
-            get
-            {
-                return m_measuredLines;
-            }
+            get => m_measuredLines;
             set
             {
                 m_measuredLines = value;
@@ -570,10 +494,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(0)]
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -587,10 +508,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(false)]
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
@@ -605,10 +523,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(10)]
         public int AllowedParsingExceptions
         {
-            get
-            {
-                return m_allowedParsingExceptions;
-            }
+            get => m_allowedParsingExceptions;
             set
             {
                 m_allowedParsingExceptions = value;
@@ -623,10 +538,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(5.0D)]
         public double ParsingExceptionWindow
         {
-            get
-            {
-                return m_parsingExceptionWindow;
-            }
+            get => m_parsingExceptionWindow;
             set
             {
                 m_parsingExceptionWindow = value;
@@ -641,10 +553,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(5.0D)]
         public double DelayedConnectionInterval
         {
-            get
-            {
-                return m_delayedConnectionInterval;
-            }
+            get => m_delayedConnectionInterval;
             set
             {
                 m_delayedConnectionInterval = value;
@@ -658,10 +567,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(true)]
         public bool AllowUseOfCachedConfiguration
         {
-            get
-            {
-                return m_allowUseOfCachedConfiguration;
-            }
+            get => m_allowUseOfCachedConfiguration;
             set
             {
                 m_allowUseOfCachedConfiguration = value;
@@ -676,10 +582,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(true)]
         public bool AutoStartDataParsingSequence
         {
-            get
-            {
-                return m_autoStartDataParsingSequence;
-            }
+            get => m_autoStartDataParsingSequence;
             set
             {
                 m_autoStartDataParsingSequence = value;
@@ -693,10 +596,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(false)]
         public bool SkipDisableRealTimeData
         {
-            get
-            {
-                return m_skipDisableRealTimeData;
-            }
+            get => m_skipDisableRealTimeData;
             set
             {
                 m_skipDisableRealTimeData = value;
@@ -711,10 +611,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(100000)]
         public int MeasurementReportingInterval
         {
-            get
-            {
-                return m_measurementReportingInterval;
-            }
+            get => m_measurementReportingInterval;
             set
             {
                 m_measurementReportingInterval = value;
@@ -725,112 +622,52 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets <see cref="Device"/> CompanyName.
         /// </summary>
-        public string CompanyName
-        {
-            get
-            {
-                return m_companyName;
-            }
-        }
+        public string CompanyName => m_companyName;
 
         /// <summary>
         /// Gets <see cref="Device"/> CompanyAcronym.
         /// </summary>
-        public string CompanyAcronym
-        {
-            get
-            {
-                return m_companyAcronym;
-            }
-        }
+        public string CompanyAcronym => string.IsNullOrWhiteSpace(m_companyAcronym) ? s_companyAcronym : m_companyAcronym;
 
         /// <summary>
         /// Gets <see cref="Device"/> HistorianAcronym.
         /// </summary>
-        public string HistorianAcronym
-        {
-            get
-            {
-                return m_historianAcronym;
-            }
-        }
+        public string HistorianAcronym => m_historianAcronym;
 
         /// <summary>
         /// Gets <see cref="Device"/> VendorDeviceName.
         /// </summary>
-        public string VendorDeviceName
-        {
-            get
-            {
-                return m_vendorDeviceName;
-            }
-        }
+        public string VendorDeviceName => m_vendorDeviceName;
 
         /// <summary>
         /// Gets <see cref="Device"/> VendorAcronym.
         /// </summary>
-        public string VendorAcronym
-        {
-            get
-            {
-                return m_vendorAcronym;
-            }
-        }
+        public string VendorAcronym => m_vendorAcronym;
 
         /// <summary>
         /// Gets <see cref="Device"/> ProtocolName.
         /// </summary>
-        public string ProtocolName
-        {
-            get
-            {
-                return m_protocolName;
-            }
-        }
+        public string ProtocolName => m_protocolName;
 
         /// <summary>
         /// Gets <see cref="Device"/> ProtocolCategory.
         /// </summary>
-        public string ProtocolCategory
-        {
-            get
-            {
-                return m_protocolCategory;
-            }
-        }
+        public string ProtocolCategory => m_protocolCategory;
 
         /// <summary>
         /// Gets <see cref="Device"/> InterconnectionName.
         /// </summary>
-        public string InterconnectionName
-        {
-            get
-            {
-                return m_interconnectionName;
-            }
-        }
+        public string InterconnectionName => m_interconnectionName;
 
         /// <summary>
         /// Gets <see cref="Device"/> NodeName.
         /// </summary>
-        public string NodeName
-        {
-            get
-            {
-                return m_nodeName;
-            }
-        }
+        public string NodeName => m_nodeName;
 
         /// <summary>
         /// Gets <see cref="Device"/> ParentAcronym.
         /// </summary>
-        public string ParentAcronym
-        {
-            get
-            {
-                return m_parentAcronym;
-            }
-        }
+        public string ParentAcronym => m_parentAcronym;
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> CreatedOn.
@@ -838,14 +675,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
+            get => m_createdOn;
+            set => m_createdOn = value;
         }
 
         /// <summary>
@@ -854,14 +685,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
+            get => m_createdBy;
+            set => m_createdBy = value;
         }
 
         /// <summary>
@@ -870,14 +695,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
+            get => m_updatedOn;
+            set => m_updatedOn = value;
         }
 
         /// <summary>
@@ -886,14 +705,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
+            get => m_updatedBy;
+            set => m_updatedBy = value;
         }
 
         /// <summary>
@@ -902,10 +715,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is not saved in database so no validation applied.
         public string AlternateCommandChannel
         {
-            get
-            {
-                return m_alternateCommandChannel;
-            }
+            get => m_alternateCommandChannel;
             set
             {
                 m_alternateCommandChannel = value;
@@ -916,6 +726,27 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #endregion
 
         #region [ Static ]
+
+        // Static Fields
+        private static readonly string s_companyAcronym;
+        
+        // Static Constructor
+        static Device()
+        {
+            try
+            {
+                CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+                systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openHistorian.");
+                s_companyAcronym = systemSettings["CompanyAcronym"].Value;
+
+                if (string.IsNullOrWhiteSpace(s_companyAcronym))
+                    s_companyAcronym = "GPA";
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex, "Failed to initialize default company acronym");
+            }
+        }
 
         // Static Methods
 
@@ -947,7 +778,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (!string.IsNullOrEmpty(searchText))
                 {
-                    searchParam = string.Format("%{0}%", searchText);
+                    searchParam = $"%{searchText}%";
 
                     if (database.IsJetEngine)
                     {
@@ -973,23 +804,23 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
                 if (parentID > 0)
                 {
                     if (string.IsNullOrEmpty(searchText))
                     {
-                        query = database.ParameterizedQueryString(string.Format("SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} {0}", sortClause), "nodeID", "parentID");
+                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} {sortClause}", "nodeID", "parentID");
                         deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID);
                     }
                     else if (!database.IsJetEngine)
                     {
-                        query = database.ParameterizedQueryString(string.Format("SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} AND ({0}) {1}", searchText, sortClause), "nodeID", "parentID");
+                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} AND ({searchText}) {sortClause}", "nodeID", "parentID");
                         deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID, searchParam);
                     }
                     else
                     {
-                        query = database.ParameterizedQueryString(string.Format("SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} AND ({0}) {1}", searchText, sortClause), "nodeID", "parentID");
+                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} AND ({searchText}) {sortClause}", "nodeID", "parentID");
                         deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID);
                     }
                 }
@@ -997,17 +828,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     if (string.IsNullOrEmpty(searchText))
                     {
-                        query = database.ParameterizedQueryString(string.Format("SELECT ID From DeviceDetail WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
+                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} {sortClause}", "nodeID");
                         deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
                     }
                     else if (!database.IsJetEngine)
                     {
-                        query = database.ParameterizedQueryString(string.Format("SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ({0}) {1}", searchQuery, sortClause), "nodeID");
+                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ({searchQuery}) {sortClause}", "nodeID");
                         deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), searchParam);
                     }
                     else
                     {
-                        query = database.ParameterizedQueryString(string.Format("SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ({0}) {1}", searchQuery, sortClause), "nodeID");
+                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ({searchQuery}) {sortClause}", "nodeID");
                         deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
                     }
                 }
@@ -1050,7 +881,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT * FROM DeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                    query = $"SELECT * FROM DeviceDetail WHERE ID IN ({commaSeparatedKeys})";
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     deviceList = new Device[deviceTable.Rows.Count];
 
@@ -1509,7 +1340,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
                 catch (Exception ex)
                 {
-                    return "Device information saved successfully. Failed to send Initialize command to backend service." + Environment.NewLine + ex.Message;
+                    return "Device information saved successfully. Failed to send Initialize command to back-end service." + Environment.NewLine + ex.Message;
                 }
 
                 return "Device information saved successfully";
@@ -1719,7 +1550,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        /// Sends required commands to backend service to notify that <see cref="Device"/> configuration has changed.
+        /// Sends required commands to back-end service to notify that <see cref="Device"/> configuration has changed.
         /// </summary>
         /// <param name="device"><see cref="Device"/> whose configuration has changed.</param>
         /// <param name="historianID">ID of the historian to refresh metadata if device is null.</param>
