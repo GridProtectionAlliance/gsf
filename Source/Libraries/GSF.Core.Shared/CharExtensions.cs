@@ -140,13 +140,7 @@ namespace GSF
         /// <returns>
         /// <paramref name="value"/> converted to lower case
         /// </returns>
-        public static char ToLower(this char value)
-        {
-            if (value > 64 && value < 91)
-                return (char)(value + 32);
-
-            return value;
-        }
+        public static char ToLower(this char value) => char.ToLowerInvariant(value);
 
         /// <summary>
         /// Converts <paramref name="value"/> to upper case
@@ -154,13 +148,7 @@ namespace GSF
         /// <returns>
         /// <paramref name="value"/> converted to upper case
         /// </returns>
-        public static char ToUpper(this char value)
-        {
-            if (value > 96 && value < 123)
-                return (char)(value - 32);
-
-            return value;
-        }
+        public static char ToUpper(this char value) => char.ToUpperInvariant(value);
 
         /// <summary>
         /// Returns true if char is hexadecimal digit.
