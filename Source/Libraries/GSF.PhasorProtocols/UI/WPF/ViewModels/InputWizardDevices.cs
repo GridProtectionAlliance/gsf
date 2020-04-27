@@ -1564,7 +1564,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             device.AccessID = inputWizardDevice.AccessID;
                             device.ParentID = PdcID;
                             device.ConnectionString = string.Empty;
-                            // IF it is connected to concentrator then do not send initialize command when device is saved.
+                            // If device is connected to concentrator then do not send initialize command when device is saved.
                             Device.SaveWithAnalogsDigitals(database, device, false, inputWizardDevice.DigitalCount, inputWizardDevice.AnalogCount, inputWizardDevice.DigitalLabels, inputWizardDevice.AnalogLabels);
                         }
                         else

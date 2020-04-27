@@ -46,7 +46,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private decimal m_longitude;
         private decimal m_latitude;
         private int? m_vendorDeviceId;
-        private int m_accessId;
+        private int m_accessId = 1;
         private int m_parentAccessId;
         private bool m_include;
         private int m_digitalCount;
@@ -76,10 +76,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [AcronymValidation]
         public string Acronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value.Replace("'", "").Replace(" ", "_").ToUpper();
@@ -98,10 +95,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Device Name cannot exceed 200 characters.")]
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 if ((object)value != null && value.Length > 200)
@@ -118,10 +112,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ConfigAcronym
         {
-            get
-            {
-                return m_configAcronym;
-            }
+            get => m_configAcronym;
             set
             {
                 m_configAcronym = value;
@@ -134,10 +125,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ConfigName
         {
-            get
-            {
-                return m_configName;
-            }
+            get => m_configName;
             set
             {
                 m_configName = value;
@@ -150,10 +138,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public decimal Longitude
         {
-            get
-            {
-                return m_longitude;
-            }
+            get => m_longitude;
             set
             {
                 m_longitude = value;
@@ -166,10 +151,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public decimal Latitude
         {
-            get
-            {
-                return m_latitude;
-            }
+            get => m_latitude;
             set
             {
                 m_latitude = value;
@@ -182,10 +164,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int? VendorDeviceID
         {
-            get
-            {
-                return m_vendorDeviceId;
-            }
+            get => m_vendorDeviceId;
             set
             {
                 m_vendorDeviceId = value;
@@ -198,10 +177,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int AccessID
         {
-            get
-            {
-                return m_accessId;
-            }
+            get => m_accessId;
             set
             {
                 m_accessId = value;
@@ -214,10 +190,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int ParentAccessID
         {
-            get
-            {
-                return m_parentAccessId;
-            }
+            get => m_parentAccessId;
             set
             {
                 m_parentAccessId = value;
@@ -230,10 +203,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Include
         {
-            get
-            {
-                return m_include;
-            }
+            get => m_include;
             set
             {
                 m_include = value;
@@ -246,10 +216,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int DigitalCount
         {
-            get
-            {
-                return m_digitalCount;
-            }
+            get => m_digitalCount;
             set
             {
                 m_digitalCount = value;
@@ -262,10 +229,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int AnalogCount
         {
-            get
-            {
-                return m_analogCount;
-            }
+            get => m_analogCount;
             set
             {
                 m_analogCount = value;
@@ -278,10 +242,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool AddDigitals
         {
-            get
-            {
-                return m_addDigitals;
-            }
+            get => m_addDigitals;
             set
             {
                 m_addDigitals = value;
@@ -294,10 +255,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool AddAnalogs
         {
-            get
-            {
-                return m_addAnalogs;
-            }
+            get => m_addAnalogs;
             set
             {
                 m_addAnalogs = value;
@@ -310,10 +268,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Existing
         {
-            get
-            {
-                return m_existing;
-            }
+            get => m_existing;
             set
             {
                 m_existing = value;
@@ -330,10 +285,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string StatusColor
         {
-            get
-            {
-                return m_statusColor;
-            }
+            get => m_statusColor;
             set
             {
                 m_statusColor = value;
@@ -346,10 +298,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public ObservableCollection<InputWizardDevicePhasor> PhasorList
         {
-            get
-            {
-                return m_phasorList;
-            }
+            get => m_phasorList;
             set
             {
                 m_phasorList = value;
@@ -362,14 +311,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public List<string> DigitalLabels
         {
-            get
-            {
-                return m_digitalLabels;
-            }
-            set
-            {
-                m_digitalLabels = value;
-            }
+            get => m_digitalLabels;
+            set => m_digitalLabels = value;
         }
 
         /// <summary>
@@ -377,14 +320,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public List<string> AnalogLabels
         {
-            get
-            {
-                return m_analogLabels;
-            }
-            set
-            {
-                m_analogLabels = value;
-            }
+            get => m_analogLabels;
+            set => m_analogLabels = value;
         }
 
         #endregion
@@ -466,10 +403,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Phasor label must not exceed 200 characters.")]
         public string Label
         {
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
                 if ((object)value != null && value.Length > 200)
@@ -488,10 +422,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(1, ErrorMessage = "Phasor type must be 1 character.")]
         public string Type
         {
-            get
-            {
-                return m_type;
-            }
+            get => m_type;
             set
             {
                 m_type = value;
@@ -504,10 +435,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ConfigLabel
         {
-            get
-            {
-                return m_configLabel;
-            }
+            get => m_configLabel;
             set
             {
                 m_configLabel = value;
@@ -520,10 +448,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ConfigType
         {
-            get
-            {
-                return m_configType;
-            }
+            get => m_configType;
             set
             {
                 m_configType = value;
@@ -538,10 +463,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(1, ErrorMessage = "Phasor phase must be 1 character.")]
         public string Phase
         {
-            get
-            {
-                return m_phase;
-            }
+            get => m_phase;
             set
             {
                 m_phase = value;
@@ -561,10 +483,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [RegularExpression("^[0-9]*$", ErrorMessage = "Base kV must be an integer")]
         public string BaseKVInput
         {
-            get
-            {
-                return m_baseKVInput;
-            }
+            get => m_baseKVInput;
             set
             {
                 if (int.TryParse(value, out int baseKV))
@@ -596,10 +515,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Include
         {
-            get
-            {
-                return m_include;
-            }
+            get => m_include;
             set
             {
                 m_include = value;
