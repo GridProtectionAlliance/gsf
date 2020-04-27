@@ -116,8 +116,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private int m_currentDeviceRuntimeID;
         private bool m_disconnectedCurrentDevice;
         private bool m_newDeviceConfiguration;
-        private Dispatcher m_dispatcher;
-        private Dictionary<string, string> m_errorMessages;
+        private readonly Dispatcher m_dispatcher;
+        private readonly Dictionary<string, string> m_errorMessages;
 
         #endregion
 
@@ -170,13 +170,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets flag that determines if <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/> is a new record.
         /// </summary>
-        public override bool IsNewRecord
-        {
-            get
-            {
-                return string.IsNullOrEmpty(CurrentItem.Acronym);
-            }
-        }
+        public override bool IsNewRecord => CurrentItem.ID == 0; // string.IsNullOrEmpty(CurrentItem.Acronym);
 
         /// <summary>
         /// Gets or sets flag that determines whether the wizard steps are enabled.
@@ -293,57 +287,27 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Company"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> CompanyLookupList
-        {
-            get
-            {
-                return m_companyLookupList;
-            }
-        }
+        public Dictionary<int, string> CompanyLookupList => m_companyLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Historian"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> HistorianLookupList
-        {
-            get
-            {
-                return m_historianLookupList;
-            }
-        }
+        public Dictionary<int, string> HistorianLookupList => m_historianLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Interconnection"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> InterconnectionLookupList
-        {
-            get
-            {
-                return m_interconnectionLookupList;
-            }
-        }
+        public Dictionary<int, string> InterconnectionLookupList => m_interconnectionLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Protocol"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> ProtocolLookupList
-        {
-            get
-            {
-                return m_protocolLookupList;
-            }
-        }
+        public Dictionary<int, string> ProtocolLookupList => m_protocolLookupList;
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="VendorDevice"/> defined in the database.
         /// </summary>
-        public Dictionary<int, string> VendorDeviceLookupList
-        {
-            get
-            {
-                return m_vendorDeviceLookupList;
-            }
-        }
+        public Dictionary<int, string> VendorDeviceLookupList => m_vendorDeviceLookupList;
 
         /// <summary>
         /// Gets or sets connection string to backend service.
@@ -463,16 +427,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// Gets a flag indicating if selected protocol is BpaPdcStream. 
         /// This is used to hide or display INI file selection on input wizard screen.
         /// </summary>
-        public bool ProtocolIsBpaPdcStream
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(m_protocolAcronym))
-                    return (m_protocolAcronym.ToLower() == "bpapdcstream");
-
-                return false;
-            }
-        }
+        public bool ProtocolIsBpaPdcStream => !string.IsNullOrEmpty(m_protocolAcronym) && m_protocolAcronym.ToLower() == "bpapdcstream";
 
         /// <summary>
         /// Gets or sets boolean value indicating if connection is to concentrator.
@@ -702,112 +657,52 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets <see cref="ICommand"/> to launch the wizard walkthrough.
         /// </summary>
-        public ICommand LaunchWalkthroughCommand
-        {
-            get
-            {
-                return m_launchWalkthroughCommand ?? (m_launchWalkthroughCommand = new RelayCommand(LaunchWalkthrough));
-            }
-        }
+        public ICommand LaunchWalkthroughCommand => m_launchWalkthroughCommand ?? (m_launchWalkthroughCommand = new RelayCommand(LaunchWalkthrough));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to connection file.
         /// </summary>
-        public ICommand BrowseConnectionFileCommand
-        {
-            get
-            {
-                return m_browseConnectionFileCommand ?? (m_browseConnectionFileCommand = new RelayCommand(BrowseConnectionFile, () => CanSave));
-            }
-        }
+        public ICommand BrowseConnectionFileCommand => m_browseConnectionFileCommand ?? (m_browseConnectionFileCommand = new RelayCommand(BrowseConnectionFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to build connection string.
         /// </summary>
-        public ICommand BuildConnectionStringCommand
-        {
-            get
-            {
-                return m_buildConnectionStringCommand ?? (m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, () => CanSave));
-            }
-        }
+        public ICommand BuildConnectionStringCommand => m_buildConnectionStringCommand ?? (m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to build alternate command channel.
         /// </summary>
-        public ICommand BuildAlternateCommandChannelCommand
-        {
-            get
-            {
-                return m_buildAlternateCommandChannelCommand ?? (m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, () => CanSave));
-            }
-        }
+        public ICommand BuildAlternateCommandChannelCommand => m_buildAlternateCommandChannelCommand ?? (m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to INI file.
         /// </summary>
-        public ICommand BrowseIniFileCommand
-        {
-            get
-            {
-                return m_browseIniFileCommand ?? (m_browseIniFileCommand = new RelayCommand(BrowseIniFile, () => CanSave));
-            }
-        }
+        public ICommand BrowseIniFileCommand => m_browseIniFileCommand ?? (m_browseIniFileCommand = new RelayCommand(BrowseIniFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to configuration file.
         /// </summary>
-        public ICommand BrowseConfigurationFileCommand
-        {
-            get
-            {
-                return m_browseConfigurationFileCommand ?? (m_browseConfigurationFileCommand = new RelayCommand(BrowseConfigurationFile, () => CanSave));
-            }
-        }
+        public ICommand BrowseConfigurationFileCommand => m_browseConfigurationFileCommand ?? (m_browseConfigurationFileCommand = new RelayCommand(BrowseConfigurationFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to request configuration frame from backed service.
         /// </summary>
-        public ICommand RequestConfigurationCommand
-        {
-            get
-            {
-                return m_requestConfigurationCommand ?? (m_requestConfigurationCommand = new RelayCommand(RequestConfiguration, () => CanSave));
-            }
-        }
+        public ICommand RequestConfigurationCommand => m_requestConfigurationCommand ?? (m_requestConfigurationCommand = new RelayCommand(RequestConfiguration, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to cancel a configuration frame request.
         /// </summary>
-        public ICommand CancelConfigurationRequestCommand
-        {
-            get
-            {
-                return m_cancelConfigurationRequestCommand ?? (m_cancelConfigurationRequestCommand = new RelayCommand(CancelConfigurationRequest));
-            }
-        }
+        public ICommand CancelConfigurationRequestCommand => m_cancelConfigurationRequestCommand ?? (m_cancelConfigurationRequestCommand = new RelayCommand(CancelConfigurationRequest));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to save current configuration to XML file.
         /// </summary>
-        public ICommand SaveConfigurationFileCommand
-        {
-            get
-            {
-                return m_saveConfigurationFileCommand ?? (m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, () => CanSave));
-            }
-        }
+        public ICommand SaveConfigurationFileCommand => m_saveConfigurationFileCommand ?? (m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, () => CanSave));
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to create or update configuration manually.
         /// </summary>
-        public ICommand ManualConfigurationCommand
-        {
-            get
-            {
-                return m_manualConfigurationCommand ?? (m_manualConfigurationCommand = new RelayCommand(ManualConfiguration, () => CanSave));
-            }
-        }
+        public ICommand ManualConfigurationCommand => m_manualConfigurationCommand ?? (m_manualConfigurationCommand = new RelayCommand(ManualConfiguration, () => CanSave));
 
         /// <summary>
         /// Gets or sets summary message to be displayed on UI after parsing configuration file or frame.
@@ -828,13 +723,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets boolean flag indicating if configuration can be saved or not.
         /// </summary>
-        public override bool CanSave
-        {
-            get
-            {
-                return CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor");
-            }
-        }
+        public override bool CanSave => CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor");
 
         /// <summary>
         /// Gets or sets ID of the device in case where configuration is being updated.
@@ -854,13 +743,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets a flag indicating if current device was disconnected before requesting configuration.
         /// </summary>
-        public bool DisconnectedCurrentDevice
-        {
-            get
-            {
-                return m_disconnectedCurrentDevice;
-            }
-        }
+        public bool DisconnectedCurrentDevice => m_disconnectedCurrentDevice;
 
         /// <summary>
         /// Gets or sets a flag indicating whether the wizard was launched in
@@ -886,18 +769,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// The error message for the property. The default is an empty string ("").
         /// </returns>
         /// <param name="propertyName">The name of the property whose error message to get. </param>
-        public string this[string propertyName]
-        {
-            get
-            {
-                string errorMessage;
-
-                if (m_errorMessages.TryGetValue(propertyName, out errorMessage))
-                    return errorMessage;
-
-                return string.Empty;
-            }
-        }
+        public string this[string propertyName] => m_errorMessages.TryGetValue(propertyName, out string errorMessage) ? errorMessage : string.Empty;
 
         /// <summary>
         /// Gets an error message indicating what is wrong with this object.
@@ -909,9 +781,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                IEnumerable<string> errorMessages = m_errorMessages
-                    .Select(kvp => string.Format("{0}: {1}", kvp.Key, kvp.Value));
-
+                IEnumerable<string> errorMessages = m_errorMessages .Select(kvp => $"{kvp.Key}: {kvp.Value}");
                 return string.Join(Environment.NewLine, errorMessages);
             }
         }
@@ -924,124 +794,111 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// Gets the primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.
         /// </summary>
         /// <returns>The primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
-        public override string GetCurrentItemKey()
-        {
-            return CurrentItem.Acronym;
-        }
+        public override string GetCurrentItemKey() => CurrentItem.Acronym;
 
         /// <summary>
         /// Gets the string based named identifier of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.
         /// </summary>
         /// <returns>The string based named identifier of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
-        public override string GetCurrentItemName()
-        {
-            return CurrentItem.Name;
-        }
+        public override string GetCurrentItemName() => CurrentItem.Name;
 
         /// <summary>
         /// Handles BrowseConnectionFileCommand.
         /// </summary>        
         private void BrowseConnectionFile()
         {
-            Stream fileData;
             OpenFileDialog fileDialog = new OpenFileDialog();
 
             fileDialog.Multiselect = false;
             fileDialog.Filter = "PMU Connection Files (*.PmuConnection)|*.PmuConnection|All Files (*.*)|*.*";
 
-            if (fileDialog.ShowDialog() == DialogResult.OK)
+            if (fileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
             {
-                try
+                Mouse.OverrideCursor = Cursors.Wait;
+                ConnectionFileName = fileDialog.FileName;
+
+                Stream fileData = fileDialog.OpenFile();
+                ConnectionSettings connectionSettings;
+
+                using (fileData)
                 {
-                    Mouse.OverrideCursor = Cursors.Wait;
-                    ConnectionFileName = fileDialog.FileName;
+                    SoapFormatter sf = new SoapFormatter();
+                    sf.AssemblyFormat = FormatterAssemblyStyle.Simple;
+                    sf.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
+                    sf.Binder = Serialization.LegacyBinder;
+                    connectionSettings = sf.Deserialize(fileData) as ConnectionSettings;
+                }
 
-                    fileData = fileDialog.OpenFile();
+                if (connectionSettings != null)
+                {
+                    ConnectionString = connectionSettings.ConnectionString;
+                    Dictionary<string, string> connectionStringKeyValues = ConnectionString.ParseKeyValuePairs();
 
-                    ConnectionSettings connectionSettings;
-
-                    using (fileData)
+                    if (connectionStringKeyValues.ContainsKey("commandchannel"))
                     {
-                        SoapFormatter sf = new SoapFormatter();
-                        sf.AssemblyFormat = FormatterAssemblyStyle.Simple;
-                        sf.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
-                        sf.Binder = Serialization.LegacyBinder;
-                        connectionSettings = sf.Deserialize(fileData) as ConnectionSettings;
+                        AlternateCommandChannel = connectionStringKeyValues["commandchannel"];
+                        connectionStringKeyValues.Remove("commandchannel");
                     }
 
-                    if ((object)connectionSettings != null)
+                    if (connectionStringKeyValues.ContainsKey("skipdisablerealtimedata"))
                     {
-                        ConnectionString = connectionSettings.ConnectionString;
-                        Dictionary<string, string> connectionStringKeyValues = ConnectionString.ParseKeyValuePairs();
+                        SkipDisableRealTimeData = Convert.ToBoolean(connectionStringKeyValues["skipdisablerealtimedata"]);
+                        connectionStringKeyValues.Remove("skipdisablerealtimedata");
+                    }
 
-                        if (connectionStringKeyValues.ContainsKey("commandchannel"))
+                    ConnectionString = $"transportprotocol={connectionSettings.TransportProtocol};{connectionStringKeyValues.JoinKeyValuePairs()}";
+
+                    if (connectionSettings.ConnectionParameters != null)
+                    {
+                        switch (connectionSettings.PhasorProtocol)
                         {
-                            AlternateCommandChannel = connectionStringKeyValues["commandchannel"];
-                            connectionStringKeyValues.Remove("commandchannel");
-                        }
-
-                        if (connectionStringKeyValues.ContainsKey("skipdisablerealtimedata"))
-                        {
-                            SkipDisableRealTimeData = Convert.ToBoolean(connectionStringKeyValues["skipdisablerealtimedata"]);
-                            connectionStringKeyValues.Remove("skipdisablerealtimedata");
-                        }
-
-                        ConnectionString = "transportprotocol=" + connectionSettings.TransportProtocol.ToString() + ";" + connectionStringKeyValues.JoinKeyValuePairs();
-
-                        if ((object)connectionSettings.ConnectionParameters != null)
-                        {
-                            switch (connectionSettings.PhasorProtocol)
-                            {
-                                case PhasorProtocol.BPAPDCstream:
-                                    ConnectionParameters bpaParameters = connectionSettings.ConnectionParameters as ConnectionParameters;
-                                    if ((object)bpaParameters != null)
-                                        ConnectionString += "; iniFileName=" + bpaParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + bpaParameters.RefreshConfigurationFileOnChange + "; parseWordCountFromByte=" + bpaParameters.ParseWordCountFromByte;
-                                    break;
-                                case PhasorProtocol.FNET:
-                                    FNET.ConnectionParameters fnetParameters = connectionSettings.ConnectionParameters as FNET.ConnectionParameters;
-                                    if ((object)fnetParameters != null)
-                                        ConnectionString += "; timeOffset=" + fnetParameters.TimeOffset + "; stationName=" + fnetParameters.StationName + "; frameRate=" + fnetParameters.FrameRate + "; nominalFrequency=" + (int)fnetParameters.NominalFrequency;
-                                    break;
-                                case PhasorProtocol.SelFastMessage:
-                                    SelFastMessage.ConnectionParameters selParameters = connectionSettings.ConnectionParameters as SelFastMessage.ConnectionParameters;
-                                    if ((object)selParameters != null)
-                                        ConnectionString += "; messagePeriod=" + selParameters.MessagePeriod;
-                                    AccessID = 0;
-                                    break;
-                                case PhasorProtocol.IEC61850_90_5:
-                                    IEC61850_90_5.ConnectionParameters iecParameters = connectionSettings.ConnectionParameters as IEC61850_90_5.ConnectionParameters;
-                                    if ((object)iecParameters != null)
-                                        ConnectionString += "; useETRConfiguration=" + iecParameters.UseETRConfiguration + "; guessConfiguration=" + iecParameters.GuessConfiguration + "; parseRedundantASDUs=" + iecParameters.ParseRedundantASDUs + "; ignoreSignatureValidationFailures=" + iecParameters.IgnoreSignatureValidationFailures + "; ignoreSampleSizeValidationFailures=" + iecParameters.IgnoreSampleSizeValidationFailures;
-                                    break;
-                                case PhasorProtocol.Macrodyne:
-                                    Macrodyne.ConnectionParameters macrodyneParameters = connectionSettings.ConnectionParameters as Macrodyne.ConnectionParameters;
-                                    if ((object)macrodyneParameters != null)
-                                        ConnectionString += "; protocolVersion=" + macrodyneParameters.ProtocolVersion + "; iniFileName=" + macrodyneParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + macrodyneParameters.RefreshConfigurationFileOnChange + "; deviceLabel=" + macrodyneParameters.DeviceLabel;
-                                    AccessID = 0;
-                                    break;
-                            }
-                        }
-
-                        AccessID = connectionSettings.PmuID;
-                        ProtocolAcronym = connectionSettings.PhasorProtocol.ToString();
-
-                        if (m_protocolLookupList.Count > 0)
-                        {
-                            Protocol protocol = m_protocolList.FirstOrDefault(p => p.Acronym.ToLower() == connectionSettings.PhasorProtocol.ToString().ToLower());
-
-                            if ((object)protocol != null)
-                                ProtocolID = protocol.ID;
+                            case PhasorProtocol.BPAPDCstream:
+                                if (connectionSettings.ConnectionParameters is ConnectionParameters bpaParameters)
+                                    ConnectionString += $"; iniFileName={bpaParameters.ConfigurationFileName}; refreshConfigFileOnChange={bpaParameters.RefreshConfigurationFileOnChange}; parseWordCountFromByte={bpaParameters.ParseWordCountFromByte}";
+                                break;
+                            case PhasorProtocol.FNET:
+                                if (connectionSettings.ConnectionParameters is FNET.ConnectionParameters fnetParameters)
+                                    ConnectionString += $"; timeOffset={fnetParameters.TimeOffset}; stationName={fnetParameters.StationName}; frameRate={fnetParameters.FrameRate}; nominalFrequency={(int)fnetParameters.NominalFrequency}";
+                                break;
+                            case PhasorProtocol.SelFastMessage:
+                                if (connectionSettings.ConnectionParameters is SelFastMessage.ConnectionParameters selParameters)
+                                    ConnectionString += $"; messagePeriod={selParameters.MessagePeriod}";
+                                AccessID = 0;
+                                break;
+                            case PhasorProtocol.IEC61850_90_5:
+                                if (connectionSettings.ConnectionParameters is IEC61850_90_5.ConnectionParameters iecParameters)
+                                    ConnectionString += $"; useETRConfiguration={iecParameters.UseETRConfiguration}; guessConfiguration={iecParameters.GuessConfiguration}; parseRedundantASDUs={iecParameters.ParseRedundantASDUs}; ignoreSignatureValidationFailures={iecParameters.IgnoreSignatureValidationFailures}; ignoreSampleSizeValidationFailures={iecParameters.IgnoreSampleSizeValidationFailures}";
+                                break;
+                            case PhasorProtocol.Macrodyne:
+                                if (connectionSettings.ConnectionParameters is Macrodyne.ConnectionParameters macrodyneParameters)
+                                    ConnectionString += $"; protocolVersion={macrodyneParameters.ProtocolVersion}; iniFileName={macrodyneParameters.ConfigurationFileName}; refreshConfigFileOnChange={macrodyneParameters.RefreshConfigurationFileOnChange}; deviceLabel={macrodyneParameters.DeviceLabel}";
+                                AccessID = 0;
+                                break;
                         }
                     }
+
+                    AccessID = connectionSettings.PmuID;
+                    ProtocolAcronym = connectionSettings.PhasorProtocol.ToString();
+
+                    if (m_protocolLookupList.Count > 0)
+                    {
+                        Protocol protocol = m_protocolList.FirstOrDefault(protocolRecord => string.Equals(protocolRecord.Acronym, connectionSettings.PhasorProtocol.ToString(), StringComparison.OrdinalIgnoreCase));
+
+                        if (protocol != null)
+                            ProtocolID = protocol.ID;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    DisplayPopup(ex.Message, "Open Connection File", MessageBoxImage.Error);
-                }
-                finally
-                {
-                    Mouse.OverrideCursor = null;
-                }
+            }
+            catch (Exception ex)
+            {
+                DisplayPopup(ex.Message, "Open Connection File", MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
         }
 
@@ -1075,8 +932,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         try
                         {
                             string configFileDataString = (new StreamReader(fileData)).ReadToEnd();
-                            string leftPart = configFileDataString.Substring(0, configFileDataString.IndexOf("</configurationFileName>"));
-                            string rightPart = configFileDataString.Substring(configFileDataString.IndexOf("</configurationFileName>"));
+                            string leftPart = configFileDataString.Substring(0, configFileDataString.IndexOf("</configurationFileName>", StringComparison.Ordinal));
+                            string rightPart = configFileDataString.Substring(configFileDataString.IndexOf("</configurationFileName>", StringComparison.Ordinal));
                             leftPart = leftPart.Substring(0, leftPart.LastIndexOf(">", StringComparison.Ordinal) + 1);
                             configFileDataString = leftPart + m_iniFileName + rightPart;
 
@@ -1089,7 +946,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         }
                         catch (Exception ex)
                         {
-                            throw new Exception("Error occurred in processing INI file. " + ex.Message);
+                            throw new Exception($"Error occurred in processing INI file. {ex.Message}");
                         }
                     }
                     else
@@ -1118,7 +975,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             ObservableCollection<InputWizardDevice> wizardDeviceList = new ObservableCollection<InputWizardDevice>();
             bool isConcentrator = false;
 
-            if ((object)m_configurationFrame != null)
+            if (m_configurationFrame != null)
             {
                 PdcFrameRate = m_configurationFrame.FrameRate;
 
@@ -1147,28 +1004,27 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         if (!string.IsNullOrWhiteSpace(phase) && phase != "+")
                             return phase;
 
-                        if (phasorLabel.IndexOf("_VA") > -1 || phasorLabel.IndexOf("_IA") > -1 || phasorLabel.IndexOf(" A ") > -1 || phasorLabel.IndexOf(" APV") > -1 || phasorLabel.IndexOf(" API") > -1 || phasorLabel.IndexOf("VA ") > -1 || phasorLabel.IndexOf("IA ") > -1 || phasorLabel.IndexOf("VAPM") > -1 || phasorLabel.IndexOf("IAPM") > -1 || phasorLabel.IndexOf(".AV") > -1 || phasorLabel.IndexOf(".AI") > -1)
+                        if (phasorLabel.IndexOf("_VA", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IA", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" A ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" APV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" API", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VA ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IA ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VAPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IAPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".AV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".AI", StringComparison.Ordinal) > -1)
                             return "A";
 
-                        if (phasorLabel.IndexOf("_VB") > -1 || phasorLabel.IndexOf("_IB") > -1 || phasorLabel.IndexOf(" B ") > -1 || phasorLabel.IndexOf(" BPV") > -1 || phasorLabel.IndexOf(" BPI") > -1 || phasorLabel.IndexOf("VB ") > -1 || phasorLabel.IndexOf("IB ") > -1 || phasorLabel.IndexOf("VBPM") > -1 || phasorLabel.IndexOf("IBPM") > -1 || phasorLabel.IndexOf(".BV") > -1 || phasorLabel.IndexOf(".BI") > -1)
+                        if (phasorLabel.IndexOf("_VB", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IB", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" B ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" BPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" BPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VB ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IB ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VBPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IBPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".BV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".BI", StringComparison.Ordinal) > -1)
                             return "B";
 
-                        if (phasorLabel.IndexOf("_VC") > -1 || phasorLabel.IndexOf("_IC") > -1 || phasorLabel.IndexOf(" C ") > -1 || phasorLabel.IndexOf(" CPV") > -1 || phasorLabel.IndexOf(" CPI") > -1 || phasorLabel.IndexOf("VC ") > -1 || phasorLabel.IndexOf("IC ") > -1 || phasorLabel.IndexOf("VCPM") > -1 || phasorLabel.IndexOf("ICPM") > -1 || phasorLabel.IndexOf(".CV") > -1 || phasorLabel.IndexOf(".CI") > -1)
+                        if (phasorLabel.IndexOf("_VC", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IC", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" C ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" CPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" CPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VC ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IC ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VCPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("ICPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".CV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".CI", StringComparison.Ordinal) > -1)
                             return "C";
 
-                        if (phasorLabel.IndexOf("_VN") > -1 || phasorLabel.IndexOf("_IN") > -1 || phasorLabel.IndexOf(" NEUT ") > -1 || phasorLabel.IndexOf(" NPV") > -1 || phasorLabel.IndexOf(" NPI") > -1 || phasorLabel.IndexOf("VN ") > -1 || phasorLabel.IndexOf("IN ") > -1 || phasorLabel.IndexOf("VNPM") > -1 || phasorLabel.IndexOf("INPM") > -1 || phasorLabel.IndexOf(".NV") > -1 || phasorLabel.IndexOf(".NI") > -1)
+                        if (phasorLabel.IndexOf("_VN", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IN", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NEUT ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VN ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IN ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VNPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("INPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".NV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".NI", StringComparison.Ordinal) > -1)
                             return "N";
 
-                        if (phasorLabel.IndexOf("_V0") > -1 || phasorLabel.IndexOf("_I0") > -1 || phasorLabel.IndexOf(" ZERO ") > -1 || phasorLabel.IndexOf(" ZPV") > -1 || phasorLabel.IndexOf(" ZPI") > -1 || phasorLabel.IndexOf("VZ ") > -1 || phasorLabel.IndexOf("IZ ") > -1 || phasorLabel.IndexOf("VZPM") > -1 || phasorLabel.IndexOf("IZPM") > -1 || phasorLabel.IndexOf(".ZV") > -1 || phasorLabel.IndexOf(".ZI") > -1 || phasorLabel.IndexOf("_ZS") > -1)
+                        if (phasorLabel.IndexOf("_V0", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_I0", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" ZERO ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" ZPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" ZPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VZ ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IZ ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VSPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VZPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IZPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".ZV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".ZI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_ZS", StringComparison.Ordinal) > -1)
                             return "0";
 
-                        if (phasorLabel.IndexOf("_V2") > -1 || phasorLabel.IndexOf("_I2") > -1 || phasorLabel.IndexOf(" NEG ") > -1 || phasorLabel.IndexOf(" -SV") > -1 || phasorLabel.IndexOf(" -SI") > -1 || phasorLabel.IndexOf("V2 ") > -1 || phasorLabel.IndexOf("I2 ") > -1 || phasorLabel.IndexOf("V2PM") > -1 || phasorLabel.IndexOf("I2PM") > -1 || phasorLabel.IndexOf(".-V") > -1 || phasorLabel.IndexOf(".-I") > -1 || phasorLabel.IndexOf("_NS") > -1)
+                        if (phasorLabel.IndexOf("_V2", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_I2", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NEG ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" -SV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" -SI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V2 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I2 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V2PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I2PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".-V", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".-I", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_NS", StringComparison.Ordinal) > -1)
                             return "-";
 
-                        if (phasorLabel.IndexOf("_V1") > -1 || phasorLabel.IndexOf("_I1") > -1 || phasorLabel.IndexOf(" POS ") > -1 || phasorLabel.IndexOf(" +SV") > -1 || phasorLabel.IndexOf(" +SI") > -1 || phasorLabel.IndexOf(" SI") > -1 || phasorLabel.IndexOf("V1 ") > -1 || phasorLabel.IndexOf("I1 ") > -1 || phasorLabel.IndexOf("V1PM") > -1 || phasorLabel.IndexOf("I1PM") > -1 || phasorLabel.IndexOf(".+V") > -1 || phasorLabel.IndexOf(".+I") > -1 || phasorLabel.IndexOf("_PS") > -1)
-                            return "+";
-
-                        return string.IsNullOrWhiteSpace(phase) ? "?" : phase;
+                        return phasorLabel.IndexOf("_V1", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_I1", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" POS ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" +SV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" +SI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" SI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V1 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I1 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V1PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I1PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".+V", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".+I", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_PS", StringComparison.Ordinal) > -1
+                            ? "+"
+                            : string.IsNullOrWhiteSpace(phase) ? "?" : phase;
                     }
 
                     string guessBaseKV(string baseKV, string phasorLabel, string deviceLabel)
@@ -1179,13 +1035,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         // Check phasor label before device
                         foreach (string voltageLevel in s_commonVoltageLevels)
                         {
-                            if (phasorLabel.IndexOf(voltageLevel) > -1)
+                            if (phasorLabel.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
                                 return voltageLevel;
                         }
 
                         foreach (string voltageLevel in s_commonVoltageLevels)
                         {
-                            if (deviceLabel.IndexOf(voltageLevel) > -1)
+                            if (deviceLabel.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
                                 return voltageLevel;
                         }
 
@@ -1206,6 +1062,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                     wizardDeviceList.Add(new InputWizardDevice()
                     {
+                        ID = deviceID,
                         Acronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? stationAcronym : existingDevice.Acronym,
                         Name = string.IsNullOrWhiteSpace(existingDevice?.Name) ? stationName : existingDevice.Name,
                         ConfigAcronym = $"Device{deviceIndex} label from config: {stationAcronym}{(string.IsNullOrWhiteSpace(cell.IDLabel) ? "" : $" ({cell.IDLabel})")}",
@@ -1244,7 +1101,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 ItemsSource = wizardDeviceList;
 
-                ConfigurationSummary = "Current Configuration Summary: " + wizardDeviceList.Count;
+                ConfigurationSummary = $"Current Configuration Summary: {wizardDeviceList.Count}";
 
                 if (isConcentrator)
                 {
@@ -1266,17 +1123,14 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             List<string> returnCollection = new List<string>();
 
-            DigitalDefinitionCollection digitalCollection = analogOrDigitalCollection as DigitalDefinitionCollection;
-            AnalogDefinitionCollection analogCollection = analogOrDigitalCollection as AnalogDefinitionCollection;
-
-            if ((object)digitalCollection != null)
+            if (analogOrDigitalCollection is DigitalDefinitionCollection digitalCollection)
             {
                 foreach (IDigitalDefinition digital in digitalCollection)
                 {
                     returnCollection.Add(digital.Label.TruncateRight(256));
                 }
             }
-            else if ((object)analogCollection != null)
+            else if (analogOrDigitalCollection is AnalogDefinitionCollection analogCollection)
             {
                 foreach (IAnalogDefinition analog in analogCollection)
                 {
@@ -1320,7 +1174,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             catch (Exception ex)
             {
-                DisplayPopup("ERROR: " + ex.Message, "Save Current Configuration", MessageBoxImage.Error);
+                DisplayPopup($"ERROR: {ex.Message}", "Save Current Configuration", MessageBoxImage.Error);
             }
         }
 
@@ -1371,7 +1225,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             csb.Closed += delegate
             {
-                if ((object)csb.DialogResult != null && csb.DialogResult.GetValueOrDefault())
+                if (csb.DialogResult != null && csb.DialogResult.GetValueOrDefault())
                     ConnectionString = csb.ConnectionString;
             };
 
@@ -1392,7 +1246,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             csb.Closed += delegate
             {
-                if ((object)csb.DialogResult != null && csb.DialogResult.GetValueOrDefault())
+                if (csb.DialogResult != null && csb.DialogResult.GetValueOrDefault())
                     AlternateCommandChannel = csb.ConnectionString;
             };
 
@@ -1410,7 +1264,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             StepsEnabled = false;
             RequestConfigurationPopupIsOpen = true;
-            RequestConfigurationPopupText = string.Concat("Requesting configuration", Environment.NewLine, ".");
+            RequestConfigurationPopupText = $"Requesting configuration{Environment.NewLine}.";
 
             timer.Tick += (sender, args) => RequestConfigurationPopupText += ".";
             timer.Interval = TimeSpan.FromSeconds(1.0D);
@@ -1428,7 +1282,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                     if (m_currentDeviceRuntimeID > 0)
                     {
-                        CommonFunctions.SendCommandToService("Disconnect " + m_currentDeviceRuntimeID);
+                        CommonFunctions.SendCommandToService($"Disconnect {m_currentDeviceRuntimeID}");
                         m_disconnectedCurrentDevice = true;
                     }
 
@@ -1438,8 +1292,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                     windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
 
-                    if (windowsServiceClient != null && windowsServiceClient.Helper != null &&
-                       windowsServiceClient.Helper.RemotingClient != null && windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+                    if (windowsServiceClient?.Helper?.RemotingClient != null && windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                     {
                         windowsServiceClient.Helper.RemotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
                         windowsServiceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
@@ -1450,36 +1303,36 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         if (!connectionString.EndsWith(";"))
                             connectionString += ";";
 
-                        connectionString += "accessid=" + AccessID + ";";
+                        connectionString += $"accessid={AccessID};";
 
                         if (!connectionString.ToLower().Contains("phasorprotocol"))
                         {
                             Protocol protocol = m_protocolList.FirstOrDefault(p => p.ID == ProtocolID);
 
-                            if ((object)protocol != null)
-                                connectionString += "phasorprotocol=" + protocol.Acronym + ";";
+                            if (protocol != null)
+                                connectionString += $"phasorprotocol={protocol.Acronym};";
                         }
 
                         s_responseWaitHandle.Reset();
                         m_requestConfigurationAttachment = null;
-                        CommonFunctions.SendCommandToService(string.Format("invoke 0 requestdeviceconfiguration \"{0}\"", connectionString));
+                        CommonFunctions.SendCommandToService($"invoke 0 requestdeviceconfiguration \"{connectionString}\"");
 
                         if (s_responseWaitHandle.WaitOne(65000))
                         {
                             if (m_requestConfigurationAttachment is ConfigurationErrorFrame)
                             {
-                                m_dispatcher.BeginInvoke(new Action(() => RequestConfigurationPopupText = string.Concat("Accumulating error messages", Environment.NewLine, ".")));
+                                m_dispatcher.BeginInvoke(new Action(() => RequestConfigurationPopupText = $"Accumulating error messages{Environment.NewLine}."));
 
                                 Thread.Sleep(3000);
 
-                                m_requestConfigurationError = "Received configuration error frame." + Environment.NewLine + m_requestConfigurationError;
+                                m_requestConfigurationError = $"Received configuration error frame.{Environment.NewLine}{m_requestConfigurationError}";
 
                                 throw new ApplicationException(m_requestConfigurationError);
                             }
 
-                            if (m_requestConfigurationAttachment is IConfigurationFrame)
+                            if (m_requestConfigurationAttachment is IConfigurationFrame frame)
                             {
-                                m_configurationFrame = m_requestConfigurationAttachment as IConfigurationFrame;
+                                m_configurationFrame = frame;
                                 ParseConfiguration();
                                 m_dispatcher.BeginInvoke(new Action(() => RequestConfigurationSuccess = true));
                             }
@@ -1515,15 +1368,14 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         RequestConfigurationPopupIsOpen = false;
                         timer.Stop();
 
-                        DisplayPopup("ERROR: " + ex.Message, "Request Configuration", MessageBoxImage.Error);
+                        DisplayPopup($"ERROR: {ex.Message}", "Request Configuration", MessageBoxImage.Error);
                     }));
                 }
                 finally
                 {
-                    if ((object)database != null)
-                        database.Dispose();
+                    database?.Dispose();
 
-                    if ((object)windowsServiceClient != null && (object)windowsServiceClient.Helper != null && (object)windowsServiceClient.Helper.RemotingClient != null)
+                    if (windowsServiceClient?.Helper?.RemotingClient != null)
                     {
                         windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
                         windowsServiceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
@@ -1544,7 +1396,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             catch (Exception ex)
             {
-                DisplayPopup("ERROR: " + ex.Message, "Cancel Configuration Request", MessageBoxImage.Error);
+                DisplayPopup($"ERROR: {ex.Message}", "Cancel Configuration Request", MessageBoxImage.Error);
             }
         }
 
@@ -1559,7 +1411,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             cc.Closed += delegate
             {
-                if ((object)cc.DialogResult != null && cc.DialogResult.GetValueOrDefault())
+                if (cc.DialogResult != null && cc.DialogResult.GetValueOrDefault())
                 {
                     m_configurationFrame = cc.ConfigurationFrame;
                     ParseConfiguration(false);
@@ -1578,7 +1430,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <param name="e">Event arguments.</param>
         private void Helper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
         {
-            foreach (string message in e.Argument2.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string message in e.Argument2.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (message.StartsWith("[PHASOR!SERVICES]") && !message.Contains("*"))
                     m_requestConfigurationError += message.Replace("[PHASOR!SERVICES]", "") + Environment.NewLine;
@@ -1622,31 +1474,34 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 if (ConnectToConcentrator && (PdcID == null || PdcID == 0))
                 {
-                    Device device = new Device();
-                    device.IsConcentrator = true;
-                    device.Acronym = PdcAcronym.ToUpper();
-                    device.Name = PdcName;
-                    device.ParentID = null;
-                    device.AccessID = AccessID;
-                    device.CompanyID = CompanyID == 0 ? (int?)null : CompanyID;
-                    device.HistorianID = HistorianID == 0 ? (int?)null : HistorianID;
-                    device.ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID;
-                    device.InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID;
-                    device.VendorDeviceID = PdcVendorDeviceID == 0 ? (int?)null : PdcVendorDeviceID;
-                    device.FramesPerSecond = PdcFrameRate;
-                    device.SkipDisableRealTimeData = SkipDisableRealTimeData;
-                    device.ConnectionString = GenerateConnectionString();
-                    device.Enabled = true;
+                    Device device = new Device
+                    {
+                        IsConcentrator = true,
+                        Acronym = PdcAcronym.ToUpper(),
+                        Name = PdcName,
+                        ParentID = null,
+                        AccessID = AccessID,
+                        CompanyID = CompanyID == 0 ? (int?)null : CompanyID,
+                        HistorianID = HistorianID == 0 ? (int?)null : HistorianID,
+                        ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID,
+                        InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID,
+                        VendorDeviceID = PdcVendorDeviceID == 0 ? (int?)null : PdcVendorDeviceID,
+                        FramesPerSecond = PdcFrameRate,
+                        SkipDisableRealTimeData = SkipDisableRealTimeData,
+                        ConnectionString = GenerateConnectionString(),
+                        Enabled = true
+                    };
+
                     Device.SaveWithAnalogsDigitals(null, device, false, 0, 0);
 
-                    device = Device.GetDevice(null, "WHERE Acronym = '" + PdcAcronym.ToUpper() + "'");
+                    device = Device.GetDevice(null, $"WHERE Acronym = '{PdcAcronym.ToUpper()}'");
                     PdcID = device.ID;
                     m_pdcDevice = device;
                 }
             }
             catch (Exception ex)
             {
-                DisplayPopup("ERROR: " + ex.Message, "Save PDC information", MessageBoxImage.Error);
+                DisplayPopup($"ERROR: {ex.Message}", "Save PDC information", MessageBoxImage.Error);
             }
             finally
             {
@@ -1671,13 +1526,18 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     if (inputWizardDevice.Include)
                     {
                         // Included NodeID to find devices
-                        Device device = Device.GetDevice(database, "WHERE Acronym = '" + inputWizardDevice.Acronym.ToUpper() + "' and NodeID = '" + database.CurrentNodeID() + "'");
+                        Device device = null;
+
+                        if (inputWizardDevice.ID > 0)
+                            device = Device.GetDevice(database, $"WHERE ID = {inputWizardDevice.ID}");
 
                         if (device == null)
-                        {
-                            device = new Device();
+                            device = Device.GetDevice(database, $"WHERE Acronym = '{inputWizardDevice.Acronym.ToUpper()}' AND NodeID = '{database.CurrentNodeID()}'");
+                        else
                             device.Acronym = inputWizardDevice.Acronym.ToUpper();
-                        }
+
+                        if (device == null)
+                            device = new Device { Acronym = inputWizardDevice.Acronym.ToUpper() };
 
                         device.Name = inputWizardDevice.Name;
                         device.CompanyID = CompanyID == 0 ? (int?)null : CompanyID;
@@ -1716,7 +1576,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         }
 
                         if (device.ID == 0)
-                            device.ID = Device.GetDevice(database, "WHERE Acronym = '" + inputWizardDevice.Acronym.ToUpper() + "'").ID;
+                        {
+                            device.ID = Device.GetDevice(database, $"WHERE Acronym = '{inputWizardDevice.Acronym.ToUpper()}'").ID;
+                            inputWizardDevice.ID = device.ID;
+                        }
 
                         IList<InputWizardDevicePhasor> inputPhasorList = inputWizardDevice.PhasorList;
                         HashSet<InputWizardDevicePhasor> unsavedInputPhasorSet = new HashSet<InputWizardDevicePhasor>(inputWizardDevice.PhasorList);
@@ -1733,7 +1596,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             inputPhasor = inputPhasorList[index];
                             oldPhasor = unsavedOldPhasorSet.FirstOrDefault(p => inputPhasor.Label == p.Label);
 
-                            if ((object)oldPhasor != null)
+                            if (oldPhasor != null)
                             {
                                 int oldSourceIndex = oldPhasor.SourceIndex;
 
@@ -1842,7 +1705,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 if (ConnectToConcentrator && PdcID != null && PdcID > 0)
                 {
                     if (m_pdcDevice == null)
-                        m_pdcDevice = Device.GetDevice(database, "WHERE ID = " + PdcID.ToString());
+                        m_pdcDevice = Device.GetDevice(database, $"WHERE ID = {PdcID}");
 
                     if (m_pdcDevice != null)
                         Device.NotifyService(m_pdcDevice);
@@ -1855,13 +1718,12 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             catch (Exception ex)
             {
-                DisplayPopup("ERROR: " + ex.Message, "Input Wizard Configuration", MessageBoxImage.Error);
+                DisplayPopup($"ERROR: {ex.Message}", "Input Wizard Configuration", MessageBoxImage.Error);
                 CommonFunctions.LogException(database, "Input wizard save configuration", ex);
             }
             finally
             {
-                if (database != null)
-                    database.Dispose();
+                database?.Dispose();
 
                 Mouse.OverrideCursor = null;
             }
@@ -1897,9 +1759,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 else
                 {
                     // If the acronym is formatted properly, check in the database to see if it already exists
-                    device = Device.GetDevice(null, " WHERE Acronym = '" + m_pdcAcronym.ToUpper() + "'");
+                    device = Device.GetDevice(null, $" WHERE Acronym = '{m_pdcAcronym.ToUpper()}'");
 
-                    if ((object)device != null)
+                    if (device != null)
                     {
                         if (device.IsConcentrator)
                         {
@@ -1939,7 +1801,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 if (!connectionString.EndsWith(";"))
                     connectionString += ";";
 
-                connectionString += "commandchannel={" + AlternateCommandChannel + "}";
+                connectionString += $"commandchannel={{{AlternateCommandChannel}}}";
             }
 
             return connectionString;
@@ -1959,7 +1821,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         // Fields
         private static ManualResetEvent s_responseWaitHandle;
-        private static readonly string[] s_commonVoltageLevels = { "69", "115", "138", "230", "345", "500", "765" };
+        private static readonly string[] s_commonVoltageLevels = { "69", "115", "138", "161", "230", "345", "500", "765" };
 
         #endregion
     }

@@ -64,6 +64,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets existing device ID, if any.
+        /// </summary>
+        public int ID { get; set; }
+
+        /// <summary>
         /// Gets or sets acronym of the <see cref="InputWizardDevice"/>.
         /// </summary>
         [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
