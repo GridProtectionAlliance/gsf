@@ -1820,7 +1820,7 @@ namespace GSF.TimeSeries.Transport
                     if (!filterToTemporalSessions || hasActiveTemporalSession)
                     {
                         clientEnumeration.Append(
-                            $"  {i.ToString().PadLeft(3)} - {connection.ConnectionID}\r\n" +
+                            $"  {(i+1).ToString().PadLeft(3)} - {connection.ConnectionID}\r\n" +
                             $"          {connection.SubscriberInfo}\r\n" + GetOperationalModes(connection) +
                             $"          Active Temporal Session = {(hasActiveTemporalSession ? "Yes" : "No")}\r\n\r\n");
                     }
