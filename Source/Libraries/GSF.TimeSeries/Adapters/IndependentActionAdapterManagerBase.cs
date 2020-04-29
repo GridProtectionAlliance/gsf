@@ -307,6 +307,11 @@ namespace GSF.TimeSeries.Adapters
         public int CurrentAdapterIndex { get; internal set; }
 
         /// <summary>
+        /// Get adapter output index currently being processed.
+        /// </summary>
+        public int CurrentOutputIndex { get; internal set; }
+
+        /// <summary>
         /// Returns the detailed status of the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.
         /// </summary>
         public override string Status
@@ -509,6 +514,8 @@ namespace GSF.TimeSeries.Adapters
                 // Setup output measurements for new child adapter
                 for (int j = 0; j < outputsPerAdapter; j++)
                 {
+                    CurrentOutputIndex = j;
+
                     string outputID = $"{adapterName}-{PerAdapterOutputNames[j].ToUpper()}";
                     string outputPointTag = string.Format(PointTagTemplate, outputID);
                     string signalReference = string.Format(SignalReferenceTemplate, outputID);

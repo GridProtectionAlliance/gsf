@@ -199,6 +199,11 @@ namespace GSF.TimeSeries.Adapters
         public int CurrentAdapterIndex { get; internal set; }
 
         /// <summary>
+        /// Get adapter output index currently being processed.
+        /// </summary>
+        public int CurrentOutputIndex { get; internal set; }
+
+        /// <summary>
         /// Returns the detailed status of the <see cref="IndependentInputAdapterManagerBase"/>.
         /// </summary>
         public override string Status

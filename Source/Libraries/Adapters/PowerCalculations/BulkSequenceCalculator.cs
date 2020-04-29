@@ -35,6 +35,7 @@ using GSF.FuzzyStrings;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units.EE;
+//using PhasorProtocolAdapters;
 using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
 using PhasorRecord = GSF.TimeSeries.Model.Phasor;
 using SignalType = GSF.Units.EE.SignalType;
@@ -133,6 +134,25 @@ namespace PowerCalculations
                 return null;
             }
         }
+
+        ///// <summary>
+        ///// Gets or sets template for output measurement point tag names.
+        ///// </summary>
+        //[ConnectionStringParameter]
+        //[Description("Defines template for output measurement point tag names, typically an expression like \"" + IndependentAdapterManagerExtensions.DefaultPointTagTemplate + "\".")]
+        //[DefaultValue(null)]
+        //public override string PointTagTemplate
+        //{
+        //    get
+        //    {
+        //        if (CurrentAdapterIndex > -1 && CurrentAdapterIndex < m_customAdapterSettings.Count && CurrentOutputIndex > -1 && CurrentOutputIndex < PerAdapterOutputNames.Count)
+        //        {
+        //            CommonPhasorServices.CreatePointTag()
+        //        }
+        //    }
+        //    // ReSharper disable once ValueParameterNotUsed
+        //    set { }
+        //}
 
         /// <summary>
         /// Gets or sets output measurements that the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/> will produce, if any.

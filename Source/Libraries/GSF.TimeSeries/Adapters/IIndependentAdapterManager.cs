@@ -147,7 +147,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Get adapter index currently being processed.
         /// </summary>
-        int CurrentAdapterIndex { get; } 
+        int CurrentAdapterIndex { get; }
+
+        /// <summary>
+        /// Get adapter output index currently being processed.
+        /// </summary>
+        int CurrentOutputIndex { get; }
 
         /// <summary>
         /// Parses connection string. Derived classes should override for custom connection string parsing.
