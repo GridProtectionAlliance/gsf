@@ -27,7 +27,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
@@ -39,6 +38,7 @@ using GSF.Units.EE;
 using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
 using PhasorRecord = GSF.TimeSeries.Model.Phasor;
 using SignalType = GSF.Units.EE.SignalType;
+using PhaseDetail = System.Tuple<GSF.TimeSeries.MeasurementKey, GSF.Units.EE.SignalType, GSF.TimeSeries.Model.Measurement, GSF.TimeSeries.Model.Phasor>;
 
 namespace PowerCalculations
 {
@@ -54,19 +54,9 @@ namespace PowerCalculations
         // Constants
 
         /// <summary>
-        /// Defines the default value for the <see cref="TargetPhasorType"/>.
+        /// Defines the default value for the <see cref="InputMeasurementKeys"/>.
         /// </summary>
-        public const string DefaultPhasorType = nameof(PhasorType.Voltage);
-
-        /// <summary>
-        /// Defines the default value for the <see cref="PerAdapterInputMeasurementsExpression"/>.
-        /// </summary>
-        public const string DefaultPerAdapterInputMeasurementsExpression = "FILTER ActiveMeasurements WHERE PhasorType = '{0}' AND Phase IN ('A', 'B', 'C') ORDER BY PhasorID";
-
-        /// <summary>
-        /// Defines the default value for the <see cref="IndependentActionAdapterManagerBase{TAdapter}.InputMeasurementIndexUsedForName"/>.
-        /// </summary>
-        public const int DefaultInputMeasurementIndexUsedForName = 2;
+        public const string DefaultInputMeasurementKeys = "FILTER ActiveMeasurements WHERE SignalType LIKE '%PH%' AND Phase IN ('A', 'B', 'C') ORDER BY PhasorID";
 
         // Fields
         private readonly List<PhasorType> m_outputAdapterPhasorTypes;
@@ -83,42 +73,11 @@ namespace PowerCalculations
         {
             m_outputAdapterPhasorTypes = new List<PhasorType>();
             m_customAdapterSettings = new List<string>();
-            base.InputMeasurementIndexUsedForName = DefaultInputMeasurementIndexUsedForName;
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the filter expression for each <see cref="SequenceCalculator"/> where <c>{0}</c> represents the
-        /// <c>PhasorType</c> field value, i.e., <c>V</c> for <see cref="PhasorType.Voltage"/> and <c>I</c> for
-        /// <see cref="PhasorType.Current"/> as defined by <see cref="TargetPhasorType"/>.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines the filter expression for each " + nameof(SequenceCalculator) + " where \"{0}\" expression token represents 'V' or 'I' as defined by " + nameof(TargetPhasorType) + " selection.")]
-        [DefaultValue(DefaultPerAdapterInputMeasurementsExpression)]
-        public string PerAdapterInputMeasurementsExpression { get; set; } = DefaultPerAdapterInputMeasurementsExpression;
-
-        /// <summary>
-        /// Gets or sets the target calculation type for the oscillation detector.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines the target calculation type for the oscillation detector.")]
-        [DefaultValue(typeof(PhasorType), DefaultPhasorType)]
-        public PhasorType TargetPhasorType { get; set; } = (PhasorType)Enum.Parse(typeof(PhasorType), DefaultPhasorType);
-
-        /// <summary>
-        /// Gets or sets the index into the per adapter input measurements to use for target adapter name.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines the index into the per adapter input measurements to use for target adapter name.")]
-        [DefaultValue(DefaultInputMeasurementIndexUsedForName)] // Overriding to provide implementation specific default value
-        public override int InputMeasurementIndexUsedForName
-        {
-            get => base.InputMeasurementIndexUsedForName;
-            set => base.InputMeasurementIndexUsedForName = value;
-        }
 
         /// <summary>
         /// Gets number of input measurement required by each adapter.
@@ -170,7 +129,10 @@ namespace PowerCalculations
         /// <summary>
         /// Gets or sets primary keys of input measurements for the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)] // Hiding parameter from manager - inputs managed via PerAdapterInputMeasurementsExpression
+        [ConnectionStringParameter]
+        [Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [DefaultValue(DefaultInputMeasurementKeys)] // Overriding to provide implementation specific default value
         public override MeasurementKey[] InputMeasurementKeys
         {
             get => base.InputMeasurementKeys;
@@ -187,22 +149,6 @@ namespace PowerCalculations
             set => base.OutputMeasurements = value;
         }
 
-        /// <summary>
-        /// Returns the detailed status of the <see cref="BulkSequenceCalculator"/>.
-        /// </summary>
-        public override string Status
-        {
-            get
-            {
-                StringBuilder status = new StringBuilder();
-
-                status.AppendLine($"        Target Phasor Type: {TargetPhasorType}");
-                status.Append(base.Status);
-
-                return status.ToString();
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -213,20 +159,13 @@ namespace PowerCalculations
         public override void ParseConnectionString()
         {
             Dictionary<string, string> settings = Settings;
-            string perAdapterInputMeasurementsExpression = PerAdapterInputMeasurementsExpression;
-            PhasorType targetPhasorType = TargetPhasorType;
 
-            if (settings.TryGetValue(nameof(TargetPhasorType), out string setting) && Enum.TryParse(setting, out PhasorType phasorType))
-                targetPhasorType = phasorType;
-
-            if (settings.TryGetValue(nameof(PerAdapterInputMeasurementsExpression), out setting) && !string.IsNullOrWhiteSpace(setting))
-                perAdapterInputMeasurementsExpression = setting;
-
-            settings[nameof(InputMeasurementKeys)] = string.Format(perAdapterInputMeasurementsExpression, targetPhasorType == PhasorType.Voltage ?  "V" : "I");
+            if (!settings.TryGetValue(nameof(InputMeasurementKeys), out string inputMeasurementKeys) || string.IsNullOrWhiteSpace(inputMeasurementKeys))
+                settings[nameof(InputMeasurementKeys)] = DefaultInputMeasurementKeys;
 
             base.ParseConnectionString();
 
-            Dictionary<int, List<Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord>>> devicePhaseDetails = new Dictionary<int, List<Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord>>>();
+            Dictionary<int, List<PhaseDetail>> devicePhaseDetails = new Dictionary<int, List<PhaseDetail>>();
 
             using (AdoDataConnection connection = GetConfiguredConnection())
             {
@@ -265,8 +204,8 @@ namespace PowerCalculations
 
                                     if (phase == 'A' || phase == 'B' || phase == 'C')
                                     {
-                                        List<Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord>> phases = devicePhaseDetails.GetOrAdd(deviceID, id => new List<Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord>>());
-                                        phases.Add(new Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord>(key, signalType, measurement, phasor));
+                                        List<PhaseDetail> phases = devicePhaseDetails.GetOrAdd(deviceID, id => new List<PhaseDetail>());
+                                        phases.Add(new PhaseDetail(key, signalType, measurement, phasor));
                                     }
                                     else
                                     {
@@ -288,10 +227,10 @@ namespace PowerCalculations
             HashSet<int> duplicatedMatches = new HashSet<int>();
             int incompleteCount = 0;
 
-            foreach (KeyValuePair<int, List<Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord>>> kvp in devicePhaseDetails)
+            foreach (KeyValuePair<int, List<PhaseDetail>> kvp in devicePhaseDetails)
             {
                 int deviceID = kvp.Key;
-                List<Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord>> phaseDetails = kvp.Value;
+                List<PhaseDetail> phaseDetails = kvp.Value;
 
                 // Check if the device has the minimum needed phasor count to perform sequence calculation
                 if (phaseDetails.Count < PerAdapterInputCount)
@@ -314,7 +253,7 @@ namespace PowerCalculations
 
                 for (int i = 0; i < phaseDetails.Count; i++)
                 {
-                    Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord> phaseDetail = phaseDetails[i];
+                    PhaseDetail phaseDetail = phaseDetails[i];
                     SignalType signalType = phaseDetail.Item2;
                     MeasurementRecord measurement = phaseDetail.Item3;
                     PhasorRecord phasor = phaseDetail.Item4;
@@ -373,7 +312,7 @@ namespace PowerCalculations
                     if (phaseIndexes.Count == 0)
                         return new List<int>();
 
-                    Debug.Assert(phaseIndexes.Count == phaseLabels.Count, "Target phase index and label lists lengths do not match");
+                    Debug.Assert(phaseIndexes.Count == phaseLabels.Count, "Target phase index and label list lengths do not match");
 
                     // Check for exact match, best possible case
                     for (int i = 0; i < phaseLabels.Count; i++)
@@ -382,7 +321,7 @@ namespace PowerCalculations
                             return new List<int>(new[] { phaseIndexes[i] });
                     }
 
-                    // Try fuzzy match for longest common subsequence length
+                    // Try fuzzy match for longest common sub-sequence length
                     List<string> fuzzyMatches = phaseLabels.Select(aPhaseLabel.LongestCommonSubsequence).ToList();
 
                     // Sort descending by greatest matching lengths
@@ -465,7 +404,7 @@ namespace PowerCalculations
 
                 bool tryGetMagnitudeMeasurement(int angleMeasurementIndex, out MeasurementKey magnitudeMeasurement)
                 {
-                    Tuple<MeasurementKey, SignalType, MeasurementRecord, PhasorRecord> phaseDetail = phaseDetails[angleMeasurementIndex];
+                    PhaseDetail phaseDetail = phaseDetails[angleMeasurementIndex];
                     MeasurementRecord angleMeasurementRecord = phaseDetail.Item3;
                     SignalType signalType = phaseDetail.Item2;
                     int phasorSourceIndex = angleMeasurementRecord.PhasorSourceIndex.GetValueOrDefault();
