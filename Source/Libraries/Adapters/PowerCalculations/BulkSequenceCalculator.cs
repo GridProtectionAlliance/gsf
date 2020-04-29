@@ -43,7 +43,7 @@ using PhaseDetail = System.Tuple<GSF.TimeSeries.MeasurementKey, GSF.Units.EE.Sig
 namespace PowerCalculations
 {
     /// <summary>
-    /// Represents an adapter that manages bulk detection of oscillations based on individual inputs.
+    /// Represents an adapter that manages bulk calculation of positive, negative and zero sequence values based on A, B and C phase data inputs.
     /// </summary>
     [Description("Bulk Sequence Calculator: Manages bulk calculation of positive, negative and zero sequence values based on A, B and C phase data inputs.")]
     [EditorBrowsable(EditorBrowsableState.Always)]
@@ -265,7 +265,7 @@ namespace PowerCalculations
                     if (phasorSourceIndex > 0)
                         phasorSourceIndexCounts[phasorSourceIndex] = phasorSourceIndexCounts.GetOrAdd(phasorSourceIndex, 0) + 1;
 
-                    // Just focusing on angle measurements since both angle and magnitude share same phase label
+                    // Just focusing on indexes for angle measurements since both angle and magnitude share same phase label
                     switch (signalType)
                     {
                         case SignalType.VPHA: // Voltage Phase Angle Measurement
