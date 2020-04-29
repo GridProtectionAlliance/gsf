@@ -117,6 +117,12 @@ namespace GSF.TimeSeries.Adapters
             if (instance.InputMeasurementIndexUsedForName < 0 || instance.InputMeasurementIndexUsedForName > instance.PerAdapterInputCount - 1)
                 instance.InputMeasurementIndexUsedForName = 0;
 
+            if (instance.SignalTypes != null && instance.SignalTypes.Length != instance.PerAdapterOutputNames.Count)
+            {
+                instance.OnStatusMessage(MessageLevel.Warning, $"Defined {nameof(IIndependentAdapterManager.SignalTypes)} array length for adapter \"{instance.Name}\" does not match {nameof(IIndependentAdapterManager.PerAdapterOutputNames)} array length, defaulting to {nameof(IIndependentAdapterManager.SignalType)} \"{instance.SignalType}\" for all outputs.");
+                instance.SignalTypes = null;
+            }
+
             instance.Initialized = true;
         }
 

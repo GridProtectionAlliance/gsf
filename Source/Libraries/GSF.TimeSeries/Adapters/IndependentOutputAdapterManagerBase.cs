@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using GSF.Data;
@@ -126,12 +125,28 @@ namespace GSF.TimeSeries.Adapters
         public virtual string SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
 
         /// <summary>
-        /// Gets or sets signal type for output measurements.
+        /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
         /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines the signal type for output measurements.")]
-        [DefaultValue(typeof(SignalType), DefaultSignalType)]
-        public virtual SignalType SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
+        /// <remarks>
+        /// Not used by output adapters, inputs into <see cref="IOutputAdapter"/> are not reentrant into time-series framework.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public SignalType SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
+
+        /// <summary>
+        /// Gets signal type for each output measurement, used when each output needs to be a different type.
+        /// </summary>
+        /// <remarks>
+        /// Not used by output adapters, inputs into <see cref="IOutputAdapter"/> are not reentrant into time-series framework.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public SignalType[] SignalTypes { get; } = null;
+
+        /// <summary>
+        /// Gets any custom adapter settings to be added to each adapter connection string. Can be used to add
+        /// settings that are custom per adapter.
+        /// </summary>
+        public virtual string CustomAdapterSettings { get; } = null;
 
         /// <summary>
         /// Gets or sets the target historian acronym for output measurements.
@@ -190,6 +205,11 @@ namespace GSF.TimeSeries.Adapters
         /// Gets input measurement <see cref="SignalType"/>'s for each of the <see cref="AdapterBase.InputMeasurementKeys"/>, if any.
         /// </summary>
         public virtual SignalType[] InputMeasurementKeyTypes { get; private set; }
+
+        /// <summary>
+        /// Get adapter index currently being processed.
+        /// </summary>
+        public int CurrentAdapterIndex { get; internal set; }
 
         /// <summary>
         /// Returns the detailed status of the <see cref="IndependentOutputAdapterManagerBase"/>.

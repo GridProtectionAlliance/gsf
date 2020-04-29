@@ -108,7 +108,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
+        /// Gets or sets output measurements that the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/> will produce, if any.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
@@ -210,12 +210,23 @@ namespace GSF.TimeSeries.Adapters
         public virtual string SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
 
         /// <summary>
-        /// Gets or sets signal type for output measurements.
+        /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the signal type for output measurements.")]
+        [Description("Defines the default signal type to use for output measurements. Used when per output measurement SignalTypes array is not defined.")]
         [DefaultValue(typeof(SignalType), DefaultSignalType)]
         public virtual SignalType SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
+
+        /// <summary>
+        /// Gets signal type for each output measurement, used when each output needs to be a different type.
+        /// </summary>
+        public virtual SignalType[] SignalTypes { get; } = null;
+
+        /// <summary>
+        /// Gets any custom adapter settings to be added to each adapter connection string. Can be used to add
+        /// settings that are custom per adapter.
+        /// </summary>
+        public virtual string CustomAdapterSettings { get; } = null;
 
         /// <summary>
         /// Gets or sets the target historian acronym for output measurements.
@@ -289,7 +300,12 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets current adapter ID counter.
         /// </summary>
         public uint AdapterIDCounter { get; set; }
-        
+
+        /// <summary>
+        /// Get adapter index currently being processed.
+        /// </summary>
+        public int CurrentAdapterIndex { get; internal set; }
+
         /// <summary>
         /// Returns the detailed status of the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.
         /// </summary>
@@ -471,6 +487,8 @@ namespace GSF.TimeSeries.Adapters
             // Create child adapter for provided inputs to the parent bulk collection-based adapter
             for (int i = 0; i < measurementKeys.Length; i += inputsPerAdapter)
             {
+                CurrentAdapterIndex = adapters.Count;
+
                 Guid[] inputs = new Guid[inputsPerAdapter];
                 Guid[] outputs = new Guid[outputsPerAdapter];
 
@@ -494,9 +512,10 @@ namespace GSF.TimeSeries.Adapters
                     string outputID = $"{adapterName}-{PerAdapterOutputNames[j].ToUpper()}";
                     string outputPointTag = string.Format(PointTagTemplate, outputID);
                     string signalReference = string.Format(SignalReferenceTemplate, outputID);
+                    SignalType signalType = SignalTypes?[j] ?? SignalType;
 
                     // Get output measurement record, creating a new one if needed
-                    MeasurementRecord measurement = this.GetMeasurementRecord(outputPointTag, signalReference, SignalType, TargetHistorianAcronym);
+                    MeasurementRecord measurement = this.GetMeasurementRecord(outputPointTag, signalReference, signalType, TargetHistorianAcronym);
 
                     // Track output signal IDs
                     signalIDs.Add(measurement.SignalID);
@@ -507,11 +526,16 @@ namespace GSF.TimeSeries.Adapters
                 settings[nameof(InputMeasurementKeys)] = string.Join(";", inputs);
                 settings[nameof(OutputMeasurements)] = string.Join(";", outputs);
 
+                string connectionString = settings.JoinKeyValuePairs();
+
+                if (!string.IsNullOrWhiteSpace(CustomAdapterSettings))
+                    connectionString = $"{connectionString}; {CustomAdapterSettings}";
+
                 adapters.Add(new TAdapter
                 {
                     Name = adapterName,
                     ID = AdapterIDCounter++,
-                    ConnectionString = settings.JoinKeyValuePairs(),
+                    ConnectionString = connectionString,
                     DataSource = DataSource
                 });
             }

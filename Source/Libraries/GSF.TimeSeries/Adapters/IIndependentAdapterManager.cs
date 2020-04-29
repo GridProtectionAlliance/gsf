@@ -66,9 +66,20 @@ namespace GSF.TimeSeries.Adapters
         string SignalReferenceTemplate { get; set; }
 
         /// <summary>
-        /// Gets or sets signal type for output measurements.
+        /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
         /// </summary>
         SignalType SignalType { get; set; }
+
+        /// <summary>
+        /// Gets signal type for each output measurement, used when each output needs to be a different type.
+        /// </summary>
+        SignalType[] SignalTypes { get; }
+
+        /// <summary>
+        /// Gets any custom adapter settings to be added to each adapter connection string. Can be used to add
+        /// settings that are custom per adapter.
+        /// </summary>
+        string CustomAdapterSettings { get; }
 
         /// <summary>
         /// Gets or sets the target historian acronym for output measurements.
@@ -132,6 +143,11 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets current adapter ID counter.
         /// </summary>
         uint AdapterIDCounter { get; set; }
+
+        /// <summary>
+        /// Get adapter index currently being processed.
+        /// </summary>
+        int CurrentAdapterIndex { get; } 
 
         /// <summary>
         /// Parses connection string. Derived classes should override for custom connection string parsing.
