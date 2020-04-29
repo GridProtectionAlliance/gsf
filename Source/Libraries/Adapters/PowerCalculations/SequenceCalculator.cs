@@ -53,8 +53,6 @@ namespace PowerCalculations
         // Fields
         private MeasurementKey[] m_angles;
         private MeasurementKey[] m_magnitudes;
-        private bool m_trackRecentValues;
-        private int m_sampleSize;
         private string m_magnitudeUnits;
         private List<double> m_positiveMagnitudeSample;
         private List<double> m_positiveAngleSample;
@@ -63,14 +61,37 @@ namespace PowerCalculations
         private List<double> m_zeroMagnitudeSample;
         private List<double> m_zeroAngleSample;
 
-        // Important: Make sure output definition defines points in the following order
-        private enum Output
+        /// <summary>
+        /// Defines the output measurements for the <see cref="SequenceCalculator"/>.
+        /// </summary>
+        /// <remarks>
+        /// One output measurement should be defined for each enumeration value, in order:
+        /// </remarks>
+        public enum Output
         {
+            /// <summary>
+            /// Positive sequence magnitude measurement.
+            /// </summary>
             PositiveMagnitude,
+            /// <summary>
+            /// Positive sequence angle measurement.
+            /// </summary>
             PositiveAngle,
+            /// <summary>
+            /// Negative sequence magnitude measurement.
+            /// </summary>
             NegativeMagnitude,
+            /// <summary>
+            /// Negative sequence angle measurement.
+            /// </summary>
             NegativeAngle,
+            /// <summary>
+            /// Zero sequence magnitude measurement.
+            /// </summary>
             ZeroMagnitude,
+            /// <summary>
+            /// Zero sequence angle measurement.
+            /// </summary>
             ZeroAngle
         }
 
@@ -81,49 +102,23 @@ namespace PowerCalculations
         /// <summary>
         /// Gets or sets flag that determines if the last few values should be monitored.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Flag that determines if the last few values should be monitored."),
-        DefaultValue(true)]
-        public bool TrackRecentValues
-        {
-            get
-            {
-                return m_trackRecentValues;
-            }
-            set
-            {
-                m_trackRecentValues = value;
-            }
-        }
+        [ConnectionStringParameter]
+        [Description("Flag that determines if the last few values should be monitored.")]
+        [DefaultValue(true)]
+        public bool TrackRecentValues { get; set; }
 
         /// <summary>
         /// Gets or sets the sample size of the data to be monitored.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the sample size of the data to be monitored."),
-        DefaultValue(5)]
-        public int SampleSize
-        {
-            get
-            {
-                return m_sampleSize;
-            }
-            set
-            {
-                m_sampleSize = value;
-            }
-        }
+        [ConnectionStringParameter]
+        [Description("Define the sample size of the data to be monitored.")]
+        [DefaultValue(5)]
+        public int SampleSize { get; set; }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool SupportsTemporalProcessing => true;
 
         /// <summary>
         /// Returns the detailed status of the <see cref="PowerCalculator"/>.
@@ -149,7 +144,7 @@ namespace PowerCalculations
                 status.AppendFormat("             Phase C angle: {0}", m_angles[2]);
                 status.AppendLine();
 
-                if (m_trackRecentValues)
+                if (TrackRecentValues)
                 {
                     status.AppendLine();
 
@@ -165,7 +160,7 @@ namespace PowerCalculations
                                 List<double> positiveMagnitudeSample = m_positiveMagnitudeSample.GetRange(m_positiveMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
                                 List<double> positiveAngleSample = m_positiveAngleSample.GetRange(m_positiveMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
 
-                                status.Append(positiveMagnitudeSample.Zip(positiveAngleSample, (mV, mA) => string.Format("{0:0.00} {1}, {2:0.00}°", mV, m_magnitudeUnits, mA)).ToDelimitedString("\r\n                            "));
+                                status.Append(positiveMagnitudeSample.Zip(positiveAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
                             }
                             else
                             {
@@ -187,7 +182,7 @@ namespace PowerCalculations
                                 List<double> negativeMagnitudeSample = m_negativeMagnitudeSample.GetRange(m_negativeMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
                                 List<double> negativeAngleSample = m_negativeAngleSample.GetRange(m_negativeMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
 
-                                status.Append(negativeMagnitudeSample.Zip(negativeAngleSample, (mV, mA) => string.Format("{0:0.00} {1}, {2:0.00}°", mV, m_magnitudeUnits, mA)).ToDelimitedString("\r\n                            "));
+                                status.Append(negativeMagnitudeSample.Zip(negativeAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
                             }
                             else
                             {
@@ -209,7 +204,7 @@ namespace PowerCalculations
                                 List<double> zeroMagnitudeSample = m_zeroMagnitudeSample.GetRange(m_zeroMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
                                 List<double> zeroAngleSample = m_zeroAngleSample.GetRange(m_zeroMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
 
-                                status.Append(zeroMagnitudeSample.Zip(zeroAngleSample, (mV, mA) => string.Format("{0:0.00} {1}, {2:0.00}°", mV, m_magnitudeUnits, mA)).ToDelimitedString("\r\n                            "));
+                                status.Append(zeroMagnitudeSample.Zip(zeroAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
                             }
                             else
                             {
@@ -239,18 +234,15 @@ namespace PowerCalculations
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Load parameters
-            if (settings.TryGetValue("trackRecentValues", out setting))
-                m_trackRecentValues = setting.ParseBoolean();
-            else
-                m_trackRecentValues = true;
+            TrackRecentValues = !settings.TryGetValue("trackRecentValues", out string setting) || setting.ParseBoolean();
 
-            if (settings.TryGetValue("sampleSize", out setting))            // Data sample size to monitor, in seconds
-                m_sampleSize = int.Parse(setting);
+            // Data sample size to monitor, in seconds
+            if (settings.TryGetValue("sampleSize", out setting) && int.TryParse(setting, out int sampleSize))
+                SampleSize = sampleSize;
             else
-                m_sampleSize = 5;
+                SampleSize = 5;
 
             // Load needed phase angle measurement keys from defined InputMeasurementKeys
             m_angles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHA).ToArray();
@@ -278,7 +270,7 @@ namespace PowerCalculations
             }
             else
             {
-                // Make only only one kind of magnitudes are defined - not a mixture of voltage and currents
+                // Make only one kind of magnitudes are defined - not a mixture of voltage and currents
                 if (InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).Any())
                     throw new InvalidOperationException("Magnitude input measurements for a single sequence calculator instance should only be for voltages or currents - not both.");
 
@@ -301,7 +293,7 @@ namespace PowerCalculations
             if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
                 throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Positive Sequence Magnitude\", \"Positive Sequence Angle\", \"Negative Sequence Magnitude\", \"Negative Sequence Angle\", \"Zero Sequence Magnitude\" and \"Zero Sequence Angle\" - in this order.");
 
-            if (m_trackRecentValues)
+            if (TrackRecentValues)
             {
                 m_positiveMagnitudeSample = new List<double>();
                 m_positiveAngleSample = new List<double>();
@@ -313,7 +305,7 @@ namespace PowerCalculations
 
             // Assign a default adapter name to be used if sequence calculator is loaded as part of automated collection
             if (string.IsNullOrWhiteSpace(Name))
-                Name = string.Format("SC!{0}", OutputMeasurements[(int)Output.PositiveMagnitude].Key);
+                Name = $"SC!{OutputMeasurements[(int)Output.PositiveMagnitude].Key}";
         }
 
         /// <summary>
@@ -331,11 +323,10 @@ namespace PowerCalculations
             {
                 ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
                 double mA = 0.0D, aA = 0.0D, mB = 0.0D, aB = 0.0D, mC = 0.0D, aC = 0.0D;
-                IMeasurement measurement;
                 bool allValuesReceived = false;
 
                 // Get all needed measurement values from this frame
-                if (measurements.TryGetValue(m_magnitudes[0], out measurement) && measurement.ValueQualityIsGood())
+                if (measurements.TryGetValue(m_magnitudes[0], out IMeasurement measurement) && measurement.ValueQualityIsGood())
                 {
                     // Get A-phase magnitude value
                     mA = measurement.AdjustedValue;
@@ -373,76 +364,75 @@ namespace PowerCalculations
                     }
                 }
 
+                if (!allValuesReceived)
+                    return;
 
-                if (allValuesReceived)
+                ComplexNumber aPhase = new ComplexNumber(Angle.FromDegrees(aA), mA);
+                ComplexNumber bPhase = new ComplexNumber(Angle.FromDegrees(aB), mB);
+                ComplexNumber cPhase = new ComplexNumber(Angle.FromDegrees(aC), mC);
+
+                zeroSequence = (aPhase + bPhase + cPhase) / 3.0D;
+                positiveSequence = (aPhase + a * bPhase + aSq * cPhase) / 3.0D;
+                negativeSequence = (aPhase + aSq * bPhase + a * cPhase) / 3.0D;
+
+                if (!TrackRecentValues)
+                    return;
+
+                // Add latest positive sequence to data sample
+                lock (m_positiveMagnitudeSample)
                 {
-                    ComplexNumber aPhase = new ComplexNumber(Angle.FromDegrees(aA), mA);
-                    ComplexNumber bPhase = new ComplexNumber(Angle.FromDegrees(aB), mB);
-                    ComplexNumber cPhase = new ComplexNumber(Angle.FromDegrees(aC), mC);
+                    m_positiveMagnitudeSample.Add(positiveSequence.Magnitude);
 
-                    zeroSequence = (aPhase + bPhase + cPhase) / 3.0D;
-                    positiveSequence = (aPhase + a * bPhase + aSq * cPhase) / 3.0D;
-                    negativeSequence = (aPhase + aSq * bPhase + a * cPhase) / 3.0D;
+                    // Maintain sample size
+                    while (m_positiveMagnitudeSample.Count > SampleSize)
+                        m_positiveMagnitudeSample.RemoveAt(0);
+                }
 
-                    if (m_trackRecentValues)
-                    {
-                        // Add latest positive sequence to data sample
-                        lock (m_positiveMagnitudeSample)
-                        {
-                            m_positiveMagnitudeSample.Add(positiveSequence.Magnitude);
+                lock (m_positiveAngleSample)
+                {
+                    m_positiveAngleSample.Add(positiveSequence.Angle);
 
-                            // Maintain sample size
-                            while (m_positiveMagnitudeSample.Count > m_sampleSize)
-                                m_positiveMagnitudeSample.RemoveAt(0);
-                        }
+                    // Maintain sample size
+                    while (m_positiveAngleSample.Count > SampleSize)
+                        m_positiveAngleSample.RemoveAt(0);
+                }
 
-                        lock (m_positiveAngleSample)
-                        {
-                            m_positiveAngleSample.Add(positiveSequence.Angle);
+                // Add latest negative sequence to data sample
+                lock (m_negativeMagnitudeSample)
+                {
+                    m_negativeMagnitudeSample.Add(negativeSequence.Magnitude);
 
-                            // Maintain sample size
-                            while (m_positiveAngleSample.Count > m_sampleSize)
-                                m_positiveAngleSample.RemoveAt(0);
-                        }
+                    // Maintain sample size
+                    while (m_negativeMagnitudeSample.Count > SampleSize)
+                        m_negativeMagnitudeSample.RemoveAt(0);
+                }
 
-                        // Add latest negative sequence to data sample
-                        lock (m_negativeMagnitudeSample)
-                        {
-                            m_negativeMagnitudeSample.Add(negativeSequence.Magnitude);
+                lock (m_negativeAngleSample)
+                {
+                    m_negativeAngleSample.Add(negativeSequence.Angle);
 
-                            // Maintain sample size
-                            while (m_negativeMagnitudeSample.Count > m_sampleSize)
-                                m_negativeMagnitudeSample.RemoveAt(0);
-                        }
+                    // Maintain sample size
+                    while (m_negativeAngleSample.Count > SampleSize)
+                        m_negativeAngleSample.RemoveAt(0);
+                }
 
-                        lock (m_negativeAngleSample)
-                        {
-                            m_negativeAngleSample.Add(negativeSequence.Angle);
+                // Add latest zero sequence to data sample
+                lock (m_zeroMagnitudeSample)
+                {
+                    m_zeroMagnitudeSample.Add(zeroSequence.Magnitude);
 
-                            // Maintain sample size
-                            while (m_negativeAngleSample.Count > m_sampleSize)
-                                m_negativeAngleSample.RemoveAt(0);
-                        }
+                    // Maintain sample size
+                    while (m_zeroMagnitudeSample.Count > SampleSize)
+                        m_zeroMagnitudeSample.RemoveAt(0);
+                }
 
-                        // Add latest zero sequence to data sample
-                        lock (m_zeroMagnitudeSample)
-                        {
-                            m_zeroMagnitudeSample.Add(zeroSequence.Magnitude);
+                lock (m_zeroAngleSample)
+                {
+                    m_zeroAngleSample.Add(zeroSequence.Angle);
 
-                            // Maintain sample size
-                            while (m_zeroMagnitudeSample.Count > m_sampleSize)
-                                m_zeroMagnitudeSample.RemoveAt(0);
-                        }
-
-                        lock (m_zeroAngleSample)
-                        {
-                            m_zeroAngleSample.Add(zeroSequence.Angle);
-
-                            // Maintain sample size
-                            while (m_zeroAngleSample.Count > m_sampleSize)
-                                m_zeroAngleSample.RemoveAt(0);
-                        }
-                    }
+                    // Maintain sample size
+                    while (m_zeroAngleSample.Count > SampleSize)
+                        m_zeroAngleSample.RemoveAt(0);
                 }
             }
             finally
@@ -465,9 +455,16 @@ namespace PowerCalculations
 
         #region [ Static ]
 
+        // Static Fields
+
         // a = e^((2/3) * pi * i)
         private static readonly ComplexNumber a = new ComplexNumber(Math.Cos(Rad120), Math.Sin(Rad120));
         private static readonly ComplexNumber aSq = a * a;
+
+        /// <summary>
+        /// Array of <see cref="Output"/> enumeration values.
+        /// </summary>
+        public static readonly Output[] Outputs = Enum.GetValues(typeof(Output)) as Output[];
 
         #endregion
     }
