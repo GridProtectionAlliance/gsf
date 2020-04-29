@@ -201,6 +201,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         #region [ Static ]
 
+        private const int GroupAccessID = -99999;
+
         // Static Methods
 
         /// <summary>
@@ -236,7 +238,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 resultSet.Tables["PdcTable"].Rows.Add(row);
 
                 // Get Non-PDC device list.
-                resultSet.Tables.Add(database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, Acronym, Name, CompanyName, ProtocolName, VendorDeviceName, " +
+                resultSet.Tables.Add(database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, Acronym, Name, AccessID, CompanyName, ProtocolName, VendorDeviceName, " +
                     "ParentAcronym, Enabled FROM DeviceDetail WHERE NodeID = {0} AND IsConcentrator = {1} AND Enabled = {2} ORDER BY Acronym", "nodeID", "isConcentrator", "enabled"),
                     DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(true)).Copy());
 
@@ -269,7 +271,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                 Expanded = false,
                                 DeviceList = new ObservableCollection<RealTimeDevice>(
                                         from device in resultSet.Tables["DeviceTable"].AsEnumerable()
-                                        where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym")
+                                        where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym") && device.Field<int>("AccessID") != GroupAccessID
                                         select new RealTimeDevice
                                             {
                                                 ID = device.ConvertNullableField<int>("ID"),
