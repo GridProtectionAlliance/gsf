@@ -134,7 +134,7 @@ namespace GSF.TimeSeries.Adapters
         public SignalType SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
 
         /// <summary>
-        /// Gets signal type for each output measurement, used when each output needs to be a different type.
+        /// Gets per adapter signal type for output measurements, used when each output needs to be a different type.
         /// </summary>
         /// <remarks>
         /// Not used by output adapters, inputs into <see cref="IOutputAdapter"/> are not reentrant into time-series framework.

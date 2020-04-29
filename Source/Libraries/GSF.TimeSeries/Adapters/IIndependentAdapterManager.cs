@@ -71,7 +71,7 @@ namespace GSF.TimeSeries.Adapters
         SignalType SignalType { get; set; }
 
         /// <summary>
-        /// Gets signal type for each output measurement, used when each output needs to be a different type.
+        /// Gets per adapter signal type for output measurements, used when each output needs to be a different type.
         /// </summary>
         SignalType[] SignalTypes { get; }
 
