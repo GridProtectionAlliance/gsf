@@ -413,7 +413,7 @@ namespace PowerCalculations
                     if (phasorSourceIndex == 0)
                     {
                         OnStatusMessage(MessageLevel.Warning, $"Measurement \"{angleMeasurementRecord.PointTag}\" [{signalType}] did not define a PhasorSourceIndex - this was unexpected, A/B/C phasor-set will be skipped for sequence calculations.");
-                        magnitudeMeasurement = default;
+                        magnitudeMeasurement = default(MeasurementKey);
                         return false;
                     }
 
@@ -435,7 +435,7 @@ namespace PowerCalculations
                         if (signalType != SignalType.VPHM && signalType != SignalType.IPHM)
                         {
                             OnStatusMessage(MessageLevel.Warning, $"Measurement \"{magnitudeMeasurementRecord.PointTag}\" [{signalType}] is not a magnitude measurement - this was unexpected, A/B/C phasor-set will be skipped for sequence calculations.");
-                            magnitudeMeasurement = default;
+                            magnitudeMeasurement = default(MeasurementKey);
                             return false;
                         }
 
@@ -443,7 +443,7 @@ namespace PowerCalculations
                         return true;
                     }
 
-                    magnitudeMeasurement = default;
+                    magnitudeMeasurement = default(MeasurementKey);
                     return false;
                 }
 
