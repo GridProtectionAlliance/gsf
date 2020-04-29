@@ -191,9 +191,9 @@ namespace GSF.TimeSeries.Adapters
             status.AppendLine();
             status.AppendFormat("      Original Data Member: {0}", instance.OriginalDataMember);
             status.AppendLine();
-            status.AppendFormat("     Config Reload Timeout: {0:N0} ms", instance.ConfigurationReloadWaitAttempts);
+            status.AppendFormat("     Config Reload Timeout: {0:N0} ms", instance.ConfigurationReloadWaitTimeout);
             status.AppendLine();
-            status.AppendFormat("    Config Reload Attempts: {0:N0}", instance.ConfigurationReloadWaitTimeout);
+            status.AppendFormat("    Config Reload Attempts: {0:N0}", instance.ConfigurationReloadWaitAttempts);
             status.AppendLine();
             status.AppendFormat("Database Connection String: {0}", string.IsNullOrWhiteSpace(instance.DatabaseConnectionString) ? "Using <systemSettings>" : instance.DatabaseConnectionString);
             status.AppendLine();
