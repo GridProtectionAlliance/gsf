@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AverageFrequency.cs" />
+    <Compile Include="BulkSequenceCalculator.cs" />
     <Compile Include="PowerMultiCalculator\MeasurementRepository.cs" />
     <Compile Include="PowerMultiCalculator\PowerCalculation.cs" />
     <Compile Include="PowerMultiCalculator\PowerCalculationConfigurationValidation.cs" />
