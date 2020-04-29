@@ -883,7 +883,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="e">Event arguments for event that contains references to the new measurements.</param>
         public virtual void NewMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
-            m_filterAdapters.HandleNewMeasurements(e.Argument);
+            m_filterAdapters?.HandleNewMeasurements(e.Argument);
         }
 
         /// <summary>
