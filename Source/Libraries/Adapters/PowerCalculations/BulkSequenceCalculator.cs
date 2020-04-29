@@ -54,7 +54,7 @@ namespace PowerCalculations
         // Constants
 
         /// <summary>
-        /// Defines the default value for the <see cref="InputMeasurementKeys"/>.
+        /// Defines the default value for the <see cref="IndependentActionAdapterManagerBase{TAdapter}.InputMeasurementKeys"/>.
         /// </summary>
         public const string DefaultInputMeasurementKeys = "FILTER ActiveMeasurements WHERE SignalType LIKE '%PH%' AND Phase IN ('A', 'B', 'C') ORDER BY PhasorID";
 
@@ -83,6 +83,14 @@ namespace PowerCalculations
         /// Gets number of input measurement required by each adapter.
         /// </summary>
         public override int PerAdapterInputCount => 6;
+
+        /// <summary>
+        /// Gets or sets the index into the per adapter input measurements to use for target adapter name.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the index into the per adapter input measurements to use for target adapter name.")]
+        [DefaultValue(0)]
+        public override int InputMeasurementIndexUsedForName { get; set; } = 0;
 
         /// <summary>
         /// Gets output measurement names.
@@ -124,19 +132,6 @@ namespace PowerCalculations
 
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets primary keys of input measurements for the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
-        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        [DefaultValue(DefaultInputMeasurementKeys)] // Overriding to provide implementation specific default value
-        public override MeasurementKey[] InputMeasurementKeys
-        {
-            get => base.InputMeasurementKeys;
-            set => base.InputMeasurementKeys = value;
         }
 
         /// <summary>
