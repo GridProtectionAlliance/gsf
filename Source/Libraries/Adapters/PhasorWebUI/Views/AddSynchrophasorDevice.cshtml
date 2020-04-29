@@ -3345,6 +3345,11 @@
                         // Select last value
                         var lastInstanceName = Cookies.get("instanceName");
 
+                        if (lastInstanceName === undefined) {
+                            if (names.indexOf("PPA") !== -1)
+                                lastInstanceName = "PPA"
+                        }
+
                         if (lastInstanceName === undefined)
                             lastInstanceName = instanceNameSelect.eq(0).val();
 
