@@ -202,12 +202,20 @@ namespace GSF.TimeSeries.Adapters
         public virtual string PointTagTemplate { get; set; } = DefaultPointTagTemplate;
 
         /// <summary>
-        /// Gets or sets template for local signal reference measurement name for source historian point.
+        /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines template for output measurement signal reference names, typically an expression like \"" + DefaultSignalReferenceTemplate + "\".")]
         [DefaultValue(DefaultSignalReferenceTemplate)]
         public virtual string SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
+
+        /// <summary>
+        /// Gets or sets template for output measurement descriptions.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines template for output measurement descriptions, typically an expression like \"" + DefaultDescriptionTemplate + "\".")]
+        [DefaultValue(DefaultDescriptionTemplate)]
+        public virtual string DescriptionTemplate { get; set; } = DefaultDescriptionTemplate;
 
         /// <summary>
         /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
@@ -302,14 +310,19 @@ namespace GSF.TimeSeries.Adapters
         public uint AdapterIDCounter { get; set; }
 
         /// <summary>
-        /// Get adapter index currently being processed.
+        /// Gets adapter index currently being processed.
         /// </summary>
         public int CurrentAdapterIndex { get; internal set; }
 
         /// <summary>
-        /// Get adapter output index currently being processed.
+        /// Gets adapter output index currently being processed.
         /// </summary>
         public int CurrentOutputIndex { get; internal set; }
+
+        /// <summary>
+        /// Gets associated device ID for <see cref="CurrentAdapterIndex"/>, if any, for measurement generation.
+        /// </summary>
+        public virtual int CurrentDeviceID { get; } = 0;
 
         /// <summary>
         /// Returns the detailed status of the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.
@@ -520,9 +533,10 @@ namespace GSF.TimeSeries.Adapters
                     string outputPointTag = string.Format(PointTagTemplate, outputID);
                     string signalReference = string.Format(SignalReferenceTemplate, outputID);
                     SignalType signalType = SignalTypes?[j] ?? SignalType;
+                    string description = string.Format(DescriptionTemplate, outputID, signalType, Name, GetType().Name);
 
                     // Get output measurement record, creating a new one if needed
-                    MeasurementRecord measurement = this.GetMeasurementRecord(outputPointTag, signalReference, signalType, TargetHistorianAcronym);
+                    MeasurementRecord measurement = this.GetMeasurementRecord(CurrentDeviceID, outputPointTag, signalReference, description, signalType, TargetHistorianAcronym);
 
                     // Track output signal IDs
                     signalIDs.Add(measurement.SignalID);

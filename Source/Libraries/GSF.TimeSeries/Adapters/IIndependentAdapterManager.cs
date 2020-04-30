@@ -61,9 +61,14 @@ namespace GSF.TimeSeries.Adapters
         string PointTagTemplate { get; set; }
 
         /// <summary>
-        /// Gets or sets template for local signal reference measurement name for source historian point.
+        /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         string SignalReferenceTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets template for output measurement descriptions.
+        /// </summary>
+        string DescriptionTemplate { get; set; }
 
         /// <summary>
         /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
@@ -145,14 +150,19 @@ namespace GSF.TimeSeries.Adapters
         uint AdapterIDCounter { get; set; }
 
         /// <summary>
-        /// Get adapter index currently being processed.
+        /// Gets adapter index currently being processed.
         /// </summary>
         int CurrentAdapterIndex { get; }
 
         /// <summary>
-        /// Get adapter output index currently being processed.
+        /// Gets adapter output index currently being processed.
         /// </summary>
         int CurrentOutputIndex { get; }
+
+        /// <summary>
+        /// Gets associated device ID for <see cref="CurrentAdapterIndex"/>, if any, for measurement generation.
+        /// </summary>
+        int CurrentDeviceID { get; }
 
         /// <summary>
         /// Parses connection string. Derived classes should override for custom connection string parsing.

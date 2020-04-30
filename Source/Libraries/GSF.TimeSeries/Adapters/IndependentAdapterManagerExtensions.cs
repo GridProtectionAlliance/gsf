@@ -71,6 +71,11 @@ namespace GSF.TimeSeries.Adapters
         public const string DefaultSignalReferenceTemplate = DefaultPointTagTemplate + "-CV";
 
         /// <summary>
+        /// Defines the default value for the <see cref="IIndependentAdapterManager.DescriptionTemplate"/>.
+        /// </summary>
+        public const string DefaultDescriptionTemplate = "{0} [{1}] measurement created for {2} [{3}].";
+
+        /// <summary>
         /// Defines the default value for the <see cref="IIndependentAdapterManager.SignalType"/>.
         /// </summary>
         public const string DefaultSignalType = "CALC";
@@ -127,12 +132,14 @@ namespace GSF.TimeSeries.Adapters
         /// Gets measurement record, creating it if needed.
         /// </summary>
         /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
+        /// <param name="currentDeviceID">Device ID associated with current adapter, or zero if none.</param>
         /// <param name="pointTag">Point tag of measurement.</param>
         /// <param name="signalReference">Signal reference of measurement.</param>
+        /// <param name="description">Description of measurement.</param>
         /// <param name="signalType">Signal type of measurement.</param>
         /// <param name="targetHistorianAcronym">Acronym of target historian for measurement.</param>
         /// <returns>Measurement record.</returns>
-        public static MeasurementRecord GetMeasurementRecord(this IIndependentAdapterManager instance, string pointTag, string signalReference, SignalType signalType = SignalType.CALC, string targetHistorianAcronym = "PPA")
+        public static MeasurementRecord GetMeasurementRecord(this IIndependentAdapterManager instance, int currentDeviceID, string pointTag, string signalReference, string description, SignalType signalType = SignalType.CALC, string targetHistorianAcronym = "PPA")
         {
             // Open database connection as defined in configuration file "systemSettings" category
             using (AdoDataConnection connection = instance.GetConfiguredConnection())
@@ -143,7 +150,7 @@ namespace GSF.TimeSeries.Adapters
                 TableOperations<SignalTypeRecord> signalTypeTable = new TableOperations<SignalTypeRecord>(connection);
 
                 // Lookup target device ID
-                int? deviceID = deviceTable.QueryRecordWhere("Acronym = {0}", instance.Name)?.ID;
+                int? deviceID = currentDeviceID > 0 ? currentDeviceID : deviceTable.QueryRecordWhere("Acronym = {0}", instance.Name)?.ID;
 
                 // Lookup target historian ID
                 int? historianID = historianTable.QueryRecordWhere("Acronym = {0}", targetHistorianAcronym)?.ID;
@@ -160,7 +167,7 @@ namespace GSF.TimeSeries.Adapters
                 measurement.PointTag = pointTag;
                 measurement.SignalReference = signalReference;
                 measurement.SignalTypeID = signalTypeID;
-                measurement.Description = $"{signalType} measurement created for {instance.Name} [{instance.GetType().Name}].";
+                measurement.Description = description;
 
                 // Save record updates
                 measurementTable.AddNewOrUpdateRecord(measurement);
