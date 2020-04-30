@@ -156,16 +156,21 @@ namespace NoInetFixUtil
 
             if (applyAll)
             {
-                if (!ServiceOIDCheckBox.Checked)
-                    ServiceOIDCheckBox.Checked = true;
-                if (!PublisherEvidenceCheckBox.Checked)
-                    PublisherEvidenceCheckBox.Checked = true;
-                if (!ClientOIDCheckBox.Checked)
-                    ClientOIDCheckBox.Checked = true;
-                if (!RootCertificateListCheckBox.Checked)
-                    RootCertificateListCheckBox.Checked = true;
+                try
+                {
+                    if (!ServiceOIDCheckBox.Checked)
+                        ServiceOIDCheckBox.Checked = true;
+                    if (!PublisherEvidenceCheckBox.Checked)
+                        PublisherEvidenceCheckBox.Checked = true;
+                    if (!ClientOIDCheckBox.Checked)
+                        ClientOIDCheckBox.Checked = true;
+                    if (!RootCertificateListCheckBox.Checked)
+                        RootCertificateListCheckBox.Checked = true;
 
+                }
+                catch { }
 
+                this.Close();
 
             }
         }
