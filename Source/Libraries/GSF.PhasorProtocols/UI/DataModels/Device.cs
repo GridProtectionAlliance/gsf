@@ -736,8 +736,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-                systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openHistorian.");
-                s_companyAcronym = systemSettings["CompanyAcronym"].Value;
+                s_companyAcronym = systemSettings["CompanyAcronym"]?.Value;
 
                 if (string.IsNullOrWhiteSpace(s_companyAcronym))
                     s_companyAcronym = "GPA";
