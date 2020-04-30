@@ -54,14 +54,15 @@ namespace NoInetFixUtil
         // Fields
         private List<Product> m_products;
         private bool m_checkedEventsEnabled;
-
+        private bool applyAll;
         #endregion
 
         #region [ Constructors ]
 
-        public Main()
+        public Main(bool applyAll)
         {
             InitializeComponent();
+            this.applyAll = applyAll;
         }
 
         #endregion
@@ -152,6 +153,21 @@ namespace NoInetFixUtil
 
             // Enabled checkbox checked events
             m_checkedEventsEnabled = true;
+
+            if (applyAll)
+            {
+                if (!ServiceOIDCheckBox.Checked)
+                    ServiceOIDCheckBox.Checked = true;
+                if (!PublisherEvidenceCheckBox.Checked)
+                    PublisherEvidenceCheckBox.Checked = true;
+                if (!ClientOIDCheckBox.Checked)
+                    ClientOIDCheckBox.Checked = true;
+                if (!RootCertificateListCheckBox.Checked)
+                    RootCertificateListCheckBox.Checked = true;
+
+
+
+            }
         }
 
         // Registers or unregisters the OIDs used by GPA services based on user selection.
