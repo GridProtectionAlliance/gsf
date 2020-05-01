@@ -528,7 +528,7 @@
         }
 
         function guessNominalVoltage(nominalVoltage, phasorLabel, deviceLabel) {
-            if (!isEmpty(nominalVoltage) && nominalVoltage > 0)
+            if (!isEmpty(nominalVoltage) && nominalVoltage !== 0)
                 return nominalVoltage;
 
             const commonVoltageLevels = ["69", "115", "138", "161", "230", "345", "500", "765"];
@@ -1135,6 +1135,8 @@
                     };
                 }
 
+                self.resortPhasors();
+
                 // Make sure table is refreshed
                 if (ko.options.deferUpdates)
                     ko.tasks.runEarly();
@@ -1231,71 +1233,47 @@
             };
 
             self.resortPhasors = function () {
-                const cells = self.configFrame().Cells;
+                const voltages = self.voltages();
+                const currents = self.currents();
 
-                // Resort device phasor definitions by voltage, current then label with disabled phasors sorted to the bottom
-                for (let i = 0; i < cells.length; i++) {
-                    const cell = cells[i];
+                function sortPhasors(phasors) {
+                    phasors.sort(function (left, right) {
+                        // Sort by IDLabel first - in case there are multiple devices
+                        const leftIDLabel = String(left.Device.IDLabel()).trim().toUpperCase();
+                        const rightIDLabel = String(right.Device.IDLabel()).trim().toUpperCase();
 
-                    cell.PhasorDefinitions.sort(function (left, right) {
-                        const leftIsVoltage = left.PhasorType.toLowerCase() === "voltage";
-                        const rightIsVoltage = right.PhasorType.toLowerCase() === "voltage";
-
-                        if (leftIsVoltage && !rightIsVoltage)
+                        if (leftIDLabel < rightIDLabel)
                             return -1;
 
-                        if (!leftIsVoltage && rightIsVoltage)
+                        if (leftIDLabel > rightIDLabel)
                             return 1;
 
-                        const leftLabel = String(left.Label).trim().toUpperCase();
-                        const rightLabel = String(right.Label).trim().toUpperCase();
-
-                        if (left.Enabled() && right.Enabled()) {
-                            if (leftLabel < rightLabel)
-                                return -1;
-
-                            if (leftLabel > rightLabel)
-                                return 1;
-
-                            return 0;
-                        }
-
-                        if (left.Enabled())
+                        // Sort next by enabled flag such that disabled devices drop to bottom
+                        if (left.Enabled() && !right.Enabled())
                             return -1;
 
-                        if (right.Enabled())
+                        if (!left.Enabled() && right.Enabled())
+                            return 1;
+
+                        // Finally sort by phasor label
+                        const leftLabel = String(left.Label()).trim().toUpperCase();
+                        const rightLabel = String(right.Label()).trim().toUpperCase();
+
+                        if (leftLabel < rightLabel)
+                            return -1;
+
+                        if (leftLabel > rightLabel)
                             return 1;
 
                         return 0;
                     });
                 }
 
-                const voltages = [];
-                const currents = [];
+                sortPhasors(voltages);
+                sortPhasors(currents);
 
-                for (let i = 0; i < cells.length; i++) {
-                    const cell = cells[i];
-
-                    let firstVoltage = true;
-                    let firstCurrent = true;
-
-                    for (let j = 0; j < cell.PhasorDefinitions.length; j++) {
-                        const phasorDefinition = cell.PhasorDefinitions[j];
-
-                        phasorDefinition.Label = String(phasorDefinition.Label).toUpperCase();
-
-                        if (phasorDefinition.PhasorType.toLowerCase() === "voltage") {
-                            voltages.push(self.createObservableVoltage(cell, phasorDefinition, firstVoltage));
-                            firstVoltage = false;
-                        } else {
-                            currents.push(self.createObservableCurrent(cell, phasorDefinition, firstCurrent));
-                            firstCurrent = false;
-                        }
-                    }
-                }
-
-                self.voltages = ko.observableArray(voltages);
-                self.currents = ko.observableArray(currents);
+                self.voltages.valueHasMutated();
+                self.currents.valueHasMutated();
             };
 
             self.createObservableVoltage = function (cell, phasorDefinition, firstVoltage) {
@@ -1305,7 +1283,7 @@
                 const phase = guessPhase(phasorDefinition.Phase, phasorLabel);
                 const vphmSignalType = getPhasorSignalType("VPHM");
 
-                voltage._enabled = ko.observable(!self.forwardOnly());
+                voltage._enabled = ko.observable(!self.forwardOnly() && nominalVoltage >= 0);
                 voltage._taggedForDelete = ko.observable(false);
 
                 voltage.ID = phasorDefinition.ID;
@@ -1321,11 +1299,22 @@
                     write: function (value) {
                         voltage._enabled(value);
 
-                        // Un-tag for delete when enabled
-                        if (value)
+                        if (value) {
+                            // Un-tag for delete when enabled
                             voltage.TaggedForDelete(false);
+                            voltage.NominalVoltage(Math.abs(voltage.NominalVoltage()));
 
-                        setTimeout(self.resortPhasors, 100);
+                            if (voltage.NominalVoltage() === 1)
+                                voltage.NominalVoltage(guessNominalVoltage(0, voltage.OriginalLabel, voltage.Device.IDLabel()));
+                        }
+                        else {
+                            if (voltage.NominalVoltage() === 0)
+                                voltage.NominalVoltage(-1);
+                            else
+                                voltage.NominalVoltage(Math.abs(voltage.NominalVoltage()) * -1);
+                        }
+
+                        self.resortPhasors();
                     },
                     owner: voltage
                 });
@@ -1380,7 +1369,7 @@
 
                 current._associatedVoltage = ko.observable(-1);
                 current._phase = ko.observable("");
-                current._enabled = ko.observable(!self.forwardOnly());
+                current._enabled = ko.observable(!self.forwardOnly() && phasorDefinition.NominalVoltage >= 0);
                 current._taggedForDelete = ko.observable(false);
 
                 current.AssociatedVoltage = ko.pureComputed({
@@ -1484,7 +1473,7 @@
                             current.TaggedForDelete(false);
                         }
 
-                        setTimeout(self.resortPhasors, 100);
+                        self.resortPhasors();
                     },
                     owner: current
                 });
@@ -1590,7 +1579,7 @@
 
                     self.forwardOnly(false);
                     self.loadConfigFrame(configFrame);
-                }
+                };
 
                 reader.onloadend = function () {
                     if (reader.error && reader.error.message)
@@ -1699,7 +1688,7 @@
                     measurement.SignalReference = signalReference;
                     measurement.SignalTypeID = signalType.ID;
                     measurement.Internal = true;
-                    measurement.Enabled = true;
+                    measurement.Enabled = phasorDefinition.Enabled();
 
                     return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
                         showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
@@ -1752,13 +1741,40 @@
                 }
 
                 // Separate voltage and current phasor definitions
+                const saveDevicePromises = [];
                 const voltages = [];
                 const currents = [];
 
                 for (let i = 0; i < cell.PhasorDefinitions.length; i++) {
                     const phasorDefinition = cell.PhasorDefinitions[i];
 
-                    if (phasorDefinition.Enabled()) {
+                    if (phasorDefinition.TaggedForDelete()) {
+                        saveDevicePromises.push(phasorHub.queryDeviceMeasurements(cell.ID).then(function (measurements) {
+                            const promises = [];
+
+                            // Remove measurements associated with phasor
+                            for (let j = 0; j < measurements.length; j++) {
+                                const measurement = measurements[j];
+
+                                if (measurement.PhasorSourceIndex === phasorDefinition.SourceIndex) {
+                                    promises.push(phasorHub.deleteMeasurement(measurement.PointID).fail(function (error) {
+                                        showErrorMessage("Failed to delete phasor measurement: " + error);
+                                    }));
+                                }
+                            }
+
+                            // Remove phasor
+                            promises.push(phasorHub.deletePhasor(phasorDefinition.ID).fail(function (error) {
+                                showErrorMessage("Failed to delete phasor: " + error);
+                            }));
+
+                            return $(promises).whenAll();
+                        })
+                            .fail(function (error) {
+                                showErrorMessage("Failed to query device measurements: " + error);
+                            }));
+                    }
+                    else {
                         if (phasorDefinition.PhasorType.toLowerCase() === "voltage")
                             voltages.push(phasorDefinition);
                         else
@@ -1770,7 +1786,7 @@
                     // Handle drop and (re)add phasors operation
                     const promise = cell.PhasorDefinitions.length > 0 ? phasorHub.deletePhasorsForDevice(cell.ID) : $.Deferred().resolve().promise();
 
-                    return promise.then(function () {
+                    saveDevicePromises.push(promise.then(function () {
                         const promises = [];
                         const voltageIDMap = [];
 
@@ -1833,6 +1849,13 @@
                                 if (voltage)
                                     baseKV = voltage.Voltage.NominalVoltage();
 
+                                if (!current.Enabled()) {
+                                    if (baseKV === 0)
+                                        baseKV = -1;
+                                    else
+                                        baseKV = Math.abs(baseKV) * -1;
+                                }
+
                                 phasor.DeviceID = cell.ID;
                                 phasor.Label = current.Label();
                                 phasor.Type = "I";
@@ -1876,17 +1899,16 @@
                     })
                     .fail(function (error) {
                         showErrorMessage("Failed to delete old phasors: " + error);
-                    });
+                    }));
                 }
                 else {
                     // Handle update phasors operation
-                    const promises = [];
                     const voltageIDMap = [];
 
                     for (let i = 0; i < voltages.length; i++) {
                         const voltage = voltages[i];
 
-                        promises.push(phasorHub.queryPhasorForDevice(cell.ID, voltage.SourceIndex).then(function (phasor) {
+                        saveDevicePromises.push(phasorHub.queryPhasorForDevice(cell.ID, voltage.SourceIndex).then(function (phasor) {
                             phasor.DeviceID = cell.ID;
                             phasor.Label = voltage.Label();
                             phasor.Type = "V";
@@ -1928,7 +1950,7 @@
                     for (let i = 0; i < currents.length; i++) {
                         const current = currents[i];
 
-                        promises.push(phasorHub.queryPhasorForDevice(cell.ID, current.SourceIndex).then(function (phasor) {
+                        saveDevicePromises.push(phasorHub.queryPhasorForDevice(cell.ID, current.SourceIndex).then(function (phasor) {
                             phasor.DeviceID = cell.ID;
                             phasor.Label = current.Label();
                             phasor.Type = "I";
@@ -1936,6 +1958,13 @@
                             phasor.BaseKV = current.Current.AssociatedNominalVoltage();
                             phasor.DestinationPhasorID = voltageIDMap[current.Current.AssociatedVoltage()];
                             phasor.SourceIndex = current.SourceIndex;
+
+                            if (!current.Enabled()) {
+                                if (phasor.BaseKV === 0)
+                                    phasor.BaseKV = -1;
+                                else
+                                    phasor.BaseKV = Math.abs(phasor.BaseKV) * -1;
+                            }
 
                             if (phasor.DestinationPhasorID === undefined)
                                 phasor.DestinationPhasorID = null;
@@ -1967,9 +1996,9 @@
                             showErrorMessage("Failed to query current phasor: " + error);
                         }));
                     }
-
-                    return $(promises).whenAll();
                 }
+
+                return $(saveDevicePromises).whenAll();
             })
             .fail(function (error) {
                 showErrorMessage("Failed to query phasor count: " + error);
@@ -2474,6 +2503,9 @@
                 for (let j = 0; j < cell.PhasorDefinitions.length; j++) {
                     const phasorDefinition = cell.PhasorDefinitions[j];
                     const phase = phasorDefinition.Phase().toUpperCase();
+
+                    if (!phasorDefinition.Enabled())
+                        continue;
 
                     if (phasorDefinition.PhasorType.toLowerCase() === "voltage") {
                         const nominalVoltage = phasorDefinition.Voltage.NominalVoltage() * 1000; // Convert from kV
@@ -3340,7 +3372,7 @@
                         }, 1);
                     });
                 }
-            }
+            };
 
             // Enable knockout validation
             ko.validation.init({
@@ -3446,11 +3478,11 @@
 
             $("#inputESPMarker").focus(function() {
                 $(this).select();
-            })
+            });
 
             $("#inputNonESPMarker").focus(function() {
                 $(this).select();
-            })
+            });
 
             $("#latitude").focus(function() {
                 $(this).select();
