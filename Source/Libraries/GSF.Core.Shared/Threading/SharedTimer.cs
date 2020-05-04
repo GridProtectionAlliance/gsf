@@ -85,7 +85,7 @@ namespace GSF.Threading
         [EditorBrowsable(EditorBrowsableState.Never)]
         internal SharedTimer(SharedTimerScheduler scheduler, int interval = 100)
         {
-            if ((object)scheduler == null)
+            if (scheduler == null)
                 throw new ArgumentNullException(nameof(scheduler));
 
             if (scheduler.IsDisposed)
@@ -118,10 +118,7 @@ namespace GSF.Threading
         /// </returns>
         public bool AutoReset
         {
-            get
-            {
-                return m_autoReset;
-            }
+            get => m_autoReset;
             set
             {
                 if (m_autoReset == value)
@@ -129,11 +126,11 @@ namespace GSF.Threading
 
                 m_autoReset = value;
 
-                if (value && m_enabled)
-                {
-                    m_registeredCallback?.Clear();
-                    m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
-                }
+                if (!m_autoReset || !m_enabled)
+                    return;
+
+                m_registeredCallback?.Clear();
+                m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
             }
         }
 
@@ -146,17 +143,15 @@ namespace GSF.Threading
         /// </returns>
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
-                if (m_disposed)
-                    throw new ObjectDisposedException(GetType().FullName);
-
                 if (m_enabled == value)
                     return;
+
+                // Check dispose after checking if there was an actual state change (in case Stop or Close is called after Dispose)
+                if (m_disposed)
+                    throw new ObjectDisposedException(GetType().FullName);
 
                 m_enabled = value;
 
@@ -177,10 +172,7 @@ namespace GSF.Threading
         /// </remarks>
         public int Interval
         {
-            get
-            {
-                return m_interval;
-            }
+            get => m_interval;
             set
             {
                 if (value <= 0)
@@ -191,11 +183,11 @@ namespace GSF.Threading
 
                 m_interval = value;
 
-                if (m_enabled)
-                {
-                    m_registeredCallback?.Clear();
-                    m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
-                }
+                if (!m_enabled)
+                    return;
+
+                m_registeredCallback?.Clear();
+                m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
             }
         }
 
@@ -206,10 +198,7 @@ namespace GSF.Threading
         /// <summary>
         /// Stops the timer.
         /// </summary>
-        public void Close()
-        {
-            Enabled = false;
-        }
+        public void Close() => Enabled = false;
 
         /// <summary>
         /// Stops the timer and prevents reuse of the class.
@@ -223,18 +212,12 @@ namespace GSF.Threading
         /// <summary>
         /// Starts raising the <see cref="Elapsed" /> event by setting <see cref="Enabled" /> to <c>true</c>.
         /// </summary>
-        public void Start()
-        {
-            Enabled = true;
-        }
+        public void Start() => Enabled = true;
 
         /// <summary>
         /// Stops raising the <see cref="Elapsed"/> event by setting <see cref="Enabled" /> to <c>false</c>.
         /// </summary>
-        public void Stop()
-        {
-            Enabled = false;
-        }
+        public void Stop() => Enabled = false;
 
         /// <summary>
         /// Callback from <see cref="SharedTimerScheduler"/>.
