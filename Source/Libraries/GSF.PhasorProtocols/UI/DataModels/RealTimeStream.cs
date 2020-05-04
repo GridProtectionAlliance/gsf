@@ -271,7 +271,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                 Expanded = false,
                                 DeviceList = new ObservableCollection<RealTimeDevice>(
                                         from device in resultSet.Tables["DeviceTable"].AsEnumerable()
-                                        where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym") && device.Field<int>("AccessID") != GroupAccessID
+                                        where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym") && device.ConvertField<int>("AccessID") != GroupAccessID
                                         select new RealTimeDevice
                                             {
                                                 ID = device.ConvertNullableField<int>("ID"),
