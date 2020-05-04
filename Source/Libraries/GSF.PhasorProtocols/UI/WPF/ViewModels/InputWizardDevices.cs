@@ -998,33 +998,48 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                     if (existingDevice?.ID > 0)
                         existingPhasors = Phasor.Load(null, Phasor.LoadKeys(null, existingDevice.ID)).ToDictionary(phasor => phasor.SourceIndex - 1, phasor => phasor);
+                    
+                    bool phaseMatch(string phaseLabel, string[] phaseMatches)
+                    {
+                        foreach (string match in phaseMatches)
+                        {
+                            string[] variations = { $" {match}", $"{match} ", $"_{match}", $"{match}_", $"_{match}_", $".{match}", $"{match}.", $".{match}." };
+
+                            if (variations.Any(matchVariation => phaseLabel.IndexOf(matchVariation, StringComparison.Ordinal) > -1))
+                                return true;
+                        }
+
+                        return false;
+                    }
 
                     string guessPhase(string phase, string phasorLabel)
                     {
                         if (!string.IsNullOrWhiteSpace(phase) && phase != "+")
                             return phase;
 
-                        if (phasorLabel.IndexOf("_VA", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IA", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" A ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" APV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" API", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VA ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IA ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VAPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IAPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".AV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".AI", StringComparison.Ordinal) > -1)
+                        if (phaseMatch(phasorLabel, new[] { "VA", " IA", "APV", "API", "VAPM", "IAPM", "AV", "AI" }))
                             return "A";
 
-                        if (phasorLabel.IndexOf("_VB", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IB", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" B ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" BPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" BPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VB ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IB ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VBPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IBPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".BV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".BI", StringComparison.Ordinal) > -1)
+                        if (phaseMatch(phasorLabel, new[] { "VB", "IB", "BPV", "BPI", "VBPM", "IBPM", "BV", "BI" }))
                             return "B";
 
-                        if (phasorLabel.IndexOf("_VC", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IC", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" C ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" CPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" CPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VC ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IC ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VCPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("ICPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".CV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".CI", StringComparison.Ordinal) > -1)
+                        if (phaseMatch(phasorLabel, new[] { "VC", "IC", "CPV", "CPI", "VCPM", "ICPM", "CV", "CI" }))
                             return "C";
 
-                        if (phasorLabel.IndexOf("_VN", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_IN", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NEUT ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VN ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IN ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VNPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("INPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".NV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".NI", StringComparison.Ordinal) > -1)
+                        if (phaseMatch(phasorLabel, new[] { "VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" }))
                             return "N";
 
-                        if (phasorLabel.IndexOf("_V0", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_I0", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" ZERO ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" ZPV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" ZPI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VZ ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IZ ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VSPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("VZPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("IZPM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".ZV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".ZI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_ZS", StringComparison.Ordinal) > -1)
+                        if (phaseMatch(phasorLabel, new[] { "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" }))
                             return "0";
 
-                        if (phasorLabel.IndexOf("_V2", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_I2", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" NEG ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" -SV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" -SI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V2 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I2 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V2PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I2PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".-V", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".-I", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_NS", StringComparison.Ordinal) > -1)
+                        if (phaseMatch(phasorLabel, new[] { "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" }))
+                            return "+";
+
+                        // -V and -I may match too often, so check these last
+                        if (phaseMatch(phasorLabel, new[] { "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI", "-V", "-I" }))
                             return "-";
 
-                        return phasorLabel.IndexOf("_V1", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_I1", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" POS ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" +SV", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" +SI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(" SI", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V1 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I1 ", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("V1PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("I1PM", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".+V", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf(".+I", StringComparison.Ordinal) > -1 || phasorLabel.IndexOf("_PS", StringComparison.Ordinal) > -1
-                            ? "+"
-                            : string.IsNullOrWhiteSpace(phase) ? "?" : phase;
+                        return string.IsNullOrWhiteSpace(phase) ? "?" : phase;
                     }
 
                     string guessBaseKV(string baseKV, string phasorLabel, string deviceLabel)
