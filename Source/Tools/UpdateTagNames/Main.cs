@@ -36,6 +36,7 @@ using GSF.Diagnostics;
 using System.Diagnostics;
 using System.ServiceProcess;
 using GSF.IO;
+using GSF;
 
 namespace UpdateTagNames
 {
@@ -60,6 +61,14 @@ namespace UpdateTagNames
             {
                 // Load current settings registering a symbolic reference to this form instance for use by default value expressions
                 m_settings = new Settings(new Dictionary<string, object> { { "Form", this } }.RegisterSymbols());
+
+                if (m_settings.PortNumber < 1)
+                {
+                    checkBoxSetPortNumber.Checked = false;
+                    checkBoxSetPortNumber.Visible = false;
+                    maskedTextBoxPortNumber.Visible = false;
+                    labelInternalPublisherNote.Visible = false;
+                }
 
                 // Restore last window size/location
                 this.RestoreLayout();
