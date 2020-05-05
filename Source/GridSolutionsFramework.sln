@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9CC9F00F-92FB-48C7-93A2-99319700C8D2}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		buildmono.sh = buildmono.sh
 		GridSolutionsFramework.testrunconfig = GridSolutionsFramework.testrunconfig
 		..\Build\Scripts\GridSolutionsFramework.version = ..\Build\Scripts\GridSolutionsFramework.version
