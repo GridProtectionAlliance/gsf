@@ -49,8 +49,7 @@ namespace PowerCalculations
     /// Represents an adapter that manages bulk calculation of positive, negative and zero sequence values based on A, B and C phase data inputs.
     /// </summary>
     [Description("Bulk Sequence Calculator: Manages bulk calculation of positive, negative and zero sequence values based on A, B and C phase data inputs.")]
-    //[EditorBrowsable(EditorBrowsableState.Always)]
-    [EditorBrowsable(EditorBrowsableState.Never)] // Temporarily hiding this adapter from official release since it's not fully cooked
+    [EditorBrowsable(EditorBrowsableState.Always)]
     public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<SequenceCalculator>
     {
         #region [ Members ]
