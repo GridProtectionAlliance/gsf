@@ -1021,6 +1021,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         if (phaseMatch(phasorLabel, new[] { "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" }))
                             return "+";
 
+                        if (phaseMatch(phasorLabel, new[] { "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" }))
+                            return "0";
+
                         if (phaseMatch(phasorLabel, new[] { "VA", " IA", "APV", "API", "VAPM", "IAPM", "AV", "AI" }))
                             return "A";
 
@@ -1032,9 +1035,6 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                         if (phaseMatch(phasorLabel, new[] { "VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" }))
                             return "N";
-
-                        if (phaseMatch(phasorLabel, new[] { "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" }))
-                            return "0";
 
                         // -V and -I may match too often, so check these last
                         if (phaseMatch(phasorLabel, new[] { "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI", "-V", "-I" }))
