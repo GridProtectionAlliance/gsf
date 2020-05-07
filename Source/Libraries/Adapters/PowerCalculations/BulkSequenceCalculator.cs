@@ -42,6 +42,7 @@ using PhasorRecord = GSF.TimeSeries.Model.Phasor;
 using DeviceRecord = GSF.TimeSeries.Model.Device;
 using SignalType = GSF.Units.EE.SignalType;
 using PhaseDetail = System.Tuple<GSF.TimeSeries.MeasurementKey, GSF.Units.EE.SignalType, GSF.TimeSeries.Model.Measurement, GSF.TimeSeries.Model.Phasor>;
+using static PowerCalculations.SequenceCalculator.Output;
 
 namespace PowerCalculations
 {
@@ -77,6 +78,7 @@ namespace PowerCalculations
 
         // Fields
         private readonly List<AdapterDetail> m_adapterDetails;
+        private ReadOnlyCollection<string> m_perAdapterOutputNames;
 
         #endregion
 
@@ -95,7 +97,31 @@ namespace PowerCalculations
         #region [ Properties ]
 
         /// <summary>
-        /// Gets number of input measurement required by each adapter.
+        /// Gets or sets flag that determines if positive sequence calculations should be included.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if positive sequence calculations should be included.")]
+        [DefaultValue(true)]
+        public bool IncludePositiveSequence { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets flag that determines if negative sequence calculations should be included.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if negative sequence calculations should be included.")]
+        [DefaultValue(true)]
+        public bool IncludeNegativeSequence { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets flag that determines if zero sequence calculations should be included.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if zero sequence calculations should be included.")]
+        [DefaultValue(true)]
+        public bool IncludeZeroSequence { get; set; } = true;
+
+        /// <summary>
+        /// Gets number of input measurements required by each adapter.
         /// </summary>
         public override int PerAdapterInputCount => 6;
 
@@ -108,7 +134,117 @@ namespace PowerCalculations
         /// <summary>
         /// Gets output measurement names.
         /// </summary>
-        public override ReadOnlyCollection<string> PerAdapterOutputNames => Array.AsReadOnly(SequenceCalculator.Outputs.Select(output => $"{output}").ToArray());
+        public override ReadOnlyCollection<string> PerAdapterOutputNames
+        {
+            get
+            {
+                if (Initialized && m_perAdapterOutputNames != null)
+                    return m_perAdapterOutputNames;
+
+                ReadOnlyCollection<string> generatePerAdapterOutputNames()
+                {
+                    if (IncludePositiveSequence && IncludeNegativeSequence && IncludeZeroSequence)
+                        return Array.AsReadOnly(new[]
+                        {
+                            $"{nameof(PositiveSequenceMagnitude)}",
+                            $"{nameof(PositiveSequenceAngle)}",
+                            $"{nameof(NegativeSequenceMagnitude)}",
+                            $"{nameof(NegativeSequenceAngle)}",
+                            $"{nameof(ZeroSequenceMagnitude)}",
+                            $"{nameof(ZeroSequenceAngle)}"
+                        });
+
+                    if (IncludePositiveSequence && IncludeNegativeSequence)
+                        return Array.AsReadOnly(new[]
+                        {
+                            $"{nameof(PositiveSequenceMagnitude)}",
+                            $"{nameof(PositiveSequenceAngle)}",
+                            $"{nameof(NegativeSequenceMagnitude)}",
+                            $"{nameof(NegativeSequenceAngle)}"
+                        });
+
+                    if (IncludePositiveSequence && IncludeZeroSequence)
+                        return Array.AsReadOnly(new[]
+                        {
+                            $"{nameof(PositiveSequenceMagnitude)}",
+                            $"{nameof(PositiveSequenceAngle)}",
+                            $"{nameof(ZeroSequenceMagnitude)}",
+                            $"{nameof(ZeroSequenceAngle)}"
+                        });
+
+                    if (IncludeNegativeSequence && IncludeZeroSequence)
+                        return Array.AsReadOnly(new[]
+                        {
+                            $"{nameof(NegativeSequenceMagnitude)}",
+                            $"{nameof(NegativeSequenceAngle)}",
+                            $"{nameof(ZeroSequenceMagnitude)}",
+                            $"{nameof(ZeroSequenceAngle)}"
+                        });
+
+                    if (IncludePositiveSequence)
+                        return Array.AsReadOnly(new[]
+                        {
+                            $"{nameof(PositiveSequenceMagnitude)}",
+                            $"{nameof(PositiveSequenceAngle)}"
+                        });
+
+                    if (IncludeNegativeSequence)
+                        return Array.AsReadOnly(new[]
+                        {
+                            $"{nameof(NegativeSequenceMagnitude)}",
+                            $"{nameof(NegativeSequenceAngle)}"
+                        });
+
+                    if (IncludeZeroSequence)
+                        return Array.AsReadOnly(new[]
+                        {
+                            $"{nameof(ZeroSequenceMagnitude)}",
+                            $"{nameof(ZeroSequenceAngle)}"
+                        });
+
+                    return Array.AsReadOnly(Array.Empty<string>());
+                }
+
+                m_perAdapterOutputNames = generatePerAdapterOutputNames();
+
+                return m_perAdapterOutputNames;
+            }
+        }
+
+        /// <summary>
+        /// Gets output phase for each output measurement.
+        /// </summary>
+        public char[] OutputPhases
+        {
+            get
+            {
+                if (CurrentAdapterIndex > -1 && CurrentAdapterIndex < m_adapterDetails.Count)
+                {
+                    if (IncludePositiveSequence && IncludeNegativeSequence && IncludeZeroSequence)
+                        return new[] { '+', '+', '-', '-', '0', '0' };
+
+                    if (IncludePositiveSequence && IncludeNegativeSequence)
+                        return new[] { '+', '+', '-', '-' };
+
+                    if (IncludePositiveSequence && IncludeZeroSequence)
+                        return new[] { '+', '+', '0', '0' };
+
+                    if (IncludeNegativeSequence && IncludeZeroSequence)
+                        return new[] { '-', '-', '0', '0' };
+
+                    if (IncludePositiveSequence)
+                        return new[] { '+', '+' };
+
+                    if (IncludeNegativeSequence)
+                        return new[] { '-', '-' };
+
+                    if (IncludeZeroSequence)
+                        return new[] { '0', '0' };
+                }
+
+                return Array.Empty<char>();
+            }
+        }
 
         /// <summary>
         /// Gets signal type for each output measurement, used when each output needs to be a different type.
@@ -122,9 +258,29 @@ namespace PowerCalculations
                     switch (m_adapterDetails[CurrentAdapterIndex].PhasorType)
                     {
                         case PhasorType.Voltage:
-                            return new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA };
+                            {
+                                switch (PerAdapterOutputNames.Count)
+                                {
+                                    case 6:
+                                        return new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA };
+                                    case 4:
+                                        return new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA };
+                                    default:
+                                        return new[] { SignalType.VPHM, SignalType.VPHA };
+                                }
+                            }
                         case PhasorType.Current:
-                            return new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA };
+                            {
+                                switch (PerAdapterOutputNames.Count)
+                                {
+                                    case 6:
+                                        return new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA };
+                                    case 4:
+                                        return new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA };
+                                    default:
+                                        return new[] { SignalType.IPHM, SignalType.IPHA };
+                                }
+                            }
                     }
                 }
 
@@ -161,8 +317,8 @@ namespace PowerCalculations
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
                 SignalType signalType = SignalTypes[CurrentOutputIndex];
                 int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex;
-                    
-                return CommonPhasorServices.CreatePointTag(adapterDetail.CompanyAcronym, adapterDetail.DeviceAcronym, null, signalType.ToString(), adapterDetail.PhasorLabel, signalIndex, s_outputPhases[CurrentOutputIndex], adapterDetail.BaseKV);
+
+                return CommonPhasorServices.CreatePointTag(adapterDetail.CompanyAcronym, adapterDetail.DeviceAcronym, null, signalType.ToString(), adapterDetail.PhasorLabel, signalIndex, OutputPhases[CurrentOutputIndex], adapterDetail.BaseKV);
 
             }
             set => base.PointTagTemplate = value;
@@ -217,7 +373,7 @@ namespace PowerCalculations
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
                 string phaseKind, measurementKind;
 
-                switch (s_outputPhases[CurrentOutputIndex])
+                switch (OutputPhases[CurrentOutputIndex])
                 {
                     case '+':
                         phaseKind = "Positive";
@@ -322,7 +478,7 @@ namespace PowerCalculations
                         case SignalType.VPHA:
                         case SignalType.IPHA:
                             MeasurementRecord measurement = measurementTable.QueryRecordWhere("SignalID = {0}", key.SignalID);
-                            
+
                             if (measurement?.DeviceID != null)
                             {
                                 int deviceID = measurement.DeviceID.Value;
@@ -705,14 +861,11 @@ namespace PowerCalculations
         #region [ Static ]
 
         // Static Fields
-        private static readonly char[] s_outputPhases;
         private static readonly string s_companyAcronym;
 
         // Static Constructor
         static BulkSequenceCalculator()
         {
-            s_outputPhases = new[] { '+', '+', '-', '-', '0', '0' };
-
             try
             {
                 CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];

@@ -618,11 +618,6 @@ namespace PowerCalculations
         private static readonly ComplexNumber aSq = a * a;
         private static readonly ComplexNumber nanSeq = new ComplexNumber(double.NaN, double.NaN);
 
-        /// <summary>
-        /// Array of <see cref="Output"/> enumeration values.
-        /// </summary>
-        public static readonly Output[] Outputs = Enum.GetValues(typeof(Output)) as Output[];
-
         #endregion
     }
 }
