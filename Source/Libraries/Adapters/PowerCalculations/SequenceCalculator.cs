@@ -105,7 +105,7 @@ namespace PowerCalculations
         [ConnectionStringParameter]
         [Description("Flag that determines if the last few values should be monitored.")]
         [DefaultValue(true)]
-        public bool TrackRecentValues { get; set; }
+        public bool TrackRecentValues { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the sample size of the data to be monitored.
@@ -113,7 +113,31 @@ namespace PowerCalculations
         [ConnectionStringParameter]
         [Description("Define the sample size of the data to be monitored.")]
         [DefaultValue(5)]
-        public int SampleSize { get; set; }
+        public int SampleSize { get; set; } = 5;
+
+        /// <summary>
+        /// Gets or sets flag that determines if positive sequence calculations should be included.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if positive sequence calculations should be included.")]
+        [DefaultValue(true)]
+        public bool IncludePositiveSequence { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets flag that determines if negative sequence calculations should be included.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if negative sequence calculations should be included.")]
+        [DefaultValue(true)]
+        public bool IncludeNegativeSequence { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets flag that determines if zero sequence calculations should be included.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if zero sequence calculations should be included.")]
+        [DefaultValue(true)]
+        public bool IncludeZeroSequence { get; set; } = true;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -146,69 +170,77 @@ namespace PowerCalculations
 
                 if (TrackRecentValues)
                 {
-                    status.AppendLine();
-
-                    status.Append("   Last positive sequences: ");
-
-                    lock (m_positiveSequenceMagnitudeSample)
+                    if (IncludePositiveSequence)
                     {
-                        lock (m_positiveSequenceAngleSample)
-                        {
-                            // Display last several values
-                            if (m_positiveSequenceMagnitudeSample.Count > ValuesToShow)
-                            {
-                                List<double> positiveMagnitudeSample = m_positiveSequenceMagnitudeSample.GetRange(m_positiveSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
-                                List<double> positiveAngleSample = m_positiveSequenceAngleSample.GetRange(m_positiveSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+                        status.AppendLine();
+                        status.Append("   Last positive sequences: ");
 
-                                status.Append(positiveMagnitudeSample.Zip(positiveAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
-                            }
-                            else
+                        lock (m_positiveSequenceMagnitudeSample)
+                        {
+                            lock (m_positiveSequenceAngleSample)
                             {
-                                status.Append("Not enough values calculated yet...");
+                                // Display last several values
+                                if (m_positiveSequenceMagnitudeSample.Count > ValuesToShow)
+                                {
+                                    List<double> positiveMagnitudeSample = m_positiveSequenceMagnitudeSample.GetRange(m_positiveSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+                                    List<double> positiveAngleSample = m_positiveSequenceAngleSample.GetRange(m_positiveSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+
+                                    status.Append(positiveMagnitudeSample.Zip(positiveAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
+                                }
+                                else
+                                {
+                                    status.Append("Not enough values calculated yet...");
+                                }
                             }
                         }
                     }
 
-                    status.AppendLine();
-                    status.Append("   Last negative sequences: ");
-
-                    lock (m_negativeSequenceMagnitudeSample)
+                    if (IncludeNegativeSequence)
                     {
-                        lock (m_negativeSequenceAngleSample)
-                        {
-                            // Display last several values
-                            if (m_positiveSequenceMagnitudeSample.Count > ValuesToShow)
-                            {
-                                List<double> negativeMagnitudeSample = m_negativeSequenceMagnitudeSample.GetRange(m_negativeSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
-                                List<double> negativeAngleSample = m_negativeSequenceAngleSample.GetRange(m_negativeSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+                        status.AppendLine();
+                        status.Append("   Last negative sequences: ");
 
-                                status.Append(negativeMagnitudeSample.Zip(negativeAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
-                            }
-                            else
+                        lock (m_negativeSequenceMagnitudeSample)
+                        {
+                            lock (m_negativeSequenceAngleSample)
                             {
-                                status.Append("Not enough values calculated yet...");
+                                // Display last several values
+                                if (m_positiveSequenceMagnitudeSample.Count > ValuesToShow)
+                                {
+                                    List<double> negativeMagnitudeSample = m_negativeSequenceMagnitudeSample.GetRange(m_negativeSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+                                    List<double> negativeAngleSample = m_negativeSequenceAngleSample.GetRange(m_negativeSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+
+                                    status.Append(negativeMagnitudeSample.Zip(negativeAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
+                                }
+                                else
+                                {
+                                    status.Append("Not enough values calculated yet...");
+                                }
                             }
                         }
                     }
 
-                    status.AppendLine();
-                    status.Append("       Last zero sequences: ");
-
-                    lock (m_zeroSequenceMagnitudeSample)
+                    if (IncludeZeroSequence)
                     {
-                        lock (m_zeroSequenceAngleSample)
-                        {
-                            // Display last several values
-                            if (m_zeroSequenceMagnitudeSample.Count > ValuesToShow)
-                            {
-                                List<double> zeroMagnitudeSample = m_zeroSequenceMagnitudeSample.GetRange(m_zeroSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
-                                List<double> zeroAngleSample = m_zeroSequenceAngleSample.GetRange(m_zeroSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+                        status.AppendLine();
+                        status.Append("       Last zero sequences: ");
 
-                                status.Append(zeroMagnitudeSample.Zip(zeroAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
-                            }
-                            else
+                        lock (m_zeroSequenceMagnitudeSample)
+                        {
+                            lock (m_zeroSequenceAngleSample)
                             {
-                                status.Append("Not enough values calculated yet...");
+                                // Display last several values
+                                if (m_zeroSequenceMagnitudeSample.Count > ValuesToShow)
+                                {
+                                    List<double> zeroMagnitudeSample = m_zeroSequenceMagnitudeSample.GetRange(m_zeroSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+                                    List<double> zeroAngleSample = m_zeroSequenceAngleSample.GetRange(m_zeroSequenceMagnitudeSample.Count - ValuesToShow - 1, ValuesToShow);
+
+                                    status.Append(zeroMagnitudeSample.Zip(zeroAngleSample, (mV, mA) => $"{mV:0.00} {m_magnitudeUnits}, {mA:0.00}°").ToDelimitedString("\r\n                            "));
+                                }
+                                else
+                                {
+                                    status.Append("Not enough values calculated yet...");
+                                }
                             }
                         }
                     }
@@ -237,13 +269,21 @@ namespace PowerCalculations
             Dictionary<string, string> settings = Settings;
 
             // Load parameters
-            TrackRecentValues = !settings.TryGetValue("trackRecentValues", out string setting) || setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(TrackRecentValues), out string setting))
+                TrackRecentValues = setting.ParseBoolean();
 
             // Data sample size to monitor, in seconds
-            if (settings.TryGetValue("sampleSize", out setting) && int.TryParse(setting, out int sampleSize))
+            if (settings.TryGetValue(nameof(SampleSize), out setting) && int.TryParse(setting, out int sampleSize))
                 SampleSize = sampleSize;
-            else
-                SampleSize = 5;
+
+            if (settings.TryGetValue(nameof(IncludePositiveSequence), out setting))
+                IncludePositiveSequence = setting.ParseBoolean();
+
+            if (settings.TryGetValue(nameof(IncludeNegativeSequence), out setting))
+                IncludeNegativeSequence = setting.ParseBoolean();
+
+            if (settings.TryGetValue(nameof(IncludeZeroSequence), out setting))
+                IncludeZeroSequence = setting.ParseBoolean();
 
             // Load needed phase angle measurement keys from defined InputMeasurementKeys
             m_angles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHA).ToArray();
@@ -291,8 +331,45 @@ namespace PowerCalculations
             InputMeasurementKeys = m_angles.Concat(m_magnitudes).ToArray();
 
             // Validate output measurements
-            if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Positive Sequence Magnitude\", \"Positive Sequence Angle\", \"Negative Sequence Magnitude\", \"Negative Sequence Angle\", \"Zero Sequence Magnitude\" and \"Zero Sequence Angle\" - in this order.");
+            if (IncludePositiveSequence && IncludeNegativeSequence && IncludeZeroSequence)
+            {
+                if (OutputMeasurements.Length < 6)
+                    throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Positive Sequence Magnitude\", \"Positive Sequence Angle\", \"Negative Sequence Magnitude\", \"Negative Sequence Angle\", \"Zero Sequence Magnitude\" and \"Zero Sequence Angle\" - in this order.");
+            }
+            else if (IncludePositiveSequence && IncludeNegativeSequence)
+            {
+                if (OutputMeasurements.Length < 4)
+                    throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Positive Sequence Magnitude\", \"Positive Sequence Angle\", \"Negative Sequence Magnitude\" and \"Negative Sequence Angle\" - in this order.");
+            }
+            else if (IncludePositiveSequence && IncludeZeroSequence)
+            {
+                if (OutputMeasurements.Length < 4)
+                    throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Positive Sequence Magnitude\", \"Positive Sequence Angle\", \"Zero Sequence Magnitude\" and \"Zero Sequence Angle\" - in this order.");
+            }
+            else if (IncludeNegativeSequence && IncludeZeroSequence)
+            {
+                if (OutputMeasurements.Length < 4)
+                    throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Negative Sequence Magnitude\", \"Negative Sequence Angle\", \"Zero Sequence Magnitude\" and \"Zero Sequence Angle\" - in this order.");
+            }
+            else if (IncludePositiveSequence)
+            {
+                if (OutputMeasurements.Length < 2)
+                    throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Positive Sequence Magnitude\" and \"Positive Sequence Angle\" - in this order.");
+            }
+            else if (IncludeNegativeSequence)
+            {
+                if (OutputMeasurements.Length < 2)
+                    throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Negative Sequence Magnitude\" and \"Negative Sequence Angle\" - in this order.");
+            }
+            else if (IncludeZeroSequence)
+            {
+                if (OutputMeasurements.Length < 2)
+                    throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Zero Sequence Magnitude\" and \"Zero Sequence Angle\" - in this order.");
+            }
+            else
+            {
+                throw new InvalidOperationException("At least one of positive, negative or sequence calculations must be included to calculate.");
+            }
 
             if (TrackRecentValues)
             {
@@ -316,9 +393,9 @@ namespace PowerCalculations
         /// <param name="index">Index of frame within a second ranging from zero to frames per second - 1.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            ComplexNumber positiveSequence = new ComplexNumber(double.NaN, double.NaN);
-            ComplexNumber negativeSequence = new ComplexNumber(double.NaN, double.NaN);
-            ComplexNumber zeroSequence = new ComplexNumber(double.NaN, double.NaN);
+            ComplexNumber positiveSequence = nanSeq;
+            ComplexNumber negativeSequence = nanSeq;
+            ComplexNumber zeroSequence = nanSeq;
 
             try
             {
@@ -372,91 +449,161 @@ namespace PowerCalculations
                 ComplexNumber bPhase = new ComplexNumber(Angle.FromDegrees(aB), mB);
                 ComplexNumber cPhase = new ComplexNumber(Angle.FromDegrees(aC), mC);
 
-                zeroSequence = (aPhase + bPhase + cPhase) / 3.0D;
-                positiveSequence = (aPhase + a * bPhase + aSq * cPhase) / 3.0D;
-                negativeSequence = (aPhase + aSq * bPhase + a * cPhase) / 3.0D;
+                if (IncludePositiveSequence)
+                    positiveSequence = (aPhase + a * bPhase + aSq * cPhase) / 3.0D;
+
+                if (IncludeNegativeSequence)
+                    negativeSequence = (aPhase + aSq * bPhase + a * cPhase) / 3.0D;
+
+                if (IncludeZeroSequence)
+                    zeroSequence = (aPhase + bPhase + cPhase) / 3.0D;
 
                 if (!TrackRecentValues)
                     return;
 
                 // Add latest positive sequence to data sample
-                lock (m_positiveSequenceMagnitudeSample)
+                if (IncludePositiveSequence)
                 {
-                    m_positiveSequenceMagnitudeSample.Add(positiveSequence.Magnitude);
+                    lock (m_positiveSequenceMagnitudeSample)
+                    {
+                        m_positiveSequenceMagnitudeSample.Add(positiveSequence.Magnitude);
 
-                    // Maintain sample size
-                    while (m_positiveSequenceMagnitudeSample.Count > SampleSize)
-                        m_positiveSequenceMagnitudeSample.RemoveAt(0);
-                }
+                        // Maintain sample size
+                        while (m_positiveSequenceMagnitudeSample.Count > SampleSize)
+                            m_positiveSequenceMagnitudeSample.RemoveAt(0);
+                    }
 
-                lock (m_positiveSequenceAngleSample)
-                {
-                    m_positiveSequenceAngleSample.Add(positiveSequence.Angle);
+                    lock (m_positiveSequenceAngleSample)
+                    {
+                        m_positiveSequenceAngleSample.Add(positiveSequence.Angle);
 
-                    // Maintain sample size
-                    while (m_positiveSequenceAngleSample.Count > SampleSize)
-                        m_positiveSequenceAngleSample.RemoveAt(0);
+                        // Maintain sample size
+                        while (m_positiveSequenceAngleSample.Count > SampleSize)
+                            m_positiveSequenceAngleSample.RemoveAt(0);
+                    }
                 }
 
                 // Add latest negative sequence to data sample
-                lock (m_negativeSequenceMagnitudeSample)
+                if (IncludeNegativeSequence)
                 {
-                    m_negativeSequenceMagnitudeSample.Add(negativeSequence.Magnitude);
+                    lock (m_negativeSequenceMagnitudeSample)
+                    {
+                        m_negativeSequenceMagnitudeSample.Add(negativeSequence.Magnitude);
 
-                    // Maintain sample size
-                    while (m_negativeSequenceMagnitudeSample.Count > SampleSize)
-                        m_negativeSequenceMagnitudeSample.RemoveAt(0);
-                }
+                        // Maintain sample size
+                        while (m_negativeSequenceMagnitudeSample.Count > SampleSize)
+                            m_negativeSequenceMagnitudeSample.RemoveAt(0);
+                    }
 
-                lock (m_negativeSequenceAngleSample)
-                {
-                    m_negativeSequenceAngleSample.Add(negativeSequence.Angle);
+                    lock (m_negativeSequenceAngleSample)
+                    {
+                        m_negativeSequenceAngleSample.Add(negativeSequence.Angle);
 
-                    // Maintain sample size
-                    while (m_negativeSequenceAngleSample.Count > SampleSize)
-                        m_negativeSequenceAngleSample.RemoveAt(0);
+                        // Maintain sample size
+                        while (m_negativeSequenceAngleSample.Count > SampleSize)
+                            m_negativeSequenceAngleSample.RemoveAt(0);
+                    }
                 }
 
                 // Add latest zero sequence to data sample
-                lock (m_zeroSequenceMagnitudeSample)
+                if (IncludeZeroSequence)
                 {
-                    m_zeroSequenceMagnitudeSample.Add(zeroSequence.Magnitude);
+                    lock (m_zeroSequenceMagnitudeSample)
+                    {
+                        m_zeroSequenceMagnitudeSample.Add(zeroSequence.Magnitude);
 
-                    // Maintain sample size
-                    while (m_zeroSequenceMagnitudeSample.Count > SampleSize)
-                        m_zeroSequenceMagnitudeSample.RemoveAt(0);
-                }
+                        // Maintain sample size
+                        while (m_zeroSequenceMagnitudeSample.Count > SampleSize)
+                            m_zeroSequenceMagnitudeSample.RemoveAt(0);
+                    }
 
-                lock (m_zeroSequenceAngleSample)
-                {
-                    m_zeroSequenceAngleSample.Add(zeroSequence.Angle);
+                    lock (m_zeroSequenceAngleSample)
+                    {
+                        m_zeroSequenceAngleSample.Add(zeroSequence.Angle);
 
-                    // Maintain sample size
-                    while (m_zeroSequenceAngleSample.Count > SampleSize)
-                        m_zeroSequenceAngleSample.RemoveAt(0);
+                        // Maintain sample size
+                        while (m_zeroSequenceAngleSample.Count > SampleSize)
+                            m_zeroSequenceAngleSample.RemoveAt(0);
+                    }
                 }
             }
             finally
             {
                 IMeasurement[] outputMeasurements = OutputMeasurements;
 
-                Measurement positiveSequenceMagnitudeMeasurement = Measurement.Clone(outputMeasurements[(int)Output.PositiveSequenceMagnitude], positiveSequence.Magnitude, frame.Timestamp);
-                Measurement positiveSequenceAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.PositiveSequenceAngle], positiveSequence.Angle.ToDegrees(), frame.Timestamp);
-                Measurement negativeSequenceMagnitudeMeasurement = Measurement.Clone(outputMeasurements[(int)Output.NegativeSequenceMagnitude], negativeSequence.Magnitude, frame.Timestamp);
-                Measurement negativeSequenceAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.NegativeSequenceAngle], negativeSequence.Angle.ToDegrees(), frame.Timestamp);
-                Measurement zeroSequenceMagnitudeMeasurement = Measurement.Clone(outputMeasurements[(int)Output.ZeroSequenceMagnitude], zeroSequence.Magnitude, frame.Timestamp);
-                Measurement zeroSequenceAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.ZeroSequenceAngle], zeroSequence.Angle.ToDegrees(), frame.Timestamp);
-
-                // Provide calculated measurements for external consumption
-                OnNewMeasurements(new IMeasurement[]
+                if (IncludePositiveSequence && IncludeNegativeSequence && IncludeZeroSequence)
                 {
-                    positiveSequenceMagnitudeMeasurement,
-                    positiveSequenceAngleMeasurement,
-                    negativeSequenceMagnitudeMeasurement,
-                    negativeSequenceAngleMeasurement,
-                    zeroSequenceMagnitudeMeasurement,
-                    zeroSequenceAngleMeasurement
-                });
+                    // Provide calculated measurements for external consumption
+                    OnNewMeasurements(new IMeasurement[]
+                    {
+                        Measurement.Clone(outputMeasurements[0], positiveSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[1], positiveSequence.Angle.ToDegrees(), frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[2], negativeSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[3], negativeSequence.Angle.ToDegrees(), frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[4], zeroSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[5], zeroSequence.Angle.ToDegrees(), frame.Timestamp)
+                    });
+                }
+                else if (IncludePositiveSequence && IncludeNegativeSequence)
+                {
+                    // Provide calculated measurements for external consumption
+                    OnNewMeasurements(new IMeasurement[]
+                    {
+                        Measurement.Clone(outputMeasurements[0], positiveSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[1], positiveSequence.Angle.ToDegrees(), frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[2], negativeSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[3], negativeSequence.Angle.ToDegrees(), frame.Timestamp)
+                    });
+                }
+                else if (IncludePositiveSequence && IncludeZeroSequence)
+                {
+                    // Provide calculated measurements for external consumption
+                    OnNewMeasurements(new IMeasurement[]
+                    {
+                        Measurement.Clone(outputMeasurements[0], positiveSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[1], positiveSequence.Angle.ToDegrees(), frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[2], zeroSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[3], zeroSequence.Angle.ToDegrees(), frame.Timestamp)
+                    });
+                }
+                else if (IncludeNegativeSequence && IncludeZeroSequence)
+                {
+                    // Provide calculated measurements for external consumption
+                    OnNewMeasurements(new IMeasurement[]
+                    {
+                        Measurement.Clone(outputMeasurements[0], negativeSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[1], negativeSequence.Angle.ToDegrees(), frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[2], zeroSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[3], zeroSequence.Angle.ToDegrees(), frame.Timestamp)
+                    });
+                }
+                else if (IncludePositiveSequence)
+                {
+                    // Provide calculated measurements for external consumption
+                    OnNewMeasurements(new IMeasurement[]
+                    {
+                        Measurement.Clone(outputMeasurements[0], positiveSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[1], positiveSequence.Angle.ToDegrees(), frame.Timestamp)
+                    });
+                }
+                else if (IncludeNegativeSequence)
+                {
+                    // Provide calculated measurements for external consumption
+                    OnNewMeasurements(new IMeasurement[]
+                    {
+                        Measurement.Clone(outputMeasurements[0], negativeSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[1], negativeSequence.Angle.ToDegrees(), frame.Timestamp)
+                    });
+                }
+                else // if (IncludeZeroSequence)
+                {
+                    // Provide calculated measurements for external consumption
+                    OnNewMeasurements(new IMeasurement[]
+                    {
+                        Measurement.Clone(outputMeasurements[0], zeroSequence.Magnitude, frame.Timestamp),
+                        Measurement.Clone(outputMeasurements[1], zeroSequence.Angle.ToDegrees(), frame.Timestamp)
+                    });
+                }
             }
         }
 
@@ -469,6 +616,7 @@ namespace PowerCalculations
         // a = e^((2/3) * pi * i)
         private static readonly ComplexNumber a = new ComplexNumber(Math.Cos(Rad120), Math.Sin(Rad120));
         private static readonly ComplexNumber aSq = a * a;
+        private static readonly ComplexNumber nanSeq = new ComplexNumber(double.NaN, double.NaN);
 
         /// <summary>
         /// Array of <see cref="Output"/> enumeration values.
