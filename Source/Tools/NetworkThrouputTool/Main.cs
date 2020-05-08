@@ -45,17 +45,27 @@ namespace NetworkThrouputTool
                 int port = Convert.ToInt32(textBoxClientPort.Text);
 
                 Stopwatch stopWatch = new Stopwatch();
+                Stopwatch stopWatchEstablish = new Stopwatch();
+                string host = textBoxClientHost.Text;
+
                 stopWatch.Reset();
+                stopWatchEstablish.Reset();
+                stopWatchEstablish.Start();
+                
+                
+                TcpClient client = new TcpClient(host, port);
+                stopWatchEstablish.Stop();
+
+                NetworkStream stream = client.GetStream();
+
                 stopWatch.Start();
 
-                TcpClient client = new TcpClient(textBoxClientHost.Text, port);
-                
-                NetworkStream stream = client.GetStream();
                 stream.Write(data, 0, data.Length);
 
+                stopWatch.Stop();
                 stream.Close();
                 client.Close();
-                stopWatch.Stop();
+                
 
                 Result result = new Result()
                 {
@@ -77,7 +87,7 @@ namespace NetworkThrouputTool
         {
             try
             {
-                IPAddress localAddr = IPAddress.Parse("127.0.0.1");
+                IPAddress localAddr = IPAddress.Any;
                 int port = Convert.ToInt32(textBoxServerPort.Text);
                 m_server = new TcpListener(localAddr, port);
                 m_server.Start();
@@ -114,14 +124,16 @@ namespace NetworkThrouputTool
                 NetworkStream stream = client.GetStream();
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Reset();
-                stopWatch.Start();
+                
 
                 Byte[] hbuffer = new Byte[4]; // 4 Byte buffer for size
+                Byte[] buffer = new Byte[1024]; // 8 Byte buffer for size
+                
+                stopWatch.Start();
                 int actualReadBytes = stream.Read(hbuffer, 0, hbuffer.Length);
-              
                 int size = BitConverter.ToInt32(hbuffer, 0);
 
-                Byte[] buffer = new Byte[size-4]; // 8 Byte buffer for size
+                
 
                 while (actualReadBytes < size)
                 {
