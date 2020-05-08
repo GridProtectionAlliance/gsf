@@ -175,6 +175,10 @@ namespace GSF.TimeSeries.Adapters
             status.AppendLine();
             status.AppendFormat(" Signal Reference Template: {0}", instance.SignalReferenceTemplate);
             status.AppendLine();
+            status.AppendFormat("      Description Template: {0}", instance.DescriptionTemplate);
+            status.AppendLine();
+            status.AppendFormat("   Device Acronym Template: {0}", instance.ParentDeviceAcronymTemplate);
+            status.AppendLine();
             status.AppendFormat("        Output Signal Type: {0}", instance.SignalType);
             status.AppendLine();
             status.AppendFormat("  Target Historian Acronym: {0}", instance.TargetHistorianAcronym);

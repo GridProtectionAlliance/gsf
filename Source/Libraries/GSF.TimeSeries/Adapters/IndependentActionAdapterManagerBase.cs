@@ -31,12 +31,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Diagnostics;
 using GSF.Reflection;
 using GSF.Threading;
 using GSF.TimeSeries.Data;
 using GSF.Units.EE;
 using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
+using DeviceRecord = GSF.TimeSeries.Model.Device;
 using static GSF.TimeSeries.Adapters.IndependentAdapterManagerExtensions;
 
 namespace GSF.TimeSeries.Adapters
@@ -197,7 +199,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for output measurement point tag names.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for output measurement point tag names, typically an expression like \"" + DefaultPointTagTemplate + "\".")]
+        [Description("Defines template for output measurement point tag names, typically an expression like \"" + DefaultPointTagTemplate + "\" where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
         [DefaultValue(DefaultPointTagTemplate)]
         public virtual string PointTagTemplate { get; set; } = DefaultPointTagTemplate;
 
@@ -205,7 +207,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for output measurement signal reference names, typically an expression like \"" + DefaultSignalReferenceTemplate + "\".")]
+        [Description("Defines template for output measurement signal reference names, typically an expression like \"" + DefaultSignalReferenceTemplate + "\" where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
         [DefaultValue(DefaultSignalReferenceTemplate)]
         public virtual string SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
 
@@ -218,10 +220,18 @@ namespace GSF.TimeSeries.Adapters
         public virtual string DescriptionTemplate { get; set; } = DefaultDescriptionTemplate;
 
         /// <summary>
-        /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
+        /// Gets or sets template for the parent device acronym used to group associated output measurements.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the default signal type to use for output measurements. Used when per output measurement SignalTypes array is not defined.")]
+        [Description("Defines template for the parent device acronym used to group associated output measurements, typically an expression like \"" + DefaultParentDeviceAcronymTemplate + "\" where \"{0}\" is substituted with this adapter name. Set to blank value to create no parent device associated output measurements. Note that \"{0}\" token is not required, you can simply use a specific device acronym.")]
+        [DefaultValue(DefaultParentDeviceAcronymTemplate)]
+        public virtual string ParentDeviceAcronymTemplate { get; set; } = DefaultParentDeviceAcronymTemplate;
+
+        /// <summary>
+        /// Gets or sets default signal type to use for all output measurements when <see cref="SignalTypes"/> array is not defined.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the default signal type to use for all output measurements. Used when per output measurement SignalTypes array is not defined.")]
         [DefaultValue(typeof(SignalType), DefaultSignalType)]
         public virtual SignalType SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
 
@@ -320,7 +330,8 @@ namespace GSF.TimeSeries.Adapters
         public int CurrentOutputIndex { get; internal set; }
 
         /// <summary>
-        /// Gets associated device ID for <see cref="CurrentAdapterIndex"/>, if any, for measurement generation.
+        /// Gets associated device ID for <see cref="CurrentAdapterIndex"/>, if any, for measurement generation. If overridden to provide custom
+        /// device ID, <see cref="ParentDeviceAcronymTemplate"/> should be set to <c>null</c> so no parent device is created.
         /// </summary>
         public virtual int CurrentDeviceID { get; } = 0;
 
@@ -476,6 +487,7 @@ namespace GSF.TimeSeries.Adapters
         private void ManageChildAdapters()
         {
             MeasurementKey[] measurementKeys;
+            int? currentDeviceID = null;
 
             lock (m_adapterInputSync)
             {
@@ -483,6 +495,30 @@ namespace GSF.TimeSeries.Adapters
                     return;
 
                 measurementKeys = InputMeasurementKeys;
+            }
+
+            // Create associated parent device for output measurements if 
+            if (!string.IsNullOrWhiteSpace(ParentDeviceAcronymTemplate))
+            {
+                if (CurrentDeviceID > 0)
+                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Creating a parent device for \"{Name}\" [{GetType().Name}] based on specified template \"{ParentDeviceAcronymTemplate}\", but overridden CurrentDeviceID property reports non-zero value: {CurrentDeviceID:N0}");
+                
+                using (AdoDataConnection connection = GetConfiguredConnection())
+                {
+                    TableOperations<DeviceRecord> deviceTable = new TableOperations<DeviceRecord>(connection);
+                    string deviceAcronym = string.Format(ParentDeviceAcronymTemplate, Name);
+
+                    DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym) ?? deviceTable.NewRecord();
+                    int protocolID = connection.ExecuteScalar<int?>("SELECT ID FROM Protocol WHERE Acronym = 'VirtualInput'") ?? 15;
+
+                    device.Acronym = deviceAcronym;
+                    device.Name = deviceAcronym;
+                    device.ProtocolID = protocolID;
+                    device.Enabled = true;
+
+                    deviceTable.AddNewOrUpdateRecord(device);
+                    currentDeviceID = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym)?.ID;
+                }
             }
 
             HashSet<string> activeAdapterNames = new HashSet<string>(StringComparer.Ordinal);
@@ -536,7 +572,7 @@ namespace GSF.TimeSeries.Adapters
                     string description = string.Format(DescriptionTemplate, outputID, signalType, Name, GetType().Name);
 
                     // Get output measurement record, creating a new one if needed
-                    MeasurementRecord measurement = this.GetMeasurementRecord(CurrentDeviceID, outputPointTag, signalReference, description, signalType, TargetHistorianAcronym);
+                    MeasurementRecord measurement = this.GetMeasurementRecord(currentDeviceID ?? CurrentDeviceID, outputPointTag, signalReference, description, signalType, TargetHistorianAcronym);
 
                     // Track output signal IDs
                     signalIDs.Add(measurement.SignalID);

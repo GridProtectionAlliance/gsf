@@ -76,6 +76,11 @@ namespace GSF.TimeSeries.Adapters
         public const string DefaultDescriptionTemplate = "{0} [{1}] measurement created for {2} [{3}].";
 
         /// <summary>
+        /// Defines the default value for the <see cref="IIndependentAdapterManager.ParentDeviceAcronymTemplate"/>.
+        /// </summary>
+        public const string DefaultParentDeviceAcronymTemplate = "IAM!{0}";
+
+        /// <summary>
         /// Defines the default value for the <see cref="IIndependentAdapterManager.SignalType"/>.
         /// </summary>
         public const string DefaultSignalType = "CALC";

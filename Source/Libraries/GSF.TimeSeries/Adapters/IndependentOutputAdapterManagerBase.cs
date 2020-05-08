@@ -109,60 +109,10 @@ namespace GSF.TimeSeries.Adapters
         public virtual string DatabaseProviderString { get; set; }
 
         /// <summary>
-        /// Gets or sets template for output measurement point tag names.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines template for output measurement point tag names, typically an expression like \"" + DefaultPointTagTemplate + "\".")]
-        [DefaultValue(DefaultPointTagTemplate)]
-        public virtual string PointTagTemplate { get; set; } = DefaultPointTagTemplate;
-
-        /// <summary>
-        /// Gets or sets template for output measurement signal reference names.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines template for output measurement signal reference names, typically an expression like \"" + DefaultSignalReferenceTemplate + "\".")]
-        [DefaultValue(DefaultSignalReferenceTemplate)]
-        public virtual string SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
-
-        /// <summary>
-        /// Gets or sets template for output measurement descriptions.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines template for output measurement descriptions, typically an expression like \"" + DefaultDescriptionTemplate + "\".")]
-        [DefaultValue(DefaultDescriptionTemplate)]
-        public virtual string DescriptionTemplate { get; set; } = DefaultDescriptionTemplate;
-
-        /// <summary>
-        /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
-        /// </summary>
-        /// <remarks>
-        /// Not used by output adapters, inputs into <see cref="IOutputAdapter"/> are not reentrant into time-series framework.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public SignalType SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
-
-        /// <summary>
-        /// Gets per adapter signal type for output measurements, used when each output needs to be a different type.
-        /// </summary>
-        /// <remarks>
-        /// Not used by output adapters, inputs into <see cref="IOutputAdapter"/> are not reentrant into time-series framework.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public SignalType[] SignalTypes { get; } = null;
-
-        /// <summary>
         /// Gets any custom adapter settings to be added to each adapter connection string. Can be used to add
         /// settings that are custom per adapter.
         /// </summary>
         public virtual string CustomAdapterSettings { get; } = null;
-
-        /// <summary>
-        /// Gets or sets the target historian acronym for output measurements.
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines the target historian acronym for output measurements.")]
-        [DefaultValue(DefaultTargetHistorianAcronym)]
-        public virtual string TargetHistorianAcronym { get; set; } = DefaultTargetHistorianAcronym;
 
         /// <summary>
         /// Gets or sets the source measurement table to use for configuration.
@@ -334,9 +284,26 @@ namespace GSF.TimeSeries.Adapters
 
         #region [ IIndependentAdapterManager Implementation ]
 
+        // The following properties are not used by output adapters. An IOutputAdapter implementation does not define
+        // output measurements nor is any output automatically reentrant into time-series framework.
+
+        string IIndependentAdapterManager.PointTagTemplate { get; set; } = DefaultPointTagTemplate;
+
+        string IIndependentAdapterManager.SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
+
+        string IIndependentAdapterManager.DescriptionTemplate { get; set; } = DefaultDescriptionTemplate;
+
+        string IIndependentAdapterManager.ParentDeviceAcronymTemplate { get; set; } = DefaultParentDeviceAcronymTemplate;
+
+        SignalType IIndependentAdapterManager.SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
+
+        SignalType[] IIndependentAdapterManager.SignalTypes { get; } = null;
+
         ReadOnlyCollection<string> IIndependentAdapterManager.PerAdapterOutputNames { get; } = null;
 
         SignalType[] IIndependentAdapterManager.OutputMeasurementTypes { get; } = null;
+
+        string IIndependentAdapterManager.TargetHistorianAcronym { get; set; } = DefaultTargetHistorianAcronym;
 
         RoutingTables IIndependentAdapterManager.RoutingTables { get; set; }
 

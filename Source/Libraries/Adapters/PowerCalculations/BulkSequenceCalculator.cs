@@ -410,6 +410,16 @@ namespace PowerCalculations
         }
 
         /// <summary>
+        /// Gets or sets template for the parent device acronym used to group associated output measurements.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)] // Hiding parameter from manager - all outputs automatically associated with input device
+        public override string ParentDeviceAcronymTemplate
+        {
+            get => null;
+            set => base.ParentDeviceAcronymTemplate = value;
+        }
+
+        /// <summary>
         /// Gets associated device ID for <see cref="IndependentActionAdapterManagerBase{TAdapter}.CurrentAdapterIndex"/>, if any, for measurement generation.
         /// </summary>
         public override int CurrentDeviceID
