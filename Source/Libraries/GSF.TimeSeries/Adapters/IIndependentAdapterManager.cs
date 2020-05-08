@@ -71,7 +71,12 @@ namespace GSF.TimeSeries.Adapters
         string DescriptionTemplate { get; set; }
 
         /// <summary>
-        /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
+        /// Gets or sets template for the parent device acronym used to group associated output measurements.
+        /// </summary>
+        string ParentDeviceAcronymTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets default signal type to use for all output measurements when <see cref="SignalTypes"/> array is not defined.
         /// </summary>
         SignalType SignalType { get; set; }
 

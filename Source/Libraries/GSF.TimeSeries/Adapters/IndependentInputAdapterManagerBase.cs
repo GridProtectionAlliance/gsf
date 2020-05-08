@@ -111,7 +111,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for output measurement point tag names.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for output measurement point tag names, typically an expression like \"" + DefaultPointTagTemplate + "\".")]
+        [Description("Defines template for output measurement point tag names, typically an expression like \"" + DefaultPointTagTemplate + "\" where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
         [DefaultValue(DefaultPointTagTemplate)]
         public virtual string PointTagTemplate { get; set; } = DefaultPointTagTemplate;
 
@@ -119,7 +119,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for output measurement signal reference names, typically an expression like \"" + DefaultSignalReferenceTemplate + "\".")]
+        [Description("Defines template for output measurement signal reference names, typically an expression like \"" + DefaultSignalReferenceTemplate + "\" where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
         [DefaultValue(DefaultSignalReferenceTemplate)]
         public virtual string SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
 
@@ -132,10 +132,18 @@ namespace GSF.TimeSeries.Adapters
         public virtual string DescriptionTemplate { get; set; } = DefaultDescriptionTemplate;
 
         /// <summary>
-        /// Gets or sets default signal type to use for output measurements when <see cref="SignalTypes"/> array is not defined.
+        /// Gets or sets template for the parent device acronym used to group associated output measurements.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the signal type for output measurements.")]
+        [Description("Defines template for the parent device acronym used to group associated output measurements, typically an expression like \"" + DefaultParentDeviceAcronymTemplate + "\" where \"{0}\" is substituted with this adapter name. Set to blank value to create no parent device associated output measurements. Note that \"{0}\" token is not required, you can simply use a specific device acronym.")]
+        [DefaultValue(DefaultParentDeviceAcronymTemplate)]
+        public virtual string ParentDeviceAcronymTemplate { get; set; } = DefaultParentDeviceAcronymTemplate;
+
+        /// <summary>
+        /// Gets or sets default signal type to use for all output measurements when <see cref="SignalTypes"/> array is not defined.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the default signal type to use for all output measurements. Used when per output measurement SignalTypes array is not defined.")]
         [DefaultValue(typeof(SignalType), DefaultSignalType)]
         public virtual SignalType SignalType { get; set; } = (SignalType)Enum.Parse(typeof(SignalType), DefaultSignalType);
 
@@ -212,7 +220,8 @@ namespace GSF.TimeSeries.Adapters
         public int CurrentOutputIndex { get; internal set; }
 
         /// <summary>
-        /// Gets associated device ID for <see cref="CurrentAdapterIndex"/>, if any, for measurement generation.
+        /// Gets associated device ID for <see cref="CurrentAdapterIndex"/>, if any, for measurement generation. If overridden to provide custom
+        /// device ID, <see cref="ParentDeviceAcronymTemplate"/> should be set to <c>null</c> so no parent device is created.
         /// </summary>
         public virtual int CurrentDeviceID { get; } = 0;
 
