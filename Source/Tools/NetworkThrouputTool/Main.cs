@@ -116,16 +116,16 @@ namespace NetworkThrouputTool
                 stopWatch.Reset();
                 stopWatch.Start();
 
-                Byte[] hbuffer = new Byte[4]; // 8 Byte buffer for size
+                Byte[] hbuffer = new Byte[4]; // 4 Byte buffer for size
                 int actualReadBytes = stream.Read(hbuffer, 0, hbuffer.Length);
               
                 int size = BitConverter.ToInt32(hbuffer, 0);
 
-                Byte[] buffer = new Byte[1024]; // 8 Byte buffer for size
+                Byte[] buffer = new Byte[size-4]; // 8 Byte buffer for size
 
                 while (actualReadBytes < size)
                 {
-                    actualReadBytes = actualReadBytes + stream.Read(buffer, actualReadBytes, buffer.Length);
+                    actualReadBytes = actualReadBytes + stream.Read(buffer, 0, buffer.Length);
                 }
 
                 stopWatch.Stop();
@@ -142,7 +142,9 @@ namespace NetworkThrouputTool
                 };
                 this.listView1.Invoke(d, result);
             }
-            catch { }
+            catch (Exception ex)
+            {
+            }
         }
 
         private void AppendRow(Result result)
