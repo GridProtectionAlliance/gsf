@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -181,6 +182,37 @@ namespace NetworkThrouputTool
         private void button3_Click(object sender, EventArgs e)
         {
             this.listView1.Clear();
+        }
+
+        private void export2File()
+        {
+            string filename = "";
+            SaveFileDialog sfd = new SaveFileDialog();
+
+            sfd.Title = "Export Results";
+            sfd.Filter = "Text File (.csv) | *.csv";
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                filename = sfd.FileName.ToString();
+                if (filename != "")
+                {
+                    using (StreamWriter sw = new StreamWriter(filename))
+                    {
+                        sw.WriteLine("{0},{1},{2},{3}", "Type", "Size (B)","Time (ms)","Speed (KB/s)");
+
+                        foreach (ListViewItem item in this.listView1.Items)
+                        {
+                            sw.WriteLine("{0},{1},{2},{3}", item.SubItems[0].Text, item.SubItems[1].Text, item.SubItems[2].Text, item.SubItems[3].Text);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            export2File();
         }
     }
 
