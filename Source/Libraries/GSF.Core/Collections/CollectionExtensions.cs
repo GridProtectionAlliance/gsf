@@ -59,6 +59,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -80,6 +81,7 @@ namespace GSF.Collections
         /// <param name="source">Source array.</param>
         /// <param name="rowIndex">Row index, i.e., dimension zero value, to retrieve.</param>
         /// <returns>Values from specified <paramref name="rowIndex"/>.</returns>
+        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", Justification = "This extension method is targeted for a two dimensional array.")]
         public static IEnumerable<T> GetRow<T>(this T[,] source, int rowIndex)
         {
             if (source == null)
@@ -101,6 +103,7 @@ namespace GSF.Collections
         /// <param name="source">Source array.</param>
         /// <param name="columnIndex">Column index, i.e., dimension one value, to retrieve.</param>
         /// <returns>Values from specified <paramref name="columnIndex"/>.</returns>
+        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", Justification = "This extension method is targeted for a two dimensional array.")]
         public static IEnumerable<T> GetColumn<T>(this T[,] source, int columnIndex)
         {
             if (source == null)

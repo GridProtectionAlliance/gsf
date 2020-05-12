@@ -49,6 +49,9 @@ This includes, but may not be limited to, the following:
     Copyright (c) 2009-2011 Dino Chiesa and Microsoft Corporation
     Copyright (c) 2009-2011 Dino Chiesa
 
+* GSF.Net.TFtp Trivial FTP library derived from tftp.net project (https://github.com/Callisto82/tftp.net)
+    Copyright (c) 2011, Michael Baer
+
 =========================================================================================================
 
 Portions of this software implemented using source code that was licensed using the BSD 3-clause license:

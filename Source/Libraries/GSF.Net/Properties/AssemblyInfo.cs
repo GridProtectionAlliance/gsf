@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("GSF.Net")]
-[assembly: AssemblyDescription("Library of network protocol implementations (e.g., FTP)")]
+[assembly: AssemblyDescription("Library of network protocol implementations (e.g., FTP and TFTP)")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]

@@ -281,7 +281,7 @@ namespace GSF.Net.Ftp
                     CheckSessionCurrentDirectory();
 
                     StringBuilder parentPath = new StringBuilder();
-                    var fullPath = m_session.ControlChannel.PWD();
+                    string fullPath = m_session.ControlChannel.PWD();
 
                     if (fullPath.Substring(fullPath.Length - 1, 1) != "/")
                         fullPath += "/";
