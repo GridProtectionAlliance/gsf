@@ -270,9 +270,9 @@ namespace GSF.Net.Ftp
         /// <returns>An <see cref="Int32"/> that represents the result of the comparison. 1 - object is greater than, 0 - object is equal to, -1 - object is less than.</returns>
         public int CompareTo(object obj)
         {
-            IFtpFile file = obj as IFtpFile;
-            if (file == null)
+            if (!(obj is IFtpFile file))
                 return 1;
+
             return CompareTo(file);
         }
 
@@ -290,6 +290,7 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
+
             return value1.CompareTo(value2) == 0;
         }
 
@@ -314,6 +315,7 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
+
             return value1.CompareTo(value2) < 0;
         }
 
@@ -338,6 +340,7 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
+
             return value1.CompareTo(value2) <= 0;
         }
 
