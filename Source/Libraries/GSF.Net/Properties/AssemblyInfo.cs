@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("GSF.Net")]
-[assembly: AssemblyDescription("Library of network protocol implementations (e.g., FTP)")]
+[assembly: AssemblyDescription("Library of network protocol implementations (e.g., FTP and TFTP)")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
@@ -58,7 +58,7 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2.3.305.0")]
-[assembly: AssemblyVersion("2.3.305.0")]
-[assembly: AssemblyFileVersion("2.3.305.0")]
-[assembly: AssemblyInformationalVersion("2.3.305-beta")]
+// [assembly: AssemblyVersion("2.3.307.0")]
+[assembly: AssemblyVersion("2.3.307.0")]
+[assembly: AssemblyFileVersion("2.3.307.0")]
+[assembly: AssemblyInformationalVersion("2.3.307-beta")]

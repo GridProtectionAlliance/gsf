@@ -78,15 +78,14 @@ namespace GSF.Net.Ftp
         {
             get
             {
-                if ((object)m_ftpResponse != null)
+                if (m_ftpResponse != null)
                     return m_ftpResponse.Message;
-                else
-                    return "";
+                return "";
             }
         }
 
         /// <summary>
-        /// Derserializes the <see cref="FtpExceptionBase"/>.
+        /// Deserializes the <see cref="FtpExceptionBase"/>.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
@@ -128,7 +127,7 @@ namespace GSF.Net.Ftp
     public class FtpFileNotFoundException : FtpExceptionBase
     {
         internal FtpFileNotFoundException(string remoteFile)
-            : base("Remote file (" + remoteFile + ") not found.  Try refreshing the directory.")
+            : base($"Remote file ({remoteFile}) not found.  Try refreshing the directory.")
         {
         }
     }

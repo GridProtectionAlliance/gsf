@@ -71,8 +71,6 @@ namespace GSF.Net.Ftp
 
         // Fields
         private readonly BitArray m_result;
-        private readonly string m_message;
-        private readonly int m_ftpResponse;
 
         #endregion
 
@@ -91,8 +89,8 @@ namespace GSF.Net.Ftp
         internal FtpAsyncResult(string message, int ftpCode, int result)
         {
             m_result = new BitArray(3);
-            m_message = message;
-            m_ftpResponse = ftpCode;
+            Message = message;
+            ResponseCode = ftpCode;
             m_result[result] = true;
         }
 
@@ -103,57 +101,27 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Returns true if asynchronous transfer completed successfully.
         /// </summary>
-        public bool IsSuccess
-        {
-            get
-            {
-                return m_result[Complete];
-            }
-        }
+        public bool IsSuccess => m_result[Complete];
 
         /// <summary>
         /// Returns true if asynchronous transfer failed.
         /// </summary>
-        public bool IsFailed
-        {
-            get
-            {
-                return m_result[Fail];
-            }
-        }
+        public bool IsFailed => m_result[Fail];
 
         /// <summary>
         /// Returns true if asynchronous transfer was aborted.
         /// </summary>
-        public bool IsAborted
-        {
-            get
-            {
-                return m_result[Abort];
-            }
-        }
+        public bool IsAborted => m_result[Abort];
 
         /// <summary>
         /// Gets response code from asynchronous transfer.
         /// </summary>
-        public int ResponseCode
-        {
-            get
-            {
-                return m_ftpResponse;
-            }
-        }
+        public int ResponseCode { get; }
 
         /// <summary>
         /// Gets any message associated with asynchronous transfer.
         /// </summary>
-        public string Message
-        {
-            get
-            {
-                return m_message;
-            }
-        }
+        public string Message { get; }
 
         #endregion
     }

@@ -120,10 +120,6 @@ namespace GSF.Net.Ftp
         /// </summary>
         public const int TransferAborted = 426;
 
-        // Fields
-        private readonly Queue m_responses;
-        private readonly int m_code;
-
         #endregion
 
         #region [ Constructors ]
@@ -132,7 +128,7 @@ namespace GSF.Net.Ftp
         {
             string response;
 
-            m_responses = new Queue();
+            Responses = new Queue();
 
             do
             {
@@ -140,19 +136,19 @@ namespace GSF.Net.Ftp
 
                 try
                 {
-                    m_code = InvalidCode;
-                    m_code = int.Parse(response.Substring(0, 3));
+                    Code = InvalidCode;
+                    Code = int.Parse(response.Substring(0, 3));
                 }
                 catch
                 {
                     throw new FtpInvalidResponseException("Invalid response", this);
                 }
 
-                m_responses.Enqueue(response);
+                Responses.Enqueue(response);
             }
             while (response.Length >= 4 && response[3] == '-');
 
-            if (m_code == ServiceUnavailable)
+            if (Code == ServiceUnavailable)
                 throw new FtpServerDownException(this);
         }
 
@@ -163,35 +159,17 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Gets FTP response message.
         /// </summary>
-        public string Message
-        {
-            get
-            {
-                return m_responses.Peek().ToString();
-            }
-        }
+        public string Message => Responses.Peek().ToString();
 
         /// <summary>
         /// Gets FTP response queue.
         /// </summary>
-        public Queue Responses
-        {
-            get
-            {
-                return m_responses;
-            }
-        }
+        public Queue Responses { get; }
 
         /// <summary>
         /// Gets FTP response code.
         /// </summary>
-        public int Code
-        {
-            get
-            {
-                return m_code;
-            }
-        }
+        public int Code { get; }
 
         #endregion
 
@@ -200,16 +178,15 @@ namespace GSF.Net.Ftp
         private char ReadAppendChar(NetworkStream stream, StringBuilder toAppend)
         {
             int i = stream.ReadByte();
+
             if (i >= 0)
             {
                 char c = Encoding.ASCII.GetChars(new[] { (byte)i })[0];
                 toAppend.Append(c);
                 return c;
             }
-            else
-            {
-                return '\n';
-            }
+
+            return '\n';
         }
 
         private string GetLine(NetworkStream stream)

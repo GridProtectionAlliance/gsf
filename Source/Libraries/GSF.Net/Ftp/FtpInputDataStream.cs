@@ -83,12 +83,6 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Returns false, cannot write to input stream.
         /// </summary>
-        public override bool CanWrite
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanWrite => false;
     }
 }

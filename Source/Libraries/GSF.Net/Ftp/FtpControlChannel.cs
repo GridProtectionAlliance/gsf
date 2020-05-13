@@ -46,6 +46,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -53,6 +54,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Net.Ftp
 {
@@ -88,17 +90,12 @@ namespace GSF.Net.Ftp
 
         // Fields
         private readonly FtpClient m_sessionHost;
-        private FtpSessionConnected m_session;
         private TcpClient m_connection;
         private string m_server;
-        private int m_port;
-        private int m_timeout;
-        private bool m_passive;
         private IPAddress m_activeAddress;
         private Range<int> m_activePortRange;
         private int m_lastActivePort;
         private TransferMode m_currentTransferMode;
-        private FtpResponse m_lastResponse;
         private bool m_disposed;
 
         #endregion
@@ -109,9 +106,9 @@ namespace GSF.Net.Ftp
         {
             m_connection = new TcpClient();
             m_server = "localhost";
-            m_port = 21;
-            m_timeout = 30000;
-            m_passive = true;
+            Port = 21;
+            Timeout = 30000;
+            Passive = true;
             m_sessionHost = host;
             m_currentTransferMode = TransferMode.Unknown;
         }
@@ -130,10 +127,7 @@ namespace GSF.Net.Ftp
 
         internal string Server
         {
-            get
-            {
-                return m_server;
-            }
+            get => m_server;
             set
             {
                 if (value.Length == 0)
@@ -143,60 +137,21 @@ namespace GSF.Net.Ftp
             }
         }
 
-        internal int Port
-        {
-            get
-            {
-                return m_port;
-            }
-            set
-            {
-                m_port = value;
-            }
-        }
+        internal int Port { get; set; }
 
-        internal int Timeout
-        {
-            get
-            {
-                return m_timeout;
-            }
-            set
-            {
-                m_timeout = value;
-            }
-        }
+        internal int Timeout { get; set; }
 
-        internal bool Passive
-        {
-            get
-            {
-                return m_passive;
-            }
-            set
-            {
-                m_passive = value;
-            }
-        }
+        internal bool Passive { get; set; }
 
         internal IPAddress ActiveAddress
         {
-            get
-            {
-                return m_activeAddress ?? (m_activeAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork));
-            }
-            set
-            {
-                m_activeAddress = value;
-            }
+            get => m_activeAddress ?? (m_activeAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork));
+            set => m_activeAddress = value;
         }
 
         internal Range<int> DataChannelPortRange
         {
-            get
-            {
-                return m_activePortRange;
-            }
+            get => m_activePortRange;
             set
             {
                 if (value.Start <= IPEndPoint.MinPort)
@@ -215,19 +170,9 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Last response from control channel.
         /// </summary>
-        public FtpResponse LastResponse => m_lastResponse;
+        public FtpResponse LastResponse { get; private set; }
 
-        internal FtpSessionConnected Session
-        {
-            get
-            {
-                return m_session;
-            }
-            set
-            {
-                m_session = value;
-            }
-        }
+        internal FtpSessionConnected Session { get; set; }
 
         #endregion
 
@@ -256,26 +201,22 @@ namespace GSF.Net.Ftp
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
 
-                    if (disposing)
-                    {
-                        m_lastResponse = null;
+                LastResponse = null;
 
-                        if ((object)m_connection != null)
-                            m_connection.Close();
-
-                        m_connection = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                m_connection?.Close();
+                m_connection = null;
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -284,21 +225,21 @@ namespace GSF.Net.Ftp
         /// </summary>
         public void Connect()
         {
-            if ((object)m_connection == null)
+            if (m_connection == null)
                 return;
 
-            m_connection.Connect(m_server, m_port);
+            m_connection.Connect(m_server, Port);
 
             try
             {
                 NetworkStream stream = m_connection.GetStream();
 
-                stream.ReadTimeout = m_timeout;
-                stream.WriteTimeout = m_timeout;
-                m_lastResponse = new FtpResponse(stream);
+                stream.ReadTimeout = Timeout;
+                stream.WriteTimeout = Timeout;
+                LastResponse = new FtpResponse(stream);
 
-                if (m_lastResponse.Code != FtpResponse.ServiceReady)
-                    throw new FtpServerDownException("FTP service unavailable.", m_lastResponse);
+                if (LastResponse.Code != FtpResponse.ServiceReady)
+                    throw new FtpServerDownException("FTP service unavailable.", LastResponse);
             }
             catch
             {
@@ -313,7 +254,7 @@ namespace GSF.Net.Ftp
         /// <param name="cmd">A <see cref="String"/> representing the command to send.</param>
         public void Command(string cmd)
         {
-            if ((object)m_connection == null)
+            if (m_connection == null)
                 return;
 
             // If the client receives an exception when establishing a data channel,
@@ -322,8 +263,10 @@ namespace GSF.Net.Ftp
 
             byte[] buff = Encoding.Default.GetBytes(cmd + Environment.NewLine);
             NetworkStream stream = m_connection.GetStream();
+            
             m_sessionHost.OnCommandSent(cmd);
             stream.Write(buff, 0, buff.Length);
+            
             RefreshResponse();
         }
 
@@ -332,18 +275,14 @@ namespace GSF.Net.Ftp
         /// </summary>
         public void RefreshResponse()
         {
-            if ((object)m_connection == null)
+            if (m_connection == null)
                 return;
 
             lock (this)
-            {
-                m_lastResponse = new FtpResponse(m_connection.GetStream());
-            }
+                LastResponse = new FtpResponse(m_connection.GetStream());
 
-            foreach (string s in m_lastResponse.Responses)
-            {
+            foreach (string s in LastResponse.Responses)
                 m_sessionHost.OnResponseReceived(s);
-            }
         }
 
         /// <summary>
@@ -373,7 +312,7 @@ namespace GSF.Net.Ftp
                 .ToString()
                 .Split('\n')
                 .Where(line => !string.IsNullOrWhiteSpace(line))
-                .Select(line => line + "\n")
+                .Select(line => $"{line}\n")
                 .ToList();
 
             foreach (string line in lines)
@@ -382,54 +321,56 @@ namespace GSF.Net.Ftp
 
         internal void REST(long offset)
         {
-            Command("REST " + offset);
+            Command($"REST {offset}");
 
-            if (m_lastResponse.Code != FtpResponse.RequestFileActionPending)
-                throw new FtpResumeNotSupportedException(m_lastResponse);
+            if (LastResponse.Code != FtpResponse.RequestFileActionPending)
+                throw new FtpResumeNotSupportedException(LastResponse);
         }
 
         internal void STOR(string name)
         {
             Type(TransferMode.Binary);
-            Command("STOR " + name);
 
-            if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
-                throw new FtpCommandException("Failed to send file " + name + ".", m_lastResponse);
+            Command($"STOR {name}");
+
+            if (LastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && LastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
+                throw new FtpCommandException($"Failed to send file {name}.", LastResponse);
         }
 
         internal void RETR(string name)
         {
             Type(TransferMode.Binary);
-            Command("RETR " + name);
 
-            if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
-                throw new FtpCommandException("Failed to retrieve file " + name + ".", m_lastResponse);
+            Command($"RETR {name}");
+
+            if (LastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && LastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
+                throw new FtpCommandException($"Failed to retrieve file {name}.", LastResponse);
         }
 
         internal void DELE(string fileName)
         {
-            Command("DELE " + fileName);
+            Command($"DELE {fileName}");
 
-            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete) // 250)
-                throw new FtpCommandException("Failed to delete file " + fileName + ".", m_lastResponse);
+            if (LastResponse.Code != FtpResponse.RequestFileActionComplete) // 250)
+                throw new FtpCommandException($"Failed to delete file {fileName}.", LastResponse);
         }
 
         internal void RMD(string dirName)
         {
-            Command("RMD " + dirName);
+            Command($"RMD {dirName}");
 
-            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete) // 250)
-                throw new FtpCommandException("Failed to remove subdirectory " + dirName + ".", m_lastResponse);
+            if (LastResponse.Code != FtpResponse.RequestFileActionComplete) // 250)
+                throw new FtpCommandException($"Failed to remove subdirectory {dirName}.", LastResponse);
         }
 
         internal string PWD()
         {
             Command("PWD");
 
-            if (m_lastResponse.Code != 257)
-                throw new FtpCommandException("Cannot get current directory.", m_lastResponse);
+            if (LastResponse.Code != 257)
+                throw new FtpCommandException("Cannot get current directory.", LastResponse);
 
-            Match m = s_pwdExpression.Match(m_lastResponse.Message);
+            Match m = s_pwdExpression.Match(LastResponse.Message);
             return m.Groups[2].Value;
         }
 
@@ -437,16 +378,16 @@ namespace GSF.Net.Ftp
         {
             Command("CDUP");
 
-            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete)
-                throw new FtpCommandException("Cannot move to parent directory (CDUP).", m_lastResponse);
+            if (LastResponse.Code != FtpResponse.RequestFileActionComplete)
+                throw new FtpCommandException("Cannot move to parent directory (CDUP).", LastResponse);
         }
 
         internal void CWD(string path)
         {
-            Command("CWD " + path);
+            Command($"CWD {path}");
 
-            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete && m_lastResponse.Code != FtpResponse.ClosingDataChannel)
-                throw new FtpCommandException("Cannot change directory to " + path + ".", m_lastResponse);
+            if (LastResponse.Code != FtpResponse.RequestFileActionComplete && LastResponse.Code != FtpResponse.ClosingDataChannel)
+                throw new FtpCommandException($"Cannot change directory to {path}.", LastResponse);
         }
 
         internal void QUIT()
@@ -456,30 +397,37 @@ namespace GSF.Net.Ftp
 
         internal void Type(TransferMode mode)
         {
-            if (mode == TransferMode.Unknown)
-                return;
+            switch (mode)
+            {
+                case TransferMode.Unknown:
+                    return;
 
-            if (mode == TransferMode.Ascii && m_currentTransferMode != TransferMode.Ascii)
-                Command("TYPE A");
-            else if (mode == TransferMode.Binary && m_currentTransferMode != TransferMode.Binary)
-                Command("TYPE I");
+                case TransferMode.Ascii when m_currentTransferMode != TransferMode.Ascii:
+                    Command("TYPE A");
+                    break;
+
+                case TransferMode.Binary when m_currentTransferMode != TransferMode.Binary:
+                    Command("TYPE I");
+                    break;
+            }
 
             m_currentTransferMode = mode;
         }
 
         internal void Rename(string oldName, string newName)
         {
-            Command("RNFR " + oldName);
+            Command($"RNFR {oldName}");
 
-            if (m_lastResponse.Code != FtpResponse.RequestFileActionPending)
-                throw new FtpCommandException("Failed to rename file from " + oldName + " to " + newName + ".", m_lastResponse);
+            if (LastResponse.Code != FtpResponse.RequestFileActionPending)
+                throw new FtpCommandException($"Failed to rename file from {oldName} to {newName}.", LastResponse);
 
-            Command("RNTO " + newName);
-            if (m_lastResponse.Code != FtpResponse.RequestFileActionComplete)
-                throw new FtpCommandException("Failed to rename file from " + oldName + " to " + newName + ".", m_lastResponse);
+            Command($"RNTO {newName}");
+            
+            if (LastResponse.Code != FtpResponse.RequestFileActionComplete)
+                throw new FtpCommandException($"Failed to rename file from {oldName} to {newName}.", LastResponse);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "StreamReader leaves stream open so that outer using can close")]
+        [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "StreamReader leaves stream open so that outer using can close")]
         internal Queue List(bool passive)
         {
             const string errorMsgListing = "Error when listing server directory.";
@@ -487,6 +435,7 @@ namespace GSF.Net.Ftp
             try
             {
                 Type(TransferMode.Ascii);
+                
                 Queue lineQueue = new Queue();
 
                 using (FtpDataStream dataStream = GetDataStream())
@@ -494,23 +443,23 @@ namespace GSF.Net.Ftp
                 {
                     Command("LIST");
 
-                    if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
+                    if (LastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && LastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
                     {
                         dataStream.Close(true);
-                        throw new FtpCommandException(errorMsgListing, m_lastResponse);
+                        throw new FtpCommandException(errorMsgListing, LastResponse);
                     }
 
                     string line = lineReader.ReadLine();
 
-                    while ((object)line != null)
+                    while (line != null)
                     {
                         lineQueue.Enqueue(line);
                         line = lineReader.ReadLine();
                     }
                 }
 
-                if (m_lastResponse.Code != FtpResponse.ClosingDataChannel)
-                    throw new FtpCommandException(errorMsgListing, m_lastResponse);
+                if (LastResponse.Code != FtpResponse.ClosingDataChannel)
+                    throw new FtpCommandException(errorMsgListing, LastResponse);
 
                 return lineQueue;
             }
@@ -531,7 +480,7 @@ namespace GSF.Net.Ftp
 
         internal FtpDataStream GetDataStream(TransferDirection direction)
         {
-            return m_passive ? GetPassiveDataStream(direction) : GetActiveDataStream(direction);
+            return Passive ? GetPassiveDataStream(direction) : GetActiveDataStream(direction);
         }
 
         internal FtpDataStream GetActiveDataStream()
@@ -552,7 +501,6 @@ namespace GSF.Net.Ftp
                 try
                 {
                     TcpListener listener = new TcpListener(address, port);
-                    TcpClient client;
 
                     listener.Start();
 
@@ -563,13 +511,13 @@ namespace GSF.Net.Ftp
 
                         for (int i = 0; !listener.Pending(); i++)
                         {
-                            if (i * 200 >= m_timeout)
+                            if (i * 200 >= Timeout)
                                 throw new TimeoutException("Timeout expired while waiting for connection on active FTP data channel.");
 
                             Thread.Sleep(200);
                         }
 
-                        client = listener.AcceptTcpClient();
+                        TcpClient client = listener.AcceptTcpClient();
 
                         if (direction == TransferDirection.Download)
                             return new FtpInputDataStream(this, client);
@@ -583,12 +531,12 @@ namespace GSF.Net.Ftp
                 }
                 catch (IOException ie)
                 {
-                    throw new Exception("Failed to open active port (" + port + ") data connection due to IO exception: " + ie.Message + ".", ie);
+                    throw new Exception($"Failed to open active port ({port}) data connection due to IO exception: {ie.Message}.", ie);
                 }
                 catch (SocketException se)
                 {
                     if (se.SocketErrorCode != SocketError.AddressAlreadyInUse)
-                        throw new Exception("Failed to open active port (" + port + ") data connection due to socket exception: " + se.Message + ".", se);
+                        throw new Exception($"Failed to open active port ({port}) data connection due to socket exception: {se.Message}.", se);
                 }
 
                 port = GetActivePort();
@@ -615,26 +563,26 @@ namespace GSF.Net.Ftp
 
                 if (direction == TransferDirection.Download)
                     return new FtpInputDataStream(this, client);
-                else
-                    return new FtpOutputDataStream(this, client);
+                
+                return new FtpOutputDataStream(this, client);
             }
             catch (IOException ie)
             {
-                throw new Exception("Failed to open passive port (" + port + ") data connection due to IO exception: " + ie.Message + ".", ie);
+                throw new Exception($"Failed to open passive port ({port}) data connection due to IO exception: {ie.Message}.", ie);
             }
             catch (SocketException se)
             {
-                throw new Exception("Failed to open passive port (" + port + ") data connection due to socket exception: " + se.Message + ".", se);
+                throw new Exception($"Failed to open passive port ({port}) data connection due to socket exception: {se.Message}.", se);
             }
         }
 
         private int GetActivePort()
         {
-            if ((object)m_activePortRange == null)
+            if (m_activePortRange == null)
                 return 0;
 
             if (m_lastActivePort == 0)
-                m_lastActivePort = GSF.Security.Cryptography.Random.Int32Between(m_activePortRange.Start, m_activePortRange.End);
+                m_lastActivePort = Random.Int32Between(m_activePortRange.Start, m_activePortRange.End);
             else if (m_lastActivePort == m_activePortRange.End)
                 m_lastActivePort = m_activePortRange.Start;
             else
@@ -647,15 +595,12 @@ namespace GSF.Net.Ftp
         {
             Command("PASV");
 
-            if (m_lastResponse.Code == FtpResponse.EnterPassiveMode)
-            {
-                string[] numbers = s_regularExpression.Match(m_lastResponse.Message).Groups[2].Value.Split(',');
-                return int.Parse(numbers[4]) * 256 + int.Parse(numbers[5]);
-            }
-            else
-            {
-                throw new FtpCommandException("Failed to enter passive mode. - " + m_lastResponse.Code + " - " + m_lastResponse.Message, m_lastResponse);
-            }
+            if (LastResponse.Code != FtpResponse.EnterPassiveMode)
+                throw new FtpCommandException($"Failed to enter passive mode. - {LastResponse.Code} - {LastResponse.Message}", LastResponse);
+
+            string[] numbers = s_regularExpression.Match(LastResponse.Message).Groups[2].Value.Split(',');
+            
+            return int.Parse(numbers[4]) * 256 + int.Parse(numbers[5]);
         }
 
         #endregion

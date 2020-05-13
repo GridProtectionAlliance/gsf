@@ -52,13 +52,6 @@ namespace GSF.Net.Ftp
 
         // Fields
         private FtpClient m_host;
-        private string m_server;
-        private int m_port;
-        private int m_timeout;
-        private bool m_passive;
-        private IPAddress m_activeAddress;
-        private int m_minActivePort;
-        private int m_maxActivePort;
         private readonly bool m_caseInsensitive;
         private bool m_disposed;
 
@@ -68,9 +61,9 @@ namespace GSF.Net.Ftp
 
         internal FtpSessionDisconnected(FtpClient h, bool caseInsensitive)
         {
-            m_passive = true;
-            m_timeout = 30000;
-            m_port = 21;
+            Passive = true;
+            Timeout = 30000;
+            Port = 21;
             m_host = h;
             m_caseInsensitive = caseInsensitive;
         }
@@ -87,125 +80,31 @@ namespace GSF.Net.Ftp
 
         #region [ Properties ]
 
-        public string Server
-        {
-            get
-            {
-                return m_server;
-            }
-            set
-            {
-                m_server = value;
-            }
-        }
+        public string Server { get; set; }
 
-        public int Port
-        {
-            get
-            {
-                return m_port;
-            }
-            set
-            {
-                m_port = value;
-            }
-        }
+        public int Port { get; set; }
 
-        public int Timeout
-        {
-            get
-            {
-                return m_timeout;
-            }
-            set
-            {
-                m_timeout = value;
-            }
-        }
+        public int Timeout { get; set; }
 
-        public bool Passive
-        {
-            get
-            {
-                return m_passive;
-            }
-            set
-            {
-                m_passive = value;
-            }
-        }
+        public bool Passive { get; set; }
 
-        public IPAddress ActiveAddress
-        {
-            get
-            {
-                return m_activeAddress;
-            }
-            set
-            {
-                m_activeAddress = value;
-            }
-        }
+        public IPAddress ActiveAddress { get; set; }
 
-        public int MinActivePort
-        {
-            get
-            {
-                return m_minActivePort;
-            }
-            set
-            {
-                m_minActivePort = value;
-            }
-        }
+        public int MinActivePort { get; set; }
 
-        public int MaxActivePort
-        {
-            get
-            {
-                return m_maxActivePort;
-            }
-            set
-            {
-                m_maxActivePort = value;
-            }
-        }
+        public int MaxActivePort { get; set; }
 
         public FtpDirectory CurrentDirectory
         {
-            get
-            {
-                throw new InvalidOperationException();
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => throw new InvalidOperationException();
+            set => throw new InvalidOperationException();
         }
 
-        public FtpControlChannel ControlChannel
-        {
-            get
-            {
-                throw new InvalidOperationException();
-            }
-        }
+        public FtpControlChannel ControlChannel => throw new InvalidOperationException();
 
-        public bool IsBusy
-        {
-            get
-            {
-                throw new InvalidOperationException();
-            }
-        }
+        public bool IsBusy => throw new InvalidOperationException();
 
-        public FtpDirectory RootDirectory
-        {
-            get
-            {
-                throw new InvalidOperationException();
-            }
-        }
+        public FtpDirectory RootDirectory => throw new InvalidOperationException();
 
         #endregion
 
@@ -226,41 +125,42 @@ namespace GSF.Net.Ftp
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                        m_host = null;
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                if (disposing)
+                    m_host = null;
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
         public void Connect(string userName, string password)
         {
-            FtpControlChannel ctrl = new FtpControlChannel(m_host);
+            FtpControlChannel ctrl = new FtpControlChannel(m_host)
+            {
+                Server = Server,
+                Port = Port,
+                Timeout = Timeout,
+                Passive = Passive,
+                ActiveAddress = ActiveAddress
+            };
 
-            ctrl.Server = m_server;
-            ctrl.Port = m_port;
-            ctrl.Timeout = m_timeout;
-            ctrl.Passive = m_passive;
-            ctrl.ActiveAddress = m_activeAddress;
-
-            if (m_minActivePort > 0 && m_maxActivePort > 0)
-                ctrl.DataChannelPortRange = new Range<int>(m_minActivePort, m_maxActivePort);
+            if (MinActivePort > 0 && MaxActivePort > 0)
+                ctrl.DataChannelPortRange = new Range<int>(MinActivePort, MaxActivePort);
 
             ctrl.Connect();
 
             try
             {
-                ctrl.Command("USER " + userName);
+                ctrl.Command($"USER {userName}");
 
                 if (ctrl.LastResponse.Code == FtpResponse.UserAcceptedWaitingPass)
-                    ctrl.Command("PASS " + password);
+                    ctrl.Command($"PASS {password}");
 
                 if (ctrl.LastResponse.Code != FtpResponse.UserLoggedIn)
                     throw new FtpAuthenticationException("Failed to login.", ctrl.LastResponse);

@@ -23,8 +23,8 @@
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  11/13/2003 - Pinal C. Patel
-//       Fixed bug in initialization of Name, FullPath and Parent properties.
-//       Fixed null-reference exception occurrences in comparision methods/overloads.
+//       Fixed issue in initialization of Name, FullPath and Parent properties.
+//       Fixed null-reference exception occurrences in comparison methods/overloads.
 //  12/17/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -90,16 +90,10 @@ namespace GSF.Net.Ftp
         public event Action<FtpExceptionBase> DirectoryScanException;
 
         // Fields
-        private readonly FtpSessionConnected m_session;
         private FtpDirectory m_parent;
-        private readonly string m_name;
-        private readonly string m_fullPath;
         private Dictionary<string, FtpDirectory> m_subDirectories;
         private Dictionary<string, FtpFile> m_files;
         private bool m_caseInsensitive;
-        private long m_size;
-        private string m_permission;
-        private DateTime m_timestamp;
 
         #endregion
 
@@ -107,7 +101,7 @@ namespace GSF.Net.Ftp
 
         internal FtpDirectory(FtpSessionConnected s, bool caseInsensitive, string fullPath)
         {
-            m_session = s;
+            Session = s;
             m_parent = null;
             m_caseInsensitive = caseInsensitive;
 
@@ -116,41 +110,37 @@ namespace GSF.Net.Ftp
 
             if (fullPath.Length == 0)
             {
-                m_name = "";
-                m_fullPath = "/";
+                Name = "";
+                FullPath = "/";
             }
             else
             {
                 string[] directories = fullPath.Split('/');
-                m_name = directories[directories.Length - 1];
-                m_fullPath = fullPath + "/";
+                Name = directories[directories.Length - 1];
+                FullPath = $"{fullPath}/";
             }
         }
 
         internal FtpDirectory(FtpSessionConnected s, FtpDirectory parent, bool caseInsensitive, ItemInfo info)
         {
-            m_session = s;
+            Session = s;
             m_parent = parent;
             m_caseInsensitive = caseInsensitive;
 
             if (info.Name.Length > 0)
             {
-                m_name = info.Name;
-
-                if ((object)parent == null)
-                    m_fullPath = m_name + "/";
-                else
-                    m_fullPath = parent.FullPath + m_name + "/";
+                Name = info.Name;
+                FullPath = parent == null ? $"{Name}/" : $"{parent.FullPath}{Name}/";
             }
             else
             {
-                m_name = "";
-                m_fullPath = "/";
+                Name = "";
+                FullPath = "/";
             }
 
-            m_size = info.Size;
-            m_permission = info.Permission;
-            m_timestamp = info.TimeStamp.Value;
+            Size = info.Size;
+            Permission = info.Permission;
+            Timestamp = info.TimeStamp.Value;
         }
 
         #endregion
@@ -165,10 +155,7 @@ namespace GSF.Net.Ftp
         /// </remarks>
         public bool CaseInsensitive
         {
-            get
-            {
-                return m_caseInsensitive;
-            }
+            get => m_caseInsensitive;
             set
             {
                 m_caseInsensitive = value;
@@ -179,91 +166,37 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Name of directory.
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return m_name;
-            }
-        }
+        public string Name { get; }
 
         /// <summary>
         /// Full path of directory.
         /// </summary>
-        public string FullPath
-        {
-            get
-            {
-                return m_fullPath;
-            }
-        }
+        public string FullPath { get; }
 
         /// <summary>
         /// Returns false for directory entries.
         /// </summary>
-        public bool IsFile
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public bool IsFile => false;
 
         /// <summary>
         /// Returns true for directory entries.
         /// </summary>
-        public bool IsDirectory
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public bool IsDirectory => true;
 
         /// <summary>
         /// Gets or sets size of directory.
         /// </summary>
-        public long Size
-        {
-            get
-            {
-                return m_size;
-            }
-            set
-            {
-                m_size = value;
-            }
-        }
+        public long Size { get; set; }
 
         /// <summary>
         /// Gets or sets permission of directory.
         /// </summary>
-        public string Permission
-        {
-            get
-            {
-                return m_permission;
-            }
-            set
-            {
-                m_permission = value;
-            }
-        }
+        public string Permission { get; set; }
 
         /// <summary>
         /// Gets or sets timestamp of directory.
         /// </summary>
-        public DateTime Timestamp
-        {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
-        }
+        public DateTime Timestamp { get; set; }
 
         /// <summary>
         /// Gets parent directory of directory.
@@ -272,43 +205,43 @@ namespace GSF.Net.Ftp
         {
             get
             {
-                if (string.Compare(m_fullPath, m_session.RootDirectory.m_fullPath, m_caseInsensitive) == 0)
+                if (string.Compare(FullPath, Session.RootDirectory.FullPath, m_caseInsensitive) == 0)
                     return null;
 
+                if (m_parent != null)
+                    return m_parent;
+
                 // If we don't have a reference to parent directory, we try to derive it...
-                if ((object)m_parent == null)
+                CheckSessionCurrentDirectory();
+
+                StringBuilder parentPath = new StringBuilder();
+                string fullPath = Session.ControlChannel.PWD();
+
+                if (fullPath.Substring(fullPath.Length - 1, 1) != "/")
+                    fullPath += "/";
+
+                string[] paths = fullPath.Split('/');
+                int i;
+
+                for (i = 0; i < paths.Length - 2; i++)
                 {
-                    CheckSessionCurrentDirectory();
-
-                    StringBuilder parentPath = new StringBuilder();
-                    var fullPath = m_session.ControlChannel.PWD();
-
-                    if (fullPath.Substring(fullPath.Length - 1, 1) != "/")
-                        fullPath += "/";
-
-                    string[] paths = fullPath.Split('/');
-                    int i;
-
-                    for (i = 0; i < paths.Length - 2; i++)
+                    if (paths[i].Length == 0)
                     {
-                        if (paths[i].Length == 0)
-                        {
-                            parentPath.Append("/");
-                        }
-                        else
-                        {
-                            parentPath.Append(paths[i]);
-                            parentPath.Append("/");
-                        }
+                        parentPath.Append("/");
                     }
-
-                    FtpDirectory parentDir = new FtpDirectory(m_session, m_caseInsensitive, parentPath.ToString());
-
-                    if (string.Compare(parentDir.m_fullPath, m_session.RootDirectory.m_fullPath, m_caseInsensitive) == 0)
-                        m_parent = m_session.RootDirectory;
                     else
-                        m_parent = parentDir;
+                    {
+                        parentPath.Append(paths[i]);
+                        parentPath.Append("/");
+                    }
                 }
+
+                FtpDirectory parentDir = new FtpDirectory(Session, m_caseInsensitive, parentPath.ToString());
+
+                if (string.Compare(parentDir.FullPath, Session.RootDirectory.FullPath, m_caseInsensitive) == 0)
+                    m_parent = Session.RootDirectory;
+                else
+                    m_parent = parentDir;
 
                 return m_parent;
             }
@@ -338,13 +271,7 @@ namespace GSF.Net.Ftp
             }
         }
 
-        internal FtpSessionConnected Session
-        {
-            get
-            {
-                return m_session;
-            }
-        }
+        internal FtpSessionConnected Session { get; }
 
         #endregion
 
@@ -358,13 +285,7 @@ namespace GSF.Net.Ftp
         public FtpFile FindFile(string fileName)
         {
             InitHashtable();
-
-            FtpFile file;
-
-            if (m_files.TryGetValue(fileName, out file))
-                return file;
-            else
-                return null;
+            return m_files.TryGetValue(fileName, out FtpFile file) ? file : null;
         }
 
         /// <summary>
@@ -375,13 +296,7 @@ namespace GSF.Net.Ftp
         public FtpDirectory FindSubDirectory(string dirName)
         {
             InitHashtable();
-
-            FtpDirectory directory;
-
-            if (m_subDirectories.TryGetValue(dirName, out directory))
-                return directory;
-            else
-                return null;
+            return m_subDirectories.TryGetValue(dirName, out FtpDirectory directory) ? directory : null;
         }
 
         /// <summary>
@@ -404,7 +319,7 @@ namespace GSF.Net.Ftp
 
             FileInfo fi = new FileInfo(localFile);
 
-            if ((object)remoteFile == null)
+            if (remoteFile == null)
                 remoteFile = fi.Name;
 
             FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
@@ -430,9 +345,7 @@ namespace GSF.Net.Ftp
         {
             InitHashtable();
 
-            FtpFile file;
-
-            if (m_files.TryGetValue(remoteFile, out file))
+            if (m_files.TryGetValue(remoteFile, out FtpFile file))
             {
                 FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
                 transfer.StartTransfer();
@@ -444,7 +357,7 @@ namespace GSF.Net.Ftp
         }
 
         /// <summary>
-        /// Starts asynchrnonous local file upload to directory.
+        /// Starts asynchronous local file upload to directory.
         /// </summary>
         /// <param name="localFile">Local file to upload.</param>
         public void BeginPutFile(string localFile)
@@ -453,7 +366,7 @@ namespace GSF.Net.Ftp
         }
 
         /// <summary>
-        /// Starts asynchrnonous local file upload to directory using alternate name.
+        /// Starts asynchronous local file upload to directory using alternate name.
         /// </summary>
         /// <param name="localFile">Local file to upload.</param>
         /// <param name="remoteFile">Remote filename to use for upload.</param>
@@ -463,7 +376,7 @@ namespace GSF.Net.Ftp
 
             FileInfo fi = new FileInfo(localFile);
 
-            if ((object)remoteFile == null)
+            if (remoteFile == null)
                 remoteFile = fi.Name;
 
             FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, fi.Length, TransferDirection.Upload);
@@ -489,9 +402,7 @@ namespace GSF.Net.Ftp
         {
             InitHashtable();
 
-            FtpFile file;
-
-            if (m_files.TryGetValue(remoteFile, out file))
+            if (m_files.TryGetValue(remoteFile, out FtpFile file))
             {
                 FtpFileTransferer transfer = new FtpFileTransferer(this, localFile, remoteFile, file.Size, TransferDirection.Download);
                 transfer.StartAsyncTransfer();
@@ -510,7 +421,7 @@ namespace GSF.Net.Ftp
         {
             CheckSessionCurrentDirectory();
 
-            m_session.ControlChannel.DELE(fileName);
+            Session.ControlChannel.DELE(fileName);
 
             m_files.Remove(fileName);
         }
@@ -523,7 +434,7 @@ namespace GSF.Net.Ftp
         {
             CheckSessionCurrentDirectory();
 
-            m_session.ControlChannel.RMD(dirName);
+            Session.ControlChannel.RMD(dirName);
 
             m_subDirectories.Remove(dirName);
         }
@@ -551,17 +462,17 @@ namespace GSF.Net.Ftp
         {
             InitHashtable();
 
-            FtpDataStream stream = m_session.ControlChannel.GetDataStream(TransferDirection.Upload);
+            FtpDataStream stream = Session.ControlChannel.GetDataStream(TransferDirection.Upload);
 
             try
             {
-                m_session.ControlChannel.STOR(newFileName);
+                Session.ControlChannel.STOR(newFileName);
 
                 FtpFile newFile = new FtpFile(this, newFileName);
 
                 m_files[newFileName] = newFile;
 
-                return ((FtpOutputDataStream)stream);
+                return (FtpOutputDataStream)stream;
             }
             catch
             {
@@ -587,40 +498,37 @@ namespace GSF.Net.Ftp
 
         internal void CheckSessionCurrentDirectory()
         {
-            if (m_session.CurrentDirectory.m_fullPath != m_fullPath)
-                throw new InvalidOperationException(m_fullPath + " is not current directory.");
+            if (Session.CurrentDirectory.FullPath != FullPath)
+                throw new InvalidOperationException($"{FullPath} is not current directory.");
         }
 
         private void LoadDirectoryItems()
         {
-            if (m_session.CurrentDirectory != this)
-                throw new InvalidOperationException(m_name + " is not current active directory");
+            if (Session.CurrentDirectory != this)
+                throw new InvalidOperationException($"{Name} is not current active directory");
 
-            Queue lineQueue = m_session.ControlChannel.List(false);
-            ItemInfo info;
+            Queue lineQueue = Session.ControlChannel.List(false);
 
             foreach (string line in lineQueue)
             {
                 // We allow users to inspect FTP lineQueue if desired...
-                if ((object)DirectoryListLineScan != null)
-                    DirectoryListLineScan(line);
+                DirectoryListLineScan?.Invoke(line);
 
                 try
                 {
-                    info = new ItemInfo();
+                    ItemInfo info = new ItemInfo();
 
                     if (ParseListLine(line, info))
                     {
                         if (info.IsDirectory)
-                            m_subDirectories.Add(info.Name, new FtpDirectory(m_session, this, m_caseInsensitive, info));
+                            m_subDirectories.Add(info.Name, new FtpDirectory(Session, this, m_caseInsensitive, info));
                         else
                             m_files.Add(info.Name, new FtpFile(this, info));
                     }
                 }
                 catch (FtpExceptionBase ex)
                 {
-                    if ((object)DirectoryScanException != null)
-                        DirectoryScanException(ex);
+                    DirectoryScanException?.Invoke(ex);
                 }
             }
         }
@@ -629,23 +537,23 @@ namespace GSF.Net.Ftp
         {
             CheckSessionCurrentDirectory();
 
-            if ((object)m_subDirectories != null && (object)m_files != null)
+            if (m_subDirectories != null && m_files != null)
                 return;
 
-            if ((object)m_subDirectories == null)
+            if (m_subDirectories == null)
             {
                 if (m_caseInsensitive)
-                    m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveComparer.Default)
+                    m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCultureIgnoreCase);
                 else
-                    m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCulture); // New Hashtable
+                    m_subDirectories = new Dictionary<string, FtpDirectory>(StringComparer.CurrentCulture);
             }
 
-            if ((object)m_files == null)
+            if (m_files == null)
             {
                 if (m_caseInsensitive)
-                    m_files = new Dictionary<string, FtpFile>(StringComparer.CurrentCultureIgnoreCase); // New Hashtable(CaseInsensitiveHashCodeProvider.Default, CaseInsensitiveComparer.Default)
+                    m_files = new Dictionary<string, FtpFile>(StringComparer.CurrentCultureIgnoreCase);
                 else
-                    m_files = new Dictionary<string, FtpFile>(StringComparer.CurrentCulture); // New Hashtable
+                    m_files = new Dictionary<string, FtpFile>(StringComparer.CurrentCulture);
             }
 
             LoadDirectoryItems();
@@ -653,16 +561,16 @@ namespace GSF.Net.Ftp
 
         private bool ParseListLine(string line, ItemInfo info)
         {
-            Match m = MatchingListLine(line, ref info.TimeStamp.Style);
+            Match m = MatchingListLine(line, out info.TimeStamp.Style);
 
-            if ((object)m == null)
+            if (m == null)
                 return false;
 
             info.Name = new string(m.Groups["name"].Value
                 .TakeWhile(c => c != '\0')
                 .ToArray());
 
-            info.FullPath = m_fullPath + info.Name;
+            info.FullPath = FullPath + info.Name;
 
             string dir = m.Groups["dir"].Value;
 
@@ -682,7 +590,7 @@ namespace GSF.Net.Ftp
             return true;
         }
 
-        private Match MatchingListLine(string line, ref FtpTimeStampParser.RawDataStyle tsStyle)
+        private Match MatchingListLine(string line, out FtpTimeStampParser.RawDataStyle tsStyle)
         {
             Match m = s_unixListLineStyle1.Match(line);
 
@@ -737,8 +645,8 @@ namespace GSF.Net.Ftp
         {
             FtpDirectory other = obj as FtpDirectory;
 
-            if ((object)other != null)
-                return (CompareTo(other) == 0);
+            if (other != null)
+                return CompareTo(other) == 0;
 
             return false;
         }
@@ -749,19 +657,19 @@ namespace GSF.Net.Ftp
         /// <returns>An <see cref="Int32"/> value as the result.</returns>
         public override int GetHashCode()
         {
-            return m_name.GetHashCode();
+            return Name.GetHashCode();
         }
 
         int IComparable<FtpDirectory>.CompareTo(FtpDirectory other)
         {
             // Directories are sorted by name
-            return string.Compare(m_name, other.Name, m_caseInsensitive);
+            return string.Compare(Name, other.Name, m_caseInsensitive);
         }
 
         int IComparable<IFtpFile>.CompareTo(IFtpFile other)
         {
             // Directories are sorted by name
-            return string.Compare(m_name, other.Name, m_caseInsensitive);
+            return string.Compare(Name, other.Name, m_caseInsensitive);
         }
 
         /// <summary>
@@ -771,18 +679,10 @@ namespace GSF.Net.Ftp
         /// <returns>An <see cref="Int32"/> value representing the result. 1 - obj is greater than, 0 - obj is equal to, -1 - obj is less than.</returns>
         public int CompareTo(object obj)
         {
-            if (Equals(obj, null))
-            {
+            if (!(obj is IFtpFile file))
                 return 1;
-            }
-            else
-            {
-                IFtpFile file = obj as IFtpFile;
-                if ((object)file == null)
-                    return 1;
-                else
-                    return ((IComparable<IFtpFile>)this).CompareTo(file);
-            }
+
+            return ((IComparable<IFtpFile>)this).CompareTo(file);
         }
 
         #endregion
@@ -799,8 +699,8 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
-            else
-                return (value1.CompareTo(value2) == 0);
+
+            return value1.CompareTo(value2) == 0;
         }
 
         /// <summary>
@@ -824,8 +724,8 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
-            else
-                return (value1.CompareTo(value2) < 0);
+
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -849,8 +749,8 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
-            else
-                return (value1.CompareTo(value2) <= 0);
+
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>

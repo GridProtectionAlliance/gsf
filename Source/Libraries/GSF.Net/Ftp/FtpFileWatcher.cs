@@ -154,8 +154,7 @@ namespace GSF.Net.Ftp
         public FtpFileWatcher(IContainer container)
             : this()
         {
-            if ((object)container != null)
-                container.Add(this);
+            container?.Add(this);
         }
 
         #endregion
@@ -171,14 +170,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify FTP server name (do not prefix with ftp://).")]
         public virtual string Server
         {
-            get
-            {
-                return m_session.Server;
-            }
-            set
-            {
-                m_session.Server = value;
-            }
+            get => m_session.Server;
+            set => m_session.Server = value;
         }
 
         /// <summary>
@@ -190,14 +183,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify FTP server port, if needed."), DefaultValue(21)]
         public int Port
         {
-            get
-            {
-                return m_session.Port;
-            }
-            set
-            {
-                m_session.Port = value;
-            }
+            get => m_session.Port;
+            set => m_session.Port = value;
         }
 
         /// <summary>
@@ -209,14 +196,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Set to True to not be case sensitive with FTP file and directory names."), DefaultValue(false)]
         public bool CaseInsensitive
         {
-            get
-            {
-                return m_session.CaseInsensitive;
-            }
-            set
-            {
-                m_session.CaseInsensitive = value;
-            }
+            get => m_session.CaseInsensitive;
+            set => m_session.CaseInsensitive = value;
         }
 
         /// <summary>
@@ -228,10 +209,7 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify interval in seconds to poll FTP directory for file changes."), DefaultValue(5)]
         public virtual int WatchInterval
         {
-            get
-            {
-                return (int)(m_watchTimer.Interval / 1000);
-            }
+            get => (int)(m_watchTimer.Interval / 1000);
             set
             {
                 m_watchTimer.Enabled = false;
@@ -246,10 +224,7 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify FTP directory to monitor.  Leave blank to monitor initial FTP session directory."), DefaultValue("")]
         public virtual string Directory
         {
-            get
-            {
-                return m_watchDirectory;
-            }
+            get => m_watchDirectory;
             set
             {
                 m_watchDirectory = value;
@@ -264,10 +239,7 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Set to True to only be notified of new FTP files when upload is complete.  This monitors file size changes at each WatchInterval."), DefaultValue(true)]
         public virtual bool NotifyOnComplete
         {
-            get
-            {
-                return m_notifyOnComplete;
-            }
+            get => m_notifyOnComplete;
             set
             {
                 m_notifyOnComplete = value;
@@ -281,10 +253,7 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Determines if FTP file watcher is enabled."), DefaultValue(true)]
         public virtual bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
@@ -296,13 +265,7 @@ namespace GSF.Net.Ftp
         /// Returns true if FTP file watcher session is connected.
         /// </summary>
         [Browsable(false)]
-        public virtual bool IsConnected
-        {
-            get
-            {
-                return m_session.IsConnected;
-            }
-        }
+        public virtual bool IsConnected => m_session.IsConnected;
 
         #endregion
 
@@ -314,42 +277,44 @@ namespace GSF.Net.Ftp
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
+            if (m_disposed)
+                return;
+
             try
             {
-                if (!m_disposed)
+                if (!disposing)
+                    return;
+
+                Close();
+
+                if (m_session != null)
                 {
-                    if (disposing)
-                    {
-                        Close();
-
-                        if ((object)m_session != null)
-                        {
-                            m_session.CommandSent -= OnCommandSent;
-                            m_session.ResponseReceived -= OnResponseReceived;
-                            m_session.Dispose();
-                        }
-                        m_session = null;
-
-                        if ((object)m_watchTimer != null)
-                        {
-                            m_watchTimer.Elapsed -= WatchTimer_Elapsed;
-                            m_watchTimer.Dispose();
-                        }
-                        m_watchTimer = null;
-
-                        if ((object)m_restartTimer != null)
-                        {
-                            m_restartTimer.Elapsed -= RestartTimer_Elapsed;
-                            m_restartTimer.Dispose();
-                        }
-                        m_restartTimer = null;
-                    }
+                    m_session.CommandSent -= OnCommandSent;
+                    m_session.ResponseReceived -= OnResponseReceived;
+                    m_session.Dispose();
                 }
 
-                m_disposed = true;
+                m_session = null;
+
+                if (m_watchTimer != null)
+                {
+                    m_watchTimer.Elapsed -= WatchTimer_Elapsed;
+                    m_watchTimer.Dispose();
+                }
+
+                m_watchTimer = null;
+
+                if (m_restartTimer != null)
+                {
+                    m_restartTimer.Elapsed -= RestartTimer_Elapsed;
+                    m_restartTimer.Dispose();
+                }
+
+                m_restartTimer = null;
             }
             finally
             {
+                m_disposed = true;
                 base.Dispose(disposing);
             }
         }
@@ -363,6 +328,7 @@ namespace GSF.Net.Ftp
             m_newFiles.Clear();
             m_watchTimer.Enabled = false;
             m_restartTimer.Enabled = false;
+
             CloseSession();
         }
 
@@ -384,12 +350,12 @@ namespace GSF.Net.Ftp
                 // Attempt to connect to FTP server
                 m_session.Connect(m_username, m_password);
 
-                OnStatus("FTP file watcher connected to \"ftp://" + m_username + "@" + m_session.Server + "\"");
+                OnStatus($"FTP file watcher connected to \"ftp://{m_username}@{m_session.Server}\"");
 
                 ConnectToWatchDirectory();
                 m_watchTimer.Enabled = m_enabled;
 
-                // FTP servers can be fickle creatues, so after a successful connection we setup the
+                // FTP servers can be fickle creatures, so after a successful connection we setup the
                 // restart timer to reconnect every thirty minutes whether we need to or not :)
                 m_restartTimer.Interval = 1800000;
                 m_restartTimer.Enabled = true;
@@ -397,7 +363,7 @@ namespace GSF.Net.Ftp
             catch (FtpExceptionBase ex)
             {
                 // If this fails, we'll try again in a moment.  The FTP server may be down...
-                OnStatus("FTP file watcher failed to connect to \"ftp://" + m_username + "@" + m_session.Server + "\" - trying again in 10 seconds..." + "\r\n" + "\t" + "Exception: " + ex.Message);
+                OnStatus($"FTP file watcher failed to connect to \"ftp://{m_username}@{m_session.Server}\" - trying again in 10 seconds...\r\n\tException: {ex.Message}");
                 RestartConnectCycle();
             }
         }
@@ -412,9 +378,8 @@ namespace GSF.Net.Ftp
             // actual internal directory for sending files or other work because it is
             // constantly being refreshed/used etc., so we instead create a new FTP Session
             // based on the current internal session and watch directory information
-            FtpClient newSession = new FtpClient(m_session.CaseInsensitive);
+            FtpClient newSession = new FtpClient(m_session.CaseInsensitive) { Server = m_session.Server };
 
-            newSession.Server = m_session.Server;
             newSession.Connect(m_username, m_password);
             newSession.SetCurrentDirectory(m_watchDirectory);
 
@@ -444,8 +409,7 @@ namespace GSF.Net.Ftp
         /// <param name="status">A <see cref="String"/> status message.</param>
         protected void OnStatus(string status)
         {
-            if ((object)Status != null)
-                Status(this, new EventArgs<string>("[" + DateTime.UtcNow + "] " + status));
+            Status?.Invoke(this, new EventArgs<string>($"[{DateTime.UtcNow}] {status}"));
         }
 
         /// <summary>
@@ -454,8 +418,7 @@ namespace GSF.Net.Ftp
         /// <param name="file">A <see cref="FtpFile"/> file.</param>
         protected void OnFileAdded(FtpFile file)
         {
-            if ((object)FileAdded != null)
-                FileAdded(this, new EventArgs<FtpFile>(file));
+            FileAdded?.Invoke(this, new EventArgs<FtpFile>(file));
         }
 
         /// <summary>
@@ -464,8 +427,7 @@ namespace GSF.Net.Ftp
         /// <param name="file">A <see cref="FtpFile"/> file.</param>
         protected void OnFileDeleted(FtpFile file)
         {
-            if ((object)FileDeleted != null)
-                FileDeleted(this, new EventArgs<FtpFile>(file));
+            FileDeleted?.Invoke(this, new EventArgs<FtpFile>(file));
         }
 
         /// <summary>
@@ -474,8 +436,7 @@ namespace GSF.Net.Ftp
         /// <param name="command">A <see cref="String"/> command.</param>
         protected void OnCommandSent(string command)
         {
-            if ((object)CommandSent != null)
-                CommandSent(this, new EventArgs<string>(command));
+            CommandSent?.Invoke(this, new EventArgs<string>(command));
         }
 
         private void OnCommandSent(object sender, EventArgs<string> e)
@@ -489,8 +450,7 @@ namespace GSF.Net.Ftp
         /// <param name="response">A <see cref="String"/> response.</param>
         protected void OnResponseReceived(string response)
         {
-            if ((object)ResponseReceived != null)
-                ResponseReceived(this, new EventArgs<string>(response));
+            ResponseReceived?.Invoke(this, new EventArgs<string>(response));
         }
 
         private void OnResponseReceived(object sender, EventArgs<string> e)
@@ -500,15 +460,15 @@ namespace GSF.Net.Ftp
 
         private void ConnectToWatchDirectory()
         {
-            if (m_session.IsConnected)
-            {
-                m_session.SetCurrentDirectory(m_watchDirectory);
+            if (!m_session.IsConnected)
+                return;
 
-                if (m_watchDirectory.Length > 0)
-                    OnStatus("FTP file watcher monitoring directory \"" + m_watchDirectory + "\"");
-                else
-                    OnStatus("No FTP file watcher directory specified - monitoring initial folder");
-            }
+            m_session.SetCurrentDirectory(m_watchDirectory);
+
+            if (m_watchDirectory.Length > 0)
+                OnStatus($"FTP file watcher monitoring directory \"{m_watchDirectory}\"");
+            else
+                OnStatus("No FTP file watcher directory specified - monitoring initial folder");
         }
 
         // This method is synchronized in case user sets watch interval too tight...
@@ -525,90 +485,86 @@ namespace GSF.Net.Ftp
             catch (FtpExceptionBase ex)
             {
                 RestartConnectCycle();
-                OnStatus("FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle." + "\r\n" + "\t" + "Exception: " + ex.Message);
+                OnStatus($"FTP file watcher is no longer connected to server \"{m_session.Server}\" - restarting connect cycle.\r\n\tException: {ex.Message}");
             }
 
-            if ((object)m_session != null)
+            if (m_session == null)
+                return;
+
+            if (m_session.IsConnected)
             {
-                if (m_session.IsConnected)
+                //Dictionary<string, FtpFile>.ValueCollection.Enumerator currentFiles = m_session.CurrentDirectory.Files.GetEnumerator();
+                List<int> removedFiles = new List<int>();
+
+                // Check for new files
+                foreach (FtpFile currentFile in m_session.CurrentDirectory.Files)
                 {
-                    //Dictionary<string, FtpFile>.ValueCollection.Enumerator currentFiles = m_session.CurrentDirectory.Files.GetEnumerator();
-                    FtpFile newFile;
-                    List<int> removedFiles = new List<int>();
-                    int x, index;
-
-                    // Check for new files
-                    foreach (FtpFile currentFile in m_session.CurrentDirectory.Files)
+                    if (m_notifyOnComplete)
                     {
-                        if (m_notifyOnComplete)
+                        // See if any new files are finished downloading
+                        int index = m_newFiles.BinarySearch(currentFile);
+
+                        if (index >= 0)
                         {
-                            // See if any new files are finished downloading
-                            index = m_newFiles.BinarySearch(currentFile);
+                            FtpFile newFile = m_newFiles[index];
 
-                            if (index >= 0)
+                            if (newFile.Size == currentFile.Size)
                             {
-                                newFile = m_newFiles[index];
-
-                                if (newFile.Size == currentFile.Size)
-                                {
-                                    // File size has not changed since last directory refresh, so we will
-                                    // notify user of new file...
-                                    m_currentFiles.Add(currentFile);
-                                    m_currentFiles.Sort();
-                                    m_newFiles.RemoveAt(index);
-                                    OnFileAdded(currentFile);
-                                }
-                                else
-                                {
-                                    newFile.Size = currentFile.Size;
-                                }
+                                // File size has not changed since last directory refresh, so we will
+                                // notify user of new file...
+                                m_currentFiles.Add(currentFile);
+                                m_currentFiles.Sort();
+                                m_newFiles.RemoveAt(index);
+                                OnFileAdded(currentFile);
                             }
-                            else if (m_currentFiles.BinarySearch(currentFile) < 0)
+                            else
                             {
-                                m_newFiles.Add(currentFile);
-                                m_newFiles.Sort();
+                                newFile.Size = currentFile.Size;
                             }
                         }
                         else if (m_currentFiles.BinarySearch(currentFile) < 0)
                         {
-                            // If user wants an immediate notification of new files, we'll give it to them...
-                            m_currentFiles.Add(currentFile);
-                            m_currentFiles.Sort();
-                            OnFileAdded(currentFile);
+                            m_newFiles.Add(currentFile);
+                            m_newFiles.Sort();
                         }
                     }
-
-                    // Check for removed files
-                    for (x = 0; x < m_currentFiles.Count; x++)
+                    else if (m_currentFiles.BinarySearch(currentFile) < 0)
                     {
-                        if ((object)m_session.CurrentDirectory.FindFile(m_currentFiles[x].Name) == null)
-                        {
-                            removedFiles.Add(x);
-                            OnFileDeleted(m_currentFiles[x]);
-                        }
+                        // If user wants an immediate notification of new files, we'll give it to them...
+                        m_currentFiles.Add(currentFile);
+                        m_currentFiles.Sort();
+                        OnFileAdded(currentFile);
                     }
-
-                    // Remove files that have been deleted
-                    if (removedFiles.Count > 0)
-                    {
-                        removedFiles.Sort();
-
-                        // We remove items in desc order to maintain index integrity
-                        for (x = removedFiles.Count - 1; x >= 0; x--)
-                        {
-                            m_currentFiles.RemoveAt(removedFiles[x]);
-                        }
-
-                        removedFiles.Clear();
-                    }
-
-                    m_watchTimer.Enabled = m_enabled;
                 }
-                else
+
+                // Check for removed files
+                for (int i = 0; i < m_currentFiles.Count; i++)
                 {
-                    RestartConnectCycle();
-                    OnStatus("FTP file watcher is no longer connected to server \"" + m_session.Server + "\" - restarting connect cycle.");
+                    if (m_session.CurrentDirectory.FindFile(m_currentFiles[i].Name) == null)
+                    {
+                        removedFiles.Add(i);
+                        OnFileDeleted(m_currentFiles[i]);
+                    }
                 }
+
+                // Remove files that have been deleted
+                if (removedFiles.Count > 0)
+                {
+                    removedFiles.Sort();
+
+                    // We remove items in descending order to maintain index integrity
+                    for (int i = removedFiles.Count - 1; i >= 0; i--)
+                        m_currentFiles.RemoveAt(removedFiles[i]);
+
+                    removedFiles.Clear();
+                }
+
+                m_watchTimer.Enabled = m_enabled;
+            }
+            else
+            {
+                RestartConnectCycle();
+                OnStatus($"FTP file watcher is no longer connected to server \"{m_session.Server}\" - restarting connect cycle.");
             }
         }
 

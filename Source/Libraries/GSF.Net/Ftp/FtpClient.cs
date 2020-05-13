@@ -51,7 +51,7 @@ using System.Net;
 // This FTP library is based on a similar C# library found on "The Code Project" web site originally written by
 // Alex Kwok (no license specified), then enhanced by Uwe Keim (licensed under The Code Project Open License).
 // GSF translated the code into VB with most of classes being renamed (removed Ftp prefix) and the namespace was
-// changed to GSF.Ftp. Many bug fixes, additions and modifications have been made to this code as well as extensive
+// changed to GSF.Ftp. Many fixes, additions and modifications have been made to this code as well as extensive
 // testing.  Note worthy changes:  converted the C# delegates to standard .NET events for ease of use, made the
 // library work with IIS based FTP servers that were in Unix mode, added detailed file system information for FTP
 // files and directories (size, timestamp, etc), converted FTP session into a component that could be dragged onto
@@ -104,7 +104,7 @@ namespace GSF.Net.Ftp
         public event EventHandler<EventArgs<ProcessProgress<long>, TransferDirection>> FileTransferProgress;
 
         /// <summary>
-        /// Raised when ansynchronous file transfer process has completed (success or failure).
+        /// Raised when asynchronous file transfer process has completed (success or failure).
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is result of asynchronous FTP transfer process.
@@ -128,9 +128,6 @@ namespace GSF.Net.Ftp
         public event EventHandler<EventArgs<string>> CommandSent;
 
         // Fields
-        private bool m_caseInsensitive;
-        private IFtpSessionState m_currentState;
-        private int m_waitLockTimeOut;
         private bool m_disposed;
 
         #endregion
@@ -151,9 +148,9 @@ namespace GSF.Net.Ftp
         /// <param name="caseInsensitive">Set to true to not be case sensitive with FTP file and directory names.</param>
         public FtpClient(bool caseInsensitive)
         {
-            m_caseInsensitive = caseInsensitive;
-            m_waitLockTimeOut = 10;
-            m_currentState = new FtpSessionDisconnected(this, m_caseInsensitive);
+            CaseInsensitive = caseInsensitive;
+            WaitLockTimeout = 10;
+            State = new FtpSessionDisconnected(this, CaseInsensitive);
         }
 
         /// <summary>
@@ -163,8 +160,7 @@ namespace GSF.Net.Ftp
         public FtpClient(IContainer container)
             : this()
         {
-            if ((object)container != null)
-                container.Add(this);
+            container?.Add(this);
         }
 
         #endregion
@@ -180,14 +176,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify FTP server name (do not prefix with FTP://).")]
         public string Server
         {
-            get
-            {
-                return m_currentState.Server;
-            }
-            set
-            {
-                m_currentState.Server = value;
-            }
+            get => State.Server;
+            set => State.Server = value;
         }
 
         /// <summary>
@@ -197,17 +187,7 @@ namespace GSF.Net.Ftp
         /// Set to true to not be case sensitive with FTP file and directory names.
         /// </remarks>
         [Browsable(true), Category("Configuration"), Description("Set to True to not be case sensitive with FTP file names."), DefaultValue(false)]
-        public bool CaseInsensitive
-        {
-            get
-            {
-                return m_caseInsensitive;
-            }
-            set
-            {
-                m_caseInsensitive = value;
-            }
-        }
+        public bool CaseInsensitive { get; set; }
 
         /// <summary>
         /// Gets or sets FTP server port to use, defaults to 21.
@@ -218,14 +198,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify FTP server port, if needed."), DefaultValue(21)]
         public int Port
         {
-            get
-            {
-                return m_currentState.Port;
-            }
-            set
-            {
-                m_currentState.Port = value;
-            }
+            get => State.Port;
+            set => State.Port = value;
         }
 
         /// <summary>
@@ -235,14 +209,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify FTP server read/write timeout, if needed."), DefaultValue(30000)]
         public int Timeout
         {
-            get
-            {
-                return m_currentState.Timeout;
-            }
-            set
-            {
-                m_currentState.Timeout = value;
-            }
+            get => State.Timeout;
+            set => State.Timeout = value;
         }
 
         /// <summary>
@@ -251,14 +219,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify passive/active mode of FTP server."), DefaultValue(true)]
         public bool Passive
         {
-            get
-            {
-                return m_currentState.Passive;
-            }
-            set
-            {
-                m_currentState.Passive = value;
-            }
+            get => State.Passive;
+            set => State.Passive = value;
         }
 
         /// <summary>
@@ -267,19 +229,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify IP address to send with PORT command."), DefaultValue(null)]
         public string ActiveAddress
         {
-            get
-            {
-                return m_currentState.ActiveAddress.ToString();
-            }
-            set
-            {
-                IPAddress address;
-
-                if (IPAddress.TryParse(value, out address))
-                    m_currentState.ActiveAddress = address;
-                else
-                    m_currentState.ActiveAddress = null;
-            }
+            get => State.ActiveAddress.ToString();
+            set => State.ActiveAddress = IPAddress.TryParse(value, out IPAddress address) ? address : null;
         }
 
         /// <summary>
@@ -289,14 +240,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify minimum port in range of active ports."), DefaultValue(0)]
         public int MinActivePort
         {
-            get
-            {
-                return m_currentState.MinActivePort;
-            }
-            set
-            {
-                m_currentState.MinActivePort = value;
-            }
+            get => State.MinActivePort;
+            set => State.MinActivePort = value;
         }
 
         /// <summary>
@@ -306,14 +251,8 @@ namespace GSF.Net.Ftp
         [Browsable(true), Category("Configuration"), Description("Specify maximum port in range of active ports."), DefaultValue(0)]
         public int MaxActivePort
         {
-            get
-            {
-                return m_currentState.MaxActivePort;
-            }
-            set
-            {
-                m_currentState.MaxActivePort = value;
-            }
+            get => State.MaxActivePort;
+            set => State.MaxActivePort = value;
         }
 
         /// <summary>
@@ -322,43 +261,21 @@ namespace GSF.Net.Ftp
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FtpDirectory CurrentDirectory
         {
-            get
-            {
-                return m_currentState.CurrentDirectory;
-            }
-            set
-            {
-                m_currentState.CurrentDirectory = value;
-            }
+            get => State.CurrentDirectory;
+            set => State.CurrentDirectory = value;
         }
 
         /// <summary>
         /// Gets FTP session root directory entry.
         /// </summary>
         [Browsable(false)]
-        public FtpDirectory RootDirectory
-        {
-            get
-            {
-                return m_currentState.RootDirectory;
-            }
-        }
+        public FtpDirectory RootDirectory => State.RootDirectory;
 
         /// <summary>
         /// Gets or sets maximum number of seconds to wait for read lock for files to be uploaded. Defaults to 10 seconds.
         /// </summary>
         [Browsable(true), Category("Configuration"), Description("Specify the maximum number of seconds to wait for read lock for files to be uploaded."), DefaultValue(10)]
-        public int WaitLockTimeout
-        {
-            get
-            {
-                return m_waitLockTimeOut;
-            }
-            set
-            {
-                m_waitLockTimeOut = value;
-            }
-        }
+        public int WaitLockTimeout { get; set; }
 
         /// <summary>
         /// Changes the current FTP session directory to the specified path.
@@ -369,60 +286,32 @@ namespace GSF.Net.Ftp
             if (!IsConnected)
                 throw new InvalidOperationException("You must be connected to the FTP server before you can set the current directory.");
 
-            if (directoryPath.Length > 0)
-            {
-                m_currentState.CurrentDirectory = new FtpDirectory((FtpSessionConnected)m_currentState, CaseInsensitive, directoryPath);
-                m_currentState.CurrentDirectory.Refresh();
-            }
+            if (directoryPath.Length <= 0)
+                return;
+
+            State.CurrentDirectory = new FtpDirectory((FtpSessionConnected)State, CaseInsensitive, directoryPath);
+            State.CurrentDirectory.Refresh();
         }
 
         /// <summary>
         /// Gets the current FTP control channel.
         /// </summary>
         [Browsable(false)]
-        public FtpControlChannel ControlChannel
-        {
-            get
-            {
-                return m_currentState.ControlChannel;
-            }
-        }
+        public FtpControlChannel ControlChannel => State.ControlChannel;
 
         /// <summary>
         /// Returns true if FTP session is currently connected.
         /// </summary>
         [Browsable(false)]
-        public bool IsConnected
-        {
-            get
-            {
-                return (m_currentState is FtpSessionConnected);
-            }
-        }
+        public bool IsConnected => State is FtpSessionConnected;
 
         /// <summary>
         /// Returns true if FTP session is currently busy.
         /// </summary>
         [Browsable(false)]
-        public bool IsBusy
-        {
-            get
-            {
-                return m_currentState.IsBusy;
-            }
-        }
+        public bool IsBusy => State.IsBusy;
 
-        internal IFtpSessionState State
-        {
-            get
-            {
-                return m_currentState;
-            }
-            set
-            {
-                m_currentState = value;
-            }
-        }
+        internal IFtpSessionState State { get; set; }
 
         #endregion
 
@@ -434,23 +323,21 @@ namespace GSF.Net.Ftp
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_currentState != null)
-                            m_currentState.Dispose();
+            if (m_disposed)
+                return;
 
-                        m_currentState = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+            try
+            {
+                if (!disposing)
+                    return;
+
+                State?.Dispose();
+                State = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -459,7 +346,7 @@ namespace GSF.Net.Ftp
         /// </summary>
         public void AbortTransfer()
         {
-            m_currentState.AbortTransfer();
+            State.AbortTransfer();
         }
 
         /// <summary>
@@ -469,7 +356,7 @@ namespace GSF.Net.Ftp
         /// <param name="password">Password used to authenticate to FTP server.</param>
         public void Connect(string userName, string password)
         {
-            m_currentState.Connect(userName, password);
+            State.Connect(userName, password);
         }
 
         /// <summary>
@@ -477,43 +364,37 @@ namespace GSF.Net.Ftp
         /// </summary>
         public void Close()
         {
-            m_currentState.Close();
+            State.Close();
         }
 
         internal void OnResponseReceived(string response)
         {
-            if ((object)ResponseReceived != null)
-                ResponseReceived(this, new EventArgs<string>(response));
+            ResponseReceived?.Invoke(this, new EventArgs<string>(response));
         }
 
         internal void OnCommandSent(string command)
         {
-            if ((object)CommandSent != null)
-                CommandSent(this, new EventArgs<string>(command));
+            CommandSent?.Invoke(this, new EventArgs<string>(command));
         }
 
         internal void OnBeginFileTransfer(string localFileName, string remoteFileName, TransferDirection transferDirection)
         {
-            if ((object)BeginFileTransfer != null)
-                BeginFileTransfer(this, new EventArgs<string, string, TransferDirection>(localFileName, remoteFileName, transferDirection));
+            BeginFileTransfer?.Invoke(this, new EventArgs<string, string, TransferDirection>(localFileName, remoteFileName, transferDirection));
         }
 
         internal void OnEndFileTransfer(string localFileName, string remoteFileName, TransferDirection transferDirection)
         {
-            if ((object)EndFileTransfer != null)
-                EndFileTransfer(this, new EventArgs<string, string, TransferDirection>(localFileName, remoteFileName, transferDirection));
+            EndFileTransfer?.Invoke(this, new EventArgs<string, string, TransferDirection>(localFileName, remoteFileName, transferDirection));
         }
 
         internal void OnFileTransferProgress(ProcessProgress<long> fileTransferProgress, TransferDirection transferDirection)
         {
-            if ((object)FileTransferProgress != null)
-                FileTransferProgress(this, new EventArgs<ProcessProgress<long>, TransferDirection>(fileTransferProgress, transferDirection));
+            FileTransferProgress?.Invoke(this, new EventArgs<ProcessProgress<long>, TransferDirection>(fileTransferProgress, transferDirection));
         }
 
         internal void OnFileTransferNotification(FtpAsyncResult transferResult)
         {
-            if ((object)FileTransferNotification != null)
-                FileTransferNotification(this, new EventArgs<FtpAsyncResult>(transferResult));
+            FileTransferNotification?.Invoke(this, new EventArgs<FtpAsyncResult>(transferResult));
         }
 
         #endregion
