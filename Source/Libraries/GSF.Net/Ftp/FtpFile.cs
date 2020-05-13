@@ -58,10 +58,6 @@ namespace GSF.Net.Ftp
 
         // Fields
         private readonly FtpDirectory m_parent;
-        private readonly string m_name;
-        private long m_size;
-        private string m_permission;
-        private DateTime m_timestamp;
 
         #endregion
 
@@ -70,16 +66,16 @@ namespace GSF.Net.Ftp
         internal FtpFile(FtpDirectory parent, FtpDirectory.ItemInfo info)
         {
             m_parent = parent;
-            m_name = info.Name;
-            m_size = info.Size;
-            m_permission = info.Permission;
-            m_timestamp = info.TimeStamp.Value;
+            Name = info.Name;
+            Size = info.Size;
+            Permission = info.Permission;
+            Timestamp = info.TimeStamp.Value;
         }
 
         internal FtpFile(FtpDirectory parent, string name)
         {
             m_parent = parent;
-            m_name = name;
+            Name = name;
         }
 
         #endregion
@@ -89,91 +85,37 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Name of file.
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return m_name;
-            }
-        }
+        public string Name { get; }
 
         /// <summary>
         /// Full path of file.
         /// </summary>
-        public string FullPath
-        {
-            get
-            {
-                return m_parent.FullPath + m_name;
-            }
-        }
+        public string FullPath => m_parent.FullPath + Name;
 
         /// <summary>
         /// Returns true for file entries.
         /// </summary>
-        public bool IsFile
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public bool IsFile => true;
 
         /// <summary>
         /// Returns false for directory entries.
         /// </summary>
-        public bool IsDirectory
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public bool IsDirectory => false;
 
         /// <summary>
         /// Gets or sets size of file.
         /// </summary>
-        public long Size
-        {
-            get
-            {
-                return m_size;
-            }
-            set
-            {
-                m_size = value;
-            }
-        }
+        public long Size { get; set; }
 
         /// <summary>
         /// Gets or sets permission of file.
         /// </summary>
-        public string Permission
-        {
-            get
-            {
-                return m_permission;
-            }
-            set
-            {
-                m_permission = value;
-            }
-        }
+        public string Permission { get; set; }
 
         /// <summary>
         /// Gets or sets timestamp of file.
         /// </summary>
-        public DateTime Timestamp
-        {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
-        }
+        public DateTime Timestamp { get; set; }
 
         /// <summary>
         /// Gets parent directory of file.
@@ -226,7 +168,7 @@ namespace GSF.Net.Ftp
         /// <returns>FTP input stream for file.</returns>
         public FtpInputDataStream GetInputStream()
         {
-            return ((FtpInputDataStream)(GetStream(0, TransferDirection.Download)));
+            return (FtpInputDataStream)GetStream(0, TransferDirection.Download);
         }
 
         /// <summary>
@@ -235,7 +177,7 @@ namespace GSF.Net.Ftp
         /// <returns>FTP output stream for file.</returns>
         public FtpOutputDataStream GetOutputStream()
         {
-            return ((FtpOutputDataStream)(GetStream(0, TransferDirection.Upload)));
+            return (FtpOutputDataStream)GetStream(0, TransferDirection.Upload);
         }
 
         /// <summary>
@@ -245,7 +187,7 @@ namespace GSF.Net.Ftp
         /// <returns>FTP input stream for file.</returns>
         public FtpInputDataStream GetInputStream(long offset)
         {
-            return ((FtpInputDataStream)(GetStream(offset, TransferDirection.Download)));
+            return (FtpInputDataStream)GetStream(offset, TransferDirection.Download);
         }
 
         /// <summary>
@@ -255,7 +197,7 @@ namespace GSF.Net.Ftp
         /// <returns>FTP output stream for file.</returns>
         public FtpOutputDataStream GetOutputStream(long offset)
         {
-            return ((FtpOutputDataStream)(GetStream(offset, TransferDirection.Upload)));
+            return (FtpOutputDataStream)GetStream(offset, TransferDirection.Upload);
         }
 
         private FtpDataStream GetStream(long offset, TransferDirection dir)
@@ -272,9 +214,9 @@ namespace GSF.Net.Ftp
             try
             {
                 if (dir == TransferDirection.Download)
-                    Session.ControlChannel.RETR(m_name);
+                    Session.ControlChannel.RETR(Name);
                 else
-                    Session.ControlChannel.STOR(m_name);
+                    Session.ControlChannel.STOR(Name);
             }
             catch
             {
@@ -294,8 +236,8 @@ namespace GSF.Net.Ftp
         {
             FtpFile other = obj as FtpFile;
 
-            if ((object)other != null)
-                return (CompareTo(other) == 0);
+            if (other != null)
+                return CompareTo(other) == 0;
 
             return false;
         }
@@ -306,19 +248,19 @@ namespace GSF.Net.Ftp
         /// <returns>An <see cref="Int32"/> representing the hash code.</returns>
         public override int GetHashCode()
         {
-            return m_name.GetHashCode();
+            return Name.GetHashCode();
         }
 
         int IComparable<FtpFile>.CompareTo(FtpFile other)
         {
             // Files are sorted by name
-            return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
+            return string.Compare(Name, other.Name, m_parent.CaseInsensitive);
         }
 
         int IComparable<IFtpFile>.CompareTo(IFtpFile other)
         {
             // Files are sorted by name
-            return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
+            return string.Compare(Name, other.Name, m_parent.CaseInsensitive);
         }
 
         /// <summary>
@@ -328,18 +270,10 @@ namespace GSF.Net.Ftp
         /// <returns>An <see cref="Int32"/> that represents the result of the comparison. 1 - object is greater than, 0 - object is equal to, -1 - object is less than.</returns>
         public int CompareTo(object obj)
         {
-            if (Equals(obj, null))
-            {
+            IFtpFile file = obj as IFtpFile;
+            if (file == null)
                 return 1;
-            }
-            else
-            {
-                IFtpFile file = obj as IFtpFile;
-                if ((object)file == null)
-                    return 1;
-                else
-                    return CompareTo(file);
-            }
+            return CompareTo(file);
         }
 
         #endregion
@@ -356,8 +290,7 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
-            else
-                return (value1.CompareTo(value2) == 0);
+            return value1.CompareTo(value2) == 0;
         }
 
         /// <summary>
@@ -381,8 +314,7 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
-            else
-                return (value1.CompareTo(value2) < 0);
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <summary>
@@ -406,8 +338,7 @@ namespace GSF.Net.Ftp
         {
             if (Equals(value1, null))
                 return Equals(value2, null);
-            else
-                return (value1.CompareTo(value2) <= 0);
+            return value1.CompareTo(value2) <= 0;
         }
 
         /// <summary>

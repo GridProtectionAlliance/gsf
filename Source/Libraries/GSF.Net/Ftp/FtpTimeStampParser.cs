@@ -73,8 +73,8 @@ namespace GSF.Net.Ftp
 
         public FtpTimeStampParser(string rawValue, RawDataStyle style)
         {
-            this.RawValue = rawValue;
-            this.Style = style;
+            RawValue = rawValue;
+            Style = style;
         }
 
         #endregion
@@ -85,29 +85,18 @@ namespace GSF.Net.Ftp
         {
             get
             {
-                if (RawValue.Length > 0)
+                if (string.IsNullOrWhiteSpace(RawValue))
+                    return DateTime.MinValue;
+
+                try
                 {
-                    try
-                    {
-                        switch (Style)
-                        {
-                            case RawDataStyle.UnixDate:
-                                return DateTime.Parse(RawValue);
-                            case RawDataStyle.UnixDateTime:
-                                string[] sa = RawValue.Split(' ');
-                                return Convert.ToDateTime(sa[0] + " " + sa[1] + " " + DateTime.UtcNow.Year + " " + sa[2]);
-                            case RawDataStyle.DosDateTime:
-                                return DateTime.Parse(RawValue);
-                            default:
-                                return DateTime.Parse(RawValue);
-                        }
-                    }
-                    catch
-                    {
-                        return DateTime.MinValue;
-                    }
+                    if (Style != RawDataStyle.UnixDateTime)
+                        return DateTime.Parse(RawValue);
+
+                    string[] sa = RawValue.Split(' ');
+                    return Convert.ToDateTime($"{sa[0]} {sa[1]} {DateTime.UtcNow.Year} {sa[2]}");
                 }
-                else
+                catch
                 {
                     return DateTime.MinValue;
                 }

@@ -54,7 +54,6 @@ namespace GSF.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private readonly FtpControlChannel m_ctrl;
         private readonly FtpSessionConnected m_session;
         private TcpClient m_tcpClient;
         private readonly Stream m_stream;
@@ -67,11 +66,12 @@ namespace GSF.Net.Ftp
         internal FtpDataStream(FtpControlChannel ctrl, TcpClient client)
         {
             m_session = ctrl.Session;
-            m_ctrl = ctrl;
+            ControlChannel = ctrl;
             m_tcpClient = client;
             m_stream = client.GetStream();
             m_stream.ReadTimeout = ctrl.Timeout;
             m_stream.WriteTimeout = ctrl.Timeout;
+
             TryBeginDataTransfer();
         }
 
@@ -79,21 +79,9 @@ namespace GSF.Net.Ftp
 
         #region [ Properties ]
 
-        internal bool IsClosed
-        {
-            get
-            {
-                return ((object)m_tcpClient == null);
-            }
-        }
+        internal bool IsClosed => m_tcpClient == null;
 
-        internal FtpControlChannel ControlChannel
-        {
-            get
-            {
-                return m_ctrl;
-            }
-        }
+        internal FtpControlChannel ControlChannel { get; }
 
         /// <summary>
         /// Gets a value indicating whether the current stream supports reading.
@@ -101,13 +89,7 @@ namespace GSF.Net.Ftp
         /// <returns>
         /// true if the stream supports reading; otherwise, false.
         /// </returns>
-        public override bool CanRead
-        {
-            get
-            {
-                return m_stream.CanRead;
-            }
-        }
+        public override bool CanRead => m_stream.CanRead;
 
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
@@ -115,13 +97,7 @@ namespace GSF.Net.Ftp
         /// <returns>
         /// true if the stream supports seeking; otherwise, false.
         /// </returns>
-        public override bool CanSeek
-        {
-            get
-            {
-                return m_stream.CanSeek;
-            }
-        }
+        public override bool CanSeek => m_stream.CanSeek;
 
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
@@ -129,13 +105,7 @@ namespace GSF.Net.Ftp
         /// <returns>
         /// true if the stream supports writing; otherwise, false.
         /// </returns>
-        public override bool CanWrite
-        {
-            get
-            {
-                return m_stream.CanWrite;
-            }
-        }
+        public override bool CanWrite => m_stream.CanWrite;
 
         /// <summary>
         /// Gets the length in bytes of the stream.
@@ -145,13 +115,7 @@ namespace GSF.Net.Ftp
         /// </returns>
         /// <exception cref="System.NotSupportedException">Stream does not support seeking.</exception>
         /// <exception cref="System.ObjectDisposedException">Methods were called after the stream was closed.</exception>
-        public override long Length
-        {
-            get
-            {
-                return m_stream.Length;
-            }
-        }
+        public override long Length => m_stream.Length;
 
         /// <summary>
         /// Gets or sets the position within the current stream.
@@ -164,14 +128,8 @@ namespace GSF.Net.Ftp
         /// <exception cref="System.ObjectDisposedException">Methods were called after the stream was closed.</exception>
         public override long Position
         {
-            get
-            {
-                return m_stream.Position;
-            }
-            set
-            {
-                m_stream.Position = value;
-            }
+            get => m_stream.Position;
+            set => m_stream.Position = value;
         }
 
         #endregion
@@ -188,15 +146,15 @@ namespace GSF.Net.Ftp
 
         internal void Close(bool error)
         {
-            if (!IsClosed)
-            {
-                CloseConnection();
+            if (IsClosed)
+                return;
 
-                if (!error)
-                    m_ctrl.RefreshResponse();
+            CloseConnection();
 
-                m_ctrl.Session.EndDataTransfer();
-            }
+            if (!error)
+                ControlChannel.RefreshResponse();
+
+            ControlChannel.Session.EndDataTransfer();
         }
 
         internal void Abort()

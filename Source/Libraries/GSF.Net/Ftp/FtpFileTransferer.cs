@@ -81,15 +81,7 @@ namespace GSF.Net.Ftp
         // Fields
         private readonly StreamCopyDelegate m_streamCopyRoutine;
         private readonly FileCommandDelegate m_ftpFileCommandRoutine;
-        private FtpDirectory m_transferStarter;
         private readonly FtpSessionConnected m_session;
-        private readonly string m_localFile;
-        private readonly string m_remoteFile;
-        private readonly long m_totalBytes;
-        private long m_totalBytesTransfered;
-        private int m_transferedPercentage;
-        private readonly TransferDirection m_transferDirection;
-        private FtpAsyncResult m_transferResult;
 
         #endregion
 
@@ -97,12 +89,11 @@ namespace GSF.Net.Ftp
 
         internal FtpFileTransferer(FtpDirectory transferStarter, string localFile, string remoteFile, long totalBytes, TransferDirection dir)
         {
-            m_transferStarter = transferStarter;
-            m_transferDirection = dir;
+            TransferDirection = dir;
             m_session = transferStarter.Session;
-            m_localFile = localFile;
-            m_remoteFile = remoteFile;
-            m_totalBytes = totalBytes;
+            LocalFileName = localFile;
+            RemoteFileName = remoteFile;
+            TotalBytes = totalBytes;
 
             if (dir == TransferDirection.Upload)
             {
@@ -120,61 +111,19 @@ namespace GSF.Net.Ftp
 
         #region [ Properties ]
 
-        public string LocalFileName
-        {
-            get
-            {
-                return m_localFile;
-            }
-        }
+        public string LocalFileName { get; }
 
-        public string RemoteFileName
-        {
-            get
-            {
-                return m_remoteFile;
-            }
-        }
+        public string RemoteFileName { get; }
 
-        public long TotalBytes
-        {
-            get
-            {
-                return m_totalBytes;
-            }
-        }
+        public long TotalBytes { get; }
 
-        public long TotalBytesTransfered
-        {
-            get
-            {
-                return m_totalBytesTransfered;
-            }
-        }
+        public long TotalBytesTransfered { get; private set; }
 
-        public TransferDirection TransferDirection
-        {
-            get
-            {
-                return m_transferDirection;
-            }
-        }
+        public TransferDirection TransferDirection { get; }
 
-        public FtpAsyncResult TransferResult
-        {
-            get
-            {
-                return m_transferResult;
-            }
-        }
+        public FtpAsyncResult TransferResult { get; private set; }
 
-        public int TransferedPercentage
-        {
-            get
-            {
-                return m_transferedPercentage;
-            }
-        }
+        public int TransferedPercentage { get; private set; }
 
         #endregion
 
@@ -185,13 +134,13 @@ namespace GSF.Net.Ftp
             try
             {
                 StartTransfer();
-                m_transferResult = new FtpAsyncResult("Success.", FtpAsyncResult.Complete);
-                m_session.Host.OnFileTransferNotification(m_transferResult);
+                TransferResult = new FtpAsyncResult("Success.", FtpAsyncResult.Complete);
+                m_session.Host.OnFileTransferNotification(TransferResult);
             }
             catch (FtpExceptionBase e)
             {
-                m_transferResult = new FtpAsyncResult("Transfer fail: " + e.Message, FtpAsyncResult.Fail);
-                m_session.Host.OnFileTransferNotification(m_transferResult);
+                TransferResult = new FtpAsyncResult($"Transfer fail: {e.Message}", FtpAsyncResult.Fail);
+                m_session.Host.OnFileTransferNotification(TransferResult);
             }
         }
 
@@ -204,18 +153,18 @@ namespace GSF.Net.Ftp
             try
             {
                 // Files just created may still have a file lock, we'll wait a few seconds for read access if needed...
-                if (m_transferDirection == TransferDirection.Upload)
-                    FilePath.WaitForReadLock(m_localFile, m_session.Host.WaitLockTimeout);
+                if (TransferDirection == TransferDirection.Upload)
+                    FilePath.WaitForReadLock(LocalFileName, m_session.Host.WaitLockTimeout);
 
-                m_session.Host.OnBeginFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
+                m_session.Host.OnBeginFileTransfer(LocalFileName, RemoteFileName, TransferDirection);
 
-                remoteStream = m_session.ControlChannel.GetDataStream(m_transferDirection);
-                m_ftpFileCommandRoutine(m_remoteFile);
+                remoteStream = m_session.ControlChannel.GetDataStream(TransferDirection);
+                m_ftpFileCommandRoutine(RemoteFileName);
 
-                if (m_transferDirection == TransferDirection.Download)
-                    localStream = new FileStream(m_localFile, FileMode.Create);
+                if (TransferDirection == TransferDirection.Download)
+                    localStream = new FileStream(LocalFileName, FileMode.Create);
                 else
-                    localStream = new FileStream(m_localFile, FileMode.Open, FileAccess.Read);
+                    localStream = new FileStream(LocalFileName, FileMode.Open, FileAccess.Read);
 
                 m_streamCopyRoutine(remoteStream, localStream);
 
@@ -224,18 +173,18 @@ namespace GSF.Net.Ftp
                 remoteStream.Dispose();
                 TestTransferResult();
 
-                m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
+                m_session.Host.OnEndFileTransfer(LocalFileName, RemoteFileName, TransferDirection);
             }
             catch
             {
-                m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
+                m_session.Host.OnEndFileTransfer(LocalFileName, RemoteFileName, TransferDirection);
                 throw;
             }
             finally
             {
                 // Need to make sure we end data transfer on the session, which would
                 // normally happen automatically when the remote stream is closed
-                if ((object)remoteStream != null)
+                if (remoteStream != null)
                     remoteStream.Dispose();
                 else
                     m_session.EndDataTransfer();
@@ -246,13 +195,7 @@ namespace GSF.Net.Ftp
 
         internal void StartAsyncTransfer()
         {
-#if ThreadTracking
-            ManagedThread thread = new ManagedThread(TransferThreadProc);
-            thread.Name = "GSF.Net.Ftp.FileTransferer.TransferThreadProc() [" + m_remoteFile + "]";
-#else
-            Thread thread = new Thread(TransferThreadProc);
-            thread.Name = "Transfer file thread: " + m_remoteFile;
-#endif
+            Thread thread = new Thread(TransferThreadProc) { Name = $"Transfer file thread: {RemoteFileName}" };
             thread.Start();
         }
 
@@ -260,13 +203,14 @@ namespace GSF.Net.Ftp
         {
             int responseCode = m_session.ControlChannel.LastResponse.Code;
 
-            if (responseCode == FtpResponse.ClosingDataChannel)
-                return;
-
-            if (responseCode == FtpResponse.RequestFileActionComplete)
-                return;
-
-            throw new FtpDataTransferException("Failed to transfer file.", m_session.ControlChannel.LastResponse);
+            switch (responseCode)
+            {
+                case FtpResponse.ClosingDataChannel:
+                case FtpResponse.RequestFileActionComplete:
+                    return;
+                default:
+                    throw new FtpDataTransferException("Failed to transfer file.", m_session.ControlChannel.LastResponse);
+            }
         }
 
         private void RemoteToLocal(Stream remote, Stream local)
@@ -281,26 +225,23 @@ namespace GSF.Net.Ftp
 
         private void StreamCopy(Stream dest, Stream source)
         {
-            int byteRead;
-            long onePercentage;
-            long bytesReadFromLastProgressEvent;
             byte[] buffer = new byte[4 * 1024 + 1];
-            ProcessProgress<long> progress = new ProcessProgress<long>("FTP " + m_transferDirection + " File Transfer", "Transferring file \"" + m_remoteFile + "\"...", m_totalBytes, 0);
+            ProcessProgress<long> progress = new ProcessProgress<long>($"FTP {TransferDirection} File Transfer", $"Transferring file \"{RemoteFileName}\"...", TotalBytes, 0);
 
-            onePercentage = m_totalBytes / 100;
-            bytesReadFromLastProgressEvent = 0;
-            byteRead = source.Read(buffer, 0, 4 * 1024);
+            long onePercentage = TotalBytes / 100;
+            long bytesReadFromLastProgressEvent = 0;
+            int byteRead = source.Read(buffer, 0, 4 * 1024);
 
             while (byteRead != 0)
             {
-                m_totalBytesTransfered += byteRead;
+                TotalBytesTransfered += byteRead;
                 bytesReadFromLastProgressEvent += byteRead;
 
                 if (bytesReadFromLastProgressEvent > onePercentage)
                 {
-                    m_transferedPercentage = (int)(((float)m_totalBytesTransfered) / ((float)m_totalBytes) * 100);
-                    progress.Complete = m_totalBytesTransfered;
-                    m_session.Host.OnFileTransferProgress(progress, m_transferDirection);
+                    TransferedPercentage = (int)(TotalBytesTransfered / (float)TotalBytes * 100);
+                    progress.Complete = TotalBytesTransfered;
+                    m_session.Host.OnFileTransferProgress(progress, TransferDirection);
                     bytesReadFromLastProgressEvent = 0;
                 }
 

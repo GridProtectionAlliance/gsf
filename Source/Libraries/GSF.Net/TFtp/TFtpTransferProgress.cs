@@ -56,7 +56,7 @@ namespace GSF.Net.TFtp
         }
 
         public override string ToString() => TotalBytes > 0 ? 
-            $"{(TransferredBytes * 100L) / TotalBytes}% completed" : 
+            $"{TransferredBytes * 100L / TotalBytes}% completed" : 
             $"{TransferredBytes} bytes transferred";
     }
 }

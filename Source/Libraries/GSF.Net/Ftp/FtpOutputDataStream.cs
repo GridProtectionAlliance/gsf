@@ -84,12 +84,6 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Returns false, cannot read from output stream.
         /// </summary>
-        public override bool CanRead
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanRead => false;
     }
 }

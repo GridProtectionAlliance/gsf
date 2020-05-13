@@ -51,8 +51,8 @@ namespace GSF.Net.Ftp
 
             foreach (string path in paths)
             {
-                if ((object)path == null)
-                    throw new ArgumentNullException("One of the strings in the array is null.");
+                if (path == null)
+                    throw new ArgumentNullException(nameof(paths),"One of the strings in the array is null.");
 
                 if (path.Length == 0)
                     continue;

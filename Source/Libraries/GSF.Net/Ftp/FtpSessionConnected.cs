@@ -52,9 +52,6 @@ namespace GSF.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private FtpClient m_host;
-        private FtpControlChannel m_ctrlChannel;
-        private FtpDirectory m_root;
         private FtpDirectory m_current;
         private FtpDataStream m_dataStream;
         private readonly bool m_caseInsensitive;
@@ -66,9 +63,9 @@ namespace GSF.Net.Ftp
 
         internal FtpSessionConnected(FtpClient h, FtpControlChannel ctrl, bool caseInsensitive)
         {
-            m_host = h;
-            m_ctrlChannel = ctrl;
-            m_ctrlChannel.Session = this;
+            Host = h;
+            ControlChannel = ctrl;
+            ControlChannel.Session = this;
             m_caseInsensitive = caseInsensitive;
         }
 
@@ -86,133 +83,64 @@ namespace GSF.Net.Ftp
 
         public string Server
         {
-            get
-            {
-                return m_ctrlChannel.Server;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => ControlChannel.Server;
+            set => throw new InvalidOperationException();
         }
 
         public int Port
         {
-            get
-            {
-                return m_ctrlChannel.Port;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => ControlChannel.Port;
+            set => throw new InvalidOperationException();
         }
 
         public int Timeout
         {
-            get
-            {
-                return m_ctrlChannel.Timeout;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => ControlChannel.Timeout;
+            set => throw new InvalidOperationException();
         }
 
         public bool Passive
         {
-            get
-            {
-                return m_ctrlChannel.Passive;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => ControlChannel.Passive;
+            set => throw new InvalidOperationException();
         }
 
         public IPAddress ActiveAddress
         {
-            get
-            {
-                return m_ctrlChannel.ActiveAddress;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => ControlChannel.ActiveAddress;
+            set => throw new InvalidOperationException();
         }
 
         public int MinActivePort
         {
-            get
-            {
-                return m_ctrlChannel.DataChannelPortRange.Start;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => ControlChannel.DataChannelPortRange.Start;
+            set => throw new InvalidOperationException();
         }
 
         public int MaxActivePort
         {
-            get
-            {
-                return m_ctrlChannel.DataChannelPortRange.End;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => ControlChannel.DataChannelPortRange.End;
+            set => throw new InvalidOperationException();
         }
 
-        public FtpDirectory RootDirectory
-        {
-            get
-            {
-                return m_root;
-            }
-        }
+        public FtpDirectory RootDirectory { get; private set; }
 
         public FtpDirectory CurrentDirectory
         {
-            get
-            {
-                return m_current;
-            }
+            get => m_current;
             set
             {
-                m_ctrlChannel.CWD(value.FullPath);
+                ControlChannel.CWD(value.FullPath);
                 m_current = value;
                 m_current.ClearItems();
             }
         }
 
-        public bool IsBusy
-        {
-            get
-            {
-                return ((object)m_dataStream != null);
-            }
-        }
+        public bool IsBusy => m_dataStream != null;
 
-        internal FtpClient Host
-        {
-            get
-            {
-                return m_host;
-            }
-        }
+        internal FtpClient Host { get; private set; }
 
-        public FtpControlChannel ControlChannel
-        {
-            get
-            {
-                return m_ctrlChannel;
-            }
-        }
+        public FtpControlChannel ControlChannel { get; private set; }
 
         #endregion
 
@@ -233,40 +161,34 @@ namespace GSF.Net.Ftp
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
 
-                    if (disposing)
-                    {
-                        m_host = null;
-                        m_root = null;
-                        m_current = null;
+                Host = null;
+                RootDirectory = null;
+                m_current = null;
 
-                        if ((object)m_ctrlChannel != null)
-                            m_ctrlChannel.Close();
+                ControlChannel?.Close();
+                ControlChannel = null;
 
-                        m_ctrlChannel = null;
-
-                        if ((object)m_dataStream != null)
-                            m_dataStream.Dispose();
-
-                        m_dataStream = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                m_dataStream?.Dispose();
+                m_dataStream = null;
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
         internal void InitRootDirectory()
         {
-            m_root = new FtpDirectory(this, m_caseInsensitive, m_ctrlChannel.PWD());
-            m_current = m_root;
+            RootDirectory = new FtpDirectory(this, m_caseInsensitive, ControlChannel.PWD());
+            m_current = RootDirectory;
         }
 
         // You can only aborting file transfer started by
@@ -277,28 +199,28 @@ namespace GSF.Net.Ftp
             // to null when DataStream call EndDataTransfer
             FtpDataStream tempDataStream = m_dataStream;
 
-            if ((object)tempDataStream != null)
-            {
-                tempDataStream.Abort();
+            if (tempDataStream == null)
+                return;
 
-                while (!tempDataStream.IsClosed)
-                    Thread.Sleep(1);
-            }
+            tempDataStream.Abort();
+
+            while (!tempDataStream.IsClosed)
+                Thread.Sleep(1);
         }
 
         public void Close()
         {
-            m_host.State = new FtpSessionDisconnected(m_host, m_caseInsensitive);
-            m_host.Server = m_ctrlChannel.Server;
-            m_host.Port = m_ctrlChannel.Port;
+            Host.State = new FtpSessionDisconnected(Host, m_caseInsensitive);
+            Host.Server = ControlChannel.Server;
+            Host.Port = ControlChannel.Port;
 
             try
             {
-                m_ctrlChannel.QUIT();
+                ControlChannel.QUIT();
             }
             finally
             {
-                m_ctrlChannel.Close();
+                ControlChannel.Close();
             }
         }
 
@@ -311,7 +233,7 @@ namespace GSF.Net.Ftp
         {
             lock (this)
             {
-                if ((object)m_dataStream != null)
+                if (m_dataStream != null)
                     throw new FtpDataTransferException();
 
                 m_dataStream = stream;
@@ -322,7 +244,7 @@ namespace GSF.Net.Ftp
         {
             lock (this)
             {
-                if ((object)m_dataStream == null)
+                if (m_dataStream == null)
                     throw new InvalidOperationException();
 
                 m_dataStream = null;
