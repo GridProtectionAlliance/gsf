@@ -55,6 +55,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbstractFtpClient\FtpClient.cs" />
+    <Compile Include="AbstractFtpClient\FtpDirectory.cs" />
+    <Compile Include="AbstractFtpClient\FtpFile.cs" />
+    <Compile Include="AbstractFtpClient\FtpTransferResult.cs" />
+    <Compile Include="AbstractFtpClient\NamespaceDoc.cs" />
     <Compile Include="Ftp\FtpAsyncResult.cs" />
     <Compile Include="Ftp\FtpClient.cs">
       <SubType>Component</SubType>
@@ -140,6 +145,7 @@
   <ItemGroup>
     <None Include="GSF.Net.nuspec" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />
