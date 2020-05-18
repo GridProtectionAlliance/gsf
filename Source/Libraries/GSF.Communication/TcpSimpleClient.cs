@@ -435,8 +435,9 @@ namespace GSF.Communication
 
                     // Retrieve data from the socket
                     m_tcpClient.BytesReceived = await stream.ReadAsync(m_tcpClient.ReceiveBuffer, m_tcpClient.Offset, length - m_tcpClient.Offset);
-                    m_tcpClient.Offset += m_tcpClient.BytesReceived;
-                    m_tcpClient.Statistics.UpdateBytesReceived(m_tcpClient.BytesReceived);
+                    
+                    if (PayloadAware)
+                        m_tcpClient.Offset += m_tcpClient.BytesReceived;
 
                     if (PayloadAware)
                     {
