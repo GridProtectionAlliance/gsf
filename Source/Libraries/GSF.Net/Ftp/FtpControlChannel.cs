@@ -211,7 +211,7 @@ namespace GSF.Net.Ftp
 
                 LastResponse = null;
 
-                m_connection?.Close();
+                m_connection?.Dispose();
                 m_connection = null;
             }
             finally

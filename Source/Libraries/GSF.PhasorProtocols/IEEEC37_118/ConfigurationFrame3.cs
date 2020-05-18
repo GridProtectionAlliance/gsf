@@ -36,8 +36,15 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     [Serializable]
     public class ConfigurationFrame3 : ConfigurationFrame1
     {
-        new private const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6 + 2;
+        #region [ Members ]
+
+        // Constants
+        private new const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6 + 2;
+
+        // Fields
         private int m_contIDX = 0;
+
+        #endregion
 
         #region [ Constructors ]
 
@@ -79,8 +86,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         #endregion
 
-        #region [ Methods ]
+        #region [ Properties ]
 
+        /// <summary>
+        /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame3"/>.
+        /// </summary>
+        public override FrameType TypeID => IEEEC37_118.FrameType.ConfigurationFrame3;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationFrame3"/> object.
@@ -107,20 +118,24 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             }
         }
 
-
         #endregion
 
-        #region [ Properties ]
+        #region [ Methods ]
+
+        // ReSharper disable once RedundantOverriddenMember
 
         /// <summary>
-        /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame3"/>.
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
         /// </summary>
-        public override FrameType TypeID
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            get
-            {
-                return IEEEC37_118.FrameType.ConfigurationFrame3;
-            }
+            base.GetObjectData(info, context);
+
+            // TODO: Serialize configuration frame
+            //info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
+            //info.AddValue("timebase", m_timebase);
         }
 
         #endregion

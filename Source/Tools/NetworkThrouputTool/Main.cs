@@ -155,7 +155,7 @@ namespace NetworkThrouputTool
                 };
                 this.listView1.Invoke(d, result);
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
