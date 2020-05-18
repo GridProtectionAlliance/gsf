@@ -419,7 +419,7 @@ namespace GSF.Communication
                     throw new InvalidOperationException("Failed to get network stream.");
 
                 // Process the entire file content
-                while (stream.DataAvailable)
+                do
                 {
                     int length;
 
@@ -442,7 +442,7 @@ namespace GSF.Communication
 
                     if (PayloadAware)
                     {
-                        if (m_tcpClient.PayloadLength  < 0)
+                        if (m_tcpClient.PayloadLength < 0)
                         {
                             m_tcpClient.PayloadLength = Payload.ExtractLength(m_tcpClient.ReceiveBuffer, m_tcpClient.Offset, m_payloadMarker, m_payloadEndianOrder);
 
@@ -470,6 +470,7 @@ namespace GSF.Communication
                         OnReceiveDataComplete(m_tcpClient.ReceiveBuffer, m_tcpClient.BytesReceived);
                     }
                 }
+                while (stream.DataAvailable);
             }
             catch (Exception ex)
             {
