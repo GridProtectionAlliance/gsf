@@ -74,6 +74,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="SerialException.cs" />
+    <Compile Include="TcpSimpleClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ZeroMQServer.cs">
       <SubType>Component</SubType>
     </Compile>

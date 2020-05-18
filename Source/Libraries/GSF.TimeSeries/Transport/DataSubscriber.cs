@@ -692,6 +692,11 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if a <see cref="TcpSimpleClient"/> should be used for connection.
+        /// </summary>
+        public bool UseSimpleTcpClient { get; set; }
+
+        /// <summary>
         /// Gets or sets logging path to be used to be runtime and outage logs of the subscriber which are required for
         /// automated data recovery.
         /// </summary>
@@ -1590,6 +1595,9 @@ namespace GSF.TimeSeries.Transport
             m_supportsRealTimeProcessing = !settings.TryGetValue("supportsRealTimeProcessing", out setting) || setting.ParseBoolean();
             m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out setting) && setting.ParseBoolean();
 
+            if (settings.TryGetValue("useSimpleTcpClient", out setting))
+                UseSimpleTcpClient = setting.ParseBoolean();
+
             if (settings.TryGetValue("useZeroMQChannel", out setting))
                 m_useZeroMQChannel = setting.ParseBoolean();
 
@@ -1724,6 +1732,22 @@ namespace GSF.TimeSeries.Transport
                     commandChannel.MaxConnectionAttempts = 1;
                     commandChannel.ReceiveBufferSize = bufferSize;
                     commandChannel.SendBufferSize = bufferSize;
+
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
+                else if (UseSimpleTcpClient)
+                {
+                    // Create a new simple TCP client
+                    TcpSimpleClient commandChannel = new TcpSimpleClient();
+
+                    // Initialize default settings
+                    commandChannel.PayloadAware = true;
+                    commandChannel.PersistSettings = false;
+                    commandChannel.MaxConnectionAttempts = 1;
+                    commandChannel.ReceiveBufferSize = bufferSize;
+                    commandChannel.SendBufferSize = bufferSize;
+                    commandChannel.NoDelay = true;
 
                     // Assign command channel client reference and attach to needed events
                     CommandChannel = commandChannel;
