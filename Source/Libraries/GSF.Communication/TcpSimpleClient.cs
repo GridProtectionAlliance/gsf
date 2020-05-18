@@ -310,13 +310,12 @@ namespace GSF.Communication
                 OnConnectionAttempt();
                 m_connectWaitHandle.Reset();
 
-                // Overwrite config file if no delay exists in connection string.
+                // Overwrite config file value if "noDelay" option exists in connection string
                 if (m_connectData.TryGetValue("noDelay", out string noDelaySetting))
                     NoDelay = noDelaySetting.ParseBoolean();
 
                 tcpClient.Client.NoDelay = NoDelay;
 
-                // Initialize state object for the asynchronous connection loop
                 Match endpoint = Regex.Match(ServerList[m_serverIndex], Transport.EndpointFormatRegex);
 
                 // Initiate the asynchronous connection loop
@@ -328,7 +327,7 @@ namespace GSF.Communication
                         m_connectWaitHandle?.Set();
                         OnConnectionEstablished();
 
-                        // Start read thread
+                        // Start continuous read thread
                         m_readThread = new Thread(async () =>
                         {
                             try
@@ -418,7 +417,6 @@ namespace GSF.Communication
                 if (stream == null)
                     throw new InvalidOperationException("Failed to get network stream.");
 
-                // Process the entire file content
                 do
                 {
                     int length;
