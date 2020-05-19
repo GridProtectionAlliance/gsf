@@ -75,7 +75,7 @@ namespace GSF.Communication
         private int m_serverIndex;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
-        private Thread m_readThread;
+        private Func<Task> m_cancelReadAsync;
         private bool m_disposed;
 
         #endregion
@@ -213,7 +213,8 @@ namespace GSF.Communication
                     m_connectWaitHandle = null;
                 }
 
-                m_readThread?.Abort();
+                Task readTask = m_cancelReadAsync?.Invoke();
+                readTask?.Wait(TimeSpan.FromSeconds(5.0D));
             }
             finally
             {
@@ -273,15 +274,11 @@ namespace GSF.Communication
 
             if (CurrentState != ClientState.Disconnected || m_disposed)
                 return m_connectWaitHandle;
-            
-            m_readThread?.Abort();
-            
+
             void fail(Exception ex)
             {
                 // Log exception during connection attempt
                 OnConnectionException(ex);
-
-                m_readThread?.Abort();
 
                 // ReSharper disable once AccessToDisposedClosure
                 tcpClient?.Close();
@@ -327,25 +324,44 @@ namespace GSF.Communication
                         m_connectWaitHandle?.Set();
                         OnConnectionEstablished();
 
-                        // Start continuous read thread
-                        m_readThread = new Thread(async () =>
+                        // Set up read cancellation before starting the read loop
+                        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+                        TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
+                        CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+                        Func<Task> cancelAsync = () =>
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                                cancellationTokenSource.Cancel();
+
+                            return taskCompletionSource.Task;
+                        };
+
+                        // This ensures that no orphaned read loops can
+                        // persist regardless of potential race conditions.
+                        // If a previous read loop is replaced, we cancel it here.
+                        Func<Task> cancelPreviousReadAsync = Interlocked.Exchange(ref m_cancelReadAsync, cancelAsync);
+                        cancelPreviousReadAsync?.Invoke();
+
+                        // Start continuous read loop
+                        Task.Run(async () =>
                         {
                             try
                             {
-                                while (CurrentState == ClientState.Connected)
-                                    await ReadData();
+                                while (!cancellationToken.IsCancellationRequested && CurrentState == ClientState.Connected)
+                                    await ReadDataAsync(cancellationToken);
                             }
                             catch (Exception ex)
                             {
                                 if (!(ex is ThreadAbortException))
                                     OnReceiveDataException(ex);
                             }
-                        })
-                        {
-                            IsBackground = true
-                        };
-
-                        m_readThread.Start();
+                            finally
+                            {
+                                taskCompletionSource.SetResult(null);
+                                cancellationTokenSource.Dispose();
+                            }
+                        });
                     }
                     catch (Exception ex)
                     {
@@ -408,7 +424,7 @@ namespace GSF.Communication
         }
 
         // Reads data from the TcpClient stream.
-        private async Task ReadData()
+        private async Task ReadDataAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -417,7 +433,7 @@ namespace GSF.Communication
                 if (stream == null)
                     throw new InvalidOperationException("Failed to get network stream.");
 
-                do
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     int length;
 
@@ -434,7 +450,10 @@ namespace GSF.Communication
                     }
 
                     // Retrieve data from the socket
-                    m_tcpClient.BytesReceived = await stream.ReadAsync(m_tcpClient.ReceiveBuffer, m_tcpClient.Offset, length - m_tcpClient.Offset);
+                    m_tcpClient.BytesReceived = await stream.ReadAsync(m_tcpClient.ReceiveBuffer, m_tcpClient.Offset, length - m_tcpClient.Offset, cancellationToken);
+
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
                     
                     if (PayloadAware)
                         m_tcpClient.Offset += m_tcpClient.BytesReceived;
@@ -469,7 +488,6 @@ namespace GSF.Communication
                         OnReceiveDataComplete(m_tcpClient.ReceiveBuffer, m_tcpClient.BytesReceived);
                     }
                 }
-                while (stream.DataAvailable);
             }
             catch (Exception ex)
             {
@@ -521,6 +539,11 @@ namespace GSF.Communication
                 
                 m_tcpClient.Provider?.Dispose();
                 m_connectWaitHandle?.Set();
+
+                Task readTask = m_cancelReadAsync?.Invoke();
+
+                if (!readTask.Wait(TimeSpan.FromSeconds(15.0D)))
+                    throw new TimeoutException("Timeout waiting for read cancellation.");
             }
             catch (ObjectDisposedException)
             {
