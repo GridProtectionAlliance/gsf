@@ -329,13 +329,13 @@ namespace GSF.Communication
                         TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
                         CancellationToken cancellationToken = cancellationTokenSource.Token;
 
-                        Func<Task> cancelAsync = () =>
+                        Task cancelAsync()
                         {
                             if (!cancellationToken.IsCancellationRequested)
                                 cancellationTokenSource.Cancel();
 
                             return taskCompletionSource.Task;
-                        };
+                        }
 
                         // This ensures that no orphaned read loops can
                         // persist regardless of potential race conditions.
@@ -344,6 +344,7 @@ namespace GSF.Communication
                         cancelPreviousReadAsync?.Invoke();
 
                         // Start continuous read loop
+                        // ReSharper disable once MethodSupportsCancellation
                         Task.Run(async () =>
                         {
                             try
@@ -542,7 +543,7 @@ namespace GSF.Communication
 
                 Task readTask = m_cancelReadAsync?.Invoke();
 
-                if (!readTask.Wait(TimeSpan.FromSeconds(15.0D)))
+                if (!readTask?.Wait(TimeSpan.FromSeconds(15.0D)) ?? false)
                     throw new TimeoutException("Timeout waiting for read cancellation.");
             }
             catch (ObjectDisposedException)
