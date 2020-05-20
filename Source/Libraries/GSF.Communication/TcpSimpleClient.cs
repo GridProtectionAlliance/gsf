@@ -78,6 +78,9 @@ namespace GSF.Communication
         private Func<Task> m_cancelReadAsync;
         private bool m_disposed;
 
+        [ThreadStatic]
+        private bool m_onReadThread;
+
         #endregion
 
         #region [ Constructors ]
@@ -214,7 +217,9 @@ namespace GSF.Communication
                 }
 
                 Task readTask = m_cancelReadAsync?.Invoke();
-                readTask?.Wait(TimeSpan.FromSeconds(5.0D));
+
+                if (!m_onReadThread)
+                    readTask?.Wait(TimeSpan.FromSeconds(5.0D));
             }
             finally
             {
@@ -497,7 +502,7 @@ namespace GSF.Communication
                     OnReceiveDataException(ex);
 
                 // Terminate connection on read exceptions
-                OnConnectionTerminated();
+                TerminateConnectionOnReadThread();
             }
         }
 
@@ -543,8 +548,11 @@ namespace GSF.Communication
 
                 Task readTask = m_cancelReadAsync?.Invoke();
 
-                if (!readTask?.Wait(TimeSpan.FromSeconds(15.0D)) ?? false)
-                    throw new TimeoutException("Timeout waiting for read cancellation.");
+                if (!m_onReadThread)
+                {
+                    if (!readTask?.Wait(TimeSpan.FromSeconds(15.0D)) ?? false)
+                        throw new TimeoutException("Timeout waiting for read cancellation.");
+                }
             }
             catch (ObjectDisposedException)
             {
@@ -628,6 +636,18 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Raises the <see cref="ClientBase.ReceiveDataComplete"/> event.
+        /// </summary>
+        /// <param name="data">Data received from the client.</param>
+        /// <param name="size">Number of bytes received from the client.</param>
+        protected override void OnReceiveDataComplete(byte[] data, int size)
+        {
+            m_onReadThread = true;
+            try { base.OnReceiveDataComplete(data, size); }
+            finally { m_onReadThread = false; }
+        }
+
+        /// <summary>
         /// Raises the <see cref="ClientBase.ReceiveDataException"/> event for <see cref="SocketException"/>.
         /// </summary>
         /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
@@ -645,10 +665,26 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
         protected override void OnReceiveDataException(Exception ex)
         {
-            if (CurrentState != ClientState.Disconnected)
-                base.OnReceiveDataException(ex);
-            else
-                Logger.SwallowException(ex, $"{nameof(TcpSimpleClient)}: The socket was disconnected");
+            m_onReadThread = true;
+
+            try
+            {
+                if (CurrentState != ClientState.Disconnected)
+                    base.OnReceiveDataException(ex);
+                else
+                    Logger.SwallowException(ex, $"{nameof(TcpSimpleClient)}: The socket was disconnected");
+            }
+            finally
+            {
+                m_onReadThread = false;
+            }
+        }
+
+        private void TerminateConnectionOnReadThread()
+        {
+            m_onReadThread = true;
+            try { OnConnectionTerminated(); }
+            finally { m_onReadThread = false; }
         }
 
         #endregion
