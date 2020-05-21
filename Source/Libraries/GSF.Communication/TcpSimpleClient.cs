@@ -330,10 +330,11 @@ namespace GSF.Communication
                         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
                         TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
                         CancellationToken cancellationToken = cancellationTokenSource.Token;
+                        int isCancelled = 0;
 
                         Task cancelAsync()
                         {
-                            if (!cancellationToken.IsCancellationRequested)
+                            if (Interlocked.Exchange(ref isCancelled, 1) == 0)
                                 cancellationTokenSource.Cancel();
 
                             return taskCompletionSource.Task;
