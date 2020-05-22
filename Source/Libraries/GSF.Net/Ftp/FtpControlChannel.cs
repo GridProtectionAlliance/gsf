@@ -199,6 +199,7 @@ namespace GSF.Net.Ftp
         /// Releases the unmanaged resources used by the <see cref="FtpControlChannel"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_connection", Justification = "Member is properly disposed")]
         protected virtual void Dispose(bool disposing)
         {
             if (m_disposed)
