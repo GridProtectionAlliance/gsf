@@ -502,7 +502,12 @@ namespace AzureEventHubAdapters
                     }
                     else
                     {
-                        pushToEventHub().Wait();
+                        pushToEventHub().ContinueWith(task =>
+                        {
+                            if (task.Exception != null)
+                                OnProcessException(MessageLevel.Warning, task.Exception);
+                        }, TaskContinuationOptions.OnlyOnFaulted);
+
                         samples.Add(record);
                         size = 0;
                     }
@@ -511,7 +516,11 @@ namespace AzureEventHubAdapters
                 }
 
                 // Push any remaining events
-                pushToEventHub().Wait();
+                pushToEventHub().ContinueWith(task =>
+                {
+                    if (task.Exception != null)
+                        OnProcessException(MessageLevel.Warning, task.Exception);
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
             catch (Exception ex)
             {
