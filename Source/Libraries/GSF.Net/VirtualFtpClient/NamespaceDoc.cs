@@ -23,10 +23,10 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.Net.AbstractFtpClient
+namespace GSF.Net.VirtualFtpClient
 {
     /// <summary>
-    /// Contains classes used to create an abstract FTP-style client connection to either an FTP or TFTP server for uploading and downloading files.
+    /// Contains classes used to create a a virtual FTP-style client connection to either an FTP or TFTP server for uploading and downloading files.
     /// </summary>
     [CompilerGenerated]
     class NamespaceDoc

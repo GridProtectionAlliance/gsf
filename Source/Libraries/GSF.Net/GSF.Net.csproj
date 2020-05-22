@@ -55,11 +55,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AbstractFtpClient\FtpClient.cs" />
-    <Compile Include="AbstractFtpClient\FtpDirectory.cs" />
-    <Compile Include="AbstractFtpClient\FtpFile.cs" />
-    <Compile Include="AbstractFtpClient\FtpTransferResult.cs" />
-    <Compile Include="AbstractFtpClient\NamespaceDoc.cs" />
+    <Compile Include="VirtualFtpClient\FtpClient.cs" />
+    <Compile Include="VirtualFtpClient\FtpDirectory.cs" />
+    <Compile Include="VirtualFtpClient\FtpFile.cs" />
+    <Compile Include="VirtualFtpClient\FtpTransferResult.cs" />
+    <Compile Include="VirtualFtpClient\NamespaceDoc.cs" />
     <Compile Include="Ftp\FtpAsyncResult.cs" />
     <Compile Include="Ftp\FtpClient.cs">
       <SubType>Component</SubType>

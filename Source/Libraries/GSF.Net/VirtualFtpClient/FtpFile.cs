@@ -23,10 +23,10 @@
 
 using System;
 
-namespace GSF.Net.AbstractFtpClient
+namespace GSF.Net.VirtualFtpClient
 {
     /// <summary>
-    /// Represents an abstract FTP file for the specified target <see cref="FtpType"/>.
+    /// Represents a virtual FTP file for the specified target <see cref="FtpType"/>.
     /// </summary>
     public class FtpFile
     {

@@ -24,12 +24,12 @@
 using System;
 
 // ReSharper disable InconsistentNaming
-namespace GSF.Net.AbstractFtpClient
+namespace GSF.Net.VirtualFtpClient
 {
     #region [ Enumerations ]
     
     /// <summary>
-    /// Defines support FTP types for abstract FTP client.
+    /// Defines support FTP types for virtual FTP client.
     /// </summary>
     public enum FtpType
     {
@@ -64,7 +64,7 @@ namespace GSF.Net.AbstractFtpClient
     #endregion
 
     /// <summary>
-    /// Represents an abstract FTP session for the specified target <see cref="AbstractFtpClient.FtpType"/>.
+    /// Represents an virtual FTP session for the specified target <see cref="VirtualFtpClient.FtpType"/>.
     /// </summary>
     public class FtpClient : IDisposable
     {
@@ -142,7 +142,7 @@ namespace GSF.Net.AbstractFtpClient
         /// <summary>
         /// Creates a new <see cref="FtpClient"/>.
         /// </summary>
-        /// <param name="ftpType">Target <see cref="AbstractFtpClient.FtpType"/> for this <see cref="FtpClient"/></param>
+        /// <param name="ftpType">Target <see cref="VirtualFtpClient.FtpType"/> for this <see cref="FtpClient"/></param>
         /// <param name="caseSensitive">Set to true to be case sensitive with FTP file and directory names.</param>
         public FtpClient(FtpType ftpType, bool caseSensitive = false)
         {
@@ -155,7 +155,7 @@ namespace GSF.Net.AbstractFtpClient
         #region [ Properties ]
 
         /// <summary>
-        /// Gets <see cref="AbstractFtpClient.FtpType"/> for this <see cref="FtpClient"/>.
+        /// Gets <see cref="VirtualFtpClient.FtpType"/> for this <see cref="FtpClient"/>.
         /// </summary>
         public FtpType FtpType { get; }
 

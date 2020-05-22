@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FtpTransferResult.cs - Gbtc
+//  FtpDirectory.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,27 +21,33 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Net.AbstractFtpClient
+using System.Collections.Generic;
+
+namespace GSF.Net.VirtualFtpClient
 {
     /// <summary>
-    /// Represents an abstract FTP transfer result for the specified target <see cref="FtpType"/>.
+    /// Represents a virtual FTP directory for the specified target <see cref="FtpType"/>.
     /// </summary>
-    public class FtpTransferResult
+    public class FtpDirectory
     {
-        internal FtpTransferResult(string message, int responseCode)
-        {
-            Message = message;
-            ResponseCode = responseCode;
-        }
+        /// <summary>
+        /// Name of directory.
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
-        /// Gets any message associated with transfer.
+        /// Full path of directory.
         /// </summary>
-        public string Message { get; }
+        public string FullPath { get; }
 
         /// <summary>
-        /// Gets response code from transfer.
+        /// Gets the list of files in this <see cref="FtpDirectory"/>.
         /// </summary>
-        public int ResponseCode { get; }
+        IEnumerable<FtpFile> Files { get; }
+
+        /// <summary>
+        /// Gets the list of subdirectories in this <see cref="FtpDirectory"/>.
+        /// </summary>
+        IEnumerable<FtpDirectory> SubDirectories { get; }
     }
 }
