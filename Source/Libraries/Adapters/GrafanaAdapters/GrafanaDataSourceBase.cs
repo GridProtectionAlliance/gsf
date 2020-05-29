@@ -863,16 +863,14 @@ namespace GrafanaAdapters
                 {
                     IEnumerable<GSF.TimeSeries.Model.Device> groups = (new TableOperations<GSF.TimeSeries.Model.Device>(connection)).QueryRecordsWhere("AccessID = -99999");
 
-                    return groups.Select(item => {
-                        return new DeviceGroup()
-                        {
-                            ID = item.ID,
-                            Name = item.Name,
-                            Devices = ProcessDeviceGroup(item.ConnectionString).ToList()
+                    return groups.Select(item => new DeviceGroup
+                    {
+                        ID = item.ID,
+                        Name = item.Name,
+                        Devices = ProcessDeviceGroup(item.ConnectionString).ToList()
 
-                        };
                     });
-                    
+
                 }
             },
             cancellationToken);
@@ -881,12 +879,12 @@ namespace GrafanaAdapters
         private IEnumerable<int> ProcessDeviceGroup(string connectionString)
         {
             // Parse the connection string into a dictionary of key-value pairs for easy lookups
-            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs(';', '=', '{', '}');
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             if (!settings.ContainsKey("DeviceIDs"))
                 return new List<int>();
 
-            return settings["DeviceIDs"].Split(',').Select(item => { return ParseInt(item); });
+            return settings["DeviceIDs"].Split(',').Select(item => ParseInt(item));
         }
 
         /// <summary>
@@ -1012,7 +1010,7 @@ namespace GrafanaAdapters
                 catch
                 {
                     return null;
-                }                
+                }
             });
         }
 
@@ -1039,11 +1037,8 @@ namespace GrafanaAdapters
             foreach (string target in targetSet)
             {
                 // Find any series functions in target
-                Match[] matchedFunctions = TargetCache<Match[]>.GetOrAdd(target, () =>
-                {
-                    lock (s_seriesFunctions)
-                        return s_seriesFunctions.Matches(target).Cast<Match>().ToArray();
-                });
+                Match[] matchedFunctions = TargetCache<Match[]>.GetOrAdd(target, () => 
+                    s_seriesFunctions.Matches(target).Cast<Match>().ToArray());
 
                 if (matchedFunctions.Length > 0)
                 {
@@ -1097,7 +1092,7 @@ namespace GrafanaAdapters
                     if (key == MeasurementKey.Undefined)
                     {
                         Tuple<MeasurementKey, string> result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(Metadata));
-                        
+
                         key = result.Item1;
                         string pointTag = result.Item2;
 
@@ -1571,10 +1566,7 @@ namespace GrafanaAdapters
             if (string.IsNullOrWhiteSpace(selectExpression))
                 return false;
 
-            Match match;
-
-            lock (s_selectExpression)
-                match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
+            Match match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
 
             if (!match.Success)
                 return false;
@@ -1614,253 +1606,217 @@ namespace GrafanaAdapters
                 }
 
                 // Look for average function
-                lock (s_averageExpression)
-                    match = s_averageExpression.Match(expression);
+                match = s_averageExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Average, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for minimum function
-                lock (s_minimumExpression)
-                    match = s_minimumExpression.Match(expression);
+                match = s_minimumExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Minimum, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for maximum function
-                lock (s_maximumExpression)
-                    match = s_maximumExpression.Match(expression);
+                match = s_maximumExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Maximum, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for total function
-                lock (s_totalExpression)
-                    match = s_totalExpression.Match(expression);
+                match = s_totalExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Total, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for range function
-                lock (s_rangeExpression)
-                    match = s_rangeExpression.Match(expression);
+                match = s_rangeExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Range, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for count function
-                lock (s_countExpression)
-                    match = s_countExpression.Match(expression);
+                match = s_countExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Count, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for distinct function
-                lock (s_distinctExpression)
-                    match = s_distinctExpression.Match(expression);
+                match = s_distinctExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Distinct, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for absolute value function
-                lock (s_absoluteValueExpression)
-                    match = s_absoluteValueExpression.Match(expression);
+                match = s_absoluteValueExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.AbsoluteValue, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for add function
-                lock (s_addExpression)
-                    match = s_addExpression.Match(expression);
+                match = s_addExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Add, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for subtract function
-                lock (s_subtractExpression)
-                    match = s_subtractExpression.Match(expression);
+                match = s_subtractExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Subtract, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for multiply function
-                lock (s_multiplyExpression)
-                    match = s_multiplyExpression.Match(expression);
+                match = s_multiplyExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Multiply, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for divide function
-                lock (s_divideExpression)
-                    match = s_divideExpression.Match(expression);
+                match = s_divideExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Divide, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for round function
-                lock (s_roundExpression)
-                    match = s_roundExpression.Match(expression);
+                match = s_roundExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Round, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for floor function
-                lock (s_floorExpression)
-                    match = s_floorExpression.Match(expression);
+                match = s_floorExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Floor, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for ceiling function
-                lock (s_ceilingExpression)
-                    match = s_ceilingExpression.Match(expression);
+                match = s_ceilingExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Ceiling, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for truncate function
-                lock (s_truncateExpression)
-                    match = s_truncateExpression.Match(expression);
+                match = s_truncateExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Truncate, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for standard deviation function
-                lock (s_standardDeviationExpression)
-                    match = s_standardDeviationExpression.Match(expression);
+                match = s_standardDeviationExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.StandardDeviation, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for median function
-                lock (s_medianExpression)
-                    match = s_medianExpression.Match(expression);
+                match = s_medianExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Median, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for mode function
-                lock (s_modeExpression)
-                    match = s_modeExpression.Match(expression);
+                match = s_modeExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Mode, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for top function
-                lock (s_topExpression)
-                    match = s_topExpression.Match(expression);
+                match = s_topExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Top, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for bottom function
-                lock (s_bottomExpression)
-                    match = s_bottomExpression.Match(expression);
+                match = s_bottomExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Bottom, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for random function
-                lock (s_randomExpression)
-                    match = s_randomExpression.Match(expression);
+                match = s_randomExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Random, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for first function
-                lock (s_firstExpression)
-                    match = s_firstExpression.Match(expression);
+                match = s_firstExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.First, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for last function
-                lock (s_lastExpression)
-                    match = s_lastExpression.Match(expression);
+                match = s_lastExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Last, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for percentile function
-                lock (s_percentileExpression)
-                    match = s_percentileExpression.Match(expression);
+                match = s_percentileExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Percentile, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for difference function
-                lock (s_differenceExpression)
-                    match = s_differenceExpression.Match(expression);
+                match = s_differenceExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Difference, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for time difference function
-                lock (s_timeDifferenceExpression)
-                    match = s_timeDifferenceExpression.Match(expression);
+                match = s_timeDifferenceExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.TimeDifference, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for derivative function
-                lock (s_derivativeExpression)
-                    match = s_derivativeExpression.Match(expression);
+                match = s_derivativeExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Derivative, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for time integration function
-                lock (s_timeIntegrationExpression)
-                    match = s_timeIntegrationExpression.Match(expression);
+                match = s_timeIntegrationExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.TimeIntegration, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for interval function
-                lock (s_intervalExpression)
-                    match = s_intervalExpression.Match(expression);
+                match = s_intervalExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Interval, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for include range function
-                lock (s_includeRangeExpression)
-                    match = s_includeRangeExpression.Match(expression);
+                match = s_includeRangeExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.IncludeRange, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for exclude range function
-                lock (s_excludeRangeExpression)
-                    match = s_excludeRangeExpression.Match(expression);
+                match = s_excludeRangeExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.ExcludeRange, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for filter NaN function
-                lock (s_filterNaNExpression)
-                    match = s_filterNaNExpression.Match(expression);
+                match = s_filterNaNExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.FilterNaN, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for unwrap angle function
-                lock (s_unwrapAngleExpression)
-                    match = s_unwrapAngleExpression.Match(expression);
+                match = s_unwrapAngleExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.UnwrapAngle, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for wrap angle function
-                lock (s_wrapAngleExpression)
-                    match = s_wrapAngleExpression.Match(expression);
+                match = s_wrapAngleExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.WrapAngle, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for label function
-                lock (s_labelExpression)
-                    match = s_labelExpression.Match(expression);
+                match = s_labelExpression.Match(expression);
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Label, match.Result("${Expression}").Trim(), groupOperation);
@@ -1892,7 +1848,7 @@ namespace GrafanaAdapters
                     });
 
                     (result.Source as List<DataSourceValue>)?.Add(dataValue);
-                }                    
+                }
             }
 
             return results.Values;
@@ -1901,7 +1857,7 @@ namespace GrafanaAdapters
         // Execute series function over a set of points from each series at the same time-slice
         private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
         {
-            
+
             while (!scanner.DataReadComplete)
             {
                 foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
