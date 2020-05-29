@@ -2347,7 +2347,7 @@ namespace GSF
         /// </code>
         ///
         /// <para>
-        /// If <paramref name="parameters"/> can be safely cast to <see cref="IEnumerable{KeyValuePair{string, object}}"/>,
+        /// If <paramref name="parameters"/> can be safely cast to <code>IEnumerable{KeyValuePair{string, object}}</code>,
         /// this function will skip the reflection and call <see cref="Interpolate(string, IEnumerable{KeyValuePair{string, object}})"/>
         /// directly.
         /// </para>
@@ -2397,7 +2397,7 @@ namespace GSF
         /// </remarks>
         public static string Interpolate(this string format, IEnumerable<KeyValuePair<string, object>> parameters)
         {
-            Lazy<List<KeyValuePair<string, object>>> lazyList = new Lazy<List<KeyValuePair<string, object>>>(() => parameters.ToList());
+            Lazy<List<KeyValuePair<string, object>>> lazyList = new Lazy<List<KeyValuePair<string, object>>>(parameters.ToList);
 
             Lazy<Dictionary<string, int>> lazyLookup = new Lazy<Dictionary<string, int>>(() => lazyList.Value
                 .Select((parameter, Index) => new { parameter.Key, Index })
@@ -2419,6 +2419,9 @@ namespace GSF
                 string fmt = match.Groups["fmt"].Value;
                 return $"{{{index}:{fmt}}}";
             });
+
+            if (!lazyLookup.IsValueCreated)
+                return format;
 
             object[] parameterValues = lazyList.Value
                 .Select(parameter => parameter.Value)
