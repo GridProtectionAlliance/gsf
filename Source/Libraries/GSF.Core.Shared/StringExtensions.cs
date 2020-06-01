@@ -2403,7 +2403,7 @@ namespace GSF
                 .Select((parameter, Index) => new { parameter.Key, Index })
                 .ToDictionary(obj => obj.Key, obj => obj.Index));
 
-            string indexed = Regex.Replace(format, @"(?:{{)|(?:}})|{(?<arg>[^}:]+)(?::(?<fmt>[^}]+))?}", match =>
+            string indexed = Regex.Replace(format, @"{{|{(?<arg>[^}:]+)(?::(?<fmt>[^}]+))?}", match =>
             {
                 if (!match.Groups["arg"].Success)
                     return match.Value;
