@@ -25,6 +25,8 @@ using System.IO;
 using System.Web.Http;
 using GSF.Configuration;
 using GSF.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ModbusAdapters
 {
@@ -34,9 +36,9 @@ namespace ModbusAdapters
 
         [HttpPost]
         [Authorize(Roles = "Administrator,Editor")]
-        public void SaveDeviceConfiguration([FromUri(Name = "id")] string acronym, [FromBody] string configuration)
+        public void SaveDeviceConfiguration([FromUri(Name = "id")] string acronym, [FromBody] JToken configuration)
         {
-            File.WriteAllText(GetConfigurationCacheFileName(acronym), configuration);
+            File.WriteAllText(GetConfigurationCacheFileName(acronym), configuration.ToString(Formatting.Indented));
         }
 
         [HttpGet]
