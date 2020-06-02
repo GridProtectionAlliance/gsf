@@ -1103,6 +1103,7 @@
 
                     queryPromise.done(function(measurement) {
                         measurement.DeviceID = device.ID;
+                        measurement.HistorianID = viewModel.historianID();
                         measurement.PointTag = record.tagName();
                         measurement.SignalReference = record.signalReference();
                         measurement.Description = record.tagDescription();
@@ -1141,9 +1142,9 @@
             return $.ajax({
                 url: "/api/ModbusConfig/SaveDeviceConfiguration/" + acronym,
                 method: "POST",
-                contentType: "application/json; charset=UTF-8",
-                dataType: "json",
-                data: configuration
+                contentType: "application/json; charset=utf-8",
+                data: configuration,
+                dataType: "json"
             });
         }
 
@@ -1151,7 +1152,7 @@
             return $.ajax({
                 url: "/api/ModbusConfig/LoadDeviceConfiguration/" + acronym,
                 method: "GET",
-                contentType: "application/json; charset=UTF-8"
+                contentType: "application/json; charset=utf-8"
             });
         }
 
@@ -1159,7 +1160,7 @@
             return $.ajax({
                 url: "/api/ModbusConfig/GetConfigurationCacheFileName/" + acronym,
                 method: "GET",
-                contentType: "application/json; charset=UTF-8"
+                contentType: "application/json; charset=utf-8"
             });
         }
 
@@ -1167,7 +1168,7 @@
             return $.ajax({
                 url: "/api/ModbusConfig/GetConfigurationCachePath",
                 method: "GET",
-                contentType: "application/json; charset=UTF-8"
+                contentType: "application/json; charset=utf-8"
             });
         }
 
@@ -1180,6 +1181,7 @@
                 // Query existing device with specified acronym or create a new onw
                 dataHub.queryDevice(viewModel.deviceName()).done(function(device) {
                     device.Acronym = viewModel.deviceName();
+                    device.HistorianID = viewModel.historianID();
                     device.Name = device.Acronym + " (Modbus)";
                     device.ConnectionString = viewModel.adapterConnectionString();
                     device.Enabled = true;
@@ -1496,6 +1498,39 @@
                 loadDeviceConnection(deviceID);
                 deviceID = 0;
             }
+
+            const instanceNameSelect = $("#instanceName");
+
+            // Load available historian instance names, if not already loaded
+            if (instanceNameSelect.children("option").length === 0) {
+                dataHub.getInstanceNames().done(function (names) {
+                    instanceNameSelect.append($("<option>", { value: null, text: 'Do Not Archive' }));
+
+                    for (let i = 0; i < names.length; i++) {
+                        const value = names[i];
+                        instanceNameSelect.append($("<option>", { value: value, text: value }));
+                    }
+
+                    // Select last value
+                    var lastInstanceName = Cookies.get("instanceName");
+
+                    if (lastInstanceName === undefined) {
+                        // Assume name of PPA as default, if defined
+                        if (names.indexOf("PPA") !== -1)
+                            lastInstanceName = "PPA";
+                        // Otherwise select first available historian
+                        else if (names.length > 1)
+                            lastInstanceName = instanceNameSelect.eq(1).val();
+                    }
+
+                    if (!isEmpty(lastInstanceName))
+                        instanceNameSelect.val(lastInstanceName);
+
+                    setTimeout(function () {
+                        viewModel.instanceName(lastInstanceName);
+                    }, 200);
+                });
+            }
         });
 
         $(window).on("hubDisconnected", function(event) {
@@ -1708,7 +1743,16 @@
         });
     </script>
 }
-<h3>Modbus Configuration Map Builder <span class="label label-info" id="editDeviceName"></span> @if (!ViewBag.HideLogo) { <img class="page-logo pull-right" src="@ViewBag.ModbusLogo" /> }</h3>
+<h3>
+Modbus Configuration Map Builder
+<span class="form-inline pull-right clearfix" style="margin-top: -25px; padding-left: 15px;">
+    <small>
+        Instance:<br/><select class="form-control" id="instanceName" data-bind="value: instanceName; valueAllowUnset: true" style="border: 0; width: 140px"></select>
+    </small>
+</span>
+<span class="label label-info" id="editDeviceName"></span>
+@if (!ViewBag.HideLogo) { <img class="page-logo pull-right" src="@ViewBag.ModbusLogo" /> }
+</h3>
 @* Connection Settings and Status Panel *@
 <div class="panel panel-primary">
     <div class="panel-heading clearfix">

@@ -36,8 +36,8 @@ function MapViewModel() {
     self.sequences = ko.observableArray();
     self.totalReadsAndWrites = ko.observable(0);
     self.unitID = ko.observable(255).extend({ required: true }).extend({ number: true }).extend({ min: 0 }).extend({ max: 255 });
-    self.pollingRate = ko.observable(2000).extend({ required: true }).extend({ number: true }).extend({ min: 100 });
-    self.interSequenceGroupPollDelay = ko.observable(250).extend({ required: true }).extend({ number: true }).extend({ min: 100 });
+    self.pollingRate = ko.observable(2000).extend({ required: true }).extend({ number: true }).extend({ min: 1 });
+    self.interSequenceGroupPollDelay = ko.observable(250).extend({ required: true }).extend({ number: true }).extend({ min: 1 });
     self.ipPort = ko.observable(502).extend({ required: true }).extend({ number: true }).extend({ min: 1 }).extend({ max: 65535 });
     self.hostName = ko.observable("localhost").extend({ required: true });
     self.interface = ko.observable("0.0.0.0").extend({ required: true }).extend({ pattern: { message: 'Must be a valid IP address', params: /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/ } });
@@ -53,6 +53,8 @@ function MapViewModel() {
     self._transport = ko.observable("TCP");
     self._connectionString = ko.observable("");
     self._deviceName = ko.observable("");
+    self._instanceName = ko.observable("");
+    self._historianID = ko.observable(-1);
 
     // Properties
     self.isDirty = ko.pureComputed({
@@ -151,12 +153,54 @@ function MapViewModel() {
                 params: "^[A-Z0-9\\-!_\\.@#\\$]+$"
             }
         })}, {
-        adapterConnectionString: self.adapterConnectionString.extend({
-            required: true
+            adapterConnectionString: self.adapterConnectionString.extend({
+                required: true
         })}, {
-        sequences: self.sequences
+            sequences: self.sequences
         }
     );
+
+    self.historianID = ko.pureComputed({
+        read: function () {
+            const historianID = self._historianID();
+
+            if (historianID === -1)
+                return null;
+
+            return historianID;
+        },
+        owner: self
+    });
+
+    self.instanceName = ko.pureComputed({
+        read: self._instanceName,
+        write: function (value) {
+            if (value === self._instanceName())
+                return;
+
+            if (value) {
+                self._instanceName(value);
+                Cookies.set("instanceName", value.toString(), { expires: 365 });
+            } else {
+                self._instanceName("");
+            }
+
+            if (hubIsConnected) {
+                if (isEmpty(self._instanceName())) {
+                    self._historianID(-1);
+                }
+                else {
+                    dataHub.queryHistorian(self.instanceName()).done(function (historian) {
+                        if (historian)
+                            self._historianID(historian.ID);
+                        else
+                            self._historianID(-1);
+                    });
+                }
+            }
+        },
+        owner: self
+    });
 
     // Delegates
     self.reorderSequencePanels = function() { };
