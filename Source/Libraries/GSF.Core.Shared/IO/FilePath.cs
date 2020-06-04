@@ -129,20 +129,58 @@ namespace GSF.IO
         /// <returns>An enumerable collection of the full names (including paths) for the directories in the directory specified by <paramref name="path"/> and that match the specified search pattern and option.</returns>
         public static IEnumerable<string> EnumerateDirectories(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
         {
+            IEnumerable<string> enumerable;
+            IEnumerator<string> enumerator;
+
             try
             {
-                return (searchOption == SearchOption.TopDirectoryOnly)
-                    ? Directory.EnumerateDirectories(path, searchPattern, SearchOption.TopDirectoryOnly)
-                    : Directory.EnumerateDirectories(path, searchPattern, SearchOption.TopDirectoryOnly)
-                        .Concat(Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
-                            .SelectMany(directory => EnumerateDirectories(directory, searchPattern, searchOption, exceptionHandler)));
+                IEnumerable<string> topDirectory = Directory.EnumerateDirectories(path, searchPattern, SearchOption.TopDirectoryOnly);
+                IEnumerable<string> recursive = Enumerable.Empty<string>();
+
+                if (searchOption == SearchOption.AllDirectories)
+                {
+                    recursive = Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
+                        .SelectMany(directory => EnumerateDirectories(directory, searchPattern, searchOption, exceptionHandler));
+                }
+
+                enumerable = topDirectory.Concat(recursive);
+                enumerator = enumerable.GetEnumerator();
             }
             catch (Exception ex)
             {
                 exceptionHandler?.Invoke(ex);
+                yield break;
             }
 
-            return Enumerable.Empty<string>();
+            // yield return cannot be used in a try block with a catch clause,
+            // so in order to handle errors in enumerator.MoveNext() and enumerator.Current,
+            // the enumerator must be accessed directly rather than using foreach
+            using (enumerable as IDisposable)
+            using (enumerator)
+            {
+                while (true)
+                {
+                    string current;
+
+                    try
+                    {
+                        if (!enumerator.MoveNext())
+                            break;
+
+                        current = enumerator.Current;
+                    }
+                    catch (Exception ex)
+                    {
+                        exceptionHandler?.Invoke(ex);
+
+                        // To avoid an infinite exception loop,
+                        // break out at the first sign of trouble
+                        break;
+                    }
+
+                    yield return current;
+                }
+            }
         }
 
         /// <summary>
@@ -168,20 +206,58 @@ namespace GSF.IO
         /// <returns>An enumerable collection of the full names (including paths) for the files in the directory specified by <paramref name="path"/> and that match the specified search pattern and option.</returns>
         public static IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
         {
+            IEnumerable<string> enumerable = Enumerable.Empty<string>();
+            IEnumerator<string> enumerator;
+
             try
             {
-                return (searchOption == SearchOption.TopDirectoryOnly)
-                    ? Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
-                    : Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
-                        .Concat(Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
-                            .SelectMany(directory => EnumerateFiles(directory, searchPattern, searchOption, exceptionHandler)));
+                IEnumerable<string> topDirectory = Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly);
+                IEnumerable<string> recursive = Enumerable.Empty<string>();
+
+                if (searchOption == SearchOption.AllDirectories)
+                {
+                    recursive = Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
+                        .SelectMany(directory => EnumerateFiles(directory, searchPattern, searchOption, exceptionHandler));
+                }
+
+                enumerable = topDirectory.Concat(recursive);
+                enumerator = enumerable.GetEnumerator();
             }
             catch (Exception ex)
             {
                 exceptionHandler?.Invoke(ex);
+                yield break;
             }
 
-            return Enumerable.Empty<string>();
+            // yield return cannot be used in a try block with a catch clause,
+            // so in order to handle errors in enumerator.MoveNext() and enumerator.Current,
+            // the enumerator must be accessed directly rather than using foreach
+            using (enumerable as IDisposable)
+            using (enumerator)
+            {
+                while (true)
+                {
+                    string current;
+
+                    try
+                    {
+                        if (!enumerator.MoveNext())
+                            break;
+
+                        current = enumerator.Current;
+                    }
+                    catch (Exception ex)
+                    {
+                        exceptionHandler?.Invoke(ex);
+
+                        // To avoid an infinite exception loop,
+                        // break out at the first sign of trouble
+                        break;
+                    }
+
+                    yield return current;
+                }
+            }
         }
 
         /// <summary>
