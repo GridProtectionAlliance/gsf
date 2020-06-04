@@ -206,7 +206,7 @@ namespace GSF.IO
         /// <returns>An enumerable collection of the full names (including paths) for the files in the directory specified by <paramref name="path"/> and that match the specified search pattern and option.</returns>
         public static IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
         {
-            IEnumerable<string> enumerable = Enumerable.Empty<string>();
+            IEnumerable<string> enumerable;
             IEnumerator<string> enumerator;
 
             try
