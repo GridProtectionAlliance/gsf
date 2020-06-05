@@ -148,7 +148,7 @@ namespace GSF.IO
             }
             catch (Exception ex)
             {
-                exceptionHandler?.Invoke(ex);
+                exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating directories in \"{path}\": {ex.Message}", ex));
                 yield break;
             }
 
@@ -171,7 +171,7 @@ namespace GSF.IO
                     }
                     catch (Exception ex)
                     {
-                        exceptionHandler?.Invoke(ex);
+                        exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating directories in \"{path}\": {ex.Message}", ex));
 
                         // To avoid an infinite exception loop,
                         // break out at the first sign of trouble
@@ -225,7 +225,7 @@ namespace GSF.IO
             }
             catch (Exception ex)
             {
-                exceptionHandler?.Invoke(ex);
+                exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating files in \"{path}\": {ex.Message}", ex));
                 yield break;
             }
 
@@ -248,7 +248,7 @@ namespace GSF.IO
                     }
                     catch (Exception ex)
                     {
-                        exceptionHandler?.Invoke(ex);
+                        exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating files in \"{path}\": {ex.Message}", ex));
 
                         // To avoid an infinite exception loop,
                         // break out at the first sign of trouble
