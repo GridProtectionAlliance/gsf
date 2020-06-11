@@ -479,7 +479,7 @@ namespace GSF.Communication
                 status.Append(m_currentState);
                 status.AppendLine();
                 status.Append("           Connection time: ");
-                status.Append(ConnectionTime);
+                status.Append(ConnectionTime.ToString(3));
                 status.AppendLine();
                 status.Append("            Receive buffer: ");
                 status.Append(m_receiveBufferSize.ToString());
