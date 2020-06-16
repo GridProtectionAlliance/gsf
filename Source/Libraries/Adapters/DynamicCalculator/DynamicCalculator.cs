@@ -349,6 +349,11 @@ namespace DynamicCalculator
         /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
         /// </summary>
         protected virtual bool ExpectsOutputMeasurement => true;
+
+        /// <summary>
+        /// Gets defined variable collection with current values.
+        /// </summary>
+        protected IDictionary<string, object> Variables => m_expressionContext.Variables;
         
         /// <summary>
         /// Returns the detailed status of the data input source.
@@ -433,7 +438,6 @@ namespace DynamicCalculator
             const string ErrorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
 
             Dictionary<string, string> settings;
-            string setting;
 
             settings = Settings;
             base.Initialize();
@@ -442,20 +446,18 @@ namespace DynamicCalculator
                 throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements?.Length ?? 0}");
 
             // Load required parameters
-
-            if (!settings.TryGetValue("variableList", out setting))
+            if (!settings.TryGetValue("variableList", out _))
                 throw new ArgumentException(string.Format(ErrorMessage, "variableList"));
 
             VariableList = settings["variableList"];
 
-            if (!settings.TryGetValue("expressionText", out setting))
+            if (!settings.TryGetValue("expressionText", out _))
                 throw new ArgumentException(string.Format(ErrorMessage, "expressionText"));
 
             ExpressionText = settings["expressionText"];
 
             // Load optional parameters
-
-            if (settings.TryGetValue("imports", out setting))
+            if (settings.TryGetValue("imports", out string setting))
                 Imports = setting;
             else
                 Imports = DefaultImports;
@@ -582,6 +584,8 @@ namespace DynamicCalculator
 
             // Handle special constants
             m_expressionContext.Variables["TIME"] = RealTime.Value;
+            m_expressionContext.Variables["UTCTIME"] = DateTime.UtcNow;
+            m_expressionContext.Variables["LOCALTIME"] = DateTime.Now;
 
             // Compile the expression if it has not been compiled already
             if ((object)m_expression == null)
@@ -643,6 +647,12 @@ namespace DynamicCalculator
 
             if (alias.Equals("TIME", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Variable name \"TIME\" is reserved.");
+
+            if (alias.Equals("UTCTIME", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Variable name \"UTCTIME\" is reserved.");
+            
+            if (alias.Equals("LOCALTIME", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Variable name \"LOCALTIME\" is reserved.");
 
             m_variableNames.Add(alias);
             m_keyMapping.Add(key, alias);
