@@ -146,11 +146,7 @@ namespace DynamicCalculator
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the body of the e-mail message.")]
-        public string Body
-        {
-            get => m_mailClient.Body;
-            set => m_mailClient.Body = value;
-        }
+        public string Body { get; set; }
 
         /// <summary>
         /// Gets or sets the name or IP address of the SMTP server to be used for sending the message.
@@ -391,6 +387,7 @@ namespace DynamicCalculator
             if (value.ToString().ParseBoolean())
             {
                 m_expressionSuccesses++;
+                m_mailClient.Body = Body.Interpolate(Variables);
                 m_mailClient.Send();
                 m_totalEmailOperations++;
             }
