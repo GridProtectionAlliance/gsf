@@ -2363,8 +2363,8 @@ namespace GSF.Data
 
             // If the value is an instance of the given type,
             // no type conversion is necessary
-            if (value is T)
-                return (T)value;
+            if (value is T typeValue)
+                return typeValue;
 
             Type type = typeof(T);
 
@@ -2462,8 +2462,8 @@ namespace GSF.Data
             if (value == null || value == DBNull.Value)
                 return defaultValue ?? Guid.Empty;
 
-            if (value is Guid)
-                return (Guid)value;
+            if (value is Guid guid)
+                return guid;
 
             return Guid.Parse(value.ToString());
         }
