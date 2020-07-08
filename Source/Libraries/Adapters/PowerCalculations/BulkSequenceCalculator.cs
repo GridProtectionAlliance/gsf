@@ -98,6 +98,22 @@ namespace PowerCalculations
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets flag that determines if the last few values should be monitored.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if the last few values should be monitored.")]
+        [DefaultValue(true)]
+        public bool TrackRecentValues { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the sample size of the data to be monitored.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the sample size of the data to be monitored.")]
+        [DefaultValue(5)]
+        public int SampleSize { get; set; } = 5;
+
+        /// <summary>
         /// Gets or sets flag that determines if positive sequence calculations should be included.
         /// </summary>
         [ConnectionStringParameter]
