@@ -79,6 +79,7 @@ namespace PowerCalculations
         // Fields
         private readonly List<AdapterDetail> m_adapterDetails;
         private ReadOnlyCollection<string> m_perAdapterOutputNames;
+        private bool m_forceCalcSignalType;
 
         #endregion
 
@@ -247,12 +248,39 @@ namespace PowerCalculations
         }
 
         /// <summary>
+        /// Gets or sets default signal type to use for all output measurements when <see cref="SignalTypes"/> array is not defined.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)] // Hiding parameter from manager - value not used by this bulk calculator (see SignalTypes override)
+        public override SignalType SignalType { get => base.SignalType; set => base.SignalType = value; }
+
+        /// <summary>
+        /// Gets or sets flag that determines if all output signal types should be forced to CALC.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("STTP usage flag that determines if all output signal types should be forced to CALC. This is required if you are wanting to create local sequence calculations using data received from GEP or STTP - otherwise output values associated with source device with targeted signal types will appear as foreign measurements, i.e., non-existent on publisher, and be deleted during metadata synchronization.")]
+        [DefaultValue(false)]
+        public bool ForceCalcSignalType
+        {
+            get => m_forceCalcSignalType;
+            set
+            {
+                m_forceCalcSignalType = value;
+
+                if (m_forceCalcSignalType)
+                    SignalType = SignalType.CALC;
+            }
+        }
+
+        /// <summary>
         /// Gets signal type for each output measurement, used when each output needs to be a different type.
         /// </summary>
         public override SignalType[] SignalTypes
         {
             get
             {
+                if (ForceCalcSignalType)
+                    return null;
+
                 if (CurrentAdapterIndex > -1 && CurrentAdapterIndex < m_adapterDetails.Count)
                 {
                     switch (m_adapterDetails[CurrentAdapterIndex].PhasorType)
