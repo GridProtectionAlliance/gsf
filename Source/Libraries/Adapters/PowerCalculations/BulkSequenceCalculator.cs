@@ -290,46 +290,42 @@ namespace PowerCalculations
         /// <summary>
         /// Gets signal type for each output measurement, used when each output needs to be a different type.
         /// </summary>
-        public override SignalType[] SignalTypes
-        {
-            get
-            {
-                if (ForceCalcSignalType)
-                    return null;
+        public override SignalType[] SignalTypes => ForceCalcSignalType ? null : GetSignalTypes();
 
-                if (CurrentAdapterIndex > -1 && CurrentAdapterIndex < m_adapterDetails.Count)
+        private SignalType[] GetSignalTypes()
+        {
+            if (CurrentAdapterIndex <= -1 || CurrentAdapterIndex >= m_adapterDetails.Count)
+                return null;
+
+            switch (m_adapterDetails[CurrentAdapterIndex].PhasorType)
+            {
+                case PhasorType.Voltage:
                 {
-                    switch (m_adapterDetails[CurrentAdapterIndex].PhasorType)
+                    switch (PerAdapterOutputNames.Count)
                     {
-                        case PhasorType.Voltage:
-                            {
-                                switch (PerAdapterOutputNames.Count)
-                                {
-                                    case 6:
-                                        return new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA };
-                                    case 4:
-                                        return new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA };
-                                    default:
-                                        return new[] { SignalType.VPHM, SignalType.VPHA };
-                                }
-                            }
-                        case PhasorType.Current:
-                            {
-                                switch (PerAdapterOutputNames.Count)
-                                {
-                                    case 6:
-                                        return new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA };
-                                    case 4:
-                                        return new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA };
-                                    default:
-                                        return new[] { SignalType.IPHM, SignalType.IPHA };
-                                }
-                            }
+                        case 6:
+                            return new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA };
+                        case 4:
+                            return new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA };
+                        default:
+                            return new[] { SignalType.VPHM, SignalType.VPHA };
                     }
                 }
-
-                return null;
+                case PhasorType.Current:
+                {
+                    switch (PerAdapterOutputNames.Count)
+                    {
+                        case 6:
+                            return new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA };
+                        case 4:
+                            return new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA };
+                        default:
+                            return new[] { SignalType.IPHM, SignalType.IPHA };
+                    }
+                }
             }
+
+            return null;
         }
 
         /// <summary>
@@ -359,7 +355,7 @@ namespace PowerCalculations
                     return base.PointTagTemplate;
 
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
-                SignalType signalType = SignalTypes[CurrentOutputIndex];
+                SignalType signalType = GetSignalTypes()?[CurrentOutputIndex] ?? SignalType;
                 int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex;
 
                 return CommonPhasorServices.CreatePointTag(adapterDetail.CompanyAcronym, adapterDetail.DeviceAcronym, null, signalType.ToString(), adapterDetail.PhasorLabel, signalIndex, OutputPhases[CurrentOutputIndex], adapterDetail.BaseKV);
@@ -383,7 +379,7 @@ namespace PowerCalculations
                 int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex;
                 SignalKind signalKind;
 
-                switch (SignalTypes[CurrentOutputIndex])
+                switch (GetSignalTypes()?[CurrentOutputIndex] ?? SignalType)
                 {
                     case SignalType.VPHA:
                     case SignalType.IPHA:
@@ -433,7 +429,7 @@ namespace PowerCalculations
                         break;
                 }
 
-                switch (SignalTypes[CurrentOutputIndex])
+                switch (GetSignalTypes()?[CurrentOutputIndex] ?? SignalType)
                 {
                     case SignalType.VPHA:
                     case SignalType.IPHA:
