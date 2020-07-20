@@ -510,71 +510,73 @@ namespace GSF.Web
             }
         }
 
-        /// <summary>
-        /// Validates the assembly bindings for the specified application <paramref name="configFileName"/>.
-        /// </summary>
-        /// <param name="configFileName">Application configuration file to validate for needed assembly bindings.</param>
-        /// <param name="assemblyBindingsSource">Stream to assembly bindings to add; defaults to embedded "GSF.Web.AssemblyBindings.xml" resource.</param>
-        /// <returns><c>true</c> if assembly bindings were updated; otherwise, <c>false</c>.</returns>
-        /// <remarks>Any stream passed in via <paramref name="assemblyBindingsSource"/> will be closed if function succeeds.</remarks>
-        public static bool ValidateAssemblyBindings(string configFileName, Stream assemblyBindingsSource = null)
-        {
-            if (!File.Exists(configFileName))
-                return false;
+        // Code replaced by full dependent assembly scan withing ValidateAssemblyBindings tool
 
-            XmlDocument configFile = new XmlDocument();
-            configFile.Load(configFileName);
+        ///// <summary>
+        ///// Validates the assembly bindings for the specified application <paramref name="configFileName"/>.
+        ///// </summary>
+        ///// <param name="configFileName">Application configuration file to validate for needed assembly bindings.</param>
+        ///// <param name="assemblyBindingsSource">Stream to assembly bindings to add; defaults to embedded "GSF.Web.AssemblyBindings.xml" resource.</param>
+        ///// <returns><c>true</c> if assembly bindings were updated; otherwise, <c>false</c>.</returns>
+        ///// <remarks>Any stream passed in via <paramref name="assemblyBindingsSource"/> will be closed if function succeeds.</remarks>
+        //public static bool ValidateAssemblyBindings(string configFileName, Stream assemblyBindingsSource = null)
+        //{
+        //    if (!File.Exists(configFileName))
+        //        return false;
 
-            XmlNode runTime = configFile.SelectSingleNode("configuration/runtime");
+        //    XmlDocument configFile = new XmlDocument();
+        //    configFile.Load(configFileName);
 
-            if ((object)runTime == null)
-            {
-                XmlNode config = configFile.SelectSingleNode("configuration");
+        //    XmlNode runTime = configFile.SelectSingleNode("configuration/runtime");
 
-                // This is expected to already exist...
-                if ((object)config == null)
-                    return false;
+        //    if ((object)runTime == null)
+        //    {
+        //        XmlNode config = configFile.SelectSingleNode("configuration");
 
-                runTime = configFile.CreateElement("runtime");
-                config.AppendChild(runTime);
+        //        // This is expected to already exist...
+        //        if ((object)config == null)
+        //            return false;
 
-                XmlElement gcServer = configFile.CreateElement("gcServer");
-                XmlAttribute enabled = configFile.CreateAttribute("enabled");
-                enabled.Value = "true";
+        //        runTime = configFile.CreateElement("runtime");
+        //        config.AppendChild(runTime);
 
-                gcServer.Attributes.Append(enabled);
-                runTime.AppendChild(gcServer);
+        //        XmlElement gcServer = configFile.CreateElement("gcServer");
+        //        XmlAttribute enabled = configFile.CreateAttribute("enabled");
+        //        enabled.Value = "true";
 
-                XmlElement gcConcurrent = configFile.CreateElement("gcConcurrent");
-                enabled = configFile.CreateAttribute("enabled");
-                enabled.Value = "true";
+        //        gcServer.Attributes.Append(enabled);
+        //        runTime.AppendChild(gcServer);
 
-                gcConcurrent.Attributes.Append(enabled);
-                runTime.AppendChild(gcConcurrent);
-            }
+        //        XmlElement gcConcurrent = configFile.CreateElement("gcConcurrent");
+        //        enabled = configFile.CreateAttribute("enabled");
+        //        enabled.Value = "true";
 
-            using (Stream stream = assemblyBindingsSource ?? OpenEmbeddedResourceStream("GSF.Web.AssemblyBindings.xml"))
-            {
-                XmlNamespaceManager nsmgr = new XmlNamespaceManager(configFile.NameTable);
-                nsmgr.AddNamespace("s", "urn:schemas-microsoft-com:asm.v1");
+        //        gcConcurrent.Attributes.Append(enabled);
+        //        runTime.AppendChild(gcConcurrent);
+        //    }
 
-                XmlDocument assemblyBindingsXml = new XmlDocument();
-                assemblyBindingsXml.Load(stream);
+        //    using (Stream stream = assemblyBindingsSource ?? OpenEmbeddedResourceStream("GSF.Web.AssemblyBindings.xml"))
+        //    {
+        //        XmlNamespaceManager nsmgr = new XmlNamespaceManager(configFile.NameTable);
+        //        nsmgr.AddNamespace("s", "urn:schemas-microsoft-com:asm.v1");
 
-                XmlDocumentFragment assemblyBindings = configFile.CreateDocumentFragment();
-                assemblyBindings.InnerXml = assemblyBindingsXml.InnerXml;
+        //        XmlDocument assemblyBindingsXml = new XmlDocument();
+        //        assemblyBindingsXml.Load(stream);
 
-                XmlNode oldAssemblyBindings = configFile.SelectSingleNode("configuration/runtime/s:assemblyBinding", nsmgr);
+        //        XmlDocumentFragment assemblyBindings = configFile.CreateDocumentFragment();
+        //        assemblyBindings.InnerXml = assemblyBindingsXml.InnerXml;
 
-                if ((object)oldAssemblyBindings != null)
-                    runTime.ReplaceChild(assemblyBindings, oldAssemblyBindings);
-                else
-                    runTime.AppendChild(assemblyBindings);
-            }
+        //        XmlNode oldAssemblyBindings = configFile.SelectSingleNode("configuration/runtime/s:assemblyBinding", nsmgr);
 
-            configFile.Save(configFileName);
+        //        if ((object)oldAssemblyBindings != null)
+        //            runTime.ReplaceChild(assemblyBindings, oldAssemblyBindings);
+        //        else
+        //            runTime.AppendChild(assemblyBindings);
+        //    }
 
-            return true;
-        }
+        //    configFile.Save(configFileName);
+
+        //    return true;
+        //}
     }
 }

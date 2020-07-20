@@ -330,9 +330,6 @@
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.time.min.js" />
     <EmbeddedResource Include="Shared\Scripts\flot\jquery.flot.axislabels.min.js" />
     <EmbeddedResource Include="Shared\Images\placeholder-64x64.png" />
-    <EmbeddedResource Include="AssemblyBindings.xml">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Model\Scripts\bootstrap-datepicker.js" />
     <EmbeddedResource Include="Model\Scripts\bootstrap-toolkit.js" />
     <EmbeddedResource Include="Model\Scripts\pagedViewModel.js" />
