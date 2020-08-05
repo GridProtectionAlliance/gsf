@@ -160,7 +160,7 @@ namespace PhasorWebUI
 
         private int DefaultCalculationFramesPerSecond => s_defaultCalculationFramesPerSecond != default(int) ? s_defaultCalculationFramesPerSecond : s_defaultCalculationFramesPerSecond = AppModelGlobal.DefaultCalculationFramesPerSecond;
 
-        private const string SystemFrequencyDeviceName = "SYSTEM!FREQ";
+        private const string SystemFrequencyDeviceName = "{0}SYSTEM!FREQ";
 
         #endregion
 
@@ -717,7 +717,7 @@ namespace PhasorWebUI
                     Binder = Serialization.LegacyBinder
                 };
 
-                // Try deseralizing input as connection settings
+                // Try deserializing input as connection settings
                 ConnectionSettings connectionSettings;
 
                 using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
@@ -766,7 +766,7 @@ namespace PhasorWebUI
                     return RequestConfigurationFrame(connectionString);
                 }
 
-                // Try deseralizing input as a configuration frame
+                // Try deserializing input as a configuration frame
                 IConfigurationFrame configurationFrame;
 
                 using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
@@ -879,19 +879,21 @@ namespace PhasorWebUI
             });
         }
 
-        public void ValidateCalculatorConfigurations(int? historianID)
+        public void ValidateCalculatorConfigurations(int? historianID, string systemName)
         {
             const int Avg = 0, Max = 1, Min = 2;
-            PowerCalculationConfigurationValidation.ValidateDatabaseDefinitions();        
+            PowerCalculationConfigurationValidation.ValidateDatabaseDefinitions();
+
             TableOperations<Measurement> measurementTable = DataContext.Table<Measurement>();
+            string frequencyDeviceName = string.Format(SystemFrequencyDeviceName, systemName);
 
             // Look for existing frequency average
-            if (measurementTable.QueryRecordCountWhere($"SignalReference = '{SignalReference.ToString(SystemFrequencyDeviceName, SignalKind.Frequency)}'") > 0)
+            if (measurementTable.QueryRecordCountWhere($"SignalReference = '{SignalReference.ToString(frequencyDeviceName, SignalKind.Frequency)}'") > 0)
                 return;
 
             TableOperations<CustomActionAdapter> customActionAdapterTable = DataContext.Table<CustomActionAdapter>();
             CustomActionAdapter avgFreqAdapter = customActionAdapterTable.QueryRecordWhere("TypeName = {0}", typeof(PowerCalculations.AverageFrequency).FullName) ?? NewCustomActionAdapter();
-            Measurement[] measurements = GetCalculatedFrequencyMeasurements(historianID);
+            Measurement[] measurements = GetCalculatedFrequencyMeasurements(historianID, frequencyDeviceName);
 
             double lagTime = DefaultCalculationLagTime;
 
@@ -904,22 +906,22 @@ namespace PhasorWebUI
             avgFreqAdapter.AdapterName = "PHASOR!AVERAGEFREQ";
             avgFreqAdapter.AssemblyName = "PowerCalculations.dll";
             avgFreqAdapter.TypeName = typeof(PowerCalculations.AverageFrequency).FullName;
-            avgFreqAdapter.ConnectionString = $"InputMeasurementKeys={{FILTER ActiveMeasurements WHERE SignalType = 'FREQ' AND SignalReference NOT LIKE '{SystemFrequencyDeviceName}%'}}; OutputMeasurements={{{measurements[Avg].SignalID};{measurements[Max].SignalID};{measurements[Min].SignalID}}}; LagTime={lagTime}; LeadTime={DefaultCalculationLeadTime}; FramesPerSecond={DefaultCalculationFramesPerSecond}";
+            avgFreqAdapter.ConnectionString = $"InputMeasurementKeys={{FILTER ActiveMeasurements WHERE SignalType = 'FREQ' AND SignalReference NOT LIKE '{frequencyDeviceName}%'}}; OutputMeasurements={{{measurements[Avg].SignalID};{measurements[Max].SignalID};{measurements[Min].SignalID}}}; LagTime={lagTime}; LeadTime={DefaultCalculationLeadTime}; FramesPerSecond={DefaultCalculationFramesPerSecond}";
             avgFreqAdapter.Enabled = true;
 
             customActionAdapterTable.AddNewOrUpdateRecord(avgFreqAdapter);            
         }
 
-        private Measurement[] GetCalculatedFrequencyMeasurements(int? historianID)
+        private Measurement[] GetCalculatedFrequencyMeasurements(int? historianID, string frequencyDeviceName)
         {
             SignalType freqSignalType = DataContext.Table<SignalType>().QueryRecordWhere("Acronym = 'FREQ'");
 
             if (freqSignalType.ID == 0)
                 throw new InvalidOperationException("Failed to find 'FREQ' signal type");
 
-            Device freqDevice = QueryDevice(SystemFrequencyDeviceName);
+            Device freqDevice = QueryDevice(frequencyDeviceName);
 
-            freqDevice.Acronym = SystemFrequencyDeviceName;
+            freqDevice.Acronym = frequencyDeviceName;
             freqDevice.Name = "Calculated System Frequency Statistics Virtual Device";
             freqDevice.IsConcentrator = false;
             freqDevice.HistorianID = historianID;
@@ -928,19 +930,19 @@ namespace PhasorWebUI
 
             AddNewOrUpdateDevice(freqDevice);
             
-            freqDevice = QueryDevice(SystemFrequencyDeviceName);
+            freqDevice = QueryDevice(frequencyDeviceName);
 
             // Signal references within a device are used to map frequencies back into a frame of data - since frames are only
             // designated to have a single frequency measurement, the max and min frequencies are marked as analog values
-            string avgFreqSignalRef = SignalReference.ToString(SystemFrequencyDeviceName, SignalKind.Frequency);
-            string maxFreqSignalRef = SignalReference.ToString(SystemFrequencyDeviceName, SignalKind.Analog, 1);
-            string minFreqSignalRef = SignalReference.ToString(SystemFrequencyDeviceName, SignalKind.Analog, 2);
+            string avgFreqSignalRef = SignalReference.ToString(frequencyDeviceName, SignalKind.Frequency);
+            string maxFreqSignalRef = SignalReference.ToString(frequencyDeviceName, SignalKind.Analog, 1);
+            string minFreqSignalRef = SignalReference.ToString(frequencyDeviceName, SignalKind.Analog, 2);
 
             Measurement avgFreqMeasurement = QueryMeasurement(avgFreqSignalRef);
             Measurement maxFreqMeasurement = QueryMeasurement(maxFreqSignalRef);
             Measurement minFreqMeasurement = QueryMeasurement(minFreqSignalRef);
 
-            avgFreqMeasurement.PointTag = $"{SystemFrequencyDeviceName}-AVG-FQ";
+            avgFreqMeasurement.PointTag = $"{frequencyDeviceName}-AVG-FQ";
             avgFreqMeasurement.SignalReference = avgFreqSignalRef;
             avgFreqMeasurement.SignalTypeID = freqSignalType.ID;
             avgFreqMeasurement.DeviceID = freqDevice.ID;
@@ -949,7 +951,7 @@ namespace PhasorWebUI
             avgFreqMeasurement.Internal = true;
             avgFreqMeasurement.Enabled = true;
 
-            maxFreqMeasurement.PointTag = $"{SystemFrequencyDeviceName}-MAX-FQ";
+            maxFreqMeasurement.PointTag = $"{frequencyDeviceName}-MAX-FQ";
             maxFreqMeasurement.SignalReference = maxFreqSignalRef;
             maxFreqMeasurement.SignalTypeID = freqSignalType.ID;
             maxFreqMeasurement.DeviceID = freqDevice.ID;
@@ -958,7 +960,7 @@ namespace PhasorWebUI
             maxFreqMeasurement.Internal = true;
             maxFreqMeasurement.Enabled = true;
 
-            minFreqMeasurement.PointTag = $"{SystemFrequencyDeviceName}-MIN-FQ";
+            minFreqMeasurement.PointTag = $"{frequencyDeviceName}-MIN-FQ";
             minFreqMeasurement.SignalReference = minFreqSignalRef;
             minFreqMeasurement.SignalTypeID = freqSignalType.ID;
             minFreqMeasurement.DeviceID = freqDevice.ID;
