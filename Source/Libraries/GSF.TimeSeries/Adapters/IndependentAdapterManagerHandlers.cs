@@ -173,6 +173,8 @@ namespace GSF.TimeSeries.Adapters
 
             status.AppendFormat("        Point Tag Template: {0}", instance.PointTagTemplate);
             status.AppendLine();
+            status.AppendFormat("    Alternate Tag Template: {0}", instance.AlternateTagTemplate);
+            status.AppendLine();
             status.AppendFormat(" Signal Reference Template: {0}", instance.SignalReferenceTemplate);
             status.AppendLine();
             status.AppendFormat("      Description Template: {0}", instance.DescriptionTemplate);

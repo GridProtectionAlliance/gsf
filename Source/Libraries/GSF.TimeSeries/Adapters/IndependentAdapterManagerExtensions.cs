@@ -66,6 +66,11 @@ namespace GSF.TimeSeries.Adapters
         public const string DefaultPointTagTemplate = "IAM!{0}";
 
         /// <summary>
+        /// Defines the default value for the <see cref="IIndependentAdapterManager.AlternateTagTemplate"/>.
+        /// </summary>
+        public const string DefaultAlternateTagTemplate = "";
+
+        /// <summary>
         /// Defines the default value for the <see cref="IIndependentAdapterManager.SignalReferenceTemplate"/>.
         /// </summary>
         public const string DefaultSignalReferenceTemplate = DefaultPointTagTemplate + "-CV";
@@ -139,12 +144,13 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
         /// <param name="currentDeviceID">Device ID associated with current adapter, or zero if none.</param>
         /// <param name="pointTag">Point tag of measurement.</param>
+        /// <param name="alternateTag">Alternate tag of measurement.</param>
         /// <param name="signalReference">Signal reference of measurement.</param>
         /// <param name="description">Description of measurement.</param>
         /// <param name="signalType">Signal type of measurement.</param>
         /// <param name="targetHistorianAcronym">Acronym of target historian for measurement.</param>
         /// <returns>Measurement record.</returns>
-        public static MeasurementRecord GetMeasurementRecord(this IIndependentAdapterManager instance, int currentDeviceID, string pointTag, string signalReference, string description, SignalType signalType = SignalType.CALC, string targetHistorianAcronym = "PPA")
+        public static MeasurementRecord GetMeasurementRecord(this IIndependentAdapterManager instance, int currentDeviceID, string pointTag, string alternateTag, string signalReference, string description, SignalType signalType = SignalType.CALC, string targetHistorianAcronym = "PPA")
         {
             // Open database connection as defined in configuration file "systemSettings" category
             using (AdoDataConnection connection = instance.GetConfiguredConnection())
@@ -170,6 +176,7 @@ namespace GSF.TimeSeries.Adapters
                 measurement.DeviceID = deviceID;
                 measurement.HistorianID = historianID;
                 measurement.PointTag = pointTag;
+                measurement.AlternateTag = alternateTag;
                 measurement.SignalReference = signalReference;
                 measurement.SignalTypeID = signalTypeID;
                 measurement.Description = description;

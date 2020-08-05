@@ -359,7 +359,6 @@ namespace PowerCalculations
                 int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex;
 
                 return CommonPhasorServices.CreatePointTag(adapterDetail.CompanyAcronym, adapterDetail.DeviceAcronym, null, signalType.ToString(), adapterDetail.PhasorLabel, signalIndex, OutputPhases[CurrentOutputIndex], adapterDetail.BaseKV);
-
             }
             set => base.PointTagTemplate = value;
         }

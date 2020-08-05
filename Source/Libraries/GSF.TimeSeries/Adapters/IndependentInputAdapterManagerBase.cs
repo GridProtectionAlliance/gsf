@@ -116,6 +116,14 @@ namespace GSF.TimeSeries.Adapters
         public virtual string PointTagTemplate { get; set; } = DefaultPointTagTemplate;
 
         /// <summary>
+        /// Gets or sets template for output measurement alternate tag names.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines template for output measurement alternate tag names, typically an expression where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
+        [DefaultValue(DefaultAlternateTagTemplate)]
+        public virtual string AlternateTagTemplate { get; set; } = DefaultAlternateTagTemplate;
+
+        /// <summary>
         /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         [ConnectionStringParameter]

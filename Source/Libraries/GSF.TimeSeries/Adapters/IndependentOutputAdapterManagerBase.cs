@@ -289,6 +289,8 @@ namespace GSF.TimeSeries.Adapters
 
         string IIndependentAdapterManager.PointTagTemplate { get; set; } = DefaultPointTagTemplate;
 
+        string IIndependentAdapterManager.AlternateTagTemplate { get; set; } = DefaultAlternateTagTemplate;
+
         string IIndependentAdapterManager.SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
 
         string IIndependentAdapterManager.DescriptionTemplate { get; set; } = DefaultDescriptionTemplate;

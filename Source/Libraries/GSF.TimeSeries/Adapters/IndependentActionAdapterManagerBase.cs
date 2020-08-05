@@ -204,6 +204,14 @@ namespace GSF.TimeSeries.Adapters
         public virtual string PointTagTemplate { get; set; } = DefaultPointTagTemplate;
 
         /// <summary>
+        /// Gets or sets template for output measurement alternate tag names.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines template for output measurement alternate tag names, typically an expression where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
+        [DefaultValue(DefaultAlternateTagTemplate)]
+        public virtual string AlternateTagTemplate { get; set; } = DefaultAlternateTagTemplate;
+
+        /// <summary>
         /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         [ConnectionStringParameter]
@@ -567,12 +575,13 @@ namespace GSF.TimeSeries.Adapters
 
                     string outputID = $"{adapterName}-{PerAdapterOutputNames[j].ToUpper()}";
                     string outputPointTag = string.Format(PointTagTemplate, outputID);
+                    string outputAlternateTag = string.Format(AlternateTagTemplate, outputID);
                     string signalReference = string.Format(SignalReferenceTemplate, outputID);
                     SignalType signalType = SignalTypes?[j] ?? SignalType;
                     string description = string.Format(DescriptionTemplate, outputID, signalType, Name, GetType().Name);
 
                     // Get output measurement record, creating a new one if needed
-                    MeasurementRecord measurement = this.GetMeasurementRecord(currentDeviceID ?? CurrentDeviceID, outputPointTag, signalReference, description, signalType, TargetHistorianAcronym);
+                    MeasurementRecord measurement = this.GetMeasurementRecord(currentDeviceID ?? CurrentDeviceID, outputPointTag, outputAlternateTag, signalReference, description, signalType, TargetHistorianAcronym);
 
                     // Track output signal IDs
                     signalIDs.Add(measurement.SignalID);

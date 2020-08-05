@@ -61,6 +61,11 @@ namespace GSF.TimeSeries.Adapters
         string PointTagTemplate { get; set; }
 
         /// <summary>
+        /// Gets or sets template for output measurement alternate tag names.
+        /// </summary>
+        string AlternateTagTemplate { get; set; }
+
+        /// <summary>
         /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         string SignalReferenceTemplate { get; set; }
