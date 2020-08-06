@@ -560,7 +560,15 @@ namespace GSF.TimeSeries.Adapters
 
                 string inputName = this.LookupPointTag(inputs[nameIndex], SourceMeasurementTable);
                 string adapterName = $"{Name}!{inputName}";
-
+                string alternateTagPrefix = null;
+                
+                if (!string.IsNullOrWhiteSpace(AlternateTagTemplate))
+                {
+                    string deviceName = this.LookupDevice(inputs[nameIndex], SourceMeasurementTable);
+                    string phasorLabel = this.LookupPhasorLabel(inputs[nameIndex], SourceMeasurementTable);
+                    alternateTagPrefix = $"{deviceName}-{phasorLabel}";
+                }
+                
                 // Track active adapter names so that adapters that no longer have sources can be removed
                 activeAdapterNames.Add(adapterName);
 
@@ -573,12 +581,13 @@ namespace GSF.TimeSeries.Adapters
                 {
                     CurrentOutputIndex = j;
 
-                    string outputID = $"{adapterName}-{PerAdapterOutputNames[j].ToUpper()}";
-                    string outputPointTag = string.Format(PointTagTemplate, outputID);
-                    string outputAlternateTag = string.Format(AlternateTagTemplate, outputID);
-                    string signalReference = string.Format(SignalReferenceTemplate, outputID);
+                    string perAdapterOutputName = PerAdapterOutputNames[j].ToUpper();
+                    string outputPrefix = $"{adapterName}-{perAdapterOutputName}";
+                    string outputPointTag = string.Format(PointTagTemplate, outputPrefix);
+                    string outputAlternateTag = string.Format(AlternateTagTemplate, alternateTagPrefix is null ? "" : $"{alternateTagPrefix}-{perAdapterOutputName}");
+                    string signalReference = string.Format(SignalReferenceTemplate, outputPrefix);
                     SignalType signalType = SignalTypes?[j] ?? SignalType;
-                    string description = string.Format(DescriptionTemplate, outputID, signalType, Name, GetType().Name);
+                    string description = string.Format(DescriptionTemplate, outputPrefix, signalType, Name, GetType().Name);
 
                     // Get output measurement record, creating a new one if needed
                     MeasurementRecord measurement = this.GetMeasurementRecord(currentDeviceID ?? CurrentDeviceID, outputPointTag, outputAlternateTag, signalReference, description, signalType, TargetHistorianAcronym);

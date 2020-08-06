@@ -117,6 +117,7 @@
     <Compile Include="Model\Historian.cs" />
     <Compile Include="Model\Measurement.cs" />
     <Compile Include="Model\Phasor.cs" />
+    <Compile Include="Model\Runtime.cs" />
     <Compile Include="Model\SignalType.cs" />
     <Compile Include="Reports\CorrectnessReportingProcess.cs" />
     <Compile Include="Frame.cs" />

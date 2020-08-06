@@ -27,11 +27,12 @@ using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.TimeSeries.Data;
-using GSF.Units.EE;
+using GSF.TimeSeries.Model;
 using DeviceRecord = GSF.TimeSeries.Model.Device;
 using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
 using SignalTypeRecord = GSF.TimeSeries.Model.SignalType;
 using HistorianRecord = GSF.TimeSeries.Model.Historian;
+using SignalType = GSF.Units.EE.SignalType;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -109,7 +110,7 @@ namespace GSF.TimeSeries.Adapters
         public static IAdapter FindAdapter(this IIndependentAdapterManager instance, string adapterName) => instance.FirstOrDefault(adapter => adapterName.Equals(adapter.Name));
 
         /// <summary>
-        /// Lookups up point tag name from provided <see cref="MeasurementKey"/>.
+        /// Lookups up point tag name from provided <paramref name="signalID"/>.
         /// </summary>
         /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
         /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
@@ -127,6 +128,53 @@ namespace GSF.TimeSeries.Adapters
                 pointTag = signalID.ToString();
 
             return pointTag.ToUpper();
+        }
+
+        /// <summary>
+        /// Lookups up associated device name from provided <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
+        /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
+        /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+        /// <returns>Device name, if found; otherwise, string representation of associated point tag.</returns>
+        public static string LookupDevice(this IIndependentAdapterManager instance, Guid signalID, string measurementTable = "ActiveMeasurements")
+        {
+            DataRow record = instance.DataSource.LookupMetadata(signalID, measurementTable);
+            string device = null;
+
+            if (record != null)
+                device = record["Device"].ToString();
+
+            if (string.IsNullOrWhiteSpace(device))
+                device = instance.LookupPointTag(signalID, measurementTable);
+
+            return device.ToUpper();
+        }
+
+        /// <summary>
+        /// Lookups up associated phasor label from provided <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
+        /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
+        /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+        /// <returns>Phasor label name, if found; otherwise, string representation associated point tag.</returns>
+        public static string LookupPhasorLabel(this IIndependentAdapterManager instance, Guid signalID, string measurementTable = "ActiveMeasurements")
+        {
+            DataRow record = instance.DataSource.LookupMetadata(signalID, measurementTable);
+            int phasorID = 0;
+
+            if (record != null)
+                phasorID = record.ConvertNullableField<int>("PhasorID") ?? 0;
+
+            if (phasorID == 0)
+                return instance.LookupPointTag(signalID, measurementTable);
+
+            using (AdoDataConnection connection = instance.HandleGetConfiguredConnection())
+            {
+                TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
+                Phasor phasorRecord = phasorTable.QueryRecordWhere("ID = {0}", phasorID);
+                return phasorRecord is null ? instance.LookupPointTag(signalID, measurementTable) : phasorRecord.Label.Trim().ToUpper();
+            }
         }
 
         /// <summary>
