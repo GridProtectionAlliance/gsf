@@ -893,7 +893,7 @@ namespace PhasorWebUI
 
             TableOperations<CustomActionAdapter> customActionAdapterTable = DataContext.Table<CustomActionAdapter>();
             CustomActionAdapter avgFreqAdapter = customActionAdapterTable.QueryRecordWhere("TypeName = {0}", typeof(PowerCalculations.AverageFrequency).FullName) ?? NewCustomActionAdapter();
-            Measurement[] measurements = GetCalculatedFrequencyMeasurements(historianID, frequencyDeviceName);
+            Measurement[] measurements = GetCalculatedFrequencyMeasurements(historianID, systemName, frequencyDeviceName);
 
             double lagTime = DefaultCalculationLagTime;
 
@@ -912,7 +912,7 @@ namespace PhasorWebUI
             customActionAdapterTable.AddNewOrUpdateRecord(avgFreqAdapter);            
         }
 
-        private Measurement[] GetCalculatedFrequencyMeasurements(int? historianID, string frequencyDeviceName)
+        private Measurement[] GetCalculatedFrequencyMeasurements(int? historianID, string systemName, string frequencyDeviceName)
         {
             SignalType freqSignalType = DataContext.Table<SignalType>().QueryRecordWhere("Acronym = 'FREQ'");
 
@@ -922,7 +922,7 @@ namespace PhasorWebUI
             Device freqDevice = QueryDevice(frequencyDeviceName);
 
             freqDevice.Acronym = frequencyDeviceName;
-            freqDevice.Name = "Calculated System Frequency Statistics Virtual Device";
+            freqDevice.Name = $"Calculated System Frequency Statistics Virtual Device for {systemName}";
             freqDevice.IsConcentrator = false;
             freqDevice.HistorianID = historianID;
             freqDevice.ProtocolID = VirtualProtocolID;
@@ -947,7 +947,7 @@ namespace PhasorWebUI
             avgFreqMeasurement.SignalTypeID = freqSignalType.ID;
             avgFreqMeasurement.DeviceID = freqDevice.ID;
             avgFreqMeasurement.HistorianID = historianID;
-            avgFreqMeasurement.Description = "Average System Frequency";
+            avgFreqMeasurement.Description = $"{systemName} Average System Frequency";
             avgFreqMeasurement.Internal = true;
             avgFreqMeasurement.Enabled = true;
 
@@ -956,7 +956,7 @@ namespace PhasorWebUI
             maxFreqMeasurement.SignalTypeID = freqSignalType.ID;
             maxFreqMeasurement.DeviceID = freqDevice.ID;
             maxFreqMeasurement.HistorianID = historianID;
-            maxFreqMeasurement.Description = "Maximum System Frequency";
+            maxFreqMeasurement.Description = $"{systemName} Maximum System Frequency";
             maxFreqMeasurement.Internal = true;
             maxFreqMeasurement.Enabled = true;
 
@@ -965,7 +965,7 @@ namespace PhasorWebUI
             minFreqMeasurement.SignalTypeID = freqSignalType.ID;
             minFreqMeasurement.DeviceID = freqDevice.ID;
             minFreqMeasurement.HistorianID = historianID;
-            minFreqMeasurement.Description = "Minimum System Frequency";
+            minFreqMeasurement.Description = $"{systemName} Minimum System Frequency";
             minFreqMeasurement.Internal = true;
             minFreqMeasurement.Enabled = true;
 
