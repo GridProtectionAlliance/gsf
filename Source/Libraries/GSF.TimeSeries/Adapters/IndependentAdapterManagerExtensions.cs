@@ -44,7 +44,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Defines the default value for the <see cref="IIndependentAdapterManager.ConfigurationReloadWaitTimeout"/>.
         /// </summary>
-        public const int DefaultConfigurationReloadWaitTimeout = 3000;
+        public const int DefaultConfigurationReloadWaitTimeout = 10000;
 
         /// <summary>
         /// Defines the default value for the <see cref="IIndependentAdapterManager.ConfigurationReloadWaitAttempts"/>.
