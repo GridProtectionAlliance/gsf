@@ -323,6 +323,7 @@ namespace ConfigEditor
                 if (restartService && controller.Status == ServiceControllerStatus.Stopped)
                 {
                     controller.Start();
+                    controller.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
                     returnMessage.AppendLine("Successfully started " + ConfigurationManager.AppSettings["DefaultServiceName"] + " service.");
                     returnMessage.AppendLine();
                 }
