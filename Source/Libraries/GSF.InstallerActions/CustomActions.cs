@@ -229,7 +229,7 @@ namespace GSF.InstallerActions
         }
 
         /// <summary>
-        /// Custom action to load any previously defined CompanyName and CompanyAcronym settings from the configuration file of an installed service.
+        /// Custom action to load any previously defined CompanyName, CompanyAcronym and SystemName settings from the configuration file of an installed service.
         /// </summary>
         /// <param name="session">Session object containing data from the installer.</param>
         /// <returns>Result of the custom action.</returns>
@@ -261,6 +261,7 @@ namespace GSF.InstallerActions
                 {
                     setPropertyValue(systemSettings, "CompanyName", "COMPANYNAME");
                     setPropertyValue(systemSettings, "CompanyAcronym", "COMPANYACRONYM");
+                    setPropertyValue(systemSettings, "SystemName", "SYSTEMNAME");
                 }
             }
 
@@ -270,7 +271,7 @@ namespace GSF.InstallerActions
         }
 
         /// <summary>
-        /// Custom action to write CompanyName and CompanyAcronym settings to the configuration file of an installed service.
+        /// Custom action to write CompanyName, CompanyAcronym and SystemName settings to the configuration file of an installed service.
         /// </summary>
         /// <param name="session">Session object containing data from the installer.</param>
         /// <returns>Result of the custom action.</returns>
@@ -283,6 +284,12 @@ namespace GSF.InstallerActions
 
             string serviceName = GetPropertyValue(session, "SERVICENAME");
             string configPath = Path.Combine(GetPropertyValue(session, "INSTALLDIR"), $"{serviceName}.exe.config");
+
+            void validateAcronymBasedPropertyValue(string propertyName) => 
+                session[propertyName] = Regex.Replace(GetPropertyValue(session, propertyName).ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
+
+            validateAcronymBasedPropertyValue("COMPANYACRONYM");
+            validateAcronymBasedPropertyValue("SYSTEMNAME");
 
             if (File.Exists(configPath))
             {
@@ -297,6 +304,10 @@ namespace GSF.InstallerActions
                     // Search for existing CompanyAcronym settings and update their values
                     foreach (XElement companyAcronymElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyAcronym", StringComparison.OrdinalIgnoreCase) == 0)))
                         companyAcronymElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "COMPANYACRONYM"));
+
+                    // Search for existing SystemName settings and update their values
+                    foreach (XElement systemNameElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "SystemName", StringComparison.OrdinalIgnoreCase) == 0)))
+                        systemNameElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "SYSTEMNAME"));
 
                     // Add CompanyName setting if no such setting exists
                     if (!systemSettings.Elements("add").Any(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyName", StringComparison.OrdinalIgnoreCase) == 0)))
@@ -316,6 +327,17 @@ namespace GSF.InstallerActions
                             new XAttribute("name", "CompanyAcronym"),
                             new XAttribute("value", GetPropertyValue(session, "COMPANYACRONYM")),
                             new XAttribute("description", $"The acronym representing the company who owns this instance of the {serviceName}."),
+                            new XAttribute("encrypted", "false")
+                        ));
+                    }
+
+                    // Add SystemName setting if no such setting exists
+                    if (!systemSettings.Elements("add").Any(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "SystemName", StringComparison.OrdinalIgnoreCase) == 0)))
+                    {
+                        systemSettings.Add(new XElement("add",
+                            new XAttribute("name", "SystemName"),
+                            new XAttribute("value", GetPropertyValue(session, "SYSTEMNAME")),
+                            new XAttribute("description", $"Name of system for this instance of the {serviceName} that will be prefixed to system level tags, when defined. Value should follow tag naming conventions, e.g., no spaces and all upper case."),
                             new XAttribute("encrypted", "false")
                         ));
                     }
