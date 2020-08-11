@@ -248,7 +248,7 @@ namespace GSF.InstallerActions
                 XElement setting = systemSettings.Elements("add").FirstOrDefault(element => string.Compare(element.Attributes("name").FirstOrDefault()?.Value, settingName, StringComparison.OrdinalIgnoreCase) == 0);
                 string value = setting?.Attributes("value").FirstOrDefault()?.Value;
 
-                if (!string.IsNullOrWhiteSpace(value))
+                if (!string.IsNullOrEmpty(value))
                     session[propertyName] = value;
             }
 
@@ -285,8 +285,13 @@ namespace GSF.InstallerActions
             string serviceName = GetPropertyValue(session, "SERVICENAME");
             string configPath = Path.Combine(GetPropertyValue(session, "INSTALLDIR"), $"{serviceName}.exe.config");
 
-            void validateAcronymBasedPropertyValue(string propertyName) => 
-                session[propertyName] = Regex.Replace(GetPropertyValue(session, propertyName).ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
+            void validateAcronymBasedPropertyValue(string propertyName)
+            {
+                string value = Regex.Replace(GetPropertyValue(session, propertyName).ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
+                
+                if (!string.IsNullOrEmpty(value))
+                    session[propertyName] = value;
+            }
 
             validateAcronymBasedPropertyValue("COMPANYACRONYM");
             validateAcronymBasedPropertyValue("SYSTEMNAME");
