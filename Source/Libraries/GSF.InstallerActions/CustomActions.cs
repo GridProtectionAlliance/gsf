@@ -278,6 +278,10 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult CompanyInfoAction(Session session)
         {
+            const string DefaultCompanyName = "Grid Protection Alliance";
+            const string DefaultCompanyAcronym = "GPA";
+            const string DefaultSystemName = " ";
+
             Logger logger = new Logger(session);
 
             logger.Log("Begin CompanyInfoAction");
@@ -311,22 +315,22 @@ namespace GSF.InstallerActions
                 {
                     // Search for existing CompanyName settings and update their values
                     foreach (XElement companyNameElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyName", StringComparison.OrdinalIgnoreCase) == 0)))
-                        companyNameElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "COMPANYNAME"));
+                        companyNameElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "COMPANYNAME") ?? DefaultCompanyName);
 
                     // Search for existing CompanyAcronym settings and update their values
                     foreach (XElement companyAcronymElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyAcronym", StringComparison.OrdinalIgnoreCase) == 0)))
-                        companyAcronymElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "COMPANYACRONYM"));
+                        companyAcronymElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "COMPANYACRONYM") ?? DefaultCompanyAcronym);
 
                     // Search for existing SystemName settings and update their values
                     foreach (XElement systemNameElement in systemSettings.Elements("add").Where(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "SystemName", StringComparison.OrdinalIgnoreCase) == 0)))
-                        systemNameElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "SYSTEMNAME"));
+                        systemNameElement.Attributes("value").ToList().ForEach(valueAttribute => valueAttribute.Value = GetPropertyValue(session, "SYSTEMNAME") ?? DefaultSystemName);
 
                     // Add CompanyName setting if no such setting exists
                     if (!systemSettings.Elements("add").Any(element => element.Attributes("name").Any(nameAttribute => string.Compare(nameAttribute.Value, "CompanyName", StringComparison.OrdinalIgnoreCase) == 0)))
                     {
                         systemSettings.Add(new XElement("add",
                             new XAttribute("name", "CompanyName"),
-                            new XAttribute("value", GetPropertyValue(session, "COMPANYNAME")),
+                            new XAttribute("value", GetPropertyValue(session, "COMPANYNAME") ?? DefaultCompanyName),
                             new XAttribute("description", $"The name of the company who owns this instance of the {serviceName}."),
                             new XAttribute("encrypted", "false")
                         ));
@@ -337,7 +341,7 @@ namespace GSF.InstallerActions
                     {
                         systemSettings.Add(new XElement("add",
                             new XAttribute("name", "CompanyAcronym"),
-                            new XAttribute("value", GetPropertyValue(session, "COMPANYACRONYM")),
+                            new XAttribute("value", GetPropertyValue(session, "COMPANYACRONYM") ?? DefaultCompanyAcronym),
                             new XAttribute("description", $"The acronym representing the company who owns this instance of the {serviceName}."),
                             new XAttribute("encrypted", "false")
                         ));
@@ -348,7 +352,7 @@ namespace GSF.InstallerActions
                     {
                         systemSettings.Add(new XElement("add",
                             new XAttribute("name", "SystemName"),
-                            new XAttribute("value", GetPropertyValue(session, "SYSTEMNAME")),
+                            new XAttribute("value", GetPropertyValue(session, "SYSTEMNAME") ?? DefaultSystemName),
                             new XAttribute("description", $"Name of system for this instance of the {serviceName} that will be prefixed to system level tags, when defined. Value should follow tag naming conventions, e.g., no spaces and all upper case."),
                             new XAttribute("encrypted", "false")
                         ));
