@@ -287,10 +287,17 @@ namespace GSF.InstallerActions
 
             void validateAcronymBasedPropertyValue(string propertyName)
             {
-                string value = Regex.Replace(GetPropertyValue(session, propertyName).ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
-                
-                if (!string.IsNullOrEmpty(value))
-                    session[propertyName] = value;
+                try
+                {
+                    string value = Regex.Replace(GetPropertyValue(session, propertyName).ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
+
+                    if (!string.IsNullOrEmpty(value))
+                        session[propertyName] = value;
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(EventLogEntryType.Warning, ex);
+                }
             }
 
             validateAcronymBasedPropertyValue("COMPANYACRONYM");
