@@ -525,15 +525,22 @@
             setTimeout(function () { $("#loadingDataLabel").css("visibility", "hidden"); }, 500);
         }
 
+        function phaseEndsWith(phaseLabel, phaseMatches) {
+            for (let i = 0; i < phaseMatches.length; i++) {
+                if (phaseLabel.endsWith(phaseMatches[i]))
+                    return true;
+            }
+
+            return false;
+        }
+
         function phaseMatchHighConfidence(phaseLabel, phaseMatches) {
             for (let i = 0; i < phaseMatches.length; i++) {
                 const match = phaseMatches[i];
                 const variations = [ " " + match, "_" + match, "-" + match, "." + match ];
 
-                for (let j = 0; j < variations.length; j++) {
-                    if (phaseLabel.endsWith(variations[j]))
-                        return true;
-                }
+                if (phaseEndsWith(phaseLabel, variations))
+                    return true;
             }
 
             return false;
@@ -557,12 +564,12 @@
             if (!isEmpty(phase) && phase !== "+")
                 return phase;
 
-            // Handle high confidence phase matches when no phase is defined or phase is "+" - since positive sequence is often default value, it's treated with suspicion
+            // Handle high confidence phase matches when no phase is defined or when phase is "+" - since positive sequence is often default value, it's treated with suspicion
             if (isEmpty(phase) || phase === "+") {
-                if (phaseMatchHighConfidence(phasorLabel, [ "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" ]))
+                if (phaseMatchHighConfidence(phasorLabel, [ "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" ]) || phaseEndsWith(phasorLabel, [ "+SV", "+SI", "+V", "+I" ]))
                     return "+";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" ]))
+                if (phaseMatchHighConfidence(phasorLabel, [ "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" ]) || phaseEndsWith(phasorLabel, [ "0SV", "0SI" ]))
                     return "0";
 
                 if (phaseMatchHighConfidence(phasorLabel, [ "VA", "IA", "APV", "API", "VAPM", "IAPM", "AV", "AI" ]))
@@ -577,11 +584,11 @@
                 if (phaseMatchHighConfidence(phasorLabel, [ "VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" ]))
                     return "N";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI", "-V", "-I" ]))
+                if (phaseMatchHighConfidence(phasorLabel, [ "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]) || phaseEndsWith(phasorLabel, [ "-V", "-I" ]))
                     return "-";
             }
 
-            // Handle lower confidence phase matches when phase is not defined
+            // Handle lower confidence phase matches only when phase is not defined
             if (isEmpty(phase)) {
                 // Since positive sequence is the default and always treated with accuracy suspicion, verify it's value first
                 if (phaseMatchLowConfidence(phasorLabel, [ "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" ]))
