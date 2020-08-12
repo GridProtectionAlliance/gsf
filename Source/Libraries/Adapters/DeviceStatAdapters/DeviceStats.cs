@@ -22,6 +22,16 @@
 //******************************************************************************************************
 
 using DeviceStatAdapters.Model;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
@@ -29,12 +39,8 @@ using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Text;
+using GSF.IO;
+using GSF.Reflection;
 
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
 
@@ -382,6 +388,78 @@ namespace DeviceStatAdapters
             }
         }
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Constructor
+        static DeviceStats()
+        {
+            try
+            {
+                RestoreSQLScripts();
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+        }
+
+        // Static Methods
+        private static void RestoreSQLScripts()
+        {
+            Assembly executingAssembly = AssemblyInfo.ExecutingAssembly.Assembly;
+            string targetPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(""));
+
+            // This simple file restoration assumes embedded resources to restore are in root namespace
+            foreach (string name in executingAssembly.GetManifestResourceNames().Where(name => name.EndsWith(".sql")))
+            {
+                using (Stream resourceStream = executingAssembly.GetManifestResourceStream(name))
+                {
+                    if (resourceStream == null)
+                        continue;
+
+                    string sourceNamespace = $"{nameof(DeviceStatAdapters)}.";
+                    string filePath = name;
+
+                    // Remove namespace prefix from resource file name
+                    if (filePath.StartsWith(sourceNamespace))
+                        filePath = filePath.Substring(sourceNamespace.Length);
+
+                    string targetFileName = Path.Combine(targetPath, filePath);
+                    bool restoreFile = true;
+
+                    if (File.Exists(targetFileName))
+                    {
+                        string resourceMD5 = GetMD5HashFromStream(resourceStream);
+                        resourceStream.Seek(0, SeekOrigin.Begin);
+                        restoreFile = !resourceMD5.Equals(GetMD5HashFromFile(targetFileName));
+                    }
+
+                    if (!restoreFile)
+                        continue;
+
+                    byte[] buffer = new byte[resourceStream.Length];
+                    resourceStream.Read(buffer, 0, (int)resourceStream.Length);
+
+                    using (StreamWriter writer = File.CreateText(targetFileName))
+                        writer.Write(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+                }
+            }
+        }
+
+        private static string GetMD5HashFromFile(string fileName)
+        {
+            using (FileStream stream = File.OpenRead(fileName))
+                return GetMD5HashFromStream(stream);
+        }
+
+        private static string GetMD5HashFromStream(Stream stream)
+        {
+            using (MD5 md5 = MD5.Create())
+                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
+        }
+        
         #endregion
     }
 }
