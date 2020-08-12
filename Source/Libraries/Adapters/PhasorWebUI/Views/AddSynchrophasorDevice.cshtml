@@ -2529,7 +2529,7 @@
                                         return serviceHub.sendCommand("initialize " + adapter.AdapterName);
                                     })
                                     .fail(function (error) {
-                                        showErrorMessage("Save failed for new custom action measurement: " + error);
+                                        showErrorMessage("Save failed for new custom action adapter: " + error);
                                     });
                                 })
                                 .fail(function (error) {
@@ -2572,7 +2572,7 @@
             //    IAA: Current A-Phase Angle     also IBA, ICA, INA                         IPOSA, INEGA, IZA
             //   FREQ: Frequency
             //   FNOM: Model.Global.NominalFrequency
-            //   FAVG: Frequency Average = system singleton where signal reference is "SYSTEM!FREQ-AVG-FQ"
+            //   FAVG: Frequency Average = system singleton where signal reference is "SYSTEM!FREQ-FQ"
             //  FLAGS: Status Flags
 
             const promises = [];
@@ -2698,7 +2698,7 @@
             }
 
             return $(promises).whenAll().then(function () {
-                return phasorHub.queryMeasurement(freqDeviceName + "-AVG-FQ");
+                return phasorHub.queryMeasurement(freqDeviceName + "-FQ");
             })
             .then(function (measurement) {
                 if (measurement && measurement.SignalID)
@@ -2708,7 +2708,7 @@
                 dynamicCalculation.initialized = true;
             })
             .fail(function (error) {
-                showErrorMessage("Failed to find average system frequency with SignalReference = '" + freqDeviceName + "-AVG-FQ': " + error);
+                showErrorMessage("Failed to find average system frequency with SignalReference = '" + freqDeviceName + "-FQ': " + error);
             });
         }
 
@@ -2935,7 +2935,7 @@
                                             return serviceHub.sendCommand("initialize " + adapter.AdapterName);
                                         })
                                         .fail(function (error) {
-                                            showErrorMessage("Save failed for new custom action measurement: " + error);
+                                            showErrorMessage("Save failed for new custom action adapter: " + error);
                                         });
                                     })
                                     .fail(function (error) {
@@ -2960,7 +2960,29 @@
             });
         }
 
-        function saveTemplateCalculations(cell) {
+        function saveCustomActionAdapter(tagTemplate) {
+            return phasorHub.newCustomActionAdapter().then(function (adapter) {
+                adapter.NodeID = nodeID;
+                adapter.AdapterName = tagTemplate.TagName;
+                adapter.AssemblyName = tagTemplate.Equation;
+                adapter.TypeName = tagTemplate.Type;
+                adapter.ConnectionString = tagTemplate.Inputs.join(";");
+                adapter.LoadOrder = 1;
+                adapter.Enabled = true;
+
+                return phasorHub.addNewOrUpdateCustomActionAdapter(adapter).then(function () {
+                    return serviceHub.sendCommand("initialize " + adapter.AdapterName);
+                })
+                .fail(function (error) {
+                    showErrorMessage("Save failed for new custom action adapter: " + error);
+                });
+            })
+            .fail(function (error) {
+                showErrorMessage("Failed to create new custom action adapter record: " + error);
+            });
+        }
+
+        function saveTemplateCalculations(cell, index) {
             // Do not create calculations if only forwarding data
             if (viewModel.forwardOnly())
                 return $.Deferred().resolve().promise();
@@ -3023,6 +3045,12 @@
                                 case "DYNAMICCALCULATOR":
                                     promises.push(saveDynamicCalculation(cell, tagTemplate, calcSignalType));
                                     break;
+                                default:
+                                    // All other template types are assumed to be custom action adapter defintions. Since
+                                    // these adpater defintions are singletons, only execute save for first device:
+                                    if (index === 0)
+                                        promises.push(saveCustomActionAdapter(tagTemplate));
+                                    break;
                             }
                         }
 
@@ -3077,7 +3105,7 @@
                                 return phasorHub.updateDevice(device).then(function () {
                                     // Save measurements and calculations associated with a directly edited child device
                                     return saveDeviceMeasurements(cell).then(function () {
-                                        return saveTemplateCalculations(cell);
+                                        return saveTemplateCalculations(cell, index);
                                     });
                                 });
                             }
@@ -3105,7 +3133,7 @@
                                             cell.ID = newDevice.ID;
 
                                             return saveDeviceMeasurements(cell).then(function () {
-                                                return saveTemplateCalculations(cell);
+                                                return saveTemplateCalculations(cell, index);
                                             });
                                         })
                                         .fail(function (error) {
@@ -3123,7 +3151,7 @@
                                         cell.ID = device.ID;
 
                                         return saveDeviceMeasurements(cell).then(function () {
-                                            return saveTemplateCalculations(cell);
+                                            return saveTemplateCalculations(cell, index);
                                         });
                                     })
                                     .fail(function (error) {
@@ -3146,7 +3174,7 @@
 
                 // Save measurements and calculations  associated with a directly connected device
                 return saveDeviceMeasurements(cell).then(function () {
-                    return saveTemplateCalculations(cell);
+                    return saveTemplateCalculations(cell, 0);
                 });
             }
         }
