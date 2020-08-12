@@ -402,7 +402,7 @@ namespace StatHistorianReportGenerator
                     if (string.IsNullOrWhiteSpace(applicationName))
                         continue;
 
-                    if (applicationName.Trim().Equals(FilePath.GetFileNameWithoutExtension(configFile), StringComparison.OrdinalIgnoreCase))
+                    if (applicationName.Trim().Equals(FilePath.GetFileNameWithoutExtension(FilePath.GetFileNameWithoutExtension(configFile)), StringComparison.OrdinalIgnoreCase))
                         return configFile;
                 }
                 catch (Exception ex)
