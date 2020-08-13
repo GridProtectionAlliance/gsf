@@ -346,12 +346,12 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid CreationTag = new Guid("89738609-f1c3-11cf-9d89-0080c72e70a3");
 
         /// <summary>
-        /// Tag that identifies the notes stored in the PQDIF file.
+        /// Tag that identifies the title applied to the PQDIF file.
         /// </summary>
         public static readonly Guid TitleTag = new Guid("8973860d-f1c3-11cf-9d89-0080c72e70a3");
 
         /// <summary>
-        /// Tag that identifies the notes stored in the PQDIF file.
+        /// Tag that identifies the subject applied to the PQDIF file.
         /// </summary>
         public static readonly Guid SubjectTag = new Guid("8973860e-f1c3-11cf-9d89-0080c72e70a3");
 
