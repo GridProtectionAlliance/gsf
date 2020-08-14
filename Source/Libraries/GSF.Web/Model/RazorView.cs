@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using System.Web;
 using GSF.Collections;
 using GSF.Data;
+using GSF.Reflection;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
 using RazorEngine.Templating;
@@ -204,6 +205,7 @@ namespace GSF.Web.Model
                     throw;
 
                 m_viewBag.AddValue("Exception", ex);
+                m_viewBag.AddValue("DebugBuild", AssemblyInfo.EntryAssembly.Debuggable);
                 return m_razorEngine.RunCompile(WebServerOptions.ErrorTemplateName, viewBag: m_viewBag);
             }
         }
@@ -247,6 +249,7 @@ namespace GSF.Web.Model
                     throw;
 
                 m_viewBag.AddValue("Exception", ex);
+                m_viewBag.AddValue("DebugBuild", AssemblyInfo.EntryAssembly.Debuggable);
                 return m_razorEngine.RunCompile(WebServerOptions.ErrorTemplateName, viewBag: m_viewBag);
             }
         }
