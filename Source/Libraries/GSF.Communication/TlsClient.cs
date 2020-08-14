@@ -420,7 +420,7 @@ namespace GSF.Communication
                 // As of July 2014, Tls12 is the latest and most secure TLS protocol - all other protocols
                 // represent a security risk when used, as such we log a security message when any of the
                 // older protocols are being used.
-                if (m_enabledSslProtocols == SslProtocols.Tls12)
+                if (m_enabledSslProtocols >= SslProtocols.Tls12)
                     return;
 
                 try
