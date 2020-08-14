@@ -262,7 +262,7 @@ namespace GSF.TimeSeries.UI
                 if (settings.TryGetValue("enabledSslProtocols", out setting) && Enum.TryParse(setting, true, out enabledSslProtocols))
                     remotingClient.EnabledSslProtocols = enabledSslProtocols;
                 else
-                    remotingClient.EnabledSslProtocols = SslProtocols.Tls | SslProtocols.Tls12;
+                    remotingClient.EnabledSslProtocols = SslProtocols.Tls12;
             }
             catch (SecurityException)
             {
