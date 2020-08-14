@@ -123,6 +123,11 @@ namespace GSF.Web.Hosting
         }
 
         /// <summary>
+        /// Gets or sets template file name to use when a Razor compile or execution exception occurs.
+        /// </summary>
+        public string ErrorTemplateName { get; set; }
+
+        /// <summary>
         /// Gets an immutable version of the web server options.
         /// </summary>
         public ReadonlyWebServerOptions Readonly => new ReadonlyWebServerOptions(this);
@@ -190,6 +195,11 @@ namespace GSF.Web.Hosting
         /// Page name for web server use will not be prefixed with slash.
         /// </remarks>
         public string AuthTestPage => m_webServerOptions.AuthTestPage;
+
+        /// <summary>
+        /// Gets template file name to use when a Razor compile or execution exception occurs.
+        /// </summary>
+        public string ErrorTemplateName => m_webServerOptions.ErrorTemplateName;
 
         #endregion
     }

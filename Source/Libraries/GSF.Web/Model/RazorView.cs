@@ -58,7 +58,8 @@ namespace GSF.Web.Model
         /// <param name="razorEngine"><see cref="IRazorEngine"/> instance to use.</param>
         /// <param name="templateName">Name of template file, typically a .cshtml or .vbhtml file.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        public RazorView(IRazorEngine razorEngine, string templateName, Action<Exception> exceptionHandler = null) : this(razorEngine, templateName, null, null, null, null, null, exceptionHandler)
+        public RazorView(IRazorEngine razorEngine, string templateName, Action<Exception> exceptionHandler = null) : 
+            this(razorEngine, templateName, null, null, null, null, null, exceptionHandler)
         {
         }
 
@@ -186,13 +187,24 @@ namespace GSF.Web.Model
         /// <returns>Rendered result.</returns>
         public string Execute()
         {
-            using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
+            try
             {
-                if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
-                    dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, null as string, m_viewBag);
+                using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
+                {
+                    if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
+                        dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, null as string, m_viewBag);
 
-                m_viewBag.AddValue("DataContext", dataContext);
-                return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
+                    m_viewBag.AddValue("DataContext", dataContext);
+                    return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (string.IsNullOrWhiteSpace(WebServerOptions?.ErrorTemplateName))
+                    throw;
+
+                m_viewBag.AddValue("Exception", ex);
+                return m_razorEngine.RunCompile(WebServerOptions.ErrorTemplateName, viewBag: m_viewBag);
             }
         }
 
@@ -204,29 +216,38 @@ namespace GSF.Web.Model
         /// <returns>Rendered result.</returns>
         public string Execute(HttpRequestMessage request, HttpResponseMessage response)
         {
-            using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
+            try
             {
-                // Need to add the security principal to the view bag before configuring the view
-                m_viewBag.AddValue("SecurityPrincipal", request.GetRequestContext().Principal);
+                using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
+                {
+                    // Need to add the security principal to the view bag before configuring the view
+                    m_viewBag.AddValue("SecurityPrincipal", request.GetRequestContext().Principal);
 
-                if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
-                    dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
+                    if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
+                        dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
 
-                m_viewBag.AddValue("Application", s_applicationCache);
-                m_viewBag.AddValue("DataContext", dataContext);
-                m_viewBag.AddValue("Request", request);
-                m_viewBag.AddValue("Response", response);
-                m_viewBag.AddValue("IsPost", request.Method == HttpMethod.Post);
-                m_viewBag.AddValue("WebServerOptions", WebServerOptions);
-                m_viewBag.AddValue("AuthenticationOptions", request.GetAuthenticationOptions());
+                    m_viewBag.AddValue("Application", s_applicationCache);
+                    m_viewBag.AddValue("DataContext", dataContext);
+                    m_viewBag.AddValue("Request", request);
+                    m_viewBag.AddValue("Response", response);
+                    m_viewBag.AddValue("IsPost", request.Method == HttpMethod.Post);
+                    m_viewBag.AddValue("WebServerOptions", WebServerOptions);
+                    m_viewBag.AddValue("AuthenticationOptions", request.GetAuthenticationOptions());
 
-                DynamicViewBag sessionState;
+                    // See if a client session has been defined for this execution request
+                    if (SessionHandler.TryGetSessionState(request, WebServerOptions?.SessionToken, out DynamicViewBag sessionState))
+                        m_viewBag.AddValue("Session", sessionState);
 
-                // See if a client session has been defined for this execution request
-                if (SessionHandler.TryGetSessionState(request, WebServerOptions?.SessionToken, out sessionState))
-                    m_viewBag.AddValue("Session", sessionState);
+                    return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (string.IsNullOrWhiteSpace(WebServerOptions?.ErrorTemplateName))
+                    throw;
 
-                return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
+                m_viewBag.AddValue("Exception", ex);
+                return m_razorEngine.RunCompile(WebServerOptions.ErrorTemplateName, viewBag: m_viewBag);
             }
         }
 

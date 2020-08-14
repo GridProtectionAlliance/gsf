@@ -507,6 +507,7 @@ namespace GSF.Web.Hosting
                     settings.Add("UseMinifyInDebug", WebServerOptions.DefaultUseMinifyInDebug, "Determines if minification should be applied when running a Debug build.");
                     settings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
                     settings.Add("AuthTestPage", AuthenticationOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated.");
+                    settings.Add("ErrorTemplateName", "", "Defines the template file name to use when a Razor compile or execution exception occurs. Leave blank for none.");
 
                     WebServerOptions options = new WebServerOptions
                     {
@@ -516,7 +517,8 @@ namespace GSF.Web.Hosting
                         MinifyStyleSheets = settings["MinifyStyleSheets"].ValueAsBoolean(WebServerOptions.DefaultMinifyStyleSheets),
                         UseMinifyInDebug = settings["UseMinifyInDebug"].ValueAsBoolean(WebServerOptions.DefaultUseMinifyInDebug),
                         SessionToken = settings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken),
-                        AuthTestPage = settings["AuthTestPage"].ValueAs(AuthenticationOptions.DefaultAuthTestPage)
+                        AuthTestPage = settings["AuthTestPage"].ValueAs(AuthenticationOptions.DefaultAuthTestPage),
+                        ErrorTemplateName = settings["ErrorTemplateName"].Value
                     };
 
                     return new WebServer(options, razorEngineCS, razorEngineVB);
