@@ -3795,7 +3795,6 @@ namespace GSF.TimeSeries.Transport
                         if (metadata.Tables.Contains("DeviceDetail"))
                         {
                             DataTable deviceDetail = metadata.Tables["DeviceDetail"];
-                            List<Guid> uniqueIDs = new List<Guid>();
                             DataRow[] deviceRows;
 
                             // Define SQL statement to query if this device is already defined (this should always be based on the unique guid-based device ID)
@@ -3849,13 +3848,29 @@ namespace GSF.TimeSeries.Transport
                             // Older versions of GEP did not include the AccessID field, so this is treated as optional
                             int accessID = 0;
 
+                            List<Guid> uniqueIDs = deviceRows
+                                .Select(deviceRow => database.Guid(deviceRow, "UniqueID"))
+                                .ToList();
+
+                            // Remove any device records associated with this subscriber that no longer exist in the meta-data
+                            if (uniqueIDs.Count > 0)
+                            {
+                                IEnumerable<Guid> retiredUniqueIDs = command
+                                    .RetrieveData(database.AdapterType, queryUniqueDeviceIDsSql, m_metadataSynchronizationTimeout, parentID)
+                                    .Select()
+                                    .Select(deviceRow => database.Guid(deviceRow, "UniqueID"))
+                                    .Except(uniqueIDs);
+
+                                foreach (Guid retiredUniqueID in retiredUniqueIDs)
+                                    command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, database.Guid(retiredUniqueID));
+
+                                UpdateSyncProgress();
+                            }
+
                             foreach (DataRow row in deviceRows)
                             {
                                 Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString());
                                 bool recordNeedsUpdating;
-
-                                // Track unique device Guids in this meta-data session, we'll need to remove any old associated devices that no longer exist
-                                uniqueIDs.Add(uniqueID);
 
                                 // Determine if record has changed since last synchronization
                                 if (updatedOnFieldExists)
@@ -3954,26 +3969,6 @@ namespace GSF.TimeSeries.Transport
                                 deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(queryDeviceIDSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID)));
 
                                 // Periodically notify user about synchronization progress
-                                UpdateSyncProgress();
-                            }
-
-                            // Remove any device records associated with this subscriber that no longer exist in the meta-data
-                            if (uniqueIDs.Count > 0)
-                            {
-                                // Sort unique ID list so that binary search can be used for quick lookups
-                                uniqueIDs.Sort();
-
-                                DataTable deviceUniqueIDs = command.RetrieveData(database.AdapterType, queryUniqueDeviceIDsSql, m_metadataSynchronizationTimeout, parentID);
-                                Guid uniqueID;
-
-                                foreach (DataRow deviceRow in deviceUniqueIDs.Rows)
-                                {
-                                    uniqueID = database.Guid(deviceRow, "UniqueID");
-
-                                    // Remove any devices in the database that are associated with the parent device and do not exist in the meta-data
-                                    if (uniqueIDs.BinarySearch(uniqueID) < 0)
-                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID));
-                                }
                                 UpdateSyncProgress();
                             }
                         }
