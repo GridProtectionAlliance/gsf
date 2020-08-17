@@ -293,10 +293,7 @@ namespace GSF.InstallerActions
             {
                 try
                 {
-                    string value = Regex.Replace(GetPropertyValue(session, propertyName).ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
-
-                    // Trim and remove spaces from acronym
-                    value = value.Trim().Replace(' ', '_');
+                    string value = Regex.Replace(GetPropertyValue(session, propertyName).Trim().ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
 
                     if (!string.IsNullOrEmpty(value))
                         session[propertyName] = value;
