@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Web.Security;
+using GSF.Web.Shared;
 
 namespace GSF.Web.Hosting
 {
@@ -38,6 +39,11 @@ namespace GSF.Web.Hosting
         /// Default value for <see cref="WebRootPath"/>.
         /// </summary>
         public const string DefaultWebRootPath = "wwwroot";
+
+        /// <summary>
+        /// Default value for <see cref="ErrorTemplateName"/>.
+        /// </summary>
+        public const string DefaultErrorTemplateName = Resources.Root + "/Shared/Views/Error.cshtml";
 
         /// <summary>
         /// Default value for <see cref="ClientCacheEnabled"/>.
@@ -125,7 +131,7 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets or sets template file name to use when a Razor compile or execution exception occurs.
         /// </summary>
-        public string ErrorTemplateName { get; set; }
+        public string ErrorTemplateName { get; set; } = DefaultErrorTemplateName;
 
         /// <summary>
         /// Gets an immutable version of the web server options.

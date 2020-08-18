@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text.RegularExpressions;
+using GSF.Web.Shared;
 
 namespace GSF.Web.Security
 {
@@ -55,7 +56,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Default value for <see cref="LoginPage"/>.
         /// </summary>
-        public const string DefaultLoginPage = "/@GSF/Web/Security/Views/Login.cshtml";
+        public const string DefaultLoginPage = Resources.Root + "/Security/Views/Login.cshtml";
 
         /// <summary>
         /// Default value for <see cref="AuthTestPage"/>.

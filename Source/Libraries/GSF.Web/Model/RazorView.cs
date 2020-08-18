@@ -23,12 +23,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using GSF.Collections;
 using GSF.Data;
+using GSF.IO;
 using GSF.Reflection;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
@@ -201,12 +203,12 @@ namespace GSF.Web.Model
             }
             catch (Exception ex)
             {
-                if (string.IsNullOrWhiteSpace(WebServerOptions?.ErrorTemplateName))
+                string errorTemplateName = WebServerOptions?.ErrorTemplateName;
+
+                if (string.IsNullOrWhiteSpace(errorTemplateName))
                     throw;
 
-                m_viewBag.AddValue("Exception", ex);
-                m_viewBag.AddValue("DebugBuild", AssemblyInfo.EntryAssembly.Debuggable);
-                return m_razorEngine.RunCompile(WebServerOptions.ErrorTemplateName, viewBag: m_viewBag);
+                return RenderErrorTemplate(errorTemplateName, ex);
             }
         }
 
@@ -245,12 +247,12 @@ namespace GSF.Web.Model
             }
             catch (Exception ex)
             {
-                if (string.IsNullOrWhiteSpace(WebServerOptions?.ErrorTemplateName))
+                string errorTemplateName = WebServerOptions?.ErrorTemplateName;
+
+                if (string.IsNullOrWhiteSpace(errorTemplateName))
                     throw;
 
-                m_viewBag.AddValue("Exception", ex);
-                m_viewBag.AddValue("DebugBuild", AssemblyInfo.EntryAssembly.Debuggable);
-                return m_razorEngine.RunCompile(WebServerOptions.ErrorTemplateName, viewBag: m_viewBag);
+                return RenderErrorTemplate(errorTemplateName, ex);
             }
         }
 
@@ -264,6 +266,37 @@ namespace GSF.Web.Model
         public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             return Task.Run(() => Execute(request, response), cancellationToken);
+        }
+
+        private string RenderErrorTemplate(string errorTemplateName, Exception ex)
+        {
+            errorTemplateName = errorTemplateName.RemoveLeadingString('/');
+            bool embeddedResource = errorTemplateName.StartsWith("@");
+
+            if (embeddedResource)
+                errorTemplateName = errorTemplateName.Substring(1).Replace('/', '.');
+
+            string fileExtension = FilePath.GetExtension(errorTemplateName).ToLowerInvariant();
+            bool debugBuild = AssemblyInfo.EntryAssembly.Debuggable;
+            IRazorEngine razorEngine;
+
+            switch (fileExtension)
+            {
+                case ".cshtml":
+                    razorEngine = embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : debugBuild ? RazorEngine<CSharpDebug>.Default as IRazorEngine : RazorEngine<CSharp>.Default;
+                    break;
+                case ".vbhtml":
+                    razorEngine = embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : debugBuild ? RazorEngine<VisualBasicDebug>.Default as IRazorEngine : RazorEngine<VisualBasic>.Default;
+                    break;
+                default:
+                    razorEngine = RazorEngine<CSharp>.Default;
+                    break;
+            }
+
+            m_viewBag.AddValue("Exception", ex);
+            m_viewBag.AddValue("DebugBuild", debugBuild);
+
+            return razorEngine.RunCompile(errorTemplateName, viewBag: m_viewBag);
         }
 
         #endregion
