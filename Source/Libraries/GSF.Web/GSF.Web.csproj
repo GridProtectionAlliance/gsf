@@ -292,6 +292,7 @@
     <EmbeddedResource Include="Shared\Views\UserInfo.cshtml" />
     <EmbeddedResource Include="Shared\Views\VendorDevices.cshtml" />
     <EmbeddedResource Include="Shared\Views\Vendors.cshtml" />
+    <EmbeddedResource Include="Shared\Views\Error.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Shared\Content\Images\layers-2x.png" />
