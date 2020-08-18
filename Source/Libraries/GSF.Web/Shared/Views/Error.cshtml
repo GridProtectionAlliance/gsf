@@ -67,8 +67,8 @@
 
     string failedMessageStyle = "display: " + (showDebug ? "none" : "initial");
     string manualMessageStyle = "display: " + (showDebug ? "initial" : "none");
-
-}<!DOCTYPE html>
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -169,7 +169,7 @@
         </h4>
     </div>
 
-    <pre id="exception-details">Exception Details:<br /><br />@exceptionDetails</pre>
+    <pre id="exceptionDetails">Exception Details:<br /><br />@exceptionDetails</pre>
     <script src="@Resources.Root/Shared/Scripts/jquery.js"></script>
     <script src="@Resources.Root/Shared/Scripts/bootstrap.js"></script>
     <script>
@@ -178,7 +178,7 @@
         }
 
         function setExceptionDetailsHeight() {
-            $("#exception-details").height(calculateRemainingBodyHeight());
+            $("#exceptionDetails").height(calculateRemainingBodyHeight());
         }
 
         $(window).resize(setExceptionDetailsHeight);
