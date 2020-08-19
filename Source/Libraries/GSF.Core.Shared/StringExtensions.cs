@@ -1755,7 +1755,6 @@ namespace GSF
         /// <returns>A string with <paramref name="charToRemove"/> deleted from the beginning</returns>
         public static string RemoveLeadingString(this string value, char charToRemove, bool matchCase = true)
         {
-
             if (string.IsNullOrEmpty(value))
                 return string.Empty;
 
@@ -1763,23 +1762,24 @@ namespace GSF
                 return value;
 
             string result = value;
+
             if (!matchCase)
             {
                 value = value.ToLower();
                 charToRemove = charToRemove.ToLower();
             }
 
-            //handle the "do nothing" case quickly
-            if (value[0] != charToRemove) return result;
+            // Handle the "do nothing" case quickly
+            if (value[0] != charToRemove)
+                return result;
 
             for (int i = 1; i < value.Length; i++)
             {
                 if (value[i] != charToRemove)
-                {
-                    return result.Substring(i - 1);
-                }
+                    return result.Substring(i); // JRC: Fixed index
             }
-            //all the characters are to be removed.
+
+            // All the characters are to be removed.
             return string.Empty;
         }
 
