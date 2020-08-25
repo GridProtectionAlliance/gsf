@@ -226,8 +226,9 @@ namespace GSF.Web.Security
                         currentIdentity = AdjustedUserName(originalPrincpal.Identity.Name);
                 }
 
+                bool debuggable = Common.GetApplicationType() != ApplicationType.Web && AssemblyInfo.EntryAssembly.Debuggable;
                 Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
-                Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, AssemblyInfo.EntryAssembly.Debuggable);
+                Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, debuggable);
                 
                 return true; // Abort pipeline
             });
