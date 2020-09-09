@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdHocFilter.cs" />
     <Compile Include="Annotation.cs" />
     <Compile Include="AnnotationExtensions.cs" />
     <Compile Include="AnnotationRequest.cs" />
@@ -88,6 +89,10 @@
     <Compile Include="RangeRaw.cs" />
     <Compile Include="Table.cs" />
     <Compile Include="LocationRequest.cs" />
+    <Compile Include="TagKeysRequest.cs" />
+    <Compile Include="TagKeysResponse.cs" />
+    <Compile Include="TagValuesRequest.cs" />
+    <Compile Include="TagValuesResponse.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="TargetCache.cs" />
     <Compile Include="DataSourceValue.cs" />

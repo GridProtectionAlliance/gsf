@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  Target.cs - Gbtc
+//  TagKeysResponse.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  09/09/2020 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -24,33 +24,18 @@
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana query request target.
+    /// Defines a Grafana tag-keys response.
     /// </summary>
-    public class Target
+    public class TagKeysResponse
     {
         /// <summary>
-        /// Reference ID.
-        /// </summary>
-        public string refId { get; set; }
-
-        /// <summary>
-        /// Target point/tag name.
-        /// </summary>
-        public string target { get; set; }
-
-        /// <summary>
-        /// Target type, can be "timeseries" or "table".
+        /// Response type.
         /// </summary>
         public string type { get; set; }
 
         /// <summary>
-        /// Exclude data that have the specified flags set.
+        /// Response text.
         /// </summary>
-        public uint excludedFlags { get; set; }
-
-        /// <summary>
-        /// Exclude data that has normal flag set.
-        /// </summary>
-        public bool excludeNormalFlags { get; set; }
+        public string text { get; set; }
     }
 }

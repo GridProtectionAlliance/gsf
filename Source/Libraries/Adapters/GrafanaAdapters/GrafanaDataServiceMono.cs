@@ -75,7 +75,7 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public string[] Search(Target request)
         {
-            return m_dataSource.Search(request).Result;
+            return m_dataSource.Search(request, m_cancellationSource.Token).Result;
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace GrafanaAdapters
         /// <param name="request">Table Name.</param>
         public string[] SearchFields(Target request)
         {
-            return m_dataSource.SearchFields(request).Result;
+            return m_dataSource.SearchFields(request, m_cancellationSource.Token).Result;
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace GrafanaAdapters
         /// <param name="request">Request.</param>
         public string[] SearchFilters(Target request)
         {
-            return m_dataSource.SearchFilters(request).Result;
+            return m_dataSource.SearchFilters(request, m_cancellationSource.Token).Result;
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace GrafanaAdapters
         /// <param name="request">Table Name.</param>
         public string[] SearchOrderBys(Target request)
         {
-            return m_dataSource.SearchOrderBys(request).Result;
+            return m_dataSource.SearchOrderBys(request, m_cancellationSource.Token).Result;
         }
 
         /// <summary>
@@ -116,6 +116,24 @@ namespace GrafanaAdapters
                 return null;
 
             return m_dataSource.Annotations(request, m_cancellationSource.Token).Result;
+        }
+
+        /// <summary>
+        /// Requests available tag keys.
+        /// </summary>
+        /// <param name="_">Tag keys request.</param>
+        public TagKeysResponse[] TagKeys(TagKeysRequest _)
+        {
+            return m_dataSource.TagKeys(_, m_cancellationSource.Token).Result;
+        }
+
+        /// <summary>
+        /// Requests available tag values.
+        /// </summary>
+        /// <param name="request">Tag values request.</param>
+        public TagValuesResponse[] TagValues(TagValuesRequest request)
+        {
+            return m_dataSource.TagValues(request, m_cancellationSource.Token).Result;
         }
     }
 }

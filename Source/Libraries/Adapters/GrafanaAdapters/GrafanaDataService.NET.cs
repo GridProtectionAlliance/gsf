@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using GSF.Historian.DataServices;
-using GSF.TimeSeries;
 using Newtonsoft.Json;
 
 namespace GrafanaAdapters
@@ -125,7 +124,7 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public async Task<string[]> Search(Target request)
         {
-            return await m_dataSource.Search(request);
+            return await m_dataSource.Search(request, m_cancellationSource.Token);
         }
 
         /// <summary>
@@ -134,7 +133,7 @@ namespace GrafanaAdapters
         /// <param name="request">Table Name.</param>
         public async Task<string[]> SearchFields(Target request)
         {
-            return await m_dataSource.SearchFields(request);
+            return await m_dataSource.SearchFields(request, m_cancellationSource.Token);
         }
 
         /// <summary>
@@ -143,7 +142,7 @@ namespace GrafanaAdapters
         /// <param name="request">Request.</param>
         public async Task<string[]> SearchFilters(Target request)
         {
-            return await m_dataSource.SearchFilters(request);
+            return await m_dataSource.SearchFilters(request, m_cancellationSource.Token);
         }
 
         /// <summary>
@@ -152,7 +151,7 @@ namespace GrafanaAdapters
         /// <param name="request">Table Name.</param>
         public async Task<string[]> SearchOrderBys(Target request)
         {
-            return await m_dataSource.SearchOrderBys(request);
+            return await m_dataSource.SearchOrderBys(request, m_cancellationSource.Token);
         }
 
         /// <summary>
@@ -181,7 +180,23 @@ namespace GrafanaAdapters
             return await LocationData.GetLocationData((double)request.radius, (double)request.zoom, request.request, m_cancellationSource.Token);
         }
 
+        /// <summary>
+        /// Requests available tag keys.
+        /// </summary>
+        /// <param name="_">Tag keys request.</param>
+        public async Task<TagKeysResponse[]> TagKeys(TagKeysRequest _)
+        {
+            return await m_dataSource.TagKeys(_, m_cancellationSource.Token);
+        }
 
+        /// <summary>
+        /// Requests available tag values.
+        /// </summary>
+        /// <param name="request">Tag values request.</param>
+        public async Task<TagValuesResponse[]> TagValues(TagValuesRequest request)
+        {
+            return await m_dataSource.TagValues(request, m_cancellationSource.Token);
+        }
     }
 }
 

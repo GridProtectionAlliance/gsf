@@ -91,6 +91,20 @@ namespace GrafanaAdapters
         /// <param name="request">Annotation request.</param>
         [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<List<AnnotationResponse>> Annotations(AnnotationRequest request);
+
+        /// <summary>
+        /// Requests available tag keys.
+        /// </summary>
+        /// <param name="_">Tag keys request.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/tag-keys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Task<TagKeysResponse[]> TagKeys(TagKeysRequest _);
+
+        /// <summary>
+        /// Requests available tag values.
+        /// </summary>
+        /// <param name="request">Tag values request.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/tag-values", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Task<TagValuesResponse[]> TagValues(TagValuesRequest request);
     }
 }
 

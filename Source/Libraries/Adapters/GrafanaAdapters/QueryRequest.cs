@@ -56,9 +56,9 @@ namespace GrafanaAdapters
         public string interval { get; set; }
 
         /// <summary>
-        /// Request targets.
+        /// Request interval, in milliseconds.
         /// </summary>
-        public List<Target> targets { get; set; }
+        public string intervalMs { get; set; }
 
         /// <summary>
         /// Request format (typically json).
@@ -69,5 +69,15 @@ namespace GrafanaAdapters
         /// Maximum data points to return.
         /// </summary>
         public int maxDataPoints { get; set; }
+
+        /// <summary>
+        /// Request targets.
+        /// </summary>
+        public List<Target> targets { get; set; }
+
+        /// <summary>
+        /// Ad-hoc filters to apply.
+        /// </summary>
+        public List<AdHocFilter> adhocFilters { get; set; }
     }
 }
