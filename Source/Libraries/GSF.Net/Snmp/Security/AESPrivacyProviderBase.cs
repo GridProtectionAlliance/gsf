@@ -29,7 +29,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace GSF.Net.Snmp.Security
