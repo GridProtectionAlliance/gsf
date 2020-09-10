@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;ASYNC;NET471</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
@@ -27,7 +27,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;ASYNC;NET471</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
@@ -36,7 +36,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
-    <DefineConstants>TRACE;MONO</DefineConstants>
+    <DefineConstants>TRACE;ASYNC;NET471;MONO</DefineConstants>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -48,6 +48,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -55,6 +56,100 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Snmp\ByteTool.cs" />
+    <Compile Include="Snmp\Counter32.cs" />
+    <Compile Include="Snmp\Counter64.cs" />
+    <Compile Include="Snmp\DataFactory.cs" />
+    <Compile Include="Snmp\EndOfMibView.cs" />
+    <Compile Include="Snmp\ErrorCode.cs" />
+    <Compile Include="Snmp\Gauge32.cs" />
+    <Compile Include="Snmp\GenericCode.cs" />
+    <Compile Include="Snmp\GetBulkRequestPdu.cs" />
+    <Compile Include="Snmp\GetNextRequestPdu.cs" />
+    <Compile Include="Snmp\GetRequestPdu.cs" />
+    <Compile Include="Snmp\Header.cs" />
+    <Compile Include="Snmp\Helper.cs" />
+    <Compile Include="Snmp\InformRequestPdu.cs" />
+    <Compile Include="Snmp\Integer32.cs" />
+    <Compile Include="Snmp\IP.cs" />
+    <Compile Include="Snmp\ISegment.cs" />
+    <Compile Include="Snmp\ISnmpData.cs" />
+    <Compile Include="Snmp\ISnmpPdu.cs" />
+    <Compile Include="Snmp\Levels.cs" />
+    <Compile Include="Snmp\MalformedPdu.cs" />
+    <Compile Include="Snmp\Messaging\AgentFoundEventArgs.cs" />
+    <Compile Include="Snmp\Messaging\AsyncHelper.cs" />
+    <Compile Include="Snmp\Messaging\Discoverer.cs" />
+    <Compile Include="Snmp\Messaging\Discovery.cs" />
+    <Compile Include="Snmp\Messaging\EndPointExtension.cs" />
+    <Compile Include="Snmp\Messaging\ErrorException.cs" />
+    <Compile Include="Snmp\Messaging\ExceptionRaisedEventArgs.cs" />
+    <Compile Include="Snmp\Messaging\GetBulkRequestMessage.cs" />
+    <Compile Include="Snmp\Messaging\GetNextRequestMessage.cs" />
+    <Compile Include="Snmp\Messaging\GetRequestMessage.cs" />
+    <Compile Include="Snmp\Messaging\InformRequestMessage.cs" />
+    <Compile Include="Snmp\Messaging\ISnmpMessage.cs" />
+    <Compile Include="Snmp\Messaging\MalformedMessage.cs" />
+    <Compile Include="Snmp\Messaging\Manager.cs" />
+    <Compile Include="Snmp\Messaging\MessageFactory.cs" />
+    <Compile Include="Snmp\Messaging\MessageFactoryException.cs" />
+    <Compile Include="Snmp\Messaging\Messenger.cs" />
+    <Compile Include="Snmp\Messaging\NumberGenerator.cs" />
+    <Compile Include="Snmp\Messaging\PortInUseException.cs" />
+    <Compile Include="Snmp\Messaging\ReportMessage.cs" />
+    <Compile Include="Snmp\Messaging\ResponseMessage.cs" />
+    <Compile Include="Snmp\Messaging\SetRequestMessage.cs" />
+    <Compile Include="Snmp\Messaging\SnmpMessageExtension.cs" />
+    <Compile Include="Snmp\Messaging\SocketAsyncEventArgsFactory.cs" />
+    <Compile Include="Snmp\Messaging\SocketAwaitable.cs" />
+    <Compile Include="Snmp\Messaging\SocketExtension.cs" />
+    <Compile Include="Snmp\Messaging\TimeoutException.cs" />
+    <Compile Include="Snmp\Messaging\TrapV1Message.cs" />
+    <Compile Include="Snmp\Messaging\TrapV2Message.cs" />
+    <Compile Include="Snmp\Messaging\WalkMode.cs" />
+    <Compile Include="Snmp\NoSuchInstance.cs" />
+    <Compile Include="Snmp\NoSuchObject.cs" />
+    <Compile Include="Snmp\Null.cs" />
+    <Compile Include="Snmp\ObjectIdentifier.cs" />
+    <Compile Include="Snmp\ObjectIdentifierConverter.cs" />
+    <Compile Include="Snmp\OctetString.cs" />
+    <Compile Include="Snmp\Opaque.cs" />
+    <Compile Include="Snmp\OperationException.cs" />
+    <Compile Include="Snmp\ReportPdu.cs" />
+    <Compile Include="Snmp\ResponsePdu.cs" />
+    <Compile Include="Snmp\Scope.cs" />
+    <Compile Include="Snmp\SecurityParameters.cs" />
+    <Compile Include="Snmp\Security\AES192PrivacyProvider.cs" />
+    <Compile Include="Snmp\Security\AES256PrivacyProvider.cs" />
+    <Compile Include="Snmp\Security\AESPrivacyProvider.cs" />
+    <Compile Include="Snmp\Security\AESPrivacyProviderBase.cs" />
+    <Compile Include="Snmp\Security\Cache.cs" />
+    <Compile Include="Snmp\Security\CryptoKeyCache.cs" />
+    <Compile Include="Snmp\Security\DecryptionException.cs" />
+    <Compile Include="Snmp\Security\DefaultAuthenticationProvider.cs" />
+    <Compile Include="Snmp\Security\DefaultPrivacyProvider.cs" />
+    <Compile Include="Snmp\Security\DESPrivacyProvider.cs" />
+    <Compile Include="Snmp\Security\IAuthenticationProvider.cs" />
+    <Compile Include="Snmp\Security\IPrivacyProvider.cs" />
+    <Compile Include="Snmp\Security\MD5AuthenticationProvider.cs" />
+    <Compile Include="Snmp\Security\PrivacyProviderExtension.cs" />
+    <Compile Include="Snmp\Security\SaltGenerator.cs" />
+    <Compile Include="Snmp\Security\SHA1AuthenticationProvider.cs" />
+    <Compile Include="Snmp\Security\SHA256AuthenticationProvider.cs" />
+    <Compile Include="Snmp\Security\TripleDESPrivacyProvider.cs" />
+    <Compile Include="Snmp\Security\User.cs" />
+    <Compile Include="Snmp\Security\UserRegistry.cs" />
+    <Compile Include="Snmp\Sequence.cs" />
+    <Compile Include="Snmp\SetRequestPdu.cs" />
+    <Compile Include="Snmp\SnmpDataExtension.cs" />
+    <Compile Include="Snmp\SnmpException.cs" />
+    <Compile Include="Snmp\SnmpType.cs" />
+    <Compile Include="Snmp\StreamExtension.cs" />
+    <Compile Include="Snmp\TimeTicks.cs" />
+    <Compile Include="Snmp\TrapV1Pdu.cs" />
+    <Compile Include="Snmp\TrapV2Pdu.cs" />
+    <Compile Include="Snmp\Variable.cs" />
+    <Compile Include="Snmp\VersionCode.cs" />
     <Compile Include="VirtualFtpClient\FtpClient.cs" />
     <Compile Include="VirtualFtpClient\FtpDirectory.cs" />
     <Compile Include="VirtualFtpClient\FtpFile.cs" />
@@ -144,6 +239,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="GSF.Net.nuspec" />
+    <None Include="Snmp\LICENSE" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
