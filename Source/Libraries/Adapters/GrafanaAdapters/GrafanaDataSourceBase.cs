@@ -1002,7 +1002,7 @@ namespace GrafanaAdapters
                 }).ToList();
 
                 // Apply any encountered ad-hoc filters
-                if (request.adhocFilters.Count > 0)
+                if (request.adhocFilters?.Count > 0)
                 {
                     foreach (AdHocFilter filter in request.adhocFilters)
                         result = result.Where(values => IsFilterMatch(values.rootTarget, filter)).ToList();
