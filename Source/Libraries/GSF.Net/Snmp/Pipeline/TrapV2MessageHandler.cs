@@ -56,7 +56,7 @@ namespace GSF.Net.Snmp.Pipeline
         /// <summary>
         /// Invokes the message received event handler.
         /// </summary>
-        /// <param name="e">The <see cref="GSF.Net.Snmp.Messaging.MessageReceivedEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The <see cref="MessageReceivedEventArgs"/> instance containing the event data.</param>
         private void InvokeMessageReceived(TrapV2MessageReceivedEventArgs e)
         {
             EventHandler<TrapV2MessageReceivedEventArgs> handler = MessageReceived;
