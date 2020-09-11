@@ -96,7 +96,7 @@ namespace GSF.Net.Snmp.Messaging
         /// <returns></returns>
         public Variable GetSingle(IPEndPoint endpoint, string community, Variable variable)
         {
-            var variables = new List<Variable> { variable };
+            List<Variable> variables = new List<Variable> { variable };
             return Messenger.Get(_version, endpoint, new OctetString(community), variables, _timeout)[0];
         }
 
@@ -169,7 +169,7 @@ namespace GSF.Net.Snmp.Messaging
         /// <returns></returns>
         public Variable SetSingle(IPEndPoint endpoint, string community, Variable variable)
         {
-            var variables = new List<Variable> { variable };
+            List<Variable> variables = new List<Variable> { variable };
             return Messenger.Set(_version, endpoint, new OctetString(community), variables, _timeout)[0];
         }
         

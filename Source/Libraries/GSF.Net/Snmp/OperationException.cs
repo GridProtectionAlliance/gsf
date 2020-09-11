@@ -85,7 +85,7 @@ namespace GSF.Net.Snmp
         /// <param name="agent">Agent address</param>
         public static OperationException Create(string message, IPAddress agent)
         {
-            var ex = new OperationException(message) { Agent = agent };
+            OperationException ex = new OperationException(message) { Agent = agent };
             return ex;
         }
     }

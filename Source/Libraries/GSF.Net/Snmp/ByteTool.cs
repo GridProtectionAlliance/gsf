@@ -53,9 +53,9 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(description));
             }
             
-            var result = new List<byte>();
-            var content = description.Trim().Split(new[] { ' ' });
-            foreach (var part in content)
+            List<byte> result = new List<byte>();
+            string[] content = description.Trim().Split(new[] { ' ' });
+            foreach (string part in content)
             {
                 byte temp;
                 if (byte.TryParse(part, out temp))
@@ -80,9 +80,9 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(description));
             }
 
-            var result = new List<byte>();
-            var buffer = new StringBuilder(2);
-            foreach (var c in description.Where(c => !char.IsWhiteSpace(c)))
+            List<byte> result = new List<byte>();
+            StringBuilder buffer = new StringBuilder(2);
+            foreach (char c in description.Where(c => !char.IsWhiteSpace(c)))
             {
                 if (!char.IsLetterOrDigit(c))
                 {
@@ -134,9 +134,9 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(items));
             }
 
-            using (var result = new MemoryStream())
+            using (MemoryStream result = new MemoryStream())
             {
-                foreach (var item in items)
+                foreach (ISnmpData item in items)
                 {
                     if (item == null)
                     {
@@ -157,9 +157,9 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(items));
             }
 
-            using (var result = new MemoryStream())
+            using (MemoryStream result = new MemoryStream())
             {
-                foreach (var item in items)
+                foreach (ISnmpData item in items)
                 {
                     item.AppendBytesTo(result);
                 }
@@ -188,7 +188,7 @@ namespace GSF.Net.Snmp
                 sign = 0x0;
             }
 
-            var list = new List<byte>(orig);
+            List<byte> list = new List<byte>(orig);
             while (list.Count > 1)
             {
                 if (list[list.Count - 1] == flag)
@@ -237,7 +237,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(data));
             }
 
-            var items = new[] 
+            ISnmpData[] items = new[] 
             {
                 new Integer32((int)version),
                 header.GetData(version),
@@ -254,7 +254,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentException("length cannot be negative.", nameof(length));
             }
 
-            var stream = new MemoryStream();
+            MemoryStream stream = new MemoryStream();
 
             if (length < 127)
             {
@@ -262,8 +262,8 @@ namespace GSF.Net.Snmp
                 return stream.ToArray();
             }
             
-            var c = new byte[16];
-            var j = 0;
+            byte[] c = new byte[16];
+            int j = 0;
             while (length > 0)
             {
                 c[j++] = (byte)(length & 0xff);

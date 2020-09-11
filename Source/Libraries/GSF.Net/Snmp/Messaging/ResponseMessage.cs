@@ -68,7 +68,7 @@ namespace GSF.Net.Snmp.Messaging
             Version = version;
             Header = Header.Empty;
             Parameters = SecurityParameters.Create(community);
-            var pdu = new ResponsePdu(
+            ResponsePdu pdu = new ResponsePdu(
                 requestId,
                 error,
                 index,

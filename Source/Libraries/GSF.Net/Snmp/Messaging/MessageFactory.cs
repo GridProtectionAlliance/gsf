@@ -107,7 +107,7 @@ namespace GSF.Net.Snmp.Messaging
                 int first;
                 while ((first = stream.ReadByte()) != -1)
                 {
-                    var message = ParseMessage(first, stream, registry);
+                    ISnmpMessage message = ParseMessage(first, stream, registry);
                     if (message == null)
                     {
                         continue;
@@ -122,7 +122,7 @@ namespace GSF.Net.Snmp.Messaging
 
         private static ISnmpMessage ParseMessage(int first, Stream stream, UserRegistry registry)
         {
-            var array = DataFactory.CreateSnmpData(first, stream);
+            ISnmpData array = DataFactory.CreateSnmpData(first, stream);
 
             if (array == null)
             {
@@ -134,13 +134,13 @@ namespace GSF.Net.Snmp.Messaging
                 throw new SnmpException("not an SNMP message");
             }
 
-            var body = (Sequence)array;
+            Sequence body = (Sequence)array;
             if (body.Length != 3 && body.Length != 4)
             {
                 throw new SnmpException("not an SNMP message");
             }
 
-            var version = (VersionCode)((Integer32)body[0]).ToInt32();
+            VersionCode version = (VersionCode)((Integer32)body[0]).ToInt32();
             Header header;
             SecurityParameters parameters;
             IPrivacyProvider privacy;
@@ -163,7 +163,7 @@ namespace GSF.Net.Snmp.Messaging
                     return new MalformedMessage(header.MessageId, parameters.UserName, body[3]);
                 }
 
-                var code = body[3].TypeCode;
+                SnmpType code = body[3].TypeCode;
                 if (code == SnmpType.Sequence)
                 {
                     // v3 not encrypted
@@ -193,7 +193,7 @@ namespace GSF.Net.Snmp.Messaging
                 }
             }
 
-            var scopeCode = scope.Pdu.TypeCode;
+            SnmpType scopeCode = scope.Pdu.TypeCode;
             try
             {
                 switch (scopeCode)

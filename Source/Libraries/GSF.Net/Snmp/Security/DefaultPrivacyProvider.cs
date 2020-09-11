@@ -85,7 +85,7 @@ namespace GSF.Net.Snmp.Security
             
             if (data.TypeCode != SnmpType.Sequence)
             {
-                var newException = new DecryptionException("Default decryption failed");
+                DecryptionException newException = new DecryptionException("Default decryption failed");
                 throw newException;
             }
             

@@ -65,7 +65,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(stream));
             }
             
-            var length = stream.ReadPayloadLength();
+            Tuple<int, byte[]> length = stream.ReadPayloadLength();
             try
             {
                 switch ((SnmpType)type)
@@ -150,7 +150,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(buffer));
             }
             
-            using (var m = new MemoryStream(buffer, index, count, false))
+            using (MemoryStream m = new MemoryStream(buffer, index, count, false))
             {
                 return CreateSnmpData(m);
             }

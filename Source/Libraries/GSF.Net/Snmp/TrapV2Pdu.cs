@@ -88,8 +88,8 @@ namespace GSF.Net.Snmp
             
             RequestId = (Integer32)DataFactory.CreateSnmpData(stream); // request
 #pragma warning disable 168
-            var temp1 = (Integer32)DataFactory.CreateSnmpData(stream); // 0
-            var temp2 = (Integer32)DataFactory.CreateSnmpData(stream); // 0
+            Integer32 temp1 = (Integer32)DataFactory.CreateSnmpData(stream); // 0
+            Integer32 temp2 = (Integer32)DataFactory.CreateSnmpData(stream); // 0
 #pragma warning restore 168
             _varbindSection = (Sequence)DataFactory.CreateSnmpData(stream);
             Variables = Variable.Transform(_varbindSection); // v[0] is timestamp. v[1] oid, v[2] value.

@@ -38,7 +38,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(data));
             }
                 
-            using (var result = new MemoryStream())
+            using (MemoryStream result = new MemoryStream())
             {
                 data.AppendBytesTo(result);
                 return result.ToArray();

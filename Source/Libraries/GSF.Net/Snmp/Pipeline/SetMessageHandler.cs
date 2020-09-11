@@ -67,14 +67,14 @@ namespace GSF.Net.Snmp.Pipeline
                 return;
             }
 
-            var index = 0;
-            var status = ErrorCode.NoError;
+            int index = 0;
+            ErrorCode status = ErrorCode.NoError;
 
             IList<Variable> result = new List<Variable>();
-            foreach (var v in context.Request.Pdu().Variables)
+            foreach (Variable v in context.Request.Pdu().Variables)
             {
                 index++;
-                var obj = store.GetObject(v.Id);
+                ScalarObject obj = store.GetObject(v.Id);
                 if (obj != null)
                 {
                     try

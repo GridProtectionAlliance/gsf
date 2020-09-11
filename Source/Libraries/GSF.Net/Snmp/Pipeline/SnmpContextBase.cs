@@ -98,7 +98,7 @@ namespace GSF.Net.Snmp.Pipeline
         {
             get
             {
-                var length = Response.ToBytes().Length;
+                int length = Response.ToBytes().Length;
                 return length > Request.Header.MaxSize || length > Messenger.MaxMessageSize;
             }
         }

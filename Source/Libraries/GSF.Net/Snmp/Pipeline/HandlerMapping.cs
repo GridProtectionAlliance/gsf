@@ -20,6 +20,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using GSF.Net.Snmp.Messaging;
 
 namespace GSF.Net.Snmp.Pipeline
@@ -112,7 +113,7 @@ namespace GSF.Net.Snmp.Pipeline
         private static IMessageHandler CreateMessageHandler(string assemblyName, string type)
         {
 #if NET471
-            foreach (var assembly in from assembly in AppDomain.CurrentDomain.GetAssemblies()
+            foreach (Assembly assembly in from assembly in AppDomain.CurrentDomain.GetAssemblies()
                                 let name = assembly.GetName().Name
                                 where string.Compare(name, assemblyName, StringComparison.OrdinalIgnoreCase) == 0
                                 select assembly)
@@ -157,7 +158,7 @@ namespace GSF.Net.Snmp.Pipeline
 
         private bool CommandMatched(ISnmpMessage message)
         {
-            var codeString = message.Pdu().TypeCode.ToString();
+            string codeString = message.Pdu().TypeCode.ToString();
             return StringEquals(_command, "*") || StringEquals(_command + "RequestPdu", codeString) ||
             StringEquals(_command + "Pdu", codeString);
         }

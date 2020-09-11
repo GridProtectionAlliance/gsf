@@ -61,12 +61,12 @@ namespace GSF.Net.Snmp
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
-            var s = value as string;
+            string s = value as string;
             if (s != null)
             {
                 try
                 {
-                    var oidVal = ObjectIdentifier.Convert(s);
+                    uint[] oidVal = ObjectIdentifier.Convert(s);
                     return new ObjectIdentifier(oidVal);
                 }
                 catch
@@ -87,7 +87,7 @@ namespace GSF.Net.Snmp
         /// <returns></returns>
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            var oid = value as ObjectIdentifier;
+            ObjectIdentifier oid = value as ObjectIdentifier;
             if (destinationType == typeof(string) && oid != null)
             {
                 return oid.ToString(); // GetTextual(null);

@@ -89,7 +89,7 @@ namespace GSF.Net.Snmp.Messaging
             Generic = generic;
             Specific = specific;
             TimeStamp = time;
-            var pdu = new TrapV1Pdu(
+            TrapV1Pdu pdu = new TrapV1Pdu(
                 Enterprise,
                 new IP(AgentAddress.GetAddressBytes()),
                 new Integer32((int)Generic),
@@ -131,7 +131,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentException("Invalid message type.", nameof(body));
             }
 
-            var trapPdu = (TrapV1Pdu)_pdu;
+            TrapV1Pdu trapPdu = (TrapV1Pdu)_pdu;
             Enterprise = trapPdu.Enterprise;
             AgentAddress = new IPAddress(trapPdu.AgentAddress.GetRaw());
             Generic = trapPdu.Generic;
@@ -253,7 +253,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(data));
             }
             
-            var collection = new List<ISnmpData>(1 + data.Length) { new Integer32((int)version) };
+            List<ISnmpData> collection = new List<ISnmpData>(1 + data.Length) { new Integer32((int)version) };
             collection.AddRange(data);
             return new Sequence(collection);
         }

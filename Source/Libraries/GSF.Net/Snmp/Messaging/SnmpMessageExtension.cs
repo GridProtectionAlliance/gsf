@@ -63,7 +63,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(message));
             }
 
-            var code = message.TypeCode();
+            SnmpType code = message.TypeCode();
             return code == SnmpType.Unknown ? new List<Variable>(0) : message.Scope.Pdu.Variables;
         }
 
@@ -145,7 +145,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(manager));
             }
 
-            var code = message.TypeCode();
+            SnmpType code = message.TypeCode();
             if ((code != SnmpType.TrapV1Pdu && code != SnmpType.TrapV2Pdu) && code != SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(
@@ -154,7 +154,7 @@ namespace GSF.Net.Snmp.Messaging
                     code));
             }
 
-            using (var socket = manager.GetSocket())
+            using (Socket socket = manager.GetSocket())
             {
                 message.Send(manager, socket);
             }
@@ -183,7 +183,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(manager));
             }
 
-            var code = message.TypeCode();
+            SnmpType code = message.TypeCode();
             if ((code != SnmpType.TrapV1Pdu && code != SnmpType.TrapV2Pdu) && code != SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(
@@ -192,7 +192,7 @@ namespace GSF.Net.Snmp.Messaging
                     code));
             }
 
-            var bytes = message.ToBytes();
+            byte[] bytes = message.ToBytes();
             socket.SendTo(bytes, 0, bytes.Length, SocketFlags.None, manager);
         }
 
@@ -217,13 +217,13 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(receiver));
             }
 
-            var code = request.TypeCode();
+            SnmpType code = request.TypeCode();
             if (code == SnmpType.TrapV1Pdu || code == SnmpType.TrapV2Pdu || code == SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "not a request message: {0}", code));
             }
 
-            using (var socket = receiver.GetSocket())
+            using (Socket socket = receiver.GetSocket())
             {
                 return request.GetResponse(timeout, receiver, registry, socket);
             }
@@ -248,13 +248,13 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(receiver));
             }
 
-            var code = request.TypeCode();
+            SnmpType code = request.TypeCode();
             if (code == SnmpType.TrapV1Pdu || code == SnmpType.TrapV2Pdu || code == SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "not a request message: {0}", code));
             }
 
-            using (var socket = receiver.GetSocket())
+            using (Socket socket = receiver.GetSocket())
             {
                 return request.GetResponse(timeout, receiver, socket);
             }
@@ -285,7 +285,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(udpSocket));
             }
 
-            var registry = new UserRegistry();
+            UserRegistry registry = new UserRegistry();
             if (request.Version == VersionCode.V3)
             {
                 registry.Add(request.Parameters.UserName, request.Privacy);
@@ -325,15 +325,15 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(registry));
             }
 
-            var requestCode = request.TypeCode();
+            SnmpType requestCode = request.TypeCode();
             if (requestCode == SnmpType.TrapV1Pdu || requestCode == SnmpType.TrapV2Pdu || requestCode == SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "not a request message: {0}", requestCode));
             }
 
-            var bytes = request.ToBytes();
-            var bufSize = udpSocket.ReceiveBufferSize = Messenger.MaxMessageSize;
-            var reply = new byte[bufSize];
+            byte[] bytes = request.ToBytes();
+            int bufSize = udpSocket.ReceiveBufferSize = Messenger.MaxMessageSize;
+            byte[] reply = new byte[bufSize];
 
             // Whatever you change, try to keep the Send and the Receive close to each other.
             udpSocket.SendTo(bytes, receiver);
@@ -361,12 +361,12 @@ namespace GSF.Net.Snmp.Messaging
             }
 
             // Passing 'count' is not necessary because ParseMessages should ignore it, but it offer extra safety (and would avoid an issue if parsing >1 response).
-            var response = MessageFactory.ParseMessages(reply, 0, count, registry)[0];
-            var responseCode = response.TypeCode();
+            ISnmpMessage response = MessageFactory.ParseMessages(reply, 0, count, registry)[0];
+            SnmpType responseCode = response.TypeCode();
             if (responseCode == SnmpType.ResponsePdu || responseCode == SnmpType.ReportPdu)
             {
-                var requestId = request.MessageId();
-                var responseId = response.MessageId();
+                int requestId = request.MessageId();
+                int responseId = response.MessageId();
                 if (responseId != requestId)
                 {
                     throw OperationException.Create(string.Format(CultureInfo.InvariantCulture, "wrong response sequence: expected {0}, received {1}", requestId, responseId), receiver.Address);
@@ -401,17 +401,17 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(request));
             }
             
-            var ar = (SnmpMessageAsyncResult)asyncResult;
-            var s = ar.WorkSocket;
-            var count = s.EndReceive(ar.Inner);
+            SnmpMessageAsyncResult ar = (SnmpMessageAsyncResult)asyncResult;
+            Socket s = ar.WorkSocket;
+            int count = s.EndReceive(ar.Inner);
             
             // Passing 'count' is not necessary because ParseMessages should ignore it, but it offer extra safety (and would avoid an issue if parsing >1 response).
-            var response = MessageFactory.ParseMessages(ar.GetBuffer(), 0, count, ar.Users)[0];
-            var responseCode = response.TypeCode();
+            ISnmpMessage response = MessageFactory.ParseMessages(ar.GetBuffer(), 0, count, ar.Users)[0];
+            SnmpType responseCode = response.TypeCode();
             if (responseCode == SnmpType.ResponsePdu || responseCode == SnmpType.ReportPdu)
             {
-                var requestId = request.MessageId();
-                var responseId = response.MessageId();
+                int requestId = request.MessageId();
+                int responseId = response.MessageId();
                 if (responseId != requestId)
                 {
                     throw OperationException.Create(string.Format(CultureInfo.InvariantCulture, "wrong response sequence: expected {0}, received {1}", requestId, responseId), ar.Receiver.Address);
@@ -456,7 +456,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(registry));
             }
 
-            var requestCode = request.TypeCode();
+            SnmpType requestCode = request.TypeCode();
             if (requestCode == SnmpType.TrapV1Pdu || requestCode == SnmpType.TrapV2Pdu || requestCode == SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "not a request message: {0}", requestCode));
@@ -464,8 +464,8 @@ namespace GSF.Net.Snmp.Messaging
 
             // Whatever you change, try to keep the Send and the Receive close to each other.
             udpSocket.SendTo(request.ToBytes(), receiver);
-            var bufferSize = udpSocket.ReceiveBufferSize = Messenger.MaxMessageSize;
-            var buffer = new byte[bufferSize];
+            int bufferSize = udpSocket.ReceiveBufferSize = Messenger.MaxMessageSize;
+            byte[] buffer = new byte[bufferSize];
 
             // https://sharpsnmplib.codeplex.com/workitem/7234
             if (callback != null)
@@ -473,12 +473,12 @@ namespace GSF.Net.Snmp.Messaging
                 AsyncCallback wrapped = callback;
                 callback = asyncResult =>
                 {
-                    var result = new SnmpMessageAsyncResult(asyncResult, udpSocket, registry, receiver, buffer);
+                    SnmpMessageAsyncResult result = new SnmpMessageAsyncResult(asyncResult, udpSocket, registry, receiver, buffer);
                     wrapped(result);
                 };
             }
 
-            var ar = udpSocket.BeginReceive(buffer, 0, bufferSize, SocketFlags.None, callback, state);
+            IAsyncResult ar = udpSocket.BeginReceive(buffer, 0, bufferSize, SocketFlags.None, callback, state);
             return new SnmpMessageAsyncResult(ar, udpSocket, registry, receiver, buffer);
         }
 #endif
@@ -499,7 +499,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(manager));
             }
 
-            var code = message.TypeCode();
+            SnmpType code = message.TypeCode();
             if ((code != SnmpType.TrapV1Pdu && code != SnmpType.TrapV2Pdu) && code != SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(
@@ -508,7 +508,7 @@ namespace GSF.Net.Snmp.Messaging
                     code));
             }
 
-            using (var socket = manager.GetSocket())
+            using (Socket socket = manager.GetSocket())
             {
                 await message.SendAsync(manager, socket).ConfigureAwait(false);
             }
@@ -537,7 +537,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(manager));
             }
 
-            var code = message.TypeCode();
+            SnmpType code = message.TypeCode();
             if ((code != SnmpType.TrapV1Pdu && code != SnmpType.TrapV2Pdu) && code != SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(
@@ -546,11 +546,11 @@ namespace GSF.Net.Snmp.Messaging
                     code));
             }
 
-            var bytes = message.ToBytes();
-            var info = SocketExtension.EventArgsFactory.Create();
+            byte[] bytes = message.ToBytes();
+            SocketAsyncEventArgs info = SocketExtension.EventArgsFactory.Create();
             info.RemoteEndPoint = manager;
             info.SetBuffer(bytes, 0, bytes.Length);
-            using (var awaitable1 = new SocketAwaitable(info))
+            using (SocketAwaitable awaitable1 = new SocketAwaitable(info))
             {
                 await socket.SendToAsync(awaitable1);
             }
@@ -576,13 +576,13 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(receiver));
             }
 
-            var code = request.TypeCode();
+            SnmpType code = request.TypeCode();
             if (code == SnmpType.TrapV1Pdu || code == SnmpType.TrapV2Pdu || code == SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "not a request message: {0}", code));
             }
 
-            using (var socket = receiver.GetSocket())
+            using (Socket socket = receiver.GetSocket())
             {
                 return await request.GetResponseAsync(receiver, registry, socket).ConfigureAwait(false);
             }
@@ -606,13 +606,13 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(receiver));
             }
 
-            var code = request.TypeCode();
+            SnmpType code = request.TypeCode();
             if (code == SnmpType.TrapV1Pdu || code == SnmpType.TrapV2Pdu || code == SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "not a request message: {0}", code));
             }
 
-            using (var socket = receiver.GetSocket())
+            using (Socket socket = receiver.GetSocket())
             {
                 return await request.GetResponseAsync(receiver, socket).ConfigureAwait(false);
             }
@@ -642,7 +642,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(udpSocket));
             }
 
-            var registry = new UserRegistry();
+            UserRegistry registry = new UserRegistry();
             if (request.Version == VersionCode.V3)
             {
                 registry.Add(request.Parameters.UserName, request.Privacy);
@@ -676,37 +676,37 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(registry));
             }
 
-            var requestCode = request.TypeCode();
+            SnmpType requestCode = request.TypeCode();
             if (requestCode == SnmpType.TrapV1Pdu || requestCode == SnmpType.TrapV2Pdu || requestCode == SnmpType.ReportPdu)
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "not a request message: {0}", requestCode));
             }
 
-            var bytes = request.ToBytes();
-            var bufSize = udpSocket.ReceiveBufferSize = Messenger.MaxMessageSize;
+            byte[] bytes = request.ToBytes();
+            int bufSize = udpSocket.ReceiveBufferSize = Messenger.MaxMessageSize;
 
             // Whatever you change, try to keep the Send and the Receive close to each other.
-            var info = SocketExtension.EventArgsFactory.Create();
+            SocketAsyncEventArgs info = SocketExtension.EventArgsFactory.Create();
             info.RemoteEndPoint = receiver ?? throw new ArgumentNullException(nameof(receiver));
             info.SetBuffer(bytes, 0, bytes.Length);
-            using (var awaitable1 = new SocketAwaitable(info))
+            using (SocketAwaitable awaitable1 = new SocketAwaitable(info))
             {
                 await udpSocket.SendToAsync(awaitable1);
             }
 
             int count;
-            var reply = new byte[bufSize];
+            byte[] reply = new byte[bufSize];
 
             // IMPORTANT: follow http://blogs.msdn.com/b/pfxteam/archive/2011/12/15/10248293.aspx
-            var args = SocketExtension.EventArgsFactory.Create();
-            var remoteAddress = udpSocket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any;
+            SocketAsyncEventArgs args = SocketExtension.EventArgsFactory.Create();
+            IPAddress remoteAddress = udpSocket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any;
             EndPoint remote = new IPEndPoint(remoteAddress, 0);
 
             try
             {
                 args.RemoteEndPoint = remote;
                 args.SetBuffer(reply, 0, bufSize);
-                using (var awaitable = new SocketAwaitable(args))
+                using (SocketAwaitable awaitable = new SocketAwaitable(args))
                 {
                     count = await udpSocket.ReceiveMessageFromAsync(awaitable);
                 }
@@ -728,12 +728,12 @@ namespace GSF.Net.Snmp.Messaging
             }
 
             // Passing 'count' is not necessary because ParseMessages should ignore it, but it offer extra safety (and would avoid an issue if parsing >1 response).
-            var response = MessageFactory.ParseMessages(reply, 0, count, registry)[0];
-            var responseCode = response.TypeCode();
+            ISnmpMessage response = MessageFactory.ParseMessages(reply, 0, count, registry)[0];
+            SnmpType responseCode = response.TypeCode();
             if (responseCode == SnmpType.ResponsePdu || responseCode == SnmpType.ReportPdu)
             {
-                var requestId = request.MessageId();
-                var responseId = response.MessageId();
+                int requestId = request.MessageId();
+                int responseId = response.MessageId();
                 if (responseId != requestId)
                 {
                     throw OperationException.Create(string.Format(CultureInfo.InvariantCulture, "wrong response sequence: expected {0}, received {1}", requestId, responseId), receiver.Address);

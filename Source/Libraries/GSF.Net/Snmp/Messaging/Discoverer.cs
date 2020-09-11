@@ -71,7 +71,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(community));
             }
 
-            var addressFamily = broadcastAddress.AddressFamily;
+            AddressFamily addressFamily = broadcastAddress.AddressFamily;
             if (addressFamily == AddressFamily.InterNetworkV6)
             {
                 throw new ArgumentException("IP v6 is not yet supported.", nameof(broadcastAddress));
@@ -82,16 +82,16 @@ namespace GSF.Net.Snmp.Messaging
             if (version == VersionCode.V3)
             {
                 // throw new NotSupportedException("SNMP v3 is not supported");
-                var discovery = new Discovery(Messenger.NextMessageId, _requestId, Messenger.MaxMessageSize);
+                Discovery discovery = new Discovery(Messenger.NextMessageId, _requestId, Messenger.MaxMessageSize);
                 bytes = discovery.ToBytes();
             }
             else
             {
-                var message = new GetRequestMessage(_requestId, version, community, _defaultVariables);
+                GetRequestMessage message = new GetRequestMessage(_requestId, version, community, _defaultVariables);
                 bytes = message.ToBytes();
             }
 
-            using (var udp = new UdpClient(addressFamily))
+            using (UdpClient udp = new UdpClient(addressFamily))
             {
 #if (!CF)
                 udp.EnableBroadcast = true;
@@ -101,7 +101,7 @@ namespace GSF.Net.Snmp.Messaging
 #else
                 AsyncHelper.RunSync(() => udp.SendAsync(bytes, bytes.Length, broadcastAddress));
 #endif
-                var activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
+                int activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
                 if (activeBefore == Active)
                 {
                     // If already started, we've nothing to do.
@@ -242,12 +242,12 @@ namespace GSF.Net.Snmp.Messaging
 
         private void HandleMessage(byte[] buffer, int count, IPEndPoint remote)
         {
-            foreach (var message in MessageFactory.ParseMessages(buffer, 0, count, Empty))
+            foreach (ISnmpMessage message in MessageFactory.ParseMessages(buffer, 0, count, Empty))
             {
-                var code = message.TypeCode();
+                SnmpType code = message.TypeCode();
                 if (code == SnmpType.ReportPdu)
                 {
-                    var report = (ReportMessage)message;
+                    ReportMessage report = (ReportMessage)message;
                     if (report.RequestId() != _requestId)
                     {
                         continue;
@@ -266,7 +266,7 @@ namespace GSF.Net.Snmp.Messaging
                     continue;
                 }
 
-                var response = (ResponseMessage)message;
+                ResponseMessage response = (ResponseMessage)message;
                 if (response.RequestId() != _requestId)
                 {
                     continue;
@@ -301,7 +301,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(community));
             }
 
-            var addressFamily = broadcastAddress.AddressFamily;
+            AddressFamily addressFamily = broadcastAddress.AddressFamily;
             if (addressFamily == AddressFamily.InterNetworkV6)
             {
                 throw new ArgumentException("IP v6 is not yet supported.", nameof(broadcastAddress));
@@ -312,28 +312,28 @@ namespace GSF.Net.Snmp.Messaging
             if (version == VersionCode.V3)
             {
                 // throw new NotSupportedException("SNMP v3 is not supported");
-                var discovery = new Discovery(Messenger.NextMessageId, _requestId, Messenger.MaxMessageSize);
+                Discovery discovery = new Discovery(Messenger.NextMessageId, _requestId, Messenger.MaxMessageSize);
                 bytes = discovery.ToBytes();
             }
             else
             {
-                var message = new GetRequestMessage(_requestId, version, community, _defaultVariables);
+                GetRequestMessage message = new GetRequestMessage(_requestId, version, community, _defaultVariables);
                 bytes = message.ToBytes();
             }
 
-            using (var udp = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp))
+            using (Socket udp = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp))
             {
                 udp.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-                var info = SocketExtension.EventArgsFactory.Create();
+                SocketAsyncEventArgs info = SocketExtension.EventArgsFactory.Create();
                 info.RemoteEndPoint = broadcastAddress;
                 info.SetBuffer(bytes, 0, bytes.Length);
 
-                using (var awaitable1 = new SocketAwaitable(info))
+                using (SocketAwaitable awaitable1 = new SocketAwaitable(info))
                 {
                     await udp.SendToAsync(awaitable1);
                 }
 
-                var activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
+                int activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
                 if (activeBefore == Active)
                 {
                     // If already started, we've nothing to do.
@@ -372,14 +372,14 @@ namespace GSF.Net.Snmp.Messaging
                 }
 
                 int count;
-                var reply = new byte[_bufferSize];
-                var args = SocketExtension.EventArgsFactory.Create();
+                byte[] reply = new byte[_bufferSize];
+                SocketAsyncEventArgs args = SocketExtension.EventArgsFactory.Create();
                 try
                 {
                     EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
                     args.RemoteEndPoint = remote;
                     args.SetBuffer(reply, 0, _bufferSize);
-                    using (var awaitable = new SocketAwaitable(args))
+                    using (SocketAwaitable awaitable = new SocketAwaitable(args))
                     {
                         count = await socket.ReceiveMessageFromAsync(awaitable);
                     }
@@ -396,7 +396,7 @@ namespace GSF.Net.Snmp.Messaging
 
                     // If the SnmpTrapListener was active, marks it as stopped and call HandleException.
                     // If it was inactive, the exception is likely to result from this, and we raise nothing.
-                    var activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
+                    int activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
                     if (activeBefore == Active)
                     {
                         HandleException(ex);

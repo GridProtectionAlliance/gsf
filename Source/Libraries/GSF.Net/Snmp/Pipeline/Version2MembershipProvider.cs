@@ -54,13 +54,13 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ArgumentNullException(nameof(context));
             }
             
-            var request = context.Request;
+            ISnmpMessage request = context.Request;
             if (request.Version != Version)
             {
                 return false;
             }
             
-            var parameters = request.Parameters;
+            SecurityParameters parameters = request.Parameters;
             if (request.Pdu().TypeCode == SnmpType.SetRequestPdu)
             {
                 return parameters.UserName == _set;

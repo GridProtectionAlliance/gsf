@@ -92,7 +92,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentException("If byte length is 5, then first byte must be 0.", nameof(length));
             }
 
-            var list = new List<byte>(_raw);
+            List<byte> list = new List<byte>(_raw);
             list.Reverse();
             while (list.Count > 4)
             {

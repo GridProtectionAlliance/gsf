@@ -151,7 +151,7 @@ namespace GSF.Net.Snmp
         /// <returns></returns>
         public Levels ToLevels()
         {          
-            var bytes = GetRaw();
+            byte[] bytes = GetRaw();
             if (bytes.Length > 1)
             {
                 throw new InvalidCastException("Length should be 1");
@@ -166,8 +166,8 @@ namespace GSF.Net.Snmp
         /// <returns></returns>
         public string ToHexString()
         {
-            var result = new StringBuilder();
-            foreach (var b in _raw)
+            StringBuilder result = new StringBuilder();
+            foreach (byte b in _raw)
             {
                 result.Append(b.ToString("X2", CultureInfo.InvariantCulture));
             }

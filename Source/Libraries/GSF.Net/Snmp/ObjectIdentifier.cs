@@ -93,8 +93,8 @@ namespace GSF.Net.Snmp
             {
                 if (_hashcode == 0)
                 {
-                    var hash = 0;
-                    for (var i = _oid.Length - 1; i >= 0; i--)
+                    int hash = 0;
+                    for (int i = _oid.Length - 1; i >= 0; i--)
                     {
                         hash ^= (int)_oid[i];
                     }
@@ -138,9 +138,9 @@ namespace GSF.Net.Snmp
                 throw new ArgumentException("Byte length cannot be 0.", nameof(length));
             }
 
-            var result = new List<uint> { (uint)(_raw[0] / 40), (uint)(_raw[0] % 40) };
+            List<uint> result = new List<uint> { (uint)(_raw[0] / 40), (uint)(_raw[0] % 40) };
             uint buffer = 0;
-            for (var i = 1; i < _raw.Length; i++)
+            for (int i = 1; i < _raw.Length; i++)
             {
                 if ((_raw[i] & 0x80) == 0)
                 {
@@ -160,8 +160,8 @@ namespace GSF.Net.Snmp
             {
                 if (_hashcode == 0)
                 {
-                    var hash = 0;
-                    for (var i = _oid.Length - 1; i >= 0; i--)
+                    int hash = 0;
+                    for (int i = _oid.Length - 1; i >= 0; i--)
                     {
                         hash ^= (int)_oid[i];
                     }
@@ -225,8 +225,8 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(other));
             }
 
-            var shortest = (_oid.Length < other._oid.Length) ? _oid.Length : other._oid.Length;
-            for (var i = 0; i < shortest; i++)
+            int shortest = (_oid.Length < other._oid.Length) ? _oid.Length : other._oid.Length;
+            for (int i = 0; i < shortest; i++)
             {
                 if (_oid[i] > other._oid[i])
                 {
@@ -264,8 +264,8 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(numerical));
             }
 
-            var result = new StringBuilder(numerical[0].ToString(CultureInfo.InvariantCulture));
-            for (var k = 1; k < numerical.Length; k++)
+            StringBuilder result = new StringBuilder(numerical[0].ToString(CultureInfo.InvariantCulture));
+            for (int k = 1; k < numerical.Length; k++)
             {
                 result.Append(".").Append(numerical[k].ToString(CultureInfo.InvariantCulture));
             }
@@ -286,9 +286,9 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(dotted));
             }
 
-            var parts = dotted.Split(new[] { '.' });
-            var result = new List<uint>();
-            foreach (var s in parts.Where(s => !string.IsNullOrEmpty(s)))
+            string[] parts = dotted.Split(new[] { '.' });
+            List<uint> result = new List<uint>();
+            foreach (string s in parts.Where(s => !string.IsNullOrEmpty(s)))
             {
                 uint temp;
                 if (uint.TryParse(s, out temp))
@@ -326,10 +326,10 @@ namespace GSF.Net.Snmp
             }
 
             // TODO: improve here.
-            var temp = new List<byte>();
-            var first = (byte)((40 * _oid[0]) + _oid[1]);
+            List<byte> temp = new List<byte>();
+            byte first = (byte)((40 * _oid[0]) + _oid[1]);
             temp.Add(first);
-            for (var i = 2; i < _oid.Length; i++)
+            for (int i = 2; i < _oid.Length; i++)
             {
                 temp.AddRange(ConvertToBytes(_oid[i]));
             }
@@ -339,7 +339,7 @@ namespace GSF.Net.Snmp
 
         private static IEnumerable<byte> ConvertToBytes(uint subIdentifier)
         {
-            var result = new List<byte> { (byte)(subIdentifier & 0x7F) };
+            List<byte> result = new List<byte> { (byte)(subIdentifier & 0x7F) };
             while ((subIdentifier = subIdentifier >> 7) > 0)
             {
                 result.Add((byte)((subIdentifier & 0x7F) | 0x80));
@@ -411,7 +411,7 @@ namespace GSF.Net.Snmp
         /// </exception>
         public int CompareTo(object obj)
         {
-            var o = obj as ObjectIdentifier;
+            ObjectIdentifier o = obj as ObjectIdentifier;
             if (o == null)
             {
                 throw new ArgumentException("obj is not the same type as this instance.", nameof(obj));
@@ -522,8 +522,8 @@ namespace GSF.Net.Snmp
             }
 
             // Old method with List<uint> dropped as it incurred two copies of the array (vs 1 for this method).
-            var length = original.Length;
-            var tmp = new uint[length + 1];
+            int length = original.Length;
+            uint[] tmp = new uint[length + 1];
             Array.Copy(original, tmp, length);
             tmp[length] = extra;
             return tmp;

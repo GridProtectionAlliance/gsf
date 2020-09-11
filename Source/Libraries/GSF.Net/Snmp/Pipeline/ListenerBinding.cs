@@ -151,7 +151,7 @@ namespace GSF.Net.Snmp.Pipeline
                 return;
             }
 
-            var buffer = response.ToBytes();
+            byte[] buffer = response.ToBytes();
             try
             {
                 _socket.SendTo(buffer, 0, buffer.Length, 0, receiver);
@@ -183,7 +183,7 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
-            var addressFamily = Endpoint.AddressFamily;
+            AddressFamily addressFamily = Endpoint.AddressFamily;
             if (addressFamily == AddressFamily.InterNetwork && !Socket.OSSupportsIPv4)
             {
                 throw new InvalidOperationException(Listener.ErrorIPv4NotSupported);
@@ -194,7 +194,7 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new InvalidOperationException(Listener.ErrorIPv6NotSupported);
             }
 
-            var activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
+            int activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
             if (activeBefore == Active)
             {
                 // If already started, we've nothing to do.
@@ -242,7 +242,7 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
-            var activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
+            int activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
             if (activeBefore != Active)
             {
                 return;
@@ -394,7 +394,7 @@ namespace GSF.Net.Snmp.Pipeline
             }
             catch (Exception ex)
             {
-                var exception = new MessageFactoryException("Invalid message bytes found. Use tracing to analyze the bytes.", ex);
+                MessageFactoryException exception = new MessageFactoryException("Invalid message bytes found. Use tracing to analyze the bytes.", ex);
                 exception.SetBytes(buffer);
                 HandleException(exception);
             }
@@ -404,9 +404,9 @@ namespace GSF.Net.Snmp.Pipeline
                 return;
             }
 
-            foreach (var message in messages)
+            foreach (ISnmpMessage message in messages)
             {
-                var handler = MessageReceived;
+                EventHandler<MessageReceivedEventArgs> handler = MessageReceived;
                 handler?.Invoke(this, new MessageReceivedEventArgs(remote, message, this));
             }
         }
@@ -445,14 +445,14 @@ namespace GSF.Net.Snmp.Pipeline
                 return;
             }
 
-            var buffer = response.ToBytes();
-            var info = SocketExtension.EventArgsFactory.Create();
+            byte[] buffer = response.ToBytes();
+            SocketAsyncEventArgs info = SocketExtension.EventArgsFactory.Create();
 
             try
             {
                 info.RemoteEndPoint = receiver;
                 info.SetBuffer(buffer, 0, buffer.Length);
-                using (var awaitable1 = new SocketAwaitable(info))
+                using (SocketAwaitable awaitable1 = new SocketAwaitable(info))
                 {
                     await _socket.SendToAsync(awaitable1);
                 }
@@ -478,7 +478,7 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
-            var addressFamily = Endpoint.AddressFamily;
+            AddressFamily addressFamily = Endpoint.AddressFamily;
             if (addressFamily == AddressFamily.InterNetwork && !Socket.OSSupportsIPv4)
             {
                 throw new InvalidOperationException(Listener.ErrorIPv4NotSupported);
@@ -489,7 +489,7 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new InvalidOperationException(Listener.ErrorIPv6NotSupported);
             }
 
-            var activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
+            int activeBefore = Interlocked.CompareExchange(ref _active, Active, Inactive);
             if (activeBefore == Active)
             {
                 // If already started, we've nothing to do.
@@ -532,14 +532,14 @@ namespace GSF.Net.Snmp.Pipeline
                 }
 
                 int count;
-                var reply = new byte[_bufferSize];
-                var args = SocketExtension.EventArgsFactory.Create();
+                byte[] reply = new byte[_bufferSize];
+                SocketAsyncEventArgs args = SocketExtension.EventArgsFactory.Create();
                 try
                 {
                     EndPoint remote = _socket.AddressFamily == AddressFamily.InterNetwork ? new IPEndPoint(IPAddress.Any, 0) : new IPEndPoint(IPAddress.IPv6Any, 0);
                     args.RemoteEndPoint = remote;
                     args.SetBuffer(reply, 0, _bufferSize);
-                    using (var awaitable = new SocketAwaitable(args))
+                    using (SocketAwaitable awaitable = new SocketAwaitable(args))
                     {
                         count = await _socket.ReceiveMessageFromAsync(awaitable);
                     }
@@ -553,7 +553,7 @@ namespace GSF.Net.Snmp.Pipeline
                     {
                         // If the SnmpTrapListener was active, marks it as stopped and call HandleException.
                         // If it was inactive, the exception is likely to result from this, and we raise nothing.
-                        var activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
+                        int activeBefore = Interlocked.CompareExchange(ref _active, Inactive, Active);
                         if (activeBefore == Active)
                         {
                             HandleException(ex);

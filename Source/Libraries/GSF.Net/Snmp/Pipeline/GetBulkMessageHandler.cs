@@ -48,18 +48,18 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ArgumentNullException(nameof(store));
             }    
             
-            var pdu = context.Request.Pdu();
+            ISnmpPdu pdu = context.Request.Pdu();
             IList<Variable> result = new List<Variable>();
-            var index = 0;
-            var nonrepeaters = pdu.ErrorStatus.ToInt32();
-            var variables = pdu.Variables;
-            for (var i = 0; i < nonrepeaters; i++)
+            int index = 0;
+            int nonrepeaters = pdu.ErrorStatus.ToInt32();
+            IList<Variable> variables = pdu.Variables;
+            for (int i = 0; i < nonrepeaters; i++)
             {
-                var v = variables[i];
+                Variable v = variables[i];
                 index++;
                 try
                 {
-                    var next = store.GetNextObject(v.Id);
+                    ScalarObject next = store.GetNextObject(v.Id);
                     result.Add(next == null ? new Variable(v.Id, new EndOfMibView()) : next.Variable);
                 }
                 catch (Exception)
@@ -69,17 +69,17 @@ namespace GSF.Net.Snmp.Pipeline
                 }
             }
 
-            for (var j = nonrepeaters; j < variables.Count; j++)
+            for (int j = nonrepeaters; j < variables.Count; j++)
             {
-                var v = variables[j];
+                Variable v = variables[j];
                 index++;
-                var temp = v;
-                var repetition = pdu.ErrorIndex.ToInt32();
+                Variable temp = v;
+                int repetition = pdu.ErrorIndex.ToInt32();
                 while (repetition-- > 0)
                 {
                     try
                     {
-                        var next = store.GetNextObject(temp.Id);
+                        ScalarObject next = store.GetNextObject(temp.Id);
                         if (next == null)
                         {
                             temp = new Variable(temp.Id, new EndOfMibView());

@@ -122,7 +122,7 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentNullException(nameof(privacy));
             }
 
-            var provider = privacy.AuthenticationProvider;
+            IAuthenticationProvider provider = privacy.AuthenticationProvider;
             if (provider is DefaultAuthenticationProvider)
             {
                 return;
@@ -133,7 +133,7 @@ namespace GSF.Net.Snmp.Security
                 return;
             }
 
-            var scopeData = privacy.GetScopeData(header, parameters, scope.GetData(version));
+            ISnmpData scopeData = privacy.GetScopeData(header, parameters, scope.GetData(version));
             parameters.AuthenticationParameters = provider.ComputeHash(version, header, parameters, scopeData, privacy, null); // replace the hash.
         }
 
@@ -171,7 +171,7 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentNullException(nameof(privacy));
             }
 
-            var provider = privacy.AuthenticationProvider;
+            IAuthenticationProvider provider = privacy.AuthenticationProvider;
             if (provider is DefaultAuthenticationProvider)
             {
                 return true;
@@ -182,9 +182,9 @@ namespace GSF.Net.Snmp.Security
                 return true;
             }
 
-            var expected = parameters.AuthenticationParameters;
+            OctetString expected = parameters.AuthenticationParameters;
             parameters.AuthenticationParameters = provider.CleanDigest; // clean the hash first.
-            var newHash = provider.ComputeHash(version, header, parameters, scopeBytes, privacy, length);
+            OctetString newHash = provider.ComputeHash(version, header, parameters, scopeBytes, privacy, length);
             parameters.AuthenticationParameters = expected; // restore the hash.
             return newHash == expected;
         }

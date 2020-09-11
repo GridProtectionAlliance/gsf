@@ -50,8 +50,8 @@ namespace GSF.Net.Snmp.Pipeline
 
         private void HandleFailure(Variable failure)
         {
-            var defaultPair = DefaultPrivacyProvider.DefaultPair;
-            var time = Group.EngineTimeData;
+            IPrivacyProvider defaultPair = DefaultPrivacyProvider.DefaultPair;
+            int[] time = Group.EngineTimeData;
             Response = new ReportMessage(
                 Request.Version,
                 new Header(
@@ -83,9 +83,9 @@ namespace GSF.Net.Snmp.Pipeline
 
         public override void CopyRequest(ErrorCode status, int index)
         {
-            var userName = Request.Parameters.UserName;
-            var privacy = Users.Find(userName);
-            var time = Group.EngineTimeData;
+            OctetString userName = Request.Parameters.UserName;
+            IPrivacyProvider privacy = Users.Find(userName);
+            int[] time = Group.EngineTimeData;
             Response = new ResponseMessage(
                     Request.Version,
                     new Header(
@@ -121,9 +121,9 @@ namespace GSF.Net.Snmp.Pipeline
         /// </summary>
         public override void GenerateTooBig()
         {
-            var userName = Request.Parameters.UserName;
-            var privacy = Users.Find(userName);
-            var time = Group.EngineTimeData;
+            OctetString userName = Request.Parameters.UserName;
+            IPrivacyProvider privacy = Users.Find(userName);
+            int[] time = Group.EngineTimeData;
             Response = new ResponseMessage(
                 Request.Version,
                 new Header(
@@ -163,9 +163,9 @@ namespace GSF.Net.Snmp.Pipeline
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
         public override bool HandleMembership()
         {
-            var request = Request;
-            var parameters = request.Parameters;
-            var typeCode = Request.TypeCode();
+            ISnmpMessage request = Request;
+            SecurityParameters parameters = request.Parameters;
+            SnmpType typeCode = Request.TypeCode();
 
             if (typeCode == SnmpType.Unknown)
             {
@@ -179,7 +179,7 @@ namespace GSF.Net.Snmp.Pipeline
                 return true;
             }
 
-            var user = Users.Find(parameters.UserName);
+            IPrivacyProvider user = Users.Find(parameters.UserName);
             if (user == null) 
             {
                 HandleFailure(Group.UnknownSecurityName);
@@ -209,7 +209,7 @@ namespace GSF.Net.Snmp.Pipeline
                 return false;
             }
 
-            var inTime = EngineGroup.IsInTime(Group.EngineTimeData, parameters.EngineBoots.ToInt32(), parameters.EngineTime.ToInt32());
+            bool inTime = EngineGroup.IsInTime(Group.EngineTimeData, parameters.EngineBoots.ToInt32(), parameters.EngineTime.ToInt32());
             if (!inTime)
             {
                 HandleFailure(Group.NotInTimeWindow);
@@ -224,7 +224,7 @@ namespace GSF.Net.Snmp.Pipeline
         private void HandleDiscovery()
         {         
             // discovery message received.
-            var time = Group.EngineTimeData;
+            int[] time = Group.EngineTimeData;
             Response = new ReportMessage(
                 VersionCode.V3,
                 new Header(
@@ -260,9 +260,9 @@ namespace GSF.Net.Snmp.Pipeline
         /// <param name="variables">The variables.</param>
         public override void GenerateResponse(IList<Variable> variables)
         {
-            var userName = Request.Parameters.UserName;
-            var privacy = Users.Find(userName);
-            var time = Group.EngineTimeData;
+            OctetString userName = Request.Parameters.UserName;
+            IPrivacyProvider privacy = Users.Find(userName);
+            int[] time = Group.EngineTimeData;
             Response = new ResponseMessage(
                 Request.Version,
                 new Header(

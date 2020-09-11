@@ -50,15 +50,15 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ArgumentNullException(nameof(store));
             }  
             
-            var status = ErrorCode.NoError;
-            var index = 0;
+            ErrorCode status = ErrorCode.NoError;
+            int index = 0;
             IList<Variable> result = new List<Variable>();
-            foreach (var v in context.Request.Pdu().Variables)
+            foreach (Variable v in context.Request.Pdu().Variables)
             {
                 index++;
                 try
                 {
-                    var next = store.GetNextObject(v.Id);
+                    ScalarObject next = store.GetNextObject(v.Id);
                     if (next == null)
                     {
                         status = ErrorCode.NoSuchName;

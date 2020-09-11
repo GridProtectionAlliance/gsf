@@ -58,8 +58,8 @@ namespace GSF.Net.Snmp.Objects
         private void LoadElements()
         {
             _elements.Clear();
-            var interfaces = NetworkInterface.GetAllNetworkInterfaces();
-            var columnTypes = new[]
+            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            Type[] columnTypes = new[]
                 {
                     typeof(IfIndex),
                     typeof(IfDescr),
@@ -84,7 +84,7 @@ namespace GSF.Net.Snmp.Objects
                     typeof(IfOutQLen),
                     typeof(IfSpecific)
                 };
-            foreach (var type in columnTypes)
+            foreach (Type type in columnTypes)
             {
                 for (int i = 0; i < interfaces.Length; i++)
                 {

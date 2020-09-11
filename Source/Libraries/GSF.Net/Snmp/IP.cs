@@ -183,7 +183,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentException("Bytes must contain 4 or 16 elements.", nameof(length));
             }
 
-            var raw = new byte[length.Item1];
+            byte[] raw = new byte[length.Item1];
             stream.Read(raw, 0, length.Item1);
             _ip = raw;
             _length = length.Item2;

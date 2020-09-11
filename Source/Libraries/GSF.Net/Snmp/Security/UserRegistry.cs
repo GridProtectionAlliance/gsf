@@ -43,7 +43,7 @@ namespace GSF.Net.Snmp.Security
                 return;
             }
 
-            foreach (var user in users)
+            foreach (User user in users)
             {
                 Add(user);
             }

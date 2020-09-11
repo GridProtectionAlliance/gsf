@@ -104,7 +104,7 @@ namespace GSF.Net.Snmp
             _raw = new byte[length.Item1];
             stream.Read(_raw, 0, length.Item1);
             _int = ((_raw[0] & 0x80) == 0x80) ? -1 : 0; // sign extended! Guy McIlroy
-            for (var j = 0; j < length.Item1; j++)
+            for (int j = 0; j < length.Item1; j++)
             {
                 _int = (_int << 8) | _raw[j];
             }

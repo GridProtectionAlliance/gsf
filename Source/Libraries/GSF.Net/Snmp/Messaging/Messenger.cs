@@ -107,9 +107,9 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("SNMP v3 is not supported");
             }
 
-            var message = new GetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
-            var pdu = response.Pdu();
+            GetRequestMessage message = new GetRequestMessage(RequestCounter.NextId, version, community, variables);
+            ISnmpMessage response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
+            ISnmpPdu pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -151,9 +151,9 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("SNMP v3 is not supported");
             }
 
-            var message = new SetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
-            var pdu = response.Pdu();
+            SetRequestMessage message = new SetRequestMessage(RequestCounter.NextId, version, community, variables);
+            ISnmpMessage response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
+            ISnmpPdu pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -185,12 +185,12 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(list));
             }
 
-            var result = 0;
-            var tableV = new Variable(table);
+            int result = 0;
+            Variable tableV = new Variable(table);
             Variable seed;
-            var next = tableV;
-            var rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
-            var subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
+            Variable next = tableV;
+            string rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
+            string subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
             Tuple<bool, Variable> data = new Tuple<bool, Variable>(false, next);
             do
             {
@@ -237,16 +237,16 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(seed));
             }
 
-            var variables = new List<Variable> { new Variable(seed.Id) };
-            var message = new GetNextRequestMessage(
+            List<Variable> variables = new List<Variable> { new Variable(seed.Id) };
+            GetNextRequestMessage message = new GetNextRequestMessage(
                 RequestCounter.NextId,
                 version,
                 community,
                 variables);
 
-            var response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
-            var pdu = response.Pdu();
-            var errorFound = pdu.ErrorStatus.ToErrorCode() == ErrorCode.NoSuchName;
+            ISnmpMessage response = await message.GetResponseAsync(endpoint).ConfigureAwait(false);
+            ISnmpPdu pdu = response.Pdu();
+            bool errorFound = pdu.ErrorStatus.ToErrorCode() == ErrorCode.NoSuchName;
             return new Tuple<bool, Variable>(!errorFound, errorFound ? null : pdu.Variables[0]);
         }
 
@@ -290,20 +290,20 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(list));
             }
 
-            var tableV = new Variable(table);
-            var seed = tableV;
-            var result = 0;
-            var message = report;
-            var data = await BulkHasNextAsync(version, endpoint, community, contextName, seed, maxRepetitions, privacy, message).ConfigureAwait(false);
-            var next = data.Item2;
+            Variable tableV = new Variable(table);
+            Variable seed = tableV;
+            int result = 0;
+            ISnmpMessage message = report;
+            Tuple<bool, IList<Variable>, ISnmpMessage> data = await BulkHasNextAsync(version, endpoint, community, contextName, seed, maxRepetitions, privacy, message).ConfigureAwait(false);
+            IList<Variable> next = data.Item2;
             message = data.Item3;
             while (data.Item1)
             {
-                var subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
-                var rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
-                foreach (var v in next)
+                string subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
+                string rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
+                foreach (Variable v in next)
                 {
-                    var id = v.Id.ToString();
+                    string id = v.Id.ToString();
                     if (v.Data.TypeCode == SnmpType.EndOfMibView)
                     {
                         goto end;
@@ -347,7 +347,7 @@ namespace GSF.Net.Snmp.Messaging
         [CLSCompliant(false)]
         public static async Task SendTrapV1Async(EndPoint receiver, IPAddress agent, OctetString community, ObjectIdentifier enterprise, GenericCode generic, int specific, uint timestamp, IList<Variable> variables)
         {
-            var message = new TrapV1Message(VersionCode.V1, agent, community, enterprise, generic, specific, timestamp, variables);
+            TrapV1Message message = new TrapV1Message(VersionCode.V1, agent, community, enterprise, generic, specific, timestamp, variables);
             await message.SendAsync(receiver).ConfigureAwait(false);
         }
 
@@ -370,7 +370,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("Only SNMP v2c is supported");
             }
 
-            var message = new TrapV2Message(requestId, version, community, enterprise, timestamp, variables);
+            TrapV2Message message = new TrapV2Message(requestId, version, community, enterprise, timestamp, variables);
             await message.SendAsync(receiver).ConfigureAwait(false);
         }
 
@@ -449,7 +449,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(report));
             }
 
-            var message = version == VersionCode.V3
+            InformRequestMessage message = version == VersionCode.V3
                                     ? new InformRequestMessage(
                                           version,
                                           MessageCounter.NextId,
@@ -470,7 +470,7 @@ namespace GSF.Net.Snmp.Messaging
                                           timestamp,
                                           variables);
 
-            var response = await message.GetResponseAsync(receiver).ConfigureAwait(false);
+            ISnmpMessage response = await message.GetResponseAsync(receiver).ConfigureAwait(false);
             if (response.Pdu().ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -521,8 +521,8 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("SNMP v1 is not supported");
             }
 
-            var variables = new List<Variable> { new Variable(seed.Id) };
-            var request = version == VersionCode.V3
+            List<Variable> variables = new List<Variable> { new Variable(seed.Id) };
+            GetBulkRequestMessage request = version == VersionCode.V3
                                                 ? new GetBulkRequestMessage(
                                                       version,
                                                       MessageCounter.NextId,
@@ -542,7 +542,7 @@ namespace GSF.Net.Snmp.Messaging
                                                       0,
                                                       maxRepetitions,
                                                       variables);
-            var reply = await request.GetResponseAsync(receiver).ConfigureAwait(false);
+            ISnmpMessage reply = await request.GetResponseAsync(receiver).ConfigureAwait(false);
             if (reply is ReportMessage)
             {
                 if (reply.Pdu().Variables.Count == 0)
@@ -551,7 +551,7 @@ namespace GSF.Net.Snmp.Messaging
                     return new Tuple<bool, IList<Variable>, ISnmpMessage>(false, new List<Variable>(0), report);
                 }
 
-                var id = reply.Pdu().Variables[0].Id;
+                ObjectIdentifier id = reply.Pdu().Variables[0].Id;
                 if (id != IdNotInTimeWindow)
                 {
                     // var error = id.GetErrorMessage();
@@ -582,7 +582,7 @@ namespace GSF.Net.Snmp.Messaging
                     reply);
             }
 
-            var next = reply.Pdu().Variables;
+            IList<Variable> next = reply.Pdu().Variables;
             return new Tuple<bool, IList<Variable>, ISnmpMessage>(next.Count != 0, next, request);
         }
 
@@ -621,9 +621,9 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("SNMP v3 is not supported");
             }
 
-            var message = new GetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = message.GetResponse(timeout, endpoint);
-            var pdu = response.Pdu();
+            GetRequestMessage message = new GetRequestMessage(RequestCounter.NextId, version, community, variables);
+            ISnmpMessage response = message.GetResponse(timeout, endpoint);
+            ISnmpPdu pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -667,9 +667,9 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("SNMP v3 is not supported");
             }
 
-            var message = new SetRequestMessage(RequestCounter.NextId, version, community, variables);
-            var response = message.GetResponse(timeout, endpoint);
-            var pdu = response.Pdu();
+            SetRequestMessage message = new SetRequestMessage(RequestCounter.NextId, version, community, variables);
+            ISnmpMessage response = message.GetResponse(timeout, endpoint);
+            ISnmpPdu pdu = response.Pdu();
             if (pdu.ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -702,12 +702,12 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(list));
             }
 
-            var result = 0;
-            var tableV = new Variable(table);
+            int result = 0;
+            Variable tableV = new Variable(table);
             Variable seed;
-            var next = tableV;
-            var rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
-            var subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
+            Variable next = tableV;
+            string rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
+            string subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
             do
             {
                 seed = next;
@@ -753,16 +753,16 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(seed));
             }
 
-            var variables = new List<Variable> { new Variable(seed.Id) };
-            var message = new GetNextRequestMessage(
+            List<Variable> variables = new List<Variable> { new Variable(seed.Id) };
+            GetNextRequestMessage message = new GetNextRequestMessage(
                 RequestCounter.NextId,
                 version,
                 community,
                 variables);
 
-            var response = message.GetResponse(timeout, endpoint);
-            var pdu = response.Pdu();
-            var errorFound = pdu.ErrorStatus.ToErrorCode() == ErrorCode.NoSuchName;
+            ISnmpMessage response = message.GetResponse(timeout, endpoint);
+            ISnmpPdu pdu = response.Pdu();
+            bool errorFound = pdu.ErrorStatus.ToErrorCode() == ErrorCode.NoSuchName;
             next = errorFound ? null : pdu.Variables[0];
             return !errorFound;
         }
@@ -814,18 +814,18 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("SNMP v1 is not supported");
             }
 
-            var tableV = new Variable(table);
-            var seed = tableV;
+            Variable tableV = new Variable(table);
+            Variable seed = tableV;
             IList<Variable> next;
-            var result = 0;
-            var message = report;
+            int result = 0;
+            ISnmpMessage message = report;
             while (BulkHasNext(version, endpoint, community, contextName, seed, timeout, maxRepetitions, out next, privacy, ref message))
             {
-                var subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
-                var rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
-                foreach (var v in next)
+                string subTreeMask = string.Format(CultureInfo.InvariantCulture, "{0}.", table);
+                string rowMask = string.Format(CultureInfo.InvariantCulture, "{0}.1.1.", table);
+                foreach (Variable v in next)
                 {
-                    var id = v.Id.ToString();
+                    string id = v.Id.ToString();
                     if (v.Data.TypeCode == SnmpType.EndOfMibView)
                     {
                         goto end;
@@ -866,7 +866,7 @@ namespace GSF.Net.Snmp.Messaging
         [CLSCompliant(false)]
         public static void SendTrapV1(EndPoint receiver, IPAddress agent, OctetString community, ObjectIdentifier enterprise, GenericCode generic, int specific, uint timestamp, IList<Variable> variables)
         {
-            var message = new TrapV1Message(VersionCode.V1, agent, community, enterprise, generic, specific, timestamp, variables);
+            TrapV1Message message = new TrapV1Message(VersionCode.V1, agent, community, enterprise, generic, specific, timestamp, variables);
             message.Send(receiver);
         }
 
@@ -889,7 +889,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("Only SNMP v2c is supported");
             }
 
-            var message = new TrapV2Message(requestId, version, community, enterprise, timestamp, variables);
+            TrapV2Message message = new TrapV2Message(requestId, version, community, enterprise, timestamp, variables);
             message.Send(receiver);
         }
 
@@ -970,7 +970,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(report));
             }
 
-            var message = version == VersionCode.V3
+            InformRequestMessage message = version == VersionCode.V3
                                     ? new InformRequestMessage(
                                           version,
                                           MessageCounter.NextId,
@@ -991,7 +991,7 @@ namespace GSF.Net.Snmp.Messaging
                                           timestamp,
                                           variables);
 
-            var response = message.GetResponse(timeout, receiver);
+            ISnmpMessage response = message.GetResponse(timeout, receiver);
             if (response.Pdu().ErrorStatus.ToInt32() != 0)
             {
                 throw ErrorException.Create(
@@ -1047,8 +1047,8 @@ namespace GSF.Net.Snmp.Messaging
                 throw new NotSupportedException("SNMP v1 is not supported");
             }
 
-            var variables = new List<Variable> { new Variable(seed.Id) };
-            var request = version == VersionCode.V3
+            List<Variable> variables = new List<Variable> { new Variable(seed.Id) };
+            GetBulkRequestMessage request = version == VersionCode.V3
                                                 ? new GetBulkRequestMessage(
                                                       version,
                                                       MessageCounter.NextId,
@@ -1068,7 +1068,7 @@ namespace GSF.Net.Snmp.Messaging
                                                       0,
                                                       maxRepetitions,
                                                       variables);
-            var reply = request.GetResponse(timeout, receiver);
+            ISnmpMessage reply = request.GetResponse(timeout, receiver);
             if (reply is ReportMessage)
             {
                 if (reply.Pdu().Variables.Count == 0)
@@ -1078,7 +1078,7 @@ namespace GSF.Net.Snmp.Messaging
                     return false;
                 }
 
-                var id = reply.Pdu().Variables[0].Id;
+                ObjectIdentifier id = reply.Pdu().Variables[0].Id;
                 if (id != IdNotInTimeWindow)
                 {
                     // var error = id.GetErrorMessage();
@@ -1138,20 +1138,20 @@ namespace GSF.Net.Snmp.Messaging
             }
 
             IList<Variable> list = new List<Variable>();
-            var rows = version == VersionCode.V1 ? Walk(version, endpoint, community, table, list, timeout, WalkMode.WithinSubtree) : BulkWalk(version, endpoint, community, OctetString.Empty, table, list, timeout, maxRepetitions, WalkMode.WithinSubtree, null, null);
+            int rows = version == VersionCode.V1 ? Walk(version, endpoint, community, table, list, timeout, WalkMode.WithinSubtree) : BulkWalk(version, endpoint, community, OctetString.Empty, table, list, timeout, maxRepetitions, WalkMode.WithinSubtree, null, null);
 
             if (rows == 0)
             {
                 return new Variable[0, 0];
             }
 
-            var cols = list.Count / rows;
-            var k = 0;
-            var result = new Variable[rows, cols];
+            int cols = list.Count / rows;
+            int k = 0;
+            Variable[,] result = new Variable[rows, cols];
 
-            for (var j = 0; j < cols; j++)
+            for (int j = 0; j < cols; j++)
             {
-                for (var i = 0; i < rows; i++)
+                for (int i = 0; i < rows; i++)
                 {
                     result[i, j] = list[k];
                     k++;

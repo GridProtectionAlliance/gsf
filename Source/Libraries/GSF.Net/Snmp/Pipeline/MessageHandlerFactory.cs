@@ -62,7 +62,7 @@ namespace GSF.Net.Snmp.Pipeline
         /// <returns></returns>
         public IMessageHandler GetHandler(ISnmpMessage message)
         {
-            foreach (var mapping in _mappings.Where(mapping => mapping.CanHandle(message)))
+            foreach (HandlerMapping mapping in _mappings.Where(mapping => mapping.CanHandle(message)))
             {
                 return mapping.Handler;
             }

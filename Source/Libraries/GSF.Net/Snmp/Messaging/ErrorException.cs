@@ -75,8 +75,8 @@ namespace GSF.Net.Snmp.Messaging
         {
             get
             {
-                var pdu = Body.Pdu();
-                var index = pdu.ErrorIndex.ToInt32();
+                ISnmpPdu pdu = Body.Pdu();
+                int index = pdu.ErrorIndex.ToInt32();
                 return string.Format(
                     CultureInfo.InvariantCulture,
                     "{0}. {1}. Index: {2}. Errored Object ID: {3}",
@@ -96,7 +96,7 @@ namespace GSF.Net.Snmp.Messaging
             /// <returns></returns>
         public static ErrorException Create(string message, IPAddress agent, ISnmpMessage body)
         {
-            var ex = new ErrorException(message) { Agent = agent, Body = body };
+            ErrorException ex = new ErrorException(message) { Agent = agent, Body = body };
             return ex;
         }
     }

@@ -68,7 +68,7 @@ namespace GSF.Net.Snmp.Messaging
             TimeStamp = time;
             Header = Header.Empty;
             Parameters = SecurityParameters.Create(community);
-            var pdu = new TrapV2Pdu(
+            TrapV2Pdu pdu = new TrapV2Pdu(
                 requestId,
                 enterprise,
                 time,
@@ -132,7 +132,7 @@ namespace GSF.Net.Snmp.Messaging
             TimeStamp = time;
 
             Header = new Header(new Integer32(messageId), new Integer32(maxMessageSize), privacy.ToSecurityLevel());
-            var authenticationProvider = Privacy.AuthenticationProvider;
+            IAuthenticationProvider authenticationProvider = Privacy.AuthenticationProvider;
             Parameters = new SecurityParameters(
                 engineId,
                 new Integer32(engineBoots), 
@@ -140,7 +140,7 @@ namespace GSF.Net.Snmp.Messaging
                 userName,
                 authenticationProvider.CleanDigest,
                 Privacy.Salt);
-            var pdu = new TrapV2Pdu(
+            TrapV2Pdu pdu = new TrapV2Pdu(
                 requestId,
                 enterprise,
                 time,
@@ -179,7 +179,7 @@ namespace GSF.Net.Snmp.Messaging
             Parameters = parameters;
             Scope = scope;
             Privacy = privacy;
-            var pdu = (TrapV2Pdu)Scope.Pdu;
+            TrapV2Pdu pdu = (TrapV2Pdu)Scope.Pdu;
             Enterprise = pdu.Enterprise;
             TimeStamp = pdu.TimeStamp;
             _bytes = this.PackMessage(length).ToBytes();

@@ -95,14 +95,14 @@ namespace GSF.Net.Snmp.Security
         {          
             using (SHA1 sha = SHA1.Create())
             {
-                var passwordIndex = 0;
-                var count = 0;
+                int passwordIndex = 0;
+                int count = 0;
                 /* Use while loop until we've done 1 Megabyte */
-                var sourceBuffer = new byte[1048576];
-                var buf = new byte[64];
+                byte[] sourceBuffer = new byte[1048576];
+                byte[] buf = new byte[64];
                 while (count < 1048576)
                 {
-                    for (var i = 0; i < 64; ++i)
+                    for (int i = 0; i < 64; ++i)
                     {
                         // Take the next octet of the password, wrapping
                         // to the beginning of the password as necessary.
@@ -113,9 +113,9 @@ namespace GSF.Net.Snmp.Security
                     count += 64;
                 }
 
-                var digest = sha.ComputeHash(sourceBuffer);
+                byte[] digest = sha.ComputeHash(sourceBuffer);
 
-                using (var buffer = new MemoryStream())
+                using (MemoryStream buffer = new MemoryStream())
                 {
                     buffer.Write(digest, 0, digest.Length);
                     buffer.Write(engineId, 0, engineId.Length);
@@ -166,14 +166,14 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentNullException(nameof(privacy));
             }
 
-            var key = PasswordToKey(_password, parameters.EngineId.GetRaw());
-            using (var sha1 = new HMACSHA1(key))
+            byte[] key = PasswordToKey(_password, parameters.EngineId.GetRaw());
+            using (HMACSHA1 sha1 = new HMACSHA1(key))
             {
-                var hash = sha1.ComputeHash(ByteTool.PackMessage(length, version, header, parameters, data).ToBytes());
+                byte[] hash = sha1.ComputeHash(ByteTool.PackMessage(length, version, header, parameters, data).ToBytes());
 #if NET471
                 sha1.Clear();
 #endif
-                var result = new byte[DigestLength];
+                byte[] result = new byte[DigestLength];
                 Buffer.BlockCopy(hash, 0, result, 0, result.Length);
                 return new OctetString(result);
             }

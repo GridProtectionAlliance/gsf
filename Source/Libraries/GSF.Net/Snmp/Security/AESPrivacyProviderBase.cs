@@ -147,15 +147,15 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentNullException(nameof(unencryptedData));
             }
 
-            var iv = new byte[16];
+            byte[] iv = new byte[16];
 
             // Set privacy parameters to the local 64 bit salt value
-            var bootsBytes = BitConverter.GetBytes(engineBoots);
+            byte[] bootsBytes = BitConverter.GetBytes(engineBoots);
             iv[0] = bootsBytes[3];
             iv[1] = bootsBytes[2];
             iv[2] = bootsBytes[1];
             iv[3] = bootsBytes[0];
-            var timeBytes = BitConverter.GetBytes(engineTime);
+            byte[] timeBytes = BitConverter.GetBytes(engineTime);
             iv[4] = timeBytes[3];
             iv[5] = timeBytes[2];
             iv[6] = timeBytes[1];
@@ -164,7 +164,7 @@ namespace GSF.Net.Snmp.Security
             // Copy salt value to the iv array
             Buffer.BlockCopy(privacyParameters, 0, iv, 8, PrivacyParametersLength);
 
-            using (var rm = new RijndaelManaged())
+            using (RijndaelManaged rm = new RijndaelManaged())
             {
                 rm.KeySize = KeyBytes * 8;
                 rm.FeedbackSize = 128;
@@ -175,19 +175,19 @@ namespace GSF.Net.Snmp.Security
                 rm.Mode = CipherMode.CFB;
 
                 // make sure we have the right key length
-                var pkey = new byte[MinimumKeyLength];
+                byte[] pkey = new byte[MinimumKeyLength];
                 Buffer.BlockCopy(key, 0, pkey, 0, MinimumKeyLength);
                 rm.Key = pkey;
                 rm.IV = iv;
-                using (var cryptor = rm.CreateEncryptor())
+                using (ICryptoTransform cryptor = rm.CreateEncryptor())
                 {
-                    var encryptedData = cryptor.TransformFinalBlock(unencryptedData, 0, unencryptedData.Length);
+                    byte[] encryptedData = cryptor.TransformFinalBlock(unencryptedData, 0, unencryptedData.Length);
 
                     // check if encrypted data is the same length as source data
                     if (encryptedData.Length != unencryptedData.Length)
                     {
                         // cut out the padding
-                        var tmp = new byte[unencryptedData.Length];
+                        byte[] tmp = new byte[unencryptedData.Length];
                         Buffer.BlockCopy(encryptedData, 0, tmp, 0, unencryptedData.Length);
                         return tmp;
                     }
@@ -231,13 +231,13 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentOutOfRangeException(nameof(key), "Invalid key length.");
             }
 
-            var iv = new byte[16];
-            var bootsBytes = BitConverter.GetBytes(engineBoots);
+            byte[] iv = new byte[16];
+            byte[] bootsBytes = BitConverter.GetBytes(engineBoots);
             iv[0] = bootsBytes[3];
             iv[1] = bootsBytes[2];
             iv[2] = bootsBytes[1];
             iv[3] = bootsBytes[0];
-            var timeBytes = BitConverter.GetBytes(engineTime);
+            byte[] timeBytes = BitConverter.GetBytes(engineTime);
             iv[4] = timeBytes[3];
             iv[5] = timeBytes[2];
             iv[6] = timeBytes[1];
@@ -247,7 +247,7 @@ namespace GSF.Net.Snmp.Security
             Buffer.BlockCopy(privacyParameters, 0, iv, 8, PrivacyParametersLength);
 
             // now do CFB decryption of the encrypted data
-            using (var rm = new RijndaelManaged())
+            using (RijndaelManaged rm = new RijndaelManaged())
             {
                 rm.KeySize = KeyBytes * 8;
                 rm.FeedbackSize = 128;
@@ -256,7 +256,7 @@ namespace GSF.Net.Snmp.Security
                 rm.Mode = CipherMode.CFB;
                 if (key.Length > KeyBytes)
                 {
-                    var normKey = new byte[KeyBytes];
+                    byte[] normKey = new byte[KeyBytes];
                     Buffer.BlockCopy(key, 0, normKey, 0, KeyBytes);
                     rm.Key = normKey;
                 }
@@ -266,17 +266,17 @@ namespace GSF.Net.Snmp.Security
                 }
 
                 rm.IV = iv;
-                using (var cryptor = rm.CreateDecryptor())
+                using (ICryptoTransform cryptor = rm.CreateDecryptor())
                 {
                     // We need to make sure that cryptedData is a collection of 128 byte blocks
                     byte[] decryptedData;
                     if ((encryptedData.Length % KeyBytes) != 0)
                     {
-                        var buffer = new byte[encryptedData.Length];
+                        byte[] buffer = new byte[encryptedData.Length];
                         Buffer.BlockCopy(encryptedData, 0, buffer, 0, encryptedData.Length);
-                        var div = (int)Math.Floor(buffer.Length / (double)16);
-                        var newLength = (div + 1) * 16;
-                        var decryptBuffer = new byte[newLength];
+                        int div = (int)Math.Floor(buffer.Length / (double)16);
+                        int newLength = (div + 1) * 16;
+                        byte[] decryptBuffer = new byte[newLength];
                         Buffer.BlockCopy(buffer, 0, decryptBuffer, 0, buffer.Length);
                         decryptedData = cryptor.TransformFinalBlock(decryptBuffer, 0, decryptBuffer.Length);
 
@@ -341,18 +341,18 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentNullException(nameof(data));
             }
 
-            var code = data.TypeCode;
+            SnmpType code = data.TypeCode;
             if (code != SnmpType.OctetString)
             {
                 throw new ArgumentException($"Cannot decrypt the scope data: {code}.", nameof(data));
             }
 
-            var octets = (OctetString)data;
-            var bytes = octets.GetRaw();
-            var pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
+            OctetString octets = (OctetString)data;
+            byte[] bytes = octets.GetRaw();
+            byte[] pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
 
             // decode encrypted packet
-            var decrypted = Decrypt(bytes, pkey, parameters.EngineBoots.ToInt32(), parameters.EngineTime.ToInt32(), parameters.PrivacyParameters.GetRaw());
+            byte[] decrypted = Decrypt(bytes, pkey, parameters.EngineBoots.ToInt32(), parameters.EngineTime.ToInt32(), parameters.PrivacyParameters.GetRaw());
             return DataFactory.CreateSnmpData(decrypted);
         }
 
@@ -379,14 +379,14 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentException("Invalid data type.", nameof(data));
             }
 
-            var pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
-            var bytes = data.ToBytes();
-            var reminder = bytes.Length % 8;
-            var count = reminder == 0 ? 0 : 8 - reminder;
-            using (var stream = new MemoryStream())
+            byte[] pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
+            byte[] bytes = data.ToBytes();
+            int reminder = bytes.Length % 8;
+            int count = reminder == 0 ? 0 : 8 - reminder;
+            using (MemoryStream stream = new MemoryStream())
             {
                 stream.Write(bytes, 0, bytes.Length);
-                for (var i = 0; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
                     stream.WriteByte(1);
                 }
@@ -394,7 +394,7 @@ namespace GSF.Net.Snmp.Security
                 bytes = stream.ToArray();
             }
 
-            var encrypted = Encrypt(bytes, pkey, parameters.EngineBoots.ToInt32(), parameters.EngineTime.ToInt32(), parameters.PrivacyParameters.GetRaw());
+            byte[] encrypted = Encrypt(bytes, pkey, parameters.EngineBoots.ToInt32(), parameters.EngineTime.ToInt32(), parameters.PrivacyParameters.GetRaw());
             return new OctetString(encrypted);
         }
 
@@ -421,7 +421,7 @@ namespace GSF.Net.Snmp.Security
         /// <returns></returns>
         public byte[] PasswordToKey(byte[] secret, byte[] engineId)
         {
-            var pkey = AuthenticationProvider.PasswordToKey(secret, engineId);
+            byte[] pkey = AuthenticationProvider.PasswordToKey(secret, engineId);
             if (pkey.Length < MinimumKeyLength)
             {
                 pkey = ExtendShortKey(pkey, secret, engineId, AuthenticationProvider);

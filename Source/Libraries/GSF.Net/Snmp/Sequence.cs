@@ -66,7 +66,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(items));
             }
 
-            foreach (var data in items.Where(data => data != null))
+            foreach (ISnmpData data in items.Where(data => data != null))
             {
                 _list.Add(data);
             }
@@ -85,7 +85,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(items));
             }
 
-            foreach (var data in items.Where(data => data != null))
+            foreach (ISnmpData data in items.Where(data => data != null))
             {
                 _list.Add(data);
             }
@@ -114,7 +114,7 @@ namespace GSF.Net.Snmp
                 return;
             }
 
-            var original = stream.Position;
+            long original = stream.Position;
             while (stream.Position < original + length.Item1)
             {
                 _list.Add(DataFactory.CreateSnmpData(stream));
@@ -171,8 +171,8 @@ namespace GSF.Net.Snmp
         /// <returns></returns>
         public override string ToString()
         {
-            var result = new StringBuilder("SNMP SEQUENCE: ");
-            foreach (var item in _list)
+            StringBuilder result = new StringBuilder("SNMP SEQUENCE: ");
+            foreach (ISnmpData item in _list)
             {
                 result.Append(item).Append("; ");
             }

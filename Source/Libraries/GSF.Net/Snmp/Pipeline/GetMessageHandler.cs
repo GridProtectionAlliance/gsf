@@ -50,21 +50,21 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ArgumentNullException(nameof(store));
             }  
             
-            var index = 0;
+            int index = 0;
             IList<Variable> result = new List<Variable>();
-            foreach (var v in context.Request.Pdu().Variables)
+            foreach (Variable v in context.Request.Pdu().Variables)
             {
                 index++;
                 try
                 {
-                    var obj = store.GetObject(v.Id);
+                    ScalarObject obj = store.GetObject(v.Id);
                     if (obj == null)
                     {
                         result.Add(new Variable(v.Id, new NoSuchInstance()));
                     }
                     else
                     {
-                        var item = obj.Variable;
+                        Variable item = obj.Variable;
                         result.Add(item);
                     }
                 }

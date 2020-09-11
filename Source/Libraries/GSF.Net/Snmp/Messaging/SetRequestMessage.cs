@@ -58,7 +58,7 @@ namespace GSF.Net.Snmp.Messaging
             Version = version;
             Header = Header.Empty;
             Parameters = SecurityParameters.Create(community);
-            var pdu = new SetRequestPdu(
+            SetRequestPdu pdu = new SetRequestPdu(
                 requestId,
                 variables);
             Scope = new Scope(pdu);
@@ -130,8 +130,8 @@ namespace GSF.Net.Snmp.Messaging
             Privacy = privacy;
 
             Header = new Header(new Integer32(messageId), new Integer32(maxMessageSize), privacy.ToSecurityLevel() | Levels.Reportable);
-            var parameters = report.Parameters;
-            var authenticationProvider = Privacy.AuthenticationProvider;
+            SecurityParameters parameters = report.Parameters;
+            IAuthenticationProvider authenticationProvider = Privacy.AuthenticationProvider;
             Parameters = new SecurityParameters(
                 parameters.EngineId,
                 parameters.EngineBoots,
@@ -139,11 +139,11 @@ namespace GSF.Net.Snmp.Messaging
                 userName,
                 authenticationProvider.CleanDigest,
                 Privacy.Salt);
-            var pdu = new SetRequestPdu(
+            SetRequestPdu pdu = new SetRequestPdu(
                 requestId,
                 variables);
-            var scope = report.Scope;
-            var contextEngineId = scope.ContextEngineId == OctetString.Empty ? parameters.EngineId : scope.ContextEngineId;
+            Scope scope = report.Scope;
+            OctetString contextEngineId = scope.ContextEngineId == OctetString.Empty ? parameters.EngineId : scope.ContextEngineId;
             Scope = new Scope(contextEngineId, contextName, pdu);
 
             Privacy.ComputeHash(Version, Header, Parameters, Scope);
@@ -193,8 +193,8 @@ namespace GSF.Net.Snmp.Messaging
             Privacy = privacy;
 
             Header = new Header(new Integer32(messageId), new Integer32(maxMessageSize), privacy.ToSecurityLevel() | Levels.Reportable);
-            var parameters = report.Parameters;
-            var authenticationProvider = Privacy.AuthenticationProvider;
+            SecurityParameters parameters = report.Parameters;
+            IAuthenticationProvider authenticationProvider = Privacy.AuthenticationProvider;
             Parameters = new SecurityParameters(
                 parameters.EngineId,
                 parameters.EngineBoots,
@@ -202,11 +202,11 @@ namespace GSF.Net.Snmp.Messaging
                 userName,
                 authenticationProvider.CleanDigest,
                 Privacy.Salt);
-            var pdu = new SetRequestPdu(
+            SetRequestPdu pdu = new SetRequestPdu(
                 requestId,
                 variables);
-            var scope = report.Scope;
-            var contextEngineId = scope.ContextEngineId == OctetString.Empty ? parameters.EngineId : scope.ContextEngineId;
+            Scope scope = report.Scope;
+            OctetString contextEngineId = scope.ContextEngineId == OctetString.Empty ? parameters.EngineId : scope.ContextEngineId;
             Scope = new Scope(contextEngineId, scope.ContextName, pdu);
 
             Privacy.ComputeHash(Version, Header, Parameters, Scope);

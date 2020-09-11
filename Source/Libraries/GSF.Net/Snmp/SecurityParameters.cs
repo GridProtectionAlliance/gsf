@@ -115,7 +115,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(parameters));
             }
             
-            var container = (Sequence)DataFactory.CreateSnmpData(parameters.GetRaw());
+            Sequence container = (Sequence)DataFactory.CreateSnmpData(parameters.GetRaw());
             EngineId = (OctetString)container[0];
             EngineBoots = (Integer32)container[1];
             EngineTime = (Integer32)container[2];

@@ -96,7 +96,7 @@ namespace GSF.Net.Snmp.Pipeline
             {
                 if (Bindings != null)
                 {
-                    foreach (var binding in Bindings)
+                    foreach (ListenerBinding binding in Bindings)
                     {
                         binding.Dispose();
                     }
@@ -157,7 +157,7 @@ namespace GSF.Net.Snmp.Pipeline
                 return;
             }
 
-            foreach (var binding in Bindings)
+            foreach (ListenerBinding binding in Bindings)
             {
                 binding.Stop();
             }
@@ -183,7 +183,7 @@ namespace GSF.Net.Snmp.Pipeline
 
             try
             {
-                foreach (var binding in Bindings)
+                foreach (ListenerBinding binding in Bindings)
                 {
                     binding.Start();
                 }
@@ -215,7 +215,7 @@ namespace GSF.Net.Snmp.Pipeline
 
             try
             {
-                foreach (var binding in Bindings)
+                foreach (ListenerBinding binding in Bindings)
                 {
                     await binding.StartAsync();
                 }
@@ -266,7 +266,7 @@ namespace GSF.Net.Snmp.Pipeline
                 return;
             }
 
-            var binding = new ListenerBinding(Users, endpoint);
+            ListenerBinding binding = new ListenerBinding(Users, endpoint);
             binding.ExceptionRaised += (o, args) =>
             {
                 ExceptionRaised?.Invoke(o, args);
@@ -294,7 +294,7 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new InvalidOperationException("Must be called when Active == false");
             }
 
-            for (var i = 0; i < Bindings.Count; i++)
+            for (int i = 0; i < Bindings.Count; i++)
             {
                 if (Bindings[i].Endpoint.Equals(endpoint))
                 {
@@ -313,7 +313,7 @@ namespace GSF.Net.Snmp.Pipeline
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
-            foreach (var binding in Bindings)
+            foreach (ListenerBinding binding in Bindings)
             {
                 binding.Stop();
                 binding.Dispose();

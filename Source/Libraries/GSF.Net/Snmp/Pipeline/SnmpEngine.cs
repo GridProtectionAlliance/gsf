@@ -102,9 +102,9 @@ namespace GSF.Net.Snmp.Pipeline
 
         private void ListenerMessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            var request = e.Message;
-            var context = SnmpContextFactory.Create(request, e.Sender, Listener.Users, _group, e.Binding);
-            var application = _factory.Create(context);
+            ISnmpMessage request = e.Message;
+            ISnmpContext context = SnmpContextFactory.Create(request, e.Sender, Listener.Users, _group, e.Binding);
+            SnmpApplication application = _factory.Create(context);
             application.Process();
         }
 
@@ -158,7 +158,7 @@ namespace GSF.Net.Snmp.Pipeline
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1300:SpecifyMessageBoxOptions")]
         private void ListenerExceptionRaised(object sender, ExceptionRaisedEventArgs e)
         {
-            var handler = ExceptionRaised;
+            EventHandler<ExceptionRaisedEventArgs> handler = ExceptionRaised;
             if (handler != null)
             {
                 handler(sender, e);

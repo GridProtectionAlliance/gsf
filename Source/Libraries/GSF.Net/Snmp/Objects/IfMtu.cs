@@ -48,7 +48,7 @@ namespace GSF.Net.Snmp.Objects
         {
             if (networkInterface.Supports(NetworkInterfaceComponent.IPv4))
             {
-                var pv4InterfaceProperties = networkInterface.GetIPProperties().GetIPv4Properties();
+                IPv4InterfaceProperties pv4InterfaceProperties = networkInterface.GetIPProperties().GetIPv4Properties();
                 _data = new Integer32(pv4InterfaceProperties == null ? -1 : pv4InterfaceProperties.Mtu);
             }
             else

@@ -76,7 +76,7 @@ namespace GSF.Net.Snmp.Messaging
             TimeStamp = time;
             Header = Header.Empty;
             Parameters = SecurityParameters.Create(community);
-            var pdu = new InformRequestPdu(
+            InformRequestPdu pdu = new InformRequestPdu(
                 requestId,
                 enterprise,
                 time,
@@ -181,8 +181,8 @@ namespace GSF.Net.Snmp.Messaging
             TimeStamp = time;
 
             Header = new Header(new Integer32(messageId), new Integer32(maxMessageSize), privacy.ToSecurityLevel() | Levels.Reportable);
-            var parameters = report.Parameters;
-            var authenticationProvider = Privacy.AuthenticationProvider;
+            SecurityParameters parameters = report.Parameters;
+            IAuthenticationProvider authenticationProvider = Privacy.AuthenticationProvider;
             Parameters = new SecurityParameters(
                 parameters.EngineId,
                 parameters.EngineBoots,
@@ -190,13 +190,13 @@ namespace GSF.Net.Snmp.Messaging
                 userName,
                 authenticationProvider.CleanDigest,
                 Privacy.Salt);
-            var pdu = new InformRequestPdu(
+            InformRequestPdu pdu = new InformRequestPdu(
                 requestId,
                 enterprise,
                 time,
                 variables);
-            var scope = report.Scope;
-            var contextEngineId = scope.ContextEngineId == OctetString.Empty ? parameters.EngineId : scope.ContextEngineId;
+            Scope scope = report.Scope;
+            OctetString contextEngineId = scope.ContextEngineId == OctetString.Empty ? parameters.EngineId : scope.ContextEngineId;
             Scope = new Scope(contextEngineId, contextName, pdu);
 
             Privacy.ComputeHash(Version, Header, Parameters, Scope);
@@ -230,7 +230,7 @@ namespace GSF.Net.Snmp.Messaging
             Parameters = parameters;
             Scope = scope;
             Privacy = privacy;
-            var pdu = (InformRequestPdu)scope.Pdu;
+            InformRequestPdu pdu = (InformRequestPdu)scope.Pdu;
             Enterprise = pdu.Enterprise;
             TimeStamp = pdu.TimeStamp;
 

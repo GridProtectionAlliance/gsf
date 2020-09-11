@@ -59,7 +59,7 @@ namespace GSF.Net.Snmp.Pipeline
         /// <param name="e">The <see cref="GSF.Net.Snmp.Messaging.MessageReceivedEventArgs"/> instance containing the event data.</param>
         private void InvokeMessageReceived(TrapV1MessageReceivedEventArgs e)
         {
-            var handler = MessageReceived;
+            EventHandler<TrapV1MessageReceivedEventArgs> handler = MessageReceived;
             if (handler != null)
             {
                 handler(this, e);

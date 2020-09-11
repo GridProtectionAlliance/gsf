@@ -116,7 +116,7 @@ namespace GSF.Net.Snmp
                     throw new ArgumentException($"Invalid varbind section data type: {item.TypeCode}.", nameof(varbindSection));
                 }
                 
-                var varbind = (Sequence)item;
+                Sequence varbind = (Sequence)item;
                 if (varbind.Length != 2)
                 {
                     throw new ArgumentException($"Invalid varbind data length: {varbind.Length}.", nameof(varbindSection));
@@ -146,10 +146,10 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(variables));
             }
 
-            var varbinds = new List<ISnmpData>(variables.Count);
+            List<ISnmpData> varbinds = new List<ISnmpData>(variables.Count);
             varbinds.AddRange(variables.Select(v => new Sequence(null, v.Id, v.Data)).Cast<ISnmpData>());
 
-            var result = new Sequence(varbinds);
+            Sequence result = new Sequence(varbinds);
             return result;
         }
         

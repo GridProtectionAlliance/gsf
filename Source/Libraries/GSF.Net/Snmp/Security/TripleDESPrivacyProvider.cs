@@ -107,17 +107,17 @@ namespace GSF.Net.Snmp.Security
             //privacyParameters = new byte[8];
             //Buffer.BlockCopy(privParamHash, 0, privacyParameters, 0, 8);
 
-            var iv = GetIV(key, privacyParameters);
+            byte[] iv = GetIV(key, privacyParameters);
 
             // DES uses 8 byte keys but we need 16 to encrypt ScopedPdu. Get first 8 bytes and use them as encryption key
-            var outKey = GetKey(key);
+            byte[] outKey = GetKey(key);
             byte[] encryptedData = null;
             using (TripleDES des = TripleDES.Create())
             {
                 des.Mode = CipherMode.CBC;
                 des.Padding = PaddingMode.None;
 
-                using (var transform = des.CreateEncryptor(outKey, iv))
+                using (ICryptoTransform transform = des.CreateEncryptor(outKey, iv))
                 {
                     if ((unencryptedData.Length % 8) == 0)
                     {
@@ -182,19 +182,19 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentOutOfRangeException(nameof(key), "Decryption key has to be at least 16 bytes long.");
             }
 
-            var iv = GetIV(key, privacyParameters);
+            byte[] iv = GetIV(key, privacyParameters);
             using (TripleDES des = TripleDES.Create())
             {
                 des.Mode = CipherMode.CBC;
                 des.Padding = PaddingMode.Zeros;
 
                 // normalize key - generated key is 32 bytes long, we need 24 bytes to encrypt
-                var outKey = new byte[24];
+                byte[] outKey = new byte[24];
                 Buffer.BlockCopy(key, 0, outKey, 0, outKey.Length);
 
-                using (var transform = des.CreateDecryptor(outKey, iv))
+                using (ICryptoTransform transform = des.CreateDecryptor(outKey, iv))
                 {
-                    var decryptedData = transform.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
+                    byte[] decryptedData = transform.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
                     return decryptedData;
                 }
             }
@@ -213,8 +213,8 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentException("Invalid privacy key length", nameof(privacyKey));
             }
 
-            var iv = new byte[8];
-            for (var i = 0; i < iv.Length; i++)
+            byte[] iv = new byte[8];
+            for (int i = 0; i < iv.Length; i++)
             {
                 iv[i] = (byte)(salt[i] ^ privacyKey[24 + i]);
             }
@@ -236,7 +236,7 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentException("Invalid privacy key length.", nameof(privacyPassword));
             }
 
-            var key = new byte[24];
+            byte[] key = new byte[24];
             Buffer.BlockCopy(privacyPassword, 0, key, 0, key.Length);
             return key;
         }
@@ -291,24 +291,24 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentNullException(nameof(parameters));
             }
 
-            var code = data.TypeCode;
+            SnmpType code = data.TypeCode;
             if (code != SnmpType.OctetString)
             {
                 throw new ArgumentException($"Cannot decrypt the scope data: {code}.", nameof(data));
             }
 
-            var octets = (OctetString)data;
-            var bytes = octets.GetRaw();
-            var pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
+            OctetString octets = (OctetString)data;
+            byte[] bytes = octets.GetRaw();
+            byte[] pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
 
             try
             {
                 // decode encrypted packet
-                var decrypted = Decrypt(bytes, pkey, parameters.PrivacyParameters.GetRaw());            
-                var result = DataFactory.CreateSnmpData(decrypted);
+                byte[] decrypted = Decrypt(bytes, pkey, parameters.PrivacyParameters.GetRaw());            
+                ISnmpData result = DataFactory.CreateSnmpData(decrypted);
                 if (result.TypeCode != SnmpType.Sequence)
                 {
-                    var newException = new DecryptionException("DES decryption failed");
+                    DecryptionException newException = new DecryptionException("DES decryption failed");
                     newException.SetBytes(bytes);
                     throw newException;
                 }
@@ -317,7 +317,7 @@ namespace GSF.Net.Snmp.Security
             }
             catch (Exception ex)
             {
-                var newException = new DecryptionException("DES decryption failed", ex);
+                DecryptionException newException = new DecryptionException("DES decryption failed", ex);
                 newException.SetBytes(bytes);
                 throw newException;
             }
@@ -346,14 +346,14 @@ namespace GSF.Net.Snmp.Security
                 throw new ArgumentException("Invalid data type.", nameof(data));
             }
 
-            var pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
-            var bytes = data.ToBytes();
-            var reminder = bytes.Length % 8;
-            var count = reminder == 0 ? 0 : 8 - reminder;
-            using (var stream = new MemoryStream())
+            byte[] pkey = PasswordToKey(_phrase.GetRaw(), parameters.EngineId.GetRaw());
+            byte[] bytes = data.ToBytes();
+            int reminder = bytes.Length % 8;
+            int count = reminder == 0 ? 0 : 8 - reminder;
+            using (MemoryStream stream = new MemoryStream())
             {
                 stream.Write(bytes, 0, bytes.Length);
-                for (var i = 0; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
                     stream.WriteByte(1);
                 }
@@ -361,7 +361,7 @@ namespace GSF.Net.Snmp.Security
                 bytes = stream.ToArray();
             }
 
-            var encrypted = Encrypt(bytes, pkey, parameters.PrivacyParameters.GetRaw());
+            byte[] encrypted = Encrypt(bytes, pkey, parameters.PrivacyParameters.GetRaw());
             return new OctetString(encrypted);
         }
 

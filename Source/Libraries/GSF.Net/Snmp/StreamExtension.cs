@@ -35,9 +35,9 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            var list = new List<byte>();
-            var first = stream.ReadByte();
-            var firstByte = (byte)first;
+            List<byte> list = new List<byte>();
+            int first = stream.ReadByte();
+            byte firstByte = (byte)first;
             if ((firstByte & 0x80) == 0)
             {
                 return new Tuple<int, byte[]>(first, new[] { firstByte });
@@ -45,17 +45,17 @@ namespace GSF.Net.Snmp
 
             list.Add(firstByte);
             
-            var result = 0;
-            var octets = firstByte & 0x7f;
-            for (var j = 0; j < octets; j++)
+            int result = 0;
+            int octets = firstByte & 0x7f;
+            for (int j = 0; j < octets; j++)
             {
-                var n = stream.ReadByte();
+                int n = stream.ReadByte();
                 if (n == -1)
                 {
                     throw new SnmpException("BER end of file");
                 }
 
-                var nextByte = (byte)n;
+                byte nextByte = (byte)n;
                 result = (result << 8) + nextByte;
                 list.Add(nextByte);
             }
@@ -70,7 +70,7 @@ namespace GSF.Net.Snmp
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            var bytes = new byte[length];
+            byte[] bytes = new byte[length];
             stream.Read(bytes, 0, length);
         }
 

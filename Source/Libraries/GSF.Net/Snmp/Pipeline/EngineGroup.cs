@@ -81,10 +81,10 @@ namespace GSF.Net.Snmp.Pipeline
         {
             get
             {
-                var now = DateTime.UtcNow;
-                var seconds = (now - _start).Ticks / 10000000;
-                var engineTime = (int)(seconds % int.MaxValue);
-                var engineReboots = (int)(seconds / int.MaxValue);
+                DateTime now = DateTime.UtcNow;
+                long seconds = (now - _start).Ticks / 10000000;
+                int engineTime = (int)(seconds % int.MaxValue);
+                int engineReboots = (int)(seconds / int.MaxValue);
                 return new[] { engineReboots, engineTime };
             }
         }
@@ -100,8 +100,8 @@ namespace GSF.Net.Snmp.Pipeline
         /// </returns>
         public static bool IsInTime(int[] currentTimeData, int pastReboots, int pastTime)
         {
-            var currentReboots = currentTimeData[0];
-            var currentTime = currentTimeData[1];
+            int currentReboots = currentTimeData[0];
+            int currentTime = currentTimeData[1];
 
             // TODO: RFC 2574 page 27
             if (currentReboots == int.MaxValue)

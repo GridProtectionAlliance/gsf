@@ -43,7 +43,7 @@ namespace GSF.Net.Snmp.Messaging
 
                 while (_queue.Count > 0)
                 {
-                    var item = _queue.Dequeue();
+                    SocketAsyncEventArgs item = _queue.Dequeue();
                     if (item?.UserToken?.ToString() == DisposedMessage)
                     {
                         item.Dispose();

@@ -40,7 +40,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(endpoint));
             }
 
-            var result = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            Socket result = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             return result;
         }
     }

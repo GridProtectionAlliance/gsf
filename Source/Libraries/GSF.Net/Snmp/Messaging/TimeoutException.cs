@@ -89,7 +89,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(agent));
             }
             
-            var ex = new TimeoutException($"Request timed out after {timeout}-ms.") { Agent = agent, Timeout = timeout };
+            TimeoutException ex = new TimeoutException($"Request timed out after {timeout}-ms.") { Agent = agent, Timeout = timeout };
             return ex;
         }
     }

@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using GSF.Net.Snmp.Security;
 
@@ -193,7 +194,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(receiver));
             }
 
-            using (var socket = receiver.GetSocket())
+            using (Socket socket = receiver.GetSocket())
             {
                 return (ReportMessage)_discovery.GetResponse(timeout, receiver, Empty, socket);
             }
@@ -211,7 +212,7 @@ namespace GSF.Net.Snmp.Messaging
                 throw new ArgumentNullException(nameof(receiver));
             }
 
-            using (var socket = receiver.GetSocket())
+            using (Socket socket = receiver.GetSocket())
             {
                 return (ReportMessage)await _discovery.GetResponseAsync(receiver, Empty, socket).ConfigureAwait(false);
             }
