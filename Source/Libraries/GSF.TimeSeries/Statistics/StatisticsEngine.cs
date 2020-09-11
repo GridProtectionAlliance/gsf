@@ -469,18 +469,21 @@ namespace GSF.TimeSeries.Statistics
             {
                 StringBuilder status = new StringBuilder(base.Status);
 
-                status.AppendFormat("          Statistics count: {0}", m_statistics.Count);
+                status.AppendFormat("          Statistics count: {0:N0}", m_statistics.Count);
                 status.AppendLine();
-                status.AppendFormat(" Recently calculated stats: {0}", m_lastStatisticCalculationCount);
+                status.AppendFormat(" Recently calculated stats: {0:N0}", m_lastStatisticCalculationCount);
                 status.AppendLine();
-                status.AppendFormat("     Last stat calculation: {0}", m_lastStatisticCalculationTime);
+                status.AppendFormat("     Last stat calculation: {0:yyyy-MM-dd HH:mm:ss}", m_lastStatisticCalculationTime);
                 status.AppendLine();
 
                 lock (StatisticSources)
                 {
-                    status.AppendFormat("    Statistic source count: {0}", StatisticSources.Count);
+                    status.AppendFormat("    Statistic source count: {0:N0}", StatisticSources.Count);
                     status.AppendLine();
                 }
+
+                status.AppendFormat("Forward statistics to SNMP: {0}", s_forwardToSnmp);
+                status.AppendLine();
 
                 return status.ToString();
             }
