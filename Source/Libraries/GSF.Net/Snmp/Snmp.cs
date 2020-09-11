@@ -86,6 +86,12 @@ namespace GSF.Net.Snmp
         public static void SendTrap(uint[] oid, ISnmpData data) => SendTrapAsync(oid, data).Wait();
 
         /// <summary>
+        /// Sends an SNMP version 3 trap.
+        /// </summary>
+        /// <param name="variables">Variables.</param>
+        public static void SendTrap(params Variable[] variables) => SendTrapAsync(variables).Wait();
+
+        /// <summary>
         /// Sends an integer based SNMP version 3 trap.
         /// </summary>
         /// <param name="oid">Target OID.</param>
@@ -114,7 +120,13 @@ namespace GSF.Net.Snmp
         /// </summary>
         /// <param name="oid">Target OID.</param>
         /// <param name="data">Notification data.</param>
-        public static async Task SendTrapAsync(uint[] oid, ISnmpData data)
+        public static Task SendTrapAsync(uint[] oid, ISnmpData data) => SendTrapAsync(new Variable(oid, data));
+
+        /// <summary>
+        /// Sends an SNMP version 3 trap.
+        /// </summary>
+        /// <param name="variables">Variables.</param>
+        public static async Task SendTrapAsync(params Variable[] variables)
         {
             await new TrapV2Message
             (
@@ -124,7 +136,7 @@ namespace GSF.Net.Snmp
                 s_community,
                 EnterpriseRoot,
                 (uint)Environment.TickCount / 10,
-                new List<Variable> { new Variable(new ObjectIdentifier(oid), data) },
+                new List<Variable>(variables),
                 s_privacyProvider,
                 Messenger.MaxMessageSize,
                 EngineID, 0, 0
