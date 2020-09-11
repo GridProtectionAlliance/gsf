@@ -42,7 +42,7 @@ namespace GSF.Net.Snmp
         /// <summary>
         /// Defines default IP end point for SNMP client agent.
         /// </summary>
-        public const string DefaultIPEndPoint = "255.255.255.255:162";
+        public const string DefaultIPEndPoint = "127.0.0.1:162";
 
         /// <summary>
         /// Root GSF OID (1.3.6.1.4.1.56056). This is the private enterprise number defined for the Grid Protection Alliance.
@@ -174,8 +174,8 @@ namespace GSF.Net.Snmp
 
                 if (!IPAddress.TryParse(parts[0], out IPAddress address))
                 {
-                    address = IPAddress.Broadcast;
-                    Logger.SwallowException(new Exception($"Configured SNMP agent IP end point \"{endPoint}\" address is invalid. Using broadcast address \"255.255.255.255\"."));
+                    address = IPAddress.Loopback;
+                    Logger.SwallowException(new Exception($"Configured SNMP agent IP end point \"{endPoint}\" address is invalid. Using loop-back address \"127.0.0.1\"."));
                 }
 
                 if (!ushort.TryParse(parts[1], out ushort port))
