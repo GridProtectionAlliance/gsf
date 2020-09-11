@@ -21,7 +21,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>CS1591,CS3021</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,7 +32,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <RunCodeAnalysis>true</RunCodeAnalysis>
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>CS1591,CS3021</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
@@ -42,10 +42,11 @@
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>CS1591,CS3021</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
@@ -56,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OID.cs" />
     <Compile Include="Snmp\ByteTool.cs" />
     <Compile Include="Snmp\Counter32.cs" />
     <Compile Include="Snmp\Counter64.cs" />
@@ -107,14 +109,97 @@
     <Compile Include="Snmp\Messaging\TrapV1Message.cs" />
     <Compile Include="Snmp\Messaging\TrapV2Message.cs" />
     <Compile Include="Snmp\Messaging\WalkMode.cs" />
+    <Compile Include="Snmp\NamespaceDoc.cs" />
     <Compile Include="Snmp\NoSuchInstance.cs" />
     <Compile Include="Snmp\NoSuchObject.cs" />
     <Compile Include="Snmp\Null.cs" />
     <Compile Include="Snmp\ObjectIdentifier.cs" />
     <Compile Include="Snmp\ObjectIdentifierConverter.cs" />
+    <Compile Include="Snmp\Objects\IfAdminStatus.cs" />
+    <Compile Include="Snmp\Objects\IfDescr.cs" />
+    <Compile Include="Snmp\Objects\IfIndex.cs" />
+    <Compile Include="Snmp\Objects\IfInDiscards.cs" />
+    <Compile Include="Snmp\Objects\IfInErrors.cs" />
+    <Compile Include="Snmp\Objects\IfInNUcastPkts.cs" />
+    <Compile Include="Snmp\Objects\IfInOctets.cs" />
+    <Compile Include="Snmp\Objects\IfInUcastPkts.cs" />
+    <Compile Include="Snmp\Objects\IfInUnknownProtos.cs" />
+    <Compile Include="Snmp\Objects\IfLastChange.cs" />
+    <Compile Include="Snmp\Objects\IfMtu.cs" />
+    <Compile Include="Snmp\Objects\IfNumber.cs" />
+    <Compile Include="Snmp\Objects\IfOperStatus.cs" />
+    <Compile Include="Snmp\Objects\IfOutDiscards.cs" />
+    <Compile Include="Snmp\Objects\IfOutErrors.cs" />
+    <Compile Include="Snmp\Objects\IfOutNUcastPkts.cs" />
+    <Compile Include="Snmp\Objects\IfOutOctets.cs" />
+    <Compile Include="Snmp\Objects\IfOutQLen.cs" />
+    <Compile Include="Snmp\Objects\IfOutUcastPkts.cs" />
+    <Compile Include="Snmp\Objects\IfPhysAddress.cs" />
+    <Compile Include="Snmp\Objects\IfSpecific.cs" />
+    <Compile Include="Snmp\Objects\IfSpeed.cs" />
+    <Compile Include="Snmp\Objects\IfTable.cs" />
+    <Compile Include="Snmp\Objects\IfType.cs" />
+    <Compile Include="Snmp\Objects\NetworkInterfaceExtensions.cs" />
+    <Compile Include="Snmp\Objects\SysContact.cs" />
+    <Compile Include="Snmp\Objects\SysDescr.cs" />
+    <Compile Include="Snmp\Objects\SysLocation.cs" />
+    <Compile Include="Snmp\Objects\SysName.cs" />
+    <Compile Include="Snmp\Objects\SysObjectId.cs" />
+    <Compile Include="Snmp\Objects\SysORDescr.cs" />
+    <Compile Include="Snmp\Objects\SysORID.cs" />
+    <Compile Include="Snmp\Objects\SysORIndex.cs" />
+    <Compile Include="Snmp\Objects\SysORLastChange.cs" />
+    <Compile Include="Snmp\Objects\SysORTable.cs" />
+    <Compile Include="Snmp\Objects\SysORUpTime.cs" />
+    <Compile Include="Snmp\Objects\SysServices.cs" />
+    <Compile Include="Snmp\Objects\SysUpTime.cs" />
     <Compile Include="Snmp\OctetString.cs" />
     <Compile Include="Snmp\Opaque.cs" />
     <Compile Include="Snmp\OperationException.cs" />
+    <Compile Include="Snmp\Pipeline\AccessFailureException.cs" />
+    <Compile Include="Snmp\Pipeline\ComposedMembershipProvider.cs" />
+    <Compile Include="Snmp\Pipeline\DefaultTypeResolver.cs" />
+    <Compile Include="Snmp\Pipeline\EngineGroup.cs" />
+    <Compile Include="Snmp\Pipeline\GetBulkMessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\GetMessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\GetNextMessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\GetNextV1MessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\GetV1MessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\HandlerMapping.cs" />
+    <Compile Include="Snmp\Pipeline\IAssemblyLoader.cs" />
+    <Compile Include="Snmp\Pipeline\IListenerBinding.cs" />
+    <Compile Include="Snmp\Pipeline\ILogger.cs" />
+    <Compile Include="Snmp\Pipeline\IMembershipProvider.cs" />
+    <Compile Include="Snmp\Pipeline\IMessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\InformRequestMessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\InformRequestMessageReceivedEventArgs.cs" />
+    <Compile Include="Snmp\Pipeline\ISnmpContext.cs" />
+    <Compile Include="Snmp\Pipeline\ISnmpObject.cs" />
+    <Compile Include="Snmp\Pipeline\Listener.cs" />
+    <Compile Include="Snmp\Pipeline\ListenerBinding.cs" />
+    <Compile Include="Snmp\Pipeline\MessageHandlerFactory.cs" />
+    <Compile Include="Snmp\Pipeline\MessageReceivedEventArgs.cs" />
+    <Compile Include="Snmp\Pipeline\NormalSnmpContext.cs" />
+    <Compile Include="Snmp\Pipeline\NullMessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\ObjectStore.cs" />
+    <Compile Include="Snmp\Pipeline\ScalarObject.cs" />
+    <Compile Include="Snmp\Pipeline\SecureSnmpContext.cs" />
+    <Compile Include="Snmp\Pipeline\SetMessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\SetV1MessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\SnmpApplication.cs" />
+    <Compile Include="Snmp\Pipeline\SnmpApplicationFactory.cs" />
+    <Compile Include="Snmp\Pipeline\SnmpContextBase.cs" />
+    <Compile Include="Snmp\Pipeline\SnmpContextFactory.cs" />
+    <Compile Include="Snmp\Pipeline\SnmpEngine.cs" />
+    <Compile Include="Snmp\Pipeline\SnmpObjectBase.cs" />
+    <Compile Include="Snmp\Pipeline\TableObject.cs" />
+    <Compile Include="Snmp\Pipeline\TrapV1MessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\TrapV1MessageReceivedEventArgs.cs" />
+    <Compile Include="Snmp\Pipeline\TrapV2MessageHandler.cs" />
+    <Compile Include="Snmp\Pipeline\TrapV2MessageReceivedEventArgs.cs" />
+    <Compile Include="Snmp\Pipeline\Version1MembershipProvider.cs" />
+    <Compile Include="Snmp\Pipeline\Version2MembershipProvider.cs" />
+    <Compile Include="Snmp\Pipeline\Version3MembershipProvider.cs" />
     <Compile Include="Snmp\ReportPdu.cs" />
     <Compile Include="Snmp\ResponsePdu.cs" />
     <Compile Include="Snmp\Scope.cs" />
@@ -141,6 +226,7 @@
     <Compile Include="Snmp\Security\UserRegistry.cs" />
     <Compile Include="Snmp\Sequence.cs" />
     <Compile Include="Snmp\SetRequestPdu.cs" />
+    <Compile Include="Snmp\Snmp.cs" />
     <Compile Include="Snmp\SnmpDataExtension.cs" />
     <Compile Include="Snmp\SnmpException.cs" />
     <Compile Include="Snmp\SnmpType.cs" />
