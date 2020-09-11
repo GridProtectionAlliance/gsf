@@ -245,6 +245,10 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GSF.Net\GSF.Net.csproj">
+      <Project>{72713097-3be3-4fa7-97b5-7ec3a2ba8316}</Project>
+      <Name>GSF.Net</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GSF.Security\GSF.Security.csproj">
       <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
       <Name>GSF.Security</Name>

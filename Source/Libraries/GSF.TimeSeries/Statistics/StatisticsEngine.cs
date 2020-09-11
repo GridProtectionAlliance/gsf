@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -37,6 +38,8 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
+using GSF.Net;
+using GSF.Net.Snmp;
 using GSF.Parsing;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
@@ -767,6 +770,15 @@ namespace GSF.TimeSeries.Statistics
                     statistic.Index = int.Parse(row["SignalIndex"].ToNonNullString("-1"));
                     statistic.Arguments = row["Arguments"].ToNonNullString();
 
+                    try
+                    {
+                        statistic.DataType = Type.GetType(row["DataType"].ToNonNullString());
+                    }
+                    catch
+                    {
+                        statistic.DataType = typeof(double);
+                    }
+
                     // Load statistic's code location information
                     assemblyName = row["AssemblyName"].ToNonNullString();
                     typeName = row["TypeName"].ToNonNullString();
@@ -962,11 +974,37 @@ namespace GSF.TimeSeries.Statistics
                     {
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString());
 
+                        double value = statistic.Method(target, statistic.Arguments);
+
+                        if (s_forwardToSnmp && OID.SnmpStats.TryGetValue(source.SourceCategory, out uint[] categoryOID))
+                        {
+                            try
+                            {
+                                uint[] statisticOID = categoryOID.Append((uint)signalIndex);
+                                uint[] statisticValueOID = statisticOID.Append(1U);
+                                uint[] statisticReferenceOID = statisticOID.Append(2U);
+                                Variable statisticReference = new Variable(statisticReferenceOID, new OctetString(signalReference));
+
+                                if (statistic.DataType == typeof(int) || statistic.DataType == typeof(bool))
+                                    Snmp.SendTrap(new Variable(statisticValueOID, new Integer32((int)value)), statisticReference);
+                                else if (statistic.DataType == typeof(double))
+                                    Snmp.SendTrap(new Variable(statisticValueOID, new OctetString(value.ToString(CultureInfo.InvariantCulture))), statisticReference);
+                                else if (statistic.DataType == typeof(DateTime))
+                                    Snmp.SendTrap(new Variable(statisticValueOID, new OctetString(new DateTime((long)value).ToString("mm:ss.fff"))), statisticReference);
+                                else
+                                    Snmp.SendTrap(new Variable(statisticValueOID, new OctetString(Convert.ChangeType(value, statistic.DataType).ToString())), statisticReference);
+                            }
+                            catch (Exception ex)
+                            {
+                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to publish statistic \"{signalReference}\" via SNMP: {ex.Message}", ex));
+                            }
+                        }    
+
                         // Calculate the current value of the statistic measurement
                         return new Measurement()
                         {
                             Metadata = key.Metadata,
-                            Value = statistic.Method(target, statistic.Arguments),
+                            Value = value,
                             Timestamp = serverTime
                         };
                     }
@@ -1062,6 +1100,7 @@ namespace GSF.TimeSeries.Statistics
         // Static Fields
         private static readonly List<StatisticSource> StatisticSources;
         private static event EventHandler<EventArgs> SourceRegistered;
+        private static readonly bool s_forwardToSnmp;
 
         // Static Constructor
 
@@ -1071,6 +1110,12 @@ namespace GSF.TimeSeries.Statistics
         static StatisticsEngine()
         {
             StatisticSources = new List<StatisticSource>();
+
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
+
+            settings.Add("ForwardStatisticsToSnmp", "false", "Defines flag that determines if statistics should be published as SNMP trap messages.");
+
+            s_forwardToSnmp = settings["ForwardStatisticsToSnmp"].ValueAs(false);
         }
 
         // Static Methods
