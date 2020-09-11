@@ -23,6 +23,8 @@
 //
 //******************************************************************************************************
 
+using System;
+
 namespace GSF.TimeSeries.Statistics
 {
     /// <summary>
@@ -57,5 +59,10 @@ namespace GSF.TimeSeries.Statistics
         /// The arguments to be passed into the statistic calculation function.
         /// </summary>
         public string Arguments { get; set; }
+
+        /// <summary>
+        /// Target data type of the statistic.
+        /// </summary>
+        public Type DataType { get; set; }
     }
 }
