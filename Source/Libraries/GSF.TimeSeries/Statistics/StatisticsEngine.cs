@@ -993,7 +993,7 @@ namespace GSF.TimeSeries.Statistics
                                 else if (statistic.DataType == typeof(double))
                                     Snmp.SendTrap(new Variable(statisticValueOID, new OctetString(value.ToString(CultureInfo.InvariantCulture))), statisticReference);
                                 else if (statistic.DataType == typeof(DateTime))
-                                    Snmp.SendTrap(new Variable(statisticValueOID, new OctetString(new DateTime((long)value).ToString("mm:ss.fff"))), statisticReference);
+                                    Snmp.SendTrap(new Variable(statisticValueOID, new OctetString(new DateTime((long)value).ToString("mm':'ss'.'fff"))), statisticReference);
                                 else
                                     Snmp.SendTrap(new Variable(statisticValueOID, new OctetString(Convert.ChangeType(value, statistic.DataType).ToString())), statisticReference);
                             }
