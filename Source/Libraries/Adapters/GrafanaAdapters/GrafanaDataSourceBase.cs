@@ -902,6 +902,7 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
+
                 const string SignalIDQuery = "SELECT TOP 1 SignalID FROM ActiveMeasurement WHERE PointTag = '{0}'";
 
                 foreach (Target target in request.targets)
@@ -910,7 +911,11 @@ namespace GrafanaAdapters
                 if (request.targets.All(item => string.IsNullOrWhiteSpace(item.target)))
                     return new List<GrafanaAlarm>();
 
-                List<string> pointTags = request.targets.Select(item => item.target.Split(';').ToList()).Aggregate((acc, list) => acc.Concat(list).ToList());
+               
+                List<string> pointTags = ReduceTarget(request.targets[0].target).SelectMany(item => item.Split(';'))
+                    .SelectMany(targetQuery => AdapterBase.ParseInputMeasurementKeys(Metadata, false, targetQuery))
+                    .Select(item => item.Metadata.TagName).ToList();
+               
                 string query = string.Join("),(", pointTags.Select(item => string.Format(SignalIDQuery, item.Trim())));
 
                 query = "((" + query + "))";
@@ -1116,6 +1121,45 @@ namespace GrafanaAdapters
                     return true;
                 }
             });
+        }
+
+        /// <summary>
+        /// This Reduces a Grafana query into individual Tragtes that do not contain Functions => Usefull to query any neccesarry points
+        /// </summary>
+        /// <returns> A Set of Targets that do not contain SeriesFunctions</returns>
+        private HashSet<string> ReduceTarget(string queryExpression)
+        {
+            HashSet<string> targetSet = new HashSet<string>(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
+            HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            List<Match> seriesFunctions = new List<Match>();
+
+            foreach (string target in targetSet)
+            {
+                // Find any series functions in target
+                Match[] matchedFunctions = TargetCache<Match[]>.GetOrAdd(target, () =>
+                    s_seriesFunctions.Matches(target).Cast<Match>().ToArray());
+
+                if (matchedFunctions.Length > 0)
+                {
+                    seriesFunctions.AddRange(matchedFunctions);
+
+                    // Reduce target to non-function expressions - important so later split on ';' succeeds properly
+                    string reducedTarget = target;
+
+                    foreach (string expression in matchedFunctions.Select(match => match.Value))
+                        reducedTarget = reducedTarget.Replace(expression, "");
+
+                    if (!string.IsNullOrWhiteSpace(reducedTarget))
+                        reducedTargetSet.Add(reducedTarget);
+                }
+                else
+                {
+                    reducedTargetSet.Add(target);
+                }
+            }
+
+            return reducedTargetSet;
         }
 
         private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool decimate, bool dropEmptySeries, CancellationToken cancellationToken)
