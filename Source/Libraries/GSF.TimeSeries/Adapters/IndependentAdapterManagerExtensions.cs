@@ -218,7 +218,7 @@ namespace GSF.TimeSeries.Adapters
                 int signalTypeID = signalTypeTable.QueryRecordWhere("Acronym = {0}", signalType.ToString())?.ID ?? 1;
 
                 // Lookup measurement record by point tag, creating a new record if one does not exist
-                MeasurementRecord measurement = measurementTable.QueryRecordWhere("PointTag = {0}", pointTag) ?? measurementTable.NewRecord();
+                MeasurementRecord measurement = measurementTable.QueryRecordWhere("SignalReference = {0}", signalReference) ?? measurementTable.NewRecord();
 
                 // Update record fields
                 measurement.DeviceID = deviceID;
@@ -234,7 +234,7 @@ namespace GSF.TimeSeries.Adapters
 
                 // Re-query new records to get any database assigned information, e.g., unique Guid-based signal ID
                 if (measurement.PointID == 0)
-                    measurement = measurementTable.QueryRecordWhere("PointTag = {0}", pointTag);
+                    measurement = measurementTable.QueryRecordWhere("SignalReference = {0}", signalReference);
 
                 // Notify host system of configuration changes
                 instance.OnConfigurationChanged();
