@@ -74,7 +74,6 @@ namespace GSF.IO
 
         // Fields
         private readonly string m_fullPath;
-        private readonly bool m_alreadyProcessed;
         private readonly bool m_raisedByFileWatcher;
         private readonly Func<int> m_retryCounter;
         private bool m_requeue;
@@ -87,13 +86,11 @@ namespace GSF.IO
         /// Creates a new instance of the <see cref="FileProcessorEventArgs"/> class.
         /// </summary>
         /// <param name="fullPath">The full path to the file to be processed.</param>
-        /// <param name="alreadyProcessed">Flag indicating whether this file has been processed before.</param>
         /// <param name="raisedByFileWatcher">Flag indicating whether this event was raised by the file watcher.</param>
         /// <param name="retryCounter">The function that provides the value for <see cref="RetryCount"/>.</param>
-        public FileProcessorEventArgs(string fullPath, bool alreadyProcessed, bool raisedByFileWatcher, Func<int> retryCounter)
+        public FileProcessorEventArgs(string fullPath, bool raisedByFileWatcher, Func<int> retryCounter)
         {
             m_fullPath = fullPath;
-            m_alreadyProcessed = alreadyProcessed;
             m_raisedByFileWatcher = raisedByFileWatcher;
             m_retryCounter = retryCounter;
         }
@@ -110,17 +107,6 @@ namespace GSF.IO
             get
             {
                 return m_fullPath;
-            }
-        }
-
-        /// <summary>
-        /// Gets the flag that indicates whether this file has been processed before.
-        /// </summary>
-        public bool AlreadyProcessed
-        {
-            get
-            {
-                return m_alreadyProcessed;
             }
         }
 
@@ -732,11 +718,6 @@ namespace GSF.IO
         public const int DefaultInternalBufferSize = 8192;
 
         /// <summary>
-        /// Default value for the <see cref="MaxFragmentation"/> property.
-        /// </summary>
-        public const int DefaultMaxFragmentation = 10;
-
-        /// <summary>
         /// Default value for the <see cref="EnumerationStrategy"/> property.
         /// </summary>
         public const FileEnumerationStrategy DefaultEnumerationStrategy = FileEnumerationStrategy.ParallelSubdirectories;
@@ -755,23 +736,18 @@ namespace GSF.IO
         public event EventHandler<ErrorEventArgs> Error;
 
         // Fields
-        private readonly Guid m_processorID;
-
         private string m_filter;
         private string m_folderExclusion;
         private Func<string, bool> m_filterMethod;
         private bool m_trackChanges;
         private string m_cachePath;
         private int m_internalBufferSize;
-        private int m_maxFragmentation;
         private FileEnumerationStrategy m_enumerationStrategy;
         private bool m_orderedEnumeration;
 
         private readonly object m_trackedDirectoriesLock;
         private readonly List<TrackedDirectory> m_trackedDirectories;
         private LogicalThread m_sequentialEnumerationThread;
-        private LogicalThread m_cleanProcessedFilesThread;
-        private LogicalThreadOperation m_cleanProcessedFilesOperation;
 
         private LogicalThreadScheduler m_threadScheduler;
         private LogicalThread m_processingThread;
@@ -780,13 +756,10 @@ namespace GSF.IO
         private ManualResetEvent m_waitObject;
 
         private readonly Dictionary<string, DateTime> m_touchedFiles;
-        private FileBackedHashSet<string> m_processedFiles;
 
         private int m_processedFileCount;
         private int m_skippedFileCount;
         private int m_requeuedFileCount;
-        private DateTime m_lastCompactTime;
-        private TimeSpan m_lastCompactDuration;
 
         private bool m_disposed;
 
@@ -797,18 +770,14 @@ namespace GSF.IO
         /// <summary>
         /// Creates a new instance of the <see cref="FileProcessor"/> class.
         /// </summary>
-        /// <param name="processorID">Identifies the file processor so that it can locate its processed file cache.</param>
-        public FileProcessor(Guid processorID)
+        public FileProcessor()
         {
-            m_processorID = processorID;
-
             m_filter = DefaultFilter;
             m_folderExclusion = DefaultFolderExclusion;
             m_filterMethod = filePath => true;
             m_trackChanges = DefaultTrackChanges;
             m_cachePath = DefaultCachePath;
             m_internalBufferSize = DefaultInternalBufferSize;
-            m_maxFragmentation = DefaultMaxFragmentation;
             m_enumerationStrategy = DefaultEnumerationStrategy;
 
             m_trackedDirectoriesLock = new object();
@@ -818,22 +787,11 @@ namespace GSF.IO
             m_processingThread = m_threadScheduler.CreateThread();
             m_watcherThread = m_threadScheduler.CreateThread();
             m_sequentialEnumerationThread = m_threadScheduler.CreateThread();
-            m_cleanProcessedFilesThread = m_threadScheduler.CreateThread();
-            m_cleanProcessedFilesOperation = new LogicalThreadOperation(m_cleanProcessedFilesThread, GetProcessedFiles, false);
             m_fileWatchTimer = new Timer(15000);
             m_fileWatchTimer.Elapsed += FileWatchTimer_Elapsed;
             m_waitObject = new ManualResetEvent(false);
 
             m_touchedFiles = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-
-            // As of .NET 4.7.1, the OrdinalIgnoreCase comparer produces a consistent hash code across 32-bit and 64-bit platforms,
-            // but Microsoft provides no guarantees in terms of consistency across CLR versions. No testing has been done against Mono.
-            // TODO: Consider implementing a platform-independent equality comparer for ignoring case, though it would be a breaking change.
-            m_processedFiles = new FileBackedHashSet<string>(Path.Combine(m_cachePath, m_processorID.ToString()), StringComparer.OrdinalIgnoreCase);
-
-            // Fragmentation statistics are only valid for the lifetime of the process
-            // so go ahead and compact the processed files collection for good measure
-            Compact();
         }
 
         #endregion
@@ -923,8 +881,6 @@ namespace GSF.IO
                             m_cachePath = FilePath.GetAbsolutePath(value);
                         else
                             m_cachePath = DefaultCachePath;
-
-                        m_processedFiles.FilePath = Path.Combine(m_cachePath, m_processorID.ToString());
                     }
                 }
             }
@@ -959,28 +915,6 @@ namespace GSF.IO
             set
             {
                 m_threadScheduler.MaxThreadCount = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum amount of fragmentation allowed
-        /// before compacting the lookup table for processed files.
-        /// </summary>
-        /// <remarks>
-        /// If files are frequently removed from the watch directories,
-        /// increasing this value may improve performance. Setting the
-        /// value too high may result in the file perpetually growing
-        /// or long pauses on the processing thread.
-        /// </remarks>
-        public int MaxFragmentation
-        {
-            get
-            {
-                return m_maxFragmentation;
-            }
-            set
-            {
-                m_maxFragmentation = value;
             }
         }
 
@@ -1063,18 +997,6 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Gets the flag indicating if the file processor is actively
-        /// purging processed files from the internal lookup table.
-        /// </summary>
-        public bool IsCleaning
-        {
-            get
-            {
-                return m_cleanProcessedFilesOperation.IsRunning;
-            }
-        }
-
-        /// <summary>
         /// Gets the number of files
         /// processed by the file processor.
         /// </summary>
@@ -1105,30 +1027,6 @@ namespace GSF.IO
             get
             {
                 return Interlocked.CompareExchange(ref m_requeuedFileCount, 0, 0);
-            }
-        }
-
-        /// <summary>
-        /// Gets the time at which the last operation to
-        /// compact the set of processed files occurred.
-        /// </summary>
-        public DateTime LastCompactTime
-        {
-            get
-            {
-                return m_lastCompactTime;
-            }
-        }
-
-        /// <summary>
-        /// Gets the amount of time spent during the last
-        /// operation to compact the set of processed files.
-        /// </summary>
-        public TimeSpan LastCompactDuration
-        {
-            get
-            {
-                return m_lastCompactDuration;
             }
         }
 
@@ -1193,10 +1091,7 @@ namespace GSF.IO
                 }
 
                 if (m_trackedDirectories.Count == 0)
-                {
                     m_fileWatchTimer.Stop();
-                    m_processedFiles.Close();
-                }
             }
         }
 
@@ -1229,8 +1124,6 @@ namespace GSF.IO
                 if (!trackedDirectory.IsEnumerating)
                     GetThread().Push(() => trackedDirectory.EnumerateFiles(enumerationStrategy));
             }
-
-            m_cleanProcessedFilesOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -1338,12 +1231,6 @@ namespace GSF.IO
                         m_fileWatchTimer = null;
                     }
 
-                    if ((object)m_processedFiles != null)
-                    {
-                        m_processedFiles.Dispose();
-                        m_processedFiles = null;
-                    }
-
                     if ((object)m_waitObject != null)
                     {
                         // DO NOT dispose of the wait object
@@ -1402,10 +1289,9 @@ namespace GSF.IO
             if ((object)waitObject == null)
                 return;
 
-            bool alreadyProcessed = m_processedFiles.Contains(filePath);
             int retryCount = 0;
             Func<int> retryCounter = () => retryCount;
-            FileProcessorEventArgs args = new FileProcessorEventArgs(filePath, alreadyProcessed, raisedByFileWatcher, retryCounter);
+            FileProcessorEventArgs args = new FileProcessorEventArgs(filePath, raisedByFileWatcher, retryCounter);
 
             Action delayAndProcess = null;
 
@@ -1485,68 +1371,6 @@ namespace GSF.IO
                 return;
 
             Interlocked.Increment(ref m_processedFileCount);
-
-            if (!args.AlreadyProcessed)
-                m_processedFiles.Add(filePath);
-        }
-
-        // Gets the list of processed files from the file processor
-        // and passes it to the cleaning thread for filtering.
-        private void GetProcessedFiles()
-        {
-            m_processingThread.Push(1, () => m_cleanProcessedFilesOperation.ExecuteAction(() =>
-            {
-                string[] processedFiles = m_processedFiles.ToArray();
-                FilterProcessedFiles(processedFiles);
-            }));
-        }
-
-        // Filters the list of processed files to only the files that no longer
-        // exist, then passes them back to the processing thread for removal.
-        private void FilterProcessedFiles(string[] processedFiles)
-        {
-            m_cleanProcessedFilesThread.Push(() => m_cleanProcessedFilesOperation.ExecuteAction(() =>
-            {
-                IList<string> trackedDirectories = TrackedDirectories;
-
-                string[] files = processedFiles
-                    .Where(file => trackedDirectories.Any(dir => file.StartsWith(dir, StringComparison.OrdinalIgnoreCase)))
-                    .Where(file => !File.Exists(file))
-                    .ToArray();
-
-                RemoveProcessedFiles(files);
-            }));
-        }
-
-        // Removes the list of files that no longer exist,
-        // then deactivates the cleaning thread.
-        private void RemoveProcessedFiles(string[] files)
-        {
-            m_processingThread.Push(1, () => m_cleanProcessedFilesOperation.ExecuteAction(() =>
-            {
-                foreach (string file in files)
-                {
-                    m_touchedFiles.Remove(file);
-                    m_processedFiles.Remove(file);
-                }
-
-                m_cleanProcessedFilesOperation.RunIfPending();
-            }));
-        }
-
-        // Defragments the lookup table to reduce disk space usage.
-        private void Compact()
-        {
-            if (LogicalThread.CurrentThread != m_processingThread)
-            {
-                m_processingThread.Push(Compact);
-                return;
-            }
-
-            DateTime lastCompactTime = DateTime.UtcNow;
-            m_processedFiles.Compact();
-            m_lastCompactTime = lastCompactTime;
-            m_lastCompactDuration = DateTime.UtcNow - m_lastCompactTime;
         }
 
         // Triggers the processing event for the given file.
@@ -1622,9 +1446,6 @@ namespace GSF.IO
                         m_touchedFiles.Add(fullPath, lastWriteTime);
                     }
 
-                    if (m_processedFiles.Remove(oldFullPath))
-                        m_processedFiles.Add(fullPath);
-
                     if (matchesFilter)
                         TouchAndProcess(fullPath, true);
                     else
@@ -1637,12 +1458,7 @@ namespace GSF.IO
         private void Watcher_Deleted(object sender, FileSystemEventArgs args)
         {
             string fullPath = args.FullPath;
-
-            m_processingThread.Push(2, () =>
-            {
-                m_touchedFiles.Remove(fullPath);
-                m_processedFiles.Remove(fullPath);
-            });
+            m_processingThread.Push(2, () => m_touchedFiles.Remove(fullPath));
         }
 
         // Triggers the error event for the exception encountered by the file watcher.
@@ -1665,13 +1481,6 @@ namespace GSF.IO
                     catch (Exception ex) { OnError(ex); }
                 }
             }
-
-            // Determine if we need to defragment the lookup table for processed files
-            m_processingThread.Push(1, () =>
-            {
-                if (m_processedFiles.FragmentationCount > m_maxFragmentation)
-                    Compact();
-            });
         }
 
         #endregion
