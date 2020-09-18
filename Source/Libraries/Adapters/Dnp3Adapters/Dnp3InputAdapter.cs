@@ -367,16 +367,17 @@ namespace DNP3Adapters
             string portName = tcpConfig.address + ":" + tcpConfig.port;
             TimeSpan minRetry = TimeSpan.FromMilliseconds(tcpConfig.minRetryMs);
             TimeSpan maxRetry = TimeSpan.FromMilliseconds(tcpConfig.maxRetryMs);
-            ChannelRetry channelRetry = new ChannelRetry(minRetry, maxRetry);
+            TimeSpan reconnectDelay = TimeSpan.FromMilliseconds(tcpConfig.reconnectDelayMs);
+            ChannelRetry channelRetry = new ChannelRetry(minRetry, maxRetry, reconnectDelay);
             IChannelListener channelListener = new ChannelListener(state => OnStatusMessage(MessageLevel.Info, portName + " - Channel state change: " + state));
 
-            IChannel channel = s_manager.AddTCPClient(portName, tcpConfig.level, channelRetry, tcpConfig.address, tcpConfig.port, channelListener);
+            IChannel channel = s_manager.AddTCPClient(portName, tcpConfig.level, channelRetry, new[] { new IPEndpoint(tcpConfig.address, tcpConfig.port) }, channelListener);
             m_channel = channel;
 
             IMaster master = channel.AddMaster(portName, m_soeHandler, DefaultMasterApplication.Instance, m_masterConfig.master);
 
             if (m_pollingInterval > TimeSpan.Zero)
-                master.AddClassScan(ClassField.AllClasses, m_pollingInterval, TaskConfig.Default);
+                master.AddClassScan(ClassField.AllClasses, m_pollingInterval, m_soeHandler, TaskConfig.Default);
 
             master.Enable();
             m_active = true;
