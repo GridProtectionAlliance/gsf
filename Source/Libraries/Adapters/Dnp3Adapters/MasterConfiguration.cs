@@ -52,26 +52,26 @@ namespace DNP3Adapters
         /// <summary>
         /// IP address of host
         /// </summary>
-        public String address = "127.0.0.1";
+        public string address = "127.0.0.1";
 
         /// <summary>
         /// TCP port for connection
         /// </summary>
-        public UInt16 port = 20000;
+        public ushort port = 20000;
 
         /// <summary>
         /// Minimum connection retry interval in milliseconds
         /// </summary>
-        public UInt64 minRetryMs = 5000;
+        public ulong minRetryMs = 5000;
 
         /// <summary>
         /// Maximum connection retry interval in milliseconds
         /// </summary>
-        public UInt64 maxRetryMs = 60000;
+        public ulong maxRetryMs = 60000;
 
         /// <summary>
         /// DNP3 filter level for port messages
         /// </summary>
-        public System.UInt32 level = LogLevels.NORMAL;
+        public uint level = LogLevels.NORMAL;
     }
 }

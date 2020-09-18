@@ -48,7 +48,7 @@ namespace DNP3Adapters
         /// <param name="id">ID</param>
         /// <param name="source">Source</param>
         /// <param name="index">Index</param>
-        public Mapping(uint id, String source, UInt32 index)
+        public Mapping(uint id, string source, uint index)
         {
             this.tsfId = id;
             this.tsfSource = source;
@@ -63,12 +63,12 @@ namespace DNP3Adapters
         /// <summary>
         /// TSF Source
         /// </summary>
-        public String tsfSource;        
+        public string tsfSource;        
         
         /// <summary>
         /// DNP Index
         /// </summary>
-        public UInt32 dnpIndex;
+        public uint dnpIndex;
     }
 
     /// <summary>

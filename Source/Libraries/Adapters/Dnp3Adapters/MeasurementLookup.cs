@@ -46,42 +46,42 @@ namespace DNP3Adapters
             map.doubleBitBinaryMap.ForEach(m => doubleBitBinaryMap.Add(m.dnpIndex, m));
         }
 
-        public void Lookup(Binary meas, UInt16 index, Action<IMeasurement> action)
+        public void Lookup(Binary meas, ushort index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, binaryMap, ConvertBinary, action);
         }
 
-        public void Lookup(DoubleBitBinary meas, UInt16 index, Action<IMeasurement> action)
+        public void Lookup(DoubleBitBinary meas, ushort index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, doubleBitBinaryMap, ConvertDoubleBinary, action);
         }
 
-        public void Lookup(Analog meas, UInt16 index, Action<IMeasurement> action)
+        public void Lookup(Analog meas, ushort index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, analogMap, ConvertAnalog, action);
         }
 
-        public void Lookup(Counter meas, UInt16 index, Action<IMeasurement> action)
+        public void Lookup(Counter meas, ushort index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, counterMap, ConvertCounter, action);
         }
 
-        public void Lookup(FrozenCounter meas, UInt16 index, Action<IMeasurement> action)
+        public void Lookup(FrozenCounter meas, ushort index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, frozenCounterMap, ConvertFrozenCounter, action);
         }
 
-        public void Lookup(BinaryOutputStatus meas, UInt16 index, Action<IMeasurement> action)
+        public void Lookup(BinaryOutputStatus meas, ushort index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, controlStatusMap, ConvertBinaryOutputStatus, action);
         }
 
-        public void Lookup(AnalogOutputStatus meas, UInt16 index, Action<IMeasurement> action)
+        public void Lookup(AnalogOutputStatus meas, ushort index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, setpointStatusMap, ConvertAnalogOutputStatus, action);
         }
 
-        private Measurement ConvertBinary(Binary meas, uint id, String source)
+        private Measurement ConvertBinary(Binary meas, uint id, string source)
         {
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
@@ -90,7 +90,7 @@ namespace DNP3Adapters
             return m;
         }
 
-        private Measurement ConvertDoubleBinary(DoubleBitBinary meas, uint id, String source)
+        private Measurement ConvertDoubleBinary(DoubleBitBinary meas, uint id, string source)
         {
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
@@ -113,7 +113,7 @@ namespace DNP3Adapters
             return m;
         }
 
-        private Measurement ConvertAnalog(Analog meas, uint id, String source)
+        private Measurement ConvertAnalog(Analog meas, uint id, string source)
         {
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
@@ -122,7 +122,7 @@ namespace DNP3Adapters
             return m;
         }
 
-        private Measurement ConvertCounter(Counter meas, uint id, String source)
+        private Measurement ConvertCounter(Counter meas, uint id, string source)
         {
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
@@ -131,7 +131,7 @@ namespace DNP3Adapters
             return m;
         }
 
-        private Measurement ConvertFrozenCounter(FrozenCounter meas, uint id, String source)
+        private Measurement ConvertFrozenCounter(FrozenCounter meas, uint id, string source)
         {
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
@@ -140,7 +140,7 @@ namespace DNP3Adapters
             return m;
         }
 
-        private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus meas, uint id, String source)
+        private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus meas, uint id, string source)
         {
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
@@ -149,7 +149,7 @@ namespace DNP3Adapters
             return m;
         }
 
-        private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus meas, uint id, String source)
+        private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus meas, uint id, string source)
         {
             var m = new Measurement();
             m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
@@ -158,7 +158,7 @@ namespace DNP3Adapters
             return m;
         }
 
-        private static void GenericLookup<T>(T meas, UInt32 index, Dictionary<UInt32, Mapping> map, Func<T, uint, String, Measurement> converter, Action<IMeasurement> action)
+        private static void GenericLookup<T>(T meas, uint index, Dictionary<uint, Mapping> map, Func<T, uint, string, Measurement> converter, Action<IMeasurement> action)
         {
             Mapping id;
             if (map.TryGetValue(index, out id))
@@ -167,12 +167,12 @@ namespace DNP3Adapters
             }
         }
 
-        private readonly Dictionary<UInt32, Mapping> binaryMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> analogMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> counterMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> frozenCounterMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> controlStatusMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> doubleBitBinaryMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<uint, Mapping> binaryMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<uint, Mapping> analogMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<uint, Mapping> counterMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<uint, Mapping> frozenCounterMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<uint, Mapping> controlStatusMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<uint, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<uint, Mapping> doubleBitBinaryMap = new Dictionary<uint, Mapping>();
     }
 }
