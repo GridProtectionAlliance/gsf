@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using Automatak.DNP3.Interface;
 
 namespace DNP3Adapters
