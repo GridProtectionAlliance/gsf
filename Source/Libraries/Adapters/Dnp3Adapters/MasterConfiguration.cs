@@ -69,6 +69,11 @@ namespace DNP3Adapters
         public ulong maxRetryMs = 60000;
 
         /// <summary>
+        /// Reconnect delay interval in milliseconds
+        /// </summary>
+        public ulong reconnectDelayMs = 2000;
+
+        /// <summary>
         /// DNP3 filter level for port messages
         /// </summary>
         public uint level = LogLevels.NORMAL;
