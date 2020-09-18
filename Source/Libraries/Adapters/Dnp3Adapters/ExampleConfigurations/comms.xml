@@ -5,6 +5,7 @@
     <port>20000</port>
     <minRetryMs>5000</minRetryMs>
     <maxRetryMs>60000</maxRetryMs>
+    <reconnectDelayMs>2000</reconnectDelayMs>
     <level>15</level>
   </client>
   <master>
