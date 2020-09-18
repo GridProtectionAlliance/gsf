@@ -20,8 +20,10 @@
 //       Generated original version of source code.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
-//  03/2/2014 - Adam Crain
+//  03/02/2014 - Adam Crain
 //       Migrated to new ISOEHandler interface
+//  09/18/2020 - J. Ritchie Carroll
+//       Updated to accommodate recent changes in ISOEHandler interface
 //
 //******************************************************************************************************
 
@@ -63,18 +65,18 @@ namespace DNP3Adapters
                 foreach (IndexedValue<T> indexedValue in grouping)
                 {
                     TimeSpan offset = TimeSpan.FromTicks(count * TimestampDifferentiation.Ticks);
-                    indexedValue.Value.Timestamp = now - offset;
+                    indexedValue.Value.Timestamp = new DNPTime(now - offset);
                     count--;
                 }
             }
         }
 
-        void ISOEHandler.Start()
+        void ISOEHandler.BeginFragment(ResponseInfo info)
         {
             m_Measurements.Clear();
         }
 
-        void ISOEHandler.End()
+        void ISOEHandler.EndFragment(ResponseInfo info)
         {
             if (m_Measurements.Count > 0 && NewMeasurements != null)
             {
