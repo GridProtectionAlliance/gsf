@@ -36,15 +36,15 @@ using GSF.TimeSeries;
 namespace DNP3Adapters
 {
     /// <summary>
-    /// This is the data adapter that converts data from the dnp3 world to the TSF
+    /// This is the data adapter that converts data from the dnp3 world to the Time Series Framework.
     /// </summary>
-    class TimeSeriesSOEHandler : ISOEHandler
+    internal class TimeSeriesSOEHandler : ISOEHandler
     {
         public delegate void OnNewMeasurements(ICollection<IMeasurement> measurements);
         public event OnNewMeasurements NewMeasurements;
 
         private readonly MeasurementLookup m_lookup;
-        private readonly List<IMeasurement> m_Measurements = new List<IMeasurement>();
+        private readonly List<IMeasurement> m_measurements = new List<IMeasurement>();
 
         public TimeSeriesSOEHandler(MeasurementLookup lookup)
         {
@@ -73,71 +73,85 @@ namespace DNP3Adapters
 
         void ISOEHandler.BeginFragment(ResponseInfo info)
         {
-            m_Measurements.Clear();
+            m_measurements.Clear();
         }
 
         void ISOEHandler.EndFragment(ResponseInfo info)
         {
-            if (m_Measurements.Count > 0 && NewMeasurements != null)
+            if (m_measurements.Count > 0 && NewMeasurements != null)
             {
-                NewMeasurements(m_Measurements);
+                NewMeasurements(m_measurements);
             }
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Binary>> values)
         {
-            PutTimestamps(values);
+            IEnumerable<IndexedValue<Binary>> indexedValues = values.ToArray();
 
-            foreach (var indexedValue in values)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
+            PutTimestamps(indexedValues);
+
+            foreach (IndexedValue<Binary> indexedValue in indexedValues)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<DoubleBitBinary>> values)
         {
-            PutTimestamps(values);
+            IEnumerable<IndexedValue<DoubleBitBinary>> indexedValues = values.ToArray();
 
-            foreach (var indexedValue in values)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
+            PutTimestamps(indexedValues);
+
+            foreach (IndexedValue<DoubleBitBinary> indexedValue in indexedValues)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Analog>> values)
         {
-            PutTimestamps(values);
+            IEnumerable<IndexedValue<Analog>> indexedValues = values.ToArray();
 
-            foreach (var indexedValue in values)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
+            PutTimestamps(indexedValues);
+
+            foreach (IndexedValue<Analog> indexedValue in indexedValues)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Counter>> values)
         {
-            PutTimestamps(values);
+            IEnumerable<IndexedValue<Counter>> indexedValues = values.ToArray();
 
-            foreach (var indexedValue in values)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
+            PutTimestamps(indexedValues);
+
+            foreach (IndexedValue<Counter> indexedValue in indexedValues)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<FrozenCounter>> values)
         {
-            PutTimestamps(values);
+            IEnumerable<IndexedValue<FrozenCounter>> indexedValues = values.ToArray();
 
-            foreach (var indexedValue in values)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
+            PutTimestamps(indexedValues);
+
+            foreach (IndexedValue<FrozenCounter> indexedValue in indexedValues)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<BinaryOutputStatus>> values)
         {
-            PutTimestamps(values);
+            IEnumerable<IndexedValue<BinaryOutputStatus>> indexedValues = values.ToArray();
 
-            foreach (var indexedValue in values)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
+            PutTimestamps(indexedValues);
+
+            foreach (IndexedValue<BinaryOutputStatus> indexedValue in indexedValues)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<AnalogOutputStatus>> values)
         {
-            PutTimestamps(values);
+            IEnumerable<IndexedValue<AnalogOutputStatus>> indexedValues = values.ToArray();
 
-            foreach (var indexedValue in values)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_Measurements.Add);
+            PutTimestamps(indexedValues);
+
+            foreach (IndexedValue<AnalogOutputStatus> indexedValue in indexedValues)
+                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
         }
 
         void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<OctetString>> values)

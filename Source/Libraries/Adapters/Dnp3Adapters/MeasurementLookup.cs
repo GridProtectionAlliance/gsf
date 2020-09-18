@@ -31,139 +31,148 @@ using GSF.TimeSeries;
 namespace DNP3Adapters
 {
     /// <summary>
-    /// Helper class that converts measurements and provides a lookup capbility
+    /// Helper class that converts measurements and provides a lookup capability.
     /// </summary>
     class MeasurementLookup
     {
         public MeasurementLookup(MeasurementMap map)
         {
-            map.binaryMap.ForEach(m => binaryMap.Add(m.dnpIndex, m));
-            map.analogMap.ForEach(m => analogMap.Add(m.dnpIndex, m));
-            map.counterMap.ForEach(m => counterMap.Add(m.dnpIndex, m));
-            map.frozenCounterMap.ForEach(m => frozenCounterMap.Add(m.dnpIndex, m));
-            map.controlStatusMap.ForEach(m => controlStatusMap.Add(m.dnpIndex, m));
-            map.setpointStatusMap.ForEach(m => setpointStatusMap.Add(m.dnpIndex, m));
-            map.doubleBitBinaryMap.ForEach(m => doubleBitBinaryMap.Add(m.dnpIndex, m));
+            map.binaryMap.ForEach(mapping => binaryMap.Add(mapping.dnpIndex, mapping));
+            map.analogMap.ForEach(mapping => analogMap.Add(mapping.dnpIndex, mapping));
+            map.counterMap.ForEach(mapping => counterMap.Add(mapping.dnpIndex, mapping));
+            map.frozenCounterMap.ForEach(mapping => frozenCounterMap.Add(mapping.dnpIndex, mapping));
+            map.controlStatusMap.ForEach(mapping => controlStatusMap.Add(mapping.dnpIndex, mapping));
+            map.setpointStatusMap.ForEach(mapping => setpointStatusMap.Add(mapping.dnpIndex, mapping));
+            map.doubleBitBinaryMap.ForEach(mapping => doubleBitBinaryMap.Add(mapping.dnpIndex, mapping));
         }
 
-        public void Lookup(Binary meas, ushort index, Action<IMeasurement> action)
+        public void Lookup(Binary measurement, ushort index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, binaryMap, ConvertBinary, action);
+            GenericLookup(measurement, index, binaryMap, ConvertBinary, action);
         }
 
-        public void Lookup(DoubleBitBinary meas, ushort index, Action<IMeasurement> action)
+        public void Lookup(DoubleBitBinary measurement, ushort index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, doubleBitBinaryMap, ConvertDoubleBinary, action);
+            GenericLookup(measurement, index, doubleBitBinaryMap, ConvertDoubleBinary, action);
         }
 
-        public void Lookup(Analog meas, ushort index, Action<IMeasurement> action)
+        public void Lookup(Analog measurement, ushort index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, analogMap, ConvertAnalog, action);
+            GenericLookup(measurement, index, analogMap, ConvertAnalog, action);
         }
 
-        public void Lookup(Counter meas, ushort index, Action<IMeasurement> action)
+        public void Lookup(Counter measurement, ushort index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, counterMap, ConvertCounter, action);
+            GenericLookup(measurement, index, counterMap, ConvertCounter, action);
         }
 
-        public void Lookup(FrozenCounter meas, ushort index, Action<IMeasurement> action)
+        public void Lookup(FrozenCounter measurement, ushort index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, frozenCounterMap, ConvertFrozenCounter, action);
+            GenericLookup(measurement, index, frozenCounterMap, ConvertFrozenCounter, action);
         }
 
-        public void Lookup(BinaryOutputStatus meas, ushort index, Action<IMeasurement> action)
+        public void Lookup(BinaryOutputStatus measurement, ushort index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, controlStatusMap, ConvertBinaryOutputStatus, action);
+            GenericLookup(measurement, index, controlStatusMap, ConvertBinaryOutputStatus, action);
         }
 
-        public void Lookup(AnalogOutputStatus meas, ushort index, Action<IMeasurement> action)
+        public void Lookup(AnalogOutputStatus measurement, ushort index, Action<IMeasurement> action)
         {
-            GenericLookup(meas, index, setpointStatusMap, ConvertAnalogOutputStatus, action);
+            GenericLookup(measurement, index, setpointStatusMap, ConvertAnalogOutputStatus, action);
         }
 
-        private Measurement ConvertBinary(Binary meas, uint id, string source)
+        private Measurement ConvertBinary(Binary measurement, uint id, string source)
         {
-            var m = new Measurement();
-            m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
-            m.Value = meas.Value ? 1.0 : 0.0;
-            m.Timestamp = meas.Timestamp.Value;
-            return m;
-        }
-
-        private Measurement ConvertDoubleBinary(DoubleBitBinary meas, uint id, string source)
-        {
-            var m = new Measurement();
-            m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
-            switch (meas.Value)
+            return new Measurement
             {
-                case (DoubleBit.INDETERMINATE):
-                    m.Value = 0.0;
+                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+                Value = measurement.Value ? 1.0 : 0.0,
+                Timestamp = measurement.Timestamp.Value
+            };
+        }
+
+        private Measurement ConvertDoubleBinary(DoubleBitBinary measurement, uint id, string source)
+        {
+            Measurement convertedMeasurement = new Measurement
+            {
+                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+                Timestamp = measurement.Timestamp.Value
+            };
+            
+            switch (measurement.Value)
+            {
+                case DoubleBit.INDETERMINATE:
+                    convertedMeasurement.Value = 0.0D;
                     break;
-                case (DoubleBit.DETERMINED_OFF):
-                    m.Value = 1.0;
+                case DoubleBit.DETERMINED_OFF:
+                    convertedMeasurement.Value = 1.0D;
                     break;
-                case (DoubleBit.DETERMINED_ON):
-                    m.Value = 2.0;
+                case DoubleBit.DETERMINED_ON:
+                    convertedMeasurement.Value = 2.0D;
                     break;
                 default:
-                    m.Value = 3.0;
+                    convertedMeasurement.Value = 3.0D;
                     break;
             }
-            m.Timestamp = meas.Timestamp.Value;
-            return m;
+            
+            return convertedMeasurement;
         }
 
-        private Measurement ConvertAnalog(Analog meas, uint id, string source)
+        private Measurement ConvertAnalog(Analog measurement, uint id, string source)
         {
-            var m = new Measurement();
-            m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
-            m.Value = meas.Value;
-            m.Timestamp = meas.Timestamp.Value;
-            return m;
-        }
-
-        private Measurement ConvertCounter(Counter meas, uint id, string source)
-        {
-            var m = new Measurement();
-            m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
-            m.Value = meas.Value;
-            m.Timestamp = meas.Timestamp.Value;
-            return m;
-        }
-
-        private Measurement ConvertFrozenCounter(FrozenCounter meas, uint id, string source)
-        {
-            var m = new Measurement();
-            m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
-            m.Value = meas.Value;
-            m.Timestamp = meas.Timestamp.Value;
-            return m;
-        }
-
-        private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus meas, uint id, string source)
-        {
-            var m = new Measurement();
-            m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
-            m.Value = meas.Value ? 1.0 : 0.0;
-            m.Timestamp = meas.Timestamp.Value;
-            return m;
-        }
-
-        private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus meas, uint id, string source)
-        {
-            var m = new Measurement();
-            m.Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata;
-            m.Value = meas.Value;
-            m.Timestamp = meas.Timestamp.Value;
-            return m;
-        }
-
-        private static void GenericLookup<T>(T meas, uint index, Dictionary<uint, Mapping> map, Func<T, uint, string, Measurement> converter, Action<IMeasurement> action)
-        {
-            Mapping id;
-            if (map.TryGetValue(index, out id))
+            return new Measurement
             {
-                action(converter(meas, id.tsfId, id.tsfSource));
+                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+                Value = measurement.Value,
+                Timestamp = measurement.Timestamp.Value
+            };
+        }
+
+        private Measurement ConvertCounter(Counter measurement, uint id, string source)
+        {
+            return new Measurement
+            {
+               Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+               Value = measurement.Value,
+               Timestamp = measurement.Timestamp.Value
+            };
+        }
+
+        private Measurement ConvertFrozenCounter(FrozenCounter measurement, uint id, string source)
+        {
+            return new Measurement
+            {
+                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+                Value = measurement.Value,
+                Timestamp = measurement.Timestamp.Value
+            };
+        }
+
+        private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus measurement, uint id, string source)
+        {
+            return new Measurement 
+            {
+                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+                Value = measurement.Value ? 1.0D : 0.0D,
+                Timestamp = measurement.Timestamp.Value
+            };
+        }
+
+        private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus measurement, uint id, string source)
+        {
+            return new Measurement
+            {
+                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+                Value = measurement.Value,
+                Timestamp = measurement.Timestamp.Value
+            };
+        }
+
+        private static void GenericLookup<T>(T measurement, uint index, Dictionary<uint, Mapping> map, Func<T, uint, string, Measurement> converter, Action<IMeasurement> action)
+        {
+            if (map.TryGetValue(index, out Mapping id))
+            {
+                action(converter(measurement, id.tsfId, id.tsfSource));
             }
         }
 

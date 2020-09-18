@@ -37,8 +37,8 @@ namespace DNP3Adapters
         /// </summary>
         public Mapping()
         {
-            this.tsfId = 0;
-            this.dnpIndex = 0;
+            tsfId = 0;
+            dnpIndex = 0;
         }
 
         /// <summary>
@@ -49,9 +49,9 @@ namespace DNP3Adapters
         /// <param name="index">Index</param>
         public Mapping(uint id, string source, uint index)
         {
-            this.tsfId = id;
-            this.tsfSource = source;
-            this.dnpIndex = index;
+            tsfId = id;
+            tsfSource = source;
+            dnpIndex = index;
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace DNP3Adapters
         public List<Mapping> counterMap = new List<Mapping>();
 
         /// <summary>
-        /// Fozen Counter Map
+        /// Frozen Counter Map
         /// </summary>
         public List<Mapping> frozenCounterMap = new List<Mapping>();
 

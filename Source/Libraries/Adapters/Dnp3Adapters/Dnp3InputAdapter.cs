@@ -52,17 +52,11 @@ namespace DNP3Adapters
 
         private class ChannelListener : IChannelListener
         {
-            private Action<ChannelState> m_onStateChange;
+            private readonly Action<ChannelState> m_onStateChange;
 
-            public ChannelListener(Action<ChannelState> onStateChange)
-            {
-                m_onStateChange = onStateChange;
-            }
+            public ChannelListener(Action<ChannelState> onStateChange) => m_onStateChange = onStateChange;
 
-            public void OnStateChange(ChannelState state)
-            {
-                m_onStateChange(state);
-            }
+            public void OnStateChange(ChannelState state) => m_onStateChange(state);
         }
 
         // Class used to proxy dnp3 manager log entries to Iaon session
@@ -78,27 +72,26 @@ namespace DNP3Adapters
                 // contends with adapter initialization and disposal so contention will not be normal
                 lock (s_adapters)
                 {
-                    if ((object)s_statusProxy != null && !s_statusProxy.m_disposed)
-                    {
-                        if ((entry.filter.Flags & LogFilters.ERROR) > 0)
-                        {
-                            // Expose errors through exception processor
-                            InvalidOperationException exception;
-                            exception = new InvalidOperationException(FormatLogEntry(entry));
-                            s_statusProxy.OnProcessException(MessageLevel.Error, exception);
-                        }
-                        else
-                        {
-                            // For other messages, we just expose as a normal status
-                            string message = FormatLogEntry(entry);
+                    if (s_statusProxy == null || s_statusProxy.m_disposed)
+                        return;
 
-                            if ((entry.filter.Flags & LogFilters.WARNING) > 0)
-                                s_statusProxy.OnStatusMessage(MessageLevel.Warning, message);
-                            else if ((entry.filter.Flags & LogFilters.DEBUG) > 0)
-                                s_statusProxy.OnStatusMessage(MessageLevel.Debug, message);
-                            else
-                                s_statusProxy.OnStatusMessage(MessageLevel.Info, message);
-                        }
+                    if ((entry.filter.Flags & LogFilters.ERROR) > 0)
+                    {
+                        // Expose errors through exception processor
+                        InvalidOperationException exception = new InvalidOperationException(FormatLogEntry(entry));
+                        s_statusProxy.OnProcessException(MessageLevel.Error, exception);
+                    }
+                    else
+                    {
+                        // For other messages, we just expose as a normal status
+                        string message = FormatLogEntry(entry);
+
+                        if ((entry.filter.Flags & LogFilters.WARNING) > 0)
+                            s_statusProxy.OnStatusMessage(MessageLevel.Warning, message);
+                        else if ((entry.filter.Flags & LogFilters.DEBUG) > 0)
+                            s_statusProxy.OnStatusMessage(MessageLevel.Debug, message);
+                        else
+                            s_statusProxy.OnStatusMessage(MessageLevel.Info, message);
                     }
                 }
             }
@@ -116,6 +109,10 @@ namespace DNP3Adapters
                 return entryText.ToString();
             }
         }
+
+        // Constants
+        private const double DefaultPollingInterval = 2.0D;
+        private const double DefaultTimestampDifferentiation = 1.0D;
 
         // Fields
         private string m_commsFilePath;             // Filename for the communication configuration file
@@ -137,7 +134,7 @@ namespace DNP3Adapters
         /// </summary>
         public DNP3InputAdapter()
         {
-            m_pollingInterval = TimeSpan.FromSeconds(2.0D);
+            m_pollingInterval = TimeSpan.FromSeconds(DefaultPollingInterval);
         }
 
         #endregion
@@ -145,73 +142,52 @@ namespace DNP3Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the name of the xml file from which the communication parameters will be read.
+        /// Gets or sets the name of the XML file from which the communication parameters will be read.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the name of the XML file from which the communication configuration will be read. Include fully qualified path if file name is not in installation folder.")]
+        [ConnectionStringParameter]
+        [Description("Define the name of the XML file from which the communication configuration will be read. Include fully qualified path if file name is not in installation folder.")]
         public string CommsFilePath
         {
-            get
-            {
-                return m_commsFilePath;
-            }
-            set
-            {
-                m_commsFilePath = value;
-            }
+            get => m_commsFilePath;
+            set => m_commsFilePath = value;
         }
 
         /// <summary>
-        /// Gets or sets the name of the xml file from which the measurement mapping is read.
+        /// Gets or sets the name of the XML file from which the measurement mapping is read.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the name of the XML file from which the communication configuration will be read. Include fully qualified path if file name is not in installation folder.")]
+        [ConnectionStringParameter]
+        [Description("Define the name of the XML file from which the communication configuration will be read. Include fully qualified path if file name is not in installation folder.")]
         public string MappingFilePath
         {
-            get
-            {
-                return m_mappingFilePath;
-            }
-            set
-            {
-                m_mappingFilePath = value;
-            }
+            get => m_mappingFilePath;
+            set => m_mappingFilePath = value;
         }
 
         /// <summary>
         /// Gets or sets the interval, in seconds, at which the adapter will poll the DNP3 device.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(2.0D),
-        Description("Define the interval, in seconds, at which the adapter will poll the DNP3 device.")]
+        [ConnectionStringParameter]
+        [Description("Define the interval, in seconds, at which the adapter will poll the DNP3 device.")]
+        [DefaultValue(DefaultPollingInterval)]
         public double PollingInterval
         {
-            get
-            {
-                return m_pollingInterval.TotalSeconds;
-            }
-            set
-            {
-                m_pollingInterval = TimeSpan.FromSeconds(value);
-            }
+            get => m_pollingInterval.TotalSeconds;
+            set => m_pollingInterval = TimeSpan.FromSeconds(value);
         }
 
         /// <summary>
         /// Gets or sets the time interval, in milliseconds, to insert between consecutive
         /// data points for a given signal that were received at the exact same time.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(1.0D),
-        Description("Define the time interval, in milliseconds, to insert between consecutive data points for with the same ID and timestamp.")]
+        [ConnectionStringParameter]
+        [Description("Define the time interval, in milliseconds, to insert between consecutive data points for with the same ID and timestamp.")]
+        [DefaultValue(DefaultTimestampDifferentiation)]
         public double TimestampDifferentiation
         {
-            get
-            {
-                return m_soeHandler?.TimestampDifferentiation.TotalMilliseconds ?? 0.0D;
-            }
+            get => m_soeHandler?.TimestampDifferentiation.TotalMilliseconds ?? 0.0D;
             set
             {
-                if ((object)m_soeHandler != null)
+                if (m_soeHandler != null)
                     m_soeHandler.TimestampDifferentiation = TimeSpan.FromMilliseconds(value);
             }
         }
@@ -219,13 +195,7 @@ namespace DNP3Adapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Gets flag that determines if the data input connects asynchronously.
@@ -233,13 +203,7 @@ namespace DNP3Adapters
         /// <remarks>
         /// Derived classes should return true when data input source is connects asynchronously, otherwise return false.
         /// </remarks>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         #endregion
 
@@ -251,53 +215,50 @@ namespace DNP3Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                if (m_active)
                 {
-                    if (disposing)
+                    m_active = false;
+
+                    if (m_channel != null)
                     {
-                        if (m_active)
-                        {
-                            m_active = false;
-
-                            if ((object)m_channel != null)
-                            {
-                                // Shutdown the communications channel
-                                m_channel.Shutdown();
-                                m_channel = null;
-                            }
-                        }
-
-                        // Detach from the time-series sequence of events new measurements event
-                        if ((object)m_soeHandler != null)
-                        {
-                            m_soeHandler.NewMeasurements -= OnNewMeasurements;
-                            m_soeHandler = null;
-                        }
-
-                        lock (s_adapters)
-                        {
-                            // Remove this adapter from the available list
-                            s_adapters.Remove(this);
-
-                            // See if we are disposing the status proxy instance
-                            if (ReferenceEquals(s_statusProxy, this))
-                            {
-                                // Attempt to find a new status proxy
-                                if (s_adapters.Count > 0)
-                                    s_statusProxy = s_adapters[0];
-                                else
-                                    s_statusProxy = null;
-                            }
-                        }
+                        // Shutdown the communications channel
+                        m_channel.Shutdown();
+                        m_channel = null;
                     }
                 }
-                finally
+
+                // Detach from the time-series sequence of events new measurements event
+                if (m_soeHandler != null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_soeHandler.NewMeasurements -= OnNewMeasurements;
+                    m_soeHandler = null;
                 }
+
+                lock (s_adapters)
+                {
+                    // Remove this adapter from the available list
+                    s_adapters.Remove(this);
+
+                    // See if we are disposing the status proxy instance
+                    if (ReferenceEquals(s_statusProxy, this))
+                    {
+                        // Attempt to find a new status proxy
+                        s_statusProxy = s_adapters.Count > 0 ? s_adapters[0] : null;
+                    }
+                }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -307,9 +268,6 @@ namespace DNP3Adapters
         public override void Initialize()
         {
             Dictionary<string, string> settings = Settings;
-            string setting;
-            double pollingInterval;
-            double timestampDifferentiation;
 
             base.Initialize();
 
@@ -319,7 +277,7 @@ namespace DNP3Adapters
             if (!settings.TryGetValue("MappingFilePath", out m_mappingFilePath) || string.IsNullOrWhiteSpace(m_mappingFilePath))
                 throw new ArgumentException("The required mappingFile parameter was not specified");
 
-            if (settings.TryGetValue("PollingInterval", out setting) && double.TryParse(setting, out pollingInterval))
+            if (settings.TryGetValue("PollingInterval", out string setting) && double.TryParse(setting, out double pollingInterval))
                 PollingInterval = pollingInterval;
 
             m_masterConfig = ReadConfig<MasterConfiguration>(m_commsFilePath);
@@ -328,10 +286,14 @@ namespace DNP3Adapters
             m_soeHandler = new TimeSeriesSOEHandler(new MeasurementLookup(m_measurementMap));
             m_soeHandler.NewMeasurements += OnNewMeasurements;
 
-            // The TimestampDifferentiation property is a passthrough to the m_soeHandler.TimestampDifferentiation,
+            // The TimestampDifferentiation property is a pass-through to the m_soeHandler.TimestampDifferentiation,
             // so m_soeHandler must be initialized before reading this property from the connection string
-            if (settings.TryGetValue("TimestampDifferentiation", out setting) && double.TryParse(setting, out timestampDifferentiation))
+            if (settings.TryGetValue("TimestampDifferentiation", out setting) && double.TryParse(setting, out double timestampDifferentiation))
                 TimestampDifferentiation = timestampDifferentiation;
+            else
+                TimestampDifferentiation = DefaultTimestampDifferentiation;
+
+            m_soeHandler.TimestampDifferentiation = TimeSpan.FromMilliseconds(TimestampDifferentiation);
 
             lock (s_adapters)
             {
@@ -339,18 +301,8 @@ namespace DNP3Adapters
                 s_adapters.Add(this);
 
                 // If no adapter has been designated as the status proxy, might as well be this one
-                if ((object)s_statusProxy == null)
+                if (s_statusProxy == null)
                     s_statusProxy = this;
-            }
-        }
-
-        private T ReadConfig<T>(string path)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
-
-            using (TextReader reader = new StreamReader(FilePath.GetAbsolutePath(path)))
-            {
-                return (T)serializer.Deserialize(reader);
             }
         }
 
@@ -392,15 +344,15 @@ namespace DNP3Adapters
         /// </remarks>
         protected override void AttemptDisconnection()
         {
-            if (m_active)
-            {
-                m_active = false;
+            if (!m_active)
+                return;
 
-                if ((object)m_channel != null)
-                {
-                    m_channel.Shutdown();
-                    m_channel = null;
-                }
+            m_active = false;
+
+            if (m_channel != null)
+            {
+                m_channel.Shutdown();
+                m_channel = null;
             }
         }
 
@@ -409,10 +361,8 @@ namespace DNP3Adapters
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="DNP3InputAdapter"/>.</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            return string.Format("Received {0:N0} measurements so far...", ProcessedMeasurements).CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) => 
+            $"Received {ProcessedMeasurements:N0} measurements so far...".CenterText(maxLength);
 
         #endregion
 
@@ -432,6 +382,17 @@ namespace DNP3Adapters
         {
             s_adapters = new List<DNP3InputAdapter>();
             s_manager = DNP3ManagerFactory.CreateManager(Environment.ProcessorCount, new IaonProxyLogHandler());
+        }
+
+        // Static Methods
+        private static T ReadConfig<T>(string path)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+
+            using (TextReader reader = new StreamReader(FilePath.GetAbsolutePath(path)))
+            {
+                return (T)serializer.Deserialize(reader);
+            }
         }
 
         #endregion
