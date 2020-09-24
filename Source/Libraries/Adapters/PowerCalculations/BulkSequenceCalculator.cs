@@ -375,7 +375,7 @@ namespace PowerCalculations
                     return base.SignalReferenceTemplate;
 
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
-                int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex;
+                int signalIndex;
                 SignalKind signalKind;
 
                 switch (GetSignalTypes()?[CurrentOutputIndex] ?? SignalType)
@@ -383,13 +383,16 @@ namespace PowerCalculations
                     case SignalType.VPHA:
                     case SignalType.IPHA:
                         signalKind = SignalKind.Angle;
+                        signalIndex = adapterDetail.SourcePhaseCount + CurrentOutputIndex - CurrentOutputIndex % 2 + 1;
                         break;
                     case SignalType.VPHM:
                     case SignalType.IPHM:
                         signalKind = SignalKind.Magnitude;
+                        signalIndex = adapterDetail.SourcePhaseCount + CurrentOutputIndex - CurrentOutputIndex % 2 + 1;
                         break;
                     default:
                         signalKind = SignalKind.Calculation;
+                        signalIndex = CurrentOutputIndex + 1;
                         break;
                 }
 
