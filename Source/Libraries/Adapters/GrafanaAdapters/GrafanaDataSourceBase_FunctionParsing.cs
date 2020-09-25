@@ -23,9 +23,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using GSF;
 using GSF.Collections;
 
 namespace GrafanaAdapters
@@ -571,7 +569,6 @@ namespace GrafanaAdapters
         private static readonly Regex s_unwrapAngleExpression;
         private static readonly Regex s_wrapAngleExpression;
         private static readonly Regex s_labelExpression;
-        private static readonly Regex s_selectExpression;
         private static readonly Dictionary<SeriesFunction, int> s_requiredParameters;
         private static readonly Dictionary<SeriesFunction, int> s_optionalParameters;
         private static readonly string[] s_groupOperationNames;
@@ -622,9 +619,6 @@ namespace GrafanaAdapters
             s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_wrapAngleExpression = new Regex(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-            // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
-            s_selectExpression = new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define required parameter counts for each function
             s_requiredParameters = new Dictionary<SeriesFunction, int>
@@ -956,36 +950,6 @@ namespace GrafanaAdapters
                 throw new InvalidOperationException($"Unrecognized series function '{matchedFunction.Value}'");
 
             return result;
-        }
-
-        // Attempt to parse an expression that has SQL SELECT syntax
-        private static bool ParseSelectExpression(string selectExpression, out string tableName, out string[] fieldNames, out string expression, out string sortField, out int topCount)
-        {
-            tableName = null;
-            fieldNames = null;
-            expression = null;
-            sortField = null;
-            topCount = 0;
-
-            if (string.IsNullOrWhiteSpace(selectExpression))
-                return false;
-
-            Match match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
-
-            if (!match.Success)
-                return false;
-
-            tableName = match.Result("${TableName}").Trim();
-            fieldNames = match.Groups["FieldName"].Captures.Cast<Capture>().Select(capture => capture.Value).ToArray();
-            expression = match.Result("${Expression}").Trim();
-            sortField = match.Result("${SortField}").Trim();
-
-            string maxRows = match.Result("${MaxRows}").Trim();
-
-            if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out topCount))
-                topCount = int.MaxValue;
-
-            return true;
         }
     }
 }

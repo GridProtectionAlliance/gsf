@@ -32,6 +32,7 @@ using GSF.NumericalAnalysis;
 using GSF.Units;
 
 // ReSharper disable PossibleMultipleEnumeration
+// ReSharper disable AccessToModifiedClosure
 namespace GrafanaAdapters
 {
     partial class GrafanaDataSourceBase
