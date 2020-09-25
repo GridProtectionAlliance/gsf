@@ -44,7 +44,7 @@ namespace GrafanaAdapters
         public async Task<List<TimeSeriesValues>> Query(QueryRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
             return await m_dataSource.Query(request, m_cancellationSource.Token);
         }
@@ -56,7 +56,7 @@ namespace GrafanaAdapters
         public async Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
             return await m_dataSource.GetAlarmState(request, m_cancellationSource.Token);
         }
@@ -68,7 +68,7 @@ namespace GrafanaAdapters
         public async Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
             return await m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token);
         }
@@ -80,7 +80,7 @@ namespace GrafanaAdapters
         public async Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
             return await m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
         }
@@ -92,7 +92,7 @@ namespace GrafanaAdapters
         public async Task<IEnumerable<GrafanaAlarm>> GetAlarms(QueryRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
             return await m_dataSource.GetAlarms(request, m_cancellationSource.Token);
         }
@@ -161,7 +161,7 @@ namespace GrafanaAdapters
         public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
 
             return await m_dataSource.Annotations(request, m_cancellationSource.Token);

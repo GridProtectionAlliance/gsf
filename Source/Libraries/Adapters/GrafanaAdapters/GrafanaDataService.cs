@@ -123,16 +123,16 @@ namespace GrafanaAdapters
             }
             set
             {
-                if ((object)base.Archive != null)
+                if (base.Archive != null)
                     base.Archive.MetadataUpdated -= Archive_MetadataUpdated;
 
                 base.Archive = value;
 
-                if ((object)base.Archive != null)
+                if (base.Archive != null)
                     base.Archive.MetadataUpdated += Archive_MetadataUpdated;
 
                 // Update data source metadata when an archive is defined, adapter should exist by then
-                if ((object)m_dataSource.Metadata == null && Enabled)
+                if (m_dataSource.Metadata == null && Enabled)
                     Archive_MetadataUpdated(this, EventArgs.Empty);
             }
         }

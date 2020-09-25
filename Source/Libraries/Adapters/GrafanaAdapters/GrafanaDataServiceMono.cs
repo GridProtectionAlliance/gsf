@@ -45,7 +45,7 @@ namespace GrafanaAdapters
         public List<TimeSeriesValues> Query(QueryRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
 
             return m_dataSource.Query(request, m_cancellationSource.Token).Result;
@@ -112,7 +112,7 @@ namespace GrafanaAdapters
         public List<AnnotationResponse> Annotations(AnnotationRequest request)
         {
             // Abort if services are not enabled
-            if (!Enabled || (object)Archive == null)
+            if (!Enabled || Archive == null)
                 return null;
 
             return m_dataSource.Annotations(request, m_cancellationSource.Token).Result;

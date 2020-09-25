@@ -96,7 +96,7 @@ namespace GrafanaAdapters
         /// <returns><c>true</c> if the data point is applicable for specified annotation <paramref name="type"/>; otherwise, <c>false</c>.</returns>
         public static bool IsApplicable(this AnnotationType type, double[] datapoint)
         {
-            if ((object)datapoint == null)
+            if (datapoint == null)
                 throw new ArgumentNullException(nameof(datapoint));
 
             double value = datapoint[TimeSeriesValues.Value];
@@ -124,16 +124,16 @@ namespace GrafanaAdapters
         /// <returns>Populates an annotation response title, text and tags for specified annotation <paramref name="type"/>.</returns>
         public static void PopulateResponse(this AnnotationType type, AnnotationResponse response, string target, DataRow definition, double[] datapoint, DataSet source)
         {
-            if ((object)response == null)
+            if (response == null)
                 throw new ArgumentNullException(nameof(response));
 
             if ((object)target == null)
                 throw new ArgumentNullException(nameof(target));
 
-            if ((object)definition == null)
+            if (definition == null)
                 throw new ArgumentNullException(nameof(definition));
 
-            if ((object)datapoint == null)
+            if (datapoint == null)
                 throw new ArgumentNullException(nameof(datapoint));
 
             switch (type)
@@ -159,7 +159,7 @@ namespace GrafanaAdapters
         /// <returns>Grafana query request object from an annotation <paramref name="request"/>.</returns>
         public static QueryRequest ExtractQueryRequest(this AnnotationRequest request, IEnumerable<string> targets, int maxDataPoints)
         {
-            if ((object)targets == null)
+            if (targets == null)
                 throw new ArgumentNullException(nameof(targets));
 
             // Create annotation query request for full resolution data using "Interval(0, {target})"
@@ -183,7 +183,7 @@ namespace GrafanaAdapters
         /// <returns>Parsed annotation type for query expression from <paramref name="annotation"/>.</returns>
         public static AnnotationType ParseQueryType(this Annotation annotation, out bool useFilterExpression)
         {
-            if ((object)annotation == null)
+            if (annotation == null)
                 throw new ArgumentNullException(nameof(annotation));
 
             string query = annotation.query ?? "";
@@ -237,7 +237,7 @@ namespace GrafanaAdapters
         /// <returns>Parsed annotation type for query expression from annotation <paramref name="request"/>.</returns>
         public static AnnotationType ParseQueryType(this AnnotationRequest request, out bool useFilterExpression)
         {
-            if ((object)request == null)
+            if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             return request.annotation.ParseQueryType(out useFilterExpression);
@@ -253,10 +253,10 @@ namespace GrafanaAdapters
         /// <returns>Parsed source definitions from <paramref name="annotation"/>.</returns>
         public static Dictionary<string, DataRow> ParseSourceDefinitions(this Annotation annotation, AnnotationType type, DataSet source, bool useFilterExpression)
         {
-            if ((object)annotation == null)
+            if (annotation == null)
                 throw new ArgumentNullException(nameof(annotation));
 
-            if ((object)source == null)
+            if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
             if (type == AnnotationType.Undefined)
@@ -305,7 +305,7 @@ namespace GrafanaAdapters
         /// <returns>Parsed source definitions from annotation <paramref name="request"/>.</returns>
         public static Dictionary<string, DataRow> ParseSourceDefinitions(this AnnotationRequest request, AnnotationType type, DataSet source, bool useFilterExpression)
         {
-            if ((object)request == null)
+            if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             return request.annotation.ParseSourceDefinitions(type, source, useFilterExpression);
@@ -344,7 +344,7 @@ namespace GrafanaAdapters
         {
             DataRow record = pointTag.MetadataRecordFromTag(source, table);
 
-            if ((object)record == null)
+            if (record == null)
                 return MeasurementKey.Undefined;
 
             try
@@ -375,7 +375,7 @@ namespace GrafanaAdapters
             DataRow record = signalID.MetadataRecordFromSignalID(source, table);
             string pointTag = "Undefined";
 
-            if ((object)record == null)
+            if (record == null)
                 return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
 
             try

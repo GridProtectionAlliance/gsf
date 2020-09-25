@@ -842,7 +842,7 @@ namespace GrafanaAdapters
             }
             else
             {
-                if ((object)source == null)
+                if (source == null)
                     throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
 
                 double defaultValue = 0.0D;
