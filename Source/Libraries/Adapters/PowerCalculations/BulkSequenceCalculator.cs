@@ -356,7 +356,7 @@ namespace PowerCalculations
 
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
                 SignalType signalType = GetSignalTypes()?[CurrentOutputIndex] ?? SignalType;
-                int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex;
+                int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex + 1;
 
                 return CommonPhasorServices.CreatePointTag(adapterDetail.CompanyAcronym, adapterDetail.DeviceAcronym, null, signalType.ToString(), adapterDetail.PhasorLabel, signalIndex, OutputPhases[CurrentOutputIndex], adapterDetail.BaseKV);
             }
@@ -375,24 +375,37 @@ namespace PowerCalculations
                     return base.SignalReferenceTemplate;
 
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
-                int signalIndex;
+                SignalType signalType = GetSignalTypes()?[CurrentOutputIndex] ?? SignalType;
                 SignalKind signalKind;
+                int signalIndex;
 
-                switch (GetSignalTypes()?[CurrentOutputIndex] ?? SignalType)
+                switch (signalType)
+                {
+                    case SignalType.VPHA:
+                    case SignalType.VPHM:
+                        signalIndex = adapterDetail.SourcePhaseCount + CurrentOutputIndex + 1 - CurrentOutputIndex % 2;
+                        break;
+                    case SignalType.IPHA:
+                    case SignalType.IPHM:
+                        signalIndex = adapterDetail.SourcePhaseCount + PerAdapterOutputNames.Count / 2 + (CurrentOutputIndex + 1 - CurrentOutputIndex % 2);
+                        break;
+                    default:
+                        signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex + 1;
+                        break;
+                }
+
+                switch (signalType)
                 {
                     case SignalType.VPHA:
                     case SignalType.IPHA:
                         signalKind = SignalKind.Angle;
-                        signalIndex = adapterDetail.SourcePhaseCount + CurrentOutputIndex - CurrentOutputIndex % 2 + 1;
                         break;
                     case SignalType.VPHM:
                     case SignalType.IPHM:
                         signalKind = SignalKind.Magnitude;
-                        signalIndex = adapterDetail.SourcePhaseCount + CurrentOutputIndex - CurrentOutputIndex % 2 + 1;
                         break;
                     default:
                         signalKind = SignalKind.Calculation;
-                        signalIndex = CurrentOutputIndex + 1;
                         break;
                 }
 
