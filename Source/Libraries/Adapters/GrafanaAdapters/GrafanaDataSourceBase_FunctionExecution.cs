@@ -273,32 +273,14 @@ namespace GrafanaAdapters
                         TimeSliceScanner scanner = new TimeSliceScanner(dataset, ParseFloat(parameters[0]) / SI.Milli);
                         parameters = parameters.Skip(1).ToArray();
 
-                        // Special case Difference 
-                        // Logic is still somewhat strange for this since all other functions are treated differently
-                        // But this is the best we could come up with that does not completly break backwards compatibility
-                        if (seriesFunction == SeriesFunction.Difference)
-                        {
-                            // Flatten all series into a single enumerable
-                            foreach (DataSourceValueGroup sliceValueGroup in ExecuteDiffOverTimeSlice(scanner, seriesFunction, parameters, cancellationToken))
-                            {
-                                yield return new DataSourceValueGroup
-                                {
-                                    Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{sliceValueGroup.Target ?? queryExpression})",
-                                    RootTarget = sliceValueGroup.Target ?? queryExpression,
-                                    SourceTarget = sourceTarget,
-                                    Source = sliceValueGroup.Source,
-                                    DropEmptySeries = dropEmptySeries
-                                };
-                            }
-                        }
-                        else
+                        foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters, cancellationToken))
                         {
                             yield return new DataSourceValueGroup
                             {
-                                Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
-                                RootTarget = queryExpression,
+                                Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                                RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
                                 SourceTarget = sourceTarget,
-                                Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters),
+                                Source = valueGroup.Source,
                                 DropEmptySeries = dropEmptySeries
                             };
                         }
@@ -323,37 +305,25 @@ namespace GrafanaAdapters
         }
 
         // Execute series function over a set of points from each series at the same time-slice
-        private static IEnumerable<DataSourceValueGroup> ExecuteDiffOverTimeSlice(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters, CancellationToken cancellationToken)
+        private static IEnumerable<DataSourceValueGroup> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters, CancellationToken cancellationToken)
         {
-            Dictionary<string, DataSourceValueGroup> results = new Dictionary<string, DataSourceValueGroup>();
-
-            while (!scanner.DataReadComplete && !cancellationToken.IsCancellationRequested)
+            IEnumerable<DataSourceValue> readSliceValues()
             {
-                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
+                while (!scanner.DataReadComplete && !cancellationToken.IsCancellationRequested)
                 {
-                    DataSourceValueGroup result = results.GetOrAdd(dataValue.Target, _ => new DataSourceValueGroup
-                    {
-                        Target = dataValue.Target,
-                        RootTarget = dataValue.Target,
-                        Source = new List<DataSourceValue>()
-                    });
-
-                    (result.Source as List<DataSourceValue>)?.Add(dataValue);
+                    foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
+                        yield return dataValue;
                 }
             }
 
-            return results.Values;
-        }
-
-        // TODO: Implementation is questionable
-        // Execute series function over a set of points from each series at the same time-slice
-        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverTimeSlices(TimeSliceScanner scanner, SeriesFunction seriesFunction, string[] parameters)
-        {
-
-            while (!scanner.DataReadComplete)
+            foreach (IGrouping<string, DataSourceValue> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target))
             {
-                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
-                    yield return dataValue;
+                yield return new DataSourceValueGroup
+                {
+                    Target = valueGroup.Key,
+                    RootTarget = valueGroup.Key,
+                    Source = valueGroup
+                };
             }
         }
 
