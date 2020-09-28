@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<MasterConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<MasterConfiguration xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <client>
     <address>127.0.0.1</address>
     <port>20000</port>
@@ -10,27 +10,38 @@
   </client>
   <master>
     <master>
-      <fragSize>2048</fragSize>
-      <allowTimeSync>true</allowTimeSync>
-      <doUnsolOnStartup>false</doUnsolOnStartup>
-      <enableUnsol>true</enableUnsol>
-      <unsolClassMask>14</unsolClassMask>
-      <integrityPeriodMs>5000</integrityPeriodMs>
-      <taskRetryPeriodMs>5000</taskRetryPeriodMs>
+      <timeSyncMode>None</timeSyncMode>
+      <disableUnsolOnStartup>true</disableUnsolOnStartup>
+      <unsolClassMask>
+        <Class0>false</Class0>
+        <Class1>true</Class1>
+        <Class2>true</Class2>
+        <Class3>true</Class3>
+      </unsolClassMask>
+      <startupIntegrityClassMask>
+        <Class0>true</Class0>
+        <Class1>true</Class1>
+        <Class2>true</Class2>
+        <Class3>true</Class3>
+      </startupIntegrityClassMask>
+      <integrityOnEventOverflowIIN>true</integrityOnEventOverflowIIN>
+      <eventScanOnEventsAvailableClassMask>
+        <Class0>false</Class0>
+        <Class1>false</Class1>
+        <Class2>false</Class2>
+        <Class3>false</Class3>
+      </eventScanOnEventsAvailableClassMask>
+      <controlQualifierMode>always_two_bytes</controlQualifierMode>
+      <TaskResponseTimeoutMilliseconds>5000</TaskResponseTimeoutMilliseconds>
+      <TaskRetryPeriodMilliseconds>5000</TaskRetryPeriodMilliseconds>
+      <TaskStartTimeoutMilliseconds>10000</TaskStartTimeoutMilliseconds>
     </master>
-    <app>
-      <isMaster>true</isMaster>
-      <rspTimeoutMs>5000</rspTimeoutMs>
-      <numRetry>0</numRetry>
-      <fragSize>2048</fragSize>
-    </app>
     <link>
       <isMaster>true</isMaster>
-      <useConfirms>false</useConfirms>
-      <numRetry>0</numRetry>
       <localAddr>1</localAddr>
       <remoteAddr>1024</remoteAddr>
-      <timeoutMs>1000</timeoutMs>
+      <ResponeTimeoutMilliseconds>1000</ResponeTimeoutMilliseconds>
+      <KeepAliveTimeoutMilliseconds>60000</KeepAliveTimeoutMilliseconds>
     </link>
   </master>
 </MasterConfiguration>
