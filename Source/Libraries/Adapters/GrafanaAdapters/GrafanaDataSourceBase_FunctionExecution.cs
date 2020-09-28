@@ -225,7 +225,7 @@ namespace GrafanaAdapters
                     for (int i = 0; i < seriesLabels.Length; i++)
                     {
                         while (uniqueLabelSet.Contains(seriesLabels[i]))
-                            seriesLabels[i] = $"{seriesLabels[i]}\u00A0";
+                            seriesLabels[i] = $"{seriesLabels[i]}\u00A0"; // Suffixing with non-breaking space for label uniqueness
 
                         uniqueLabelSet.Add(seriesLabels[i]);
                     }
@@ -248,8 +248,9 @@ namespace GrafanaAdapters
                 switch (groupOperation)
                 {
                     case GroupOperation.Set:
+                    {
                         // Flatten all series into a single enumerable
-                        DataSourceValueGroup setValueGroup = new DataSourceValueGroup
+                        DataSourceValueGroup valueGroup = new DataSourceValueGroup
                         {
                             Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
                             RootTarget = queryExpression,
@@ -261,15 +262,17 @@ namespace GrafanaAdapters
                         // Handle edge-case set operations - for these functions there is data in the target series as well
                         if (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum || seriesFunction == SeriesFunction.Median)
                         {
-                            DataSourceValue dataValue = setValueGroup.Source.First();
-                            setValueGroup.Target = $"Set{seriesFunction} = {dataValue.Target}";
-                            setValueGroup.RootTarget = dataValue.Target;
+                            DataSourceValue dataValue = valueGroup.Source.First();
+                            valueGroup.Target = $"Set{seriesFunction} = {dataValue.Target}";
+                            valueGroup.RootTarget = dataValue.Target;
                         }
 
-                        yield return setValueGroup;
-
+                        yield return valueGroup;
+                        
                         break;
+                    }
                     case GroupOperation.Slice:
+                    {
                         TimeSliceScanner scanner = new TimeSliceScanner(dataset, ParseFloat(parameters[0]) / SI.Milli);
                         parameters = parameters.Skip(1).ToArray();
 
@@ -286,7 +289,9 @@ namespace GrafanaAdapters
                         }
 
                         break;
+                    }
                     default:
+                    {
                         foreach (DataSourceValueGroup valueGroup in dataset)
                         {
                             yield return new DataSourceValueGroup
@@ -300,6 +305,7 @@ namespace GrafanaAdapters
                         }
 
                         break;
+                    }
                 }
             }
         }
