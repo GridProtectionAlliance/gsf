@@ -272,10 +272,20 @@ namespace DNP3Adapters
             base.Initialize();
 
             if (!settings.TryGetValue("CommsFilePath", out m_commsFilePath) || string.IsNullOrWhiteSpace(m_commsFilePath))
-                throw new ArgumentException("The required commsFile parameter was not specified");
+                throw new ArgumentException($"The required {nameof(CommsFilePath)} parameter was not specified");
+
+            m_commsFilePath = FilePath.GetAbsolutePath(m_commsFilePath);
+
+            if (!File.Exists(m_commsFilePath))
+                throw new FileNotFoundException($"The specified {nameof(CommsFilePath)} parameter \"{m_commsFilePath}\" was not found");
 
             if (!settings.TryGetValue("MappingFilePath", out m_mappingFilePath) || string.IsNullOrWhiteSpace(m_mappingFilePath))
-                throw new ArgumentException("The required mappingFile parameter was not specified");
+                throw new ArgumentException($"The required {nameof(MappingFilePath)} parameter was not specified");
+
+            m_mappingFilePath = FilePath.GetAbsolutePath(m_mappingFilePath);
+
+            if (!File.Exists(m_mappingFilePath))
+                throw new FileNotFoundException($"The specified {nameof(MappingFilePath)} parameter \"{m_mappingFilePath}\" was not found");
 
             if (settings.TryGetValue("PollingInterval", out string setting) && double.TryParse(setting, out double pollingInterval))
                 PollingInterval = pollingInterval;
