@@ -59,6 +59,18 @@
       <Project>{a04a48c2-112d-4ee3-a6b0-3784a1315bcf}</Project>
       <Name>DNP3Adapters</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj">
+      <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
+      <Name>GSF.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\Dependencies\Microsoft\VC_redist.x64.exe">
+      <Link>VC_redist.x64.exe</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\Libraries\Adapters\Dnp3Adapters\ExampleConfigurations\mapping.xml">
+      <Link>mapping.xml</Link>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
