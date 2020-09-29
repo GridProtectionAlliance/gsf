@@ -72,6 +72,14 @@
       <Link>mapping.xml</Link>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\Dependencies\OpenSSL\libcrypto-1_1-x64.dll">
+      <Link>libcrypto-1_1-x64.dll</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\Dependencies\OpenSSL\libssl-1_1-x64.dll">
+      <Link>libssl-1_1-x64.dll</Link>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />

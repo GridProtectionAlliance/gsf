@@ -65,7 +65,8 @@ namespace DNP3ConfigGenerator
                     if (!restoreFile)
                         continue;
 
-                    if (string.Compare(Path.GetExtension(targetFileName), ".exe", StringComparison.OrdinalIgnoreCase) == 0)
+                    if (string.Compare(Path.GetExtension(targetFileName), ".exe", StringComparison.OrdinalIgnoreCase) == 0 ||
+                        string.Compare(Path.GetExtension(targetFileName), ".dll", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         using (FileStream writer = File.Create(targetFileName))
                             resourceStream.CopyTo(writer);
