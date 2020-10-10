@@ -665,6 +665,25 @@ namespace GSF.TimeSeries.Adapters
     /// <typeparam name="TInitalizationModel"></typeparam>
     public abstract class IndependentActionAdapterManagerBase<TAdapter, TInitalizationModel>: IndependentActionAdapterManagerBase<TAdapter> where TAdapter : IAdapter, new() where TInitalizationModel: class,new()
     {
+
+        /// <summary>
+        /// Returns the detailed status of the <see cref="IndependentActionAdapterManagerBase{TAdapter,TInitalizationModel}"/>.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.AppendFormat("         Frames Per Second: {0:N0}", FramesPerSecond);
+                status.AppendLine();
+                status.AppendFormat("      Lag Time / Lead Time: {0:N3} / {1:N3}", LagTime, LeadTime);
+                status.AppendLine();
+                status.Append(base.Status);
+
+                return status.ToString();
+            }
+        }
         internal override void ManageChildAdapters()
         {
             MeasurementKey[] measurementKeys;
