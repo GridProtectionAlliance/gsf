@@ -40,6 +40,8 @@ using GSF.Units.EE;
 using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
 using DeviceRecord = GSF.TimeSeries.Model.Device;
 using static GSF.TimeSeries.Adapters.IndependentAdapterManagerExtensions;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -69,8 +71,8 @@ namespace GSF.TimeSeries.Adapters
 
         // Fields
         private ShortSynchronizedOperation m_manageChildAdapters;
-        private readonly object m_adapterInputSync;
-        private bool m_adapterInputReady;
+        internal readonly object m_adapterInputSync;
+        internal bool m_adapterInputReady;
         private bool m_disposed;
 
         #endregion
@@ -330,12 +332,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets adapter index currently being processed.
         /// </summary>
-        public int CurrentAdapterIndex { get; internal set; }
+        public int CurrentAdapterIndex { get; protected set; }
 
         /// <summary>
         /// Gets adapter output index currently being processed.
         /// </summary>
-        public int CurrentOutputIndex { get; internal set; }
+        public int CurrentOutputIndex { get; protected set; }
 
         /// <summary>
         /// Gets associated device ID for <see cref="CurrentAdapterIndex"/>, if any, for measurement generation. If overridden to provide custom
@@ -492,7 +494,8 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>New ADO data connection based on configured settings.</returns>
         public AdoDataConnection GetConfiguredConnection() => this.HandleGetConfiguredConnection();
 
-        private void ManageChildAdapters()
+       
+        internal virtual void ManageChildAdapters()
         {
             MeasurementKey[] measurementKeys;
             int? currentDeviceID = null;
@@ -654,4 +657,198 @@ namespace GSF.TimeSeries.Adapters
 
         #endregion
     }
+
+    /// <summary>
+    /// Represents an adapter base class that provides functionality to manage and distribute measurements to a collection of action adapters with parallel intialization and Models to store input/ouput relations.
+    /// </summary>
+    /// <typeparam name="TAdapter"></typeparam>
+    /// <typeparam name="TInitalizationModel"></typeparam>
+    public abstract class IndependentActionAdapterManagerBase<TAdapter, TInitalizationModel>: IndependentActionAdapterManagerBase<TAdapter> where TAdapter : IAdapter, new() where TInitalizationModel: class,new()
+    {
+        internal override void ManageChildAdapters()
+        {
+            MeasurementKey[] measurementKeys;
+            int? currentDeviceID = null;
+
+            lock (m_adapterInputSync)
+            {
+                if (!m_adapterInputReady)
+                    return;
+
+                measurementKeys = InputMeasurementKeys;
+            }
+
+            // Create associated parent device for output measurements if 
+            if (!string.IsNullOrWhiteSpace(ParentDeviceAcronymTemplate))
+            {
+                if (CurrentDeviceID > 0)
+                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Creating a parent device for \"{Name}\" [{GetType().Name}] based on specified template \"{ParentDeviceAcronymTemplate}\", but overridden CurrentDeviceID property reports non-zero value: {CurrentDeviceID:N0}");
+
+                using (AdoDataConnection connection = GetConfiguredConnection())
+                {
+                    TableOperations<DeviceRecord> deviceTable = new TableOperations<DeviceRecord>(connection);
+                    string deviceAcronym = string.Format(ParentDeviceAcronymTemplate, Name);
+
+                    DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym) ?? deviceTable.NewRecord();
+                    int protocolID = connection.ExecuteScalar<int?>("SELECT ID FROM Protocol WHERE Acronym = 'VirtualInput'") ?? 15;
+
+                    device.Acronym = deviceAcronym;
+                    device.Name = deviceAcronym;
+                    device.ProtocolID = protocolID;
+                    device.Enabled = true;
+
+                    deviceTable.AddNewOrUpdateRecord(device);
+                    currentDeviceID = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym)?.ID;
+                }
+            }
+
+            HashSet<string> activeAdapterNames = new HashSet<string>(StringComparer.Ordinal);
+            ConcurrentBag<TAdapter> adapters = new ConcurrentBag<TAdapter>();
+            HashSet<Guid> signalIDs = new HashSet<Guid>();
+
+            // Create settings dictionary for connection string to use with primary child adapters
+            Dictionary<string, string> settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (PropertyInfo property in GetType().GetProperties())
+            {
+                if (property.AttributeExists<PropertyInfo, ConnectionStringParameterAttribute>())
+                    settings[property.Name] = $"{property.GetValue(this)}";
+            }
+
+            int inputsPerAdapter = PerAdapterInputCount;
+            int outputsPerAdapter = PerAdapterOutputNames.Count;
+            int nameIndex = InputMeasurementIndexUsedForName;
+
+            // Create child adapter for provided inputs to the parent bulk collection-based adapter
+            Parallel.For(0, (measurementKeys.Length / inputsPerAdapter), (adaptercount) =>
+            {
+                int i = adaptercount * inputsPerAdapter;
+                CurrentAdapterIndex = adapters.Count;
+
+                Guid[] inputs = new Guid[inputsPerAdapter];
+                Guid[] outputs = new Guid[outputsPerAdapter];
+
+                // Adapter inputs are presumed to be grouped together
+                for (int j = 0; j < inputsPerAdapter && i + j < measurementKeys.Length; j++)
+                        inputs[j] = measurementKeys[i + j].SignalID;
+
+                string inputName = this.LookupPointTag(inputs[nameIndex], SourceMeasurementTable);
+                string adapterName = $"{Name}!{inputName}";
+                string alternateTagPrefix = null;
+
+                if (!string.IsNullOrWhiteSpace(AlternateTagTemplate))
+                {
+                    string deviceName = this.LookupDevice(inputs[nameIndex], SourceMeasurementTable);
+                    string phasorLabel = this.LookupPhasorLabel(inputs[nameIndex], SourceMeasurementTable);
+                    alternateTagPrefix = $"{deviceName}-{phasorLabel}";
+                }
+
+                // Track active adapter names so that adapters that no longer have sources can be removed
+                activeAdapterNames.Add(adapterName);
+
+                // See if child adapter already exists
+                if (this.FindAdapter(adapterName) != null)
+                        return;
+
+                // Setup output measurements for new child adapter
+
+                // Check if an Output Model already exists
+                using (AdoDataConnection connection = GetConfiguredConnection())
+                {
+                    TInitalizationModel keys = new TableOperations<TInitalizationModel>(connection).QueryRecordWhere(MapInitializationModel(inputs));
+
+                    if (keys == null)
+                    {
+
+
+                        for (int j = 0; j < outputsPerAdapter; j++)
+                        {
+                            CurrentOutputIndex = j;
+
+                            string perAdapterOutputName = PerAdapterOutputNames[j].ToUpper();
+                            string outputPrefix = $"{adapterName}-{perAdapterOutputName}";
+                            string outputPointTag = string.Format(PointTagTemplate, outputPrefix);
+                            string outputAlternateTag = string.Format(AlternateTagTemplate, alternateTagPrefix is null ? "" : $"{alternateTagPrefix}-{perAdapterOutputName}");
+                            string signalReference = string.Format(SignalReferenceTemplate, outputPrefix);
+                            SignalType signalType = SignalTypes?[j] ?? SignalType;
+                            string description = string.Format(DescriptionTemplate, outputPrefix, signalType, Name, GetType().Name);
+
+                            // Get output measurement record, creating a new one if needed
+                            MeasurementRecord measurement = this.GetMeasurementRecord(currentDeviceID ?? CurrentDeviceID, outputPointTag, outputAlternateTag, signalReference, description, signalType, TargetHistorianAcronym);
+
+                            // Track output signal IDs
+                            signalIDs.Add(measurement.SignalID);
+                            outputs[j] = measurement.SignalID;
+                        }
+                        keys = AddInitializitonModel(inputs, outputs);
+                        new TableOperations<TInitalizationModel>(connection).AddNewRecord(keys);
+
+
+                    }
+                    else
+                    {
+                        outputs = GetOutputsFromInitializationModel(keys);
+
+                    }
+                }
+                // Add inputs and outputs to connection string settings for child adapter
+                Dictionary<string, string> adapterSettings = new Dictionary<string, string>(settings);
+                adapterSettings[nameof(InputMeasurementKeys)] = string.Join(";", inputs);
+                adapterSettings[nameof(OutputMeasurements)] = string.Join(";", outputs);
+
+                string connectionString = adapterSettings.JoinKeyValuePairs();
+
+                if (!string.IsNullOrWhiteSpace(CustomAdapterSettings))
+                    connectionString = $"{connectionString}; {CustomAdapterSettings}";
+
+                adapters.Add(new TAdapter
+                {
+                    Name = adapterName,
+                    ID = AdapterIDCounter++,
+                    ConnectionString = connectionString,
+                    DataSource = DataSource
+                });
+            });
+
+            // Check for adapters that are no longer referenced and need to be removed
+            IEnumerable<IActionAdapter> adaptersToRemove = this.Where<IActionAdapter>(adapter => !activeAdapterNames.Contains(adapter.Name));
+
+            foreach (IActionAdapter adapter in adaptersToRemove)
+                Remove(adapter);
+
+            // Host system was notified about configuration changes, i.e., new or updated output measurements.
+            // Before initializing child adapters, we wait for this process to complete.
+            this.WaitForSignalsToLoad(signalIDs.ToArray(), SourceMeasurementTable);
+
+            // Add new adapters to parent bulk adapter collection, this will auto-initialize each child adapter
+            foreach (TAdapter adapter in adapters)
+                Add(adapter as IActionAdapter);
+
+            RecalculateRoutingTables();
+        }
+
+        /// <summary>
+        /// This function genereates a new Initialization model based on a list of inputs and outputs
+        /// </summary>
+        /// <param name="inputs">Input Measurments</param>
+        /// <param name="outputs">Output Measurments</param>
+        /// <returns></returns>
+        protected abstract TInitalizationModel AddInitializitonModel(Guid[] inputs, Guid[] outputs);
+
+        /// <summary>
+        /// Generates a list of outputs based on a Initialization Model
+        /// </summary>
+        /// <param name="initalizationModel">The model containing the input-output mapping</param>
+        /// <returns>A list of output measurments</returns>
+        protected abstract Guid[] GetOutputsFromInitializationModel(TInitalizationModel initalizationModel);
+
+        /// <summary>
+        /// Function that maps Inputs to a new <see cref="TInitalizationModel"/> for finding existing mappings.
+        /// </summary>
+        /// <param name="inputs">The input measurments for this Child Adapter</param>
+        /// <returns>A string with the condition to find a unique mapping model if it exists.</returns>
+        protected abstract string MapInitializationModel(Guid[] inputs);
+    }
+
+
 }
