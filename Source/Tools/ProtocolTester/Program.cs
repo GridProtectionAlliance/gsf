@@ -101,7 +101,8 @@ namespace ProtocolTester
             //parser.ConnectionString = @"phasorProtocol=Macrodyne; transportProtocol=Serial; port=COM6; baudrate=38400; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";
             //parser.ConnectionString = @"phasorProtocol=SelFastMessage; transportProtocol=Serial; port=COM5; baudrate=57600; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";            
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118v1; transportProtocol=File; file=C:\Users\Ritchie\Desktop\MTI_Test_3phase.PmuCapture; checkSumValidationFrameTypes=DataFrame,HeaderFrame,CommandFrame";
-            parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=tcp; accessID=105; server=172.31.105.135:4712; interface=0.0.0.0; isListener=false";
+            //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=tcp; accessID=105; server=172.31.105.135:4712; interface=0.0.0.0; isListener=false";
+            parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=Serial; port=COM6; baudRate=115200; dataBits=8; stopBits=One; parity=None; dtrEnable=false; rtsEnable=false; autoStartDataParsingSequence=false; disableRealTimeDataOnStop=false";
 
             Dictionary<string, string> settings = parser.ConnectionString.ParseKeyValuePairs();
             string setting;
@@ -130,19 +131,13 @@ namespace ProtocolTester
                 parser.DisableRealTimeDataOnStop = setting.ParseBoolean();
 
             // When connecting to a file based resource you may want to loop the data
-            parser.AutoRepeatCapturedPlayback = true;
-
-            // Start frame parser
-            parser.AutoStartDataParsingSequence = true;
+            //parser.AutoRepeatCapturedPlayback = true;
 
             Console.WriteLine("ConnectionString: {0}", parser.ConnectionString);
 
             parser.Start();
 
-            // To keep the console open while receiving live data with AutoRepeatCapturedPlayback = false, uncomment the following line of code:
-
             Console.WriteLine("Press <enter> to terminate application...");
-
             Console.ReadLine();
 
             parser.Stop();
@@ -188,7 +183,7 @@ namespace ProtocolTester
             // Also check to assure the DataFrame has at least one Cell
             if (frameCount % 60 == 0)
             {
-                Console.WriteLine("Received {0} data frames so far...", frameCount);
+                Console.WriteLine("Received {0} data frames so far - parsed timesatmp = \"{1}\"...", frameCount, dataFrame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 if (dataFrame.Cells.Count > 0)
                 {
@@ -197,8 +192,8 @@ namespace ProtocolTester
 
                     for (int x = 0; x < device.PhasorValues.Count; x++)
                     {
-                        Console.WriteLine("PMU {0} Phasor {1} Angle = {2}", device.IDCode, x, device.PhasorValues[x].Angle);
-                        Console.WriteLine("PMU {0} Phasor {1} Magnitude = {2}", device.IDCode, x, device.PhasorValues[x].Magnitude);
+                        Console.WriteLine("      PMU {0} Phasor {1} Angle = {2}", device.IDCode, x, device.PhasorValues[x].Angle);
+                        Console.WriteLine("      PMU {0} Phasor {1} Magnitude = {2}", device.IDCode, x, device.PhasorValues[x].Magnitude);
                     }
 
                     Console.WriteLine("    Last Timestamp: {0}", device.GetStatusFlagsMeasurement().Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));

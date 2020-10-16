@@ -225,7 +225,57 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             }
         }
 
+        /// <summary>
+        /// Output type specific frame parsing algorithm.
+        /// </summary>
+        /// <param name="buffer">Buffer containing data to parse.</param>
+        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
+        /// <param name="length">Maximum length of valid data from offset.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseFrame(byte[] buffer, int offset, int length)
+        {
+            if (StreamInitialized && buffer[offset] == PhasorProtocols.Common.SyncByte)
+                return base.ParseFrame(buffer, offset, length);
 
+            // Attempt multiple sync-byte frame alignments until a successful frame is parsed
+            int startIndex = offset;
+            int count = length;
+
+            while (true)
+            {
+                try
+                {
+                    ParseCommonHeader(buffer, offset, count);
+                    int parsedLength = base.ParseFrame(buffer, offset, count);
+                    StreamInitialized = true;
+                    return parsedLength + (offset - startIndex);
+                }
+                catch
+                {
+                    offset++;
+                    count--;
+
+                    if (count > 0)
+                    {
+                        int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
+
+                        if (syncBytesPosition > -1)
+                        {
+                            count = count - (syncBytesPosition - offset);
+                            offset = syncBytesPosition;
+                        }
+                        else
+                        {
+                            return length;
+                        }
+                    }
+                    else
+                    {
+                        return length;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented
@@ -255,6 +305,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 // Parse common frame header
                 CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame2, buffer, offset);
+
+                // Look for probable misaligned bad frame header parse
+                if (parsedFrameHeader.FrameType == FundamentalFrameType.Undetermined || parsedFrameHeader.Version > 3)
+                    throw new InvalidOperationException("Probable frame misalignment detected, forcing scan ahead to next sync byte");
 
                 // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
                 // we eliminate the need to validate length on all subsequent data elements that comprise the frame
