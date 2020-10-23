@@ -24,6 +24,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using GSF.Diagnostics;
 using GSF.Security;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Infrastructure;
@@ -86,12 +87,20 @@ namespace GSF.Web.Security
                 AuthenticationSchemes authenticationScheme;
 
                 if (Enum.TryParse(scheme, true, out authenticationScheme))
+                {
+                    string resource = request.Url.PathAndQuery;
+                    AuthenticationSchemes selectedScheme = options.AuthenticationSchemes & authenticationScheme;
+                    string logMessage = $"Authentication scheme selected for {resource}: {selectedScheme}";
+                    Log.Publish(MessageLevel.Debug, "AuthenticationSchemeSelected", logMessage);
                     return options.AuthenticationSchemes & authenticationScheme;
+                }
             }
 
             // All requests to web server are treated as anonymous so as to not establish any extra
             // expectations for the browser - the AuthenticationHandler fully manages the security
             return AuthenticationSchemes.Anonymous;
         }
+
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AppBuilderExtensions), MessageClass.Framework);
     }
 }

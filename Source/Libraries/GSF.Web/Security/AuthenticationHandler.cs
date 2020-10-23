@@ -34,6 +34,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
+using GSF.Diagnostics;
 using GSF.Reflection;
 using GSF.Security;
 using Microsoft.Owin.Security;
@@ -229,6 +230,9 @@ namespace GSF.Web.Security
                 bool debuggable = Common.GetApplicationType() != ApplicationType.Web && AssemblyInfo.EntryAssembly.Debuggable;
                 Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
                 Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, debuggable);
+
+                string failureReason = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, true);
+                Log.Publish(MessageLevel.Info, "AuthenticationFailure", $"Failed to authenticate {currentIdentity} for {Request.Path}: {failureReason}");
                 
                 return true; // Abort pipeline
             });
@@ -322,6 +326,7 @@ namespace GSF.Web.Security
         #region [ Static ]
 
         // Static Fields
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AppBuilderExtensions), MessageClass.Framework);
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
 
         // Static Constructor
