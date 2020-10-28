@@ -269,10 +269,10 @@ namespace GSF.Scheduling
                 string[] range = schedulePart.Split('-');
                 string[] parts = range[1].Split('/');
                 int lowRange = Convert.ToInt32(range[0]);
-                int highRange = Convert.ToInt32(parts[0]);
+                int highRange = Convert.ToInt32(parts[0]) % maxValue;
                 int interval = Convert.ToInt32(parts[1]);
 
-                if (lowRange < highRange && lowRange >= minValue && highRange <= maxValue && interval > 0 && interval >= minValue && interval <= maxValue)
+                if (lowRange < highRange && lowRange >= minValue && highRange <= maxValue && interval > 0 && interval <= maxValue)
                 {
                     m_valueTextSyntax = SchedulePartTextSyntax.RangeWithEveryN;
                     PopulateValues(lowRange, highRange, interval);
@@ -282,9 +282,9 @@ namespace GSF.Scheduling
             else if (Regex.Match(schedulePart, "^(\\*/\\d+){1}$").Success)
             {
                 // ^(\*/\d+){1}$         Matches: */[any digit]
-                int interval = Convert.ToInt32(schedulePart.Split('/')[1]);
+                int interval = Convert.ToInt32(schedulePart.Split('/')[1]) % maxValue;
 
-                if (interval > 0 && interval >= minValue && interval <= maxValue)
+                if (interval > 0 && interval <= maxValue)
                 {
                     m_valueTextSyntax = SchedulePartTextSyntax.EveryN;
                     PopulateValues(minValue, maxValue, interval);
@@ -296,7 +296,7 @@ namespace GSF.Scheduling
                 // ^(\d+\-\d+){1}$       Matches: [any digit]-[any digit]
                 string[] range = schedulePart.Split('-');
                 int lowRange = Convert.ToInt32(range[0]);
-                int highRange = Convert.ToInt32(range[1]);
+                int highRange = Convert.ToInt32(range[1]) % maxValue;
 
                 if (lowRange < highRange && lowRange >= minValue && highRange <= maxValue)
                 {
@@ -312,10 +312,10 @@ namespace GSF.Scheduling
 
                 foreach (string part in schedulePart.Split(','))
                 {
-                    int value;
-
-                    if (int.TryParse(part, out value))
+                    if (int.TryParse(part, out int value))
                     {
+                        value %= maxValue;
+
                         if (!(value >= minValue && value <= maxValue))
                             return false;
 
