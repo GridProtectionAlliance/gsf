@@ -87,7 +87,7 @@ namespace GrafanaAdapters
             }
         }
 
-        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Target sourceTarget, Tuple<SeriesFunction, string, GroupOperation> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool decimate, bool dropEmptySeries, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Target sourceTarget, Tuple<SeriesFunction, string, GroupOperation> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, CancellationToken cancellationToken)
         {
             SeriesFunction seriesFunction = parsedFunction.Item1;
             string expression = parsedFunction.Item2;
@@ -164,10 +164,10 @@ namespace GrafanaAdapters
 
             // When accurate calculation results are requested, query data source at full resolution
             if (seriesFunction == SeriesFunction.Interval && ParseFloat(parameters[0]) == 0.0D)
-                decimate = false;
+                includePeaks = false;
 
             // Query function expression to get series data
-            IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, decimate, dropEmptySeries, cancellationToken);
+            IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, includePeaks, dropEmptySeries, cancellationToken);
 
             // Handle label function as a special edge case - group operations on label are ignored
             if (seriesFunction == SeriesFunction.Label)

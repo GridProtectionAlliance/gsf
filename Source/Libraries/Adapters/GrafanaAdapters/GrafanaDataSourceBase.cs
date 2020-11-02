@@ -46,6 +46,7 @@ namespace GrafanaAdapters
 
         // Constants
         private const string DropEmptySeriesCommand = "dropemptyseries";
+        private const string IncludePeaksCommand = "includepeaks";
 
         #endregion
 
@@ -81,10 +82,10 @@ namespace GrafanaAdapters
         /// <param name="startTime">Start-time for query.</param>
         /// <param name="stopTime">Stop-time for query.</param>
         /// <param name="interval">Interval from Grafana request.</param>
-        /// <param name="decimate">Flag that determines if data should be decimated over provided time range.</param>
+        /// <param name="includePeaks">Flag that determines if decimated data should include min/max interval peaks over provided time range.</param>
         /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
-        protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool decimate, Dictionary<ulong, string> targetMap);
+        protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
 
         /// <summary>
         /// Queries data source returning data as Grafana time-series data set.
@@ -152,7 +153,7 @@ namespace GrafanaAdapters
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
-                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, true, false, cancellationToken)).SelectMany(groups => groups).ToArray();
+                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, cancellationToken)).SelectMany(groups => groups).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
@@ -209,12 +210,18 @@ namespace GrafanaAdapters
             cancellationToken);
         }
 
-        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool decimate, bool dropEmptySeries, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, CancellationToken cancellationToken)
         {
             if (queryExpression.ToLowerInvariant().Contains(DropEmptySeriesCommand))
             {
                 dropEmptySeries = true;
                 queryExpression = queryExpression.ReplaceCaseInsensitive(DropEmptySeriesCommand, "");
+            }
+
+            if (queryExpression.ToLowerInvariant().Contains(IncludePeaksCommand))
+            {
+                includePeaks = true;
+                queryExpression = queryExpression.ReplaceCaseInsensitive(IncludePeaksCommand, "");
             }
 
             // A single target might look like the following:
@@ -253,7 +260,7 @@ namespace GrafanaAdapters
             {
                 // Execute series functions
                 foreach (Tuple<SeriesFunction, string, GroupOperation> parsedFunction in seriesFunctions.Select(ParseSeriesFunction))
-                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(sourceTarget, parsedFunction, startTime, stopTime, interval, decimate, dropEmptySeries, cancellationToken))
+                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(sourceTarget, parsedFunction, startTime, stopTime, interval, includePeaks, dropEmptySeries, cancellationToken))
                         yield return valueGroup;
 
                 // Use reduced target set that excludes any series functions
@@ -312,7 +319,7 @@ namespace GrafanaAdapters
                 }
 
                 // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-                List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, interval, decimate, targetMap)
+                List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, interval, includePeaks, targetMap)
                     .TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
 
                 foreach (KeyValuePair<ulong, string> target in targetMap)
