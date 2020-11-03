@@ -578,9 +578,10 @@ namespace GrafanaAdapters
         {
             const string GetExpression = @"^{0}\s*\(\s*(?<Expression>.+)\s*\)";
 
-            // RegEx instance to find all series functions
             s_groupOperationNames = Enum.GetNames(typeof(GroupOperation));
-            s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!(\s+IN\s*)|((\)|\'|\s+)AND\s*)|((\)|\'|\s+)OR\s*))\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            //RegEx instance to find all series functions. Ignore RowFilter key words / functions ==>                     WHERE         IN                 AND                 OR              NOT              CONVERT              LEN              ISNULL              IIF              TRIM              SUBSTRING
+            s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!(\s+WHERE\s*)|(\s+IN\s*)|((\)|\'|\s+)AND\s*)|((\)|\'|\s+)OR\s*)|((\(|\s+)NOT\s*)|((\(|\s+)CONVERT\s*)|((\(|\s+)LEN\s*)|((\(|\s+)ISNULL\s*)|((\(|\s+)IIF\s*)|((\(|\s+)TRIM\s*)|((\(|\s+)SUBSTRING\s*))\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // RegEx instances to identify specific functions and extract internal expressions
             s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
