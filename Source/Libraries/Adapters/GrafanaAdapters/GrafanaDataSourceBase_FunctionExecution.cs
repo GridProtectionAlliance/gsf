@@ -164,7 +164,10 @@ namespace GrafanaAdapters
 
             // When accurate calculation results are requested, query data source at full resolution
             if (seriesFunction == SeriesFunction.Interval && ParseFloat(parameters[0]) == 0.0D)
+            {
                 includePeaks = false;
+                interval = "0s";
+            }
 
             // Query function expression to get series data
             IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, includePeaks, dropEmptySeries, cancellationToken);
