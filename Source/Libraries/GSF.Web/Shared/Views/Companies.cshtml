@@ -20,6 +20,11 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@using System.Net.Http
+@using GSF.Configuration
+@using GSF.Data.Model
+@using GSF.Security
+@using GSF.Web
 @using GSF.Web.Model
 @using GSF.Web.Shared
 @using GSF.Web.Shared.Model
@@ -32,25 +37,81 @@
     </style>
 }
 @{
+    HttpRequestMessage request = ViewBag.Request;
     DataContext dataContext = ViewBag.DataContext;
+    bool userIsAdmin = UserIsAdmin();
 
     ViewBag.Title = "Companies";
     ViewBag.ShowSearchFilter = true;
 
+    Layout = "Layout.cshtml";
+
+    CategorizedSettingsSection configurationSettings = ConfigurationFile.Current.Settings;
+    CategorizedSettingsElement setting;
+
+    CategorizedSettingsElementCollection systemSettings = configurationSettings["systemSettings"];
+    setting = systemSettings["CompanyAcronym"];
+    string companyAcronym = setting == null || string.IsNullOrWhiteSpace(setting.Value) ? "GPA" : setting.Value;
+
+    CategorizedSettingsElementCollection securityProvider = configurationSettings["securityProvider"];
+    setting = securityProvider["ApplicationName"];
+    string applicationName = setting == null || string.IsNullOrWhiteSpace(setting.Value) ? "TSF Service" : setting.Value;
+
+    if (ViewBag.IsPost && userIsAdmin)
+    {
+        PostData postData = request.GetPostData();
+        string selectedCompanyID = postData.FormData["selectedCompanyID"];
+        int companyID;
+
+        if (int.TryParse(selectedCompanyID, out companyID))
+        {
+            TableOperations<Company> companyTable = dataContext.Table<Company>();
+            Company company = companyTable.QueryRecordWhere("ID = {0}", companyID);
+
+            if (company != null)
+            {
+                systemSettings["CompanyName"].Value = company.Name;
+                systemSettings["CompanyAcronym"].Value = company.Acronym;
+
+                if (ViewBag.Model != null && ViewBag.Model.Global != null)
+                {
+                    ViewBag.Model.Global.CompanyName = company.Name;
+                    ViewBag.Model.Global.CompanyAcronym = company.Acronym;
+                }
+
+                companyAcronym = company.Acronym;
+                ConfigurationFile.Current.Save();
+            }
+        }
+    }
+
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "Acronym", "Acronym", "text-left" },
         new[] { "Name", "Name", "text-left" },
+        new[] { null, "Configured<br/>Company", "text-center valign-middle" },
         new[] { "URL", "URL", "text-left" }
     };
 
-    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.BodyRows = BodyRows(applicationName, userIsAdmin.ToString().ToLower()).ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
-@helper BodyRows()
+@functions {
+    public bool UserIsAdmin()
+    {
+        SecurityPrincipal securityPrincipal = ViewBag.SecurityPrincipal as SecurityPrincipal;
+
+        if ((object)securityPrincipal == null)
+            return false;
+
+        return securityPrincipal.IsInRole("Administrator");
+    }
+}
+@helper BodyRows(string applicationName, string userIsAdmin)
 {
     <td width="25%" class="text-left valign-middle"><button type="button" class="btn btn-link btn-xs" data-bind="text: Acronym, click: $parent.viewPageRecord"></button></td>
     <td width="30%" class="text-left valign-middle" data-bind="text: Name"></td>
+    <td width="5%" class="text-center"><button type="button" class="btn btn-sm btn-default" data-bind="visible: @userIsAdmin || isCurrentInstance($data), click: selectCompany.bind($data), enable: @userIsAdmin && $parent.dataHubIsConnected, style: { borderWidth: isCurrentInstance($data) ? '3px' : 'inherit', borderColor: isCurrentInstance($data) ? 'green' : 'inherit' }, attr: { title: 'Select \'' + $data.Name + '\' as the configured company for this \'@applicationName\' instance' }"><span data-bind="visible: !isCurrentInstance($data)">Select</span><span data-bind="visible: isCurrentInstance($data)">Current <span class="glyphicon glyphicon-ok" style="color: green"></span></span></button></td>
     <td width="40%" class="text-left table-cell-hard-wrap"><a data-bind="attr:{href: notNull(URL)}" target="_blank"><div data-bind="text: $($element.parentElement.parentElement).truncateToWidth(URL, 2)"></div></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -66,12 +127,28 @@
     @Raw(dataContext.AddInputField<Company>("LoadOrder", "number", "Load Order"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@if (userIsAdmin) {
+<form id="selectCompany" role="form" method="post">
+    <input name="selectedCompanyID" type="hidden" value="0">
+    @Html.RequestVerificationToken()
+</form>
+}
 @section Scripts {    
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Company, SharedHub>(ViewBag, "Acronym"))
+
+        function isCurrentInstance(record) {
+            return record.Acronym.toUpperCase() === "@companyAcronym";
+        }
+
+        function selectCompany(record) {
+            if (confirm("Are you sure you want to select '" + record.Name + "' as the configured company for this '@applicationName' instance?")) {
+                $("input[name='selectedCompanyID']").val(record.ID);
+                $("#selectCompany").submit();
+            }
+        }
     </script>
-}
-@{
+}@{
     ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();
     ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
 }
