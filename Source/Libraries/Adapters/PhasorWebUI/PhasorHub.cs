@@ -797,7 +797,7 @@ namespace PhasorWebUI
         public IEnumerable<string> GetTemplateTypes()
         {
             List<string> templateTypes = new List<string>(FilePath.GetFileList(FilePath.GetAbsolutePath("*.TagTemplate")).Select(FilePath.GetFileNameWithoutExtension));
-            templateTypes.Insert(0, "None");
+            templateTypes.Insert(0, "None: Save Mapping Only - No Calculations");
             return templateTypes;
         }
 

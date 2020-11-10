@@ -2993,7 +2993,7 @@
 
             const templateType = viewModel.templateType();
 
-            if (templateType.toUpperCase() === "NONE")
+            if (templateType.toUpperCase().startsWith("NONE:"))
                 return $.Deferred().resolve().promise();
 
             const calcSignalType = getDeviceSignalType("CALC");
