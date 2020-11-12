@@ -39,10 +39,10 @@ namespace ValidateAssemblyBindings
         {
             if (args.Length != 1)
             {
-                Console.WriteLine("USAGE: ValidateAssemblyBindings <appConfigFileName>");
-                Console.WriteLine();
-                Console.WriteLine("    Example: ValidateAssemblyBindings openPDC.exe.config");
-                Console.WriteLine();
+                Console.Error.WriteLine("USAGE: ValidateAssemblyBindings <appConfigFileName>");
+                Console.Error.WriteLine();
+                Console.Error.WriteLine("    Example: ValidateAssemblyBindings openPDC.exe.config");
+                Console.Error.WriteLine();
                 return 1;
             }
 
@@ -61,8 +61,8 @@ namespace ValidateAssemblyBindings
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR: Failed to validate assembly bindings: {ex.Message}");
-                Console.WriteLine();
+                Console.Error.WriteLine($"ERROR: Failed to validate assembly bindings: {ex.Message}");
+                Console.Error.WriteLine();
                 return 2;
             }
         }
