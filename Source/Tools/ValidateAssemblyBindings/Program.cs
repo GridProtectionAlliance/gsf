@@ -53,11 +53,18 @@ namespace ValidateAssemblyBindings
                 if (!File.Exists(appConfigFileName))
                     throw new FileNotFoundException($"Application configuration file name \"{appConfigFileName}\" not found.");
 
-                Console.WriteLine($"Updating assembly bindings for \"{appConfigFileName}\"");
-                bool result = ValidateAssemblyBindings(appConfigFileName);
-                Console.WriteLine($"Assembly bindings update {(result ? "succeeded" : "failed")}.");
-
-                return result ? 0 : 3;
+                Console.WriteLine($"Validating assembly bindings for \"{appConfigFileName}\"");
+                
+                if (ValidateAssemblyBindings(appConfigFileName))
+                {
+                    Console.WriteLine("Assembly bindings validation succeeded.");
+                    return 0;
+                }
+                else
+                {
+                    Console.Error.WriteLine("Assembly bindings validation failed.");
+                    return 3;
+                }
             }
             catch (Exception ex)
             {
@@ -67,14 +74,8 @@ namespace ValidateAssemblyBindings
             }
         }
 
-        /// <summary>
-        /// Validates the assembly bindings for the specified application <paramref name="configFileName"/>.
-        /// </summary>
-        /// <param name="configFileName">Application configuration file to validate for needed assembly bindings.</param>
-        /// <param name="assemblyBindingsSource">Stream to assembly bindings to add; defaults to embedded "GSF.Web.AssemblyBindings.xml" resource.</param>
-        /// <returns><c>true</c> if assembly bindings were updated; otherwise, <c>false</c>.</returns>
-        /// <remarks>Any stream passed in via <paramref name="assemblyBindingsSource"/> will be closed if function succeeds.</remarks>
-        public static bool ValidateAssemblyBindings(string configFileName, Stream assemblyBindingsSource = null)
+        // Validates the assembly bindings for the specified application <paramref name="configFileName"/>.
+        private static bool ValidateAssemblyBindings(string configFileName)
         {
             if (!File.Exists(configFileName))
                 return false;
