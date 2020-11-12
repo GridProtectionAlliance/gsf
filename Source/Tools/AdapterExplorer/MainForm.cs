@@ -89,6 +89,8 @@ namespace AdapterExplorer
 
                 InitializeDataSubscriber();
                 LoadAdapters();
+
+                SetBottomPanelWidths();
             }
             catch (Exception ex)
             {
@@ -329,17 +331,19 @@ namespace AdapterExplorer
             if (comboBoxAdapters.SelectedIndex < 0 || !(comboBoxAdapters.SelectedItem is IIaonAdapter iaonAdapter))
                 return;
 
-            Dictionary<string, string> settings = iaonAdapter.ConnectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings = iaonAdapter.ConnectionString?.ParseKeyValuePairs();
 
             m_subscriber.Unsubscribe();
             ClearUpdateMessages();
 
-            AssignInputMeasurements(settings);
-            AssignOutputMeasurements(settings);
-            
-            InitiateSubscribe();
+            if (!(settings is null))
+            {
+                AssignInputMeasurements(settings);
+                AssignOutputMeasurements(settings);
+                InitiateSubscribe();
+            }
 
-            labelAdapterInfo.Text = $"Adapter Info: {iaonAdapter.TypeName} [{iaonAdapter.AssemblyName}]{Environment.NewLine}{Environment.NewLine}Connection String:{Environment.NewLine}{iaonAdapter.ConnectionString}";
+            textBoxAdapterInfo.Text = $"Adapter Info: {iaonAdapter.TypeName} [{iaonAdapter.AssemblyName}]{Environment.NewLine}{Environment.NewLine}Connection String:{Environment.NewLine}{iaonAdapter.ConnectionString}";
         }
 
         private void InitiateSubscribe()
@@ -365,13 +369,19 @@ namespace AdapterExplorer
         private void MainForm_Resize(object sender, EventArgs e)
         {
             splitContainerMeasurements.SplitterDistance = (int)(splitContainerMeasurements.ClientSize.Width * 0.5);
+            SetBottomPanelWidths();
         }
 
         private void splitContainerMeasurements_SplitterMoved(object sender, SplitterEventArgs e)
         {
+            SetBottomPanelWidths();
+        }
+
+        private void SetBottomPanelWidths()
+        {
             // ReSharper disable once InconsistentlySynchronizedField
             textBoxMessageOutput.Width = groupBoxOutputMeasurements.Width;
-            labelAdapterInfo.Width = groupBoxInputMeasurements.Width;
+            textBoxAdapterInfo.Width = groupBoxInputMeasurements.Width;
         }
 
         private void buttonClear_Click(object sender, EventArgs e)
