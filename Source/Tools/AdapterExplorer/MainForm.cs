@@ -51,6 +51,7 @@ namespace AdapterExplorer
         private UnsynchronizedSubscriptionInfo m_throttledSubscription;
         private Guid[] m_inputSignalIDs;
         private Guid[] m_outputSignalIDs;
+        private bool m_formLoaded;
         private volatile bool m_formClosing;
 
         public MainForm()
@@ -91,6 +92,8 @@ namespace AdapterExplorer
                 LoadAdapters();
 
                 SetBottomPanelWidths();
+
+                m_formLoaded = true;
             }
             catch (Exception ex)
             {
@@ -141,9 +144,26 @@ namespace AdapterExplorer
             m_settings?.Dispose();
         }
 
+        private void FormElementChanged(object sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<object, EventArgs>(FormElementChanged), sender, e);
+            }
+            else
+            {
+                if (Visible && m_formLoaded)
+                    m_settings?.UpdateProperties();
+            }
+        }
+
         private void checkBoxAdapters_CheckedChanged(object sender, EventArgs e)
         {
+            if (!Visible || !m_formLoaded)
+                return;
+
             LoadAdapters();
+            FormElementChanged(sender, e);
         }
 
         private void InitializeDataSubscriber()
@@ -343,7 +363,7 @@ namespace AdapterExplorer
                 InitiateSubscribe();
             }
 
-            textBoxAdapterInfo.Text = $"Adapter Info: {iaonAdapter.TypeName} [{iaonAdapter.AssemblyName}]{Environment.NewLine}{Environment.NewLine}Connection String:{Environment.NewLine}{iaonAdapter.ConnectionString}";
+            textBoxAdapterInfo.Text = $"Adapter Info: {iaonAdapter.TypeName} [{iaonAdapter.AssemblyName}]{Environment.NewLine}{Environment.NewLine}Connection String:{Environment.NewLine}{Environment.NewLine}{iaonAdapter.ConnectionString}";
         }
 
         private void InitiateSubscribe()

@@ -312,9 +312,6 @@ namespace AdapterExplorer
         private System.Windows.Forms.Panel panelHeader;
         private System.Windows.Forms.Panel panelFooter;
         private System.Windows.Forms.SplitContainer splitContainerMeasurements;
-        private System.Windows.Forms.CheckBox checkBoxOutputAdapters;
-        private System.Windows.Forms.CheckBox checkBoxInputAdapters;
-        private System.Windows.Forms.CheckBox checkBoxActionAdapters;
         private System.Windows.Forms.ComboBox comboBoxAdapters;
         private System.Windows.Forms.Label labelAdapters;
         private System.Windows.Forms.GroupBox groupBoxInputMeasurements;
@@ -324,6 +321,9 @@ namespace AdapterExplorer
         private System.Windows.Forms.TextBox textBoxMessageOutput;
         private System.Windows.Forms.Button buttonClear;
         private System.Windows.Forms.TextBox textBoxAdapterInfo;
+        public System.Windows.Forms.CheckBox checkBoxOutputAdapters;
+        public System.Windows.Forms.CheckBox checkBoxInputAdapters;
+        public System.Windows.Forms.CheckBox checkBoxActionAdapters;
     }
 }
 

@@ -32,17 +32,6 @@ namespace AdapterExplorer
     /// <summary>
     /// Defines settings for the DataExtractor application.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Default value expressions in this class reference the primary form instance, as a result,
-    /// instances of this class should only be created from the primary UI thread or otherwise
-    /// use <see cref="System.Windows.Forms.Form.Invoke(Delegate)"/>.
-    /// </para>
-    /// <para>
-    /// In order for properties of this class decorated with <see cref="TypeConvertedValueExpressionAttribute"/>
-    /// to have access to form element values, the elements should be declared with "public" access.
-    /// </para>
-    /// </remarks>
     public sealed class Settings : CategorizedSettingsBase<Settings>
     {
         /// <summary>
@@ -57,26 +46,27 @@ namespace AdapterExplorer
         }
 
         /// <summary>
-        /// Gets or sets host address for historian connection.
+        /// Gets or sets flag that determines if action adapters are selected.
         /// </summary>
-        //[TypeConvertedValueExpression("Form.textBoxHistorianHostAddress.Text")]
-        [Description("Host address for historian connection.")]
+        [TypeConvertedValueExpression("Form.checkBoxActionAdapters.Checked")]
+        [Description("Flag that determines if action adapters are selected.")]
         [UserScopedSetting]
-        public string HostAddress { get; set; }
+        public bool SelectActionAdapters { get; set; }
 
         /// <summary>
-        /// Gets or sets port for historian GEP connection.
+        /// Gets or sets flag that determines if input adapters are selected.
         /// </summary>
-        //[TypeConvertedValueExpression("Form.maskedTextBoxHistorianPort.Text")]
-        [Description("Meta-data port for historian connection.")]
+        [TypeConvertedValueExpression("Form.checkBoxInputAdapters.Checked")]
+        [Description("Flag that determines if input adapters are selected.")]
         [UserScopedSetting]
-        public int Port { get; set; }
+        public bool SelectInputAdapters { get; set; }
 
         /// <summary>
-        /// Gets or sets meta-data retriever timeout, in milliseconds.
+        /// Gets or sets flag that determines if output adapters are selected.
         /// </summary>
+        [TypeConvertedValueExpression("Form.checkBoxOutputAdapters.Checked")]
         [UserScopedSetting]
-        [Description("Meta-data retriever timeout, in milliseconds.")]
-        public int MetadataTimeout { get; set; }
+        [Description("Flag that determines if output adapters are selected.")]
+        public bool SelectOutputAdapters { get; set; }
     }
 }
