@@ -284,8 +284,6 @@ namespace AdapterExplorer
 
         private void AssignInputMeasurements(Dictionary<string, string> settings)
         {
-            MeasurementKey[] inputMeasurementKeys;
-
             if (!settings.ContainsKey("inputMeasurementKeys") && settings.TryGetValue("variableList", out string variableList))
             {
                 Dictionary<string, string> variables = variableList.ParseKeyValuePairs();
@@ -294,7 +292,7 @@ namespace AdapterExplorer
                     settings["inputMeasurementKeys"] = string.Join(";", variables.Values);
             }
 
-            inputMeasurementKeys = settings.TryGetValue("inputMeasurementKeys", out string setting) ?
+            MeasurementKey[] inputMeasurementKeys = settings.TryGetValue("inputMeasurementKeys", out string setting) ?
                 AdapterBase.ParseInputMeasurementKeys(m_dataSource, false, setting) :
                 Array.Empty<MeasurementKey>();
 
@@ -309,9 +307,7 @@ namespace AdapterExplorer
 
         private void AssignOutputMeasurements(Dictionary<string, string> settings)
         {
-            MeasurementKey[] outputMeasurementKeys;
-
-            outputMeasurementKeys = settings.TryGetValue("outputMeasurements", out string setting) ?
+            MeasurementKey[] outputMeasurementKeys = settings.TryGetValue("outputMeasurements", out string setting) ?
                 AdapterBase.ParseOutputMeasurements(m_dataSource, false, setting).MeasurementKeys() :
                 Array.Empty<MeasurementKey>();
 
