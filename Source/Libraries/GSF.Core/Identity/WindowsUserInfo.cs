@@ -394,7 +394,7 @@ namespace GSF.Identity
                 if (!m_enabled)
                     return Array.Empty<string>();
                 
-                if (m_isLocalAccount && m_useLegacyGroupLookups)
+                if (m_isLocalAccount || m_useLegacyGroupLookups)
                     return OldGetGroups();
 
                 try
@@ -430,7 +430,7 @@ namespace GSF.Identity
                 if (!m_enabled)
                     return Array.Empty<string>();
 
-                if (m_isLocalAccount && m_useLegacyGroupLookups)
+                if (m_isLocalAccount || m_useLegacyGroupLookups)
                     return OldGetLocalGroups();
 
                 try
