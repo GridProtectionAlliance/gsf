@@ -591,6 +591,9 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReportingConfig", "Displays or modifies the configuration of the reporting process", ReportingConfigRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Ping", "Shells out a process to perform a ping on the device.", PingRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GetInputMeasurements", "Gets adapter input measurements.", GetInputMeasurementsRequestHandler, false));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GetOutputMeasurements", "Gets adapter output measurements.", GetOutputMeasurementsRequestHandler, false));
+            
             // Start system initialization on an independent thread so that service responds in a timely fashion...
             InitializeSystem();
         }
@@ -2779,6 +2782,110 @@ namespace GSF.TimeSeries
                 else
                 {
                     SendResponse(requestInfo, false, "Failed to write event log entry: required \"message\" parameter was not specified.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets adapter input measurements.
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        protected virtual void GetInputMeasurementsRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Gets adapter input measurements.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       GetInputMeasurements AdapterName [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                // See if specific ID for an adapter was requested
+                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                {
+                    IAdapter adapter = GetRequestedAdapter(requestInfo);
+
+                    string measurements = string.Join(";", adapter.InputMeasurementKeys.Select(key => key.SignalID.ToString()));
+
+                    DisplayResponseMessage(requestInfo, measurements);
+
+                    // Also allow consumers to directly consume message via event in response to a status request
+                    if (requestInfo.Request.Arguments.Exists("actionable"))
+                        m_serviceHelper.SendActionableResponse(requestInfo, true, null, measurements);
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "No target adapter was specified.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets adapter output measurements.
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        protected virtual void GetOutputMeasurementsRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Gets adapter output measurements.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       GetOutputMeasurements AdapterName [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                // See if specific ID for an adapter was requested
+                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                {
+                    IAdapter adapter = GetRequestedAdapter(requestInfo);
+
+                    string measurements = string.Join(";", adapter.OutputMeasurements.Select(m => m.Key.SignalID.ToString()));
+
+                    DisplayResponseMessage(requestInfo, measurements);
+
+                    // Also allow consumers to directly consume message via event in response to a status request
+                    if (requestInfo.Request.Arguments.Exists("actionable"))
+                        m_serviceHelper.SendActionableResponse(requestInfo, true, null, measurements);
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "No target adapter was specified.");
                 }
             }
         }
