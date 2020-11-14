@@ -44,6 +44,7 @@
     <Reference Include="ExpressionEvaluator, Version=2.0.4.0, Culture=neutral, PublicKeyToken=90d9f15d622e2348, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\ExpressionEvaluator.2.0.4.0\lib\net40\ExpressionEvaluator.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
@@ -73,6 +74,12 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="SplashScreen.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SplashScreen.Designer.cs">
+      <DependentUpon>SplashScreen.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -85,6 +92,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="SplashScreen.resx">
+      <DependentUpon>SplashScreen.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -101,15 +111,32 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AdapterExplorer.ico" />
+    <Content Include="AdapterExplorer.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\GSF.Communication\GSF.Communication.csproj">
+      <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>
+      <Name>GSF.Communication</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Security\GSF.Security.csproj">
+      <Project>{4060e729-effd-4e50-a0d5-99c0990ef7da}</Project>
+      <Name>GSF.Security</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.ServiceProcess\GSF.ServiceProcess.csproj">
+      <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
+      <Name>GSF.ServiceProcess</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj">
+      <Project>{7ed01b57-dd71-4a38-bb29-65d629224a12}</Project>
+      <Name>GSF.TimeSeries.UI</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Libraries\GSF.Windows\GSF.Windows.csproj">
       <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>

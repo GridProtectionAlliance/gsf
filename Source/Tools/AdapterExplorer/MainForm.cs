@@ -26,26 +26,32 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using AdapterExplorer.Model;
 using GSF;
+using GSF.Communication;
 using GSF.ComponentModel;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Diagnostics;
+using GSF.ServiceProcess;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Transport;
+using GSF.TimeSeries.UI;
 using GSF.Windows.Forms;
 using Measurement = AdapterExplorer.Model.Measurement;
 
 namespace AdapterExplorer
 {
-    public partial class MainForm : Form
+    public partial class MainForm : SecureForm
     {
         private DataSet m_dataSource;
         private readonly LogPublisher m_log;
-        private AdoDataConnection m_connection;
+        private AdoDataConnection m_database;
+        private WindowsServiceClient m_windowsServiceClient;
         private Settings m_settings;
         private DataSubscriber m_subscriber;
         private UnsynchronizedSubscriptionInfo m_throttledSubscription;
@@ -64,24 +70,33 @@ namespace AdapterExplorer
         {
             try
             {
-                // Load current settings registering a symbolic reference to this form instance for use by default value expressions
-                m_settings = new Settings(new Dictionary<string, object> { { "Form", this } }.RegisterSymbols());
+                CommonFunctions.CurrentPrincipal = SecurityPrincipal;
+                Text += " - " + SecurityPrincipal.Identity.Provider.UserData.LoginID;
 
-                // Restore last window size/location
-                this.RestoreLayout();
+                m_database = Program.GetDatabaseConnection();
+                MeasurementKey.EstablishDefaultCache(m_database.Connection, m_database.AdapterType);
             }
             catch (Exception ex)
             {
-                m_log.Publish(MessageLevel.Error, "FormLoad", exception: ex);
+                m_log.Publish(MessageLevel.Error, "FormLoad: Database Connection", exception: ex);
 
             #if DEBUG
                 throw;
+            #else
+                MessageBox.Show(this, $"Failed to connect to database defined in \"{Program.HostConfigFileName}\":{Environment.NewLine}{ex.Message}", "Database Connection Error", MessageBoxButtons.OK);
             #endif
             }
 
             try
             {
-                m_connection = Program.GetDatabaseConnection();
+                // Load current settings registering a symbolic reference to this form instance for use by default value expressions
+                m_settings = new Settings(new Dictionary<string, object> { { "Form", this } }.RegisterSymbols());
+
+                // Restore last window size/location
+                this.RestoreLayout();
+
+                CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
+                Program.HostNodeID.SetAsCurrentNodeID();
 
                 LoadDataSource();
 
@@ -97,12 +112,10 @@ namespace AdapterExplorer
             }
             catch (Exception ex)
             {
-                m_log.Publish(MessageLevel.Error, "FormLoad: Database Connection", exception: ex);
+                m_log.Publish(MessageLevel.Error, "FormLoad", exception: ex);
 
             #if DEBUG
                 throw;
-            #else
-                MessageBox.Show(this, $"Failed to connect to database defined in \"{Program.HostConfigFileName}\":{Environment.NewLine}{ex.Message}", "Database Connection Error", MessageBoxButtons.OK);
             #endif
             }
         }
@@ -131,6 +144,8 @@ namespace AdapterExplorer
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            CommonFunctions.DisconnectWindowsServiceClient();
+
             if (!(m_subscriber is null))
             {
                 m_subscriber.Stop();
@@ -164,6 +179,107 @@ namespace AdapterExplorer
 
             LoadAdapters();
             FormElementChanged(sender, e);
+        }
+
+        private void CommonFunctions_ServiceConnectionRefreshed(object sender, EventArgs e)
+        {
+            ConnectToService();
+        }
+
+        private void ConnectToService()
+        {
+            ClientHelper helper = m_windowsServiceClient?.Helper;
+            ClientBase remotingClient = m_windowsServiceClient?.Helper?.RemotingClient;
+
+            if (!(helper is null))
+                helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
+
+            if (!(remotingClient is null))
+            {
+                remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+                remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
+            }
+
+            m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
+            helper = m_windowsServiceClient?.Helper;
+            remotingClient = m_windowsServiceClient?.Helper?.RemotingClient;
+
+            if (m_windowsServiceClient is null || helper is null || remotingClient is null)
+                return;
+
+            helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
+            remotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+            remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+
+            SetConnectionStatus(remotingClient.CurrentState == ClientState.Connected ? Status.Connected : Status.Disconnected);
+        }
+
+        private void Helper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
+        {
+            if (!ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out _))
+                return;
+
+            string command = sourceCommand.ToLower().Trim();
+            string[] parts = (e.Argument?.Message ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length == 0)
+                return;
+
+            List<string> signalIDs = new List<string>();
+
+            foreach (string part in parts)
+            {
+                if (Guid.TryParse(part, out Guid signalID))
+                    signalIDs.Add(signalID.ToString());
+            }
+
+            if (signalIDs.Count == 0)
+                return;
+
+            string signalIDQuery = $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
+
+            if (command.Equals("getinputmeasurements"))
+            {
+                LoadMeasurements(signalIDQuery, dataGridViewInputMeasurements);
+                InitiateSubscribe();
+            }
+            else if (command.Equals("getoutputmeasurements"))
+            {
+                LoadMeasurements(signalIDQuery, dataGridViewOutputMeasurements);
+                InitiateSubscribe();
+            }
+        }
+
+        private void RemotingClient_ConnectionTerminated(object sender, EventArgs e)
+        {
+            SetConnectionStatus(Status.Disconnected);
+        }
+
+        private void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
+        {
+            SetConnectionStatus(Status.Connected);
+        }
+
+        private void SetConnectionStatus(Status status)
+        {
+            if (m_formClosing)
+                return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<Status>(SetConnectionStatus), status);
+            }
+            else
+            {
+                pictureBoxStatus.Image = imageListStatus.Images[(int)status];
+                toolTip.SetToolTip(pictureBoxStatus, status.ToString());
+            }
+        }
+
+        private void LoadDataSource()
+        {
+            m_dataSource = m_database.RetrieveDataSet("SELECT * FROM ActiveMeasurement");
+            m_dataSource.Tables[0].TableName = "ActiveMeasurements";
         }
 
         private void InitializeDataSubscriber()
@@ -247,12 +363,6 @@ namespace AdapterExplorer
             BeginInvoke(new Action(dataGridView.Refresh));
         }
 
-        private void LoadDataSource()
-        {
-            m_dataSource = m_connection.RetrieveDataSet("SELECT * FROM ActiveMeasurement");
-            m_dataSource.Tables[0].TableName = "ActiveMeasurements";
-        }
-
         private void LoadAdapters()
         {
             comboBoxAdapters.Items.Clear();
@@ -270,13 +380,13 @@ namespace AdapterExplorer
             }
 
             if (checkBoxActionAdapters.Checked)
-                loadAdapters(new TableOperations<IaonActionAdapter>(m_connection));
+                loadAdapters(new TableOperations<IaonActionAdapter>(m_database));
 
             if (checkBoxInputAdapters.Checked)
-                loadAdapters(new TableOperations<IaonInputAdapter>(m_connection));
+                loadAdapters(new TableOperations<IaonInputAdapter>(m_database));
 
             if (checkBoxOutputAdapters.Checked)
-                loadAdapters(new TableOperations<IaonOutputAdapter>(m_connection));
+                loadAdapters(new TableOperations<IaonOutputAdapter>(m_database));
 
             if (comboBoxAdapters.Items.Count > 0)
                 comboBoxAdapters.SelectedIndex = 0;
@@ -322,21 +432,31 @@ namespace AdapterExplorer
 
         private void LoadMeasurements(string signalIDQuery, DataGridView dataGridView)
         {
-            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(m_connection);
+            if (m_formClosing)
+                return;
 
-            Measurement[] measurements = signalIDQuery is null ?
-                Array.Empty<Measurement>() :
-                measurementTable.QueryRecords("PointTag", new RecordRestriction(signalIDQuery)).ToArray();
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<string, DataGridView>(LoadMeasurements), signalIDQuery, dataGridView);
+            }
+            else
+            {
+                TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(m_database);
 
-            BindingSource source = new BindingSource();
+                Measurement[] measurements = signalIDQuery is null ?
+                    Array.Empty<Measurement>() :
+                    measurementTable.QueryRecords("PointTag", new RecordRestriction(signalIDQuery)).ToArray();
 
-            foreach (Measurement measurement in measurements)
-                source.Add(measurement);
+                BindingSource source = new BindingSource();
 
-            dataGridView.DataSource = null;
-            dataGridView.Rows.Clear();
-            dataGridView.Refresh();
-            dataGridView.DataSource = source;
+                foreach (Measurement measurement in measurements)
+                    source.Add(measurement);
+
+                dataGridView.DataSource = null;
+                dataGridView.Rows.Clear();
+                dataGridView.Refresh();
+                dataGridView.DataSource = source;
+            }
         }
 
         private void comboBoxAdapters_SelectedIndexChanged(object sender, EventArgs e)
@@ -354,12 +474,17 @@ namespace AdapterExplorer
 
             if (!(settings is null))
             {
+                // Get configured measurements - this will work even if service is not running
                 AssignInputMeasurements(settings);
                 AssignOutputMeasurements(settings);
                 InitiateSubscribe();
             }
 
             textBoxAdapterInfo.Text = $"Adapter Info: {iaonAdapter.TypeName} [{iaonAdapter.AssemblyName}]{Environment.NewLine}{Environment.NewLine}Connection String:{Environment.NewLine}{Environment.NewLine}{iaonAdapter.ConnectionString}";
+
+            // Also request dynamically assigned runtime measurements from adapter
+            CommonFunctions.SendCommandToService($"GetInputMeasurements {iaonAdapter.AdapterName} -actionable");
+            CommonFunctions.SendCommandToService($"GetOutputMeasurements {iaonAdapter.AdapterName} -actionable");
         }
 
         private void InitiateSubscribe()

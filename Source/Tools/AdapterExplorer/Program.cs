@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using GSF;
@@ -33,18 +34,40 @@ using GSF.Console;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
+using Microsoft.VisualBasic.ApplicationServices;
 
 namespace AdapterExplorer
 {
+    public enum Status
+    {
+        Disconnected,
+        Connected
+    }
+
     static class Program
     {
         // Static Properties
         public static LogPublisher Log;
+
         private static string s_hostConfigFileName;
         private static string s_connectionString;
         private static string s_dataProviderString;
+        private static Guid s_nodeID;
 
         public static string HostConfigFileName => Path.GetFileName(s_hostConfigFileName ?? "undefined");
+        public static Guid HostNodeID => s_nodeID;
+
+        private class AdapterExplorerApplication : WindowsFormsApplicationBase
+        {
+            protected override void OnCreateMainForm()
+            {
+                MainForm = new MainForm();
+            }
+            protected override void OnCreateSplashScreen()
+            {
+                SplashScreen = new SplashScreen();
+            }
+        }
 
         /// <summary>
         /// The main entry point for the application.
@@ -72,9 +95,13 @@ namespace AdapterExplorer
             Log = Logger.CreatePublisher(typeof(Program), MessageClass.Application);
             Log.Publish(MessageLevel.Info, "ApplicationStart");
 
+            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            
+            AdapterExplorerApplication app = new AdapterExplorerApplication();
+            app.Run(Environment.GetCommandLineArgs());
         }
 
         public static ushort GetGEPPort()
@@ -100,6 +127,7 @@ namespace AdapterExplorer
         {
             string connectionString = s_connectionString;
             string dataProviderString = s_dataProviderString;
+            string nodeID = null;
 
             if (string.IsNullOrWhiteSpace(connectionString) || string.IsNullOrWhiteSpace(dataProviderString))
             {
@@ -118,13 +146,32 @@ namespace AdapterExplorer
                     .Where(element => "DataProviderString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
                     .Select(element => (string)element.Attribute("value"))
                     .FirstOrDefault();
+
+                nodeID = serviceConfig
+                    .Descendants("systemSettings")
+                    .SelectMany(systemSettings => systemSettings.Elements("add"))
+                    .Where(element => "NodeID".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                    .Select(element => (string)element.Attribute("value"))
+                    .FirstOrDefault();
             }
 
             if (string.IsNullOrWhiteSpace(connectionString) || string.IsNullOrWhiteSpace(dataProviderString))
                 return null;
 
+            // Copy target database settings into local user settings
+            ConfigurationFile configFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection configSettings = configFile.Settings["systemSettings"];
+
+            if (nodeID is null)
+                nodeID = Guid.NewGuid().ToString();
+
+            configSettings["ConnectionString"].Value = connectionString;
+            configSettings["DataProviderString"].Value = dataProviderString;
+            configSettings["NodeID"].Value = nodeID;
+
             s_connectionString = connectionString;
             s_dataProviderString = dataProviderString;
+            s_nodeID = Guid.Parse(nodeID);
 
             return new AdoDataConnection(connectionString, dataProviderString);
         }
