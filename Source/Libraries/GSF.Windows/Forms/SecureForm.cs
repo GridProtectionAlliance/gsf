@@ -107,6 +107,15 @@ namespace GSF.Windows.Forms
             private set;
         }
 
+        /// <summary>
+        /// Gets or sets exception handler for secure form.
+        /// </summary>
+        public Action<Exception> ExceptionHandler
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -122,37 +131,47 @@ namespace GSF.Windows.Forms
 
         private void SecureForm_Load(object sender, EventArgs e)
         {
-            // Don't proceed if the form is opened in design mode
-            if (DesignMode)
-                return;
+            try
+            {
+                // Don't proceed if the form is opened in design mode
+                if (DesignMode)
+                    return;
 
-            // Check if the resource is excluded from being secured
-            string resource = GetResourceName();
+                // Check if the resource is excluded from being secured
+                string resource = GetResourceName();
 
-            if (!SecurityProviderUtility.IsResourceSecurable(resource))
-                return;
+                if (!SecurityProviderUtility.IsResourceSecurable(resource))
+                    return;
 
-            // Set up security provider for passthrough authentication
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(WindowsIdentity.GetCurrent().Name);
-            securityProvider.PassthroughPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-            securityProvider.Authenticate();
+                // Set up security provider for passthrough authentication
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(WindowsIdentity.GetCurrent().Name);
+                securityProvider.PassthroughPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+                securityProvider.Authenticate();
 
-            // Setup the security principal for role-based security
-            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
-            SecurityPrincipal = new SecurityPrincipal(securityIdentity);
+                // Setup the security principal for role-based security
+                SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                SecurityPrincipal = new SecurityPrincipal(securityIdentity);
 
-            // Verify that the current thread principal has been authenticated
-            if (!SecurityPrincipal.Identity.IsAuthenticated)
-                throw new SecurityException($"Authentication failed for user '{SecurityPrincipal.Identity.Name}'");
+                // Verify that the current thread principal has been authenticated
+                if (!SecurityPrincipal.Identity.IsAuthenticated)
+                    throw new SecurityException($"Authentication failed for user '{SecurityPrincipal.Identity.Name}'");
 
-            // Perform a top-level permission check on the resource being accessed
-            if (!SecurityProviderUtility.IsResourceAccessible(resource, SecurityPrincipal))
-                throw new SecurityException($"Access to '{resource}' is denied");
+                // Perform a top-level permission check on the resource being accessed
+                if (!SecurityProviderUtility.IsResourceAccessible(resource, SecurityPrincipal))
+                    throw new SecurityException($"Access to '{resource}' is denied");
 
-            // Set up the current thread principal
-            // NOTE: Provided for backwards compatibility;
-            //       recommended to use the SecurityPrincipal instead
-            Thread.CurrentPrincipal = SecurityPrincipal;
+                // Set up the current thread principal
+                // NOTE: Provided for backwards compatibility;
+                //       recommended to use the SecurityPrincipal instead
+                Thread.CurrentPrincipal = SecurityPrincipal;
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHandler is null)
+                    throw;
+
+                ExceptionHandler(ex);
+            }
         }
 
         #endregion
