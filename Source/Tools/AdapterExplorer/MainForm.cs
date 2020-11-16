@@ -219,32 +219,43 @@ namespace AdapterExplorer
             if (!ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out _))
                 return;
 
-            string command = sourceCommand.ToLower().Trim();
-            string[] parts = (e.Argument?.Message ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (parts.Length == 0)
-                return;
-
-            List<string> signalIDs = new List<string>();
-
-            foreach (string part in parts)
+            string parseSignalIDQuery()
             {
-                if (Guid.TryParse(part, out Guid signalID))
-                    signalIDs.Add(signalID.ToString());
+                string[] parts = (e.Argument?.Message ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length == 0)
+                    return null;
+
+                List<string> signalIDs = new List<string>(parts.Length);
+
+                foreach (string part in parts)
+                {
+                    if (Guid.TryParse(part, out Guid signalID))
+                        signalIDs.Add(signalID.ToString());
+                }
+
+                return signalIDs.Count == 0 ? null : $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
             }
 
-            if (signalIDs.Count == 0)
-                return;
-
-            string signalIDQuery = $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
+            string command = sourceCommand.ToLower().Trim();
 
             if (command.Equals("getinputmeasurements"))
             {
+                string signalIDQuery = parseSignalIDQuery();
+
+                if (signalIDQuery is null)
+                    return;
+
                 LoadMeasurements(signalIDQuery, dataGridViewInputMeasurements);
                 InitiateSubscribe();
             }
             else if (command.Equals("getoutputmeasurements"))
             {
+                string signalIDQuery = parseSignalIDQuery();
+
+                if (signalIDQuery is null)
+                    return;
+
                 LoadMeasurements(signalIDQuery, dataGridViewOutputMeasurements);
                 InitiateSubscribe();
             }
