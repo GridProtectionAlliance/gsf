@@ -26,8 +26,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using AdapterExplorer.Model;
 using GSF;
@@ -96,7 +94,15 @@ namespace AdapterExplorer
                 this.RestoreLayout();
 
                 CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
-                Program.HostNodeID.SetAsCurrentNodeID();
+
+                try
+                {
+                    Program.HostNodeID.SetAsCurrentNodeID();
+                }
+                catch (Exception ex)
+                {
+                    ShowUpdateMessage($"ERROR: Failed to initialize service connection: {ex.Message}");
+                }
 
                 LoadDataSource();
 
@@ -494,8 +500,15 @@ namespace AdapterExplorer
             textBoxAdapterInfo.Text = $"Adapter Info: {iaonAdapter.TypeName} [{iaonAdapter.AssemblyName}]{Environment.NewLine}{Environment.NewLine}Connection String:{Environment.NewLine}{Environment.NewLine}{iaonAdapter.ConnectionString}";
 
             // Also request dynamically assigned runtime measurements from adapter
-            CommonFunctions.SendCommandToService($"GetInputMeasurements {iaonAdapter.AdapterName} -actionable");
-            CommonFunctions.SendCommandToService($"GetOutputMeasurements {iaonAdapter.AdapterName} -actionable");
+            try
+            {
+                CommonFunctions.SendCommandToService($"GetInputMeasurements {iaonAdapter.AdapterName} -actionable");
+                CommonFunctions.SendCommandToService($"GetOutputMeasurements {iaonAdapter.AdapterName} -actionable");
+            }
+            catch (Exception ex)
+            {
+                ShowUpdateMessage($"ERROR: Failed to send command to service: {ex.Message}");
+            }
         }
 
         private void InitiateSubscribe()

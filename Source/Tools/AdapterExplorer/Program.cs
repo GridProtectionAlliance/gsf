@@ -61,7 +61,18 @@ namespace AdapterExplorer
         {
             protected override void OnCreateMainForm()
             {
-                MainForm = new MainForm();
+                MainForm mainForm = new MainForm();
+                
+                mainForm.ExceptionHandler = ex =>
+                {
+                    mainForm.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show(SplashScreen, $"Failed to validate security for \"{mainForm.SecurityPrincipal.Identity.Provider.UserData.LoginID}\" in database configured in \"{Program.HostConfigFileName}\": {ex.Message}", "Security Validation Error", MessageBoxButtons.OK);
+                        Application.Exit();
+                    }));
+                };
+
+                MainForm = mainForm;
             }
             protected override void OnCreateSplashScreen()
             {
