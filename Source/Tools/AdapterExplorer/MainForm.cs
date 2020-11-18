@@ -242,12 +242,12 @@ namespace AdapterExplorer
             if (!ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out _))
                 return;
 
-            Tuple<Guid[], string> parseSignalIDQuery()
+            Guid[] parseSignalIDs()
             {
                 string[] parts = (e.Argument?.Message ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (parts.Length == 0)
-                    return null;
+                    return Array.Empty<Guid>();
 
                 List<Guid> signalIDs = new List<Guid>(parts.Length);
 
@@ -257,25 +257,20 @@ namespace AdapterExplorer
                         signalIDs.Add(signalID);
                 }
 
-                Guid[] signalIDArray = signalIDs.ToArray();
-                string signalIDQuery = signalIDs.Count == 0 ? null : $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
-
-                return new Tuple<Guid[], string>(signalIDArray, signalIDQuery);
+                return signalIDs.ToArray();
             }
 
             string command = sourceCommand.ToLower().Trim();
 
             if (command.Equals("getinputmeasurements"))
             {
-                Tuple<Guid[], string> parsedSignalIDs = parseSignalIDQuery();
-                m_inputSignalIDs = parsedSignalIDs?.Item1 ?? Array.Empty<Guid>();
-                LoadMeasurements(parsedSignalIDs?.Item2, dataGridViewInputMeasurements);
+                m_inputSignalIDs = parseSignalIDs();
+                LoadMeasurements(m_inputSignalIDs, dataGridViewInputMeasurements);
             }
             else if (command.Equals("getoutputmeasurements"))
             {
-                Tuple<Guid[], string> parsedSignalIDs = parseSignalIDQuery();
-                m_outputSignalIDs = parsedSignalIDs?.Item1 ?? Array.Empty<Guid>();
-                LoadMeasurements(parsedSignalIDs?.Item2, dataGridViewOutputMeasurements);
+                m_outputSignalIDs = parseSignalIDs();
+                LoadMeasurements(m_outputSignalIDs, dataGridViewOutputMeasurements);
             }
         }
 
@@ -459,12 +454,7 @@ namespace AdapterExplorer
                 Array.Empty<MeasurementKey>();
 
             m_inputSignalIDs = inputMeasurementKeys.Select(k => k.SignalID).ToArray();
-
-            string inputSignalIDQuery = m_inputSignalIDs.Length > 0 ?
-                $"SignalID IN ({string.Join(", ", m_inputSignalIDs.Select(id => $"'{id}'"))})" :
-                null;
-
-            LoadMeasurements(inputSignalIDQuery, dataGridViewInputMeasurements);
+            LoadMeasurements(m_inputSignalIDs, dataGridViewInputMeasurements);
         }
 
         private void AssignOutputMeasurements(Dictionary<string, string> settings)
@@ -474,26 +464,24 @@ namespace AdapterExplorer
                 Array.Empty<MeasurementKey>();
 
             m_outputSignalIDs = outputMeasurementKeys.Select(k => k.SignalID).ToArray();
-
-            string outputSignalIDQuery = m_outputSignalIDs.Length > 0 ?
-                $"SignalID IN ({string.Join(", ", m_outputSignalIDs.Select(id => $"'{id}'"))})" :
-                null;
-
-            LoadMeasurements(outputSignalIDQuery, dataGridViewOutputMeasurements);
+            LoadMeasurements(m_outputSignalIDs, dataGridViewOutputMeasurements);
         }
 
-        private void LoadMeasurements(string signalIDQuery, DataGridView dataGridView)
+        private void LoadMeasurements(Guid[] signalIDs, DataGridView dataGridView)
         {
             if (m_formClosing)
                 return;
 
             if (InvokeRequired)
             {
-                BeginInvoke(new Action<string, DataGridView>(LoadMeasurements), signalIDQuery, dataGridView);
+                BeginInvoke(new Action<Guid[], DataGridView>(LoadMeasurements), signalIDs, dataGridView);
             }
             else
             {
                 TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(m_database);
+
+                string signalIDQuery = signalIDs.Length == 0 ? null :
+                    $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
 
                 IEnumerable<Measurement> measurements = signalIDQuery is null ?
                     Enumerable.Empty<Measurement>() :
