@@ -1314,9 +1314,7 @@ namespace PhasorProtocolAdapters
                     else
                     {
                         m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
-
-                        if (i == 0)
-                            RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                        RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
                     }
                 }
             }
