@@ -225,8 +225,10 @@ namespace PhasorProtocolAdapters
         /// Gets the access ID (a.k.a, ID code) for this device connection. Value is often necessary in order to make a connection to some phasor protocols.
         /// </summary>
         /// <remarks>
-        /// This value can mutate when configured with multiple values, i.e., where one access ID code is specified for each target device connection, e.g.:
-        /// <c>server=192.168.1.10:4712,192.168.1.12:4712; accessID=95,96</c>
+        /// This value can mutate when configured with multiple values, i.e., where an alternate access ID code is specified for a target device connection, e.g.:
+        /// <c>accessID=95; server=192.168.1.10:4712,192.168.1.12:4712/96,192.168.2.10:4712,192.168.2.12:4712/96</c>
+        /// In this example both <c>192.168.1.10:4712</c> and <c>192.168.1.10:4712</c> use the configured access ID of 95, but
+        /// <c>192.168.1.12:4712/96</c> and <c>192.168.2.12:4712/96</c> specify an access ID of 96.
         /// </remarks>
         public ushort AccessID
         {
@@ -927,47 +929,41 @@ namespace PhasorProtocolAdapters
             // Load optional mapper specific connection parameters
             IsConcentrator = settings.TryGetValue("isConcentrator", out string setting) && setting.ParseBoolean();
 
-            // Parse any defined server list, this assumes TCP connection since this is currently the only connection type that supports multiple end points
+            // Parse any defined access ID (UI forces access ID to a single value)
+            if (!settings.TryGetValue("accessID", out setting) || string.IsNullOrWhiteSpace(setting) || !ushort.TryParse(setting, out ushort defaultAccessID))
+                defaultAccessID = 1;
+            
+            // Parse any defined access IDs from server list, this assumes TCP connection since this is currently the only connection type that supports multiple end points
             if (settings.TryGetValue("server", out setting) && !string.IsNullOrWhiteSpace(setting))
-                m_serverList = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(server => $"tcp://{server.Trim()}".ToLower()).ToArray();
-            else
-                m_serverList = Array.Empty<string>();
-
-            // Parse any defined access ID list, there must be one access ID for each defined server connection when multiple access IDs are specified
-            if (settings.TryGetValue("accessID", out setting) && !string.IsNullOrWhiteSpace(setting))
             {
+                List<string> serverList = new List<string>();
                 List<ushort> accessIDList = new List<ushort>();
-                string[] accessIDs = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] servers = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach (string accessID in accessIDs)
+                foreach (string server in servers)
                 {
-                    if (ushort.TryParse(accessID.Trim(), out ushort id))
-                        accessIDList.Add(id);
+                    string[] parts = server.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (parts.Length == 0)
+                        continue;
+
+                    if (parts.Length < 2 || !ushort.TryParse(parts[1], out ushort accessID))
+                        accessID = defaultAccessID;
+
+                    serverList.Add(parts[0].Trim());
+                    accessIDList.Add(accessID);
                 }
 
-                if (accessIDList.Count > 0 && accessIDList.Count == m_serverList.Length)
-                {
-                    m_accessIDList = accessIDList.ToArray();
-                }
-                else
-                {
-                    // Choose first value in list as access ID when there is a length mismatch
-                    m_accessIDList = new[] { accessIDList.Count > 0 ? accessIDList[0] : (ushort)1 };
+                settings["server"] = string.Join(",", serverList);
+                ConnectionString = settings.JoinKeyValuePairs();
 
-                    // Only display a warning when more than one access ID code is specified and there is a length mismatch with server connection list,
-                    // the more common case is to define the same single access ID code for multiple server connections
-                    if (accessIDList.Count > 1)
-                    {
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException(
-                                $"Configured \"server\" connection list \"{string.Join(",", m_serverList)}\" with {m_serverList.Length:N0} entries does not match " +
-                                $"configured \"accessID\" list \"{string.Join(",", accessIDList)}\" with {accessIDList.Count:N0} entries, as parsed. " +
-                                $"Access ID used for all connections will be {m_accessIDList[0]:N0}."), nameof(Initialize));
-                    }
-                }
+                m_serverList = serverList.Select(server => $"tcp://{server}".ToLower()).ToArray();
+                m_accessIDList = accessIDList.Count == 0 ? new[] { defaultAccessID } : accessIDList.ToArray();
             }
             else
             {
-                m_accessIDList = new[] { (ushort)1 };
+                m_serverList = Array.Empty<string>();
+                m_accessIDList = new[] { defaultAccessID };
             }
 
             m_forceLabelMapping = settings.TryGetValue("forceLabelMapping", out setting) && setting.ParseBoolean();
