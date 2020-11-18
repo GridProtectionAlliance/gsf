@@ -253,7 +253,7 @@ namespace AdapterExplorer
 
                 foreach (string part in parts)
                 {
-                    if (Guid.TryParse(part, out Guid signalID))
+                    if (Guid.TryParse(part.Trim(), out Guid signalID))
                         signalIDs.Add(signalID);
                 }
 

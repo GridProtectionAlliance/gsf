@@ -2818,18 +2818,15 @@ namespace GSF.TimeSeries
             }
             else
             {
-                // See if specific ID for an adapter was requested
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
-
                     string measurements = string.Join(";", adapter.InputMeasurementKeys.Select(key => key.SignalID.ToString()));
 
-                    DisplayResponseMessage(requestInfo, measurements);
-
-                    // Also allow consumers to directly consume message via event in response to a status request
                     if (requestInfo.Request.Arguments.Exists("actionable"))
                         m_serviceHelper.SendActionableResponse(requestInfo, true, null, measurements);
+                    else
+                        DisplayResponseMessage(requestInfo, measurements);
                 }
                 else
                 {
@@ -2870,18 +2867,15 @@ namespace GSF.TimeSeries
             }
             else
             {
-                // See if specific ID for an adapter was requested
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
-
                     string measurements = string.Join(";", adapter.OutputMeasurements.Select(m => m.Key.SignalID.ToString()));
 
-                    DisplayResponseMessage(requestInfo, measurements);
-
-                    // Also allow consumers to directly consume message via event in response to a status request
                     if (requestInfo.Request.Arguments.Exists("actionable"))
                         m_serviceHelper.SendActionableResponse(requestInfo, true, null, measurements);
+                    else
+                        DisplayResponseMessage(requestInfo, measurements);
                 }
                 else
                 {
