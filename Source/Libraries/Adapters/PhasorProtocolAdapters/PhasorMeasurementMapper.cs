@@ -146,6 +146,9 @@ namespace PhasorProtocolAdapters
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
         private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
+        private string[] m_serverList;
+        private ushort[] m_accessIDList;
+        private int m_serverIndex;
         private MissingDataMonitor m_missingDataMonitor;
         private SharedTimer m_dataStreamMonitor;
         private SharedTimer m_measurementCounter;
@@ -219,9 +222,25 @@ namespace PhasorProtocolAdapters
         public bool IsConcentrator { get; private set; }
 
         /// <summary>
-        /// Gets or sets access ID (or ID code) for this device connection which is often necessary in order to make a connection to some phasor protocols.
+        /// Gets the access ID (a.k.a, ID code) for this device connection. Value is often necessary in order to make a connection to some phasor protocols.
         /// </summary>
-        public ushort AccessID { get; set; }
+        /// <remarks>
+        /// This value can mutate when configured with multiple values, i.e., where one access ID code is specified for each target device connection, e.g.:
+        /// <c>server=192.168.1.10:4712,192.168.1.12:4712; accessID=95,96</c>
+        /// </remarks>
+        public ushort AccessID
+        {
+            get
+            {
+                if (m_serverIndex >= 0 && m_serverIndex < m_accessIDList?.Length)
+                    return m_accessIDList[m_serverIndex];
+
+                if (m_accessIDList?.Length > 0)
+                    return m_accessIDList[0];
+
+                return (ushort)1;
+            }
+        }
 
         private IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> StatisticsHelpers => m_labelDefinedDevices != null ? m_definedDevices.Values.Concat(m_labelDefinedDevices.Values) : m_definedDevices.Values;
 
@@ -693,7 +712,7 @@ namespace PhasorProtocolAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat(" Source connection ID code: {0:N0}", AccessID);
+                status.AppendFormat(" Source connection ID code: {0:N0} (index = {1:N0})", AccessID, m_serverIndex);
                 status.AppendLine();
                 status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
                 status.AppendLine();
@@ -908,7 +927,48 @@ namespace PhasorProtocolAdapters
             // Load optional mapper specific connection parameters
             IsConcentrator = settings.TryGetValue("isConcentrator", out string setting) && setting.ParseBoolean();
 
-            AccessID = settings.TryGetValue("accessID", out setting) ? ushort.Parse(setting) : (ushort)1;
+            // Parse any defined server list, this assumes TCP connection since this is currently the only connection type that supports multiple end points
+            if (settings.TryGetValue("server", out setting) && !string.IsNullOrWhiteSpace(setting))
+                m_serverList = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(server => $"tcp://{server.Trim()}".ToLower()).ToArray();
+            else
+                m_serverList = Array.Empty<string>();
+
+            // Parse any defined access ID list, there must be one access ID for each defined server connection when multiple access IDs are specified
+            if (settings.TryGetValue("accessID", out setting) && !string.IsNullOrWhiteSpace(setting))
+            {
+                List<ushort> accessIDList = new List<ushort>();
+                string[] accessIDs = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string accessID in accessIDs)
+                {
+                    if (ushort.TryParse(accessID.Trim(), out ushort id))
+                        accessIDList.Add(id);
+                }
+
+                if (accessIDList.Count > 0 && accessIDList.Count == m_serverList.Length)
+                {
+                    m_accessIDList = accessIDList.ToArray();
+                }
+                else
+                {
+                    // Choose first value in list as access ID when there is a length mismatch
+                    m_accessIDList = new[] { accessIDList.Count > 0 ? accessIDList[0] : (ushort)1 };
+
+                    // Only display a warning when more than one access ID code is specified and there is a length mismatch with server connection list,
+                    // the more common case is to define the same single access ID code for multiple server connections
+                    if (accessIDList.Count > 1)
+                    {
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException(
+                                $"Configured \"server\" connection list \"{string.Join(",", m_serverList)}\" with {m_serverList.Length:N0} entries does not match " +
+                                $"configured \"accessID\" list \"{string.Join(",", accessIDList)}\" with {accessIDList.Count:N0} entries, as parsed. " +
+                                $"Access ID used for all connections will be {m_accessIDList[0]:N0}."), nameof(Initialize));
+                    }
+                }
+            }
+            else
+            {
+                m_accessIDList = new[] { (ushort)1 };
+            }
 
             m_forceLabelMapping = settings.TryGetValue("forceLabelMapping", out setting) && setting.ParseBoolean();
 
@@ -1223,33 +1283,39 @@ namespace PhasorProtocolAdapters
             }
             else
             {
-                // Making a connection to a single device
-                definedDevice = new ConfigurationCell(AccessID);
+                if (m_forceLabelMapping && m_accessIDList.Length > 1)
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Device configuration currently forces label mapping and has {m_accessIDList.Length:N0} access ID codes configured. Only the first access ID, {m_accessIDList[0]:N0}, will be used."), nameof(LoadInputDevices));
 
-                // Used shared mapping name for single device connection if defined - this causes measurement mappings to be associated
-                // with alternate device by caching signal references associated with shared mapping acronym
-                deviceName = string.IsNullOrWhiteSpace(SharedMapping) ? Name.ToNonNullString("[undefined]").Trim() : SharedMapping;
-
-                definedDevice.StationName = deviceName.TruncateRight(definedDevice.MaximumStationNameLength);
-                definedDevice.IDLabel = deviceName.TruncateRight(definedDevice.IDLabelLength);
-                definedDevice.Tag = ID;
-                definedDevice.Source = this;
-
-                // When forcing label mapping we always try to use label for unique lookup instead of ID code
-                if (m_forceLabelMapping)
+                // Making a connection to a single device, accommodating possible multiple access ID codes
+                for (int i = 0; i < (m_forceLabelMapping ? 1 : m_accessIDList.Length); i++)
                 {
-                    if (m_labelDefinedDevices == null)
-                        m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
+                    definedDevice = new ConfigurationCell(m_accessIDList[i]);
 
-                    m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
-                    RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                    // Used shared mapping name for single device connection if defined - this causes measurement mappings to be associated
+                    // with alternate device by caching signal references associated with shared mapping acronym
+                    deviceName = string.IsNullOrWhiteSpace(SharedMapping) ? Name.ToNonNullString("[undefined]").Trim() : SharedMapping;
 
-                    OnStatusMessage(MessageLevel.Info, "Input device is using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.");
-                }
-                else
-                {
-                    m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
-                    RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                    definedDevice.StationName = deviceName.TruncateRight(definedDevice.MaximumStationNameLength);
+                    definedDevice.IDLabel = deviceName.TruncateRight(definedDevice.IDLabelLength);
+                    definedDevice.Tag = ID;
+                    definedDevice.Source = this;
+
+                    // When forcing label mapping we always try to use label for unique lookup instead of ID code
+                    if (m_forceLabelMapping)
+                    {
+                        if (m_labelDefinedDevices == null)
+                            m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
+
+                        m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
+                        RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+
+                        OnStatusMessage(MessageLevel.Info, "Input device is using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.");
+                    }
+                    else
+                    {
+                        m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
+                        RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                    }
                 }
             }
         }
@@ -1856,7 +1922,7 @@ namespace PhasorProtocolAdapters
         private int CountMappedMeasurementsWithError(IDataCell parsedDevice, List<IMeasurement> mappedMeasurements)
         {
             const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
-            Func<MeasurementStateFlags, bool> hasError = stateFlags => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
+            bool hasError(MeasurementStateFlags stateFlags) => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
             IFrequencyValue frequencyValue = parsedDevice.FrequencyValue;
 
             // Ignore frequency measurements when
@@ -1875,6 +1941,7 @@ namespace PhasorProtocolAdapters
 
             int parsedMeasurementCount = 0;
 
+            // ReSharper disable once UselessBinaryOperation
             parsedMeasurementCount += parsedDevice.PhasorValues?.Sum(phasorValue => phasorValue.Measurements.Count(measurement => !double.IsNaN(measurement.Value))) ?? 0;
             parsedMeasurementCount += parsedDevice.DigitalValues?.Sum(digitalValue => digitalValue.Measurements.Count(measurement => !double.IsNaN(measurement.Value))) ?? 0;
             parsedMeasurementCount += parsedDevice.AnalogValues?.Sum(analogValue => analogValue.Measurements.Count(measurement => !double.IsNaN(measurement.Value))) ?? 0;
@@ -1901,6 +1968,7 @@ namespace PhasorProtocolAdapters
 
             int parsedMeasurementCount = 0;
 
+            // ReSharper disable once UselessBinaryOperation
             parsedMeasurementCount += parsedDevice.PhasorValues?.Sum(phasorValue => phasorValue.Measurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))) ?? 0;
             parsedMeasurementCount += parsedDevice.DigitalValues?.Sum(digitalValue => digitalValue.Measurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))) ?? 0;
             parsedMeasurementCount += parsedDevice.AnalogValues?.Sum(analogValue => analogValue.Measurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))) ?? 0;
@@ -2503,6 +2571,31 @@ namespace PhasorProtocolAdapters
 
             if (EnableConnectionErrors)
                 OnProcessException(MessageLevel.Info, new ConnectionException($"Connection attempt failed for {ConnectionInfo}: {ex.Message}", ex));
+
+            // Check for multiple access IDs
+            if (m_accessIDList.Length > 1 && m_frameParser.TransportProtocol == TransportProtocol.Tcp)
+            {
+                // Next server URI is selected by TCP client when a connection exception occurs
+                string serverUri = m_frameParser.CommandChannelServerUri;
+
+                if (!string.IsNullOrWhiteSpace(serverUri))
+                {
+                    m_serverIndex = 0;
+
+                    // Lookup matching server URI
+                    for (int i = 0; i < m_serverList.Length; i++)
+                    {
+                        if (m_serverList[i].Equals(serverUri, StringComparison.Ordinal))
+                        {
+                            m_serverIndex = i;
+                            break;
+                        }
+                    }
+
+                    // Set new access ID for frame parser
+                    m_frameParser.DeviceID = AccessID;
+                }
+            }
 
             // So long as user hasn't requested to stop, keep trying connection
             if (Enabled)
