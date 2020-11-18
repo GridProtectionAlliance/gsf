@@ -59,6 +59,7 @@ namespace AdapterExplorer
         private UnsynchronizedSubscriptionInfo m_throttledSubscription;
         private Guid[] m_inputSignalIDs;
         private Guid[] m_outputSignalIDs;
+        private long m_lastRefresh;
         private bool m_formLoaded;
         private volatile bool m_formClosing;
 
@@ -78,12 +79,9 @@ namespace AdapterExplorer
                 }
             },
             ex => ShowUpdateMessage($"ERROR: Operations queue exception: {ex.Message}"));
-        }
 
-        private void QueueSubscriberOperation(Action operation)
-        {
-            m_subscriberOperationQueue.Enqueue(operation);
-            m_subscriberOperations.RunOnceAsync();
+            groupBoxInputMeasurements.Tag = groupBoxInputMeasurements.Text;
+            groupBoxOutputMeasurements.Tag = groupBoxOutputMeasurements.Text;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -124,7 +122,7 @@ namespace AdapterExplorer
                 InitializeDataGrid(dataGridViewOutputMeasurements);
 
                 InitializeDataSubscriber();
-                LoadAdapters();
+                LoadAdapters(false);
 
                 SetBottomPanelWidths();
 
@@ -174,6 +172,7 @@ namespace AdapterExplorer
                 m_subscriber.ProcessException -= Subscriber_ProcessException;
                 m_subscriber.ConnectionTerminated -= Subscriber_ConnectionTerminated;
                 m_subscriber.NewMeasurements -= Subscriber_NewMeasurements;
+                m_subscriber.ServerConfigurationChanged -= Subscriber_ServerConfigurationChanged;
                 m_subscriber.Dispose();
             }
 
@@ -198,16 +197,22 @@ namespace AdapterExplorer
             if (!Visible || !m_formLoaded)
                 return;
 
-            LoadAdapters();
+            LoadAdapters(false);
             FormElementChanged(sender, e);
+        }
+
+        private bool IsConnected { get; set; }
+
+        private void QueueSubscriberOperation(Action operation)
+        {
+            m_subscriberOperationQueue.Enqueue(operation);
+            m_subscriberOperations.RunOnceAsync();
         }
 
         private void CommonFunctions_ServiceConnectionRefreshed(object sender, EventArgs e)
         {
             ConnectToService();
         }
-
-        private bool IsConnected { get; set; }
 
         private void ConnectToService()
         {
@@ -265,12 +270,13 @@ namespace AdapterExplorer
             if (command.Equals("getinputmeasurements"))
             {
                 m_inputSignalIDs = parseSignalIDs();
-                LoadMeasurements(m_inputSignalIDs, dataGridViewInputMeasurements);
+                LoadMeasurements(m_inputSignalIDs, dataGridViewInputMeasurements, groupBoxInputMeasurements);
             }
             else if (command.Equals("getoutputmeasurements"))
             {
                 m_outputSignalIDs = parseSignalIDs();
-                LoadMeasurements(m_outputSignalIDs, dataGridViewOutputMeasurements);
+                LoadMeasurements(m_outputSignalIDs, dataGridViewOutputMeasurements, groupBoxOutputMeasurements);
+                InitiateSubscribe();
             }
         }
 
@@ -311,8 +317,9 @@ namespace AdapterExplorer
         {
             m_throttledSubscription = new UnsynchronizedSubscriptionInfo(true)
             {
-                LagTime = 0.5D,
-                LeadTime = 1.0D
+                LagTime = 10.0D,
+                LeadTime = 10.0D,
+                PublishInterval = 0.5D
             };
 
             m_subscriber = new DataSubscriber
@@ -327,6 +334,7 @@ namespace AdapterExplorer
             m_subscriber.ConnectionEstablished += Subscriber_ConnectionEstablished;
             m_subscriber.ConnectionTerminated += Subscriber_ConnectionTerminated;
             m_subscriber.NewMeasurements += Subscriber_NewMeasurements;
+            m_subscriber.ServerConfigurationChanged += Subscriber_ServerConfigurationChanged;
 
             m_subscriber.Initialize();
             m_subscriber.Start();
@@ -365,10 +373,26 @@ namespace AdapterExplorer
             if (m_formClosing)
                 return;
 
-            Dictionary<Guid, IMeasurement> receivedMeasurements = e.Argument.ToDictionary(m => m.ID);
+            Dictionary<Guid, IMeasurement> receivedMeasurements = new Dictionary<Guid, IMeasurement>();
+
+            foreach (IMeasurement measurement in e.Argument)
+                receivedMeasurements[measurement.ID] = measurement;
 
             AssignMeasurements(receivedMeasurements, dataGridViewInputMeasurements);
             AssignMeasurements(receivedMeasurements, dataGridViewOutputMeasurements);
+
+            if (new TimeSpan(DateTime.UtcNow.Ticks - m_lastRefresh).TotalSeconds < 1.0D)
+                return;
+
+            BeginInvoke(new Action(dataGridViewInputMeasurements.Refresh));
+            BeginInvoke(new Action(dataGridViewOutputMeasurements.Refresh));
+
+            m_lastRefresh = DateTime.UtcNow.Ticks;
+        }
+
+        private void Subscriber_ServerConfigurationChanged(object sender, EventArgs e)
+        {
+            LoadAdapters(true);
         }
 
         private void InitiateSubscribe()
@@ -390,7 +414,11 @@ namespace AdapterExplorer
             UnsynchronizedSubscriptionInfo subscription = (UnsynchronizedSubscriptionInfo)m_throttledSubscription.Copy();
             subscription.FilterExpression = string.Join(";", signalIDs);
 
-            QueueSubscriberOperation(() => m_subscriber.UnsynchronizedSubscribe(subscription));
+            QueueSubscriberOperation(() =>
+            {
+                m_lastRefresh = 0L;
+                m_subscriber.UnsynchronizedSubscribe(subscription);
+            });
         }
 
         private void AssignMeasurements(Dictionary<Guid, IMeasurement> receivedMeasurements, DataGridView dataGridView)
@@ -406,37 +434,53 @@ namespace AdapterExplorer
                 measurement.Value = receivedMeasurement.AdjustedValue;
                 measurement.Timestamp = receivedMeasurement.Timestamp;
             }
-
-            BeginInvoke(new Action(dataGridView.Refresh));
         }
 
-        private void LoadAdapters()
+        private void LoadAdapters(bool restoreSelectedIndex)
         {
-            comboBoxAdapters.Items.Clear();
-            comboBoxAdapters.Text = "";
+            if (m_formClosing)
+                return;
 
-            void loadAdapters(ITableOperations table)
+            if (InvokeRequired)
             {
-                foreach (IIaonAdapter iaonAdapter in table.QueryRecords("AdapterName"))
-                {
-                    if (iaonAdapter is null)
-                        continue;
-
-                    comboBoxAdapters.Items.Add(iaonAdapter);
-                }
+                BeginInvoke(new Action<bool>(LoadAdapters), restoreSelectedIndex);
             }
+            else
+            {
+                int selectedIndex = comboBoxAdapters.SelectedIndex;
+                comboBoxAdapters.Items.Clear();
+                comboBoxAdapters.Text = "";
 
-            if (checkBoxActionAdapters.Checked)
-                loadAdapters(new TableOperations<IaonActionAdapter>(m_database));
+                void loadAdapters(ITableOperations table)
+                {
+                    foreach (IIaonAdapter iaonAdapter in table.QueryRecords("AdapterName"))
+                    {
+                        if (iaonAdapter is null)
+                            continue;
 
-            if (checkBoxInputAdapters.Checked)
-                loadAdapters(new TableOperations<IaonInputAdapter>(m_database));
+                        comboBoxAdapters.Items.Add(iaonAdapter);
+                    }
+                }
 
-            if (checkBoxOutputAdapters.Checked)
-                loadAdapters(new TableOperations<IaonOutputAdapter>(m_database));
+                if (checkBoxActionAdapters.Checked)
+                    loadAdapters(new TableOperations<IaonActionAdapter>(m_database));
 
-            if (comboBoxAdapters.Items.Count > 0)
-                comboBoxAdapters.SelectedIndex = 0;
+                if (checkBoxInputAdapters.Checked)
+                    loadAdapters(new TableOperations<IaonInputAdapter>(m_database));
+
+                if (checkBoxOutputAdapters.Checked)
+                    loadAdapters(new TableOperations<IaonOutputAdapter>(m_database));
+
+                int itemCount = comboBoxAdapters.Items.Count;
+
+                if (itemCount == 0)
+                    return;
+
+                if (restoreSelectedIndex && selectedIndex > -1 && selectedIndex < itemCount)
+                    comboBoxAdapters.SelectedIndex = selectedIndex;
+                else
+                    comboBoxAdapters.SelectedIndex = 0;
+            }
         }
 
         private void AssignInputMeasurements(Dictionary<string, string> settings)
@@ -454,7 +498,7 @@ namespace AdapterExplorer
                 Array.Empty<MeasurementKey>();
 
             m_inputSignalIDs = inputMeasurementKeys.Select(k => k.SignalID).ToArray();
-            LoadMeasurements(m_inputSignalIDs, dataGridViewInputMeasurements);
+            LoadMeasurements(m_inputSignalIDs, dataGridViewInputMeasurements, groupBoxInputMeasurements);
         }
 
         private void AssignOutputMeasurements(Dictionary<string, string> settings)
@@ -464,17 +508,17 @@ namespace AdapterExplorer
                 Array.Empty<MeasurementKey>();
 
             m_outputSignalIDs = outputMeasurementKeys.Select(k => k.SignalID).ToArray();
-            LoadMeasurements(m_outputSignalIDs, dataGridViewOutputMeasurements);
+            LoadMeasurements(m_outputSignalIDs, dataGridViewOutputMeasurements, groupBoxOutputMeasurements);
         }
 
-        private void LoadMeasurements(Guid[] signalIDs, DataGridView dataGridView)
+        private void LoadMeasurements(Guid[] signalIDs, DataGridView dataGridView, GroupBox groupBox)
         {
             if (m_formClosing)
                 return;
 
             if (InvokeRequired)
             {
-                BeginInvoke(new Action<Guid[], DataGridView>(LoadMeasurements), signalIDs, dataGridView);
+                BeginInvoke(new Action<Guid[], DataGridView, GroupBox>(LoadMeasurements), signalIDs, dataGridView, groupBox);
             }
             else
             {
@@ -483,16 +527,15 @@ namespace AdapterExplorer
                 string signalIDQuery = signalIDs.Length == 0 ? null :
                     $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
 
-                IEnumerable<Measurement> measurements = signalIDQuery is null ?
-                    Enumerable.Empty<Measurement>() :
-                    measurementTable.QueryRecords("PointTag", new RecordRestriction(signalIDQuery));
+                Measurement[] measurements = signalIDQuery is null ?
+                    Array.Empty<Measurement>() :
+                    measurementTable.QueryRecords("PointTag", new RecordRestriction(signalIDQuery)).ToArray();
 
                 dataGridView.DataSource = null;
                 dataGridView.Rows.Clear();
                 dataGridView.Refresh();
 
-                // ReSharper disable PossibleMultipleEnumeration
-                if (measurements.Any())
+                if (measurements.Length > 0)
                 {
                     BindingSource source = new BindingSource();
 
@@ -501,9 +544,8 @@ namespace AdapterExplorer
 
                     dataGridView.DataSource = source;
                 }
-                // ReSharper restore PossibleMultipleEnumeration
 
-                InitiateSubscribe();
+                groupBox.Text = $"{groupBox.Tag} ({measurements.Length:N0}):";
             }
         }
 
@@ -540,6 +582,7 @@ namespace AdapterExplorer
                     // If service is not running, load configured measurements from database - this will work when service is not connected, but is not exhaustive
                     AssignInputMeasurements(settings);
                     AssignOutputMeasurements(settings);
+                    InitiateSubscribe();
                 }
             }
 
