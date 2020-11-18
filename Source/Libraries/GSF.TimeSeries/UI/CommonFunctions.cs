@@ -700,7 +700,7 @@ namespace GSF.TimeSeries.UI
             {
                 try
                 {
-                    if ((object)s_windowsServiceClient != null && s_retryServiceConnection)
+                    if (!(s_windowsServiceClient is null) && s_retryServiceConnection)
                     {
                         s_windowsServiceClient.Helper.Connect();
 
@@ -710,7 +710,7 @@ namespace GSF.TimeSeries.UI
                         {
                             ISecurityProvider provider = s_currentPrincipal.Identity.Provider;
 
-                            if (provider.SecurePassword.Length > 0)
+                            if (provider.SecurePassword?.Length > 0)
                             {
                                 s_windowsServiceClient.Helper.Disconnect();
                                 s_windowsServiceClient.Helper.SecurePassword = provider.SecurePassword;
