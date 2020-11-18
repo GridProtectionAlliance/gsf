@@ -34,10 +34,18 @@ using GSF.Console;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
+using GSF.TimeSeries;
 using Microsoft.VisualBasic.ApplicationServices;
 
 namespace AdapterExplorer
 {
+    public enum ExitCode
+    {
+        Success,
+        DatabaseConnectFailure,
+        SecurityValidationFailure
+    }
+
     public enum Status
     {
         Disconnected,
@@ -68,6 +76,7 @@ namespace AdapterExplorer
                     mainForm.BeginInvoke(new Action(() =>
                     {
                         MessageBox.Show(SplashScreen, $"Failed to validate security for \"{mainForm.SecurityPrincipal.Identity.Provider.UserData.LoginID}\" in database configured in \"{Program.HostConfigFileName}\": {ex.Message}", "Security Validation Error", MessageBoxButtons.OK);
+                        Environment.ExitCode = (int)ExitCode.SecurityValidationFailure;
                         Application.Exit();
                     }));
                 };
@@ -84,7 +93,7 @@ namespace AdapterExplorer
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static int Main()
         {
             string localPath = FilePath.GetAbsolutePath("");
             string logPath = string.Format("{0}{1}Logs{1}", localPath, Path.DirectorySeparatorChar);
@@ -110,9 +119,26 @@ namespace AdapterExplorer
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            
+
+            try
+            {
+                using (AdoDataConnection database = Program.GetDatabaseConnection())
+                {
+                    if (database is null)
+                        throw new InvalidOperationException("No configured database connection string and data provider string found.");
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Error, "Database Connection", exception: ex);
+                MessageBox.Show($"Failed to connect to database defined in \"{Program.HostConfigFileName}\":{Environment.NewLine}{ex.Message}", "Database Connection Error", MessageBoxButtons.OK);
+                return (int)ExitCode.DatabaseConnectFailure;
+            }
+
             AdapterExplorerApplication app = new AdapterExplorerApplication();
             app.Run(Environment.GetCommandLineArgs());
+            return (int)ExitCode.Success;
         }
 
         public static ushort GetGEPPort()

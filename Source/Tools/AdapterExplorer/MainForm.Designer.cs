@@ -247,6 +247,7 @@ namespace AdapterExplorer
             this.dataGridViewInputMeasurements.ShowRowErrors = false;
             this.dataGridViewInputMeasurements.Size = new System.Drawing.Size(410, 439);
             this.dataGridViewInputMeasurements.TabIndex = 0;
+            this.dataGridViewInputMeasurements.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.DataGridView_DataError);
             // 
             // groupBoxOutputMeasurements
             // 
@@ -277,6 +278,7 @@ namespace AdapterExplorer
             this.dataGridViewOutputMeasurements.ShowRowErrors = false;
             this.dataGridViewOutputMeasurements.Size = new System.Drawing.Size(416, 439);
             this.dataGridViewOutputMeasurements.TabIndex = 1;
+            this.dataGridViewOutputMeasurements.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.DataGridView_DataError);
             // 
             // imageListStatus
             // 

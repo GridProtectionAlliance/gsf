@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -35,6 +36,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Diagnostics;
 using GSF.ServiceProcess;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Transport;
@@ -51,6 +53,8 @@ namespace AdapterExplorer
         private AdoDataConnection m_database;
         private WindowsServiceClient m_windowsServiceClient;
         private Settings m_settings;
+        private readonly ConcurrentQueue<Action> m_subscriberOperationQueue;
+        private readonly ShortSynchronizedOperation m_subscriberOperations;
         private DataSubscriber m_subscriber;
         private UnsynchronizedSubscriptionInfo m_throttledSubscription;
         private Guid[] m_inputSignalIDs;
@@ -61,48 +65,58 @@ namespace AdapterExplorer
         public MainForm()
         {
             InitializeComponent();
+            
             m_log = Program.Log;
+
+            m_subscriberOperationQueue = new ConcurrentQueue<Action>();
+            m_subscriberOperations = new ShortSynchronizedOperation(() =>
+            {
+                while (!m_formClosing && m_subscriberOperationQueue.TryDequeue(out Action operation))
+                {
+                    if (m_subscriber.IsConnected)
+                        operation();
+                }
+            },
+            ex => ShowUpdateMessage($"ERROR: Operations queue exception: {ex.Message}"));
+        }
+
+        private void QueueSubscriberOperation(Action operation)
+        {
+            m_subscriberOperationQueue.Enqueue(operation);
+            m_subscriberOperations.RunOnceAsync();
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
             try
             {
+                // Set current principal and attempt host service connection
                 CommonFunctions.CurrentPrincipal = SecurityPrincipal;
-                Text += " - " + SecurityPrincipal.Identity.Provider.UserData.LoginID;
-
-                m_database = Program.GetDatabaseConnection();
-                MeasurementKey.EstablishDefaultCache(m_database.Connection, m_database.AdapterType);
+                CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
+                Program.HostNodeID.SetAsCurrentNodeID();
             }
             catch (Exception ex)
             {
-                m_log.Publish(MessageLevel.Error, "FormLoad: Database Connection", exception: ex);
-
-            #if DEBUG
-                throw;
-            #else
-                MessageBox.Show(this, $"Failed to connect to database defined in \"{Program.HostConfigFileName}\":{Environment.NewLine}{ex.Message}", "Database Connection Error", MessageBoxButtons.OK);
-            #endif
+                ShowUpdateMessage($"ERROR: Failed to initialize service connection: {ex.Message}");
+                m_log.Publish(MessageLevel.Error, "Initialize Service Connection", exception: ex);
             }
 
             try
             {
+                Text += " - " + SecurityPrincipal.Identity.Provider.UserData.LoginID;
+                
+                m_database = Program.GetDatabaseConnection();
+
+                if (m_database is null)
+                    throw new InvalidOperationException("Failed to connect to database.");
+
+                MeasurementKey.EstablishDefaultCache(m_database.Connection, m_database.AdapterType);
+
                 // Load current settings registering a symbolic reference to this form instance for use by default value expressions
                 m_settings = new Settings(new Dictionary<string, object> { { "Form", this } }.RegisterSymbols());
 
                 // Restore last window size/location
                 this.RestoreLayout();
-
-                CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
-
-                try
-                {
-                    Program.HostNodeID.SetAsCurrentNodeID();
-                }
-                catch (Exception ex)
-                {
-                    ShowUpdateMessage($"ERROR: Failed to initialize service connection: {ex.Message}");
-                }
 
                 LoadDataSource();
 
@@ -118,6 +132,7 @@ namespace AdapterExplorer
             }
             catch (Exception ex)
             {
+                ShowUpdateMessage($"ERROR: Failed during load: {ex.Message}");
                 m_log.Publish(MessageLevel.Error, "FormLoad", exception: ex);
 
             #if DEBUG
@@ -192,6 +207,8 @@ namespace AdapterExplorer
             ConnectToService();
         }
 
+        private bool IsConnected { get; set; }
+
         private void ConnectToService()
         {
             ClientHelper helper = m_windowsServiceClient?.Helper;
@@ -225,45 +242,40 @@ namespace AdapterExplorer
             if (!ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out _))
                 return;
 
-            string parseSignalIDQuery()
+            Tuple<Guid[], string> parseSignalIDQuery()
             {
                 string[] parts = (e.Argument?.Message ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (parts.Length == 0)
                     return null;
 
-                List<string> signalIDs = new List<string>(parts.Length);
+                List<Guid> signalIDs = new List<Guid>(parts.Length);
 
                 foreach (string part in parts)
                 {
                     if (Guid.TryParse(part, out Guid signalID))
-                        signalIDs.Add(signalID.ToString());
+                        signalIDs.Add(signalID);
                 }
 
-                return signalIDs.Count == 0 ? null : $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
+                Guid[] signalIDArray = signalIDs.ToArray();
+                string signalIDQuery = signalIDs.Count == 0 ? null : $"SignalID IN ({string.Join(",", signalIDs.Select(id => $"'{id}'"))})";
+
+                return new Tuple<Guid[], string>(signalIDArray, signalIDQuery);
             }
 
             string command = sourceCommand.ToLower().Trim();
 
             if (command.Equals("getinputmeasurements"))
             {
-                string signalIDQuery = parseSignalIDQuery();
-
-                if (signalIDQuery is null)
-                    return;
-
-                LoadMeasurements(signalIDQuery, dataGridViewInputMeasurements);
-                InitiateSubscribe();
+                Tuple<Guid[], string> parsedSignalIDs = parseSignalIDQuery();
+                m_inputSignalIDs = parsedSignalIDs?.Item1 ?? Array.Empty<Guid>();
+                LoadMeasurements(parsedSignalIDs?.Item2, dataGridViewInputMeasurements);
             }
             else if (command.Equals("getoutputmeasurements"))
             {
-                string signalIDQuery = parseSignalIDQuery();
-
-                if (signalIDQuery is null)
-                    return;
-
-                LoadMeasurements(signalIDQuery, dataGridViewOutputMeasurements);
-                InitiateSubscribe();
+                Tuple<Guid[], string> parsedSignalIDs = parseSignalIDQuery();
+                m_outputSignalIDs = parsedSignalIDs?.Item1 ?? Array.Empty<Guid>();
+                LoadMeasurements(parsedSignalIDs?.Item2, dataGridViewOutputMeasurements);
             }
         }
 
@@ -288,6 +300,7 @@ namespace AdapterExplorer
             }
             else
             {
+                IsConnected = status == Status.Connected;
                 pictureBoxStatus.Image = imageListStatus.Images[(int)status];
                 toolTip.SetToolTip(pictureBoxStatus, status.ToString());
             }
@@ -349,7 +362,7 @@ namespace AdapterExplorer
                 return;
 
             ShowUpdateMessage("Connection to publisher was terminated, restarting connection cycle...");
-            m_subscriber.Start();
+            QueueSubscriberOperation(() => m_subscriber.Start());
         }
 
         private void Subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
@@ -361,6 +374,28 @@ namespace AdapterExplorer
 
             AssignMeasurements(receivedMeasurements, dataGridViewInputMeasurements);
             AssignMeasurements(receivedMeasurements, dataGridViewOutputMeasurements);
+        }
+
+        private void InitiateSubscribe()
+        {
+            bool hasInputIDs = m_inputSignalIDs?.Length > 0;
+            bool hasOutputIDs = m_outputSignalIDs?.Length > 0;
+
+            if (!hasInputIDs && !hasOutputIDs)
+                return;
+
+            HashSet<Guid> signalIDs = new HashSet<Guid>();
+
+            if (hasInputIDs)
+                signalIDs.UnionWith(m_inputSignalIDs);
+
+            if (hasOutputIDs)
+                signalIDs.UnionWith(m_outputSignalIDs);
+
+            UnsynchronizedSubscriptionInfo subscription = (UnsynchronizedSubscriptionInfo)m_throttledSubscription.Copy();
+            subscription.FilterExpression = string.Join(";", signalIDs);
+
+            QueueSubscriberOperation(() => m_subscriber.UnsynchronizedSubscribe(subscription));
         }
 
         private void AssignMeasurements(Dictionary<Guid, IMeasurement> receivedMeasurements, DataGridView dataGridView)
@@ -460,19 +495,27 @@ namespace AdapterExplorer
             {
                 TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(m_database);
 
-                Measurement[] measurements = signalIDQuery is null ?
-                    Array.Empty<Measurement>() :
-                    measurementTable.QueryRecords("PointTag", new RecordRestriction(signalIDQuery)).ToArray();
-
-                BindingSource source = new BindingSource();
-
-                foreach (Measurement measurement in measurements)
-                    source.Add(measurement);
+                IEnumerable<Measurement> measurements = signalIDQuery is null ?
+                    Enumerable.Empty<Measurement>() :
+                    measurementTable.QueryRecords("PointTag", new RecordRestriction(signalIDQuery));
 
                 dataGridView.DataSource = null;
                 dataGridView.Rows.Clear();
                 dataGridView.Refresh();
-                dataGridView.DataSource = source;
+
+                // ReSharper disable PossibleMultipleEnumeration
+                if (measurements.Any())
+                {
+                    BindingSource source = new BindingSource();
+
+                    foreach (Measurement measurement in measurements)
+                        source.Add(measurement);
+
+                    dataGridView.DataSource = source;
+                }
+                // ReSharper restore PossibleMultipleEnumeration
+
+                InitiateSubscribe();
             }
         }
 
@@ -486,49 +529,33 @@ namespace AdapterExplorer
 
             Dictionary<string, string> settings = iaonAdapter.ConnectionString?.ParseKeyValuePairs();
 
-            m_subscriber.Unsubscribe();
+            QueueSubscriberOperation(() => m_subscriber.Unsubscribe());
             ClearUpdateMessages();
 
-            if (!(settings is null))
+            if (IsConnected)
             {
-                // Get configured measurements - this will work even if service is not running
-                AssignInputMeasurements(settings);
-                AssignOutputMeasurements(settings);
-                InitiateSubscribe();
+                try
+                {
+                    // When connected to service, request dynamically assigned runtime measurements directly from adapter
+                    CommonFunctions.SendCommandToService($"GetInputMeasurements {iaonAdapter.AdapterName} -actionable");
+                    CommonFunctions.SendCommandToService($"GetOutputMeasurements {iaonAdapter.AdapterName} -actionable");
+                }
+                catch (Exception ex)
+                {
+                    ShowUpdateMessage($"ERROR: Failed to send command to service: {ex.Message}");
+                }
+            }
+            else
+            {
+                if (!(settings is null))
+                {
+                    // If service is not running, load configured measurements from database - this will work when service is not connected, but is not exhaustive
+                    AssignInputMeasurements(settings);
+                    AssignOutputMeasurements(settings);
+                }
             }
 
             textBoxAdapterInfo.Text = $"Adapter Info: {iaonAdapter.TypeName} [{iaonAdapter.AssemblyName}]{Environment.NewLine}{Environment.NewLine}Connection String:{Environment.NewLine}{Environment.NewLine}{iaonAdapter.ConnectionString}";
-
-            // Also request dynamically assigned runtime measurements from adapter
-            try
-            {
-                CommonFunctions.SendCommandToService($"GetInputMeasurements {iaonAdapter.AdapterName} -actionable");
-                CommonFunctions.SendCommandToService($"GetOutputMeasurements {iaonAdapter.AdapterName} -actionable");
-            }
-            catch (Exception ex)
-            {
-                ShowUpdateMessage($"ERROR: Failed to send command to service: {ex.Message}");
-            }
-        }
-
-        private void InitiateSubscribe()
-        {
-            bool hasInputIDs = m_inputSignalIDs?.Length > 0;
-            bool hasOutputIDs = m_outputSignalIDs?.Length > 0;
-
-            if (!hasInputIDs && !hasOutputIDs)
-                return;
-
-            HashSet<Guid> signalIDs = new HashSet<Guid>();
-
-            if (hasInputIDs)
-                signalIDs.UnionWith(m_inputSignalIDs);
-
-            if (hasOutputIDs)
-                signalIDs.UnionWith(m_outputSignalIDs);
-
-            m_throttledSubscription.FilterExpression = string.Join(";", signalIDs);
-            m_subscriber.UnsynchronizedSubscribe(m_throttledSubscription);
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
@@ -603,6 +630,11 @@ namespace AdapterExplorer
                 FillWeight = 30,
                 CellTemplate = new DataGridViewTextBoxCell()
             });
+        }
+
+        private void DataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            ShowUpdateMessage($"ERROR: Data grid view exception: {e.Exception?.Message}");
         }
 
         private void ShowUpdateMessage(string message, bool log = true)

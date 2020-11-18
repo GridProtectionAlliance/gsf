@@ -29,13 +29,8 @@ using GSF.Data.Model;
 
 namespace AdapterExplorer.Model
 {
-    public class Measurement : INotifyPropertyChanged
+    public class Measurement
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private double m_value;
-        private DateTime m_timestamp;
-
         [PrimaryKey(true)]
         public int PointID { get; set; }
 
@@ -68,32 +63,10 @@ namespace AdapterExplorer.Model
         public double Multiplier { get; set; }
 
         [NonRecordField]
-        public double Value
-        {
-            get => m_value;
-            set
-            {
-                if (m_value == value)
-                    return;
-
-                m_value = value;
-                OnPropertyChanged("Value");
-            }
-        }
+        public double Value { get; set; }
 
         [NonRecordField]
-        public DateTime Timestamp
-        {
-            get => m_timestamp;
-            set
-            {
-                if (m_timestamp == value)
-                    return;
-
-                m_timestamp = value;
-                OnPropertyChanged("Timestamp");
-            }
-        }
+        public DateTime Timestamp { get; set; }
 
         public string Description { get; set; }
 
@@ -133,8 +106,5 @@ namespace AdapterExplorer.Model
         [DefaultValueExpression("this.CreatedBy", EvaluationOrder = 1)]
         [UpdateValueExpression("UserInfo.CurrentUserID")]
         public string UpdatedBy { get; set; }
-
-        public void OnPropertyChanged(string propertyName) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
