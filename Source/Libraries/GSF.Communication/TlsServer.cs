@@ -704,7 +704,7 @@ namespace GSF.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            if (!TryGetClient(clientID, out TransportProvider<TlsSocket> tlsClient))
+            if (!TryGetClient(clientID, out TransportProvider<TlsSocket> tlsClient) || tlsClient is null)
                 return;
 
             try
@@ -1203,11 +1203,14 @@ namespace GSF.Communication
             Tuple<Guid, bool> asyncState = (Tuple<Guid, bool>)asyncResult.AsyncState;
             bool waitingForHeader = asyncState.Item2;
 
-            if (!TryGetClient(asyncState.Item1, out TransportProvider<TlsSocket> client))
+            if (!TryGetClient(asyncState.Item1, out TransportProvider<TlsSocket> client) || client is null)
                 return;
 
             try
             {
+                if (client.Provider?.SslStream is null)
+                    return;
+
                 // Update statistics and pointers.
                 client.Statistics.UpdateBytesReceived(client.Provider.SslStream.EndRead(asyncResult));
                 client.BytesReceived += client.Statistics.LastBytesReceived;
