@@ -249,20 +249,20 @@ namespace AdapterExplorer
 
             Guid[] parseSignalIDs()
             {
-                string[] parts = (e.Argument?.Message ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-
-                if (parts.Length == 0)
-                    return Array.Empty<Guid>();
-
-                List<Guid> signalIDs = new List<Guid>(parts.Length);
-
-                foreach (string part in parts)
+                try
                 {
-                    if (Guid.TryParse(part.Trim(), out Guid signalID))
-                        signalIDs.Add(signalID);
-                }
+                    List<object> attachments = e.Argument.Attachments;
 
-                return signalIDs.ToArray();
+                    if (attachments is null || attachments.Count < 2 || !(attachments[0] is byte[][] signalIDs))
+                        return Array.Empty<Guid>();
+
+                    return signalIDs.Select(bytes => new Guid(bytes)).ToArray();
+                }
+                catch (Exception ex)
+                {
+                    m_log.Publish(MessageLevel.Info, "Parse actionable service response with Guid buffers", exception: ex);
+                    return Array.Empty<Guid>();
+                }
             }
 
             string command = sourceCommand.ToLower().Trim();
