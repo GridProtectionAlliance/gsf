@@ -469,7 +469,7 @@ namespace GSF.TimeSeries
 
             m_reloadConfigQueue.Start();
 
-#if !MONO
+        #if !MONO
             try
             {
                 // Attempt to assign desired process priority. Note that process will require SeIncreaseBasePriorityPrivilege or 
@@ -480,7 +480,7 @@ namespace GSF.TimeSeries
             {
                 LogException(ex);
             }
-#endif
+        #endif
         }
 
         /// <summary>
@@ -609,7 +609,7 @@ namespace GSF.TimeSeries
         protected virtual void ServiceStoppingHandler(object sender, EventArgs e)
         {
             // Dispose system health exporter
-            if ((object)m_healthExporter != null)
+            if (!(m_healthExporter is null))
             {
                 m_healthExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_healthExporter);
@@ -620,7 +620,7 @@ namespace GSF.TimeSeries
             }
 
             // Dispose system status exporter
-            if ((object)m_statusExporter != null)
+            if (!(m_statusExporter is null))
             {
                 m_statusExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_statusExporter);
@@ -631,7 +631,7 @@ namespace GSF.TimeSeries
             }
 
             // Dispose reload config queue
-            if ((object)m_reloadConfigQueue != null)
+            if (!(m_reloadConfigQueue is null))
             {
                 m_reloadConfigQueue.ProcessException -= m_iaonSession.ProcessExceptionHandler;
                 m_reloadConfigQueue.Dispose();
@@ -639,14 +639,14 @@ namespace GSF.TimeSeries
             }
 
             // Dispose reporting processes
-            if ((object)m_reportingProcesses != null)
+            if (!(m_reportingProcesses is null))
             {
                 m_serviceHelper.ServiceComponents.Remove(m_reportingProcesses);
                 m_reportingProcesses = null;
             }
 
             // Dispose Iaon session
-            if ((object)m_iaonSession != null)
+            if (!(m_iaonSession is null))
             {
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
@@ -660,7 +660,7 @@ namespace GSF.TimeSeries
             }
 
             // Dispose of run-time log
-            if ((object)m_runTimeLog != null)
+            if (!(m_runTimeLog is null))
             {
                 m_serviceHelper.ServiceComponents.Remove(m_runTimeLog);
                 m_runTimeLog.ProcessException -= ProcessExceptionHandler;
@@ -674,19 +674,19 @@ namespace GSF.TimeSeries
             m_serviceHelper.UpdatedStatus -= UpdatedStatusHandler;
             m_serviceHelper.LoggedException -= LoggedExceptionHandler;
 
-            if ((object)m_serviceHelper.StatusLog != null)
+            if (!(m_serviceHelper.StatusLog is null))
             {
                 m_serviceHelper.StatusLog.Flush();
                 m_serviceHelper.StatusLog.LogException -= StatusLogExceptionHandler;
             }
 
-            if ((object)m_serviceHelper.ErrorLogger != null && (object)m_serviceHelper.ErrorLogger.ErrorLog != null)
+            if (!(m_serviceHelper.ErrorLogger?.ErrorLog is null))
             {
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= ErrorLogExceptionHandler;
             }
 
-            if ((object)m_serviceHelper.ConnectionErrorLogger != null && (object)m_serviceHelper.ConnectionErrorLogger.ErrorLog != null)
+            if (!(m_serviceHelper.ConnectionErrorLogger?.ErrorLog is null))
             {
                 m_serviceHelper.ConnectionErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException -= ConnectionErrorLogExceptionHandler;
@@ -700,17 +700,11 @@ namespace GSF.TimeSeries
             Dispose();
         }
 
-        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
-        {
-            if ((object)UpdatedStatus != null)
-                UpdatedStatus(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
-        }
+        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e) => 
+            UpdatedStatus?.Invoke(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
 
-        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e)
-        {
-            if ((object)LoggedException != null)
-                LoggedException(sender, new EventArgs<Exception>(e.Argument));
-        }
+        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e) => 
+            LoggedException?.Invoke(sender, new EventArgs<Exception>(e.Argument));
 
         #endregion
 
@@ -905,17 +899,14 @@ namespace GSF.TimeSeries
 
         private void ExecuteReloadConfig(Tuple<string, Action<bool>>[] items)
         {
-            List<string> requestTypes;
-            List<string> distinctRequestsTypes;
-
             DataSet configuration = null;
             bool systemConfigurationLoaded = false;
 
-            requestTypes = items
+            List<string> requestTypes = items
                 .Select(tuple => tuple.Item1)
                 .ToList();
 
-            distinctRequestsTypes = requestTypes
+            List<string> distinctRequestsTypes = requestTypes
                 .Distinct()
                 .OrderBy(type => requestTypes.LastIndexOf(type))
                 .ToList();
@@ -930,7 +921,7 @@ namespace GSF.TimeSeries
                     configuration = GetConfigurationDataSet();
 
                     // Update data source on all adapters in all collections
-                    if ((object)configuration != null)
+                    if (!(configuration is null))
                         PropagateDataSource(configuration);
                 }
                 else if (type == "Augmented")
@@ -939,7 +930,7 @@ namespace GSF.TimeSeries
                     configuration = AugmentConfigurationDataSet(DataSource);
 
                     // Update data source on all adapters in all collections
-                    if ((object)configuration != null)
+                    if (!(configuration is null))
                         PropagateDataSource(configuration);
                 }
                 else if (type == "BinaryCache")
@@ -948,7 +939,7 @@ namespace GSF.TimeSeries
                     configuration = GetBinaryCachedConfigurationDataSet();
 
                     // Update data source on all adapters in all collections
-                    if ((object)configuration != null)
+                    if (!(configuration is null))
                         PropagateDataSource(configuration);
                 }
                 else if (type == "XmlCache")
@@ -957,7 +948,7 @@ namespace GSF.TimeSeries
                     configuration = GetXMLCachedConfigurationDataSet();
 
                     // Update data source on all adapters in all collections
-                    if ((object)configuration != null)
+                    if (!(configuration is null))
                         PropagateDataSource(configuration);
                 }
                 else if (type == "Startup")
@@ -975,7 +966,7 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        callback(systemConfigurationLoaded || (object)configuration != null);
+                        callback(systemConfigurationLoaded || !(configuration is null));
                     }
                     catch (Exception ex)
                     {
@@ -992,43 +983,33 @@ namespace GSF.TimeSeries
         // Load the system configuration data set
         private bool LoadStartupConfiguration()
         {
-            DataSet configuration;
-            bool loadedFromCache;
-
             // If cached configuration is not preferred,
             // load system configuration normally
             if (!m_preferCachedConfiguration)
                 return LoadSystemConfiguration();
 
             // Cached configuration is preferred, so start by loading cached configuration
-            loadedFromCache = true;
-            configuration = GetBinaryCachedConfigurationDataSet();
-
-            if ((object)configuration == null)
-                configuration = GetXMLCachedConfigurationDataSet();
+            bool loadedFromCache = true;
+            DataSet configuration = GetBinaryCachedConfigurationDataSet() ?? GetXMLCachedConfigurationDataSet();
 
             // If cached configuration failed to load,
             // load from regular configuration data source after all
-            if ((object)configuration == null)
+            if (configuration is null)
             {
                 loadedFromCache = false;
                 configuration = GetConfigurationDataSet();
             }
 
-            if ((object)configuration != null)
-            {
-                // Update data source on all adapters in all collections
-                if (PropagateDataSource(configuration))
-                {
-                    // Cache the configuration if it wasn't already loaded from a cache
-                    if (!loadedFromCache)
-                        CacheCurrentConfiguration(configuration);
+            // Update data source on all adapters in all collections
+            if (configuration is null || !PropagateDataSource(configuration))
+                return false;
 
-                    return true;
-                }
-            }
+            // Cache the configuration if it wasn't already loaded from a cache
+            if (!loadedFromCache)
+                CacheCurrentConfiguration(configuration);
 
-            return false;
+            return true;
+
         }
 
         // Load the system configuration data set
@@ -1049,15 +1030,14 @@ namespace GSF.TimeSeries
                 // If the configuration is a database configuration, make sure
                 // to open the database before we start so we're not constantly
                 // opening and closing connections to the database
-                if ((object)dbConfigurationLoader != null)
-                    dbConfigurationLoader.Open();
+                dbConfigurationLoader?.Open();
 
                 if (m_configurationLoader.CanAugment)
                 {
                     // Get the current running configuration
                     configuration = DataSource;
 
-                    if ((object)configuration != null)
+                    if (!(configuration is null))
                     {
                         // Existing configuration is available so we attempt to augment that
                         DisplayStatusMessage("Attempting to augment existing configuration data set...", UpdateType.Information);
@@ -1069,7 +1049,7 @@ namespace GSF.TimeSeries
                         binaryCache = GetBinaryCachedConfigurationDataSet();
                         binaryCacheLoadAttempted = true;
 
-                        if ((object)binaryCache != null)
+                        if (!(binaryCache is null))
                         {
                             // Binary cached configuration is available so we attempt to augment that
                             DisplayStatusMessage("Attempting to augment binary cached configuration data set...", UpdateType.Information);
@@ -1081,7 +1061,7 @@ namespace GSF.TimeSeries
                             xmlCache = GetXMLCachedConfigurationDataSet();
                             xmlCacheLoadAttempted = true;
 
-                            if ((object)xmlCache != null)
+                            if (!(xmlCache is null))
                             {
                                 // XML cached configuration is available so we attempt to augment that
                                 DisplayStatusMessage("Attempting to augment XML cached configuration data set...", UpdateType.Information);
@@ -1091,48 +1071,36 @@ namespace GSF.TimeSeries
                     }
                 }
 
-                if ((object)configuration == null)
+                if (configuration is null)
                 {
                     // Either we cannot augment configuration or augmentation failed,
                     // so we attempt to load the whole configuration from the source
                     configuration = GetConfigurationDataSet();
                 }
 
-                if ((object)configuration == null)
+                if (configuration is null)
                 {
                     // If all else fails, load configuration from the binary cache
                     loadedFromCache = true;
-
-                    if (binaryCacheLoadAttempted)
-                        configuration = binaryCache;
-                    else
-                        configuration = GetBinaryCachedConfigurationDataSet();
+                    configuration = binaryCacheLoadAttempted ? binaryCache : GetBinaryCachedConfigurationDataSet();
                 }
 
-                if ((object)configuration == null)
+                if (configuration is null)
                 {
                     // If we even failed to load from the
                     // binary cache, load from the XML cache
-                    if (xmlCacheLoadAttempted)
-                        configuration = xmlCache;
-                    else
-                        configuration = GetXMLCachedConfigurationDataSet();
+                    configuration = xmlCacheLoadAttempted ? xmlCache : GetXMLCachedConfigurationDataSet();
                 }
 
-                if ((object)configuration != null)
-                {
-                    // Update data source on all adapters in all collections
-                    if (PropagateDataSource(configuration))
-                    {
-                        // Cache the configuration if it wasn't already loaded from a cache
-                        if (!loadedFromCache)
-                            CacheCurrentConfiguration(configuration);
+                // Attempt to update data source on all adapters in all collections
+                if (configuration is null || !PropagateDataSource(configuration))
+                    return false;
 
-                        return true;
-                    }
-                }
+                // Cache the configuration if it wasn't already loaded from a cache
+                if (!loadedFromCache)
+                    CacheCurrentConfiguration(configuration);
 
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -1145,21 +1113,20 @@ namespace GSF.TimeSeries
                 // database. In that case, we simply attempt to load the cached configuration and use that instead
                 DisplayStatusMessage("Failed to open a connection to the database. Falling back on cached configuration...", UpdateType.Warning);
 
-                if ((object)configuration == null)
+                if (configuration is null)
                     configuration = GetBinaryCachedConfigurationDataSet();
 
-                if ((object)configuration == null)
+                if (configuration is null)
                     configuration = GetXMLCachedConfigurationDataSet();
 
-                if ((object)configuration != null)
+                if (!(configuration is null))
                     return PropagateDataSource(configuration);
 
                 return false;
             }
             finally
             {
-                if ((object)dbConfigurationLoader != null)
-                    dbConfigurationLoader.Close();
+                dbConfigurationLoader?.Close();
             }
         }
 
@@ -1264,52 +1231,52 @@ namespace GSF.TimeSeries
         {
             DataSet configuration = m_latestConfiguration;
 
-            if ((object)configuration != null)
+            if (configuration is null)
+                return;
+
+            // Create backups of binary configurations
+            BackupConfiguration(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile);
+
+            // Create backups of XML configurations
+            BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
+
+            try
             {
-                // Create backups of binary configurations
-                BackupConfiguration(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile);
+                // Wait a moment for write lock in case binary file is open by another process
+                if (File.Exists(m_cachedBinaryConfigurationFile))
+                    FilePath.WaitForWriteLock(m_cachedBinaryConfigurationFile);
 
-                // Create backups of XML configurations
-                BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
-
-                try
+                // Cache binary serialized version of data set
+                using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
                 {
-                    // Wait a moment for write lock in case binary file is open by another process
-                    if (File.Exists(m_cachedBinaryConfigurationFile))
-                        FilePath.WaitForWriteLock(m_cachedBinaryConfigurationFile);
-
-                    // Cache binary serialized version of data set
-                    using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
-                    {
-                        configuration.SerializeToStream(configurationFileStream);
-                    }
-
-                    DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
-                }
-                catch (Exception ex)
-                {
-                    DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                    LogException(ex);
+                    configuration.SerializeToStream(configurationFileStream);
                 }
 
-                // Serialize current data set to configuration files
-                try
-                {
+                DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
+                LogException(ex);
+            }
 
-                    // Wait a moment for write lock in case XML file is open by another process
-                    if (File.Exists(m_cachedXmlConfigurationFile))
-                        FilePath.WaitForWriteLock(m_cachedXmlConfigurationFile);
+            // Serialize current data set to configuration files
+            try
+            {
 
-                    // Cache XML serialized version of data set
-                    configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
+                // Wait a moment for write lock in case XML file is open by another process
+                if (File.Exists(m_cachedXmlConfigurationFile))
+                    FilePath.WaitForWriteLock(m_cachedXmlConfigurationFile);
 
-                    DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
-                }
-                catch (Exception ex)
-                {
-                    DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                    LogException(ex);
-                }
+                // Cache XML serialized version of data set
+                configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
+
+                DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
+                LogException(ex);
             }
         }
 
@@ -1322,15 +1289,15 @@ namespace GSF.TimeSeries
                 {
                     string origConfigFile = configurationFile + ".backup" + (i == 1 ? "" : (i - 1).ToString());
 
-                    if (File.Exists(origConfigFile))
-                    {
-                        string nextConfigFile = configurationFile + ".backup" + i;
+                    if (!File.Exists(origConfigFile))
+                        continue;
 
-                        if (File.Exists(nextConfigFile))
-                            File.Delete(nextConfigFile);
+                    string nextConfigFile = configurationFile + ".backup" + i;
 
-                        File.Move(origConfigFile, nextConfigFile);
-                    }
+                    if (File.Exists(nextConfigFile))
+                        File.Delete(nextConfigFile);
+
+                    File.Move(origConfigFile, nextConfigFile);
                 }
             }
             catch (Exception ex)
@@ -1341,19 +1308,16 @@ namespace GSF.TimeSeries
 
             try
             {
-                if (m_configurationBackups > 0)
-                {
-                    // Back up current configuration file, if any
-                    if (File.Exists(configurationFile))
-                    {
-                        string backupConfigFile = configurationFile + ".backup";
+                if (m_configurationBackups < 1 || !File.Exists(configurationFile))
+                    return;
 
-                        if (File.Exists(backupConfigFile))
-                            File.Delete(backupConfigFile);
+                // Back up current configuration file
+                string backupConfigFile = configurationFile + ".backup";
 
-                        File.Move(configurationFile, backupConfigFile);
-                    }
-                }
+                if (File.Exists(backupConfigFile))
+                    File.Delete(backupConfigFile);
+
+                File.Move(configurationFile, backupConfigFile);
             }
             catch (Exception ex)
             {
@@ -1368,36 +1332,36 @@ namespace GSF.TimeSeries
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)components != null)
-                        {
-                            components.Dispose();
-                            components = null;
-                        }
+                if (!disposing)
+                    return;
 
-                        if ((object)m_serviceHelper != null)
-                        {
-                            m_serviceHelper.Dispose();
-                            m_serviceHelper = null;
-                        }
-
-                        if ((object)m_remotingServer != null)
-                        {
-                            m_remotingServer.Dispose();
-                            m_remotingServer = null;
-                        }
-                    }
-                }
-                finally
+                if (!(components is null))
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    components.Dispose();
+                    components = null;
                 }
+
+                if (!(m_serviceHelper is null))
+                {
+                    m_serviceHelper.Dispose();
+                    m_serviceHelper = null;
+                }
+
+                if (!(m_remotingServer is null))
+                {
+                    m_remotingServer.Dispose();
+                    m_remotingServer = null;
+                }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -1419,21 +1383,21 @@ namespace GSF.TimeSeries
         {
             ClientRequest request = ClientRequest.Parse(userInput);
 
-            if ((object)request != null)
-            {
-                ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
+            if (request is null)
+                return;
 
-                if ((object)requestHandler != null)
-                {
-                    ClientInfo clientInfo = new ClientInfo() { ClientID = clientID };
-                    ClientRequestInfo clientRequestInfo = new ClientRequestInfo(clientInfo, request);
-                    clientInfo.SetClientUser(principal);
-                    requestHandler.HandlerMethod(clientRequestInfo);
-                }
-                else
-                {
-                    DisplayStatusMessage($"Command \"{request.Command}\" is not supported\r\n\r\n", UpdateType.Alarm);
-                }
+            ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
+
+            if (requestHandler is null)
+            {
+                DisplayStatusMessage($"Command \"{request.Command}\" is not supported\r\n\r\n", UpdateType.Alarm);
+            }
+            else
+            {
+                ClientInfo clientInfo = new ClientInfo() {ClientID = clientID};
+                ClientRequestInfo clientRequestInfo = new ClientRequestInfo(clientInfo, request);
+                clientInfo.SetClientUser(principal);
+                requestHandler.HandlerMethod(clientRequestInfo);
             }
         }
 
@@ -1456,13 +1420,13 @@ namespace GSF.TimeSeries
             m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
             m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
-            if (m_serviceHelper.StatusLog != null)
+            if (!(m_serviceHelper.StatusLog is null))
                 m_serviceHelper.StatusLog.LogException += StatusLogExceptionHandler;
 
-            if (m_serviceHelper.ErrorLogger?.ErrorLog != null)
+            if (!(m_serviceHelper.ErrorLogger?.ErrorLog is null))
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException += ErrorLogExceptionHandler;
 
-            if (m_serviceHelper.ConnectionErrorLogger?.ErrorLog != null)
+            if (!(m_serviceHelper.ConnectionErrorLogger?.ErrorLog is null))
                 m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException += ConnectionErrorLogExceptionHandler;
 
             m_serviceHelper.OnStart(args);
@@ -1642,14 +1606,14 @@ namespace GSF.TimeSeries
             const string RequestCommand = "Health";
             ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(RequestCommand);
 
-            if (requestHandler != null)
-            {
-                // We pretend to be a client and send a "Health" command to ourselves...
-                requestHandler.HandlerMethod(ClientHelper.PretendRequest(RequestCommand));
+            if (requestHandler is null)
+                return;
 
-                // We also export human readable health information to a text file for external display
-                m_healthExporter.ExportData(m_serviceHelper.PerformanceMonitor.Status);
-            }
+            // We pretend to be a client and send a "Health" command to ourselves...
+            requestHandler.HandlerMethod(ClientHelper.PretendRequest(RequestCommand));
+
+            // We also export human readable health information to a text file for external display
+            m_healthExporter.ExportData(m_serviceHelper.PerformanceMonitor.Status);
         }
 
         /// <summary>
@@ -1678,12 +1642,12 @@ namespace GSF.TimeSeries
             // Lookup reporting process
             IReportingProcess reportingProcess = m_reportingProcesses.FindReportType(name);
 
+            if (reportingProcess is null)
+                return;
+
             // Reporting process schedule is due, generate a new report
-            if ((object)reportingProcess != null)
-            {
-                reportingProcess.CleanReportLocation();
-                reportingProcess.GenerateReport(DateTime.UtcNow - TimeSpan.FromDays(1), true);
-            }
+            reportingProcess.CleanReportLocation();
+            reportingProcess.GenerateReport(DateTime.UtcNow - TimeSpan.FromDays(1), true);
         }
 
         #endregion
@@ -1727,40 +1691,41 @@ namespace GSF.TimeSeries
         /// <returns>Requested <see cref="IAdapter"/>.</returns>
         protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo, out IAdapterCollection collection)
         {
-            IAdapter adapter;
             string adapterID = requestInfo.Request.Arguments["OrderedArg1"];
             collection = GetRequestedCollection(requestInfo);
 
-            if (!string.IsNullOrWhiteSpace(adapterID))
+            if (string.IsNullOrWhiteSpace(adapterID))
+                return null;
+
+            IAdapter adapter;
+
+            adapterID = adapterID.Trim();
+
+            if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out uint id))
             {
-                adapterID = adapterID.Trim();
+                // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
+                if (collection.TryGetAdapterByID(id, out adapter))
+                    return adapter;
 
-                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out uint id))
-                {
-                    // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
-                    if (collection.TryGetAdapterByID(id, out adapter))
-                        return adapter;
+                // Try looking for ID in any collection if all runtime ID's are unique
+                if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                    return adapter;
 
-                    // Try looking for ID in any collection if all runtime ID's are unique
-                    if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
-                        return adapter;
+                collection = GetRequestedCollection(requestInfo);
+                SendResponse(requestInfo, false, "Failed to find adapter with ID \"{0}\".", id);
+            }
+            else
+            {
+                // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
+                if (collection.TryGetAdapterByName(adapterID, out adapter))
+                    return adapter;
 
-                    collection = GetRequestedCollection(requestInfo);
-                    SendResponse(requestInfo, false, "Failed to find adapter with ID \"{0}\".", id);
-                }
-                else
-                {
-                    // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
-                    if (collection.TryGetAdapterByName(adapterID, out adapter))
-                        return adapter;
+                // Try looking for adapter name in any collection
+                if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
+                    return adapter;
 
-                    // Try looking for adapter name in any collection
-                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
-                        return adapter;
-
-                    collection = GetRequestedCollection(requestInfo);
-                    SendResponse(requestInfo, false, "Failed to find adapter named \"{0}\".", adapterID);
-                }
+                collection = GetRequestedCollection(requestInfo);
+                SendResponse(requestInfo, false, "Failed to find adapter named \"{0}\".", adapterID);
             }
 
             return null;
@@ -1827,7 +1792,7 @@ namespace GSF.TimeSeries
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
                     List<IAdapter> singleItemList = new List<IAdapter>();
 
-                    if (adapter != null)
+                    if (!(adapter is null))
                         singleItemList.Add(adapter);
 
                     listItems = singleItemList;
@@ -1935,21 +1900,23 @@ namespace GSF.TimeSeries
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
 
-                    if (adapter != null)
+                    if (adapter is null)
+                        return;
+
+                    if (adapter.Initialized)
                     {
-                        if (adapter.Initialized)
-                        {
-                            adapterAction(adapter);
-                            SendResponse(requestInfo, true);
-                        }
-                        else
-                        {
-                            SendResponse(requestInfo, false, "Unable to {0} -- adapter is not initialized.", actionName);
-                        }
+                        adapterAction(adapter);
+                        SendResponse(requestInfo, true);
+                    }
+                    else
+                    {
+                        SendResponse(requestInfo, false, "Unable to {0} -- adapter is not initialized.", actionName);
                     }
                 }
                 else
+                {
                     SendResponse(requestInfo, false, "No ID was specified for \"{0}\" command.", actionName);
+                }
             }
         }
 
@@ -2021,80 +1988,82 @@ namespace GSF.TimeSeries
                         }
                     }
                     else
-                        SendResponse(requestInfo, false, "No command was specified to invoke.");
-
-                    if (adapter != null)
                     {
-                        try
+                        SendResponse(requestInfo, false, "No command was specified to invoke.");
+                    }
+
+                    if (adapter is null)
+                        return;
+
+                    try
+                    {
+                        // See if method exists with specified name using reflection
+                        MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                        // Invoke method
+                        if (!(method is null))
                         {
-                            // See if method exists with specified name using reflection
-                            MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-                            // Invoke method
-                            if (method != null)
+                            // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
+                            if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role))))
                             {
-                                // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                                if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role))))
+                                ParameterInfo[] parameterInfo = method.GetParameters();
+                                object returnValue = null;
+                                bool success = true;
+
+                                if (parameterInfo.Length == 0)
                                 {
-                                    ParameterInfo[] parameterInfo = method.GetParameters();
-                                    object returnValue = null;
-                                    bool success = true;
-
-                                    if (parameterInfo.Length == 0)
-                                    {
-                                        // Invoke parameterless adapter command
-                                        returnValue = method.Invoke(adapter, null);
-                                    }
-                                    else
-                                    {
-                                        int argCount = requestInfo.Request.Arguments.Count - 2;
-                                        int attachmentCount = requestInfo.Request.Attachments.Count;
-
-                                        // Create typed parameters for method and invoke
-                                        if (argCount + attachmentCount >= parameterInfo.Length)
-                                        {
-                                            // Attempt to convert command parameters to the method parameter types
-                                            object[] parameters = requestInfo.Request.Arguments.Skip(2)
-                                                .Select((arg, i) => arg.Value.ConvertToType(parameterInfo[i].ParameterType))
-                                                .Concat(requestInfo.Request.Attachments)
-                                                .Take(parameterInfo.Length)
-                                                .ToArray();
-
-                                            // Invoke adapter command with specified parameters
-                                            returnValue = method.Invoke(adapter, parameters);
-                                        }
-                                        else
-                                        {
-                                            success = false;
-                                            SendResponse(requestInfo, false, "Parameter count mismatch, \"{0}\" command expects {1} parameters.", command, parameterInfo.Length);
-                                        }
-                                    }
-
-                                    // If invoke was successful, return actionable response
-                                    if (success)
-                                    {
-                                        // Return value, if any, will be returned to requesting client as a response attachment
-                                        if ((object)returnValue == null)
-                                            SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
-                                        else
-                                            SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
-                                    }
+                                    // Invoke parameterless adapter command
+                                    returnValue = method.Invoke(adapter, null);
                                 }
                                 else
                                 {
-                                    SendResponse(requestInfo, false, "Specified command \"{0}\" is not marked as invokable for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                                    int argCount = requestInfo.Request.Arguments.Count - 2;
+                                    int attachmentCount = requestInfo.Request.Attachments.Count;
+
+                                    // Create typed parameters for method and invoke
+                                    if (argCount + attachmentCount >= parameterInfo.Length)
+                                    {
+                                        // Attempt to convert command parameters to the method parameter types
+                                        object[] parameters = requestInfo.Request.Arguments.Skip(2)
+                                            .Select((arg, i) => arg.Value.ConvertToType(parameterInfo[i].ParameterType))
+                                            .Concat(requestInfo.Request.Attachments)
+                                            .Take(parameterInfo.Length)
+                                            .ToArray();
+
+                                        // Invoke adapter command with specified parameters
+                                        returnValue = method.Invoke(adapter, parameters);
+                                    }
+                                    else
+                                    {
+                                        success = false;
+                                        SendResponse(requestInfo, false, "Parameter count mismatch, \"{0}\" command expects {1} parameters.", command, parameterInfo.Length);
+                                    }
+                                }
+
+                                // If invoke was successful, return actionable response
+                                if (success)
+                                {
+                                    // Return value, if any, will be returned to requesting client as a response attachment
+                                    if (returnValue is null)
+                                        SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
+                                    else
+                                        SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
                                 }
                             }
                             else
                             {
-                                SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                                SendResponse(requestInfo, false, "Specified command \"{0}\" is not marked as invokable for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
                             }
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            SendResponse(requestInfo, false, "Failed to invoke command: {0}", ex.Message);
-                            LogException(ex);
+                            SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        SendResponse(requestInfo, false, "Failed to invoke command: {0}", ex.Message);
+                        LogException(ex);
                     }
                 });
 
@@ -2153,79 +2122,77 @@ namespace GSF.TimeSeries
                 else
                     adapter = GetRequestedCollection(requestInfo);
 
-                if (adapter != null)
+                if (adapter is null)
+                    return;
+
+                try
                 {
-                    try
+                    // Get public command methods of specified adapter using reflection
+                    MethodInfo[] methods = adapter.GetType().GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                    // Invoke method
+                    StringBuilder methodList = new StringBuilder();
+
+                    methodList.AppendFormat("Adapter \"{0}\" [Type = {1}] Command List:", adapter.Name, adapter.GetType().Name);
+                    methodList.AppendLine();
+                    methodList.AppendLine();
+
+                    // Enumerate each public method
+                    foreach (MethodInfo method in methods)
                     {
-                        // Get public command methods of specified adapter using reflection
-                        MethodInfo[] methods = adapter.GetType().GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-                        // Invoke method
-                        StringBuilder methodList = new StringBuilder();
-                        bool firstParameter;
-                        string typeName;
-
-                        methodList.AppendFormat("Adapter \"{0}\" [Type = {1}] Command List:", adapter.Name, adapter.GetType().Name);
-                        methodList.AppendLine();
-                        methodList.AppendLine();
-
-                        // Enumerate each public method
-                        foreach (MethodInfo method in methods)
+                        // Only display methods marked as invokable (i.e., AdapterCommandAttribute exists on method)
+                        if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute))
                         {
-                            // Only display methods marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                            if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute))
+                            // Don't bother displaying commands to users who cannot invoke them
+                            if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role)))
+                                continue;
+
+                            bool firstParameter = true;
+
+                            methodList.Append("    ");
+                            methodList.Append(method.Name);
+                            methodList.Append('(');
+
+                            // Enumerate each method parameter
+                            foreach (ParameterInfo parameter in method.GetParameters())
                             {
-                                // Don't bother displaying commands to users who cannot invoke them
-                                if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role)))
-                                    continue;
+                                if (!firstParameter)
+                                    methodList.Append(", ");
 
-                                firstParameter = true;
+                                string typeName = parameter.ParameterType.ToString();
 
-                                methodList.Append("    ");
-                                methodList.Append(method.Name);
-                                methodList.Append('(');
+                                // Assume namespace for basic System types...
+                                if (typeName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && typeName.CharCount('.') == 1)
+                                    typeName = typeName.Substring(7);
 
-                                // Enumerate each method parameter
-                                foreach (ParameterInfo parameter in method.GetParameters())
-                                {
-                                    if (!firstParameter)
-                                        methodList.Append(", ");
+                                methodList.Append(typeName);
+                                methodList.Append(' ');
+                                methodList.Append(parameter.Name);
 
-                                    typeName = parameter.ParameterType.ToString();
-
-                                    // Assume namespace for basic System types...
-                                    if (typeName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && typeName.CharCount('.') == 1)
-                                        typeName = typeName.Substring(7);
-
-                                    methodList.Append(typeName);
-                                    methodList.Append(' ');
-                                    methodList.Append(parameter.Name);
-
-                                    firstParameter = false;
-                                }
-
-                                methodList.Append(')');
-                                methodList.AppendLine();
-
-                                if (!string.IsNullOrWhiteSpace(commandAttribute.Description))
-                                {
-                                    methodList.Append("        ");
-                                    methodList.Append(commandAttribute.Description);
-                                }
-
-                                methodList.AppendLine();
+                                firstParameter = false;
                             }
+
+                            methodList.Append(')');
+                            methodList.AppendLine();
+
+                            if (!string.IsNullOrWhiteSpace(commandAttribute.Description))
+                            {
+                                methodList.Append("        ");
+                                methodList.Append(commandAttribute.Description);
+                            }
+
+                            methodList.AppendLine();
                         }
-
-                        methodList.AppendLine();
-
-                        SendResponse(requestInfo, true, methodList.ToString());
                     }
-                    catch (Exception ex)
-                    {
-                        SendResponse(requestInfo, false, "Failed to list commands: {0}", ex.Message);
-                        LogException(ex);
-                    }
+
+                    methodList.AppendLine();
+
+                    SendResponse(requestInfo, true, methodList.ToString());
+                }
+                catch (Exception ex)
+                {
+                    SendResponse(requestInfo, false, "Failed to list commands: {0}", ex.Message);
+                    LogException(ex);
                 }
             }
         }
@@ -2308,15 +2275,15 @@ namespace GSF.TimeSeries
         private void HandleInitializeRequest(ClientRequestInfo requestInfo)
         {
             IAdapterCollection collection;
-            IAdapter adapter;
-            string adapterID;
 
             // See if specific ID for an adapter was requested
             if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
             {
-                adapterID = requestInfo.Request.Arguments["OrderedArg1"];
+                string adapterID = requestInfo.Request.Arguments["OrderedArg1"];
 
                 // Try initializing new adapter by ID searching in any collection if all runtime ID's are unique
+                IAdapter adapter;
+
                 if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out uint id) && m_iaonSession.AllAdapters.TryInitializeAdapterByID(id))
                 {
                     if (m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
@@ -2329,16 +2296,16 @@ namespace GSF.TimeSeries
                     adapter = GetRequestedAdapter(requestInfo, out collection);
 
                     // Initialize specified adapter
-                    if (adapter != null && collection != null)
+                    if (adapter is null || collection is null)
+                    {
+                        SendResponse(requestInfo, false, "Requested adapter was not found.");
+                    }
+                    else
                     {
                         if (collection.TryInitializeAdapterByID(adapter.ID))
                             SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
                         else
                             SendResponse(requestInfo, false, "Adapter \"{0}\" ({1}) failed to initialize.", adapter.Name, adapter.ID);
-                    }
-                    else
-                    {
-                        SendResponse(requestInfo, false, "Requested adapter was not found.");
                     }
                 }
             }
@@ -2347,16 +2314,16 @@ namespace GSF.TimeSeries
                 // Get specified adapter collection
                 collection = GetRequestedCollection(requestInfo);
 
-                if (collection != null)
+                if (collection is null)
+                {
+                    SendResponse(requestInfo, false, "Requested collection was unavailable.");
+                }
+                else
                 {
                     DisplayStatusMessage("Initializing all adapters in {0}...", UpdateType.Information, collection.Name);
                     collection.Initialize();
                     DisplayStatusMessage("{0} initialization complete.", UpdateType.Information, collection.Name);
                     SendResponse(requestInfo, true);
-                }
-                else
-                {
-                    SendResponse(requestInfo, false, "Requested collection was unavailable.");
                 }
             }
         }
@@ -2396,7 +2363,7 @@ namespace GSF.TimeSeries
                 else
                     throw new ArgumentException("ReportType not specified.");
 
-                if ((object)reportingProcess == null)
+                if (reportingProcess is null)
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 StringBuilder listBuilder;
@@ -2490,7 +2457,7 @@ namespace GSF.TimeSeries
                 else
                     throw new ArgumentException("ReportType not specified.");
 
-                if ((object)reportingProcess == null)
+                if (reportingProcess is null)
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 DateTime now = DateTime.UtcNow;
@@ -2563,7 +2530,7 @@ namespace GSF.TimeSeries
                 else
                     throw new ArgumentException("ReportType not specified.");
 
-                if ((object)reportingProcess == null)
+                if (reportingProcess is null)
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 try
@@ -2618,7 +2585,7 @@ namespace GSF.TimeSeries
                 else
                     throw new ArgumentException("ReportType not specified.");
 
-                if ((object)reportingProcess == null)
+                if (reportingProcess is null)
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 DateTime today = DateTime.UtcNow;
@@ -2687,7 +2654,7 @@ namespace GSF.TimeSeries
                 else
                     throw new ArgumentException("ReportType not specified.");
 
-                if ((object)reportingProcess == null)
+                if (reportingProcess is null)
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 if (requestInfo.Request.Arguments.Exists("get") || !requestInfo.Request.Arguments.Exists("set"))
@@ -2821,12 +2788,12 @@ namespace GSF.TimeSeries
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
-                    string measurements = string.Join(";", adapter.InputMeasurementKeys.Select(key => key.SignalID.ToString()));
+                    IEnumerable<Guid> signalIDs = adapter.InputMeasurementKeys.Select(key => key.SignalID);
 
                     if (requestInfo.Request.Arguments.Exists("actionable"))
-                        m_serviceHelper.SendActionableResponse(requestInfo, true, null, measurements);
+                        m_serviceHelper.SendActionableResponse(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray());
                     else
-                        DisplayResponseMessage(requestInfo, measurements);
+                        DisplayResponseMessage(requestInfo, string.Join(";", signalIDs.Select(id => id.ToString())));
                 }
                 else
                 {
@@ -2870,12 +2837,12 @@ namespace GSF.TimeSeries
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
-                    string measurements = string.Join(";", adapter.OutputMeasurements.Select(m => m.Key.SignalID.ToString()));
+                    IEnumerable<Guid> signalIDs = adapter.OutputMeasurements.Select(m => m.Key.SignalID);
 
                     if (requestInfo.Request.Arguments.Exists("actionable"))
-                        m_serviceHelper.SendActionableResponse(requestInfo, true, null, measurements);
+                        m_serviceHelper.SendActionableResponse(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray());
                     else
-                        DisplayResponseMessage(requestInfo, measurements);
+                        DisplayResponseMessage(requestInfo, string.Join(";", signalIDs.Select(id => id.ToString())));
                 }
                 else
                 {
@@ -3057,10 +3024,10 @@ namespace GSF.TimeSeries
                 {
                     if (success)
                     {
-                        if (invoking && (object)invokeHandler != null)
-                            invokeHandler.HandlerMethod(invokeInfo);
-                        else
+                        if (!invoking || invokeHandler is null)
                             SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
+                        else
+                            invokeHandler.HandlerMethod(invokeInfo);
                     }
                     else
                     {
@@ -3156,7 +3123,7 @@ namespace GSF.TimeSeries
                         xmlDoc.LoadXml(xml);
 
                         // List settings categories.
-                        if ((object)xmlDoc.DocumentElement != null)
+                        if (!(xmlDoc.DocumentElement is null))
                         {
                             foreach (XmlNode node in xmlDoc.DocumentElement)
                             {
@@ -3210,21 +3177,21 @@ namespace GSF.TimeSeries
                     if (deleteSetting)
                     {
                         // Delete existing setting.
-                        if (setting != null)
+                        if (setting is null)
+                        {
+                            SendResponse(requestInfo, false, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
+                        }
+                        else
                         {
                             settings.Remove(setting);
                             config.Save();
                             SendResponse(requestInfo, true, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                         }
-                        else
-                        {
-                            SendResponse(requestInfo, false, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
-                        }
                     }
                     else if (addSetting)
                     {
                         // Add new setting.
-                        if ((object)setting == null)
+                        if (setting is null)
                         {
                             settings.Add(settingName, settingValue);
                             config.Save();
@@ -3238,15 +3205,15 @@ namespace GSF.TimeSeries
                     else
                     {
                         // Update existing setting.
-                        if (setting != null)
+                        if (setting is null)
+                        {
+                            SendResponse(requestInfo, false, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
+                        }
+                        else
                         {
                             setting.Value = settingValue;
                             config.Save();
                             SendResponse(requestInfo, true, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
-                        }
-                        else
-                        {
-                            SendResponse(requestInfo, false, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
                         }
                     }
                 }
@@ -3608,17 +3575,12 @@ namespace GSF.TimeSeries
                 // Log details of client request as well as response
                 if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
                 {
-                    string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
+                    string responseType = $"{requestInfo.Request.Command}:{(success ? "Success" : "Failure")}";
                     string arguments = requestInfo.Request.Arguments.ToString();
-                    string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
+                    string message = $"{responseType}{(string.IsNullOrWhiteSpace(arguments) ? "" : $"({arguments})")}";
 
-                    if (status != null)
-                    {
-                        if (args.Length == 0)
-                            message += " - " + status;
-                        else
-                            message += " - " + string.Format(status, args);
-                    }
+                    if (!(status is null))
+                        message = $"{message} - {(args.Length == 0 ? status : string.Format(status, args))}";
 
                     m_serviceHelper.StatusLog.WriteTimestampedLine(message);
                 }
