@@ -72,7 +72,6 @@ namespace GSF.Communication
         private EndianOrder m_payloadEndianOrder;
         private IPStack m_ipStack;
         private string[] m_serverList;
-        private int m_serverIndex;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private Func<Task> m_cancelReadAsync;
@@ -166,7 +165,7 @@ namespace GSF.Communication
         /// Gets the server URI of the <see cref="TcpSimpleClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri => $"{TransportProtocol}://{ServerList[m_serverIndex]}".ToLower();
+        public override string ServerUri => $"{TransportProtocol}://{ServerList[ServerIndex]}".ToLower();
 
         /// <summary>
         /// Determines whether the base class should track statistics.
@@ -178,13 +177,13 @@ namespace GSF.Communication
         {
             get
             {
-                if (m_serverList != null)
+                if (!(m_serverList is null))
                     return m_serverList;
 
-                if (m_connectData?.ContainsKey("server") ?? false)
-                    m_serverList = m_connectData["server"].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(server => server.Trim()).ToArray();
+                if (m_connectData is null || !m_connectData.TryGetValue("server", out string serverList) || string.IsNullOrWhiteSpace(serverList))
+                    return Array.Empty<string>();
 
-                return m_serverList?.Length == 0 ? new[] { string.Empty } : m_serverList;
+                return m_serverList = serverList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(server => server.Trim()).ToArray();
             }
         }
 
@@ -315,7 +314,7 @@ namespace GSF.Communication
 
                 tcpClient.Client.NoDelay = NoDelay;
 
-                Match endpoint = Regex.Match(ServerList[m_serverIndex], Transport.EndpointFormatRegex);
+                Match endpoint = Regex.Match(ServerList[ServerIndex], Transport.EndpointFormatRegex);
 
                 // Initiate the asynchronous connection loop
                 tcpClient.ConnectAsync(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)).ContinueWith(task =>
@@ -612,10 +611,10 @@ namespace GSF.Communication
             if (serverListLength > 1)
             {
                 // When multiple servers are available, move to next server connection
-                m_serverIndex++;
+                ServerIndex++;
 
-                if (m_serverIndex >= serverListLength)
-                    m_serverIndex = 0;
+                if (ServerIndex >= serverListLength)
+                    ServerIndex = 0;
             }
 
             base.OnConnectionException(ex);

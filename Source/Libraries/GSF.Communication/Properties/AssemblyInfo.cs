@@ -22,7 +22,10 @@
 //******************************************************************************************************
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+[assembly: InternalsVisibleTo("GSF.PhasorProtocols")]
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("2.3.377.0")]

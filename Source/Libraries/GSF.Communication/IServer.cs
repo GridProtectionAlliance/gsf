@@ -176,87 +176,52 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the data required by the server to initialize.
         /// </summary>
-        string ConfigurationString
-        {
-            get;
-            set;
-        }
+        string ConfigurationString { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of clients that can connect to the server.
         /// </summary>
-        int MaxClientConnections
-        {
-            get;
-            set;
-        }
+        int MaxClientConnections { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.
         /// </summary>
-        int SendBufferSize
-        {
-            get;
-            set;
-        }
+        int SendBufferSize { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
         /// </summary>
-        int ReceiveBufferSize
-        {
-            get;
-            set;
-        }
+        int ReceiveBufferSize { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
         /// </summary>
-        Encoding TextEncoding
-        {
-            get;
-            set;
-        }
+        Encoding TextEncoding { get; set; }
 
         /// <summary>
         /// Gets the current <see cref="ServerState"/>.
         /// </summary>
-        ServerState CurrentState
-        {
-            get;
-        }
+        ServerState CurrentState { get; }
 
         /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
         /// </summary>
-        TransportProtocol TransportProtocol
-        {
-            get;
-        }
+        TransportProtocol TransportProtocol { get; }
 
         /// <summary>
         /// Gets the server's ID.
         /// </summary>
-        Guid ServerID
-        {
-            get;
-        }
+        Guid ServerID { get; }
 
         /// <summary>
         /// Gets the IDs of clients connected to the server.
         /// </summary>
-        Guid[] ClientIDs
-        {
-            get;
-        }
+        Guid[] ClientIDs { get; }
 
         /// <summary>
         /// Gets the <see cref="Time"/> for which the server has been running.
         /// </summary>
-        Time RunTime
-        {
-            get;
-        }
+        Time RunTime { get; }
 
         #endregion
 

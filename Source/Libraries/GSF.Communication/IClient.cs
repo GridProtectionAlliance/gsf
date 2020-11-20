@@ -164,87 +164,57 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the data required by the client to connect to the server.
         /// </summary>
-        string ConnectionString
-        {
-            get;
-            set;
-        }
+        string ConnectionString { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of times the client will attempt to connect to the server.
         /// </summary>
-        int MaxConnectionAttempts
-        {
-            get;
-            set;
-        }
+        int MaxConnectionAttempts { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.
         /// </summary>
-        int SendBufferSize
-        {
-            get;
-            set;
-        }
+        int SendBufferSize { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.
         /// </summary>
-        int ReceiveBufferSize
-        {
-            get;
-            set;
-        }
+        int ReceiveBufferSize { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the server.
         /// </summary>
-        Encoding TextEncoding
-        {
-            get;
-            set;
-        }
+        Encoding TextEncoding { get; set; }
 
         /// <summary>
         /// Gets the server URI.
         /// </summary>
-        string ServerUri
-        {
-            get;
-        }
+        string ServerUri { get; }
+
+        /// <summary>
+        /// Gets the current server index, when multiple server end points are defined.
+        /// </summary>
+        int ServerIndex { get; }
 
         /// <summary>
         /// Gets the current <see cref="ClientState"/>.
         /// </summary>
-        ClientState CurrentState
-        {
-            get;
-        }
+        ClientState CurrentState { get; }
 
         /// <summary>
         /// Gets the <see cref="TransportProtocol"/> used by the client for the transportation of data with the server.
         /// </summary>
-        TransportProtocol TransportProtocol
-        {
-            get;
-        }
+        TransportProtocol TransportProtocol { get; }
 
         /// <summary>
         /// Gets the <see cref="Time"/> for which the client has been connected to the server.
         /// </summary>
-        Time ConnectionTime
-        {
-            get;
-        }
+        Time ConnectionTime { get; }
 
         /// <summary>
         /// Gets the <see cref="TransportStatistics"/> for the client connection.
         /// </summary>
-        TransportStatistics Statistics
-        {
-            get;
-        }
+        TransportStatistics Statistics { get; }
 
         #endregion
 

@@ -268,7 +268,14 @@ namespace GSF.Communication
         /// <summary>
         /// Gets the server URI.
         /// </summary>
+        [Browsable(false)]
         public abstract string ServerUri { get; }
+
+        /// <summary>
+        /// Gets the current server index, when multiple server end points are defined.
+        /// </summary>
+        [Browsable(false)]
+        public int ServerIndex { get; internal set; } = 0;
 
         /// <summary>
         /// Gets or sets the data required by the client to connect to the server.
