@@ -65,6 +65,7 @@ namespace GSF.TimeSeries.Adapters
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private readonly LongSynchronizedOperation m_connectionOperation;
         private SharedTimer m_connectionTimer;
+        private string m_connectionInfo;
         private bool m_isConnected;
         private bool m_disposed;
 
@@ -382,7 +383,7 @@ namespace GSF.TimeSeries.Adapters
         protected virtual void OnDisconnected()
         {
             IsConnected = false;
-            OnStatusMessage(MessageLevel.Info, $"Disconnected{((object)ConnectionInfo == null ? "" : " from " + ConnectionInfo)}.");
+            OnStatusMessage(MessageLevel.Info, $"Disconnected from {m_connectionInfo ?? ConnectionInfo}.");
         }
 
         /// <summary>
@@ -421,15 +422,24 @@ namespace GSF.TimeSeries.Adapters
 
         private void AttemptConnectionOperation()
         {
+            m_connectionInfo = null;
+
             try
             {
+                // Cache connection info before possible failure in case connection switches to another target
+                m_connectionInfo = ConnectionInfo;
+
                 // So long as user hasn't requested to stop, attempt connection
                 if (Enabled)
                 {
-                    OnStatusMessage(MessageLevel.Info, $"Attempting connection{((object)ConnectionInfo == null ? "" : " to " + ConnectionInfo)}...") ;
+                    OnStatusMessage(MessageLevel.Info, $"Attempting connection{(m_connectionInfo is null ? "" : $" to {m_connectionInfo}")}...") ;
 
                     // Attempt connection to data source
                     AttemptConnection();
+
+                    // Try to update connection info after successful connection attempt in case info is now available
+                    if (m_connectionInfo is null)
+                        m_connectionInfo = ConnectionInfo;
 
                     if (!UseAsyncConnect)
                         OnConnected();
@@ -438,7 +448,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 if (EnableConnectionErrors)
-                    OnProcessException(MessageLevel.Info, new ConnectionException($"Connection attempt failed{((object)ConnectionInfo == null ? "" : " for " + ConnectionInfo)}: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, new ConnectionException($"Connection attempt failed{(m_connectionInfo is null ? "" : $" for {m_connectionInfo}")}: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)
