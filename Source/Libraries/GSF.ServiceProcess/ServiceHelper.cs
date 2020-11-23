@@ -632,6 +632,18 @@ namespace GSF.ServiceProcess
         public event EventHandler<EventArgs<Guid, ClientRequest>> ReceivedClientRequest;
 
         /// <summary>
+        /// Occurs when a response is being sent to one or more <see cref="RemoteClients"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> ID of the client to whom the response is to be sent.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the <see cref="ServiceResponse"/> to be sent to the client.<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the assignable cancellation state, set to <c>true</c> to cancel send; otherwise, <c>false</c>
+        /// </remarks>
+        [Category("Service"),
+         Description("Occurs when a response is being sent to one or more RemoteClients.")]
+        public event EventHandler<EventArgs<Guid, ServiceResponse, bool>> SendingClientResponse;
+
+        /// <summary>
         /// Occurs when the state of a defined <see cref="ServiceProcess"/> changes.
         /// </summary>
         /// <remarks>
@@ -1518,6 +1530,9 @@ namespace GSF.ServiceProcess
         /// <param name="async">Flag to determine whether to wait for the send operations to complete.</param>
         public void SendResponse(Guid client, ServiceResponse response, bool async)
         {
+            if (!OnSendingClientResponse(client, response))
+                return;
+
             if (m_remotingServer is null)
                 return;
 
@@ -2071,6 +2086,19 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
+        /// Raises the <see cref="SendingClientResponse"/> event.
+        /// </summary>
+        /// <param name="client">ID of the client to whom the <paramref name="response"/> is to be sent.</param>
+        /// <param name="response">The <see cref="ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
+        /// <returns><c>true</c> if send was successful; otherwise, <c>false</c>, i.e., send was cancelled.</returns>
+        protected virtual bool OnSendingClientResponse(Guid client, ServiceResponse response)
+        {
+            EventArgs<Guid, ServiceResponse, bool> args = new EventArgs<Guid, ServiceResponse, bool>(client, response, false);
+            SendingClientResponse?.Invoke(this, args);
+            return !args.Argument3;
+        }
+
+        /// <summary>
         /// Raises the <see cref="ProcessStateChanged"/> event.
         /// </summary>
         /// <param name="processName">Name of the <see cref="ServiceProcess"/> whose state changed.</param>
@@ -2403,7 +2431,7 @@ namespace GSF.ServiceProcess
                         string username = client.ClientUsername ?? windowsPrincipal?.Identity.Name;
 
                         if (username is null)
-                            throw new SecurityException($"Authentication failed for client: unable to determine user name.");
+                            throw new SecurityException("Authentication failed for client: unable to determine user name.");
 
                         ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, windowsPrincipal, false);
                         securityProvider.SecurePassword = client.SecureClientPassword;
