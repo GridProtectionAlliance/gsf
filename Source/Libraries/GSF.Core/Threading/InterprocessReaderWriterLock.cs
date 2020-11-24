@@ -82,10 +82,8 @@ namespace GSF.Threading
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="InterprocessReaderWriterLock"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~InterprocessReaderWriterLock()
-        {
+        ~InterprocessReaderWriterLock() =>
             Dispose(false);
-        }
 
         #endregion
 
@@ -94,13 +92,7 @@ namespace GSF.Threading
         /// <summary>
         /// Gets the maximum concurrent reader locks allowed.
         /// </summary>
-        public int MaximumConcurrentLocks
-        {
-            get
-            {
-                return m_maximumConcurrentLocks;
-            }
-        }
+        public int MaximumConcurrentLocks => m_maximumConcurrentLocks;
 
         #endregion
 
@@ -121,29 +113,29 @@ namespace GSF.Threading
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_concurrencyLock != null)
-                        {
-                            m_concurrencyLock.Close();
-                            m_concurrencyLock = null;
-                        }
+            if (m_disposed)
+                return;
 
-                        if ((object)m_semaphoreLock != null)
-                        {
-                            m_semaphoreLock.Close();
-                            m_semaphoreLock = null;
-                        }
-                    }
-                }
-                finally
+            try
+            {
+                if (!disposing)
+                    return;
+
+                if (!(m_concurrencyLock is null))
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_concurrencyLock.Close();
+                    m_concurrencyLock = null;
                 }
+
+                if (!(m_semaphoreLock is null))
+                {
+                    m_semaphoreLock.Close();
+                    m_semaphoreLock = null;
+                }
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -154,10 +146,8 @@ namespace GSF.Threading
         /// Upon successful acquisition of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
         /// One <see cref="ExitReadLock"/> should be called for each <see cref="EnterReadLock"/> or <see cref="TryEnterReadLock"/>.
         /// </remarks>
-        public void EnterReadLock()
-        {
+        public void EnterReadLock() =>
             TryEnterReadLock(Timeout.Infinite);
-        }
 
         /// <summary>
         /// Tries to enter the lock in write mode.
@@ -166,10 +156,8 @@ namespace GSF.Threading
         /// Upon successful acquisition of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
         /// One <see cref="ExitWriteLock"/> should be called for each <see cref="EnterWriteLock"/> or <see cref="TryEnterWriteLock"/>.
         /// </remarks>
-        public void EnterWriteLock()
-        {
+        public void EnterWriteLock() =>
             TryEnterWriteLock(Timeout.Infinite);
-        }
 
         /// <summary>
         /// Exits read mode and returns the prior read lock count.
@@ -178,11 +166,8 @@ namespace GSF.Threading
         /// Upon successful acquisition of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
         /// One <see cref="ExitReadLock"/> should be called for each <see cref="EnterReadLock"/> or <see cref="TryEnterReadLock"/>.
         /// </remarks>
-        public int ExitReadLock()
-        {
-            // Release the semaphore lock and restore the slot
-            return m_concurrencyLock.Release();
-        }
+        public int ExitReadLock() =>
+            m_concurrencyLock.Release();    // Release the semaphore lock and restore the slot
 
         /// <summary>
         /// Exits write mode.
@@ -191,11 +176,8 @@ namespace GSF.Threading
         /// Upon successful acquisition of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
         /// One <see cref="ExitWriteLock"/> should be called for each <see cref="EnterWriteLock"/> or <see cref="TryEnterWriteLock"/>.
         /// </remarks>
-        public void ExitWriteLock()
-        {
-            // Release semaphore synchronization mutex lock
-            m_semaphoreLock.ReleaseMutex();
-        }
+        public void ExitWriteLock() =>
+            m_semaphoreLock.ReleaseMutex(); // Release semaphore synchronization mutex lock
 
         /// <summary>
         /// Tries to enter the lock in read mode, with an optional time-out.
@@ -260,7 +242,6 @@ namespace GSF.Threading
         public bool TryEnterWriteLock(int millisecondsTimeout)
         {
             bool success = false;
-            long startTime;
 
             try
             {
@@ -279,7 +260,7 @@ namespace GSF.Threading
                 // At this point no other threads can acquire read or write access since we own the mutex.
                 // Other threads may be busy reading, so we wait until all semaphore slots become available.
                 // The only way to get a semaphore slot count is to execute a successful wait and release.
-                startTime = DateTime.UtcNow.Ticks;
+                long startTime = DateTime.UtcNow.Ticks;
 
                 success = m_concurrencyLock.WaitOne(millisecondsTimeout);
 
