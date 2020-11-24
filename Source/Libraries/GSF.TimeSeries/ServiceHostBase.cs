@@ -2788,7 +2788,7 @@ namespace GSF.TimeSeries
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
-                    IEnumerable<Guid> signalIDs = adapter.InputMeasurementKeys.Select(key => key.SignalID);
+                    IEnumerable<Guid> signalIDs = adapter.InputMeasurementKeys?.Select(key => key.SignalID) ?? Enumerable.Empty<Guid>();
 
                     if (requestInfo.Request.Arguments.Exists("actionable"))
                         m_serviceHelper.SendActionableResponse(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray());
@@ -2837,7 +2837,7 @@ namespace GSF.TimeSeries
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
-                    IEnumerable<Guid> signalIDs = adapter.OutputMeasurements.Select(m => m.Key.SignalID);
+                    IEnumerable<Guid> signalIDs = adapter.OutputMeasurements?.Select(m => m.Key.SignalID) ?? Enumerable.Empty<Guid>();
 
                     if (requestInfo.Request.Arguments.Exists("actionable"))
                         m_serviceHelper.SendActionableResponse(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray());
