@@ -307,6 +307,43 @@ if (!Array.prototype.any) {
     }
 }
 
+if (!Array.prototype.count) {
+
+    Array.prototype.count = function (callback, thisArg) {
+        var args;
+
+        if (this === null)
+            throw new TypeError("this is null or not defined");
+
+        const array = Object(this);
+        const length = array.length >>> 0; // Convert array length to positive integer
+
+        if (typeof callback !== "function")
+            throw new TypeError();
+
+        if (arguments.length > 1)
+            args = thisArg;
+        else
+            args = undefined;
+
+        var index = 0;
+        var count = 0;
+
+        while (index < length) {
+            if (index in array) {
+                const element = array[index];
+
+                if (callback.call(args, element, index, array))
+                    count++;
+            }
+
+            index++;
+        }
+
+        return count;
+    };
+}
+
 // Represents a dictionary style class with case-insensitive keys
 function Dictionary(source) {
     const self = this;
