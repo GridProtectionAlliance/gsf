@@ -712,7 +712,7 @@ namespace PhasorProtocolAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat(" Source connection ID code: {0:N0} (index = {1:N0})", AccessID, ServerIndex);
+                status.AppendFormat(" Source connection ID code: {0:N0} (index {1:N0} / {2:N0})", AccessID, ServerIndex, m_accessIDList?.Length ?? 1);
                 status.AppendLine();
                 status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
                 status.AppendLine();
