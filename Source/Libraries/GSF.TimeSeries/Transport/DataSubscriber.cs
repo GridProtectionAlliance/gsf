@@ -3739,7 +3739,6 @@ namespace GSF.TimeSeries.Transport
 
                 // Track total meta-data synchronization process time
                 Ticks startTime = DateTime.UtcNow.Ticks;
-                DateTime updateTime;
                 DateTime latestUpdateTime = DateTime.MinValue;
 
                 // Open the configuration database using settings found in the config file
@@ -3785,6 +3784,7 @@ namespace GSF.TimeSeries.Transport
                         // Prefix all children devices with the name of the parent since the same device names could appear in different connections (helps keep device names unique)
                         string sourcePrefix = m_useSourcePrefixNames ? Name + "!" : "";
                         Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                        DateTime updateTime;
                         string deviceAcronym, signalTypeAcronym;
                         decimal longitude, latitude;
                         decimal? location;
@@ -3951,17 +3951,22 @@ namespace GSF.TimeSeries.Transport
                                     else if (recordNeedsUpdating)
                                     {
                                         // Perform safety check to preserve device records which are not safe to overwrite
-                                        if (Convert.ToInt32(command.ExecuteScalar(deviceIsUpdatableSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
-                                            continue;
+                                        if (Convert.ToInt32(command.ExecuteScalar(deviceIsUpdatableSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) <= 0)
+                                        {
+                                            // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party. From a device record perspective,
+                                            // ownership is inferred by setting 'OriginalSource' to null. When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed
+                                            // locally - from a device record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a mirrored source
+                                            // restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection, if desired.
+                                            originalSource = m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym");
 
-                                        // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party. From a device record perspective,
-                                        // ownership is inferred by setting 'OriginalSource' to null. When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed
-                                        // locally - from a device record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a mirrored source
-                                        // restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection, if desired.
-                                        originalSource = m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym");
+                                            // Update existing device record
+                                            command.ExecuteNonQuery(updateDeviceSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), originalSource, m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"), historianID, accessID, longitude, latitude, contactList.JoinKeyValuePairs(), database.Guid(uniqueID));
+                                        }
 
-                                        // Update existing device record
-                                        command.ExecuteNonQuery(updateDeviceSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), originalSource, m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"), historianID, accessID, longitude, latitude, contactList.JoinKeyValuePairs(), database.Guid(uniqueID));
+                                        // Even when device already exists locally, we allow device ID to be tracked since in a mutual subscription the remote subscriber may add new measurements
+                                        // to local device -- measurements will only be synchronized when a source device exists in the deviceIDs map. The use case is that a separate machine has
+                                        // been established to run calculations whose results are associated with a source device, the primary publisher will then want to subscribe to these
+                                        // calculated results so they can be processed and redistributed locally.
                                     }
                                 }
 
