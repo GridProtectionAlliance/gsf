@@ -509,10 +509,26 @@ namespace PowerCalculations
         {
             Dictionary<string, string> settings = Settings;
 
-            if (!settings.TryGetValue(nameof(InputMeasurementKeys), out string inputMeasurementKeys) || string.IsNullOrWhiteSpace(inputMeasurementKeys))
+            if (!settings.TryGetValue(nameof(InputMeasurementKeys), out string setting) || string.IsNullOrWhiteSpace(setting))
                 settings[nameof(InputMeasurementKeys)] = DefaultInputMeasurementKeys;
 
             base.ParseConnectionString();
+
+            // Get a local copy of the input keys as these will change often during initialization
+            MeasurementKey[] inputMeasurementKeys = InputMeasurementKeys;
+            SignalType[] inputMeasurementKeyTypes = InputMeasurementKeyTypes;
+
+            if (inputMeasurementKeys.Length == 0)
+            {
+                OnStatusMessage(MessageLevel.Error, "No inputs were configured. Cannot initialize adapter.");
+                return;
+            }
+
+            if (inputMeasurementKeys.Length != inputMeasurementKeyTypes.Length)
+            {
+                OnStatusMessage(MessageLevel.Error, "Parallel input measurement keys and type array lengths do not match. Cannot initialize adapter.");
+                return;
+            }
 
             // The goal of the following code is to create the needed ordered phase set input, i.e., the A, B and C phase angle/magnitude measurements,
             // as required by an individual SequenceCalculator. Since this is a "bulk" calculator, the code operates against all system inputs unless
@@ -531,9 +547,9 @@ namespace PowerCalculations
                 TableOperations<PhasorRecord> phasorTable = new TableOperations<PhasorRecord>(connection);
                 TableOperations<DeviceRecord> deviceTable = new TableOperations<DeviceRecord>(connection);
 
-                for (int i = 0; i < InputMeasurementKeys.Length; i++)
+                for (int i = 0; i < inputMeasurementKeys.Length; i++)
                 {
-                    MeasurementKey key = InputMeasurementKeys[i];
+                    MeasurementKey key = inputMeasurementKeys[i];
                     SignalType signalType = InputMeasurementKeyTypes[i];
 
                     switch (signalType)
@@ -915,10 +931,20 @@ namespace PowerCalculations
             if (inputs.Count % PerAdapterInputCount != 0)
                 OnStatusMessage(MessageLevel.Warning, $"Unexpected number of input {inputs.Count:N0} for {PerAdapterInputCount:N0} inputs per adapter.");
 
-            // Define properly ordered and associated set of inputs
-            InputMeasurementKeys = inputs.ToArray();
+            if (inputs.Count == 0)
+            {
+                OnStatusMessage(MessageLevel.Warning, "No valid inputs were defined. Cannot initialize adapter.");
+                return;
+            }
 
-            InitializeChildAdapterManagement();
+            // Define properly ordered and associated set of inputs
+            inputMeasurementKeys = inputs.ToArray();
+            
+            // Setup child adapters
+            InitializeChildAdapterManagement(inputMeasurementKeys);
+            
+            // Update external routing tables to only needed inputs
+            InputMeasurementKeys = inputMeasurementKeys;
         }
 
         #endregion
