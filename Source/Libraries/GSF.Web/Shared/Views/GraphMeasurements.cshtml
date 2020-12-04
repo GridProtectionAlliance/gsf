@@ -64,6 +64,7 @@
     ViewBag.ShowMenu = showMenu.ParseBoolean();
 }
 @section StyleSheets {
+    <link href="@Resources.Root/Shared/Content/jquery-ui.css" rel="stylesheet">
     <style>
         html {
             overflow-x: hidden;
@@ -74,11 +75,6 @@
             overflow-x: hidden;
             overflow-y: hidden;
             height: 100%;
-        }
-
-        .col-md-3 {
-            padding-left: 0;
-            padding-right: 0;
         }
 
         .list-group {
@@ -107,314 +103,96 @@
             white-space: nowrap;
         }
 
-        #toggleCanvasButton {
+        #messageBlock {
+            width: 300px;
+            margin: 0 auto;
+            text-align: center
+        }
+
+        .ui-resizable-e {
+            right: 2px;
+            border-left-width: 8px;
+            border-left-style: double;
+            border-left-color: #C8C8C8;
+        }
+
+        .modal-dialog {
+            width: 850px;
+            margin: 2rem auto;
+        }
+
+        /* Collapsable button style */
+        .btn-collapsable.btn {
             color: rgb(255, 255, 255);
             padding-bottom: 0px;
-            padding-left: 3px;
-            font-size: small;
-            margin-left: -10px;
+            margin-left: -8px;
+            font-family: "Glyphicons Halflings";
+            font-size: 8pt;
+            height: 22px;
         }
 
-        #toggleCanvasIcon {
-            -webkit-transition: all 1.0s ease;
-            -moz-transition: all 1.0s ease;
-            -o-transition: all 1.0s ease;
-            transition: all 1.0s ease;
+        /* Collapsable button icon when content is shown - arrow down */
+        .btn-collapsable.btn:after {
+            content: "\e114";
         }
 
-        .row-offcanvas.active #toggleCanvasIcon {
-            filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
-            -webkit-transform: scale(1, -1);
-            -moz-transform: scale(1, -1);
-            -ms-transform: scale(1, -1);
-            -o-transform: scale(1, -1);
-            transform: scale(1, -1);
-            padding-bottom: 1px;
-            padding-left: 1px;
+        /* Collapsable button icon when content is hidden - arrow right */
+        .btn-collapsable.btn.collapsed:after {
+            content: "\e080";
         }
 
-        @@media screen and (min-width: 1250px) {
-            #toggleCanvasIcon {
-                filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1);
-                -webkit-transform: scale(-1, 1);
-                -moz-transform: scale(-1, 1);
-                -ms-transform: scale(-1, 1);
-                -o-transform: scale(-1, 1);
-                transform: scale(-1, 1);
+        .glyphicon-spin {
+            -webkit-animation: spin 1.25s infinite linear;
+            -moz-animation: spin 1.25s infinite linear;
+            -o-animation: spin 1.25s infinite linear;
+            animation: spin 1.25s infinite linear;
+        }
+
+        @@-moz-keyframes spin {
+            0% {
+                -moz-transform: rotate(0deg);
             }
 
-            .row-offcanvas {
-                position: relative;
-                -webkit-transition: all .25s ease-out;
-                -moz-transition: all .25s ease-out;
-                transition: all .25s ease-out;
-            }
-
-            .row-offcanvas-right {
-                right: 20%;
-            }
-
-            .row-offcanvas-left {
-                left: 20%;
-            }
-
-            .row-offcanvas-right .sidebar-offcanvas {
-                right: -20%; /* 3 columns */
-                background-color: rgb(255, 255, 255);
-            }
-
-            .row-offcanvas-left .sidebar-offcanvas {
-                left: -20%; /* 3 columns */
-                background-color: rgb(255, 255, 255);
-            }
-
-            .row-offcanvas-right.active {
-                right: 0; /* 3 columns */
-            }
-
-            .row-offcanvas-left.active {
-                left: 0; /* 3 columns */
-            }
-
-            .row-offcanvas-right.active .sidebar-offcanvas {
-                background-color: rgb(254, 254, 254);
-            }
-
-            .row-offcanvas-left.active .sidebar-offcanvas {
-                background-color: rgb(254, 254, 254);
-            }
-
-            .row-offcanvas .content {
-                width: 80%; /* 9 columns */
-                -webkit-transition: all .25s ease-out;
-                -moz-transition: all .25s ease-out;
-                transition: all .25s ease-out;
-            }
-
-            .row-offcanvas.active .content {
-                width: 100%; /* 12 columns */
-            }
-
-            .sidebar-offcanvas {
-                position: absolute;
-                top: 0;
-                width: 20%; /* 3 columns */
+            100% {
+                -moz-transform: rotate(359deg);
             }
         }
 
-        @@media screen and (max-width: 1249px) {
-            #toggleCanvasIcon {
-                filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
-                -webkit-transform: scale(1, -1);
-                -moz-transform: scale(1, -1);
-                -ms-transform: scale(1, -1);
-                -o-transform: scale(1, -1);
-                transform: scale(1, -1);
-                padding-bottom: 1px;
-                padding-left: 1px;
+        @@-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
             }
 
-            .row-offcanvas {
-                position: relative;
-                -webkit-transition: all .25s ease-out;
-                -moz-transition: all .25s ease-out;
-                transition: all .25s ease-out;
+            100% {
+                -webkit-transform: rotate(359deg);
+            }
+        }
+
+        @@-o-keyframes spin {
+            0% {
+                -o-transform: rotate(0deg);
             }
 
-            .row-offcanvas-right {
-                right: 0;
+            100% {
+                -o-transform: rotate(359deg);
+            }
+        }
+
+        @@keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
             }
 
-            .row-offcanvas-left {
-                left: 0;
-            }
-
-            .row-offcanvas-right .sidebar-offcanvas {
-                right: -50%; /* 6 columns */
-            }
-
-            .row-offcanvas-left .sidebar-offcanvas {
-                left: -50%; /* 6 columns */
-            }
-
-            .row-offcanvas-right.active {
-                right: 50%; /* 6 columns */
-            }
-
-            .row-offcanvas-left.active {
-                left: 50%; /* 6 columns */
-            }
-
-            .sidebar-offcanvas {
-                position: absolute;
-                top: 0;
-                width: 50%; /* 6 columns */
+            100% {
+                -webkit-transform: rotate(359deg);
+                transform: rotate(359deg);
             }
         }
     </style>
 }
-<div class="container-fluid">
-    <div class="row row-offcanvas row-offcanvas-left">
-        <div ng-app="GraphMeasurements" ng-controller="MeasurementsCtrl">
-            <div class="col-md-3 sidebar-offcanvas toggled" style="overflow-y: auto" id="sidebar" role="navigation">
-                <div class="panel-group">
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="padding: 5px">
-                            <h4 class="panel-title">
-                                <a data-toggle="collapse" href="#collapse1">Settings</a>
-                            </h4>
-                        </div>
-                        <div id="collapse1" class="panel-collapse collapse" style="margin: 5px">
-                            <label for="datapoints">Number of Data Points to Plot:</label>
-                            <input type="number" id="datapoints" ng-model="dataPoints" ng-change="updateDataPoints()" class="form-control" />
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-group">
-                    <div class="panel panel-default">
-                        <div class="panel-heading" style="padding: 5px">
-                            <h4 class="panel-title">
-                                <a data-toggle="collapse" href="#collapse2">Legend</a>
-                            </h4>
-                        </div>
-                        <div id="collapse2" class="panel-collapse collapse" style="margin: 5px">
-                            <div id="legend" style="overflow-y: scroll">
-                                <table>
-                                    <tr ng-repeat="x in legend"><td>{{x}}</td></tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div ng-repeat="parentDevice in deviceData" class="panel-group">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <div class="panel-title">
-                                <img id="img{{parentDevice.parent}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 6px" />
-                                <button class="btn btn-link btn-sm" style="font-size: x-small;" data-toggle="collapse" data-parent="#devicelist" data-target="#dd{{parentDevice.parent}}">{{parentDevice.parent}}</button>
-                                <button id="btn{{parentDevice.parent}}" class="btn btn-xs badge pull-right" data-toggle="modal" data-target="#mod{{parentDevice.parent}}" style="font-size: xx-small; margin: 5px 15px 0 0">Stats</button>
-                            </div>
-                        </div>
-                        <div class="panel-body">
-                            <div id="dd{{parentDevice.parent}}" class="panel-collapse collapse in">
-                                <ul class="list-group nowrap" id="parent{{parentDevice.parent}}">
-                                    <li class="list-group-item nowrap" ng-repeat="device in parentDevice.devices">
-                                        <img id="img{{cleanIdentifier(device.Acronym)}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
-                                        <button class="btn btn-link btn-sm" style="font-size: x-small;" title="{{device.Name}}" data-toggle="collapse" data-target="#dd{{cleanIdentifier(device.Acronym)}}" ng-click="device.updateMeasurements()">{{device.Acronym}}</button>
-                                        <button id="btn{{cleanIdentifier(device.Acronym)}}" class="btn btn-xs badge" data-toggle="modal" data-target="#mod{{cleanIdentifier(device.Acronym)}}" style="font-size: xx-small;">Stats</button>
-                                        <div id="dd{{cleanIdentifier(device.Acronym)}}" class="collapse">
-                                            <table class="table" style="width: 15%; font-size: x-small;" id="tb{{cleanIdentifier(device.Acronym)}}">
-                                                <tr><th></th><th>ID</th><th>Stream</th><th>Signal</th><th></th></tr>
-                                                <tr title="{{measurement.Description}}" ng-repeat="measurement in device.measurements">
-                                                    <td>
-                                                        <input type="checkbox" id="cb{{cleanIdentifier(measurement.ID)}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-model="checked" ng-init="checked=measurementChecked(measurement.SignalID)" ng-change="updateFilter(checked, measurement)" />
-                                                    </td>
-                                                    <td>{{measurement.ID.split(':')[1]}}</td>
-                                                    <td>{{cleanPointTag(measurement)}}</td>
-                                                    <td>{{measurement.SignalAcronym}}</td>
-                                                    @*<td><button class="btn btn-xs badge" data-toggle="modal" data-target="#measmod{{measurement.SignalID}}" style="font-size: xx-small;">Stats</button></td>*@
-                                                </tr>
-                                            </table>
-                                        </div>
-                                        @*<div id="measmod{{ measurement.SignalID }}" ng-repeat="measurement in device.measurements"class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <a class="close" data-dismiss="modal">×</a>
-                                                            <h4>{{ cleanIdentifier(measurement.DeviceAcronym) + ' ' + measurement.SignalAcronym}} Statistics</h4>
-                                                        </div>
-                                                        <div class="modal-body" style="height: 300px; overflow-y: scroll">
-                                                            <table class="table" style="font-size: x-small">
-                                                                <thead>Run-time Statistics:</thead>
-                                                                <tr><th style="width: 10%">ID</th><th style="width: 70%">Statistic</th><th style="width: 10%">Value</th><th style="width: 10%">TimeTag</th></tr>
-                                                                <tr ng-repeat="stat in measurement.stats" ng-if="stat.DeviceAcronym != null">
-                                                                    <td>{{stat.ID.split(":")[1]}}</td>
-                                                                    <td>{{stat.Description}}</td>
-                                                                    <td>{{stat.value}}</td>
-                                                                    <td>{{stat.timestamp}}</td>
-                                                                </tr>
-                                                            </table>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <span class="btn" data-dismiss="modal">Close</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>*@
-                                        @*<div id="mod{{ cleanIdentifier(device.Acronym)}}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <a class="close" data-dismiss="modal">×</a>
-                                                            <h4>{{ cleanIdentifier(device.Acronym)}} Statistics</h4>
-                                                        </div>
-                                                        <div class="modal-body" style="height: 300px; width: 100%; overflow-y: scroll">
-                                                            <table id="stat{{ cleanIdentifier(device.Acronym)}}" class="table" style="font-size: x-small">
-                                                                <thead>Run-time Statistics:</thead>
-                                                                <tr><th style="width: 10%">ID</th><th style="width: 70%">Statistic</th><th style="width: 10%">Value</th><th style="width: 10%">TimeTag</th></tr>
-                                                                <tr ng-repeat="stat in device.stats" ng-if="stat.DeviceAcronym != null">
-                                                                    <td>{{stat.ID.split(":")[1]}}</td>
-                                                                    <td>{{stat.Description}}</td>
-                                                                    <td>{{stat.value}}</td>
-                                                                    <td>{{formatDate(stat.timestamp)}}</td>
-                                                                </tr>
-                                                            </table>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <span class="btn" data-dismiss="modal">Close</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>*@
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        @*<div id="mod{{ cleanIdentifier(parentDevice.parent)}}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <a class="close" data-dismiss="modal">×</a>
-                                            <h4>{{ cleanIdentifier(parentDevice.parent)}} Statistics</h4>
-                                        </div>
-                                        <div class="modal-body" style="height: 300px; overflow-y: scroll">
-                                            <table id="stat{{ cleanIdentifier(parentDevice.parent)}}" class="table" style="font-size: x-small">
-                                                <thead>Run-time Statistics:</thead>
-                                                <tr><th style="width: 10%">ID</th><th style="width: 70%">Statistic</th><th style="width: 10%">Value</th><th style="width: 10%">TimeTag</th></tr>
-                                                <tr ng-repeat="stat in parentDevice.stats" ng-if="stat.DeviceAcronym != null">
-                                                    <td>{{stat.ID.split(":")[1]}}</td>
-                                                    <td>{{stat.Description}}</td>
-                                                    <td>{{stat.value}}</td>
-                                                    <td>{{formatDate(stat.timestamp)}}</td>
-                                                </tr>
-                                            </table>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <span class="btn" data-dismiss="modal">Close</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>*@
-                    </div>
-                </div>
-            </div><!--/span-->
-        </div>
-        <div class="col-md-9 content">
-            <div class="pull-left">
-                <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas" id="toggleCanvasButton" title="Toggle Menu"><span class="glyphicon glyphicon-expand" id="toggleCanvasIcon"></span></button>
-                <button type="button" class="btn btn-primary btn-xs" onclick="resetFilter()">Clear Signals</button>
-            </div>
-            <br />
-            <br />
-            <div class="text-center" id="graphwrapper">
-                <div id="placeholder" style="width: 100%;"></div>
-            </div>
-        </div><!--/span-->
-    </div><!--/row-->
-</div><!-- /.container -->
-<div id="modals">
-</div>
 @section Scripts {
+    <script src="@Resources.Root/Shared/Scripts/jquery-ui.js"></script>
     <script src="@Resources.Root/Shared/Scripts/jquery.subscriber.js"></script>
     <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.min.js"></script>
     <script src="@Resources.Root/Shared/Scripts/flot/jquery.flot.crosshair.min.js"></script>
@@ -513,7 +291,7 @@
                 html += '<a class="close" data-dismiss="modal">×</a>';
                 html += '<h4>' + acronym + ' Statistics</h4>'
                 html += '</div>';
-                html += '<div  class="modal-body" style="height: 300px; overflow-y: scroll" >';
+                html += '<div class="modal-body" style="height: 300px; overflow-y: scroll" >';
                 html += '<table id="stat' + acronym + '" class="table" style="font-size: x-small">';
                 html += '<thead>Run-time Statistics:<thead />';
                 html += '<tr><th>Stat ID</th><th>Statistic</th><th>Value</th><th>TimeTag</th></tr>';
@@ -529,13 +307,23 @@
 
             // Explicitly sets heights of various components on
             // the page to take up available screen space
-            function setHeights() {
-                const margin = 20;
-                const sidebarHeight = $(window).innerHeight() - $("#sidebar").offset().top - margin;
-                const chartHeight = $(window).innerHeight() - $("#graphwrapper").offset().top - margin;
-                $('#sidebar').css('height', sidebarHeight);
-                $('#graphwrapper').css('height', chartHeight);
-                $('#placeholder').css('height', chartHeight);
+            function resizeElements() {
+                const sidebar = $("#sidebar");
+                const sidebarExpanded = sidebar.hasClass("in");
+                const sidebarHeight = $(window).innerHeight() - sidebar.offset().top - 20;
+                const chartHeight = sidebarExpanded ? sidebarHeight - 40 : $(window).innerHeight() - 180;
+
+                if (!sidebar.hasClass("init-width")) {
+                    sidebar.addClass("init-width");
+                    sidebar.width($(window).innerWidth() * 0.20);
+                }
+
+                sidebar.height(sidebarHeight);
+                $("#placeholder").height(chartHeight);
+                $("#graphContainer").css({ "top": (sidebarExpanded ? -sidebar.height() : 0) + "px" });
+                $("#graphContainer").css({ "left": (sidebarExpanded ? sidebar.width() + 30 : 0) + "px" });
+                $("#graphContainer").width($(window).innerWidth() - (sidebarExpanded ? sidebar.width() + 80 : $("#collapseSidebarBtn").outerWidth() + 20));
+                $(".ui-resizable-e").height(sidebar.prop("scrollHeight"));
             }
 
             // Loads settings from local storage and prepares
@@ -823,6 +611,8 @@
                         $scope.deviceData = parentAcronyms.map(function (acronym) { return parents[acronym]; });
 
                         getStatistics($scope);
+
+                        showGraphMessage("Metadata load succeeded for " + data.length + " devices.", false, 10000);
                     });
             }
 
@@ -899,6 +689,8 @@
                 }
 
                 $scope.dataSubscriber.connectionEstablished = function () {
+                    showGraphMessage("Loading subscription metadata...", true);
+
                     $scope.dataSubscriber.sendCommand("MetadataRefresh")
                         .fail(showErrorMessage);
                 }
@@ -982,32 +774,154 @@
             // Fix heights when error messages are displayed
             $(window).on("messageVisibiltyChanged", function (event) {
                 setTimeout(function () {
-                    setHeights();
+                    resizeElements();
                 }, 200);
             });
+
+            function showGraphMessage(message, showWorkingIcon, timeout) {
+                if (isEmpty(message)) {
+                    $("#message").text("");
+                    $("#workingIcon").hide();
+                }
+                else {
+                    $("#message").text(message);
+
+                    if (showWorkingIcon !== undefined) {
+                        if (showWorkingIcon)
+                            $("#workingIcon").show();
+                        else
+                            $("#workingIcon").hide();
+                    }
+                }
+
+                if (timeout !== undefined)
+                    setTimeout(() => showGraphMessage(""), timeout);
+            }
 
             // Handles initial page load
             $(document).ready(function () {
                 // Set heights before we build the plot
                 // so that we don't attempt to place a
                 // chart in an element with zero height
-                setHeights();
+                resizeElements();
                 buildPlot();
 
-                $(window).resize(function () { setHeights() });
+                $(window).resize(resizeElements);
 
-                $('[data-toggle=offcanvas]').click(function () {
-                    if ($('.sidebar-offcanvas').css('background-color') == 'rgb(255, 255, 255)') {
-                        $('.list-group-item').attr('tabindex', '-1');
-                    } else {
-                        $('.list-group-item').attr('tabindex', '');
-                    }
-                    $('.row-offcanvas').toggleClass('active');
+                const sidebar = $("#sidebar");
+
+                sidebar.resizable({
+                    handles: "e",
+                });
+
+                $(".ui-resizable-e").height(sidebar.prop("title", "Resize areas"));
+
+                new ResizeObserver(function () {
+                    resizeElements();
+                }).observe(sidebar[0]);
+
+                sidebar.on("shown.bs.collapse", function () {
+                    resizeElements();
+                    $("#collapseSidebarBtn").prop("title", "Expand measurement selection section...");
+                });
+
+                sidebar.on("hidden.bs.collapse",  function () {
+                    resizeElements();
+                    $("#collapseSidebarBtn").prop("title", "Collapse measurement selection section...");
                 });
             });
         })(jQuery);
     </script>
 }
+<span class="glyphicon glyphicon-refresh pre-cache"></span>
+<div class="container-fluid">
+    <div class="row">
+        <div ng-app="GraphMeasurements" ng-controller="MeasurementsCtrl">
+            <div id="sidebar" class="col-md-3 collapse in" style="overflow-x: auto; resize: horizontal " role="navigation">
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="padding: 5px">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" href="#collapse1">Settings</a>
+                            </h4>
+                        </div>
+                        <div id="collapse1" class="panel-collapse collapse" style="margin: 5px">
+                            <label for="datapoints">Number of Data Points to Plot:</label>
+                            <input type="number" id="datapoints" ng-model="dataPoints" ng-change="updateDataPoints()" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" style="padding: 5px">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" href="#collapse2">Legend</a>
+                            </h4>
+                        </div>
+                        <div id="collapse2" class="panel-collapse collapse" style="margin: 5px">
+                            <div id="legend" style="overflow-y: scroll">
+                                <table>
+                                    <tr ng-repeat="x in legend"><td>{{x}}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-repeat="parentDevice in deviceData" class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                <img id="img{{parentDevice.parent}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 6px" />
+                                <button class="btn btn-link btn-sm" style="font-size: x-small;" data-toggle="collapse" data-parent="#devicelist" data-target="#dd{{parentDevice.parent}}">{{parentDevice.parent}}</button>
+                                <button id="btn{{parentDevice.parent}}" class="btn btn-xs badge pull-right" data-toggle="modal" data-target="#mod{{parentDevice.parent}}" style="font-size: xx-small; margin: 5px 15px 0 0">Stats</button>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="dd{{parentDevice.parent}}" class="panel-collapse collapse in">
+                                <ul class="list-group nowrap" id="parent{{parentDevice.parent}}">
+                                    <li class="list-group-item nowrap" ng-repeat="device in parentDevice.devices">
+                                        <img id="img{{cleanIdentifier(device.Acronym)}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
+                                        <button class="btn btn-link btn-sm" style="font-size: x-small;" title="{{device.Name}}" data-toggle="collapse" data-target="#dd{{cleanIdentifier(device.Acronym)}}" ng-click="device.updateMeasurements()">{{device.Acronym}}</button>
+                                        <button id="btn{{cleanIdentifier(device.Acronym)}}" class="btn btn-xs badge" data-toggle="modal" data-target="#mod{{cleanIdentifier(device.Acronym)}}" style="font-size: xx-small;">Stats</button>
+                                        <div id="dd{{cleanIdentifier(device.Acronym)}}" class="collapse">
+                                            <table class="table" style="width: 15%; font-size: x-small;" id="tb{{cleanIdentifier(device.Acronym)}}">
+                                                <tr><th></th><th>ID</th><th>Stream</th><th>Signal</th><th></th></tr>
+                                                <tr title="{{measurement.Description}}" ng-repeat="measurement in device.measurements">
+                                                    <td>
+                                                        <input type="checkbox" id="cb{{cleanIdentifier(measurement.ID)}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-model="checked" ng-init="checked=measurementChecked(measurement.SignalID)" ng-change="updateFilter(checked, measurement)" />
+                                                    </td>
+                                                    <td>{{measurement.ID.split(':')[1]}}</td>
+                                                    <td>{{cleanPointTag(measurement)}}</td>
+                                                    <td>{{measurement.SignalAcronym}}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+      
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="graphContainer" class="col-md-9 content" style="height: 100%">
+            <div class="pull-left">
+                <button id="collapseSidebarBtn" type="button" class="btn btn-primary btn-xs btn-collapsable" data-toggle="collapse" data-target="#sidebar" title="Collapse measurement selection section..."></button>
+                <button type="button" class="btn btn-primary btn-xs" onclick="resetFilter()">Clear Signals</button>
+            </div>
+            <div id="messageBlock">
+                <span id="message">Initializing data subscriptions...</span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin"></span>
+            </div>
+            <br />
+            <div id="graphWrapper" class="text-center" style="height: 100%">
+                <div id="placeholder" style="width: 100%; height: 100px"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modals">
+</div>
 @{
     ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();
     ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
