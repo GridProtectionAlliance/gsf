@@ -213,7 +213,7 @@ namespace GSF.SELEventParser
             }
             else if (headerFields.Length == 1)
             {
-                if (headerFields[0].Contains("CEV"))
+                if (headerFields[0].ToUpper().Contains("CEV"))
                 {
                     lineIndex++;
                     headerFields = StringParser.ParseStandardCSV(lines[lineIndex]);
