@@ -810,9 +810,9 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This flag is intended to be used in scenarios where a remote subscriber can add new measurements associated with
-        /// a source device, e.g., creating new calculated result measurements on a remote machine that should get associated
-        /// with a device on the local machine, thus becoming part of the local measurement set.
+        /// This flag is intended to be used in scenarios where a remote subscriber can add new measurements associated with a
+        /// source device, e.g., creating new calculated result measurements on a remote machine for load distribution that should
+        /// get associated with a device on the local machine, thus becoming part of the local measurement set.
         /// </para>
         /// <para>
         /// For best results, both the owner and renter subscriptions should be reduced to needed measurements, i.e., renter should
@@ -820,6 +820,10 @@ namespace GSF.TimeSeries.Transport
         /// when used with a TLS-style subscription this can be accomplished by using the subscription UI screens that control the
         /// measurement <c>subscribed</c> flag. For internal subscriptions, reduction of metadata and subscribed measurements will
         /// need to be controlled via connection string with <c>metadataFilters</c> and <c>outputMeasurements</c>, respectively.
+        /// </para>
+        /// <para>
+        /// Setting <see cref="MutualSubscription"/> to <c>true</c> will force <see cref="ReceiveInternalMetadata"/> to <c>true</c>
+        /// and <see cref="ReceiveExternalMetadata"/> to <c>false</c>.
         /// </para>
         /// </remarks>
         public bool MutualSubscription { get; set; }
@@ -1679,6 +1683,14 @@ namespace GSF.TimeSeries.Transport
             // Check if user has explicitly defined the ReceiveExternalMetadata flag
             if (settings.TryGetValue("receiveExternalMetadata", out setting))
                 ReceiveExternalMetadata = setting.ParseBoolean();
+
+            // Check if user has explicitly defined the MutualSubscription flag
+            if (settings.TryGetValue(nameof(MutualSubscription), out setting) && setting.ParseBoolean())
+            {
+                MutualSubscription = true;
+                ReceiveInternalMetadata = true;
+                ReceiveExternalMetadata = false;
+            }
 
             // Check if user has defined a meta-data synchronization timeout
             if (settings.TryGetValue("metadataSynchronizationTimeout", out setting) && int.TryParse(setting, out int metadataSynchronizationTimeout))
@@ -3971,7 +3983,7 @@ namespace GSF.TimeSeries.Transport
                                         contactList["interconnectionName"] = row.Field<string>("InterconnectionName") ?? string.Empty;
 
                                     // For mutual subscriptions where this subscription is owner (i.e., internal is true), we only sync devices that we did not provide
-                                    if (!MutualSubscription || !m_internal || !ReceiveInternalMetadata || ReceiveExternalMetadata || string.IsNullOrEmpty(row.Field<string>("OriginalSource")))
+                                    if (!MutualSubscription || !m_internal || string.IsNullOrEmpty(row.Field<string>("OriginalSource")))
                                     {
                                         // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party. From a device record perspective,
                                         // ownership is inferred by setting 'OriginalSource' to null. When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed
