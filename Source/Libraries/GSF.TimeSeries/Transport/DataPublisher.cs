@@ -1286,6 +1286,8 @@ namespace GSF.TimeSeries.Transport
                     status.Append(m_commandChannel.Status);
 
                 status.Append(base.Status);
+                status.AppendFormat("       Mutual Subscription: {0}", MutualSubscription);
+                status.AppendLine();
                 status.AppendFormat("        Reporting interval: {0:N0} per subscriber", MeasurementReportingInterval);
                 status.AppendLine();
                 status.AppendFormat("  Buffer block retransmits: {0:N0}", m_bufferBlockRetransmissions);

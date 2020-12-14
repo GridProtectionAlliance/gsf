@@ -1690,6 +1690,7 @@ namespace GSF.TimeSeries.Transport
                 MutualSubscription = true;
                 ReceiveInternalMetadata = true;
                 ReceiveExternalMetadata = false;
+                m_filterOutputMeasurements = false;
             }
 
             // Check if user has defined a meta-data synchronization timeout
@@ -2002,7 +2003,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // If active measurements are defined, attempt to defined desired subscription points from there
-            if (m_filterOutputMeasurements && (object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+            if ((m_securityMode == SecurityMode.TLS || m_filterOutputMeasurements) && (object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
             {
                 try
                 {
