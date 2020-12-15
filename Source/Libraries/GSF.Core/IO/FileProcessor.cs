@@ -738,7 +738,6 @@ namespace GSF.IO
         // Fields
         private string m_filter;
         private string m_folderExclusion;
-        private Func<string, bool> m_filterMethod;
         private bool m_trackChanges;
         private string m_cachePath;
         private int m_internalBufferSize;
@@ -774,7 +773,6 @@ namespace GSF.IO
         {
             m_filter = DefaultFilter;
             m_folderExclusion = DefaultFolderExclusion;
-            m_filterMethod = filePath => true;
             m_trackChanges = DefaultTrackChanges;
             m_cachePath = DefaultCachePath;
             m_internalBufferSize = DefaultInternalBufferSize;
@@ -825,22 +823,6 @@ namespace GSF.IO
             set
             {
                 m_folderExclusion = value ?? DefaultFolderExclusion;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the user-defined method by which to filter
-        /// files before raising the <see cref="Processing"/> event.
-        /// </summary>
-        public Func<string, bool> FilterMethod
-        {
-            get
-            {
-                return m_filterMethod;
-            }
-            set
-            {
-                m_filterMethod = value ?? (filePath => true);
             }
         }
 
@@ -1142,28 +1124,6 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Determines if the given file matches the filter method provided through the <see cref="FilterMethod"/> property.
-        /// </summary>
-        /// <param name="filePath">The path to the file to be tested against the filter method.</param>
-        /// <returns>True if the file matches the filter method; false otherwise.</returns>
-        public bool MatchesFilterMethod(string filePath)
-        {
-            if (m_disposed)
-                throw new ObjectDisposedException(nameof(FileProcessor));
-
-            try
-            {
-                return m_filterMethod(filePath);
-            }
-            catch (Exception ex)
-            {
-                string message = $"An exception occurred while attempting to execute user-defined filter: {ex.Message}";
-                OnError(new Exception(message, ex));
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Determines if the given folder matches the exclusion string provided through the <see cref="FolderExclusion"/> property.
         /// </summary>
         /// <param name="folderPath">The path to the folder to be tested against the exclusion string.</param>
@@ -1256,13 +1216,6 @@ namespace GSF.IO
             if (!m_touchedFiles.TryGetValue(filePath, out lastKnownWriteTime) || lastKnownWriteTime < lastWriteTime)
             {
                 m_touchedFiles[filePath] = lastWriteTime;
-
-                if (!MatchesFilterMethod(filePath))
-                {
-                    Interlocked.Increment(ref m_skippedFileCount);
-                    return;
-                }
-
                 StartProcessLoop(filePath, raisedByFileWatcher);
             }
         }
