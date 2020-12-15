@@ -635,26 +635,6 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Raises the <see cref="ClientBase.ConnectionException"/> event.
-        /// </summary>
-        /// <param name="ex">Exception to send to <see cref="ClientBase.ConnectionException"/> event.</param>
-        protected override void OnConnectionException(Exception ex)
-        {
-            int serverListLength = ServerList.Length;
-
-            if (serverListLength > 1)
-            {
-                // When multiple servers are available, move to next server connection
-                ServerIndex++;
-
-                if (ServerIndex >= serverListLength)
-                    ServerIndex = 0;
-            }
-
-            base.OnConnectionException(ex);
-        }
-
-        /// <summary>
         /// Callback method for asynchronous connect operation.
         /// </summary>
         private void ProcessConnect(ConnectState connectState)
@@ -1216,6 +1196,29 @@ namespace GSF.Communication
                 ReadIndex = 0;
 
             return readBytes;
+        }
+
+        /// <summary>
+        /// Requests that the client attempt to move to the next <see cref="ClientBase.ServerIndex"/>.
+        /// </summary>
+        /// <returns><c>true</c> if request succeeded; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Return value will only be <c>true</c> if <see cref="ClientBase.ServerIndex"/> changed.
+        /// </remarks>
+        public override bool RequestNextServerIndex()
+        {
+            int serverListLength = ServerList.Length;
+
+            if (serverListLength < 2)
+                return false;
+
+            // When multiple servers are available, move to next server connection
+            ServerIndex++;
+
+            if (ServerIndex >= serverListLength)
+                ServerIndex = 0;
+
+            return true;
         }
 
         /// <summary>

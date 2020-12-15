@@ -520,6 +520,15 @@ namespace GSF.Communication
         public abstract int Read(byte[] buffer, int startIndex, int length);
 
         /// <summary>
+        /// Requests that the client attempt to move to the next <see cref="ServerIndex"/>.
+        /// </summary>
+        /// <returns><c>true</c> if request succeeded; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Return value will only be <c>true</c> if <see cref="ServerIndex"/> changed.
+        /// </remarks>
+        public virtual bool RequestNextServerIndex() => false;
+
+        /// <summary>
         /// When overridden in a derived class, validates the specified <paramref name="connectionString"/>.
         /// </summary>
         /// <param name="connectionString">The connection string to be validated.</param>
@@ -836,6 +845,9 @@ namespace GSF.Communication
         {
             try
             {
+                // Move to next server connection, when multiple server end points are defined
+                RequestNextServerIndex();
+
                 if (!(ex is ObjectDisposedException))
                     ConnectionException?.Invoke(this, new EventArgs<Exception>(ex));
             }

@@ -266,6 +266,15 @@ namespace GSF.Communication
         /// </remarks>
         int Read(byte[] buffer, int startIndex, int length);
 
+        /// <summary>
+        /// Requests that the client attempt to move to the next <see cref="ServerIndex"/>.
+        /// </summary>
+        /// <returns><c>true</c> if request succeeded; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Return value will only be <c>true</c> if <see cref="ServerIndex"/> changed.
+        /// </remarks>
+        bool RequestNextServerIndex();
+
         #endregion
     }
 }

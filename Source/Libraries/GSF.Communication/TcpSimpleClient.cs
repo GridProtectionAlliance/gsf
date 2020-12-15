@@ -426,6 +426,29 @@ namespace GSF.Communication
             return readBytes;
         }
 
+        /// <summary>
+        /// Requests that the client attempt to move to the next <see cref="ClientBase.ServerIndex"/>.
+        /// </summary>
+        /// <returns><c>true</c> if request succeeded; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Return value will only be <c>true</c> if <see cref="ClientBase.ServerIndex"/> changed.
+        /// </remarks>
+        public override bool RequestNextServerIndex()
+        {
+            int serverListLength = ServerList.Length;
+
+            if (serverListLength < 2)
+                return false;
+
+            // When multiple servers are available, move to next server connection
+            ServerIndex++;
+
+            if (ServerIndex >= serverListLength)
+                ServerIndex = 0;
+
+            return true;
+        }
+
         // Reads data from the TcpClient stream.
         private async Task ReadDataAsync(CancellationToken cancellationToken)
         {
@@ -598,26 +621,6 @@ namespace GSF.Communication
                 if (!Transport.IsPortNumberValid(endpoint.Groups["port"].Value))
                     throw new ArgumentOutOfRangeException(nameof(connectionString), $"Server port must between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
             }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ClientBase.ConnectionException"/> event.
-        /// </summary>
-        /// <param name="ex">Exception to send to <see cref="ClientBase.ConnectionException"/> event.</param>
-        protected override void OnConnectionException(Exception ex)
-        {
-            int serverListLength = ServerList.Length;
-
-            if (serverListLength > 1)
-            {
-                // When multiple servers are available, move to next server connection
-                ServerIndex++;
-
-                if (ServerIndex >= serverListLength)
-                    ServerIndex = 0;
-            }
-
-            base.OnConnectionException(ex);
         }
 
         /// <summary>
