@@ -484,7 +484,18 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets connection info for adapter, if any.
         /// </summary>
-        public override string ConnectionInfo => m_frameParser?.ConnectionInfo;
+        public override string ConnectionInfo
+        {
+            get
+            {
+                string connectionInfo = m_frameParser?.ConnectionInfo;
+
+                if (!(connectionInfo is null) && connectionInfo.StartsWith("tcp://", StringComparison.Ordinal))
+                    return $"{connectionInfo}/{AccessID}";
+                
+                return connectionInfo;
+            }
+        }
 
         /// <summary>
         /// Gets or sets reference to <see cref="MultiProtocolFrameParser"/>, attaching and/or detaching to events as needed.
