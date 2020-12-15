@@ -33,7 +33,7 @@ namespace PhasorMapperTest
 {
     internal class Program
     {
-        private static readonly object s_displayLock = new();
+        private static readonly object s_displayLock = new object();
         private static DateTime s_lastMessageTime;
         private static long s_dataCount;
 
@@ -46,7 +46,7 @@ namespace PhasorMapperTest
             DataRow[] results = dataSource.Tables["InputAdapters"].Select($"AdapterName = '{DeviceName}'");
             uint adapterID = results.Length > 0 && uint.TryParse(results[0]["ID"].ToString(), out uint id) ? id : 0;
 
-            using PhasorMeasurementMapper mapper = new()
+            using PhasorMeasurementMapper mapper = new PhasorMeasurementMapper
             {
                 Name = DeviceName,
                 ID = adapterID,
@@ -66,7 +66,7 @@ namespace PhasorMapperTest
 
         private static DataSet LoadDataSource()
         {
-            DataSet dataSource = new();
+            DataSet dataSource = new DataSet();
             dataSource.ReadXml("SystemConfiguration.xml");
 
             foreach (DataRow measurement in dataSource.Tables["ActiveMeasurements"].Rows)
