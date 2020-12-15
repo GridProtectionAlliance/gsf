@@ -35,7 +35,7 @@
     <authors>$author$</authors>
     <description>$description$</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
-    <licenseUrl>https://github.com/GridProtectionAlliance/gsf/blob/master/LICENSE</licenseUrl>
+    <license type="expression">MIT</license>
     <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>TimeSeries Data Framework Adapter Input Action Output Measurement Time Concentration Hosting Environment Publish Subscribe Metadata Serialization Schema Routing Event Messaging Complex Processing</tags>
     <dependencies>

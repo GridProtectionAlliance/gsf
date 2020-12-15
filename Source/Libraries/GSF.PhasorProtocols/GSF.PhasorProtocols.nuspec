@@ -35,7 +35,7 @@
     <authors>$author$</authors>
     <description>$description$</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
-    <licenseUrl>https://github.com/GridProtectionAlliance/gsf/blob/master/LICENSE</licenseUrl>
+    <license type="expression">MIT</license>
     <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Synchrophasor Streaming Data Exchange Protocol Parser Generator PMU PDC Phasor Concentrator IEEE C37118 1344 IEC 61850 FNET Macrodyne SELFastMessage Library</tags>
     <dependencies>

@@ -35,7 +35,7 @@
     <authors>$author$</authors>
     <description>$description$</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
-    <licenseUrl>https://github.com/GridProtectionAlliance/gsf/blob/master/LICENSE</licenseUrl>
+    <license type="expression">MIT</license>
     <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Media Music WAV Wave Sound DTMF TouchTone RIFF Note Song Tempo Timbre</tags>
     <dependencies>
