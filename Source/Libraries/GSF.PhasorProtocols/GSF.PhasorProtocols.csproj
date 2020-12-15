@@ -34,7 +34,7 @@
     <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
     <CodeAnalysisRuleSet>GSF.PhasorProtocols.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
