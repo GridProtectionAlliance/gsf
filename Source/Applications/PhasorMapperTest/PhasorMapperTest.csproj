@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net4.6</TargetFramework>
+		<LangVersion>9.0</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="SystemConfiguration.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="SystemConfiguration.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Libraries\Adapters\PhasorProtocolAdapters\PhasorProtocolAdapters.csproj" />
+	  <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj" />
+	  <ProjectReference Include="..\..\Libraries\GSF.PhasorProtocols\GSF.PhasorProtocols.csproj" />
+	  <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj" />
+	</ItemGroup>
+
+</Project>
