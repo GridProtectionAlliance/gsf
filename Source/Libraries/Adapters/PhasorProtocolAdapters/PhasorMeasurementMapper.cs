@@ -1274,13 +1274,19 @@ namespace PhasorProtocolAdapters
             }
             else
             {
-                if (m_forceLabelMapping && m_accessIDList.Length > 1)
-                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Device configuration currently forces label mapping and has {m_accessIDList.Length:N0} access ID codes configured. Only the first access ID, {m_accessIDList[0]:N0}, will be used."), nameof(LoadInputDevices));
+                // Get unique list of access IDs for single device connection
+                ushort[] accessIDs = new HashSet<ushort>(m_accessIDList).ToArray();
+
+                if (m_forceLabelMapping && accessIDs.Length > 1)
+                {
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Device configuration currently forces label mapping and has {accessIDs.Length:N0} access ID codes configured. Only the first access ID, {accessIDs[0]:N0}, will be used."), nameof(LoadInputDevices));
+                    accessIDs = new[] { accessIDs[0] };
+                }
 
                 // Making a connection to a single device, accommodating possible multiple access ID codes
-                for (int i = 0; i < (m_forceLabelMapping ? 1 : m_accessIDList.Length); i++)
+                foreach (ushort accessID in accessIDs)
                 {
-                    definedDevice = new ConfigurationCell(m_accessIDList[i]);
+                    definedDevice = new ConfigurationCell(accessID);
 
                     // Used shared mapping name for single device connection if defined - this causes measurement mappings to be associated
                     // with alternate device by caching signal references associated with shared mapping acronym
