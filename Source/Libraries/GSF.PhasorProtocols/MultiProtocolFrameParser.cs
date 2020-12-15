@@ -959,6 +959,12 @@ namespace GSF.PhasorProtocols
             public int Read(byte[] buffer, int startIndex, int length) => m_udpClient?.Read(buffer, startIndex, length) ?? 0;
 
             /// <summary>
+            /// Requests that the client attempt to move to the next <see cref="ServerIndex"/>.
+            /// </summary>
+            /// <returns><c>true</c> if request succeeded; otherwise, <c>false</c>.</returns>
+            public bool RequestNextServerIndex() => false;
+
+            /// <summary>
             /// Sends data to the server synchronously.
             /// </summary>
             /// <param name="data">The buffer that contains the binary data to be sent.</param>
@@ -1424,6 +1430,11 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public event EventHandler ServerStopped;
 
+        /// <summary>
+        /// Occurs when the <see cref="IClient.ServerIndex"/> of the associated connection is updated.
+        /// </summary>
+        public event EventHandler ServerIndexUpdated;
+
         // Fields
         private PhasorProtocol m_phasorProtocol;
         private TransportProtocol m_transportProtocol;
@@ -1444,9 +1455,9 @@ namespace GSF.PhasorProtocols
         private long m_dataStreamStartTime;
         private long m_missingFramesOverflow;
         private long m_lastFrameReceivedTime;
-        private volatile int m_frameRateTotal;
-        private volatile int m_byteRateTotal;
-        private volatile int m_parsingExceptionCount;
+        private int m_frameRateTotal;
+        private int m_byteRateTotal;
+        private int m_parsingExceptionCount;
         private long m_lastParsingExceptionTime;
         private int m_definedFrameRate;
         private bool m_initiatingDataStream;
@@ -1865,7 +1876,18 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the current server index, when multiple server end points are defined.
         /// </summary>
-        public int ServerIndex => m_serverIndex;
+        public int ServerIndex
+        {
+            get => m_serverIndex;
+            private set
+            {
+                if (m_serverIndex == value)
+                    return;
+
+                m_serverIndex = value;
+                ServerIndexUpdated?.Invoke(this, EventArgs.Empty);
+            }
+        }
 
         /// <summary>
         /// Gets a string representing connectivity information.
@@ -2534,7 +2556,7 @@ namespace GSF.PhasorProtocols
 
             // Restore last server index so that next connection attempt will be for the next configured server
             if (m_commandChannel is ClientBase clientBase)
-                clientBase.ServerIndex = m_serverIndex;
+                clientBase.ServerIndex = ServerIndex;
 
             // Attempt connection to device over command channel
             m_commandChannel.ReceiveBufferSize = m_bufferSize;
@@ -2609,7 +2631,7 @@ namespace GSF.PhasorProtocols
 
                 // Restore last server index so that next connection attempt will be for the next configured server
                 if (m_dataChannel is ClientBase clientBase)
-                    clientBase.ServerIndex = m_serverIndex;
+                    clientBase.ServerIndex = ServerIndex;
 
                 // Attempt connection to device
                 m_dataChannel.ReceiveBufferSize = m_bufferSize;
@@ -2803,6 +2825,33 @@ namespace GSF.PhasorProtocols
 
                 m_frameParser = null;
             }
+        }
+
+        /// <summary>
+        /// Requests that the client attempt to move to the next <see cref="ServerIndex"/>.
+        /// </summary>
+        /// <returns><c>true</c> if request succeeded; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Return value will only be <c>true</c> if <see cref="ServerIndex"/> changed.
+        /// </remarks>
+        public bool RequestNextServerIndex()
+        {
+            if (!IsConnected)
+                return false;
+
+            if (!(m_commandChannel is null))
+            {
+                if (m_commandChannel.RequestNextServerIndex())
+                    ServerIndex = m_commandChannel.ServerIndex;
+            }
+
+            if (!(m_dataChannel is null))
+            {
+                if (m_dataChannel.RequestNextServerIndex())
+                    ServerIndex = m_dataChannel.ServerIndex;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -3269,7 +3318,7 @@ namespace GSF.PhasorProtocols
 
             // Next server index is selected when a connection exception occurs
             if (sender is ClientBase clientBase)
-                m_serverIndex = clientBase.ServerIndex;
+                ServerIndex = clientBase.ServerIndex;
         }
 
         private void m_dataChannel_ConnectionTerminated(object sender, EventArgs e) => ConnectionTerminated?.Invoke(this, EventArgs.Empty);
@@ -3399,7 +3448,7 @@ namespace GSF.PhasorProtocols
 
             // Next server index is selected when a connection exception occurs
             if (sender is ClientBase clientBase)
-                m_serverIndex = clientBase.ServerIndex;
+                ServerIndex = clientBase.ServerIndex;
         }
 
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
