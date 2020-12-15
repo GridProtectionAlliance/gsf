@@ -520,6 +520,7 @@ namespace PhasorProtocolAdapters
                     m_frameParser.ReceivedHeaderFrame -= m_frameParser_ReceivedHeaderFrame;
                     m_frameParser.ReceivedFrameImage -= m_frameParser_ReceivedFrameImage;
                     m_frameParser.ReceivedFrameBufferImage -= m_frameParser_ReceivedFrameBufferImage;
+                    m_frameParser.ServerIndexUpdated -= m_frameParser_ServerIndexUpdated;
 
                     if (m_frameParser != value)
                         m_frameParser.Dispose();
@@ -542,6 +543,7 @@ namespace PhasorProtocolAdapters
                     m_frameParser.ReceivedDataFrame += m_frameParser_ReceivedDataFrame;
                     m_frameParser.ReceivedHeaderFrame += m_frameParser_ReceivedHeaderFrame;
                     m_frameParser.ReceivedFrameImage += m_frameParser_ReceivedFrameImage;
+                    m_frameParser.ServerIndexUpdated += m_frameParser_ServerIndexUpdated;
 
                     // Only attach to full frame buffer reception event if data forwarding is enabled as attaching
                     // to this event engages an async queue to guarantee ordered delivery of buffer images
@@ -2123,24 +2125,6 @@ namespace PhasorProtocolAdapters
             m_measurementsPerSecondCount = 0L;
         }
 
-        // Replace with secure notification mechanism handlers for notification when subordinate phasor adapter needs to kick on when primary data feed goes offline (if feature is still deemed useful)
-
-        //// Primary data source connection has terminated, engage backup connection
-        //private void m_primaryDataSource_ConnectionTerminated(object sender, EventArgs e)
-        //{
-        //    OnStatusMessage("WARNING: Primary data source connection was terminated, attempting to engage backup connection...");
-        //    Start();
-        //}
-
-        //// Primary data source connection has been reestablished, disengage backup connection
-        //private void m_primaryDataSource_ConnectionEstablished(object sender, EventArgs e)
-        //{
-        //    if (Enabled)
-        //        OnStatusMessage("Primary data source connection has been reestablished, disengaging backup connection...");
-
-        //    Stop();
-        //}
-
         /// <summary>
         /// Gets connection ID (i.e., IP:Port) for specified <paramref name="clientID"/>.
         /// </summary>
@@ -2289,6 +2273,9 @@ namespace PhasorProtocolAdapters
                 // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
                 OnStatusMessage(MessageLevel.Info, $"\r\nNo data received in {m_dataStreamMonitor.Interval / 1000.0D:0.0} seconds, restarting connect cycle...\r\n", "Connection Issues");
+
+                // Ask to move to next server, if available
+                m_frameParser.RequestNextServerIndex();
                 Start();
             }
             else if (!m_receivedConfigFrame && AllowUseOfCachedConfiguration)
@@ -2303,6 +2290,9 @@ namespace PhasorProtocolAdapters
                 else if (m_frameParser.DeviceSupportsCommands)
                 {
                     OnStatusMessage(MessageLevel.Info, "\r\nConfiguration frame has yet to be received even after attempt to load from cache, restarting connect cycle...\r\n");
+
+                    // Ask to move to next server, if available
+                    m_frameParser.RequestNextServerIndex();
                     Start();
                 }
             }
@@ -2620,6 +2610,9 @@ namespace PhasorProtocolAdapters
             m_receivedConfigFrame = false;
             SendCommand(DeviceCommand.SendConfigurationFrame2);
         }
+
+        private void m_frameParser_ServerIndexUpdated(object sender, EventArgs e) => 
+            m_frameParser.DeviceID = AccessID;
 
         #endregion
 
