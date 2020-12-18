@@ -58,27 +58,44 @@ void write_byte(FILE* out, int32_t& chars, unsigned char value)
     fprintf(out, "0x%02X", value);
 }
 
+bool starts_with(const char* str, const char* prefix)
+{
+    return _strnicmp(prefix, str, strlen(prefix)) == 0;
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 3) {
-        fprintf(stderr, "USAGE: %s {sym} {rsrc} [{namespace}] [addnull]\n\n"
-            "  Creates {sym}.cpp/.h from the contents of {rsrc}\n",
-            argv[0]);
+        fprintf(stderr, "\nUSAGE: EmbedFile {sym} {rsrc} [-namespace={ns1::ns2::}] [-addNull] [-useIncludeGuard]\n\n"
+            "  Creates {sym}.cpp/.h from the contents of {rsrc}\n\n");
         return EXIT_FAILURE;
     }
 
     const char* sym = argv[1];
     FILE* in = open_or_exit(argv[2], "r");
-    const char* prefix = "";
+    const char* namespaceArgument = "";
+    const char* namespacePrefix = "";
     bool addNullByte = false;
+    bool useIncludeGuard = false;
 
-    // Third argument is optional C++ namespace prefix
-    if (argc > 3)
-        prefix = argv[3];
-
-    // Fourth argument is optional command to add a null byte to resource
-    if (argc > 4)
-        addNullByte = _strcmpi(argv[4], "addnull") == 0;
+    // Parse optional argumments
+    for (int i = 3; i < argc; i++)
+    {
+        //                                 01234567890
+        if (starts_with(argv[i], "-namespace=") && strlen(argv[i]) > 11)
+        {
+            namespaceArgument = argv[i];
+            namespacePrefix = &namespaceArgument[11];
+        }
+        else if (_strcmpi(argv[i], "-addNull") == 0)
+        {
+            addNullByte = true;
+        }
+        else if (_strcmpi(argv[i], "-useIncludeGuard") == 0)
+        {
+            useIncludeGuard = true;
+        }
+    }
 
     // Create .H resource file
     char symfile[256];
@@ -87,16 +104,20 @@ int main(int argc, char** argv)
 
     // Define #ifdef directive symbol used to include header file only once
     char symdirective[256];
-    const char* s = sym;
-    char* d = symdirective;
 
-    while (*s) {
-        if (isupper(*s))
-            *d++ = '_';
-        *d++ = toupper(*s++);
+    if (useIncludeGuard)
+    {
+        const char* s = sym;
+        char* d = symdirective;
+
+        while (*s) {
+            if (isupper(*s))
+                *d++ = '_';
+            *d++ = toupper(*s++);
+        }
+
+        *d = '\0';
     }
-
-    *d = '\0';
 
     char now[256];
     time_t rawtime;
@@ -107,17 +128,26 @@ int main(int argc, char** argv)
 
     // Write header for .H resource file
     fprintf(out, "// Auto-generated on %s", now);
-    fprintf(out, "// EmbedFile.exe %s %s %s%s\n\n", sym, argv[2], prefix, addNullByte ? " addnull" : "");
-    fprintf(out, "#ifndef %s\n", symdirective);
-    fprintf(out, "#define %s\n\n", symdirective);
+    fprintf(out, "// EmbedFile.exe %s %s %s%s%s\n\n", sym, argv[2], namespaceArgument, addNullByte ? " -addNull" : "", useIncludeGuard ? " -useIncludeGuard" : "");
+
+    if (useIncludeGuard)
+    {
+        fprintf(out, "#ifndef %s\n", symdirective);
+        fprintf(out, "#define %s\n\n", symdirective);
+    }
+    else
+    {
+        fprintf(out, "#pragma once\n\n");
+    }
+
     fprintf(out, "#include <cstdint>\n\n");
 
-    if (strlen(prefix) > 0)
+    if (strlen(namespacePrefix) > 0)
     {
         // When a C++ namespace prefix is provided, break each namespace
         // component out into separate namespace commands for the .H file
         char source[256];
-        strcpy_s(source, 256, prefix);
+        strcpy_s(source, 256, namespacePrefix);
 
         char* next_token;
         char* token = strtok_s(source, "::", &next_token);
@@ -144,7 +174,9 @@ int main(int argc, char** argv)
         fprintf(out, "const extern uint32_t %sLength;", sym);
     }
 
-    fprintf(out, "\n\n#endif\n");
+    if (useIncludeGuard)
+        fprintf(out, "\n\n#endif\n");
+
     fclose(out);
 
     // Create .CPP resource file
@@ -153,9 +185,9 @@ int main(int argc, char** argv)
 
     // Write header for .CPP resource file
     fprintf(out, "// Auto-generated on %s", now);
-    fprintf(out, "// EmbedFile.exe %s %s %s%s\n\n", sym, argv[2], prefix, addNullByte ? " addnull" : "");
+    fprintf(out, "// EmbedFile.exe %s %s %s%s%s\n\n", sym, argv[2], namespaceArgument, addNullByte ? " -addNull" : "", useIncludeGuard ? " -useIncludeGuard" : "");
     fprintf(out, "#include \"%s.h\"\n\n", sym);
-    fprintf(out, "const uint8_t %s%s[] = {", prefix, sym);
+    fprintf(out, "const uint8_t %s%s[] = {", namespacePrefix, sym);
 
     unsigned char buf[256];
     size_t nread;
@@ -177,7 +209,7 @@ int main(int argc, char** argv)
         write_byte(out, chars, '\0');
     
     fprintf(out, "\n};\n\n");
-    fprintf(out, "const uint32_t %s%sLength = sizeof(%s%s);\n", prefix, sym, prefix, sym);
+    fprintf(out, "const uint32_t %s%sLength = sizeof(%s%s);\n", namespacePrefix, sym, namespacePrefix, sym);
 
     fclose(in);
     fclose(out);
