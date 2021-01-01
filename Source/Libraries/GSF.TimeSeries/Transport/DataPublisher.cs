@@ -3558,7 +3558,7 @@ namespace GSF.TimeSeries.Transport
                 if (rowCount > 0)
                 {
                     Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                    OnStatusMessage(MessageLevel.Info, $"{rowCount:N0} records spanning {metadata.Tables.Count:N0} tables of meta-data prepared in {elapsedTime.ToString(2)}, sending response to {connection.ConnectionID}...");
+                    OnStatusMessage(MessageLevel.Info, $"{rowCount:N0} records spanning {metadata.Tables.Count:N0} tables of meta-data prepared in {elapsedTime.ToString(3)}, sending response to {connection.ConnectionID}...");
                 }
                 else
                 {

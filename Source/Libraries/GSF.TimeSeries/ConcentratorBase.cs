@@ -1338,7 +1338,7 @@ namespace GSF.TimeSeries
 
                 status.AppendFormat("     Data concentration is: {0}", Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
-                status.AppendFormat("    Total process run time: {0}", RunTime.ToString(2));
+                status.AppendFormat("    Total process run time: {0}", RunTime.ToString(3));
                 status.AppendLine();
                 status.AppendFormat("    Measurement wait delay: {0} seconds (lag time)", m_lagTime);
                 status.AppendLine();
@@ -1348,7 +1348,7 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat("      Down-sampling method: {0}", m_downsamplingMethod);
                 status.AppendLine();
-                status.AppendFormat("    Local clock time (UTC): {0}", currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                status.AppendFormat("    Local clock time (UTC): {0:dd-MMM-yyyy HH:mm:ss.fff}", currentTime);
                 status.AppendLine();
                 status.AppendFormat("  Using clock as real-time: {0}", m_useLocalClockAsRealTime);
                 status.AppendLine();
@@ -1397,19 +1397,19 @@ namespace GSF.TimeSeries
                     status.Append(" - ");
                     status.Append(((DateTime)lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                     status.AppendLine();
-                    status.AppendFormat(" Latency of last discarded: {0} seconds", LastDiscardedMeasurementLatency.ToSeconds().ToString("0.0000"));
+                    status.AppendFormat(" Latency of last discarded: {0:0.0000} seconds", LastDiscardedMeasurementLatency.ToSeconds());
                 }
 
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
-                status.AppendFormat("  Pre-lag-time publication: {0}", (FramesAheadOfSchedule / (double)PublishedFrames).ToString("##0.0000%"));
+                status.AppendFormat("  Pre-lag-time publication: {0:##0.0000%}", (FramesAheadOfSchedule / (double)PublishedFrames));
                 status.AppendLine();
-                status.AppendFormat(" Down-sampling application: {0}", (DownsampledMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Down-sampling application: {0:##0.0000%}", (DownsampledMeasurements / (double)ProcessedMeasurements));
                 status.AppendLine();
-                status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (TicksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / TicksPerFrame).ToString("##0.0000%"));
+                status.AppendFormat(" User function utilization: {0:##0.0000%} of available time used", 1.0D - (TicksPerFrame - AveragePublicationTimePerFrame.ToTicks()) / TicksPerFrame);
                 status.AppendLine();
-                status.AppendFormat("Published measurement loss: {0}", (DiscardedMeasurements / (double)ReceivedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("Published measurement loss: {0:##0.0000%}", (DiscardedMeasurements / (double)ReceivedMeasurements));
                 status.AppendLine();
 
                 if (m_allowSortsByArrival)

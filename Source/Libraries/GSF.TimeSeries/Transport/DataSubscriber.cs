@@ -4511,7 +4511,7 @@ namespace GSF.TimeSeries.Transport
             if (rowCount > 0)
             {
                 Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                OnStatusMessage(MessageLevel.Info, $"Received a total of {rowCount:N0} records spanning {deserializedMetadata.Tables.Count:N0} tables of meta-data that was {(compressMetadata ? "uncompressed and " : "")}deserialized in {elapsedTime.ToString(2)}...");
+                OnStatusMessage(MessageLevel.Info, $"Received a total of {rowCount:N0} records spanning {deserializedMetadata.Tables.Count:N0} tables of meta-data that was {(compressMetadata ? "uncompressed and " : "")}deserialized in {elapsedTime.ToString(3)}...");
             }
 
             return deserializedMetadata;

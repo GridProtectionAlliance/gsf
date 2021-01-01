@@ -668,7 +668,7 @@ namespace GSF.Historian
                 status.AppendLine();
                 status.AppendFormat("    Total packets received: {0}", m_totalPacketsReceived);
                 status.AppendLine();
-                status.AppendFormat("                  Run time: {0}", RunTime.ToString());
+                status.AppendFormat("                  Run time: {0}", RunTime.ToString(3));
                 status.AppendLine();
 
                 return status.ToString();

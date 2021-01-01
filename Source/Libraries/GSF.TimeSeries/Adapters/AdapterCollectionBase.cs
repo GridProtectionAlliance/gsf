@@ -708,9 +708,9 @@ namespace GSF.TimeSeries.Adapters
                 }
                 if (MonitorTimerEnabled)
                 {
-                    status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements.ToString("N0"));
+                    status.AppendFormat("    Processed measurements: {0:N0}", m_processedMeasurements);
                     status.AppendLine();
-                    status.AppendFormat("   Average processing rate: {0} measurements / second", ((int)(m_processedMeasurements / m_totalProcessTime)).ToString("N0"));
+                    status.AppendFormat("   Average processing rate: {0:N0} measurements / second", ((int)(m_processedMeasurements / m_totalProcessTime)));
                     status.AppendLine();
                 }
                 status.AppendFormat("       Data source defined: {0}", dataSource != null);
@@ -1697,7 +1697,7 @@ namespace GSF.TimeSeries.Adapters
             // Entire runtime 9,999,999,999,999 99,999,999
             // Last minute         4,985            83
 
-            status.AppendFormat("\r\nProcess statistics for {0} total runtime:\r\n\r\n", m_totalProcessTime.ToString().ToLower());
+            status.AppendFormat("\r\nProcess statistics for {0} total runtime:\r\n\r\n", m_totalProcessTime.ToString(3).ToLower());
             status.Append("Time span".PadRight(14));
             status.Append(' ');
             status.Append("Measurements".CenterText(17));

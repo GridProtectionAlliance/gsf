@@ -663,7 +663,7 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString(2));
+                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString(3));
                 status.AppendLine();
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();

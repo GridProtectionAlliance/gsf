@@ -360,7 +360,7 @@ namespace GSF.TimeSeries.Configuration
                                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                                 // Display information to the user
-                                OnStatusMessage(MessageLevel.Info, $"Loaded {changeCount} change{(changeCount == 1 ? "" : "s")} to \"{runtimeName}\" in {operationElapsedTime.ToString(2)}...");
+                                OnStatusMessage(MessageLevel.Info, $"Loaded {changeCount} change{(changeCount == 1 ? "" : "s")} to \"{runtimeName}\" in {operationElapsedTime.ToString(3)}...");
                             }
 
                             success = true;
@@ -484,7 +484,7 @@ namespace GSF.TimeSeries.Configuration
                 // Update table name as defined in configuration entity
                 source.TableName = entityRow["RuntimeName"].ToString();
 
-                OnStatusMessage(MessageLevel.Info, $"Loaded {source.Rows.Count} row{(source.Rows.Count == 1 ? "" : "s")} from \"{source.TableName}\" in {operationElapsedTime.ToString(2)}...");
+                OnStatusMessage(MessageLevel.Info, $"Loaded {source.Rows.Count} row{(source.Rows.Count == 1 ? "" : "s")} from \"{source.TableName}\" in {operationElapsedTime.ToString(3)}...");
 
                 operationStartTime = DateTime.UtcNow.Ticks;
 
@@ -522,7 +522,7 @@ namespace GSF.TimeSeries.Configuration
 
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
-                OnStatusMessage(MessageLevel.Info, $"{source.TableName} configuration pre-cache completed in {operationElapsedTime.ToString(2)}.");
+                OnStatusMessage(MessageLevel.Info, $"{source.TableName} configuration pre-cache completed in {operationElapsedTime.ToString(3)}.");
             });
 
             return destination;
@@ -645,7 +645,7 @@ namespace GSF.TimeSeries.Configuration
                 AdoSecurityProvider.ExtractSecurityContext(database.Connection, ex => OnProcessException(MessageLevel.Warning, ex, flags: MessageFlags.SecurityMessage));
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
-                OnStatusMessage(MessageLevel.Info, $"Security context prepared in {operationElapsedTime.ToString(2)}.");
+                OnStatusMessage(MessageLevel.Info, $"Security context prepared in {operationElapsedTime.ToString(3)}.");
                 OnStatusMessage(MessageLevel.Info, "Database configuration successfully loaded.", flags: MessageFlags.SecurityMessage);
             });
         }

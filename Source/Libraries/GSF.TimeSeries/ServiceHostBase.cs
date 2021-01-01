@@ -1777,7 +1777,7 @@ namespace GSF.TimeSeries
                 bool idArgExists = requestInfo.Request.Arguments.Exists("OrderedArg1");
                 int enumeratedItems = 0;
 
-                adapterList.AppendFormat("System Uptime: {0}", m_serviceHelper.RemotingServer.RunTime.ToString(2));
+                adapterList.AppendFormat("System Uptime: {0}", m_serviceHelper.RemotingServer.RunTime.ToString(3));
                 adapterList.AppendLine();
                 adapterList.AppendLine();
 

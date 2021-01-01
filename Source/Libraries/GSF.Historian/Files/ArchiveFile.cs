@@ -1136,7 +1136,7 @@ namespace GSF.Historian.Files
                     status.Append(statistics.AverageWriteSpeed + " per Second");
                     status.AppendLine();
                     status.Append("          Averaging window: ");
-                    status.Append(statistics.AveragingWindow.ToString(2));
+                    status.Append(statistics.AveragingWindow.ToString(3));
                     status.AppendLine();
 
                     if ((object)m_historicArchiveFiles != null)

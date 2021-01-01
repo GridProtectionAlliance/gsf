@@ -495,7 +495,7 @@ namespace GSF.Communication
                 status.Append(CurrentState);
                 status.AppendLine();
                 status.Append("            Server runtime: ");
-                status.Append(RunTime.ToString(CultureInfo.CurrentCulture));
+                status.Append(RunTime.ToString(3));
                 status.AppendLine();
                 status.Append("         Connected clients: ");
                 status.Append(m_clientIDs.Count);

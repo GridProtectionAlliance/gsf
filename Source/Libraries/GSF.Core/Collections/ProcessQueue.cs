@@ -1235,7 +1235,7 @@ namespace GSF.Collections
                     status.AppendLine();
                 }
 
-                status.AppendFormat("    Total process run time: {0}", RunTime.ToString(2));
+                status.AppendFormat("    Total process run time: {0}", RunTime.ToString(3));
                 status.AppendLine();
                 status.AppendFormat("      Total active threads: {0:N0}", m_threadCount);
                 status.AppendLine();

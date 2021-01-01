@@ -558,7 +558,7 @@ namespace StatHistorianReportGenerator
         {
             FontProp font = new FontProp(fontDefinition, 0.0D);
             font.rSizePoint = 10.0D;
-            page.AddCB_MM(verticalMillimeters + font.rSizeMM, new RepString(font, $"System Up-Time: {new Time(m_systemUpTime).ToString()}"));
+            page.AddCB_MM(verticalMillimeters + font.rSizeMM, new RepString(font, $"System Up-Time: {new Time(m_systemUpTime).ToString(3)}"));
             return font.rSizeMM;
         }
 

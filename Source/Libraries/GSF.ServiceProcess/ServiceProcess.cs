@@ -249,8 +249,8 @@ namespace GSF.ServiceProcess
                 }
 
                 status.AppendLine();
-                status.Append("       Last Execution Time: ");
-                status.Append(LastExecutionTime.ToString());
+                status.Append("   Last Execution Duration: ");
+                status.Append(LastExecutionTime.ToString(3));
                 status.AppendLine();
 
                 return status.ToString();

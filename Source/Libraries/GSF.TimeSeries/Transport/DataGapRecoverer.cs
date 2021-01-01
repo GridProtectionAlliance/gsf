@@ -560,13 +560,13 @@ namespace GSF.TimeSeries.Transport
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat(" Data recovery start delay: {0}", RecoveryStartDelay.ToString(2));
+                status.AppendFormat(" Data recovery start delay: {0}", RecoveryStartDelay.ToString(3));
                 status.AppendLine();
-                status.AppendFormat("  Data monitoring interval: {0}", DataMonitoringInterval.ToString(2));
+                status.AppendFormat("  Data monitoring interval: {0}", DataMonitoringInterval.ToString(3));
                 status.AppendLine();
-                status.AppendFormat("Minimum data recovery span: {0}", MinimumRecoverySpan.ToString(2));
+                status.AppendFormat("Minimum data recovery span: {0}", MinimumRecoverySpan.ToString(3));
                 status.AppendLine();
-                status.AppendFormat("Maximum data recovery span: {0}", MaximumRecoverySpan.ToString(2));
+                status.AppendFormat("Maximum data recovery span: {0}", MaximumRecoverySpan.ToString(3));
                 status.AppendLine();
                 status.AppendFormat("Recovery filter expression: {0}", FilterExpression.TruncateRight(51));
                 status.AppendLine();

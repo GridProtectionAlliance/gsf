@@ -224,7 +224,7 @@ namespace ConfigurationCacher
                             // Update table name as defined in configuration entity
                             source.TableName = entityRow["RuntimeName"].ToString();
 
-                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime.ToString(2));
+                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime.ToString(3));
 
                             operationStartTime = DateTime.UtcNow.Ticks;
 
@@ -265,7 +265,7 @@ namespace ConfigurationCacher
                             // Add entity configuration data to system configuration
                             configuration.Tables.Add(destination);
 
-                            DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime.ToString(2));
+                            DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime.ToString(3));
                         }
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
@@ -353,7 +353,7 @@ namespace ConfigurationCacher
             if (!configException)
             {
                 elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, s_configurationType, elapsedTime.ToString(2));
+                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, s_configurationType, elapsedTime.ToString(3));
             }
 
             return configuration;
