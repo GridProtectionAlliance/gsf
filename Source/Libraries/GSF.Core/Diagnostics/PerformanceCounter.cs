@@ -72,7 +72,7 @@ namespace GSF.Diagnostics
     /// </example>
     public class PerformanceCounter : IDisposable
     {
-        #region [ Members ]
+    #region [ Members ]
 
         // Constants
 
@@ -104,9 +104,9 @@ namespace GSF.Diagnostics
         private long m_lifetimeSampleCount;
         private bool m_disposed;
 
-        #endregion
+    #endregion
 
-        #region [ Constructors ]
+    #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceCounter"/> class.
@@ -174,7 +174,7 @@ namespace GSF.Diagnostics
         // Create a combined performance counter from multiple similar sources
         internal PerformanceCounter(PerformanceCounter[] sources)
         {
-            if ((object)sources == null)
+            if (sources is null)
                 throw new ArgumentNullException(nameof(sources));
 
             if (sources.Length < 1)
@@ -182,7 +182,7 @@ namespace GSF.Diagnostics
 
             PerformanceCounter initialCounter = sources[0];
 
-            if ((object)initialCounter == null)
+            if (initialCounter is null)
                 throw new InvalidOperationException("No valid performance counters available");
 
             m_aliasName = initialCounter.m_aliasName;
@@ -211,24 +211,19 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="PerformanceCounter" /> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~PerformanceCounter()
-        {
+        ~PerformanceCounter() =>
             Dispose(false);
-        }
 
-        #endregion
+    #endregion
 
-        #region [ Properties ]
+    #region [ Properties ]
 
         /// <summary>
         /// Gets or sets an alias name for the <see cref="PerformanceCounter"/>.
         /// </summary>
         public string AliasName
         {
-            get
-            {
-                return m_aliasName;
-            }
+            get => m_aliasName;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -245,10 +240,7 @@ namespace GSF.Diagnostics
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string ValueUnit
         {
-            get
-            {
-                return m_valueUnit;
-            }
+            get => m_valueUnit;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -265,10 +257,7 @@ namespace GSF.Diagnostics
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not greater than 0.</exception>
         public float ValueDivisor
         {
-            get
-            {
-                return m_valueDivisor;
-            }
+            get => m_valueDivisor;
             set
             {
                 if (value <= 0)
@@ -285,10 +274,7 @@ namespace GSF.Diagnostics
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not greater than 0.</exception>
         public int SamplingWindow
         {
-            get
-            {
-                return m_samplingWindow;
-            }
+            get => m_samplingWindow;
             set
             {
                 if (value <= 0)
@@ -306,9 +292,7 @@ namespace GSF.Diagnostics
             get
             {
                 lock (m_samplesLock)
-                {
                     return new List<float>(m_samples);
-                }
             }
         }
 
@@ -383,13 +367,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Gets the maximum sample value over the entire lifetime of the <see cref="BaseCounter"/>.
         /// </summary>
-        public float LifetimeMaximumValue
-        {
-            get
-            {
-                return m_lifetimeMaximum / m_valueDivisor;
-            }
-        }
+        public float LifetimeMaximumValue => m_lifetimeMaximum / m_valueDivisor;
 
         /// <summary>
         /// Gets the average sample value over the entire lifetime of the <see cref="BaseCounter"/>.
@@ -399,7 +377,7 @@ namespace GSF.Diagnostics
             get
             {
                 if (m_lifetimeSampleCount > 0)
-                    return (float)(m_lifetimeTotal / (decimal)m_lifetimeSampleCount) / m_valueDivisor;
+                    return (float)(m_lifetimeTotal / m_lifetimeSampleCount) / m_valueDivisor;
 
                 return float.NaN;
             }
@@ -408,24 +386,17 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Gets the total values sampled over the entire lifetime of the <see cref="BaseCounter"/>.
         /// </summary>
-        public long LifetimeSampleCount
-        {
-            get
-            {
-                return m_lifetimeSampleCount;
-            }
-        }
+        public long LifetimeSampleCount => m_lifetimeSampleCount;
 
         /// <summary>
         /// Gets the <see cref="System.Diagnostics.PerformanceCounter"/> object that this <see cref="PerformanceCounter"/> objects wraps.
         /// </summary>
-        public System.Diagnostics.PerformanceCounter BaseCounter
-        {
-            get
-            {
-                return m_counter;
-            }
-        }
+        public System.Diagnostics.PerformanceCounter BaseCounter => m_counter;
+
+        /// <summary>
+        /// Gets or sets an optional custom sample adjustment function.
+        /// </summary>
+        public Func<float, float> SampleAdjuster { get; set; }
 
         #endregion
 
@@ -447,26 +418,26 @@ namespace GSF.Diagnostics
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                // This will be done regardless of whether the object is finalized or disposed.
+                if (disposing)
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if ((object)m_counter != null)
-                            m_counter.Dispose();
+                    // This will be done only when the object is disposed by calling Dispose().
+                    if (!(m_counter is null))
+                        m_counter.Dispose();
 
-                        m_counter = null;
-                    }
+                    m_counter = null;
+                }
 
-                    Reset();
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
+                Reset();
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
@@ -477,38 +448,41 @@ namespace GSF.Diagnostics
         {
             try
             {
-                if ((object)m_counter != null)
+                if (m_counter is null)
+                    return;
+
+                float currentSample = m_counter.NextValue();
+
+                if (!(SampleAdjuster is null))
+                    currentSample = SampleAdjuster(currentSample);
+
+                lock (m_samplesLock)
                 {
-                    float currentSample = m_counter.NextValue();
+                    // Update counter sample set
+                    m_samples.Add(currentSample);
 
-                    lock (m_samplesLock)
+                    // Maintain counter samples rolling window size
+                    while (m_samples.Count > m_samplingWindow)
+                        m_samples.RemoveAt(0);
+                }
+
+                // Track lifetime maximum value
+                if (currentSample > m_lifetimeMaximum)
+                    m_lifetimeMaximum = currentSample;
+
+                // Track lifetime average components
+                checked
+                {
+                    try
                     {
-                        // Update counter sample set
-                        m_samples.Add(currentSample);
-
-                        // Maintain counter samples rolling window size
-                        while (m_samples.Count > m_samplingWindow)
-                            m_samples.RemoveAt(0);
+                        m_lifetimeSampleCount++;
+                        m_lifetimeTotal += (decimal)currentSample;
                     }
-
-                    // Track lifetime maximum value
-                    if (currentSample > m_lifetimeMaximum)
-                        m_lifetimeMaximum = currentSample;
-
-                    // Track lifetime average components
-                    checked
+                    catch (OverflowException)
                     {
-                        try
-                        {
-                            m_lifetimeSampleCount++;
-                            m_lifetimeTotal += (decimal)currentSample;
-                        }
-                        catch (OverflowException)
-                        {
-                            // If we overflow lifetime total, we restart total with current sample
-                            m_lifetimeSampleCount = 1;
-                            m_lifetimeTotal = (decimal)currentSample;
-                        }
+                        // If we overflow lifetime total, we restart total with current sample
+                        m_lifetimeSampleCount = 1;
+                        m_lifetimeTotal = (decimal)currentSample;
                     }
                 }
             }
@@ -524,11 +498,9 @@ namespace GSF.Diagnostics
         public void Reset()
         {
             lock (m_samplesLock)
-            {
                 m_samples.Clear();
-            }
         }
 
-        #endregion
+    #endregion
     }
 }

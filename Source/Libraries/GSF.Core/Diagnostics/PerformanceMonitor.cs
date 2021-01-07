@@ -84,15 +84,15 @@ namespace GSF.Diagnostics
     /// <seealso cref="PerformanceCounter"/>
     public class PerformanceMonitor : IDisposable, IProvideStatus
     {
-        #region [ Members ]
+    #region [ Members ]
 
         // Constants
-#if !MONO
+    #if !MONO
         /// <summary>
         /// Name of the custom thread pool counters category.
         /// </summary>
         public const string ThreadPoolCountersCategoryName = "GSF Thread Pool Counters";
-#endif
+    #endif
 
         /// <summary>
         /// Default interval for sampling the <see cref="Counters"/>.
@@ -105,9 +105,9 @@ namespace GSF.Diagnostics
         private readonly Timer m_samplingTimer;
         private bool m_disposed;
 
-        #endregion
+    #endregion
 
-        #region [ Constructors ]
+    #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
@@ -117,7 +117,7 @@ namespace GSF.Diagnostics
         {
         }
 
-#if MONO
+    #if MONO
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
         /// </summary>
@@ -128,7 +128,7 @@ namespace GSF.Diagnostics
             : this(Process.GetCurrentProcess().Id.ToString(), samplingInterval, addDefaultCounters)
         {
         }
-#else
+    #else
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
         /// </summary>
@@ -138,7 +138,7 @@ namespace GSF.Diagnostics
             : this(Process.GetCurrentProcess().ProcessName, samplingInterval, addDefaultCounters)
         {
         }
-#endif
+    #endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
@@ -158,29 +158,27 @@ namespace GSF.Diagnostics
         /// <param name="addDefaultCounters">Set to <c>true</c> to add default counters; otherwise <c>false</c>.</param>
         public PerformanceMonitor(string processName, double samplingInterval, bool addDefaultCounters = true)
         {
-            if ((object)processName == null)
-                throw new ArgumentNullException(nameof(processName));
-
-            m_processName = processName;
+            m_processName = processName ?? throw new ArgumentNullException(nameof(processName));
             m_counters = new List<PerformanceCounter>();
 
             if (addDefaultCounters)
             {
                 // Add default process and .NET counters
                 AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Average % / CPU", Environment.ProcessorCount);
-#if !MONO
+            #if !MONO
                 AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", SI2.Kilo);
                 AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
                 AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
-#endif
+            #endif
                 AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "System Threads", 1);
-                AddCounter(".NET CLR LocksAndThreads", "# of current logical Threads", m_processName, "CLR Thread Count", "Managed Threads", 1);
+                AddCounter(".NET CLR LocksAndThreads", "# of current logical Threads", m_processName, "CLR Thread Count", "Managed Threads", 1, true, 
+                           sample => sample > int.MaxValue ? uint.MaxValue - sample : sample);
 
-#if MONO
+            #if MONO
                 // Add Mono thread pool counters
                 AddCounter("Mono Threadpool", "# of Threads", m_processName, "Worker Threads", "Active in Pool", 1);
                 AddCounter("Mono Threadpool", "# of IO Threads", m_processName, "I/O Port Threads", "Active in Pool", 1);
-#else
+            #else
                 if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
                 {
                     // Add custom thread pool counters                                                             1234567890123456
@@ -188,7 +186,7 @@ namespace GSF.Diagnostics
                     //                                                                                    12345678901234567890
                     AddCounter(ThreadPoolCountersCategoryName, "Completion Port Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
                 }
-#endif
+            #endif
 
                 AddCounter(".NET CLR LocksAndThreads", "Current Queue Length", m_processName, "Thread Queue Size", "Waiting Threads", 1);
                 AddCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName, "Lock Contention Rate", "Attempts / sec", 1);
@@ -201,14 +199,14 @@ namespace GSF.Diagnostics
                 //                                                                                         1234567890123456
                 AddCounter(".NET CLR Exceptions", "# of Exceps Thrown", m_processName, "Exception Count", "Total Exceptions", 1);
 
-#if MONO
+            #if MONO
                 AddCounter(".NET CLR Exceptions", "# of Exceps Thrown/Sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
-#else
+            #else
                 AddCounter(".NET CLR Exceptions", "# of Exceps Thrown / sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
-#endif
+            #endif
 
                 // Add default networking counters
-#if MONO
+            #if MONO
                 PerformanceCounterCategory category = new PerformanceCounterCategory("Network Interface");
 
                 foreach (string instance in category.GetInstanceNames())
@@ -219,7 +217,7 @@ namespace GSF.Diagnostics
                     AddCounter("Network Interface", "Bytes Sent/sec", instance, string.Format("IP Outgoing ({0})", instance).TruncateRight(20), "Bytes / sec", 1);
                     AddCounter("Network Interface", "Bytes Received/sec", instance, string.Format("IP Incoming ({0})", instance).TruncateRight(20), "Bytes / sec", 1);
                 }
-#else
+            #else
                 if (PerformanceCounterCategory.Exists("IPv4"))
                 {
                     //                                            12345678901234567890
@@ -238,7 +236,7 @@ namespace GSF.Diagnostics
                     AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
                     AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
                 }
-#endif
+            #endif
             }
 
             m_samplingTimer = new Timer(samplingInterval);
@@ -249,24 +247,19 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="PerformanceMonitor"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~PerformanceMonitor()
-        {
+        ~PerformanceMonitor() => 
             Dispose(false);
-        }
 
-        #endregion
+    #endregion
 
-        #region [ Properties ]
+    #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the name of the <see cref="Process"/> to be monitored.
         /// </summary>
         public string ProcessName
         {
-            get
-            {
-                return m_processName;
-            }
+            get => m_processName;
             set
             {
                 m_processName = value;
@@ -287,14 +280,8 @@ namespace GSF.Diagnostics
         /// </summary>
         public double SamplingInterval
         {
-            get
-            {
-                return m_samplingTimer.Interval;
-            }
-            set
-            {
-                m_samplingTimer.Interval = value;
-            }
+            get => m_samplingTimer.Interval;
+            set => m_samplingTimer.Interval = value;
         }
 
         /// <summary>
@@ -305,9 +292,7 @@ namespace GSF.Diagnostics
             get
             {
                 lock (m_counters)
-                {
                     return new ReadOnlyCollection<PerformanceCounter>(m_counters);
-                }
             }
         }
 
@@ -315,13 +300,7 @@ namespace GSF.Diagnostics
         /// Gets the <see cref="PerformanceCounter"/> that monitors the processor utilization of the monitored process.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
-        public PerformanceCounter CPUUsage
-        {
-            get
-            {
-                return FindCounter("% Processor Time");
-            }
-        }
+        public PerformanceCounter CPUUsage => FindCounter("% Processor Time");
 
         /// <summary>
         /// Gets the <see cref="PerformanceCounter"/> that monitors the IP based datagrams sent / second of the system.
@@ -334,15 +313,13 @@ namespace GSF.Diagnostics
                 try
                 {
                     PerformanceCounter[] sources;
-#if MONO
+                #if MONO
                     sources = FindCounters("Bytes Sent/sec");
-#else
+                #else
                     sources = FindCounters("Datagrams Sent/sec");
-#endif
-                    if ((object)sources != null && sources.Length > 0)
-                        return new PerformanceCounter(sources);
+                #endif
 
-                    return null;
+                    return sources is null || sources.Length == 0 ? null : new PerformanceCounter(sources);
                 }
                 catch
                 {
@@ -363,15 +340,13 @@ namespace GSF.Diagnostics
                 try
                 {
                     PerformanceCounter[] sources;
-#if MONO
+                #if MONO
                     sources = FindCounters("Bytes Received/sec");
-#else
+                #else
                     sources = FindCounters("Datagrams Received/sec");
-#endif
-                    if ((object)sources != null && sources.Length > 0)
-                        return new PerformanceCounter(sources);
+                #endif
 
-                    return null;
+                    return sources is null || sources.Length <= 0 ? null : new PerformanceCounter(sources);
                 }
                 catch
                 {
@@ -385,88 +360,53 @@ namespace GSF.Diagnostics
         /// Gets the <see cref="PerformanceCounter"/> that monitors the .NET threading contention rate / second of the process.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
-        public PerformanceCounter ThreadingContentionRate
-        {
-            get
-            {
-                return FindCounter("Contention Rate / sec");
-            }
-        }
+        public PerformanceCounter ThreadingContentionRate => 
+            FindCounter("Contention Rate / sec");
 
         /// <summary>
         /// Gets the <see cref="PerformanceCounter"/> that monitors the memory utilization of the monitored process.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
-        public PerformanceCounter MemoryUsage
-        {
-            get
-            {
-                return FindCounter("Working Set");
-            }
-        }
+        public PerformanceCounter MemoryUsage => 
+            FindCounter("Working Set");
 
         /// <summary>
         /// Gets the <see cref="PerformanceCounter"/> that monitors the rate at which the monitored process is 
         /// issuing bytes to I/O operations that do not involve data such as control operations.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
-        public PerformanceCounter IOUsage
-        {
-            get
-            {
-                return FindCounter("IO Data Bytes/sec");
-            }
-        }
+        public PerformanceCounter IOUsage => 
+            FindCounter("IO Data Bytes/sec");
 
         /// <summary>
         /// Gets the <see cref="PerformanceCounter"/> that monitors the rate at which the monitored process is 
         /// issuing read and write I/O operations.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
-        public PerformanceCounter IOActivity
-        {
-            get
-            {
-                return FindCounter("IO Data Operations/sec");
-            }
-        }
+        public PerformanceCounter IOActivity => 
+            FindCounter("IO Data Operations/sec");
 
         /// <summary>
         /// Gets the <see cref="PerformanceCounter"/> that monitors the total number of handles currently open by 
         /// the monitored process.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
-        public PerformanceCounter HandleCount
-        {
-            get
-            {
-                return FindCounter("Handle Count");
-            }
-        }
+        public PerformanceCounter HandleCount => 
+            FindCounter("Handle Count");
 
         /// <summary>
         /// Gets the <see cref="PerformanceCounter"/> that monitors the number of threads currently active in the 
         /// monitored process.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
-        public PerformanceCounter ThreadCount
-        {
-            get
-            {
-                return FindCounter("Thread Count");
-            }
-        }
+        public PerformanceCounter ThreadCount => 
+            FindCounter("Thread Count");
 
         /// <summary>
         /// Gets the friendly name of the <see cref="PerformanceMonitor"/> object.
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return string.Format("{0}.{1}", this.GetType().Name, m_processName);
-            }
-        }
+        public string Name => 
+            $"{this.GetType().Name}.{m_processName}";
 
         /// <summary>
         /// Gets the current status of the <see cref="PerformanceMonitor"/> object.
@@ -603,9 +543,9 @@ namespace GSF.Diagnostics
             }
         }
 
-        #endregion
+    #endregion
 
-        #region [ Methods ]
+    #region [ Methods ]
 
         /// <summary>
         /// Releases all the resources used by the <see cref="PerformanceMonitor"/> object.
@@ -622,35 +562,31 @@ namespace GSF.Diagnostics
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        if ((object)m_samplingTimer != null)
-                        {
-                            m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
-                            m_samplingTimer.Dispose();
-                        }
+                if (!disposing)
+                    return;
 
-                        lock (m_counters)
-                        {
-                            foreach (PerformanceCounter counter in m_counters)
-                            {
-                                counter.Dispose();
-                            }
-
-                            m_counters.Clear();
-                        }
-                    }
-                }
-                finally
+                if (!(m_samplingTimer is null))
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
+                    m_samplingTimer.Elapsed -= m_samplingTimer_Elapsed;
+                    m_samplingTimer.Dispose();
                 }
+
+                lock (m_counters)
+                {
+                    foreach (PerformanceCounter counter in m_counters)
+                        counter.Dispose();
+
+                    m_counters.Clear();
+                }
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
@@ -660,10 +596,8 @@ namespace GSF.Diagnostics
         /// <param name="categoryName">The name of the performance counter category (performance object) with which this performance counter is associated.</param>
         /// <param name="counterName">The name of the performance counter.</param>
         /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
-        public void AddCounter(string categoryName, string counterName, string instanceName)
-        {
+        public void AddCounter(string categoryName, string counterName, string instanceName) =>
             AddCounter(categoryName, counterName, instanceName, counterName);
-        }
 
         /// <summary>
         /// Adds a <see cref="PerformanceCounter"/> to be monitored.
@@ -672,10 +606,8 @@ namespace GSF.Diagnostics
         /// <param name="counterName">The name of the performance counter.</param>
         /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
         /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
-        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName)
-        {
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName) =>
             AddCounter(categoryName, counterName, instanceName, aliasName, PerformanceCounter.DefaultValueUnit);
-        }
 
         /// <summary>
         /// Adds a <see cref="PerformanceCounter"/> to be monitored.
@@ -685,10 +617,8 @@ namespace GSF.Diagnostics
         /// <param name="instanceName">The name of the performance counter category instance, or an empty string (""), if the category contains a single instance.</param>
         /// <param name="aliasName">The alias name for the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
-        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit)
-        {
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit) =>
             AddCounter(categoryName, counterName, instanceName, aliasName, valueUnit, PerformanceCounter.DefaultValueDivisor);
-        }
 
         /// <summary>
         /// Adds a <see cref="PerformanceCounter"/> to be monitored.
@@ -700,11 +630,15 @@ namespace GSF.Diagnostics
         /// <param name="valueUnit">The measurement unit for the statistical values of the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="valueDivisor">The divisor to be applied to the statistical values of the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="readOnly">Flag that determines if this counter is read-only.</param>
-        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor, bool readOnly = true)
+        /// <param name="sampleAdjuster">Defines a custom sample adjustment function for the counter.</param>
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor, bool readOnly = true, Func<float, float> sampleAdjuster = null)
         {
             try
             {
-                AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor, readOnly));
+                AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor, readOnly)
+                { 
+                    SampleAdjuster = sampleAdjuster
+                });
             }
             catch
             {
@@ -719,9 +653,7 @@ namespace GSF.Diagnostics
         public void AddCounter(PerformanceCounter counter)
         {
             lock (m_counters)
-            {
                 m_counters.Add(counter);
-            }
         }
 
         /// <summary>
@@ -731,9 +663,7 @@ namespace GSF.Diagnostics
         public void RemoveCounter(PerformanceCounter counter)
         {
             lock (m_counters)
-            {
                 m_counters.Remove(counter);
-            }
         }
 
         /// <summary>
@@ -756,7 +686,7 @@ namespace GSF.Diagnostics
                 }
             }
 
-            return null;    // No match found.
+            return null; // No match found.
         }
 
         /// <summary>
@@ -776,7 +706,7 @@ namespace GSF.Diagnostics
                 }
             }
 
-            return null;    // No match found.
+            return null; // No match found.
         }
 
         /// <summary>
@@ -829,81 +759,85 @@ namespace GSF.Diagnostics
         {
             lock (m_counters)
             {
-#if !MONO
+                foreach (PerformanceCounter counter in m_counters)
+                    counter.Sample();
+
+            #if !MONO
                 // Sample custom thread pool counters (these already exist in Mono)
                 PerformanceCounter workerThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Worker Threads");
                 PerformanceCounter completionPortThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Completion Port Threads");
 
-                if ((object)workerThreadsCounter != null && (object)completionPortThreadsCounter != null)
+                if (!(workerThreadsCounter is null) && !(completionPortThreadsCounter is null))
                 {
                     System.Diagnostics.PerformanceCounter workerThreads = workerThreadsCounter.BaseCounter;
                     System.Diagnostics.PerformanceCounter completionPortThreads = completionPortThreadsCounter.BaseCounter;
 
-                    if ((object)workerThreads != null && (object)completionPortThreads != null)
+                    if (!(workerThreads is null) && !(completionPortThreads is null))
                     {
-                        int maximumWorkerThreads, maximumCompletionPortThreads, availableWorkerThreads, availableCompletionPortThreads;
-
-                        ThreadPool.GetMaxThreads(out maximumWorkerThreads, out maximumCompletionPortThreads);
-                        ThreadPool.GetAvailableThreads(out availableWorkerThreads, out availableCompletionPortThreads);
+                        ThreadPool.GetMaxThreads(out int maximumWorkerThreads, out int maximumCompletionPortThreads);
+                        ThreadPool.GetAvailableThreads(out int availableWorkerThreads, out int availableCompletionPortThreads);
 
                         workerThreads.RawValue = maximumWorkerThreads - availableWorkerThreads;
                         completionPortThreads.RawValue = maximumCompletionPortThreads - availableCompletionPortThreads;
                     }
                 }
-#endif
-
-                foreach (PerformanceCounter counter in m_counters)
-                {
-                    counter.Sample();
-                }
+            #endif
             }
         }
 
-        private void m_samplingTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
+        private void m_samplingTimer_Elapsed(object sender, ElapsedEventArgs e) => 
             SampleCounters();
-        }
 
-        #endregion
+    #endregion
 
-        #region [ Static ]
+    #region [ Static ]
 
-#if !MONO
+    #if !MONO
         // Static Constructor
         static PerformanceMonitor()
         {
             try
             {
-                if (!PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                    return;
+
+                CounterCreationDataCollection customPerformanceCounters = new CounterCreationDataCollection();
+
+                // Create custom counter objects for thread pool monitoring
+                CounterCreationData workerThreadCounter = new CounterCreationData
                 {
-                    CounterCreationDataCollection customPerformanceCounters = new CounterCreationDataCollection();
+                    CounterName = "Worker Threads",
+                    CounterHelp = "Active worker threads in the thread pool",
+                    CounterType = PerformanceCounterType.NumberOfItems32
+                };
 
-                    // Create custom counter objects for thread pool monitoring
-                    CounterCreationData workerThreadCounter = new CounterCreationData();
-                    workerThreadCounter.CounterName = "Worker Threads";
-                    workerThreadCounter.CounterHelp = "Active worker threads in the thread pool";
-                    workerThreadCounter.CounterType = PerformanceCounterType.NumberOfItems32;
+                CounterCreationData completionPortThreadCounter = new CounterCreationData
+                {
+                    CounterName = "Completion Port Threads",
+                    CounterHelp = "Active completion port threads in the thread pool", 
+                    CounterType = PerformanceCounterType.NumberOfItems32
+                };
 
-                    CounterCreationData completionPortThreadCounter = new CounterCreationData();
-                    completionPortThreadCounter.CounterName = "Completion Port Threads";
-                    completionPortThreadCounter.CounterHelp = "Active completion port threads in the thread pool";
-                    completionPortThreadCounter.CounterType = PerformanceCounterType.NumberOfItems32;
+                // Add custom counter objects to CounterCreationDataCollection
+                customPerformanceCounters.Add(workerThreadCounter);
+                customPerformanceCounters.Add(completionPortThreadCounter);
 
-                    // Add custom counter objects to CounterCreationDataCollection
-                    customPerformanceCounters.Add(workerThreadCounter);
-                    customPerformanceCounters.Add(completionPortThreadCounter);
-
-                    // Bind the counters to the PerformanceCounterCategory
-                    PerformanceCounterCategory.Create(ThreadPoolCountersCategoryName, "Application thread pool counters", PerformanceCounterCategoryType.MultiInstance, customPerformanceCounters);
-                }
+                // Bind the counters to the PerformanceCounterCategory
+                PerformanceCounterCategory.Create
+                (
+                    ThreadPoolCountersCategoryName, 
+                    "Application thread pool counters", 
+                    PerformanceCounterCategoryType.MultiInstance, 
+                    customPerformanceCounters
+                );
             }
             catch
             {
                 // Not failing if custom counters cannot be created
             }
         }
-#endif
+    #endif
 
-        #endregion
+    #endregion
     }
 }
