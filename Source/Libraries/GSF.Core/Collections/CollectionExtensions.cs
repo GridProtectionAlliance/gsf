@@ -106,12 +106,22 @@ namespace GSF.Collections
         [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional", Justification = "This extension method is targeted for a two dimensional array.")]
         public static IEnumerable<T> GetColumn<T>(this T[,] source, int columnIndex)
         {
+            // Because of the way yield methods are rewritten by the compiler (they become lazily evaluated state machines) any
+            // exceptions thrown during the parameters check will happen only when the collection is iterated over. That could
+            // happen far away from the source of the buggy code. Therefore it is recommended to split the method into two:
+            // an outer method handling the validation (no longer lazy) and an inner (lazy) method to handle the iteration.
+
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
             if (columnIndex < 0 || source.GetLength(1) > 1)
                 throw new ArgumentOutOfRangeException(nameof(columnIndex));
-            
+
+            return GetColumnIterator(source, columnIndex);
+        }
+
+        private static IEnumerable<T> GetColumnIterator<T>(T[,] source, int columnIndex)
+        {
             int length = source.GetLength(0);
 
             for (int i = 0; i < length; i++)
