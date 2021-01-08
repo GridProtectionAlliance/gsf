@@ -145,7 +145,7 @@ namespace PhasorProtocolAdapters
                     return;
 
                 // Detach from frame parser events and dispose
-                if (m_frameParser != null)
+                if (!(m_frameParser is null))
                 {
                     m_frameParser.ConnectionAttempt -= m_frameParser_ConnectionAttempt;
                     m_frameParser.ConnectionEstablished -= m_frameParser_ConnectionEstablished;
@@ -242,7 +242,7 @@ namespace PhasorProtocolAdapters
                     // Terminate connection to device
                     m_frameParser.Stop();
 
-                    if (m_configurationFrame == null)
+                    if (m_configurationFrame is null)
                     {
                         m_configurationFrame = new ConfigurationErrorFrame();
 
@@ -299,7 +299,7 @@ namespace PhasorProtocolAdapters
                 TableOperations<DataOperation> dataOperationTable = new TableOperations<DataOperation>(connection);
                 DataOperation record = dataOperationTable.QueryRecordWhere(filterExpression);
 
-                if (record == null)
+                if (record is null)
                 {
                     OnProcessException(MessageLevel.Warning, new Exception($"Failed to find DataOperation record with {filterExpression}."));
                     return;
@@ -319,14 +319,14 @@ namespace PhasorProtocolAdapters
         /// <param name="command"><see cref="DeviceCommand"/> to send to connected device.</param>
         public void SendCommand(DeviceCommand command)
         {
-            if (m_frameParser != null)
+            if (m_frameParser is null)
             {
-                m_frameParser.SendDeviceCommand(command);
-                OnStatusMessage(MessageLevel.Info, $"Sent device command \"{command}\"...");
+                OnStatusMessage(MessageLevel.Info, $"Failed to send device command \"{command}\", no frame parser is defined.");
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, $"Failed to send device command \"{command}\", no frame parser is defined.");
+                m_frameParser.SendDeviceCommand(command);
+                OnStatusMessage(MessageLevel.Info, $"Sent device command \"{command}\"...");
             }
         }
 
@@ -438,11 +438,11 @@ namespace PhasorProtocolAdapters
         public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string phasorLabel = null, int signalIndex = -1, char phase = '_', int baseKV = 0)
         {
             // Initialize point tag expression parser
-            if (s_pointTagExpressionParser == null)
+            if (s_pointTagExpressionParser is null)
                 s_pointTagExpressionParser = InitializePointTagExpressionParser();
 
             // Initialize signal type dictionary
-            if (s_signalTypes == null)
+            if (s_signalTypes is null)
                 s_signalTypes = InitializeSignalTypes();
 
             Dictionary<string, string> substitutions;
@@ -451,16 +451,16 @@ namespace PhasorProtocolAdapters
                 throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
 
             // Validate key acronyms
-            if ((object)companyAcronym == null)
+            if (companyAcronym is null)
                 companyAcronym = "";
 
-            if ((object)deviceAcronym == null)
+            if (deviceAcronym is null)
                 deviceAcronym = "";
 
-            if ((object)vendorAcronym == null)
+            if (vendorAcronym is null)
                 vendorAcronym = "";
 
-            if ((object)phasorLabel == null)
+            if (phasorLabel is null)
                 phasorLabel = "";
 
             companyAcronym = companyAcronym.Trim();
@@ -951,7 +951,7 @@ namespace PhasorProtocolAdapters
                     Dictionary<string, string> connectionSettings = device.Field<string>("ConnectionString")?.ParseKeyValuePairs();
 
                     // Do not automatically add quality measurement of device is configured to only forward data
-                    if (connectionSettings != null && connectionSettings.TryGetValue("forwardOnly", out string setting) && setting.ParseBoolean())
+                    if (!(connectionSettings is null) && connectionSettings.TryGetValue("forwardOnly", out string setting) && setting.ParseBoolean())
                         continue;
 
                     deviceID = device.ConvertField<int>("ID");
@@ -1105,12 +1105,6 @@ namespace PhasorProtocolAdapters
             {
                 statusMessage("Renaming all point tags...");
 
-                string device, vendor, signalAcronym, phasorLabel;
-                char? phase;
-                int? vendorDeviceID;
-                int baseKV;
-                SignalReference signal;
-
                 foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase, BaseKV FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
                 {
                     company = measurement.ConvertField<string>("CompanyAcronym");
@@ -1118,38 +1112,33 @@ namespace PhasorProtocolAdapters
                     if (string.IsNullOrEmpty(company))
                         company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
-                    device = measurement.ConvertField<string>("DeviceAcronym");
+                    string device = measurement.ConvertField<string>("DeviceAcronym");
 
-                    if ((object)device != null)
+                    if (device is null)
+                        continue;
+
+                    int? vendorDeviceID = measurement.ConvertNullableField<int>("VendorDeviceID");
+                    string vendor = vendorDeviceID.HasValue ? (string)database.Connection.ExecuteScalar("SELECT Acronym FROM Vendor WHERE ID = " + vendorDeviceID.Value) : null;
+                    string signalAcronym = measurement.ConvertField<string>("SignalAcronym");
+
+                    try
                     {
-                        vendorDeviceID = measurement.ConvertNullableField<int>("VendorDeviceID");
+                        SignalReference signal = new SignalReference(measurement.ConvertField<string>("SignalReference"));
+                        signalIndex = signal.Index;
 
-                        if (vendorDeviceID.HasValue)
-                            vendor = (string)database.Connection.ExecuteScalar("SELECT Acronym FROM Vendor WHERE ID = " + vendorDeviceID.Value);
-                        else
-                            vendor = null;
-
-                        signalAcronym = measurement.ConvertField<string>("SignalAcronym");
-
-                        try
-                        {
-                            signal = new SignalReference(measurement.ConvertField<string>("SignalReference"));
-                            signalIndex = signal.Index;
-
-                            if (signalIndex <= 0)
-                                signalIndex = -1;
-                        }
-                        catch
-                        {
+                        if (signalIndex <= 0)
                             signalIndex = -1;
-                        }
-
-                        phasorLabel = measurement.ConvertField<string>("PhasorLabel");
-                        phase = measurement.ConvertNullableField<char>("Phase");
-                        baseKV = measurement.ConvertField<int>("BaseKV");
-
-                        database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, phasorLabel, signalIndex, phase ?? '_', baseKV)}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
                     }
+                    catch
+                    {
+                        signalIndex = -1;
+                    }
+
+                    string phasorLabel = measurement.ConvertField<string>("PhasorLabel");
+                    char? phase = measurement.ConvertNullableField<char>("Phase");
+                    int baseKV = measurement.ConvertField<int>("BaseKV");
+
+                    database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, phasorLabel, signalIndex, phase ?? '_', baseKV)}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
                 }
             }
 
