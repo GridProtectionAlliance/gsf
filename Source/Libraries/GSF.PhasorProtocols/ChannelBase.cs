@@ -59,14 +59,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual IChannelParsingState State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
+            get => m_state;
+            set => m_state = value;
         }
 
         /// <summary>
@@ -100,14 +94,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual object Tag
         {
-            get
-            {
-                return m_tag;
-            }
-            set
-            {
-                m_tag = value;
-            }
+            get => m_tag;
+            set => m_tag = value;
         }
 
         /// <summary>
@@ -118,16 +106,17 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual byte[] BinaryImage
         {
+            // This proxy property could be removed if all channel base implementations were recoded to
+            // implement GenerateHeaderImage, GenerateBodyImage, and GenerateFooterImage overrides...
             get
             {
-                // TODO: This proxy property can be removed if all channel base implementations are recoded to implement "GenerateHeaderImage/GenerateBodyImage/GenerateFooterImage" overrides...
                 byte[] buffer = new byte[BinaryLength];
                 int index = 0;
 
                 // Copy in header, body and footer images
                 int headerLength = HeaderLength;
 
-                if (headerLength > 0)
+                if (headerLength > 0 && !(HeaderImage is null))
                 {
                     Buffer.BlockCopy(HeaderImage, 0, buffer, index, headerLength);
                     index += headerLength;
@@ -135,7 +124,7 @@ namespace GSF.PhasorProtocols
 
                 int bodyLength = BodyLength;
 
-                if (bodyLength > 0)
+                if (bodyLength > 0 && !(BodyImage is null))
                 {
                     Buffer.BlockCopy(BodyImage, 0, buffer, index, bodyLength);
                     index += bodyLength;
@@ -143,7 +132,7 @@ namespace GSF.PhasorProtocols
 
                 int footerLength = FooterLength;
 
-                if (footerLength > 0)
+                if (footerLength > 0 && !(FooterImage is null))
                     Buffer.BlockCopy(FooterImage, 0, buffer, index, footerLength);
 
                 return buffer;
@@ -156,13 +145,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual byte[] HeaderImage
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected virtual byte[] HeaderImage => null;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="ChannelBase"/> object.
@@ -170,13 +153,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual byte[] BodyImage
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected virtual byte[] BodyImage => null;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="BinaryImageBase"/> object.
@@ -184,13 +161,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
-        protected virtual byte[] FooterImage
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected virtual byte[] FooterImage => null;
 
         #endregion
 
