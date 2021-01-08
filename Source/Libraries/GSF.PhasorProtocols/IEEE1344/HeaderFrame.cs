@@ -85,10 +85,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new ulong IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
+            get => m_idCode;
             set
             {
                 m_idCode = value;
@@ -106,10 +103,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </remarks>
         public override Ticks Timestamp
         {
-            get
-            {
-                return CommonHeader.Timestamp;
-            }
+            get => CommonHeader.Timestamp;
             set
             {
                 // Keep timestamp updates synchrnonized...
@@ -121,24 +115,12 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public new NtpTimeTag TimeTag
-        {
-            get
-            {
-                return CommonHeader.TimeTag;
-            }
-        }
+        public new NtpTimeTag TimeTag => CommonHeader.TimeTag;
 
         /// <summary>
         /// Gets the identifier that is used to identify the IEEE 1344 frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return IEEE1344.FrameType.HeaderFrame;
-            }
-        }
+        public FrameType TypeID => IEEE1344.FrameType.HeaderFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
@@ -149,7 +131,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader == null)
+                if (m_frameHeader is null)
                     m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp);
 
                 return m_frameHeader;
@@ -158,37 +140,25 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                {
-                    State = m_frameHeader.State as IHeaderFrameParsingState;
-                    base.Timestamp = m_frameHeader.Timestamp;
-                }
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as IHeaderFrameParsingState;
+                base.Timestamp = m_frameHeader.Timestamp;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonFrameHeader.FixedLength;
-            }
-        }
+        protected override int HeaderLength => CommonFrameHeader.FixedLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="HeaderFrame"/> object.
@@ -241,37 +211,35 @@ namespace GSF.PhasorProtocols.IEEE1344
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             // If frame image collector was used, make sure and parse from entire frame image...
-            if (m_frameHeader != null)
+            if (m_frameHeader is null)
+                return base.ParseBinaryImage(buffer, startIndex, length);
+
+            // If all header frame images have been received, we can safely start parsing
+            if (m_frameHeader.IsLastFrame)
             {
-                // If all header frame images have been received, we can safely start parsing
-                if (m_frameHeader.IsLastFrame)
+                FrameImageCollector frameImages = m_frameHeader.FrameImages;
+
+                if (!(frameImages is null))
                 {
-                    FrameImageCollector frameImages = m_frameHeader.FrameImages;
+                    // Each individual frame will already have had a CRC check, so we implement standard parse to
+                    // bypass ChannelBase CRC frame validation on cumulative frame image
+                    buffer = frameImages.BinaryImage;
+                    length = frameImages.BinaryLength;
+                    startIndex = 0;
 
-                    if (frameImages != null)
-                    {
-                        // Each individual frame will already have had a CRC check, so we implement standard parse to
-                        // bypass ChannelBase CRC frame validation on cumulative frame image
-                        buffer = frameImages.BinaryImage;
-                        length = frameImages.BinaryLength;
-                        startIndex = 0;
+                    // Parse out header, body and footer images
+                    startIndex += ParseHeaderImage(buffer, startIndex, length);
+                    startIndex += ParseBodyImage(buffer, startIndex, length - startIndex);
+                    startIndex += ParseFooterImage(buffer, startIndex, length - startIndex);
 
-                        // Parse out header, body and footer images
-                        startIndex += ParseHeaderImage(buffer, startIndex, length);
-                        startIndex += ParseBodyImage(buffer, startIndex, length - startIndex);
-                        startIndex += ParseFooterImage(buffer, startIndex, length - startIndex);
-
-                        // Include 2 bytes for CRC that was already validated
-                        return startIndex + 2;
-                    }
+                    // Include 2 bytes for CRC that was already validated
+                    return startIndex + 2;
                 }
-
-                // There are more header frame images coming, keep parser moving by returning total
-                // frame length that was already parsed.
-                return State.ParsedBinaryLength;
             }
 
-            return base.ParseBinaryImage(buffer, startIndex, length);
+            // There are more header frame images coming, keep parser moving by returning total
+            // frame length that was already parsed.
+            return State.ParsedBinaryLength;
         }
 
         /// <summary>

@@ -79,14 +79,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -94,14 +88,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public new virtual FrequencyDefinition Definition
         {
-            get
-            {
-                return base.Definition as FrequencyDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as FrequencyDefinition;
+            set => base.Definition = value;
         }
 
         #endregion

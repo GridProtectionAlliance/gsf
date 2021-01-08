@@ -44,10 +44,8 @@ namespace GSF.PhasorProtocols.FNET
         #region [ Members ]
 
         // Fields
-        private readonly string[] m_data;
-        private readonly int m_parsedLength;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -80,20 +78,20 @@ namespace GSF.PhasorProtocols.FNET
             if (endIndex > -1)
             {
                 // Parse F-NET data frame into individual fields separated by spaces
-                m_data = Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveDuplicateWhiteSpace().Trim().Split(' ');
+                DataElements = Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveDuplicateWhiteSpace().Trim().Split(' ');
 
                 // Make sure all the needed data elements exist (could be a bad frame)
-                if (m_data.Length != 8)
-                    throw new InvalidOperationException("Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"" + Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim() + "\".  Got " + m_data.Length + " elements, expected 8.");
+                if (DataElements.Length != 8)
+                    throw new InvalidOperationException("Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"" + Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim() + "\".  Got " + DataElements.Length + " elements, expected 8.");
 
                 // Remove any extraneous spaces or control characters that may have been injected by the source device
-                for (int i = 0; i < m_data.Length; i++)
+                for (int i = 0; i < DataElements.Length; i++)
                 {
-                    m_data[i] = m_data[i].RemoveWhiteSpace().RemoveControlCharacters();
+                    DataElements[i] = DataElements[i].RemoveWhiteSpace().RemoveControlCharacters();
                 }
 
                 // Calculate total bytes parsed including start and stop bytes
-                m_parsedLength = endIndex - startIndex + 1;
+                ParsedLength = endIndex - startIndex + 1;
             }
         }
 
@@ -104,25 +102,13 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets F-NET data elements parsed during construction.
         /// </summary>
-        public string[] DataElements
-        {
-            get
-            {
-                return m_data;
-            }
-        }
+        public string[] DataElements { get; }
 
         /// <summary>
         /// Gets length of data parsed during construction.
         /// </summary>
-        public int ParsedLength
-        {
-            get
-            {
-                return m_parsedLength;
-            }
-        }
+        public int ParsedLength { get; }
 
-        #endregion
+    #endregion
     }
 }

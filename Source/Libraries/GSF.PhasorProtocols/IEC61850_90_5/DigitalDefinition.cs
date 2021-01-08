@@ -99,14 +99,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -114,14 +108,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public ushort NormalStatus
         {
-            get
-            {
-                return m_normalStatus;
-            }
-            set
-            {
-                m_normalStatus = value;
-            }
+            get => m_normalStatus;
+            set => m_normalStatus = value;
         }
 
         /// <summary>
@@ -129,26 +117,14 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public ushort ValidInputs
         {
-            get
-            {
-                return m_validInputs;
-            }
-            set
-            {
-                m_validInputs = value;
-            }
+            get => m_validInputs;
+            set => m_validInputs = value;
         }
 
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return LabelCount * 16;
-            }
-        }
+        public override int MaximumLabelLength => LabelCount * 16;
 
         /// <summary>
         /// Gets the number of labels defined in this <see cref="DigitalDefinition"/>.
@@ -159,8 +135,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 if (DraftRevision == DraftRevision.Draft6)
                     return 1;
-                else
-                    return 16;
+                return 16;
             }
         }
 
@@ -172,10 +147,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             // We hide this from the editor just because this is a large combined string of all digital labels,
             // and it will make more sense for consumers to use the "Labels" property
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -185,13 +157,11 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 {
                     throw new OverflowException("Label length cannot exceed " + MaximumLabelLength);
                 }
-                else
-                {
-                    // We override this function since base class automatically "fixes-up" labels
-                    // by removing duplicate white space characters - this can throw off the
-                    // label offsets which would break the Get/Set Label methods (below)
-                    m_label = value.Trim();
-                }
+
+                // We override this function since base class automatically "fixes-up" labels
+                // by removing duplicate white space characters - this can throw off the
+                // label offsets which would break the Get/Set Label methods (below)
+                m_label = value.Trim();
 
                 // We pass value along to base class for posterity...
                 base.Label = value;
@@ -209,25 +179,19 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 {
                     return m_draftRevision;
                 }
-                else
-                {
-                    // We must assume version 1 until a parent reference is available. The parent class,
-                    // being higher up in the chain, is not available during early points of
-                    // deserialization of this class - however, this method gets called to determine
-                    // proper number of maximum digital labels - hence the need for this function -
-                    // since we had to do this anyway, we took the opportunity to cache this value
-                    // locally for speed in future calls
-                    if (Parent != null && Parent.Parent != null)
-                    {
-                        m_parentAquired = true;
-                        m_draftRevision = Parent.Parent.DraftRevision;
-                        return m_draftRevision;
-                    }
-                    else
-                    {
-                        return DraftRevision.Draft7;
-                    }
-                }
+
+                // We must assume version 1 until a parent reference is available. The parent class,
+                // being higher up in the chain, is not available during early points of
+                // deserialization of this class - however, this method gets called to determine
+                // proper number of maximum digital labels - hence the need for this function -
+                // since we had to do this anyway, we took the opportunity to cache this value
+                // locally for speed in future calls
+                if (Parent?.Parent == null)
+                    return DraftRevision.Draft7;
+
+                m_parentAquired = true;
+                m_draftRevision = Parent.Parent.DraftRevision;
+                return m_draftRevision;
             }
         }
 
@@ -318,20 +282,17 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             if (value.Trim().Length > 16)
                 throw new OverflowException("Individual label length cannot exceed " + 16);
-            else
-            {
-                string current = Label.PadRight(MaximumLabelLength);
-                string left = "";
-                string right = "";
+            string current = Label.PadRight(MaximumLabelLength);
+            string left = "";
+            string right = "";
 
-                if (index > 0)
-                    left = current.Substring(0, index * 16);
+            if (index > 0)
+                left = current.Substring(0, index * 16);
 
-                if (index < 15)
-                    right = current.Substring((index + 1) * 16);
+            if (index < 15)
+                right = current.Substring((index + 1) * 16);
 
-                Label = left + value.GetValidLabel().PadRight(16) + right;
-            }
+            Label = left + value.GetValidLabel().PadRight(16) + right;
         }
 
         /// <summary>
@@ -348,39 +309,37 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 // Handle single label the standard way (parsing out null value)
                 return base.ParseBodyImage(buffer, startIndex, length);
             }
-            else
+
+            int parseLength = MaximumLabelLength;
+            byte[] labelBuffer = new byte[16];
+            string[] labels = new string[16];
+
+            for (int i = 0; i < 16; i++)
             {
-                int parseLength = MaximumLabelLength;
-                byte[] labelBuffer = new byte[16];
-                string[] labels = new string[16];
+                // Get next label buffer
+                Buffer.BlockCopy(buffer, startIndex + i * 16, labelBuffer, 0, 16);
 
-                for (int i = 0; i < 16; i++)
+                bool foundNull = false;
+
+                // Replace null characters with spaces; since characters after null
+                // are usually invalid garbage, blank these out with spaces as well
+                for (int j = 0; j < 16; j++)
                 {
-                    // Get next label buffer
-                    Buffer.BlockCopy(buffer, startIndex + i * 16, labelBuffer, 0, 16);
-
-                    bool foundNull = false;
-
-                    // Replace null characters with spaces; since characters after null
-                    // are usually invalid garbage, blank these out with spaces as well
-                    for (int j = 0; j < 16; j++)
+                    if (foundNull || labelBuffer[j] == 0)
                     {
-                        if (foundNull || labelBuffer[j] == 0)
-                        {
-                            foundNull = true;
-                            labelBuffer[j] = 32;
-                        }
+                        foundNull = true;
+                        labelBuffer[j] = 32;
                     }
-
-                    // Interpret bytes as an ASCII string
-                    labels[i] = Encoding.ASCII.GetString(labelBuffer, 0, 16);
                 }
 
-                // Concatenate all labels together into one large string
-                Label = string.Concat(labels);
-
-                return parseLength;
+                // Interpret bytes as an ASCII string
+                labels[i] = Encoding.ASCII.GetString(labelBuffer, 0, 16);
             }
+
+            // Concatenate all labels together into one large string
+            Label = string.Concat(labels);
+
+            return parseLength;
         }
 
         /// <summary>

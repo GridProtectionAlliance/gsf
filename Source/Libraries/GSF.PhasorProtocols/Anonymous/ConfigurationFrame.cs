@@ -78,15 +78,9 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 
@@ -195,77 +189,76 @@ namespace GSF.PhasorProtocols.Anonymous
         // Cache configuration file
         private static void CacheConfigurationFile(Tuple<IConfigurationFrame, Action<Exception>, string> args)
         {
-            if ((object)args != null)
+            if (args is null)
+                return;
+
+            FileStream configFile = null;
+            IConfigurationFrame configurationFrame = args.Item1;
+            Action<Exception> exceptionHandler = args.Item2;
+            string configurationName = args.Item3;
+            string configurationCacheFileName = GetConfigurationCacheFileName(configurationName);
+
+            try
             {
-                FileStream configFile = null;
-                IConfigurationFrame configurationFrame = args.Item1;
-                Action<Exception> exceptionHandler = args.Item2;
-                string configurationName = args.Item3;
-                string configurationCacheFileName = GetConfigurationCacheFileName(configurationName);
-
-                try
+                // Create multiple backup configurations, if requested
+                for (int i = ConfigurationBackups; i > 0; i--)
                 {
-                    // Create multiple backup configurations, if requested
-                    for (int i = ConfigurationBackups; i > 0; i--)
+                    string origConfigFile = configurationCacheFileName + ".backup" + (i == 1 ? "" : (i - 1).ToString());
+
+                    if (File.Exists(origConfigFile))
                     {
-                        string origConfigFile = configurationCacheFileName + ".backup" + (i == 1 ? "" : (i - 1).ToString());
+                        string nextConfigFile = configurationCacheFileName + ".backup" + i;
 
-                        if (File.Exists(origConfigFile))
-                        {
-                            string nextConfigFile = configurationCacheFileName + ".backup" + i;
+                        if (File.Exists(nextConfigFile))
+                            File.Delete(nextConfigFile);
 
-                            if (File.Exists(nextConfigFile))
-                                File.Delete(nextConfigFile);
-
-                            File.Move(origConfigFile, nextConfigFile);
-                        }
+                        File.Move(origConfigFile, nextConfigFile);
                     }
                 }
-                catch (Exception ex)
-                {
-                    exceptionHandler(new InvalidOperationException(string.Format("Failed to create extra backup serialized configuration frames due to exception: {0}", ex.Message)));
-                }
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler(new InvalidOperationException($"Failed to create extra backup serialized configuration frames due to exception: {ex.Message}"));
+            }
 
-                try
+            try
+            {
+                if (ConfigurationBackups > 0)
                 {
-                    if (ConfigurationBackups > 0)
+                    // Back up current configuration file, if any
+                    if (File.Exists(configurationCacheFileName))
                     {
-                        // Back up current configuration file, if any
-                        if (File.Exists(configurationCacheFileName))
-                        {
-                            string backupConfigFile = configurationCacheFileName + ".backup";
+                        string backupConfigFile = configurationCacheFileName + ".backup";
 
-                            if (File.Exists(backupConfigFile))
-                                File.Delete(backupConfigFile);
+                        if (File.Exists(backupConfigFile))
+                            File.Delete(backupConfigFile);
 
-                            File.Move(configurationCacheFileName, backupConfigFile);
-                        }
+                        File.Move(configurationCacheFileName, backupConfigFile);
                     }
                 }
-                catch (Exception ex)
-                {
-                    exceptionHandler(new InvalidOperationException(string.Format("Failed to backup last serialized configuration frame due to exception: {0}", ex.Message)));
-                }
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler(new InvalidOperationException($"Failed to backup last serialized configuration frame due to exception: {ex.Message}"));
+            }
 
-                try
-                {
-                    // Serialize configuration frame to a file
-                    SoapFormatter xmlSerializer = new SoapFormatter();
-                    xmlSerializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
-                    xmlSerializer.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
+            try
+            {
+                // Serialize configuration frame to a file
+                SoapFormatter xmlSerializer = new SoapFormatter();
+                xmlSerializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
+                xmlSerializer.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
 
-                    configFile = File.Create(configurationCacheFileName);
-                    xmlSerializer.Serialize(configFile, configurationFrame);
-                }
-                catch (Exception ex)
-                {
-                    exceptionHandler(new InvalidOperationException(string.Format("Failed to serialize configuration frame: {0}", ex.Message), ex));
-                }
-                finally
-                {
-                    if ((object)configFile != null)
-                        configFile.Close();
-                }
+                configFile = File.Create(configurationCacheFileName);
+                xmlSerializer.Serialize(configFile, configurationFrame);
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler(new InvalidOperationException($"Failed to serialize configuration frame: {ex.Message}", ex));
+            }
+            finally
+            {
+                configFile?.Close();
             }
         }
 
@@ -276,7 +269,7 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <returns>File name with path of the specified <paramref name="configurationName"/>.</returns>
         public static string GetConfigurationCacheFileName(string configurationName)
         {
-            return string.Format("{0}{1}.configuration.xml", ConfigurationCachePath, configurationName.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c)));
+            return $"{ConfigurationCachePath}{configurationName.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.configuration.xml";
         }
 
         /// <summary>

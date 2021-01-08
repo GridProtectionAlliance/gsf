@@ -79,14 +79,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -94,14 +88,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new virtual FrequencyDefinition Definition
         {
-            get
-            {
-                return base.Definition as FrequencyDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as FrequencyDefinition;
+            set => base.Definition = value;
         }
 
         /// <summary>
@@ -116,16 +104,17 @@ namespace GSF.PhasorProtocols.IEEE1344
             get
             {
                 FrequencyDefinition definition = Definition;
+
+                if (definition is null)
+                    return 0;
+
                 int length = 0;
 
-                if (definition != null)
-                {
-                    if (definition.FrequencyIsAvailable)
-                        length += 2;
+                if (definition.FrequencyIsAvailable)
+                    length += 2;
 
-                    if (definition.DfDtIsAvailable)
-                        length += 2;
-                }
+                if (definition.DfDtIsAvailable)
+                    length += 2;
 
                 return length;
             }
@@ -145,19 +134,19 @@ namespace GSF.PhasorProtocols.IEEE1344
                 FrequencyDefinition definition = Definition;
                 byte[] buffer = new byte[BodyLength];
 
-                if (definition != null)
+                if (definition is null)
+                    return buffer;
+
+                int startIndex = 0;
+
+                if (definition.FrequencyIsAvailable)
                 {
-                    int startIndex = 0;
-
-                    if (definition.FrequencyIsAvailable)
-                    {
-                        BigEndian.CopyBytes((short)UnscaledFrequency, buffer, startIndex);
-                        startIndex += 2;
-                    }
-
-                    if (definition.DfDtIsAvailable)
-                        BigEndian.CopyBytes((short)UnscaledDfDt, buffer, startIndex);
+                    BigEndian.CopyBytes((short)UnscaledFrequency, buffer, startIndex);
+                    startIndex += 2;
                 }
+
+                if (definition.DfDtIsAvailable)
+                    BigEndian.CopyBytes((short)UnscaledDfDt, buffer, startIndex);
 
                 return buffer;
             }
@@ -181,23 +170,24 @@ namespace GSF.PhasorProtocols.IEEE1344
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
             FrequencyDefinition definition = Definition;
+
+            if (definition is null)
+                return 0;
+
             int parsedLength = 0;
 
-            if (definition != null)
+            // Note that IEEE 1344 only supports scaled integers (no need to worry about floating points)
+            if (definition.FrequencyIsAvailable)
             {
-                // Note that IEEE 1344 only supports scaled integers (no need to worry about floating points)
-                if (definition.FrequencyIsAvailable)
-                {
-                    UnscaledFrequency = BigEndian.ToInt16(buffer, startIndex);
-                    startIndex += 2;
-                    parsedLength += 2;
-                }
+                UnscaledFrequency = BigEndian.ToInt16(buffer, startIndex);
+                startIndex += 2;
+                parsedLength += 2;
+            }
 
-                if (definition.DfDtIsAvailable)
-                {
-                    UnscaledDfDt = BigEndian.ToInt16(buffer, startIndex);
-                    parsedLength += 2;
-                }
+            if (definition.DfDtIsAvailable)
+            {
+                UnscaledDfDt = BigEndian.ToInt16(buffer, startIndex);
+                parsedLength += 2;
             }
 
             return parsedLength;

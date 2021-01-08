@@ -81,14 +81,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public new virtual IHeaderFrame Parent
         {
-            get
-            {
-                return base.Parent as IHeaderFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as IHeaderFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -96,26 +90,14 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual byte Character
         {
-            get
-            {
-                return m_character;
-            }
-            set
-            {
-                m_character = value;
-            }
+            get => m_character;
+            set => m_character = value;
         }
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        protected override int BodyLength => 1;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="HeaderCell"/> object.

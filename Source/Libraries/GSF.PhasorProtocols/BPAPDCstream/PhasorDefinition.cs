@@ -31,6 +31,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
@@ -86,34 +87,33 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             string[] entry = entryValue.Split(',');
             string entryType = entry[0].Trim().Substring(0, 1).ToUpper();
             PhasorDefinition defaultPhasor;
-            double dValue;
 
-            if (parent != null)
+            if (parent is null)
             {
-                ConfigurationFrame configFile = this.Parent.Parent;
-
-                if (entryType == "V")
-                {
-                    PhasorType = PhasorType.Voltage;
-                    defaultPhasor = configFile.DefaultPhasorV;
-                }
-                else if (entryType == "I")
-                {
-                    PhasorType = PhasorType.Current;
-                    defaultPhasor = configFile.DefaultPhasorI;
-                }
-                else
-                {
-                    PhasorType = PhasorType.Voltage;
-                    defaultPhasor = configFile.DefaultPhasorV;
-                }
+                defaultPhasor = new PhasorDefinition(null);
             }
             else
             {
-                defaultPhasor = new PhasorDefinition(null as ConfigurationCell);
+                ConfigurationFrame configFile = Parent.Parent;
+
+                switch (entryType)
+                {
+                    case "V":
+                        PhasorType = PhasorType.Voltage;
+                        defaultPhasor = configFile.DefaultPhasorV;
+                        break;
+                    case "I":
+                        PhasorType = PhasorType.Current;
+                        defaultPhasor = configFile.DefaultPhasorI;
+                        break;
+                    default:
+                        PhasorType = PhasorType.Voltage;
+                        defaultPhasor = configFile.DefaultPhasorV;
+                        break;
+                }
             }
 
-            if (entry.Length > 1 && double.TryParse(entry[1].Trim(), out dValue))
+            if (entry.Length > 1 && double.TryParse(entry[1].Trim(), out double dValue))
                 Ratio = dValue;
             else
                 Ratio = defaultPhasor.Ratio;
@@ -138,12 +138,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             else
                 VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex;
 
-            if (entry.Length > 6)
-                Label = entry[6].Trim();
-            else
-                Label = defaultPhasor.Label;
+            Label = entry.Length > 6 ? entry[6].Trim() : defaultPhasor.Label;
 
-            this.Index = index;
+            Index = index;
         }
 
         /// <summary>
@@ -171,14 +168,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -192,14 +183,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         public override double ConversionFactor
         {
             // BPA PDCstream uses a custom conversion factor (see shared overload below)
-            get
-            {
-                return 1.0D;
-            }
-            set
-            {
-                // Ignore updates...
-            }
+            get => 1.0D;
+            set { } // Ignore updates...
         }
 
         /// <summary>
@@ -207,14 +192,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public double Ratio
         {
-            get
-            {
-                return m_ratio;
-            }
-            set
-            {
-                m_ratio = value;
-            }
+            get => m_ratio;
+            set => m_ratio = value;
         }
 
         /// <summary>
@@ -222,14 +201,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public double CalFactor
         {
-            get
-            {
-                return m_calFactor;
-            }
-            set
-            {
-                m_calFactor = value;
-            }
+            get => m_calFactor;
+            set => m_calFactor = value;
         }
 
         /// <summary>
@@ -237,14 +210,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public double Shunt
         {
-            get
-            {
-                return m_shunt;
-            }
-            set
-            {
-                m_shunt = value;
-            }
+            get => m_shunt;
+            set => m_shunt = value;
         }
 
         /// <summary>
@@ -252,26 +219,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public int VoltageReferenceIndex
         {
-            get
-            {
-                return m_voltageReferenceIndex;
-            }
-            set
-            {
-                m_voltageReferenceIndex = value;
-            }
+            get => m_voltageReferenceIndex;
+            set => m_voltageReferenceIndex = value;
         }
 
         /// <summary>
         /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="PhasorDefinition"/>.
         /// </summary>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return 256;
-            }
-        }
+        public override int MaximumLabelLength => 256;
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorDefinition"/> object.
@@ -329,21 +284,17 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Creates phasor information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IPhasorDefinition definition)
         {
-            PhasorDefinition phasor = definition as PhasorDefinition;
-
-            if (phasor != null)
-            {
+            if (definition is PhasorDefinition phasor)
                 return (phasor.PhasorType == PhasorType.Voltage ? "V" : "I") + "," + phasor.Ratio + "," + phasor.CalFactor + "," + phasor.Offset + "," + phasor.Shunt + "," + phasor.VoltageReferenceIndex + "," + phasor.Label;
-            }
-            else if (definition != null)
-            {
-                if (definition.PhasorType == PhasorType.Voltage)
-                    return "V,4500.0,0.0060573,0,0,500," + definition.Label.ToNonNullString("Default 500kV");
-                else
-                    return "I,600.00,0.000040382,0,1,1," + definition.Label.ToNonNullString("Default Current");
-            }
 
-            return "";
+            if (definition is null)
+                return "";
+
+            if (definition.PhasorType == PhasorType.Voltage)
+                return "V,4500.0,0.0060573,0,0,500," + definition.Label.ToNonNullString("Default 500kV");
+                
+            return "I,600.00,0.000040382,0,1,1," + definition.Label.ToNonNullString("Default Current");
+
         }
 
         // Delegate handler to create a new BPA PDCstream phasor definition

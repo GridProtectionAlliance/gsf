@@ -86,14 +86,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual IChannelFrame Parent
         {
-            get
-            {
-                return m_parent;
-            }
-            set
-            {
-                m_parent = value;
-            }
+            get => m_parent;
+            set => m_parent = value;
         }
 
         /// <summary>
@@ -101,14 +95,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public new virtual IChannelCellParsingState State
         {
-            get
-            {
-                return base.State as IChannelCellParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as IChannelCellParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
@@ -120,14 +108,8 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual ushort IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
-            set
-            {
-                m_idCode = value;
-            }
+            get => m_idCode;
+            set => m_idCode = value;
         }
 
         /// <summary>

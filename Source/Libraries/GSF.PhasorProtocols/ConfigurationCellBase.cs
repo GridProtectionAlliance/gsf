@@ -103,14 +103,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public new virtual IConfigurationFrame Parent
         {
-            get
-            {
-                return base.Parent as IConfigurationFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as IConfigurationFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -118,14 +112,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public new virtual IConfigurationCellParsingState State
         {
-            get
-            {
-                return base.State as IConfigurationCellParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as IConfigurationCellParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
@@ -133,10 +121,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual string StationName
         {
-            get
-            {
-                return m_stationName;
-            }
+            get => m_stationName;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -154,38 +139,24 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the binary image of the <see cref="StationName"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual byte[] StationNameImage
-        {
-            get
-            {
-                return Encoding.ASCII.GetBytes(StationName.PadRight(MaximumStationNameLength));
-            }
-        }
+        public virtual byte[] StationNameImage => Encoding.ASCII.GetBytes(StationName.PadRight(MaximumStationNameLength));
 
         /// <summary>
         /// Gets the maximum length of the <see cref="StationName"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual int MaximumStationNameLength
-        {
-            get
-            {
-                // Typical station name length is 16 characters
-                return 16;
-            }
-        }
+        public virtual int MaximumStationNameLength =>
+            // Typical station name length is 16 characters
+            16;
 
         /// <summary>
         /// Gets or sets the ID label of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual string IDLabel
         {
-            get
-            {
-                return m_idLabel;
-            }
+            get => m_idLabel;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     value = "";
 
                 value = value.GetValidLabel();
@@ -206,33 +177,21 @@ namespace GSF.PhasorProtocols
             {
                 if (IDLabelLength < int.MaxValue)
                     return Encoding.ASCII.GetBytes(IDLabel.PadRight(IDLabelLength));
-                else
-                    return Encoding.ASCII.GetBytes(IDLabel);
+                return Encoding.ASCII.GetBytes(IDLabel);
             }
         }
 
         /// <summary>
         /// Gets the length of the <see cref="IDLabel"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual int IDLabelLength
-        {
-            get
-            {
-                // We don't restrict this for most protocols...
-                return int.MaxValue;
-            }
-        }
+        public virtual int IDLabelLength =>
+            // We don't restrict this for most protocols...
+            int.MaxValue;
 
         /// <summary>
         /// Gets a reference to the <see cref="PhasorDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual PhasorDefinitionCollection PhasorDefinitions
-        {
-            get
-            {
-                return m_phasorDefinitions;
-            }
-        }
+        public virtual PhasorDefinitionCollection PhasorDefinitions => m_phasorDefinitions;
 
         /// <summary>
         /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="PhasorDefinitions"/> of this <see cref="ConfigurationCellBase"/>.
@@ -260,14 +219,8 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual AngleFormat PhasorAngleFormat
         {
-            get
-            {
-                return m_angleFormat;
-            }
-            set
-            {
-                m_angleFormat = value;
-            }
+            get => m_angleFormat;
+            set => m_angleFormat = value;
         }
 
         /// <summary>
@@ -275,14 +228,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual IFrequencyDefinition FrequencyDefinition
         {
-            get
-            {
-                return m_frequencyDefinition;
-            }
-            set
-            {
-                m_frequencyDefinition = value;
-            }
+            get => m_frequencyDefinition;
+            set => m_frequencyDefinition = value;
         }
 
         /// <summary>
@@ -299,26 +246,14 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual LineFrequency NominalFrequency
         {
-            get
-            {
-                return m_nominalFrequency;
-            }
-            set
-            {
-                m_nominalFrequency = value;
-            }
+            get => m_nominalFrequency;
+            set => m_nominalFrequency = value;
         }
 
         /// <summary>
         /// Gets a reference to the <see cref="AnalogDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual AnalogDefinitionCollection AnalogDefinitions
-        {
-            get
-            {
-                return m_analogDefinitions;
-            }
-        }
+        public virtual AnalogDefinitionCollection AnalogDefinitions => m_analogDefinitions;
 
         /// <summary>
         /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IAnalogDefinition"/> objects in the <see cref="AnalogDefinitions"/> of this <see cref="ConfigurationCellBase"/>.
@@ -332,38 +267,20 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets a reference to the <see cref="DigitalDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual DigitalDefinitionCollection DigitalDefinitions
-        {
-            get
-            {
-                return m_digitalDefinitions;
-            }
-        }
+        public virtual DigitalDefinitionCollection DigitalDefinitions => m_digitalDefinitions;
 
         /// <summary>
         /// Gets the specified frame rate of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual ushort FrameRate
-        {
-            get
-            {
-                return Parent.FrameRate;
-            }
-        }
+        public virtual ushort FrameRate => Parent.FrameRate;
 
         /// <summary>
         /// Gets or sets the revision count of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual ushort RevisionCount
         {
-            get
-            {
-                return m_revisionCount;
-            }
-            set
-            {
-                m_revisionCount = value;
-            }
+            get => m_revisionCount;
+            set => m_revisionCount = value;
         }
 
         /// <summary>
@@ -372,13 +289,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Base implementation provides station name length from the header which is common to configuration frame headers in IEEE protocols.
         /// </remarks>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return MaximumStationNameLength;
-            }
-        }
+        protected override int HeaderLength => MaximumStationNameLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationCellBase"/> object.
@@ -386,13 +297,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Base implementation provides station name image from the header which is common to configuration frame headers in IEEE protocols.
         /// </remarks>
-        protected override byte[] HeaderImage
-        {
-            get
-            {
-                return StationNameImage;
-            }
-        }
+        protected override byte[] HeaderImage => StationNameImage;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
@@ -400,13 +305,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Channel names of IEEE protocol configuration frames are common in order and type so these are defined in the base class.
         /// </remarks>
-        protected override int BodyLength
-        {
-            get
-            {
-                return m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength;
-            }
-        }
+        protected override int BodyLength => m_phasorDefinitions.BinaryLength + m_analogDefinitions.BinaryLength + m_digitalDefinitions.BinaryLength;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="ConfigurationCellBase"/> object.
@@ -436,13 +335,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Bottom of the IEEE protocol configuration frames contain a nominal frequency definition, so base implementation exposes frequency definition as the footer.
         /// </remarks>
-        protected override int FooterLength
-        {
-            get
-            {
-                return 2;
-            }
-        }
+        protected override int FooterLength => 2;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="ConfigurationCellBase"/> object.
@@ -450,13 +343,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Bottom of the IEEE protocol configuration frames contain a nominal frequency definition, so base implementation exposes frequency definition as the footer.
         /// </remarks>
-        protected override byte[] FooterImage
-        {
-            get
-            {
-                return m_frequencyDefinition.BinaryImage();
-            }
-        }
+        protected override byte[] FooterImage => m_frequencyDefinition.BinaryImage();
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationCellBase"/> object.
@@ -553,7 +440,7 @@ namespace GSF.PhasorProtocols
             }
 
             // Return total parsed length
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -596,7 +483,7 @@ namespace GSF.PhasorProtocols
         /// </returns>
         public bool Equals(IConfigurationCell other)
         {
-            return ((object)other != null) && (CompareTo(other) == 0);
+            return !(other is null) && CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -611,9 +498,7 @@ namespace GSF.PhasorProtocols
         /// <exception cref="ArgumentException">value is not an <see cref="IConfigurationCell"/>.</exception>
         public virtual int CompareTo(object obj)
         {
-            IConfigurationCell other = obj as IConfigurationCell;
-
-            if (other == null)
+            if (!(obj is IConfigurationCell other))
                 throw new ArgumentException("ConfigurationCell can only be compared to other IConfigurationCells");
 
             return CompareTo(other);

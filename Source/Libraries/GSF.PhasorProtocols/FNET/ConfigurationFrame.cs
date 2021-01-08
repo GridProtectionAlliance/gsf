@@ -91,13 +91,7 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         /// <summary>
         /// Gets or sets the nominal <see cref="LineFrequency"/> of this <see cref="ConfigurationFrame"/>.
@@ -106,14 +100,8 @@ namespace GSF.PhasorProtocols.FNET
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
             // with our only child and expose the value at the parent level for convenience
-            get
-            {
-                return Cells[0].NominalFrequency;
-            }
-            set
-            {
-                Cells[0].NominalFrequency = value;
-            }
+            get => Cells[0].NominalFrequency;
+            set => Cells[0].NominalFrequency = value;
         }
 
         /// <summary>
@@ -127,14 +115,8 @@ namespace GSF.PhasorProtocols.FNET
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
             // with our only child and expose the value at the parent level for convenience
-            get
-            {
-                return Cells[0].TimeOffset;
-            }
-            set
-            {
-                Cells[0].TimeOffset = value;
-            }
+            get => Cells[0].TimeOffset;
+            set => Cells[0].TimeOffset = value;
         }
 
         /// <summary>
@@ -144,14 +126,8 @@ namespace GSF.PhasorProtocols.FNET
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
             // with our only child and expose the value at the parent level for convenience
-            get
-            {
-                return Cells[0].Longitude;
-            }
-            set
-            {
-                Cells[0].Longitude = value;
-            }
+            get => Cells[0].Longitude;
+            set => Cells[0].Longitude = value;
         }
 
         /// <summary>
@@ -161,14 +137,8 @@ namespace GSF.PhasorProtocols.FNET
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
             // with our only child and expose the value at the parent level for convenience
-            get
-            {
-                return Cells[0].Latitude;
-            }
-            set
-            {
-                Cells[0].Latitude = value;
-            }
+            get => Cells[0].Latitude;
+            set => Cells[0].Latitude = value;
         }
 
         /// <summary>
@@ -178,14 +148,8 @@ namespace GSF.PhasorProtocols.FNET
         {
             // Since F-NET only supports a single device there will only be one cell, so we just share this value
             // with our only child and expose the value at the parent level for convenience
-            get
-            {
-                return Cells[0].NumberOfSatellites;
-            }
-            set
-            {
-                Cells[0].NumberOfSatellites = value;
-            }
+            get => Cells[0].NumberOfSatellites;
+            set => Cells[0].NumberOfSatellites = value;
         }
 
         #endregion

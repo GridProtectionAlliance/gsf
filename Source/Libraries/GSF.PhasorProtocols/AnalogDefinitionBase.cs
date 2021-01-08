@@ -90,27 +90,15 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> for the <see cref="AnalogDefinitionBase"/>.
         /// </summary>
-        public override DataFormat DataFormat
-        {
-            get
-            {
-                return Parent.AnalogDataFormat;
-            }
-        }
+        public override DataFormat DataFormat => Parent.AnalogDataFormat;
 
         /// <summary>
         /// Gets or sets <see cref="AnalogType"/> of this <see cref="AnalogDefinitionBase"/>.
         /// </summary>
         public virtual AnalogType AnalogType
         {
-            get
-            {
-                return m_type;
-            }
-            set
-            {
-                m_type = value;
-            }
+            get => m_type;
+            set => m_type = value;
         }
 
         /// <summary>

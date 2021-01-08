@@ -68,14 +68,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new ConfigurationFrame Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -84,10 +78,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         public new uint IDCode
         {
             // SEL Fast Message only allows one device, so we share ID code with parent frame...
-            get
-            {
-                return Parent.IDCode;
-            }
+            get => Parent.IDCode;
             set
             {
                 Parent.IDCode = value;
@@ -106,10 +97,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <exception cref="NotSupportedException">SEL Fast Message only supports floating-point data.</exception>
         public override DataFormat PhasorDataFormat
         {
-            get
-            {
-                return DataFormat.FloatingPoint;
-            }
+            get => DataFormat.FloatingPoint;
             set
             {
                 if (value != DataFormat.FloatingPoint)
@@ -126,10 +114,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <exception cref="NotSupportedException">SEL Fast Message only supports polar phasor data.</exception>
         public override CoordinateFormat PhasorCoordinateFormat
         {
-            get
-            {
-                return CoordinateFormat.Polar;
-            }
+            get => CoordinateFormat.Polar;
             set
             {
                 if (value != CoordinateFormat.Polar)
@@ -146,10 +131,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <exception cref="NotSupportedException">SEL Fast Message only supports floating-point data.</exception>
         public override DataFormat FrequencyDataFormat
         {
-            get
-            {
-                return DataFormat.FloatingPoint;
-            }
+            get => DataFormat.FloatingPoint;
             set
             {
                 if (value != DataFormat.FloatingPoint)
@@ -166,10 +148,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <exception cref="NotSupportedException">SEL Fast Message only supports floating-point data.</exception>
         public override DataFormat AnalogDataFormat
         {
-            get
-            {
-                return DataFormat.FloatingPoint;
-            }
+            get => DataFormat.FloatingPoint;
             set
             {
                 if (value != DataFormat.FloatingPoint)
@@ -180,15 +159,10 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets the maximum length of the <see cref="ConfigurationCellBase.StationName"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int MaximumStationNameLength
-        {
-            get
-            {
-                // The station name is defined external to the protocol, so there is no set limit
-                return int.MaxValue;
-            }
-        }
+        public override int MaximumStationNameLength =>
+            // The station name is defined external to the protocol, so there is no set limit
+            int.MaxValue;
 
-        #endregion
+    #endregion
     }
 }

@@ -48,10 +48,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Fields
         private CommonFrameHeader m_frameHeader;
         private ushort m_sampleNumber;
-        private string[] m_legacyLabels;
-        private bool m_usePhasorDataFileFormat;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -104,27 +102,15 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrame"/>.
         /// </summary>
-        public new DataCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as DataCellCollection;
-            }
-        }
+        public new DataCellCollection Cells => base.Cells as DataCellCollection;
 
         /// <summary>
         /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
         /// </summary>
         public new ConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return base.ConfigurationFrame as ConfigurationFrame;
-            }
-            set
-            {
-                base.ConfigurationFrame = value;
-            }
+            get => base.ConfigurationFrame as ConfigurationFrame;
+            set => base.ConfigurationFrame = value;
         }
 
         /// <summary>
@@ -132,50 +118,32 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new DataFrameParsingState State
         {
-            get
-            {
-                return base.State as DataFrameParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as DataFrameParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
         /// Gets the identifier that is used to identify the IEEE C37.118 frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return BPAPDCstream.FrameType.DataFrame;
-            }
-        }
+        public FrameType TypeID => BPAPDCstream.FrameType.DataFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists - using base class timestamp to
-                // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(1);
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists - using base class timestamp to
+            // prevent recursion (m_frameHeader doesn't exist yet)
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(1));
             set
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
+                if (!(m_frameHeader is null))
                 {
                     State = m_frameHeader.State as DataFrameParsingState;
                     Timestamp = m_frameHeader.RoughTimestamp;
-                    m_usePhasorDataFileFormat = m_frameHeader.UsePhasorDataFileFormat;
+                    UsePhasorDataFileFormat = m_frameHeader.UsePhasorDataFileFormat;
                 }
             }
         }
@@ -183,14 +151,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
@@ -198,14 +160,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public byte PacketNumber
         {
-            get
-            {
-                return CommonHeader.PacketNumber;
-            }
-            set
-            {
-                CommonHeader.PacketNumber = value;
-            }
+            get => CommonHeader.PacketNumber;
+            set => CommonHeader.PacketNumber = value;
         }
 
         /// <summary>
@@ -213,62 +169,30 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort SampleNumber
         {
-            get
-            {
-                return m_sampleNumber;
-            }
-            set
-            {
-                m_sampleNumber = value;
-            }
+            get => m_sampleNumber;
+            set => m_sampleNumber = value;
         }
 
         /// <summary>
         /// Gets the timestamp of this <see cref="DataFrame"/> formatted as NTP.
         /// </summary>
-        public NtpTimeTag NtpTimeTag
-        {
-            get
-            {
-                return new NtpTimeTag(Timestamp);
-            }
-        }
+        public NtpTimeTag NtpTimeTag => new NtpTimeTag(Timestamp);
 
         /// <summary>
         /// Gets the legacy labels parsed from the <see cref="DataFrame"/>, if any.
         /// </summary>
-        public string[] LegacyLabels
-        {
-            get
-            {
-                return m_legacyLabels;
-            }
-        }
+        public string[] LegacyLabels { get; private set; }
 
         /// <summary>
         /// Gets or sets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
-        public bool UsePhasorDataFileFormat
-        {
-            get
-            {
-                return m_usePhasorDataFileFormat;
-            }
-        }
+        public bool UsePhasorDataFileFormat { get; private set; }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                if ((object)ConfigurationFrame != null && ConfigurationFrame.StreamType == StreamType.Legacy)
-                    return 12 + ConfigurationFrame.Cells.Count * 8;
-
-                return 12;
-            }
-        }
+        protected override int HeaderLength => 
+            ConfigurationFrame is null || ConfigurationFrame.StreamType != StreamType.Legacy ? 12 : 12 + ConfigurationFrame.Cells.Count * 8;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.
@@ -335,13 +259,13 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 CommonHeader.AppendHeaderAttributes(baseAttributes);
                 baseAttributes.Add("Sample Number", m_sampleNumber.ToString());
 
-                if (m_legacyLabels != null)
+                if (!(LegacyLabels is null))
                 {
-                    baseAttributes.Add("Legacy Label Count", m_legacyLabels.Length.ToString());
+                    baseAttributes.Add("Legacy Label Count", LegacyLabels.Length.ToString());
 
-                    for (int x = 0; x < m_legacyLabels.Length; x++)
+                    for (int x = 0; x < LegacyLabels.Length; x++)
                     {
-                        baseAttributes.Add("    Legacy Label " + x, m_legacyLabels[x]);
+                        baseAttributes.Add("    Legacy Label " + x, LegacyLabels[x]);
                     }
                 }
 
@@ -368,7 +292,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             int parsedLength = base.ParseBinaryImage(buffer, startIndex, length);
 
             // Subtract 2 bytes from total length when using phasor data file format, DST files do not use CRC
-            if (m_usePhasorDataFileFormat)
+            if (UsePhasorDataFileFormat)
                 parsedLength -= 2;
 
             return parsedLength;
@@ -384,13 +308,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
         {
             IDataFrameParsingState state = State;
-            ConfigurationFrame configurationFrame = state.ConfigurationFrame as ConfigurationFrame;
 
             // Check for unlikely occurrence of unexpected configuration frame type
-            if ((object)configurationFrame == null)
+            if (!(state.ConfigurationFrame is ConfigurationFrame configurationFrame))
                 throw new InvalidOperationException("Unexpected configuration frame encountered - BPA PDCstream configuration frame expected, cannot parse data frame.");
 
-            if (m_usePhasorDataFileFormat)
+            if (UsePhasorDataFileFormat)
             {
                 // Because in cases where PDCxchng is being used the data cell count will be smaller than the
                 // configuration cell count - we save this count to calculate the offsets later
@@ -411,9 +334,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             index += 6;
 
             if (configurationFrame.RevisionNumber == RevisionNumber.Revision0)
-                Timestamp = (new NtpTimeTag(secondOfCentury, 0)).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
+                Timestamp = new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
             else
-                Timestamp = (new UnixTimeTag(secondOfCentury)).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
+                Timestamp = new UnixTimeTag(secondOfCentury).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
 
             // Because in cases where PDCxchng is being used the data cell count will be smaller than the
             // configuration cell count - we save this count to calculate the offsets later
@@ -426,17 +349,17 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             // We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
             if (configurationFrame.StreamType == StreamType.Legacy)
             {
-                m_legacyLabels = new string[state.CellCount];
+                LegacyLabels = new string[state.CellCount];
 
                 for (int x = 0; x < state.CellCount; x++)
                 {
-                    m_legacyLabels[x] = Encoding.ASCII.GetString(buffer, index, 4);
+                    LegacyLabels[x] = Encoding.ASCII.GetString(buffer, index, 4);
                     // We don't need offsets, so we skip them...
                     index += 8;
                 }
             }
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -478,7 +401,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
         {
             // DST files don't use checksums
-            if (m_usePhasorDataFileFormat)
+            if (UsePhasorDataFileFormat)
                 return true;
 
             int sumLength = BinaryLength - 2;

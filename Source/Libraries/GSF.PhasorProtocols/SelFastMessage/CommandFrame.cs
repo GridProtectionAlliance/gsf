@@ -73,7 +73,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
 
             // Validate check-sum
             if (!ChecksumIsValid(buffer, startIndex))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
+                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
 
             // Validate SEL Fast Message data image
             if (buffer[startIndex] != Common.HeaderByte1 || buffer[startIndex + 1] != Common.HeaderByte2)
@@ -88,7 +88,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             int sumLength = FrameSize - 2;
 
             if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
+                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
         }
 
         /// <summary>
@@ -164,37 +164,19 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public MessagePeriod MessagePeriod
         {
-            get
-            {
-                return m_messagePeriod;
-            }
-            set
-            {
-                m_messagePeriod = value;
-            }
+            get => m_messagePeriod;
+            set => m_messagePeriod = value;
         }
 
         /// <summary>
         /// Gets frame size based on <see cref="Command"/>.
         /// </summary>
-        public byte FrameSize
-        {
-            get
-            {
-                return (byte)(Command == DeviceCommand.EnableUnsolicitedMessages ? 18 : 16);
-            }
-        }
+        public byte FrameSize => (byte)(Command == DeviceCommand.EnableUnsolicitedMessages ? 18 : 16);
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return 9;
-            }
-        }
+        protected override int HeaderLength => 9;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.
@@ -216,14 +198,9 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                // Total frame size - header length - crc value length
-                return FrameSize - HeaderLength - 2;
-            }
-        }
+        protected override int BodyLength =>
+            // Total frame size - header length - crc value length
+            FrameSize - HeaderLength - 2;
 
         /// <summary>
         /// Gets the binary body image of this <see cref="CommandFrame"/>.

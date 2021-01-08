@@ -46,22 +46,16 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields        
-        private IChannelParsingState m_state;               // Current parsing state
         private Dictionary<string, string> m_attributes;    // Attributes dictionary
-        private object m_tag;                               // User defined tag
 
-        #endregion
+    #endregion
 
         #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the parsing state for this <see cref="ChannelBase"/> object.
         /// </summary>
-        public virtual IChannelParsingState State
-        {
-            get => m_state;
-            set => m_state = value;
-        }
+        public virtual IChannelParsingState State { get; set; }
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="ChannelBase"/> object.
@@ -77,12 +71,12 @@ namespace GSF.PhasorProtocols
             get
             {
                 // Create a new attributes dictionary or clear the contents of any existing one
-                if (m_attributes == null)
+                if (m_attributes is null)
                     m_attributes = new Dictionary<string, string>();
                 else
                     m_attributes.Clear();
 
-                m_attributes.Add("Derived Type", this.GetType().FullName);
+                m_attributes.Add("Derived Type", GetType().FullName);
                 m_attributes.Add("Binary Length", BinaryLength.ToString());
 
                 return m_attributes;
@@ -92,11 +86,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets a user definable reference to an object associated with this <see cref="ChannelBase"/> object.
         /// </summary>
-        public virtual object Tag
-        {
-            get => m_tag;
-            set => m_tag = value;
-        }
+        public virtual object Tag { get; set; }
 
         /// <summary>
         /// Gets the binary image of the <see cref="ChannelBase"/> object.

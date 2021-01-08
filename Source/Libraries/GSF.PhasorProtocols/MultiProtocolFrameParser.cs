@@ -280,9 +280,8 @@ namespace GSF.PhasorProtocols
             private TcpServer m_tcpServer;
             private IPAddress m_remoteAddress;
             private Guid m_clientID;
-            private bool m_disposed;
 
-            #endregion
+        #endregion
 
             #region [ Properties ]
 
@@ -376,9 +375,9 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets a flag that indicates whether the object has been disposed.
             /// </summary>
-            public bool IsDisposed => m_disposed;
+            public bool IsDisposed { get; private set; }
 
-            #endregion
+        #endregion
 
             #region [ Methods ]
 
@@ -426,7 +425,7 @@ namespace GSF.PhasorProtocols
             /// </summary>
             public void Dispose()
             {
-                if (m_disposed)
+                if (IsDisposed)
                     return;
 
                 try
@@ -435,7 +434,7 @@ namespace GSF.PhasorProtocols
                 }
                 finally
                 {
-                    m_disposed = true;
+                    IsDisposed = true;
                 }
             }
 
@@ -754,9 +753,8 @@ namespace GSF.PhasorProtocols
             private IPAddress m_multicastServerAddress;
             private IPAddress m_multicastSourceAddress;
             private bool m_receivePacketInfo;
-            private bool m_disposed;
 
-            #endregion
+        #endregion
 
             #region [ Properties ]
 
@@ -841,7 +839,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets a flag that indicates whether the object has been disposed.
             /// </summary>
-            public bool IsDisposed => m_disposed;
+            public bool IsDisposed { get; private set; }
 
             /// <summary>
             /// Gets the unique identifier of the client.
@@ -994,7 +992,7 @@ namespace GSF.PhasorProtocols
             /// </summary>
             public void Dispose()
             {
-                if (m_disposed)
+                if (IsDisposed)
                     return;
 
                 try
@@ -1003,7 +1001,7 @@ namespace GSF.PhasorProtocols
                 }
                 finally
                 {
-                    m_disposed = true;
+                    IsDisposed = true;
                 }
             }
 

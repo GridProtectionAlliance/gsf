@@ -93,14 +93,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new DataFrame Parent
         {
-            get
-            {
-                return base.Parent as DataFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -108,40 +102,22 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new ConfigurationCell ConfigurationCell
         {
-            get
-            {
-                return base.ConfigurationCell as ConfigurationCell;
-            }
-            set
-            {
-                base.ConfigurationCell = value;
-            }
+            get => base.ConfigurationCell as ConfigurationCell;
+            set => base.ConfigurationCell = value;
         }
 
         /// <summary>
         /// Gets the numeric ID code for this <see cref="DataCell"/>.
         /// </summary>
-        public new uint IDCode
-        {
-            get
-            {
-                return ConfigurationCell.IDCode;
-            }
-        }
+        public new uint IDCode => ConfigurationCell.IDCode;
 
         /// <summary>
         /// Gets or sets status flags for this <see cref="DataCell"/>.
         /// </summary>
         public new StatusFlags StatusFlags
         {
-            get
-            {
-                return (StatusFlags)base.StatusFlags;
-            }
-            set
-            {
-                base.StatusFlags = (ushort)value;
-            }
+            get => (StatusFlags)base.StatusFlags;
+            set => base.StatusFlags = (ushort)value;
         }
 
         /// <summary>
@@ -149,10 +125,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public override bool DataIsValid
         {
-            get
-            {
-                return (StatusFlags & StatusFlags.PMDOK) > 0;
-            }
+            get => (StatusFlags & StatusFlags.PMDOK) > 0;
             set
             {
                 if (value)
@@ -167,10 +140,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public override bool SynchronizationIsValid
         {
-            get
-            {
-                return (StatusFlags & StatusFlags.TSOK) > 0;
-            }
+            get => (StatusFlags & StatusFlags.TSOK) > 0;
             set
             {
                 if (value)
@@ -185,10 +155,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public override DataSortingType DataSortingType
         {
-            get
-            {
-                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
-            }
+            get => SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
             set
             {
                 // We just ignore this value as we have defined data sorting type as a derived value based on synchronization validity
@@ -202,10 +169,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool DeviceError
         {
-            get
-            {
-                return false;
-            }
+            get => false;
             set
             {
                 // We just ignore this value as SEL Fast Message defines no flags for data errors
@@ -219,13 +183,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// SEL Fast Message doesn't define any analog values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override AnalogValueCollection AnalogValues
-        {
-            get
-            {
-                return base.AnalogValues;
-            }
-        }
+        public override AnalogValueCollection AnalogValues => base.AnalogValues;
 
         /// <summary>
         /// Gets <see cref="DigitalValueCollection"/> of this <see cref="DataCell"/>.
@@ -234,13 +192,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// SEL Fast Message doesn't define any digital values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override DigitalValueCollection DigitalValues
-        {
-            get
-            {
-                return base.DigitalValues;
-            }
-        }
+        public override DigitalValueCollection DigitalValues => base.DigitalValues;
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
@@ -291,7 +243,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             index += 2;
 
             // Return total parsed length
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         #endregion

@@ -101,23 +101,14 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         /// <summary>
         /// Gets or sets the ID code of this <see cref="ConfigurationFrame"/>.
         /// </summary>
         public new ulong IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
+            get => m_idCode;
             set
             {
                 m_idCode = value;
@@ -135,10 +126,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </remarks>
         public override Ticks Timestamp
         {
-            get
-            {
-                return CommonHeader.Timestamp;
-            }
+            get => CommonHeader.Timestamp;
             set
             {
                 // Keep timestamp updates synchrnonized...
@@ -150,13 +138,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public new NtpTimeTag TimeTag
-        {
-            get
-            {
-                return CommonHeader.TimeTag;
-            }
-        }
+        public new NtpTimeTag TimeTag => CommonHeader.TimeTag;
 
         /// <summary>
         /// Gets or sets the nominal <see cref="LineFrequency"/> of this <see cref="ConfigurationFrame"/>.
@@ -165,14 +147,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             // Since IEEE 1344 only supports a single device there will only be one cell, so we just share nominal frequency with our only child
             // and expose the value at the parent level for convenience
-            get
-            {
-                return Cells[0].NominalFrequency;
-            }
-            set
-            {
-                Cells[0].NominalFrequency = value;
-            }
+            get => Cells[0].NominalFrequency;
+            set => Cells[0].NominalFrequency = value;
         }
 
         /// <summary>
@@ -180,76 +156,46 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public ushort Period
         {
-            get
-            {
-                return (ushort)((double)NominalFrequency / (double)FrameRate * 100.0D);
-            }
-            set
-            {
-                FrameRate = (ushort)((double)NominalFrequency * 100.0D / (double)value);
-            }
+            get => (ushort)((double)NominalFrequency / FrameRate * 100.0D);
+            set => FrameRate = (ushort)((double)NominalFrequency * 100.0D / value);
         }
 
         /// <summary>
         /// Gets the identifier that is used to identify the IEEE 1344 frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return IEEE1344.FrameType.ConfigurationFrame;
-            }
-        }
+        public FrameType TypeID => IEEE1344.FrameType.ConfigurationFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists - using base class timestamp to
-                // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp);
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists - using base class timestamp to
+            // prevent recursion (m_frameHeader doesn't exist yet)
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp));
             set
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                {
-                    State = m_frameHeader.State as IConfigurationFrameParsingState;
-                    base.Timestamp = m_frameHeader.Timestamp;
-                }
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as IConfigurationFrameParsingState;
+                base.Timestamp = m_frameHeader.Timestamp;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonFrameHeader.FixedLength;
-            }
-        }
+        protected override int HeaderLength => CommonFrameHeader.FixedLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationFrame"/> object.
@@ -268,24 +214,12 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength
-        {
-            get
-            {
-                return FixedFooterLength;
-            }
-        }
+        protected override int FooterLength => FixedFooterLength;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="ConfigurationFrame"/> object.
         /// </summary>
-        protected override byte[] FooterImage
-        {
-            get
-            {
-                return BigEndian.GetBytes(Period);
-            }
-        }
+        protected override byte[] FooterImage => BigEndian.GetBytes(Period);
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationFrame"/> object.
@@ -322,37 +256,35 @@ namespace GSF.PhasorProtocols.IEEE1344
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             // If frame image collector was used, make sure and parse from entire frame image...
-            if (m_frameHeader != null)
+            if (m_frameHeader is null)
+                return base.ParseBinaryImage(buffer, startIndex, length);
+
+            // If all configuration frame images have been received, we can safely start parsing
+            if (m_frameHeader.IsLastFrame)
             {
-                // If all configuration frame images have been received, we can safely start parsing
-                if (m_frameHeader.IsLastFrame)
-                {
-                    FrameImageCollector frameImages = m_frameHeader.FrameImages;
+                FrameImageCollector frameImages = m_frameHeader.FrameImages;
 
-                    if (frameImages != null)
-                    {
-                        // Each individual frame will already have had a CRC check, so we implement standard parse to
-                        // bypass ChannelBase CRC frame validation on cumulative frame image
-                        buffer = frameImages.BinaryImage;
-                        length = frameImages.BinaryLength;
-                        startIndex = 0;
+                if (frameImages is null)
+                    return State.ParsedBinaryLength;
 
-                        // Parse out header, body and footer images
-                        startIndex += ParseHeaderImage(buffer, startIndex, length);
-                        startIndex += ParseBodyImage(buffer, startIndex, length - startIndex);
-                        startIndex += ParseFooterImage(buffer, startIndex, length - startIndex);
+                // Each individual frame will already have had a CRC check, so we implement standard parse to
+                // bypass ChannelBase CRC frame validation on cumulative frame image
+                buffer = frameImages.BinaryImage;
+                length = frameImages.BinaryLength;
+                startIndex = 0;
 
-                        // Include 2 bytes for CRC that was already validated
-                        return startIndex + 2;
-                    }
-                }
+                // Parse out header, body and footer images
+                startIndex += ParseHeaderImage(buffer, startIndex, length);
+                startIndex += ParseBodyImage(buffer, startIndex, length - startIndex);
+                startIndex += ParseFooterImage(buffer, startIndex, length - startIndex);
 
-                // There are more configuration frame images coming, keep parser moving by returning total
-                // frame length that was already parsed.
-                return State.ParsedBinaryLength;
+                // Include 2 bytes for CRC that was already validated
+                return startIndex + 2;
             }
 
-            return base.ParseBinaryImage(buffer, startIndex, length);
+            // There are more configuration frame images coming, keep parser moving by returning total
+            // frame length that was already parsed.
+            return State.ParsedBinaryLength;
         }
 
         /// <summary>

@@ -75,7 +75,6 @@ namespace GSF.PhasorProtocols.Macrodyne
         private ConfigurationFrame m_configurationFrame;
         private ProtocolVersion m_protocolVersion;
         private string m_configurationFileName;
-        private string m_deviceLabel;
         private bool m_refreshConfigurationFileOnChange;
         private SafeFileWatcher m_configurationFileWatcher;
         private readonly object m_syncLock;
@@ -98,7 +97,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             m_syncLock = new object();
             m_protocolVersion = protocolVersion;
-            m_deviceLabel = deviceLabel;
+            DeviceLabel = deviceLabel;
             ConfigurationFileName = configurationFileName;
         }
 
@@ -115,26 +114,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = CastToDerivedConfigurationFrame(value, m_configurationFileName, m_deviceLabel);
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = CastToDerivedConfigurationFrame(value, m_configurationFileName, DeviceLabel);
         }
 
         /// <summary>
         /// Gets flag that determines if Macrodyne protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool ProtocolUsesSyncBytes => false;
 
         /// <summary>
         /// Gets or sets external Macrodyne based configuration file.
@@ -143,7 +130,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFrame == null)
+                if (m_configurationFrame is null)
                     return m_configurationFileName;
 
                 return m_configurationFrame.ConfigurationFileName;
@@ -153,9 +140,9 @@ namespace GSF.PhasorProtocols.Macrodyne
                 m_configurationFileName = value;
                 ResetFileWatcher();
 
-                if ((object)m_configurationFrame == null && !string.IsNullOrEmpty(m_configurationFileName) && File.Exists(m_configurationFileName))
+                if (m_configurationFrame is null && !string.IsNullOrEmpty(m_configurationFileName) && File.Exists(m_configurationFileName))
                 {
-                    m_configurationFrame = new ConfigurationFrame(OnlineDataFormatFlags.TimestampEnabled, "1690", m_configurationFileName, m_deviceLabel);
+                    m_configurationFrame = new ConfigurationFrame(OnlineDataFormatFlags.TimestampEnabled, "1690", m_configurationFileName, DeviceLabel);
                     m_configurationFrame.CommonHeader = new CommonFrameHeader(m_protocolVersion, FrameType.ConfigurationFrame);
                 }
             }
@@ -164,27 +151,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets or sets device section label, as defined in associated INI file.
         /// </summary>
-        public string DeviceLabel
-        {
-            get
-            {
-                return m_deviceLabel;
-            }
-            set
-            {
-                m_deviceLabel = value;
-            }
-        }
+        public string DeviceLabel { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if configuration file is automatically reloaded when it has changed on disk.
         /// </summary>
         public bool RefreshConfigurationFileOnChange
         {
-            get
-            {
-                return m_refreshConfigurationFileOnChange;
-            }
+            get => m_refreshConfigurationFileOnChange;
             set
             {
                 m_refreshConfigurationFileOnChange = value;
@@ -205,7 +179,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 status.AppendLine();
                 status.AppendFormat("    INI configuration file: {0}", FilePath.TrimFileName(m_configurationFileName.ToNonNullNorEmptyString("undefined"), 51));
                 status.AppendLine();
-                status.AppendFormat("  Device INI section label: {0}", m_deviceLabel);
+                status.AppendFormat("  Device INI section label: {0}", DeviceLabel);
                 status.AppendLine();
                 status.AppendFormat(" Auto-reload configuration: {0}", m_refreshConfigurationFileOnChange);
                 status.AppendLine();
@@ -220,21 +194,16 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override IConnectionParameters ConnectionParameters
         {
-            get
-            {
-                return base.ConnectionParameters;
-            }
+            get => base.ConnectionParameters;
             set
             {
-                ConnectionParameters parameters = value as ConnectionParameters;
-
-                if (parameters != null)
+                if (value is ConnectionParameters parameters)
                 {
                     base.ConnectionParameters = parameters;
 
                     // Assign new incoming connection parameter values
                     m_protocolVersion = parameters.ProtocolVersion;
-                    m_deviceLabel = parameters.DeviceLabel;
+                    DeviceLabel = parameters.DeviceLabel;
                     ConfigurationFileName = parameters.ConfigurationFileName;
                     m_refreshConfigurationFileOnChange = parameters.RefreshConfigurationFileOnChange;
                     ResetFileWatcher();
@@ -252,25 +221,25 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                if (!(m_configurationFileWatcher is null))
                 {
-                    if (disposing)
-                    {
-                        if (m_configurationFileWatcher != null)
-                        {
-                            m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
-                            m_configurationFileWatcher.Dispose();
-                        }
-                        m_configurationFileWatcher = null;
-                    }
+                    m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
+                    m_configurationFileWatcher.Dispose();
                 }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                m_configurationFileWatcher = null;
+            }
+            finally
+            {
+                m_disposed = true;       // Prevent duplicate dispose.
+                base.Dispose(disposing); // Call base class Dispose().
             }
         }
 
@@ -432,7 +401,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             try
             {
-                if ((object)m_configurationFrame != null)
+                if (!(m_configurationFrame is null))
                     OnReceivedConfigurationFrame(m_configurationFrame);
             }
             catch (ThreadAbortException)
@@ -455,15 +424,14 @@ namespace GSF.PhasorProtocols.Macrodyne
                 OnConfigurationChanged();
 
                 // Reload configuration...
-                if ((object)m_configurationFrame != null)
-                    m_configurationFrame.Refresh();
+                m_configurationFrame?.Refresh();
             }
         }
 
         // Reset file watcher
         private void ResetFileWatcher()
         {
-            if (m_configurationFileWatcher != null)
+            if (!(m_configurationFileWatcher is null))
             {
                 m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
                 m_configurationFileWatcher.Dispose();
@@ -501,9 +469,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             base.OnReceivedConfigurationFrame(frame);
 
             // Cache new configuration frame for parsing subsequent data frames...
-            ConfigurationFrame configurationFrame = frame as ConfigurationFrame;
-
-            if ((object)configurationFrame != null)
+            if (frame is ConfigurationFrame configurationFrame)
                 m_configurationFrame = configurationFrame;
         }
 
@@ -517,9 +483,8 @@ namespace GSF.PhasorProtocols.Macrodyne
             base.OnReceivedHeaderFrame(frame);
 
             //// Cache new header frame for parsing subsequent configuration frame...
-            HeaderFrame headerFrame = frame as HeaderFrame;
 
-            if (headerFrame != null)
+            if (frame is HeaderFrame headerFrame)
                 m_headerFrame = headerFrame;
         }
 
@@ -533,34 +498,25 @@ namespace GSF.PhasorProtocols.Macrodyne
             base.OnReceivedChannelFrame(frame);
 
             // Raise Macrodyne specific channel frame events, if any have been subscribed
-            if (frame != null && (ReceivedDataFrame != null || ReceivedConfigurationFrame != null || ReceivedHeaderFrame != null))
+            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedHeaderFrame is null))
+                return;
+
+            switch (frame)
             {
-                DataFrame dataFrame = frame as DataFrame;
-
-                if (dataFrame != null)
+                case DataFrame dataFrame:
                 {
-                    if (ReceivedDataFrame != null)
-                        ReceivedDataFrame(this, new EventArgs<DataFrame>(dataFrame));
+                    ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
                 }
-                else
+                case HeaderFrame headerFrame:
                 {
-                    HeaderFrame headerFrame = frame as HeaderFrame;
-
-                    if (headerFrame != null)
-                    {
-                        if (ReceivedHeaderFrame != null)
-                            ReceivedHeaderFrame(this, new EventArgs<HeaderFrame>(headerFrame));
-                    }
-                    else
-                    {
-                        ConfigurationFrame configFrame = frame as ConfigurationFrame;
-
-                        if (configFrame != null)
-                        {
-                            if (ReceivedConfigurationFrame != null)
-                                ReceivedConfigurationFrame(this, new EventArgs<ConfigurationFrame>(configFrame));
-                        }
-                    }
+                    ReceivedHeaderFrame?.Invoke(this, new EventArgs<HeaderFrame>(headerFrame));
+                    break;
+                }
+                case ConfigurationFrame configFrame:
+                {
+                    ReceivedConfigurationFrame?.Invoke(this, new EventArgs<ConfigurationFrame>(configFrame));
+                    break;
                 }
             }
         }
@@ -589,7 +545,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             // See if frame is already a Macrodyne frame (if so, we don't need to do any work)
             ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
-            if (derivedFrame == null)
+            if (derivedFrame is null)
             {
                 // Create a new Macrodyne configuration frame converted from equivalent configuration information; Macrodyne only supports one device
                 if (sourceFrame.Cells.Count > 0)
@@ -617,7 +573,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    if (sourceFrequency != null)
+                    if (!(sourceFrequency is null))
                     {
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell)
                         {

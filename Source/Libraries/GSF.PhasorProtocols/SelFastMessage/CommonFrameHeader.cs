@@ -121,27 +121,15 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public NtpTimeTag TimeTag
-        {
-            get
-            {
-                return new NtpTimeTag(m_timestamp);
-            }
-        }
+        public NtpTimeTag TimeTag => new NtpTimeTag(m_timestamp);
 
         /// <summary>
         /// Gets or sets timestamp of this <see cref="CommonFrameHeader"/>.
         /// </summary>
         public Ticks Timestamp
         {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
+            get => m_timestamp;
+            set => m_timestamp = value;
         }
 
         /// <summary>
@@ -149,75 +137,40 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public uint IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
-            set
-            {
-                m_idCode = value;
-            }
+            get => m_idCode;
+            set => m_idCode = value;
         }
 
         /// <summary>
         /// Gets the SEL Fast Message second of century of this <see cref="CommonFrameHeader"/>.
         /// </summary>
-        public uint SecondOfCentury
-        {
-            get
-            {
-                return (uint)Math.Truncate(TimeTag.Value);
-            }
-        }
+        public uint SecondOfCentury => (uint)Math.Truncate(TimeTag.Value);
 
         /// <summary>
         /// Gets the SEL Fast Message sample number of this <see cref="CommonFrameHeader"/>.
         /// </summary>
-        public ushort SampleNumber
-        {
-            get
-            {
-                return (ushort)(m_timestamp.DistanceBeyondSecond().ToMilliseconds() / 50);
-            }
-        }
+        public ushort SampleNumber => (ushort)(m_timestamp.DistanceBeyondSecond().ToMilliseconds() / 50);
 
         /// <summary>
         /// Gets or sets the SEL Fast Message frame size of this <see cref="CommonFrameHeader"/>.
         /// </summary>
         public FrameSize FrameSize
         {
-            get
-            {
-                return m_frameSize;
-            }
-            set
-            {
-                m_frameSize = value;
-            }
+            get => m_frameSize;
+            set => m_frameSize = value;
         }
 
         /// <summary>
         /// Gets the SEL Fast Message register count of this <see cref="CommonFrameHeader"/>.
         /// </summary>
-        public ushort RegisterCount
-        {
-            get
-            {
-                return (ushort)(DataLength / 2);
-            }
-        }
+        public ushort RegisterCount => (ushort)(DataLength / 2);
 
         /// <summary>
         /// Gets the length of the data in the SEL Fast Message frame (i.e., the <see cref="FrameSize"/> minus the <see cref="HeaderLength"/> and checksum) of this <see cref="CommonFrameHeader"/>.
         /// </summary>
-        public ushort DataLength
-        {
-            get
-            {
-                // Data length will be frame length minus common header length minus crc16
-                return (ushort)((ushort)m_frameSize - HeaderLength - 2);
-            }
-        }
+        public ushort DataLength =>
+            // Data length will be frame length minus common header length minus crc16
+            (ushort)((ushort)m_frameSize - HeaderLength - 2);
 
 
         /// <summary>

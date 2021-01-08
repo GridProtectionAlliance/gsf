@@ -86,6 +86,23 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         #endregion
 
+        #region [ Methods ]
+
+        /*
+        protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
+        {
+            // Skip past header that was already parsed...
+            startIndex += CommonFrameHeader.FixedLength;
+            // State.CONT_IDX = BigEndian.ToInt16(buffer, startIndex); FIXME: For now, this is completely ignored
+            m_timebase = BigEndian.ToUInt32(buffer, startIndex + 2) & ~Common.TimeQualityFlagsMask;
+            State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 6);
+
+            return FixedHeaderLength;
+        }
+        */
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>

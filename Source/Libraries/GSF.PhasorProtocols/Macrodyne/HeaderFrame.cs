@@ -88,45 +88,33 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the identifier that is used to identify the Macrodyne frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return Macrodyne.FrameType.HeaderFrame;
-            }
-        }
+        public FrameType TypeID => Macrodyne.FrameType.HeaderFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
+            get =>
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
-                return m_frameHeader ?? (m_frameHeader = new CommonFrameHeader());
-            }
+                m_frameHeader ?? (m_frameHeader = new CommonFrameHeader());
             set
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                    State = m_frameHeader.State as IHeaderFrameParsingState;
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as IHeaderFrameParsingState;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
@@ -153,26 +141,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonFrameHeader.FixedLength;
-            }
-        }
+        protected override int HeaderLength => CommonFrameHeader.FixedLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.
         /// </summary>
-        protected override byte[] HeaderImage
-        {
-            get
-            {
-                return CommonHeader.BinaryImage;
-            }
-        }
+        protected override byte[] HeaderImage => CommonHeader.BinaryImage;
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 

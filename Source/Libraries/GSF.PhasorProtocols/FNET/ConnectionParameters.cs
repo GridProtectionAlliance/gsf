@@ -96,14 +96,8 @@ namespace GSF.PhasorProtocols.FNET
         DefaultValue(Common.DefaultTimeOffset)]
         public long TimeOffset
         {
-            get
-            {
-                return m_timeOffset;
-            }
-            set
-            {
-                m_timeOffset = value;
-            }
+            get => m_timeOffset;
+            set => m_timeOffset = value;
         }
 
         /// <summary>
@@ -117,10 +111,7 @@ namespace GSF.PhasorProtocols.FNET
         DefaultValue(Common.DefaultFrameRate)]
         public ushort FrameRate
         {
-            get
-            {
-                return m_frameRate;
-            }
+            get => m_frameRate;
             set
             {
                 if (value < 1)
@@ -138,14 +129,8 @@ namespace GSF.PhasorProtocols.FNET
         DefaultValue(typeof(LineFrequency), "Hz60")]
         public LineFrequency NominalFrequency
         {
-            get
-            {
-                return m_nominalFrequency;
-            }
-            set
-            {
-                m_nominalFrequency = value;
-            }
+            get => m_nominalFrequency;
+            set => m_nominalFrequency = value;
         }
 
         /// <summary>
@@ -156,14 +141,8 @@ namespace GSF.PhasorProtocols.FNET
         DefaultValue(Common.DefaultStationName)]
         public string StationName
         {
-            get
-            {
-                return m_stationName;
-            }
-            set
-            {
-                m_stationName = value;
-            }
+            get => m_stationName;
+            set => m_stationName = value;
         }
 
         #endregion

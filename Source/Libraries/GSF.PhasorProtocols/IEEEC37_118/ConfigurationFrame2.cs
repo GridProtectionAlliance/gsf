@@ -83,14 +83,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame2"/>.
         /// </summary>
-        public override FrameType TypeID
-        {
-            get
-            {
-                return IEEEC37_118.FrameType.ConfigurationFrame2;
-            }
-        }
+        public override FrameType TypeID => IEEEC37_118.FrameType.ConfigurationFrame2;
 
-        #endregion
+    #endregion
     }
 }

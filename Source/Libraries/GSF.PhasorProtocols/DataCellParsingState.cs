@@ -27,6 +27,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -38,12 +39,8 @@ namespace GSF.PhasorProtocols
 
         // Fields
         private readonly IConfigurationCell m_configurationCell;
-        private readonly CreateNewValueFunction<IPhasorDefinition, IPhasorValue> m_createNewPhasorValue;
-        private readonly CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> m_createNewFrequencyValue;
-        private readonly CreateNewValueFunction<IAnalogDefinition, IAnalogValue> m_createNewAnalogValue;
-        private readonly CreateNewValueFunction<IDigitalDefinition, IDigitalValue> m_createNewDigitalValue;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -58,17 +55,17 @@ namespace GSF.PhasorProtocols
         public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunction<IPhasorDefinition, IPhasorValue> createNewPhasorValue, CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValue, CreateNewValueFunction<IAnalogDefinition, IAnalogValue> createNewAnalogValue, CreateNewValueFunction<IDigitalDefinition, IDigitalValue> createNewDigitalValue)
         {
             m_configurationCell = configurationCell;
-            m_createNewPhasorValue = createNewPhasorValue;
-            m_createNewFrequencyValue = createNewFrequencyValue;
-            m_createNewAnalogValue = createNewAnalogValue;
-            m_createNewDigitalValue = createNewDigitalValue;
+            CreateNewPhasorValue = createNewPhasorValue;
+            CreateNewFrequencyValue = createNewFrequencyValue;
+            CreateNewAnalogValue = createNewAnalogValue;
+            CreateNewDigitalValue = createNewDigitalValue;
 
-            if (m_configurationCell != null)
-            {
-                PhasorCount = m_configurationCell.PhasorDefinitions.Count;
-                AnalogCount = m_configurationCell.AnalogDefinitions.Count;
-                DigitalCount = m_configurationCell.DigitalDefinitions.Count;
-            }
+            if (m_configurationCell == null)
+                return;
+
+            PhasorCount = m_configurationCell.PhasorDefinitions.Count;
+            AnalogCount = m_configurationCell.AnalogDefinitions.Count;
+            DigitalCount = m_configurationCell.DigitalDefinitions.Count;
         }
 
         #endregion
@@ -78,58 +75,28 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.
         /// </summary>
-        public virtual IConfigurationCell ConfigurationCell
-        {
-            get
-            {
-                return m_configurationCell;
-            }
-        }
+        public virtual IConfigurationCell ConfigurationCell => m_configurationCell;
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IPhasorValue"/> objects.
         /// </summary>
-        public virtual CreateNewValueFunction<IPhasorDefinition, IPhasorValue> CreateNewPhasorValue
-        {
-            get
-            {
-                return m_createNewPhasorValue;
-            }
-        }
+        public virtual CreateNewValueFunction<IPhasorDefinition, IPhasorValue> CreateNewPhasorValue { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IFrequencyValue"/> objects.
         /// </summary>
-        public virtual CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> CreateNewFrequencyValue
-        {
-            get
-            {
-                return m_createNewFrequencyValue;
-            }
-        }
+        public virtual CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> CreateNewFrequencyValue { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IAnalogValue"/> objects.
         /// </summary>
-        public virtual CreateNewValueFunction<IAnalogDefinition, IAnalogValue> CreateNewAnalogValue
-        {
-            get
-            {
-                return m_createNewAnalogValue;
-            }
-        }
+        public virtual CreateNewValueFunction<IAnalogDefinition, IAnalogValue> CreateNewAnalogValue { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IDigitalValue"/> objects.
         /// </summary>
-        public virtual CreateNewValueFunction<IDigitalDefinition, IDigitalValue> CreateNewDigitalValue
-        {
-            get
-            {
-                return m_createNewDigitalValue;
-            }
-        }
+        public virtual CreateNewValueFunction<IDigitalDefinition, IDigitalValue> CreateNewDigitalValue { get; }
 
-        #endregion
+    #endregion
     }
 }

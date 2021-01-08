@@ -44,9 +44,8 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private readonly bool m_constantCellLength;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -64,7 +63,7 @@ namespace GSF.PhasorProtocols
         protected ChannelCellCollectionBase(int lastValidIndex, bool constantCellLength)
             : base(lastValidIndex)
         {
-            m_constantCellLength = constantCellLength;
+            ConstantCellLength = constantCellLength;
         }
 
         /// <summary>
@@ -76,7 +75,7 @@ namespace GSF.PhasorProtocols
             : base(info, context)
         {
             // Deserialize extra elements
-            m_constantCellLength = info.GetBoolean("constantCellLength");
+            ConstantCellLength = info.GetBoolean("constantCellLength");
         }
 
         #endregion
@@ -86,13 +85,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets flag that determines if the lengths of <see cref="IChannelCell"/> elements in this <see cref="ChannelCellCollectionBase{T}"/> are constant.
         /// </summary>
-        public bool ConstantCellLength
-        {
-            get
-            {
-                return m_constantCellLength;
-            }
-        }
+        public bool ConstantCellLength { get; }
 
         /// <summary>
         /// Gets the length of the <see cref="ChannelCollectionBase{T}"/>.
@@ -104,16 +97,14 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                if (m_constantCellLength)
+                if (ConstantCellLength)
                 {
                     // Cells will be constant length, so we can quickly calculate lengths
                     return base.BinaryLength;
                 }
-                else
-                {
-                    // Cells will be different lengths, so we must manually sum lengths
-                    return this.Sum(frame => frame.BinaryLength);
-                }
+
+                // Cells will be different lengths, so we must manually sum lengths
+                return this.Sum(frame => frame.BinaryLength);
             }
         }
 
@@ -126,7 +117,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Constant Cell Length", m_constantCellLength.ToString());
+                baseAttributes.Add("Constant Cell Length", ConstantCellLength.ToString());
 
                 return baseAttributes;
             }
@@ -146,7 +137,7 @@ namespace GSF.PhasorProtocols
             base.GetObjectData(info, context);
 
             // Serialize extra elements
-            info.AddValue("constantCellLength", m_constantCellLength);
+            info.AddValue("constantCellLength", ConstantCellLength);
         }
 
         #endregion

@@ -29,6 +29,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
@@ -95,14 +96,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public new ConfigurationFrame Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -114,14 +109,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public FormatFlags FormatFlags
         {
-            get
-            {
-                return m_formatFlags;
-            }
-            set
-            {
-                m_formatFlags = value;
-            }
+            get => m_formatFlags;
+            set => m_formatFlags = value;
         }
 
         /// <summary>
@@ -129,19 +118,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public override DataFormat PhasorDataFormat
         {
-            get
-            {
-                // IEC 61850-90-5 always uses floating point values
-                return DataFormat.FloatingPoint;
-                //return (((m_formatFlags & FormatFlags.Phasors) > 0) ? DataFormat.FloatingPoint : DataFormat.FixedInteger);
-            }
-            set
-            {
-                //if (value == DataFormat.FloatingPoint)
-                //    m_formatFlags = m_formatFlags | FormatFlags.Phasors;
-                //else
-                //    m_formatFlags = m_formatFlags & ~FormatFlags.Phasors;
-            }
+            // IEC 61850-90-5 always uses floating point values
+            get => DataFormat.FloatingPoint;
+            set { }
         }
 
         /// <summary>
@@ -149,19 +128,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public override CoordinateFormat PhasorCoordinateFormat
         {
-            get
-            {
-                // IEC 61850-90-5 always uses polar phasor values
-                return CoordinateFormat.Polar;
-                //return (((m_formatFlags & FormatFlags.Coordinates) > 0) ? CoordinateFormat.Polar : CoordinateFormat.Rectangular);
-            }
-            set
-            {
-                //if (value == CoordinateFormat.Polar)
-                //    m_formatFlags = m_formatFlags | FormatFlags.Coordinates;
-                //else
-                //    m_formatFlags = m_formatFlags & ~FormatFlags.Coordinates;
-            }
+            // IEC 61850-90-5 always uses polar phasor values
+            get => CoordinateFormat.Polar;
+            set { }
         }
 
         /// <summary>
@@ -169,14 +138,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public override AngleFormat PhasorAngleFormat
         {
-            get
-            {
-                // User can control angle parsing format through connection parameter
-                return Parent.CommonHeader.PhasorAngleFormat;
-            }
-            set
-            {
-            }
+            // User can control angle parsing format through connection parameter
+            get => Parent.CommonHeader.PhasorAngleFormat;
+            set { }
         }
 
         /// <summary>
@@ -184,19 +148,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public override DataFormat FrequencyDataFormat
         {
-            get
-            {
-                // IEC 61850-90-5 always uses floating point values
-                return DataFormat.FloatingPoint;
-                //return (((m_formatFlags & FormatFlags.Frequency) > 0) ? DataFormat.FloatingPoint : DataFormat.FixedInteger);                
-            }
-            set
-            {
-                //if (value == DataFormat.FloatingPoint)
-                //    m_formatFlags = m_formatFlags | FormatFlags.Frequency;
-                //else
-                //    m_formatFlags = m_formatFlags & ~FormatFlags.Frequency;
-            }
+            // IEC 61850-90-5 always uses floating point values
+            get => DataFormat.FloatingPoint;
+            set { }
         }
 
         /// <summary>
@@ -204,31 +158,15 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public override DataFormat AnalogDataFormat
         {
-            get
-            {
-                // IEC 61850-90-5 always uses floating point values
-                return DataFormat.FloatingPoint;
-                //return (((m_formatFlags & FormatFlags.Analog) > 0) ? DataFormat.FloatingPoint : DataFormat.FixedInteger);
-            }
-            set
-            {
-                //if (value == DataFormat.FloatingPoint)
-                //    m_formatFlags = m_formatFlags | FormatFlags.Analog;
-                //else
-                //    m_formatFlags = m_formatFlags & ~FormatFlags.Analog;
-            }
+            // IEC 61850-90-5 always uses floating point values
+            get => DataFormat.FloatingPoint;
+            set { }
         }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return base.HeaderLength + 10;
-            }
-        }
+        protected override int HeaderLength => base.HeaderLength + 10;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationCell"/> object.
@@ -254,13 +192,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength
-        {
-            get
-            {
-                return base.FooterLength + PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + (Parent.DraftRevision > DraftRevision.Draft6 ? 2 : 0);
-            }
-        }
+        protected override int FooterLength => base.FooterLength + PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + (Parent.DraftRevision > DraftRevision.Draft6 ? 2 : 0);
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="ConfigurationCell"/> object.
@@ -270,34 +202,25 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             get
             {
                 byte[] buffer = new byte[FooterLength];
-                PhasorDefinition phasorDefinition;
-                AnalogDefinition analogDefinition;
-                DigitalDefinition digitalDefinition;
                 int x, index = 0;
 
                 // Include conversion factors in configuration cell footer
                 for (x = 0; x < PhasorDefinitions.Count; x++)
                 {
-                    phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
-
-                    if (phasorDefinition != null)
-                        phasorDefinition.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
+                    PhasorDefinition phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
+                    phasorDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
                 }
 
                 for (x = 0; x < AnalogDefinitions.Count; x++)
                 {
-                    analogDefinition = AnalogDefinitions[x] as AnalogDefinition;
-
-                    if (analogDefinition != null)
-                        analogDefinition.ConversionFactorImage.CopyImage(buffer, ref index, AnalogDefinition.ConversionFactorLength);
+                    AnalogDefinition analogDefinition = AnalogDefinitions[x] as AnalogDefinition;
+                    analogDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, AnalogDefinition.ConversionFactorLength);
                 }
 
                 for (x = 0; x < DigitalDefinitions.Count; x++)
                 {
-                    digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
-
-                    if (digitalDefinition != null)
-                        digitalDefinition.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
+                    DigitalDefinition digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
+                    digitalDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
                 }
 
                 // Include nominal frequency
@@ -354,7 +277,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             state.DigitalCount = BigEndian.ToUInt16(buffer, index + 8);
             index += 10;
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -366,33 +289,24 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
-            PhasorDefinition phasorDefinition;
-            AnalogDefinition analogDefinition;
-            DigitalDefinition digitalDefinition;
             int x, index = startIndex;
 
             // Parse conversion factors from configuration cell footer
             for (x = 0; x < PhasorDefinitions.Count; x++)
             {
-                phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
-
-                if (phasorDefinition != null)
+                if (PhasorDefinitions[x] is PhasorDefinition phasorDefinition)
                     index += phasorDefinition.ParseConversionFactor(buffer, index);
             }
 
             for (x = 0; x < AnalogDefinitions.Count; x++)
             {
-                analogDefinition = AnalogDefinitions[x] as AnalogDefinition;
-
-                if (analogDefinition != null)
+                if (AnalogDefinitions[x] is AnalogDefinition analogDefinition)
                     index += analogDefinition.ParseConversionFactor(buffer, index);
             }
 
             for (x = 0; x < DigitalDefinitions.Count; x++)
             {
-                digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
-
-                if (digitalDefinition != null)
+                if (DigitalDefinitions[x] is DigitalDefinition digitalDefinition)
                     index += digitalDefinition.ParseConversionFactor(buffer, index);
             }
 
@@ -406,7 +320,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 index += 2;
             }
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>

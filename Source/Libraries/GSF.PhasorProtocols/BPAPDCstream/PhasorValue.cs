@@ -92,14 +92,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -107,14 +101,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual PhasorDefinition Definition
         {
-            get
-            {
-                return base.Definition as PhasorDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as PhasorDefinition;
+            set => base.Definition = value;
         }
 
         /// <summary>
@@ -122,14 +110,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override Angle Angle
         {
-            get
-            {
-                return Angle.FromDegrees(base.Angle.ToDegrees() + Definition.Offset);
-            }
-            set
-            {
-                base.Angle = Angle.FromDegrees(value.ToDegrees() - Definition.Offset);
-            }
+            get => Angle.FromDegrees(base.Angle.ToDegrees() + Definition.Offset);
+            set => base.Angle = Angle.FromDegrees(value.ToDegrees() - Definition.Offset);
         }
 
         /// <summary>
@@ -137,14 +119,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override double Magnitude
         {
-            get
-            {
-                return base.Magnitude * PhasorDefinition.CustomConversionFactor(Definition);
-            }
-            set
-            {
-                base.Magnitude = value / PhasorDefinition.CustomConversionFactor(Definition);
-            }
+            get => base.Magnitude * PhasorDefinition.CustomConversionFactor(Definition);
+            set => base.Magnitude = value / PhasorDefinition.CustomConversionFactor(Definition);
         }
 
         #endregion
@@ -157,7 +133,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         internal static uint CalculateBinaryLength(IPhasorDefinition definition)
         {
             // The phasor definition will determine the binary length based on data format
-            return (uint)(new PhasorValue(null, definition)).BinaryLength;
+            return (uint)new PhasorValue(null, definition).BinaryLength;
         }
 
         // Delegate handler to create a new BPA PDCstream phasor value

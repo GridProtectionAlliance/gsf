@@ -84,14 +84,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -102,10 +96,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             get
             {
                 byte[] buffer = new byte[ConversionFactorLength];
-                UInt24 scalingFactor = (ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue);
+                UInt24 scalingFactor = ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue;
 
                 // Store analog type in first byte
-                buffer[0] = (byte)this.AnalogType;
+                buffer[0] = (byte)AnalogType;
 
                 // Store scaling in last three bytes
                 BigEndian.CopyBytes(scalingFactor, buffer, 1);
@@ -126,7 +120,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         internal int ParseConversionFactor(byte[] buffer, int startIndex)
         {
             // Get analog type from first byte
-            this.AnalogType = (AnalogType)buffer[startIndex];
+            AnalogType = (AnalogType)buffer[startIndex];
 
             // Last three bytes represent scaling factor
             ScalingValue = BigEndian.ToUInt24(buffer, startIndex + 1);

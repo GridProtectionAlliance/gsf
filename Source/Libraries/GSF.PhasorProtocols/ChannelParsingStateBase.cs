@@ -42,27 +42,16 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private int m_parsedBinaryLength;
 
-        #endregion
+    #endregion
 
         #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the length of the associated <see cref="IChannel"/> object being parsed from the binary image.
         /// </summary>
-        public virtual int ParsedBinaryLength
-        {
-            get
-            {
-                return m_parsedBinaryLength;
-            }
-            set
-            {
-                m_parsedBinaryLength = value;
-            }
-        }
+        public virtual int ParsedBinaryLength { get; set; }
 
-        #endregion
+    #endregion
     }
 }

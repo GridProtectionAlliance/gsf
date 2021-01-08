@@ -79,14 +79,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -94,14 +88,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new virtual FrequencyDefinition Definition
         {
-            get
-            {
-                return base.Definition as FrequencyDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as FrequencyDefinition;
+            set => base.Definition = value;
         }
 
         /// <summary>
@@ -111,26 +99,14 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// The SEL Fast Message protocol provides frequency and df/dt as optional data measurements, so we override
         /// the default behavior to account for this change in operation.
         /// </remarks>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 4;
-            }
-        }
+        protected override int BodyLength => 4;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="FrequencyValue"/> object.
         /// </summary>
-        protected override byte[] BodyImage
-        {
-            get
-            {
-                return BigEndian.GetBytes((float)Frequency);
-            }
-        }
+        protected override byte[] BodyImage => BigEndian.GetBytes((float)Frequency);
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 

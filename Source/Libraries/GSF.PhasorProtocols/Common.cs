@@ -99,8 +99,7 @@ namespace GSF.PhasorProtocols
             }
             finally
             {
-                if (configFile != null)
-                    configFile.Close();
+                configFile?.Close();
             }
 
             return configFrame;

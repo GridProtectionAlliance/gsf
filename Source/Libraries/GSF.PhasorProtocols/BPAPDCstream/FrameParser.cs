@@ -69,9 +69,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         private ConfigurationFrame m_configurationFrame;
         private string m_configurationFileName;
         private bool m_refreshConfigurationFileOnChange;
-        private bool m_parseWordCountFromByte;
         private SafeFileWatcher m_configurationFileWatcher;
-        private bool m_usePhasorDataFileFormat;
         private readonly object m_syncLock;
         private bool m_disposed;
 
@@ -108,26 +106,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = CastToDerivedConfigurationFrame(value, m_configurationFileName);
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = CastToDerivedConfigurationFrame(value, m_configurationFileName);
         }
 
         /// <summary>
         /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                return !m_usePhasorDataFileFormat;
-            }
-        }
+        public override bool ProtocolUsesSyncBytes => !UsePhasorDataFileFormat;
 
         /// <summary>
         /// Gets or sets required external BPA PDCstream INI based configuration file.
@@ -136,10 +122,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFrame == null)
+                if (m_configurationFrame is null)
                     return m_configurationFileName;
-                else
-                    return m_configurationFrame.ConfigurationFileName;
+                return m_configurationFrame.ConfigurationFileName;
             }
             set
             {
@@ -153,10 +138,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public bool RefreshConfigurationFileOnChange
         {
-            get
-            {
-                return m_refreshConfigurationFileOnChange;
-            }
+            get => m_refreshConfigurationFileOnChange;
             set
             {
                 m_refreshConfigurationFileOnChange = value;
@@ -173,32 +155,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// stream implementations have a 0x01 in byte three where there should be a 0x00 and this throws off the
         /// frame length, setting this property to <c>true</c> will correctly interpret the word count.
         /// </remarks>
-        public bool ParseWordCountFromByte
-        {
-            get
-            {
-                return m_parseWordCountFromByte;
-            }
-            set
-            {
-                m_parseWordCountFromByte = value;
-            }
-        }
+        public bool ParseWordCountFromByte { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
-        public bool UsePhasorDataFileFormat
-        {
-            get
-            {
-                return m_usePhasorDataFileFormat;
-            }
-            set
-            {
-                m_usePhasorDataFileFormat = value;
-            }
-        }
+        public bool UsePhasorDataFileFormat { get; set; }
 
         /// <summary>
         /// Gets current descriptive status of the <see cref="FrameParser"/>.
@@ -215,7 +177,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 status.Append("  Using phasor file format: ");
                 status.Append(UsePhasorDataFileFormat);
                 status.AppendLine();
-                if (m_configurationFrame != null)
+
+                if (!(m_configurationFrame is null))
                 {
                     status.Append("       BPA PDC stream type: ");
                     status.Append(m_configurationFrame.StreamType);
@@ -224,12 +187,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     status.Append(m_configurationFrame.RevisionNumber);
                     status.AppendLine();
                 }
+
                 status.Append(" Auto-reload configuration: ");
                 status.Append(m_refreshConfigurationFileOnChange);
                 status.AppendLine();
                 status.Append("Parse word count from byte: ");
-                status.Append(m_parseWordCountFromByte);
+                status.Append(ParseWordCountFromByte);
                 status.AppendLine();
+                
                 status.Append(base.Status);
 
                 return status.ToString();
@@ -241,23 +206,18 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override IConnectionParameters ConnectionParameters
         {
-            get
-            {
-                return base.ConnectionParameters;
-            }
+            get => base.ConnectionParameters;
             set
             {
-                ConnectionParameters parameters = value as ConnectionParameters;
-
-                if (parameters != null)
+                if (value is ConnectionParameters parameters)
                 {
                     base.ConnectionParameters = parameters;
 
                     // Assign new incoming connection parameter values
                     m_configurationFileName = parameters.ConfigurationFileName;
-                    m_parseWordCountFromByte = parameters.ParseWordCountFromByte;
+                    ParseWordCountFromByte = parameters.ParseWordCountFromByte;
                     m_refreshConfigurationFileOnChange = parameters.RefreshConfigurationFileOnChange;
-                    m_usePhasorDataFileFormat = parameters.UsePhasorDataFileFormat;
+                    UsePhasorDataFileFormat = parameters.UsePhasorDataFileFormat;
                     ResetFileWatcher();
                 }
             }
@@ -273,25 +233,26 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                if (!(m_configurationFileWatcher is null))
                 {
-                    if (disposing)
-                    {
-                        if (m_configurationFileWatcher != null)
-                        {
-                            m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
-                            m_configurationFileWatcher.Dispose();
-                        }
-                        m_configurationFileWatcher = null;
-                    }
+                    m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
+                    m_configurationFileWatcher.Dispose();
                 }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+
+                m_configurationFileWatcher = null;
+            }
+            finally
+            {
+                m_disposed = true;       // Prevent duplicate dispose.
+                base.Dispose(disposing); // Call base class Dispose().
             }
         }
 
@@ -331,7 +292,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             if (length >= CommonFrameHeader.FixedLength)
             {
                 // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_parseWordCountFromByte, m_usePhasorDataFileFormat, m_configurationFrame, buffer, offset, length);
+                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ParseWordCountFromByte, UsePhasorDataFileFormat, m_configurationFrame, buffer, offset, length);
 
                 // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
                 // we eliminate the need to validate length on all subsequent data elements that comprise the frame
@@ -370,15 +331,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 OnConfigurationChanged();
 
                 // Reload configuration...
-                if (m_configurationFrame != null)
-                    m_configurationFrame.Refresh();
+                m_configurationFrame?.Refresh();
             }
         }
 
         // Reset file watcher
         private void ResetFileWatcher()
         {
-            if (m_configurationFileWatcher != null)
+            if (!(m_configurationFileWatcher is null))
             {
                 m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
                 m_configurationFileWatcher.Dispose();
@@ -416,9 +376,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             base.OnReceivedConfigurationFrame(frame);
 
             // Cache new configuration frame for parsing subsequent data frames...
-            ConfigurationFrame configurationFrame = frame as ConfigurationFrame;
 
-            if (configurationFrame != null)
+            if (frame is ConfigurationFrame configurationFrame)
                 m_configurationFrame = configurationFrame;
         }
 
@@ -432,24 +391,20 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             base.OnReceivedChannelFrame(frame);
 
             // Raise BPA PDCstream specific channel frame events, if any have been subscribed
-            if (frame != null && (ReceivedDataFrame != null || ReceivedConfigurationFrame != null))
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null)
+                return;
+
+            switch (frame)
             {
-                DataFrame dataFrame = frame as DataFrame;
-
-                if (dataFrame != null)
+                case DataFrame dataFrame:
                 {
-                    if (ReceivedDataFrame != null)
-                        ReceivedDataFrame(this, new EventArgs<DataFrame>(dataFrame));
+                    ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
                 }
-                else
+                case ConfigurationFrame configFrame:
                 {
-                    ConfigurationFrame configFrame = frame as ConfigurationFrame;
-
-                    if (configFrame != null)
-                    {
-                        if (ReceivedConfigurationFrame != null)
-                            ReceivedConfigurationFrame(this, new EventArgs<ConfigurationFrame>(configFrame));
-                    }
+                    ReceivedConfigurationFrame?.Invoke(this, new EventArgs<ConfigurationFrame>(configFrame));
+                    break;
                 }
             }
         }
@@ -465,48 +420,43 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame, string configurationFileName)
         {
             // See if frame is already a BPA PDCstream configuration frame (if so, we don't need to do any work)
-            ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
+            if (sourceFrame is ConfigurationFrame derivedFrame)
+                return derivedFrame;
 
-            if (derivedFrame == null)
+            // Create a new BPA PDCstream configuration frame converted from equivalent configuration information
+            derivedFrame = new ConfigurationFrame(sourceFrame.Timestamp, configurationFileName, 1, RevisionNumber.Revision2, StreamType.Compact);
+
+            foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
-                // Create a new BPA PDCstream configuration frame converted from equivalent configuration information
-                ConfigurationCell derivedCell;
-                IFrequencyDefinition sourceFrequency;
+                // Create new derived configuration cell
+                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
-                derivedFrame = new ConfigurationFrame(sourceFrame.Timestamp, configurationFileName, 1, RevisionNumber.Revision2, StreamType.Compact);
-
-                foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
+                // Create equivalent derived phasor definitions
+                foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
                 {
-                    // Create new derived configuration cell
-                    derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
-
-                    // Create equivalent derived phasor definitions
-                    foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                    {
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
-                    }
-
-                    // Create equivalent derived frequency definition
-                    sourceFrequency = sourceCell.FrequencyDefinition;
-
-                    if (sourceFrequency != null)
-                        derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
-
-                    // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
-                    foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
-                    {
-                        derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
-                    }
-
-                    // Create equivalent derived digital definitions
-                    foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                    {
-                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
-                    }
-
-                    // Add cell to frame
-                    derivedFrame.Cells.Add(derivedCell);
+                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
                 }
+
+                // Create equivalent derived frequency definition
+                IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
+
+                if (!(sourceFrequency is null))
+                    derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
+
+                // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
+                foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
+                {
+                    derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
+                }
+
+                // Create equivalent derived digital definitions
+                foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
+                {
+                    derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
+                }
+
+                // Add cell to frame
+                derivedFrame.Cells.Add(derivedCell);
             }
 
             return derivedFrame;

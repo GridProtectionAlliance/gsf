@@ -37,59 +37,26 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private int m_phasorCount;
-        private int m_analogCount;
-        private int m_digitalCount;
 
-        #endregion
+    #endregion
 
         #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the number of phasor elements associated with the <see cref="IChannelCell"/> being parsed.
         /// </summary>
-        public virtual int PhasorCount
-        {
-            get
-            {
-                return m_phasorCount;
-            }
-            set
-            {
-                m_phasorCount = value;
-            }
-        }
+        public virtual int PhasorCount { get; set; }
 
         /// <summary>
         /// Gets or sets the number of analog elements associated with the <see cref="IChannelCell"/> being parsed.
         /// </summary>
-        public virtual int AnalogCount
-        {
-            get
-            {
-                return m_analogCount;
-            }
-            set
-            {
-                m_analogCount = value;
-            }
-        }
+        public virtual int AnalogCount { get; set; }
 
         /// <summary>
         /// Gets or sets the number of digital elements associated with the <see cref="IChannelCell"/> being parsed.
         /// </summary>
-        public virtual int DigitalCount
-        {
-            get
-            {
-                return m_digitalCount;
-            }
-            set
-            {
-                m_digitalCount = value;
-            }
-        }
+        public virtual int DigitalCount { get; set; }
 
-        #endregion
+    #endregion
     }
 }

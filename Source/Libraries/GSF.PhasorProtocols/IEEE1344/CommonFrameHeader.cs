@@ -117,27 +117,15 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public NtpTimeTag TimeTag
-        {
-            get
-            {
-                return new NtpTimeTag(m_timestamp);
-            }
-        }
+        public NtpTimeTag TimeTag => new NtpTimeTag(m_timestamp);
 
         /// <summary>
         /// Gets or sets timestamp of this <see cref="CommonFrameHeader"/>.
         /// </summary>
         public Ticks Timestamp
         {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
+            get => m_timestamp;
+            set => m_timestamp = value;
         }
 
         /// <summary>
@@ -153,14 +141,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </remarks>
         public FrameType TypeID
         {
-            get
-            {
-                return (FrameType)(m_sampleCount & Common.FrameTypeMask);
-            }
-            set
-            {
-                m_sampleCount = (ushort)((m_sampleCount & ~Common.FrameTypeMask) | (ushort)value);
-            }
+            get => (FrameType)(m_sampleCount & Common.FrameTypeMask);
+            set => m_sampleCount = (ushort)((m_sampleCount & ~Common.FrameTypeMask) | (ushort)value);
         }
 
         /// <summary>
@@ -168,10 +150,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public bool IsFirstFrame
         {
-            get
-            {
-                return (m_sampleCount & (ushort)Bits.Bit12) == 0;
-            }
+            get => (m_sampleCount & (ushort)Bits.Bit12) == 0;
             set
             {
                 if (value)
@@ -186,10 +165,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public bool IsLastFrame
         {
-            get
-            {
-                return (m_sampleCount & (ushort)Bits.Bit11) == 0;
-            }
+            get => (m_sampleCount & (ushort)Bits.Bit11) == 0;
             set
             {
                 if (value)
@@ -204,16 +180,12 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public ushort FrameCount
         {
-            get
-            {
-                return (ushort)(m_sampleCount & Common.FrameCountMask);
-            }
+            get => (ushort)(m_sampleCount & Common.FrameCountMask);
             set
             {
                 if (value > Common.MaximumFrameCount)
                     throw new OverflowException("Frame count value cannot exceed " + Common.MaximumFrameCount);
-                else
-                    m_sampleCount = (ushort)((m_sampleCount & ~Common.FrameCountMask) | value);
+                m_sampleCount = (ushort)((m_sampleCount & ~Common.FrameCountMask) | value);
             }
         }
 
@@ -222,27 +194,15 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public IChannelParsingState State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
+            get => m_state;
+            set => m_state = value;
         }
 
         // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value as IChannelParsingState;
-            }
+            get => m_state;
+            set => m_state = value as IChannelParsingState;
         }
 
         /// <summary>
@@ -275,14 +235,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public FrameImageCollector FrameImages
         {
-            get
-            {
-                return m_frameImages;
-            }
-            set
-            {
-                m_frameImages = value;
-            }
+            get => m_frameImages;
+            set => m_frameImages = value;
         }
 
         /// <summary>
@@ -290,16 +244,12 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public ushort FrameLength
         {
-            get
-            {
-                return (ushort)(m_statusFlags & Common.FrameLengthMask);
-            }
+            get => (ushort)(m_statusFlags & Common.FrameLengthMask);
             set
             {
                 if (value > Common.MaximumFrameLength)
                     throw new OverflowException("Frame length value cannot exceed " + Common.MaximumFrameLength);
-                else
-                    m_statusFlags = (ushort)((m_statusFlags & ~Common.FrameLengthMask) | value);
+                m_statusFlags = (ushort)((m_statusFlags & ~Common.FrameLengthMask) | value);
             }
         }
 
@@ -308,17 +258,14 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public ushort DataLength
         {
-            get
-            {
+            get =>
                 // Data length will be frame length minus common header length minus crc16
-                return (ushort)(FrameLength - FixedLength - 2);
-            }
+                (ushort)(FrameLength - FixedLength - 2);
             set
             {
                 if (value > Common.MaximumDataLength)
                     throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
-                else
-                    FrameLength = (ushort)(value + FixedLength + 2);
+                FrameLength = (ushort)(value + FixedLength + 2);
             }
         }
 
@@ -327,16 +274,12 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public ushort SampleCount
         {
-            get
-            {
-                return (ushort)(m_sampleCount & ~Common.FrameTypeMask);
-            }
+            get => (ushort)(m_sampleCount & ~Common.FrameTypeMask);
             set
             {
                 if (value > Common.MaximumSampleCount)
                     throw new OverflowException("Sample count value cannot exceed " + Common.MaximumSampleCount);
-                else
-                    m_sampleCount = (ushort)((m_sampleCount & Common.FrameTypeMask) | value);
+                m_sampleCount = (ushort)((m_sampleCount & Common.FrameTypeMask) | value);
             }
         }
 
@@ -350,7 +293,7 @@ namespace GSF.PhasorProtocols.IEEE1344
                 byte[] buffer = new byte[FixedLength];
 
                 // Make sure frame length gets included in status flags for generated binary image
-                FrameLength = (ushort)FixedLength;
+                FrameLength = FixedLength;
 
                 BigEndian.CopyBytes((uint)TimeTag.Value, buffer, 0);
                 BigEndian.CopyBytes(m_sampleCount, buffer, 4);
@@ -371,15 +314,15 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             attributes.Add("Frame Type", (ushort)TypeID + ": " + TypeID);
 
-            if (FrameImages != null)
-            {
-                attributes.Add("Frame Length", FrameImages.BinaryLength.ToString());
-                attributes.Add("Frame Images", FrameImages.Count.ToString());
-            }
-            else
+            if (FrameImages is null)
             {
                 attributes.Add("Frame Length", FrameLength.ToString());
                 attributes.Add("Frame Images", "0");
+            }
+            else
+            {
+                attributes.Add("Frame Length", FrameImages.BinaryLength.ToString());
+                attributes.Add("Frame Images", FrameImages.Count.ToString());
             }
 
             attributes.Add("Frame Count", FrameCount.ToString());

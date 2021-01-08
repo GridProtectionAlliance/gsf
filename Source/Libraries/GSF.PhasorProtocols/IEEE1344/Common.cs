@@ -156,7 +156,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Absolute maximum data length (in bytes) that could fit into any frame.
         /// </summary>
-        public const ushort MaximumDataLength = (ushort)(MaximumFrameLength - CommonFrameHeader.FixedLength - 2);
+        public const ushort MaximumDataLength = MaximumFrameLength - CommonFrameHeader.FixedLength - 2;
 
         /// <summary>
         /// Absolute maximum number of possible phasor values that could fit into a data frame constant.

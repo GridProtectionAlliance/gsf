@@ -72,7 +72,7 @@ namespace GSF.PhasorProtocols
             : base(parent, digitalDefinition)
         {
             m_value = value;
-            m_valueAssigned = (value != ushort.MaxValue);
+            m_valueAssigned = value != ushort.MaxValue;
         }
 
         /// <summary>
@@ -97,10 +97,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual ushort Value
         {
-            get
-            {
-                return m_value;
-            }
+            get => m_value;
             set
             {
                 m_value = value;
@@ -112,35 +109,17 @@ namespace GSF.PhasorProtocols
         /// Gets boolean value that determines if none of the composite values of <see cref="DigitalValueBase"/> have been assigned a value.
         /// </summary>
         /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
-        public override bool IsEmpty
-        {
-            get
-            {
-                return !m_valueAssigned;
-            }
-        }
+        public override bool IsEmpty => !m_valueAssigned;
 
         /// <summary>
         /// Gets total number of composite values that this <see cref="DigitalValueBase"/> provides.
         /// </summary>
-        public override int CompositeValueCount
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        public override int CompositeValueCount => 1;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 2;
-            }
-        }
+        protected override int BodyLength => 2;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="DigitalValueBase"/> object.

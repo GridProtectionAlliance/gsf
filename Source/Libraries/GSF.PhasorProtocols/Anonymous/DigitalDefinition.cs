@@ -79,14 +79,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -94,14 +88,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public uint MaskValue
         {
-            get
-            {
-                return m_maskValue;
-            }
-            set
-            {
-                m_maskValue = value;
-            }
+            get => m_maskValue;
+            set => m_maskValue = value;
         }
 
         /// <summary>
@@ -110,23 +98,14 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <remarks>
         /// This length is not restricted for anonymous protocol definitions.
         /// </remarks>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return int.MaxValue;
-            }
-        }
+        public override int MaximumLabelLength => int.MaxValue;
 
         /// <summary>
         /// Gets or sets the label of this <see cref="DigitalDefinition"/>.
         /// </summary>
         public override string Label
         {
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -136,13 +115,11 @@ namespace GSF.PhasorProtocols.Anonymous
                 {
                     throw new OverflowException("Label length cannot exceed " + MaximumLabelLength);
                 }
-                else
-                {
-                    // We override this function since base class automatically "fixes-up" labels
-                    // by removing duplicate white space characters - this can throw off the fixed
-                    // label lengths in IEEE C37.118
-                    m_label = value.Trim();
-                }
+
+                // We override this function since base class automatically "fixes-up" labels
+                // by removing duplicate white space characters - this can throw off the fixed
+                // label lengths in IEEE C37.118
+                m_label = value.Trim();
 
                 // We pass value along to base class for posterity...
                 base.Label = value;

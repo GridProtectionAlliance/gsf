@@ -97,10 +97,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double Value
         {
-            get
-            {
-                return m_value;
-            }
+            get => m_value;
             set
             {
                 m_value = value;
@@ -131,24 +128,12 @@ namespace GSF.PhasorProtocols
         /// Gets boolean value that determines if none of the composite values of <see cref="AnalogValueBase"/> have been assigned a value.
         /// </summary>
         /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
-        public override bool IsEmpty
-        {
-            get
-            {
-                return !m_valueAssigned;
-            }
-        }
+        public override bool IsEmpty => !m_valueAssigned;
 
         /// <summary>
         /// Gets total number of composite values that this <see cref="AnalogValueBase"/> provides.
         /// </summary>
-        public override int CompositeValueCount
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        public override int CompositeValueCount => 1;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
@@ -164,8 +149,7 @@ namespace GSF.PhasorProtocols
             {
                 if (DataFormat == DataFormat.FixedInteger)
                     return 2;
-                else
-                    return 4;
+                return 4;
             }
         }
 
@@ -235,8 +219,7 @@ namespace GSF.PhasorProtocols
         {
             if (index == 0)
                 return m_value;
-            else
-                throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
+            throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
         }
 
         /// <summary>
@@ -262,12 +245,10 @@ namespace GSF.PhasorProtocols
                 m_valueAssigned = true;
                 return 2;
             }
-            else
-            {
-                m_value = BigEndian.ToSingle(buffer, startIndex);
-                m_valueAssigned = true;
-                return 4;
-            }
+
+            m_value = BigEndian.ToSingle(buffer, startIndex);
+            m_valueAssigned = true;
+            return 4;
         }
 
         /// <summary>

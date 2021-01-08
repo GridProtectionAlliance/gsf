@@ -129,14 +129,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new DataFrame Parent
         {
-            get
-            {
-                return base.Parent as DataFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -144,14 +138,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new ConfigurationCell ConfigurationCell
         {
-            get
-            {
-                return base.ConfigurationCell as ConfigurationCell;
-            }
-            set
-            {
-                base.ConfigurationCell = value;
-            }
+            get => base.ConfigurationCell as ConfigurationCell;
+            set => base.ConfigurationCell = value;
         }
 
         /// <summary>
@@ -163,14 +151,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public ChannelFlags ChannelFlags
         {
-            get
-            {
-                return m_channelFlags;
-            }
-            set
-            {
-                m_channelFlags = value;
-            }
+            get => m_channelFlags;
+            set => m_channelFlags = value;
         }
 
         /// <summary>
@@ -182,14 +164,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public ReservedFlags ReservedFlags
         {
-            get
-            {
-                return m_reservedFlags;
-            }
-            set
-            {
-                m_reservedFlags = value;
-            }
+            get => m_reservedFlags;
+            set => m_reservedFlags = value;
         }
 
         /// <summary>
@@ -201,13 +177,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 if (Parent.ConfigurationFrame.RevisionNumber >= RevisionNumber.Revision2)
                     return (byte)Parent.ConfigurationFrame.FrameRate;
-                else
-                    return m_dataRate;
+                return m_dataRate;
             }
-            set
-            {
-                m_dataRate = value;
-            }
+            set => m_dataRate = value;
         }
 
         /// <summary>
@@ -215,14 +187,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public FormatFlags FormatFlags
         {
-            get
-            {
-                return ConfigurationCell.FormatFlags;
-            }
-            set
-            {
-                ConfigurationCell.FormatFlags = value;
-            }
+            get => ConfigurationCell.FormatFlags;
+            set => ConfigurationCell.FormatFlags = value;
         }
 
         /// <summary>
@@ -230,14 +196,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort SampleNumber
         {
-            get
-            {
-                return m_sampleNumber;
-            }
-            set
-            {
-                m_sampleNumber = value;
-            }
+            get => m_sampleNumber;
+            set => m_sampleNumber = value;
         }
 
         /// <summary>
@@ -245,10 +205,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public bool ReservedFlag0IsSet
         {
-            get
-            {
-                return ((m_reservedFlags & ReservedFlags.Reserved0) > 0);
-            }
+            get => (m_reservedFlags & ReservedFlags.Reserved0) > 0;
             set
             {
                 if (value)
@@ -263,10 +220,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public bool ReservedFlag1IsSet
         {
-            get
-            {
-                return ((m_reservedFlags & ReservedFlags.Reserved1) > 0);
-            }
+            get => (m_reservedFlags & ReservedFlags.Reserved1) > 0;
             set
             {
                 if (value)
@@ -281,10 +235,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override bool DataIsValid
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.DataIsValid) == 0);
-            }
+            get => (m_channelFlags & ChannelFlags.DataIsValid) == 0;
             set
             {
                 if (value)
@@ -299,10 +250,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override bool SynchronizationIsValid
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.PmuSynchronized) == 0);
-            }
+            get => (m_channelFlags & ChannelFlags.PmuSynchronized) == 0;
             set
             {
                 if (value)
@@ -317,10 +265,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override DataSortingType DataSortingType
         {
-            get
-            {
-                return (((m_channelFlags & ChannelFlags.DataSortedByArrival) > 0) ? DataSortingType.ByArrival : DataSortingType.ByTimestamp);
-            }
+            get => (m_channelFlags & ChannelFlags.DataSortedByArrival) > 0 ? DataSortingType.ByArrival : DataSortingType.ByTimestamp;
             set
             {
                 if (value == DataSortingType.ByArrival)
@@ -335,10 +280,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override bool DeviceError
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.TransmissionErrors) > 0);
-            }
+            get => (m_channelFlags & ChannelFlags.TransmissionErrors) > 0;
             set
             {
                 if (value)
@@ -353,10 +295,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public bool UsingPdcExchangeFormat
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.PdcExchangeFormat) > 0);
-            }
+            get => (m_channelFlags & ChannelFlags.PdcExchangeFormat) > 0;
             set
             {
                 if (value)
@@ -371,10 +310,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public bool UsingMacrodyneFormat
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.MacrodyneFormat) > 0);
-            }
+            get => (m_channelFlags & ChannelFlags.MacrodyneFormat) > 0;
             set
             {
                 if (value)
@@ -389,10 +325,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public bool UsingIeeeFormat
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.MacrodyneFormat) == 0);
-            }
+            get => (m_channelFlags & ChannelFlags.MacrodyneFormat) == 0;
             set
             {
                 if (value)
@@ -408,10 +341,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         [Obsolete("This bit definition is for obsolete uses that is no longer needed.", false)]
         public bool DataIsSortedByTimestamp
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.DataSortedByTimestamp) == 0);
-            }
+            get => (m_channelFlags & ChannelFlags.DataSortedByTimestamp) == 0;
             set
             {
                 if (value)
@@ -427,10 +357,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         [Obsolete("This bit definition is for obsolete uses that is no longer needed.", false)]
         public bool TimestampIsIncluded
         {
-            get
-            {
-                return ((m_channelFlags & ChannelFlags.TimestampIncluded) == 0);
-            }
+            get => (m_channelFlags & ChannelFlags.TimestampIncluded) == 0;
             set
             {
                 if (value)
@@ -443,27 +370,15 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
-        public bool UsePhasorDataFileFormat
-        {
-            get
-            {
-                return Parent.UsePhasorDataFileFormat;
-            }
-        }
+        public bool UsePhasorDataFileFormat => Parent.UsePhasorDataFileFormat;
 
         /// <summary>
         /// Gets or sets data buffer long word that prefixes each cell when source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
         public uint DataBuffer
         {
-            get
-            {
-                return m_dataBuffer;
-            }
-            set
-            {
-                m_dataBuffer = value;
-            }
+            get => m_dataBuffer;
+            set => m_dataBuffer = value;
         }
 
         /// <summary>
@@ -472,24 +387,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <remarks>
         /// This property is overridden to extend length evenly at 4-byte intervals.
         /// </remarks>
-        public override int BinaryLength
-        {
-            get
-            {
-                return base.BinaryLength.AlignDoubleWord();
-            }
-        }
+        public override int BinaryLength => base.BinaryLength.AlignDoubleWord();
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return 6;
-            }
-        }
+        protected override int HeaderLength => 6;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataCell"/> object.
@@ -720,7 +623,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             state.DigitalCount = digitals;
 
             // Status flags and remaining data elements will parsed by base class in the ParseBodyImage method
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>

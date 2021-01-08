@@ -29,6 +29,7 @@ using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using GSF.Parsing;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
@@ -87,7 +88,6 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         private ushort m_frameLength;
         private ushort m_dataLength;
         private readonly ushort m_headerLength;
-        private uint m_spduLength;
         private ushort m_asduLength;
         private int m_asduCount;
         private uint m_configurationRevision;
@@ -145,12 +145,12 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             m_securityAlgorithm = SecurityAlgorithm.None;
             m_signatureAlgorithm = SignatureAlgorithm.None;
 
-            if ((object)configurationFrame != null)
-            {
-                // Hang on to configured frame rate and ticks per frame
-                m_framesPerSecond = configurationFrame.FrameRate;
-                m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
-            }
+            if (configurationFrame is null)
+                return;
+
+            // Hang on to configured frame rate and ticks per frame
+            m_framesPerSecond = configurationFrame.FrameRate;
+            m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
         }
 
         /// <summary>
@@ -194,19 +194,18 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                 uint secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 6);
                 uint fractionOfSecond = BigEndian.ToUInt32(buffer, startIndex + 10);
-                long ticksBeyondSecond;
 
                 // Without timebase, the best timestamp you can get is down to the whole second
-                m_timestamp = (new UnixTimeTag((decimal)secondOfCentury)).ToDateTime().Ticks;
+                m_timestamp = new UnixTimeTag((decimal)secondOfCentury).ToDateTime().Ticks;
 
                 // "Actual fractional seconds" are obtained by taking fractionOfSecond and dividing by timebase.
                 // Since we are converting to ticks, we need to multiply by Ticks.PerSecond.
                 // We do the multiplication first so that the whole operation can be done using integer arithmetic.
                 // m_timebase / 2L is added before dividing by timebase in order to round the result.
-                ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
+                long ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
                 m_timestamp += (ticksBeyondSecond + m_timebase / 2L) / m_timebase;
 
-                if ((object)configurationFrame != null)
+                if (!(configurationFrame is null))
                 {
                     // Hang on to configured frame rate and ticks per frame
                     m_framesPerSecond = configurationFrame.FrameRate;
@@ -247,15 +246,15 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             index += 3;
 
                             // Get SPDU length
-                            m_spduLength = BigEndian.ToUInt32(buffer, index);
+                            SpduLength = BigEndian.ToUInt32(buffer, index);
                             index += 4;
 
                             // Add SPDU length to total frame length (updated as of 10/3/2012 to accommodate extra 6 bytes)
-                            frameLength += (int)m_spduLength + 8;
+                            frameLength += (int)SpduLength + 8;
 
                             // Make sure full frame of data is available - cannot calculate full frame length needed for check sum
                             // without the entire frame since signature algorithm calculation length varies by type and size
-                            if (length > m_spduLength + 13)
+                            if (length > SpduLength + 13)
                             {
                                 // Get SPDU packet number
                                 m_packetNumber = BigEndian.ToUInt32(buffer, index);
@@ -295,13 +294,13 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 if (m_signatureAlgorithm != SignatureAlgorithm.None)
                                 {
                                     int packetIndex = startIndex + cltpTagLength;
-                                    int hmacIndex = (int)(packetIndex + m_spduLength + 2);
+                                    int hmacIndex = (int)(packetIndex + SpduLength + 2);
 
                                     // Check for signature tag
                                     if (buffer[hmacIndex++] == 0x85)
                                     {
                                         // KeyID is technically a lookup into derived rotating keys, but all these are using dummy key for now
-                                        HMAC hmac = m_signatureAlgorithm <= SignatureAlgorithm.Sha256 ? (HMAC)(new ShaHmac(Common.DummyKey)) : (HMAC)(new AesHmac(Common.DummyKey));
+                                        HMAC hmac = m_signatureAlgorithm <= SignatureAlgorithm.Sha256 ? new ShaHmac(Common.DummyKey) : (HMAC)new AesHmac(Common.DummyKey);
                                         int result = 0;
 
                                         switch (m_signatureAlgorithm)
@@ -310,27 +309,27 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                                 break;
                                             case SignatureAlgorithm.Aes64:
                                                 m_sourceHash = buffer.BlockCopy(hmacIndex, 8);
-                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)m_spduLength).BlockCopy(0, 8);
+                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)SpduLength).BlockCopy(0, 8);
                                                 result = m_sourceHash.CompareTo(0, m_calculatedHash, 0, 8);
                                                 break;
                                             case SignatureAlgorithm.Sha80:
                                                 m_sourceHash = buffer.BlockCopy(hmacIndex, 10);
-                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)m_spduLength).BlockCopy(0, 10);
+                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)SpduLength).BlockCopy(0, 10);
                                                 result = m_sourceHash.CompareTo(0, m_calculatedHash, 0, 10);
                                                 break;
                                             case SignatureAlgorithm.Sha128:
                                             case SignatureAlgorithm.Aes128:
                                                 m_sourceHash = buffer.BlockCopy(hmacIndex, 16);
-                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)m_spduLength).BlockCopy(0, 16);
+                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)SpduLength).BlockCopy(0, 16);
                                                 result = m_sourceHash.CompareTo(0, m_calculatedHash, 0, 16);
                                                 break;
                                             case SignatureAlgorithm.Sha256:
                                                 m_sourceHash = buffer.BlockCopy(hmacIndex, 32);
-                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)m_spduLength).BlockCopy(0, 32);
+                                                m_calculatedHash = hmac.ComputeHash(buffer, packetIndex, (int)SpduLength).BlockCopy(0, 32);
                                                 result = m_sourceHash.CompareTo(0, m_calculatedHash, 0, 32);
                                                 break;
                                             default:
-                                                throw new NotSupportedException(string.Format("IEC 61850-90-5 signature algorithm \"{0}\" is not currently supported: ", m_signatureAlgorithm));
+                                                throw new NotSupportedException($"IEC 61850-90-5 signature algorithm \"{m_signatureAlgorithm}\" is not currently supported: ");
                                         }
 
                                         if (result != 0 && !m_ignoreSignatureValidationFailures)
@@ -390,7 +389,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     }
                     else
                     {
-                        throw new InvalidOperationException(string.Format("This library can only parse IEC 61850-90-5 sampled value sessions, type \"{0}\" is not supported.", sessionType));
+                        throw new InvalidOperationException($"This library can only parse IEC 61850-90-5 sampled value sessions, type \"{sessionType}\" is not supported.");
                     }
                 }
             }
@@ -438,14 +437,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public Action<IChannelFrame> PublishFrame
         {
-            get
-            {
-                return m_publishFrame;
-            }
-            set
-            {
-                m_publishFrame = value;
-            }
+            get => m_publishFrame;
+            set => m_publishFrame = value;
         }
 
         /// <summary>
@@ -453,14 +446,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public Ticks Timestamp
         {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
+            get => m_timestamp;
+            set => m_timestamp = value;
         }
 
         /// <summary>
@@ -476,14 +463,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </remarks>
         public FrameType TypeID
         {
-            get
-            {
-                return m_frameType;
-            }
-            set
-            {
-                m_frameType = value;
-            }
+            get => m_frameType;
+            set => m_frameType = value;
         }
 
         /// <summary>
@@ -491,14 +472,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public byte Version
         {
-            get
-            {
-                return m_version;
-            }
-            set
-            {
-                m_version = value;
-            }
+            get => m_version;
+            set => m_version = value;
         }
 
         /// <summary>
@@ -525,14 +500,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public uint PacketNumber
         {
-            get
-            {
-                return m_packetNumber;
-            }
-            set
-            {
-                m_packetNumber = value;
-            }
+            get => m_packetNumber;
+            set => m_packetNumber = value;
         }
 
         /// <summary>
@@ -540,14 +509,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public int AsduCount
         {
-            get
-            {
-                return m_asduCount;
-            }
-            set
-            {
-                m_asduCount = value;
-            }
+            get => m_asduCount;
+            set => m_asduCount = value;
         }
 
         /// <summary>
@@ -555,14 +518,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public uint ConfigurationRevision
         {
-            get
-            {
-                return m_configurationRevision;
-            }
-            set
-            {
-                m_configurationRevision = value;
-            }
+            get => m_configurationRevision;
+            set => m_configurationRevision = value;
         }
 
         /// <summary>
@@ -570,14 +527,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public ushort AsduLength
         {
-            get
-            {
-                return m_asduLength;
-            }
-            set
-            {
-                m_asduLength = value;
-            }
+            get => m_asduLength;
+            set => m_asduLength = value;
         }
 
         /// <summary>
@@ -585,14 +536,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public uint KeyID
         {
-            get
-            {
-                return m_keyID;
-            }
-            set
-            {
-                m_keyID = value;
-            }
+            get => m_keyID;
+            set => m_keyID = value;
         }
 
         /// <summary>
@@ -600,14 +545,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public ushort FrameLength
         {
-            get
-            {
-                return m_frameLength;
-            }
-            set
-            {
-                m_frameLength = value;
-            }
+            get => m_frameLength;
+            set => m_frameLength = value;
         }
 
         /// <summary>
@@ -644,27 +583,15 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets SPDU length.
         /// </summary>
-        public uint SpduLength
-        {
-            get
-            {
-                return m_spduLength;
-            }
-        }
+        public uint SpduLength { get; private set; }
 
         /// <summary>
         /// Gets or sets the IEC 61850-90-5 ID code of this frame.
         /// </summary>
         public ushort IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
-            set
-            {
-                m_idCode = value;
-            }
+            get => m_idCode;
+            set => m_idCode = value;
         }
 
         /// <summary>
@@ -672,26 +599,14 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public uint Timebase
         {
-            get
-            {
-                return m_timebase;
-            }
-            set
-            {
-                m_timebase = value;
-            }
+            get => m_timebase;
+            set => m_timebase = value;
         }
 
         /// <summary>
         /// Gets the IEC 61850-90-5 second of century.
         /// </summary>
-        public uint SecondOfCentury
-        {
-            get
-            {
-                return (uint)Math.Truncate(TimeTag.Value);
-            }
-        }
+        public uint SecondOfCentury => (uint)Math.Truncate(TimeTag.Value);
 
         /// <summary>
         /// Gets the IEC 61850-90-5 fraction of second.
@@ -719,14 +634,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
         {
-            get
-            {
-                return (TimeQualityFlags)(m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
-            }
-            set
-            {
-                m_timeQualityFlags = (m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
-            }
+            get => (TimeQualityFlags)(m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
+            set => m_timeQualityFlags = (m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
         }
 
         /// <summary>
@@ -734,39 +643,22 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public TimeQualityIndicatorCode TimeQualityIndicatorCode
         {
-            get
-            {
-                return (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
-            }
-            set
-            {
-                m_timeQualityFlags = (m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
-            }
+            get => (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
+            set => m_timeQualityFlags = (m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
         }
 
         /// <summary>
         /// Gets time as a <see cref="UnixTimeTag"/> representing seconds of current <see cref="Timestamp"/>.
         /// </summary>
-        public UnixTimeTag TimeTag
-        {
-            get
-            {
-                return new UnixTimeTag(m_timestamp);
-            }
-        }
+        public UnixTimeTag TimeTag => new UnixTimeTag(m_timestamp);
+
         /// <summary>
         /// Gets or sets flag that determines if system should find associated ETR file using MSVID with same name for configuration.
         /// </summary>
         public bool UseETRConfiguration
         {
-            get
-            {
-                return m_useETRConfiguration;
-            }
-            set
-            {
-                m_useETRConfiguration = value;
-            }
+            get => m_useETRConfiguration;
+            set => m_useETRConfiguration = value;
         }
 
         /// <summary>
@@ -774,14 +666,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public bool GuessConfiguration
         {
-            get
-            {
-                return m_guessConfiguration;
-            }
-            set
-            {
-                m_guessConfiguration = value;
-            }
+            get => m_guessConfiguration;
+            set => m_guessConfiguration = value;
         }
 
         /// <summary>
@@ -789,14 +675,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public bool ParseRedundantASDUs
         {
-            get
-            {
-                return m_parseRedundantASDUs;
-            }
-            set
-            {
-                m_parseRedundantASDUs = value;
-            }
+            get => m_parseRedundantASDUs;
+            set => m_parseRedundantASDUs = value;
         }
 
         /// <summary>
@@ -804,14 +684,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public bool IgnoreSignatureValidationFailures
         {
-            get
-            {
-                return m_ignoreSignatureValidationFailures;
-            }
-            set
-            {
-                m_ignoreSignatureValidationFailures = value;
-            }
+            get => m_ignoreSignatureValidationFailures;
+            set => m_ignoreSignatureValidationFailures = value;
         }
 
         /// <summary>
@@ -819,14 +693,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public bool IgnoreSampleSizeValidationFailures
         {
-            get
-            {
-                return m_ignoreSampleSizeValidationFailures;
-            }
-            set
-            {
-                m_ignoreSampleSizeValidationFailures = value;
-            }
+            get => m_ignoreSampleSizeValidationFailures;
+            set => m_ignoreSampleSizeValidationFailures = value;
         }
 
         /// <summary>
@@ -837,14 +705,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </remarks>
         public virtual AngleFormat PhasorAngleFormat
         {
-            get
-            {
-                return m_angleFormat;
-            }
-            set
-            {
-                m_angleFormat = value;
-            }
+            get => m_angleFormat;
+            set => m_angleFormat = value;
         }
 
         /// <summary>
@@ -852,27 +714,15 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public IChannelParsingState State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
+            get => m_state;
+            set => m_state = value;
         }
 
         // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value as IChannelParsingState;
-            }
+            get => m_state;
+            set => m_state = value as IChannelParsingState;
         }
 
         /// <summary>
@@ -880,14 +730,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public SignatureAlgorithm SignatureAlgorithm
         {
-            get
-            {
-                return m_signatureAlgorithm;
-            }
-            set
-            {
-                m_signatureAlgorithm = value;
-            }
+            get => m_signatureAlgorithm;
+            set => m_signatureAlgorithm = value;
         }
 
         /// <summary>
@@ -895,14 +739,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public SecurityAlgorithm SecurityAlgorithm
         {
-            get
-            {
-                return m_securityAlgorithm;
-            }
-            set
-            {
-                m_securityAlgorithm = value;
-            }
+            get => m_securityAlgorithm;
+            set => m_securityAlgorithm = value;
         }
 
         /// <summary>
@@ -910,14 +748,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public string MsvID
         {
-            get
-            {
-                return m_msvID;
-            }
-            set
-            {
-                m_msvID = value;
-            }
+            get => m_msvID;
+            set => m_msvID = value;
         }
 
         /// <summary>
@@ -925,14 +757,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public ConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = value;
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = value;
         }
 
         /// <summary>
@@ -986,7 +812,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     m_dataLength = (ushort)(m_payloadSize + 2);
 
                     // Calculate SPDU size
-                    m_spduLength = (uint)(m_payloadSize + Common.SessionHeaderSize);
+                    SpduLength = (uint)(m_payloadSize + Common.SessionHeaderSize);
 
                     // Start encoding IEC61850-90-5 data frame header
                     buffer[0] = 0x01; // LI - Transport Unit Data header len (variable part empty)
@@ -998,7 +824,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     index = 6;
 
                     // Encode SPDU length
-                    index += BigEndian.CopyBytes(m_spduLength, buffer, index);
+                    index += BigEndian.CopyBytes(SpduLength, buffer, index);
 
                     // Encode SPDU packet number
                     index += BigEndian.CopyBytes(m_packetNumber, buffer, index);
@@ -1098,22 +924,22 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             }
             else
             {
-                attributes.Add("SPDU Length", m_spduLength.ToString());
+                attributes.Add("SPDU Length", SpduLength.ToString());
                 attributes.Add("ASDU Payload Length", m_payloadSize.ToString());
                 attributes.Add("Packet Number", PacketNumber.ToString());
                 attributes.Add("Key ID", m_keyID.ToString("X").PadLeft(8, '0'));
                 attributes.Add("Security Algorithm", (byte)m_securityAlgorithm + ": " + m_securityAlgorithm);
                 attributes.Add("Signature Algorithm", (byte)m_signatureAlgorithm + ": " + m_signatureAlgorithm);
 
-                if ((object)m_sourceHash != null && m_sourceHash.Length > 0)
-                    attributes.Add("Parsed Signature Hash", ByteEncoding.Hexadecimal.GetString(m_sourceHash, ' '));
-                else
+                if (m_sourceHash is null || m_sourceHash.Length == 0)
                     attributes.Add("Parsed Signature Hash", "null");
-
-                if ((object)m_calculatedHash != null && m_calculatedHash.Length > 0)
-                    attributes.Add("Calculated Signature Hash", ByteEncoding.Hexadecimal.GetString(m_calculatedHash, ' '));
                 else
+                    attributes.Add("Parsed Signature Hash", ByteEncoding.Hexadecimal.GetString(m_sourceHash, ' '));
+
+                if (m_calculatedHash == null || m_calculatedHash.Length == 0)
                     attributes.Add("Calculated Signature Hash", "null");
+                else
+                    attributes.Add("Calculated Signature Hash", ByteEncoding.Hexadecimal.GetString(m_calculatedHash, ' '));
 
                 attributes.Add("Ignoring Checksum Validation", IgnoreSignatureValidationFailures.ToString());
                 attributes.Add("Number of ASDUs", m_asduCount.ToString());

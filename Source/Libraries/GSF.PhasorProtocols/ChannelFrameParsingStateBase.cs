@@ -40,8 +40,6 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private int m_cellCount;
-        private readonly CreateNewCellFunction<T> m_createNewCellFunction;
         private bool m_trustHeaderLength;
         private bool m_validateCheckSum;
 
@@ -59,7 +57,7 @@ namespace GSF.PhasorProtocols
         protected ChannelFrameParsingStateBase(int parsedBinaryLength, CreateNewCellFunction<T> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
         {
             base.ParsedBinaryLength = parsedBinaryLength;
-            m_createNewCellFunction = createNewCellFunction;
+            CreateNewCell = createNewCellFunction;
             m_trustHeaderLength = trustHeaderLength;
             m_validateCheckSum = validateCheckSum;
         }
@@ -71,28 +69,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to delegate used to create a new <see cref="IChannelCell"/> object.
         /// </summary>
-        public virtual CreateNewCellFunction<T> CreateNewCell
-        {
-            get
-            {
-                return m_createNewCellFunction;
-            }
-        }
+        public virtual CreateNewCellFunction<T> CreateNewCell { get; }
 
         /// <summary>
         /// Gets or sets number of cells that are expected in associated <see cref="IChannelFrame"/> being parsed.
         /// </summary>
-        public virtual int CellCount
-        {
-            get
-            {
-                return m_cellCount;
-            }
-            set
-            {
-                m_cellCount = value;
-            }
-        }
+        public virtual int CellCount { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
@@ -102,14 +84,8 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual bool TrustHeaderLength
         {
-            get
-            {
-                return m_trustHeaderLength;
-            }
-            set
-            {
-                m_trustHeaderLength = value;
-            }
+            get => m_trustHeaderLength;
+            set => m_trustHeaderLength = value;
         }
 
         /// <summary>
@@ -120,14 +96,8 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual bool ValidateCheckSum
         {
-            get
-            {
-                return m_validateCheckSum;
-            }
-            set
-            {
-                m_validateCheckSum = value;
-            }
+            get => m_validateCheckSum;
+            set => m_validateCheckSum = value;
         }
 
         #endregion

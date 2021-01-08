@@ -84,14 +84,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame2Draft6"/>.
         /// </summary>
-        public override DraftRevision DraftRevision
-        {
-            get
-            {
-                return DraftRevision.Draft6;
-            }
-        }
+        public override DraftRevision DraftRevision => DraftRevision.Draft6;
 
-        #endregion
+    #endregion
     }
 }

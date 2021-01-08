@@ -89,14 +89,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -104,10 +98,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public ushort NormalStatus
         {
-            get
-            {
-                return (ushort)(m_statusFlags & (ushort)Bits.Bit04);
-            }
+            get => (ushort)(m_statusFlags & (ushort)Bits.Bit04);
             set
             {
                 if (value > 0)
@@ -122,10 +113,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public ushort ValidInputs
         {
-            get
-            {
-                return (ushort)(m_statusFlags & (ushort)Bits.Bit00);
-            }
+            get => (ushort)(m_statusFlags & (ushort)Bits.Bit00);
             set
             {
                 if (value > 0)
@@ -138,13 +126,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets conversion factor image of this <see cref="DigitalDefinition"/>.
         /// </summary>
-        internal byte[] ConversionFactorImage
-        {
-            get
-            {
-                return BigEndian.GetBytes(m_statusFlags);
-            }
-        }
+        internal byte[] ConversionFactorImage => BigEndian.GetBytes(m_statusFlags);
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="DigitalDefinition"/> object.

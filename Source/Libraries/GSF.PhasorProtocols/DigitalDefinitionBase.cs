@@ -83,13 +83,7 @@ namespace GSF.PhasorProtocols
         /// Data format for digital values will always be <see cref="GSF.PhasorProtocols.DataFormat.FixedInteger"/>.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override DataFormat DataFormat
-        {
-            get
-            {
-                return DataFormat.FixedInteger;
-            }
-        }
+        public sealed override DataFormat DataFormat => DataFormat.FixedInteger;
 
         /// <summary>
         /// Gets or sets the offset of this <see cref="DigitalDefinitionBase"/>.
@@ -101,10 +95,7 @@ namespace GSF.PhasorProtocols
         [EditorBrowsable(EditorBrowsableState.Never)]
         public sealed override double Offset
         {
-            get
-            {
-                return base.Offset;
-            }
+            get => base.Offset;
             set
             {
                 if (value == 0)
@@ -124,10 +115,7 @@ namespace GSF.PhasorProtocols
         [EditorBrowsable(EditorBrowsableState.Never)]
         public sealed override uint ScalingValue
         {
-            get
-            {
-                return base.ScalingValue;
-            }
+            get => base.ScalingValue;
             set
             {
                 if (value == 1)
@@ -144,14 +132,8 @@ namespace GSF.PhasorProtocols
         /// Scale/bit for digital values will always be 1.0.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override double ScalePerBit
-        {
-            get
-            {
-                return 1.0D;
-            }
-        }
+        public sealed override double ScalePerBit => 1.0D;
 
-        #endregion
+    #endregion
     }
 }

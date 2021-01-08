@@ -82,13 +82,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
-        public override FundamentalFrameType FrameType
-        {
-            get
-            {
-                return FundamentalFrameType.ConfigurationFrame;
-            }
-        }
+        public override FundamentalFrameType FrameType => FundamentalFrameType.ConfigurationFrame;
 
         /// <summary>
         /// Gets flag that determines if frame image can be queued for publication or should be processed immediately.
@@ -96,38 +90,20 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Configuration frames are not queued for publication by default.
         /// </remarks>
-        public override bool AllowQueuedPublication
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool AllowQueuedPublication => false;
 
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
-        public new virtual ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new virtual ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
         public new virtual IConfigurationFrameParsingState State
         {
-            get
-            {
-                return base.State as IConfigurationFrameParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as IConfigurationFrameParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
@@ -135,16 +111,13 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual ushort FrameRate
         {
-            get
-            {
-                return m_frameRate;
-            }
+            get => m_frameRate;
             set
             {
                 m_frameRate = value;
 
                 if (m_frameRate != 0)
-                    m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_frameRate;
+                    m_ticksPerFrame = Ticks.PerSecond / (decimal)m_frameRate;
                 else
                     m_ticksPerFrame = 0;
             }
@@ -153,13 +126,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the defined <see cref="Ticks"/> per frame of this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
-        public virtual decimal TicksPerFrame
-        {
-            get
-            {
-                return m_ticksPerFrame;
-            }
-        }
+        public virtual decimal TicksPerFrame => m_ticksPerFrame;
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationFrameBase"/> object.

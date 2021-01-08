@@ -30,6 +30,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.Macrodyne
 {
     /// <summary>
@@ -69,47 +70,20 @@ namespace GSF.PhasorProtocols.Macrodyne
             : base(parent)
         {
             string[] entry = entryValue.Split(',');
-            FrequencyDefinition defaultFrequency;
             int index = 0;
 
-            if (parent != null)
-                defaultFrequency = parent.Parent.DefaultFrequency;
-            else
-                defaultFrequency = new FrequencyDefinition(null as IConfigurationCell);
+            FrequencyDefinition defaultFrequency = parent is null ? new FrequencyDefinition(null) : parent.Parent.DefaultFrequency;
 
             // If initial entry is an F - we just ignore this
             if (string.Compare(entry[index].Trim(), "F", StringComparison.OrdinalIgnoreCase) == 0)
                 index++;
 
-            if (entry.Length > index)
-                ScalingValue = uint.Parse(entry[index++].Trim());
-            else
-                ScalingValue = defaultFrequency.ScalingValue;
-
-            if (entry.Length > index)
-                Offset = double.Parse(entry[index++].Trim());
-            else
-                Offset = defaultFrequency.Offset;
-
-            if (entry.Length > index)
-                DfDtScalingValue = uint.Parse(entry[index++].Trim());
-            else
-                DfDtScalingValue = defaultFrequency.DfDtScalingValue;
-
-            if (entry.Length > index)
-                DfDtOffset = double.Parse(entry[index++].Trim());
-            else
-                DfDtOffset = defaultFrequency.DfDtOffset;
-
-            if (entry.Length > index)
-                m_dummy = int.Parse(entry[index++].Trim());
-            else
-                m_dummy = defaultFrequency.m_dummy;
-
-            if (entry.Length > index)
-                Label = entry[index++].Trim();
-            else
-                Label = defaultFrequency.Label;
+            ScalingValue = entry.Length > index ? uint.Parse(entry[index++].Trim()) : defaultFrequency.ScalingValue;
+            Offset = entry.Length > index ? double.Parse(entry[index++].Trim()) : defaultFrequency.Offset;
+            DfDtScalingValue = entry.Length > index ? uint.Parse(entry[index++].Trim()) : defaultFrequency.DfDtScalingValue;
+            DfDtOffset = entry.Length > index ? double.Parse(entry[index++].Trim()) : defaultFrequency.DfDtOffset;
+            m_dummy = entry.Length > index ? int.Parse(entry[index++].Trim()) : defaultFrequency.m_dummy;
+            Label = entry.Length > index ? entry[index].Trim() : defaultFrequency.Label;
         }
 
         /// <summary>
@@ -131,14 +105,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -146,13 +114,10 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override double Offset
         {
-            get
-            {
-                return Parent == null ? m_frequencyOffset : base.Offset;
-            }
+            get => Parent is null ? m_frequencyOffset : base.Offset;
             set
             {
-                if (Parent == null)
+                if (Parent is null)
                 {
                     // Store local value for default frequency definition
                     m_frequencyOffset = value;
@@ -171,15 +136,9 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="FrequencyDefinition"/>.
         /// </summary>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return 256;
-            }
-        }
+        public override int MaximumLabelLength => 256;
 
-        #endregion
+    #endregion
 
         #region [ Static ]
 
@@ -188,18 +147,12 @@ namespace GSF.PhasorProtocols.Macrodyne
         // Creates frequency information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IFrequencyDefinition definition)
         {
-            FrequencyDefinition frequency = definition as FrequencyDefinition;
-
             // type, scale, offset, dF/dt scale, dF/dt offset, dummy, label 
             //   F,  1000,    60,      1000,         0,          0,   Frequency
-
-            if (frequency != null)
+            if (definition is FrequencyDefinition frequency)
                 return "F," + frequency.ScalingValue + "," + frequency.Offset + "," + frequency.DfDtScalingValue + "," + frequency.DfDtOffset + "," + frequency.m_dummy + "," + frequency.Label;
 
-            if (definition != null)
-                return "F," + definition.ScalingValue + "," + definition.Offset + "," + definition.DfDtScalingValue + "," + definition.DfDtOffset + ",0," + definition.Label;
-
-            return "";
+            return definition is null ? "" : "F," + definition.ScalingValue + "," + definition.Offset + "," + definition.DfDtScalingValue + "," + definition.DfDtOffset + ",0," + definition.Label;
         }
 
         #endregion

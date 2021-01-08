@@ -101,14 +101,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual IConfigurationCell Parent
         {
-            get
-            {
-                return m_parent;
-            }
-            set
-            {
-                m_parent = value;
-            }
+            get => m_parent;
+            set => m_parent = value;
         }
 
         /// <summary>
@@ -127,14 +121,8 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual int Index
         {
-            get
-            {
-                return m_index;
-            }
-            set
-            {
-                m_index = value;
-            }
+            get => m_index;
+            set => m_index = value;
         }
 
         /// <summary>
@@ -142,14 +130,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double Offset
         {
-            get
-            {
-                return m_offset;
-            }
-            set
-            {
-                m_offset = value;
-            }
+            get => m_offset;
+            set => m_offset = value;
         }
 
         /// <summary>
@@ -157,10 +139,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double ConversionFactor
         {
-            get
-            {
-                return ScalingValue * ScalePerBit;
-            }
+            get => ScalingValue * ScalePerBit;
             set
             {
                 unchecked
@@ -176,24 +155,16 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// The base implementation assumes scale/bit of 10^-5.
         /// </remarks>
-        public virtual double ScalePerBit
-        {
-            get
-            {
-                // Typical scale/bit is 10^-5
-                return 0.00001D;
-            }
-        }
+        public virtual double ScalePerBit =>
+            // Typical scale/bit is 10^-5
+            0.00001D;
 
         /// <summary>
         /// Gets or sets the integer scaling value of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         public virtual uint ScalingValue
         {
-            get
-            {
-                return m_scale;
-            }
+            get => m_scale;
             set
             {
                 if (value > MaximumScalingValue)
@@ -209,24 +180,16 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// The base implementation accomodates maximum scaling factor of 24-bits of space.
         /// </remarks>
-        public virtual uint MaximumScalingValue
-        {
-            get
-            {
-                // Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
-                return UInt24.MaxValue;
-            }
-        }
+        public virtual uint MaximumScalingValue =>
+            // Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
+            UInt24.MaxValue;
 
         /// <summary>
         /// Gets or sets the label of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         public virtual string Label
         {
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -244,47 +207,24 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the binary image of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        public virtual byte[] LabelImage
-        {
-            get
-            {
-                return Encoding.ASCII.GetBytes(Label.PadRight(MaximumLabelLength));
-            }
-        }
+        public virtual byte[] LabelImage => Encoding.ASCII.GetBytes(Label.PadRight(MaximumLabelLength));
 
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        public virtual int MaximumLabelLength
-        {
-            get
-            {
-                // Typical label length is 16 characters
-                return 16;
-            }
-        }
+        public virtual int MaximumLabelLength =>
+            // Typical label length is 16 characters
+            16;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return MaximumLabelLength;
-            }
-        }
+        protected override int BodyLength => MaximumLabelLength;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="ChannelDefinitionBase"/> object.
         /// </summary>
-        protected override byte[] BodyImage
-        {
-            get
-            {
-                return LabelImage;
-            }
-        }
+        protected override byte[] BodyImage => LabelImage;
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="ChannelDefinitionBase"/> object.
@@ -357,7 +297,7 @@ namespace GSF.PhasorProtocols
         /// </returns>
         public bool Equals(IChannelDefinition other)
         {
-            return (CompareTo(other) == 0);
+            return CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -372,9 +312,7 @@ namespace GSF.PhasorProtocols
         /// <exception cref="ArgumentException">value is not an <see cref="IChannelDefinition"/>.</exception>
         public virtual int CompareTo(object obj)
         {
-            IChannelDefinition other = obj as IChannelDefinition;
-
-            if (other != null)
+            if (obj is IChannelDefinition other)
                 return CompareTo(other);
 
             throw new ArgumentException("ChannelDefinition can only be compared to other IChannelDefinitions");

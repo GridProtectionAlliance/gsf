@@ -106,14 +106,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new DataFrame Parent
         {
-            get
-            {
-                return base.Parent as DataFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -121,36 +115,21 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new ConfigurationCell ConfigurationCell
         {
-            get
-            {
-                return base.ConfigurationCell as ConfigurationCell;
-            }
-            set
-            {
-                base.ConfigurationCell = value;
-            }
+            get => base.ConfigurationCell as ConfigurationCell;
+            set => base.ConfigurationCell = value;
         }
 
         /// <summary>
         /// Gets the numeric ID code for this <see cref="DataCell"/>.
         /// </summary>
-        public new ulong IDCode
-        {
-            get
-            {
-                return ConfigurationCell.IDCode;
-            }
-        }
+        public new ulong IDCode => ConfigurationCell.IDCode;
 
         /// <summary>
         /// Gets or sets flag that determines if data of this <see cref="DataCell"/> is valid.
         /// </summary>
         public override bool DataIsValid
         {
-            get
-            {
-                return (StatusFlags & (ushort)Bits.Bit14) == 0;
-            }
+            get => (StatusFlags & (ushort)Bits.Bit14) == 0;
             set
             {
                 if (value)
@@ -165,10 +144,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public override bool SynchronizationIsValid
         {
-            get
-            {
-                return (StatusFlags & (ushort)Bits.Bit15) == 0;
-            }
+            get => (StatusFlags & (ushort)Bits.Bit15) == 0;
             set
             {
                 if (value)
@@ -183,10 +159,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public override DataSortingType DataSortingType
         {
-            get
-            {
-                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
-            }
+            get => SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
             set
             {
                 // We just ignore this value as we have defined data sorting type as a derived value based on synchronization validity
@@ -200,10 +173,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool DeviceError
         {
-            get
-            {
-                return false;
-            }
+            get => false;
             set
             {
                 // We just ignore this value as IEEE 1344 defines no flags for data errors
@@ -215,14 +185,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public TriggerStatus TriggerStatus
         {
-            get
-            {
-                return (TriggerStatus)(StatusFlags & Common.TriggerMask);
-            }
-            set
-            {
-                StatusFlags = (ushort)((StatusFlags & ~Common.TriggerMask) | (ushort)value);
-            }
+            get => (TriggerStatus)(StatusFlags & Common.TriggerMask);
+            set => StatusFlags = (ushort)((StatusFlags & ~Common.TriggerMask) | (ushort)value);
         }
 
         /// <summary>
@@ -232,13 +196,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// IEEE 1344 doesn't define any analog values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override AnalogValueCollection AnalogValues
-        {
-            get
-            {
-                return base.AnalogValues;
-            }
-        }
+        public override AnalogValueCollection AnalogValues => base.AnalogValues;
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.

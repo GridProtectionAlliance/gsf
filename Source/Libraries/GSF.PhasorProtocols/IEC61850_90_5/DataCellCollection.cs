@@ -64,14 +64,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <param name="index">Index of value to get or set.</param>
         public new DataCell this[int index]
         {
-            get
-            {
-                return base[index] as DataCell;
-            }
-            set
-            {
-                base[index] = value;
-            }
+            get => base[index] as DataCell;
+            set => base[index] = value;
         }
 
         #endregion

@@ -92,14 +92,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -107,25 +101,13 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new virtual PhasorDefinition Definition
         {
-            get
-            {
-                return base.Definition as PhasorDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as PhasorDefinition;
+            set => base.Definition = value;
         }
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 8;
-            }
-        }
+        protected override int BodyLength => 8;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="PhasorValueBase"/> object.

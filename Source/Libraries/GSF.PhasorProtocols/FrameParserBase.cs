@@ -131,10 +131,7 @@ namespace GSF.PhasorProtocols
         public event EventHandler ConfigurationChanged;
 
         // Fields
-        private IConnectionParameters m_connectionParameters;
         private AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>> m_frameImageQueue;
-        private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
-        private bool m_trustHeaderLength;
         private bool m_disposed;
 
         #endregion
@@ -149,12 +146,12 @@ namespace GSF.PhasorProtocols
         protected FrameParserBase(CheckSumValidationFrameTypes checkSumValidationFrameTypes, bool trustHeaderLength)
         {
             // We attach to base class DataParsed event to automatically redirect and cast channel frames to their specific output events
-            base.DataParsed += base_DataParsed;
-            base.DuplicateTypeHandlerEncountered += base_DuplicateTypeHandlerEncountered;
-            base.OutputTypeNotFound += base_OutputTypeNotFound;
+            DataParsed += base_DataParsed;
+            DuplicateTypeHandlerEncountered += base_DuplicateTypeHandlerEncountered;
+            OutputTypeNotFound += base_OutputTypeNotFound;
 
-            m_checkSumValidationFrameTypes = checkSumValidationFrameTypes;
-            m_trustHeaderLength = trustHeaderLength;
+            CheckSumValidationFrameTypes = checkSumValidationFrameTypes;
+            TrustHeaderLength = trustHeaderLength;
         }
 
         #endregion
@@ -192,17 +189,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets any connection specific <see cref="IConnectionParameters"/> that may be needed for parsing.
         /// </summary>
-        public virtual IConnectionParameters ConnectionParameters
-        {
-            get
-            {
-                return m_connectionParameters;
-            }
-            set
-            {
-                m_connectionParameters = value;
-            }
-        }
+        public virtual IConnectionParameters ConnectionParameters { get; set; }
 
         /// <summary>
         /// Gets or sets flags that determine if check-sums for specified frames should be validated.
@@ -210,37 +197,27 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// It is expected that this will normally be set to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
         /// </remarks>
-        public CheckSumValidationFrameTypes CheckSumValidationFrameTypes
-        {
-            get
-            {
-                return m_checkSumValidationFrameTypes;
-            }
-            set
-            {
-                m_checkSumValidationFrameTypes = value;
-            }
-        }
+        public CheckSumValidationFrameTypes CheckSumValidationFrameTypes { get; set; }
 
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if configuration frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateConfigurationFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.ConfigurationFrame) > 0;
+        protected bool ValidateConfigurationFrameCheckSum => (CheckSumValidationFrameTypes & CheckSumValidationFrameTypes.ConfigurationFrame) > 0;
 
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if data frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateDataFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
+        protected bool ValidateDataFrameCheckSum => (CheckSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
 
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if header frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateHeaderFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.HeaderFrame) > 0;
+        protected bool ValidateHeaderFrameCheckSum => (CheckSumValidationFrameTypes & CheckSumValidationFrameTypes.HeaderFrame) > 0;
 
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if command frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateCommandFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
+        protected bool ValidateCommandFrameCheckSum => (CheckSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
 
         /// <summary>
         /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
@@ -248,17 +225,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// It is expected that this will normally be left as <c>true</c>
         /// </remarks>
-        public bool TrustHeaderLength
-        {
-            get
-            {
-                return m_trustHeaderLength;
-            }
-            set
-            {
-                m_trustHeaderLength = value;
-            }
-        }
+        public bool TrustHeaderLength { get; set; }
 
         /// <summary>
         /// Gets current descriptive status of the <see cref="FrameParserBase{TypeIndentifier}"/>.
@@ -271,10 +238,10 @@ namespace GSF.PhasorProtocols
 
                 status.Append(base.Status);
                 status.Append("     Received config frame: ");
-                status.Append((object)ConfigurationFrame == null ? "No" : "Yes");
+                status.Append(ConfigurationFrame is null ? "No" : "Yes");
                 status.AppendLine();
 
-                if ((object)ConfigurationFrame != null)
+                if (!(ConfigurationFrame is null))
                 {
                     status.Append("   Devices in config frame: ");
                     status.Append(ConfigurationFrame.Cells.Count);
@@ -292,10 +259,10 @@ namespace GSF.PhasorProtocols
                 }
 
                 status.Append("    Trusting header length: ");
-                status.Append(m_trustHeaderLength);
+                status.Append(TrustHeaderLength);
                 status.AppendLine();
                 status.Append("Check-sum validation types: ");
-                status.Append(m_checkSumValidationFrameTypes);
+                status.Append(CheckSumValidationFrameTypes);
                 status.AppendLine();
 
                 return status.ToString();
@@ -319,9 +286,9 @@ namespace GSF.PhasorProtocols
                     if (disposing)
                     {
                         // Detach from base class events
-                        base.DataParsed -= base_DataParsed;
-                        base.DuplicateTypeHandlerEncountered -= base_DuplicateTypeHandlerEncountered;
-                        base.OutputTypeNotFound -= base_OutputTypeNotFound;
+                        DataParsed -= base_DataParsed;
+                        DuplicateTypeHandlerEncountered -= base_DuplicateTypeHandlerEncountered;
+                        OutputTypeNotFound -= base_OutputTypeNotFound;
                     }
                 }
                 finally
@@ -338,8 +305,7 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="ReceivedConfigurationFrame"/> event.</param>
         protected virtual void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
-            if ((object)ReceivedConfigurationFrame != null)
-                ReceivedConfigurationFrame(this, new EventArgs<IConfigurationFrame>(frame));
+            ReceivedConfigurationFrame?.Invoke(this, new EventArgs<IConfigurationFrame>(frame));
         }
 
         /// <summary>
@@ -348,8 +314,7 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="IDataFrame"/> to send to <see cref="ReceivedDataFrame"/> event.</param>
         protected virtual void OnReceivedDataFrame(IDataFrame frame)
         {
-            if ((object)ReceivedDataFrame != null)
-                ReceivedDataFrame(this, new EventArgs<IDataFrame>(frame));
+            ReceivedDataFrame?.Invoke(this, new EventArgs<IDataFrame>(frame));
         }
 
         /// <summary>
@@ -358,8 +323,7 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="IHeaderFrame"/> to send to <see cref="ReceivedHeaderFrame"/> event.</param>
         protected virtual void OnReceivedHeaderFrame(IHeaderFrame frame)
         {
-            if ((object)ReceivedHeaderFrame != null)
-                ReceivedHeaderFrame(this, new EventArgs<IHeaderFrame>(frame));
+            ReceivedHeaderFrame?.Invoke(this, new EventArgs<IHeaderFrame>(frame));
         }
 
         /// <summary>
@@ -368,8 +332,7 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="ICommandFrame"/> to send to <see cref="ReceivedCommandFrame"/> event.</param>
         protected virtual void OnReceivedCommandFrame(ICommandFrame frame)
         {
-            if ((object)ReceivedCommandFrame != null)
-                ReceivedCommandFrame(this, new EventArgs<ICommandFrame>(frame));
+            ReceivedCommandFrame?.Invoke(this, new EventArgs<ICommandFrame>(frame));
         }
 
         /// <summary>
@@ -378,8 +341,7 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="IChannelFrame"/> to send to <see cref="ReceivedUndeterminedFrame"/> event.</param>
         protected virtual void OnReceivedUndeterminedFrame(IChannelFrame frame)
         {
-            if ((object)ReceivedUndeterminedFrame != null)
-                ReceivedUndeterminedFrame(this, new EventArgs<IChannelFrame>(frame));
+            ReceivedUndeterminedFrame?.Invoke(this, new EventArgs<IChannelFrame>(frame));
         }
 
         /// <summary>
@@ -392,43 +354,42 @@ namespace GSF.PhasorProtocols
         protected virtual void OnReceivedFrameBufferImage(FundamentalFrameType frameType, byte[] buffer, int offset, int length)
         {
             // It is more light-weight for consumers to attach to the "ReceivedFrameImage" event if they don't need the buffer
-            if ((object)ReceivedFrameImage != null)
-                ReceivedFrameImage(this, new EventArgs<FundamentalFrameType, int>(frameType, length));
+            ReceivedFrameImage?.Invoke(this, new EventArgs<FundamentalFrameType, int>(frameType, length));
+
+            if (ReceivedFrameBufferImage is null)
+                return;
 
             // Since this event is called from an async socket operation, these events can be processed simultaneously, especially
             // when the consuming event may take time to process this data (e.g., writing the frame to a capture file for replay),
             // so we queue these events up for asynchronous serial processing
-            if ((object)ReceivedFrameBufferImage != null)
+            if (m_frameImageQueue is null)
             {
-                if ((object)m_frameImageQueue == null)
+                m_frameImageQueue = new AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>>
                 {
-                    m_frameImageQueue = new AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>>
-                    {
-                        ProcessItemFunction = frameImage => ReceivedFrameBufferImage(this, frameImage)
-                    };
+                    ProcessItemFunction = frameImage => ReceivedFrameBufferImage(this, frameImage)
+                };
 
-                    m_frameImageQueue.ProcessException += (sender, e) => OnParsingException(e.Argument);
-                }
+                m_frameImageQueue.ProcessException += (sender, e) => OnParsingException(e.Argument);
+            }
 
-                // We don't own the provided buffer and don't know what the consumer will do with it, so we create
-                // a copy of the relevant buffer segment and enqueue this for processing
-                byte[] bufferSegment = buffer.BlockCopy(offset, length);
+            // We don't own the provided buffer and don't know what the consumer will do with it, so we create
+            // a copy of the relevant buffer segment and enqueue this for processing
+            byte[] bufferSegment = buffer.BlockCopy(offset, length);
 
-                if (OptimizationOptions.DisableAsyncQueueInProtocolParsing)
+            if (OptimizationOptions.DisableAsyncQueueInProtocolParsing)
+            {
+                try
                 {
-                    try
-                    {
-                        ReceivedFrameBufferImage?.Invoke(this, new EventArgs<FundamentalFrameType, byte[], int, int>(frameType, bufferSegment, 0, bufferSegment.Length));
-                    }
-                    catch (Exception ex)
-                    {
-                        OnParsingException(ex);
-                    }
+                    ReceivedFrameBufferImage?.Invoke(this, new EventArgs<FundamentalFrameType, byte[], int, int>(frameType, bufferSegment, 0, bufferSegment.Length));
                 }
-                else
+                catch (Exception ex)
                 {
-                    m_frameImageQueue.Enqueue(new EventArgs<FundamentalFrameType, byte[], int, int>(frameType, bufferSegment, 0, bufferSegment.Length));
+                    OnParsingException(ex);
                 }
+            }
+            else
+            {
+                m_frameImageQueue.Enqueue(new EventArgs<FundamentalFrameType, byte[], int, int>(frameType, bufferSegment, 0, bufferSegment.Length));
             }
         }
 
@@ -437,8 +398,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         protected virtual void OnConfigurationChanged()
         {
-            if ((object)ConfigurationChanged != null)
-                ConfigurationChanged(this, EventArgs.Empty);
+            ConfigurationChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -447,51 +407,29 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="IChannelFrame"/> that was parsed by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> that implements protocol specific common frame header interface.</param>
         protected virtual void OnReceivedChannelFrame(IChannelFrame frame)
         {
-            // Process frame types in order or likely occurrence
-            if ((object)frame != null)
+            switch (frame)
             {
-                IDataFrame dataFrame = frame as IDataFrame;
-
-                if ((object)dataFrame != null)
-                {
+                // Process frame types in order of likely occurrence
+                case IDataFrame dataFrame:
                     // Frame was a data frame
                     OnReceivedDataFrame(dataFrame);
-                }
-                else
-                {
-                    IConfigurationFrame configFrame = frame as IConfigurationFrame;
-
-                    if ((object)configFrame != null)
-                    {
-                        // Frame was a configuration frame
-                        OnReceivedConfigurationFrame(configFrame);
-                    }
-                    else
-                    {
-                        IHeaderFrame headerFrame = frame as IHeaderFrame;
-
-                        if ((object)headerFrame != null)
-                        {
-                            // Frame was a header frame
-                            OnReceivedHeaderFrame(headerFrame);
-                        }
-                        else
-                        {
-                            ICommandFrame commandFrame = frame as ICommandFrame;
-
-                            if ((object)commandFrame != null)
-                            {
-                                // Frame was a command frame
-                                OnReceivedCommandFrame(commandFrame);
-                            }
-                            else
-                            {
-                                // Frame type was undetermined
-                                OnReceivedUndeterminedFrame(frame);
-                            }
-                        }
-                    }
-                }
+                    break;
+                case IConfigurationFrame configFrame:
+                    // Frame was a configuration frame
+                    OnReceivedConfigurationFrame(configFrame);
+                    break;
+                case IHeaderFrame headerFrame:
+                    // Frame was a header frame
+                    OnReceivedHeaderFrame(headerFrame);
+                    break;
+                case ICommandFrame commandFrame:
+                    // Frame was a command frame
+                    OnReceivedCommandFrame(commandFrame);
+                    break;
+                default:
+                    // Frame type was undetermined
+                    OnReceivedUndeterminedFrame(frame);
+                    break;
             }
         }
 

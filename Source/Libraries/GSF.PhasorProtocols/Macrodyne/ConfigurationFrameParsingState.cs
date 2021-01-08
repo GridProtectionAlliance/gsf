@@ -33,9 +33,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         #region [ Members ]
 
         // Fields
-        private HeaderFrame m_headerFrame;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -50,7 +49,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         public ConfigurationFrameParsingState(int parsedBinaryLength, HeaderFrame headerFrame, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
             : base(parsedBinaryLength, createNewCellFunction, trustHeaderLength, validateCheckSum, 1)
         {
-            m_headerFrame = headerFrame;
+            HeaderFrame = headerFrame;
         }
 
         #endregion
@@ -60,18 +59,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets or sets the header frame, which contains the unit ID (i.e., station name), of the device.
         /// </summary>
-        public HeaderFrame HeaderFrame
-        {
-            get
-            {
-                return m_headerFrame;
-            }
-            set
-            {
-                m_headerFrame = value;
-            }
-        }
+        public HeaderFrame HeaderFrame { get; set; }
 
-        #endregion
+    #endregion
     }
 }

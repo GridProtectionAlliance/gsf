@@ -99,14 +99,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new ConfigurationFrame Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -118,14 +112,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public ushort StatusFlags
         {
-            get
-            {
-                return m_statusFlags;
-            }
-            set
-            {
-                m_statusFlags = value;
-            }
+            get => m_statusFlags;
+            set => m_statusFlags = value;
         }
 
         /// <summary>
@@ -134,10 +122,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         public new ulong IDCode
         {
             // IEEE 1344 only allows one device, so we share ID code with parent frame...
-            get
-            {
-                return Parent.IDCode;
-            }
+            get => Parent.IDCode;
             set
             {
                 Parent.IDCode = value;
@@ -152,10 +137,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public bool SynchronizationIsValid
         {
-            get
-            {
-                return (m_statusFlags & (ushort)Bits.Bit15) == 0;
-            }
+            get => (m_statusFlags & (ushort)Bits.Bit15) == 0;
             set
             {
                 if (value)
@@ -170,10 +152,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public bool DataIsValid
         {
-            get
-            {
-                return (m_statusFlags & (ushort)Bits.Bit14) == 0;
-            }
+            get => (m_statusFlags & (ushort)Bits.Bit14) == 0;
             set
             {
                 if (value)
@@ -188,14 +167,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public TriggerStatus TriggerStatus
         {
-            get
-            {
-                return (TriggerStatus)(m_statusFlags & Common.TriggerMask);
-            }
-            set
-            {
-                m_statusFlags = (ushort)((m_statusFlags & ~Common.TriggerMask) | (ushort)value);
-            }
+            get => (TriggerStatus)(m_statusFlags & Common.TriggerMask);
+            set => m_statusFlags = (ushort)((m_statusFlags & ~Common.TriggerMask) | (ushort)value);
         }
 
         /// <summary>
@@ -207,10 +180,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <exception cref="NotSupportedException">IEEE 1344 only supports scaled data.</exception>
         public override DataFormat PhasorDataFormat
         {
-            get
-            {
-                return DataFormat.FixedInteger;
-            }
+            get => DataFormat.FixedInteger;
             set
             {
                 if (value != DataFormat.FixedInteger)
@@ -223,14 +193,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public override CoordinateFormat PhasorCoordinateFormat
         {
-            get
-            {
-                return m_coordinateFormat;
-            }
-            set
-            {
-                m_coordinateFormat = value;
-            }
+            get => m_coordinateFormat;
+            set => m_coordinateFormat = value;
         }
 
         /// <summary>
@@ -242,10 +206,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <exception cref="NotSupportedException">IEEE 1344 only supports scaled data.</exception>
         public override DataFormat FrequencyDataFormat
         {
-            get
-            {
-                return DataFormat.FixedInteger;
-            }
+            get => DataFormat.FixedInteger;
             set
             {
                 if (value != DataFormat.FixedInteger)
@@ -264,10 +225,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override DataFormat AnalogDataFormat
         {
-            get
-            {
-                return DataFormat.FixedInteger;
-            }
+            get => DataFormat.FixedInteger;
             set
             {
                 if (value != DataFormat.FixedInteger)
@@ -278,13 +236,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return base.HeaderLength + 14;
-            }
-        }
+        protected override int HeaderLength => base.HeaderLength + 14;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationCell"/> object.
@@ -313,13 +265,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength
-        {
-            get
-            {
-                return base.FooterLength + PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength;
-            }
-        }
+        protected override int FooterLength => base.FooterLength + PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="ConfigurationCell"/> object.
@@ -337,17 +283,13 @@ namespace GSF.PhasorProtocols.IEEE1344
                 for (x = 0; x < PhasorDefinitions.Count; x++)
                 {
                     phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
-
-                    if (phasorDefinition != null)
-                        phasorDefinition.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
+                    phasorDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
                 }
 
                 for (x = 0; x < DigitalDefinitions.Count; x++)
                 {
                     digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
-
-                    if (digitalDefinition != null)
-                        digitalDefinition.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
+                    digitalDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
                 }
 
                 // Include nominal frequency
@@ -404,7 +346,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             state.DigitalCount = BigEndian.ToUInt16(buffer, index + 10);
             index += 12;
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -425,7 +367,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
 
-                if (phasorDefinition != null)
+                if (!(phasorDefinition is null))
                     index += phasorDefinition.ParseConversionFactor(buffer, index);
             }
 
@@ -433,14 +375,14 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
 
-                if (digitalDefinition != null)
+                if (!(digitalDefinition is null))
                     index += digitalDefinition.ParseConversionFactor(buffer, index);
             }
 
             // Parse nominal frequency
             index += base.ParseFooterImage(buffer, index, length);
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>

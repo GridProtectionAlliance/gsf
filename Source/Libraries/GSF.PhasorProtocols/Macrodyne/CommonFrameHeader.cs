@@ -151,14 +151,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public ProtocolVersion ProtocolVersion
         {
-            get
-            {
-                return m_protocolVersion;
-            }
-            set
-            {
-                m_protocolVersion = value;
-            }
+            get => m_protocolVersion;
+            set => m_protocolVersion = value;
         }
 
         /// <summary>
@@ -169,14 +163,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </remarks>
         public StatusFlags StatusFlags
         {
-            get
-            {
-                return m_statusFlags;
-            }
-            set
-            {
-                m_statusFlags = value;
-            }
+            get => m_statusFlags;
+            set => m_statusFlags = value;
         }
 
         /// <summary>
@@ -207,13 +195,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the Macrodyne data length.
         /// </summary>
-        public ushort DataLength
-        {
-            get
-            {
-                return (ushort)(FrameLength - FixedLength - 1);
-            }
-        }
+        public ushort DataLength => (ushort)(FrameLength - FixedLength - 1);
 
         /// <summary>
         /// Gets the Macrodyne frame length.
@@ -225,7 +207,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 switch (TypeID)
                 {
                     case Macrodyne.FrameType.DataFrame:
-                        if (m_configurationFrame != null)
+                        if (!(m_configurationFrame is null))
                             return m_configurationFrame.DataFrameLength;
                         break;
                     case Macrodyne.FrameType.ConfigurationFrame:

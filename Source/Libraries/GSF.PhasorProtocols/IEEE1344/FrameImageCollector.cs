@@ -43,9 +43,8 @@ namespace GSF.PhasorProtocols.IEEE1344
 
         // Fields
         private readonly MemoryStream m_frameQueue;
-        private int m_frameCount;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -70,37 +69,19 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the combined binary image of all the collected frame images.
         /// </summary>
-        public byte[] BinaryImage
-        {
-            get
-            {
-                return m_frameQueue.ToArray();
-            }
-        }
+        public byte[] BinaryImage => m_frameQueue.ToArray();
 
         /// <summary>
         /// Gets the length of the combined binary image of all the collected frame images.
         /// </summary>
-        public int BinaryLength
-        {
-            get
-            {
-                return (int)m_frameQueue.Length;
-            }
-        }
+        public int BinaryLength => (int)m_frameQueue.Length;
 
         /// <summary>
         /// Gets the total number frames appended to <see cref="FrameImageCollector"/>.
         /// </summary>
-        public int Count
-        {
-            get
-            {
-                return m_frameCount;
-            }
-        }
+        public int Count { get; private set; }
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 
@@ -127,7 +108,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             m_frameQueue.Write(buffer, offset, length - CommonFrameHeader.FixedLength);
 
             // Track total frame images
-            m_frameCount++;
+            Count++;
         }
 
         #endregion

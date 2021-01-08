@@ -78,14 +78,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -93,14 +87,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual AnalogDefinition Definition
         {
-            get
-            {
-                return base.Definition as AnalogDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as AnalogDefinition;
+            set => base.Definition = value;
         }
 
         #endregion

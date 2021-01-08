@@ -35,9 +35,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         #region [ Members ]
 
         // Fields
-        private int m_remainingPdcBlockPmus;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -61,29 +60,13 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationFrame"/> associated with the <see cref="DataFrame"/> being parsed.
         /// </summary>
-        public new ConfigurationFrame ConfigurationFrame
-        {
-            get
-            {
-                return base.ConfigurationFrame as ConfigurationFrame;
-            }
-        }
+        public new ConfigurationFrame ConfigurationFrame => base.ConfigurationFrame as ConfigurationFrame;
 
         /// <summary>
         /// Gets or sets the remaining number of PMU's the PDC block to be parsed.
         /// </summary>
-        public int RemainingPdcBlockPmus
-        {
-            get
-            {
-                return m_remainingPdcBlockPmus;
-            }
-            set
-            {
-                m_remainingPdcBlockPmus = value;
-            }
-        }
+        public int RemainingPdcBlockPmus { get; set; }
 
-        #endregion
+    #endregion
     }
 }

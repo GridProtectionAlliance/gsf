@@ -95,13 +95,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="FrequencyDefinitionBase"/>.
         /// </summary>
-        public override DataFormat DataFormat
-        {
-            get
-            {
-                return Parent.FrequencyDataFormat;
-            }
-        }
+        public override DataFormat DataFormat => Parent.FrequencyDataFormat;
 
         /// <summary>
         /// Gets the nominal <see cref="LineFrequency"/> of this <see cref="FrequencyDefinitionBase"/>.
@@ -109,13 +103,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Value returned is the <see cref="IConfigurationCell.NominalFrequency"/> and is exposed here just for convenience.
         /// </remarks>
-        public virtual LineFrequency NominalFrequency
-        {
-            get
-            {
-                return Parent.NominalFrequency;
-            }
-        }
+        public virtual LineFrequency NominalFrequency => Parent.NominalFrequency;
 
         /// <summary>
         /// Gets or sets the index of this <see cref="FrequencyDefinitionBase"/>.
@@ -126,14 +114,8 @@ namespace GSF.PhasorProtocols
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int Index
         {
-            get
-            {
-                return base.Index;
-            }
-            set
-            {
-                base.Index = value;
-            }
+            get => base.Index;
+            set => base.Index = value;
         }
 
         /// <summary>
@@ -145,14 +127,8 @@ namespace GSF.PhasorProtocols
         /// <exception cref="NotSupportedException">Frequency offset is read-only; value is determined by nominal frequency specified in containing configuration cell.</exception>
         public override double Offset
         {
-            get
-            {
-                return (double)Parent.NominalFrequency;
-            }
-            set
-            {
-                throw new NotSupportedException("Frequency offset is read-only; value is determined by nominal frequency specified in containing configuration cell");
-            }
+            get => (double)Parent.NominalFrequency;
+            set => throw new NotSupportedException("Frequency offset is read-only; value is determined by nominal frequency specified in containing configuration cell");
         }
 
         /// <summary>
@@ -160,14 +136,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double DfDtOffset
         {
-            get
-            {
-                return m_dfdtOffset;
-            }
-            set
-            {
-                m_dfdtOffset = value;
-            }
+            get => m_dfdtOffset;
+            set => m_dfdtOffset = value;
         }
 
         /// <summary>
@@ -175,14 +145,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual uint DfDtScalingValue
         {
-            get
-            {
-                return m_dfdtScale;
-            }
-            set
-            {
-                m_dfdtScale = value;
-            }
+            get => m_dfdtScale;
+            set => m_dfdtScale = value;
         }
 
         /// <summary>

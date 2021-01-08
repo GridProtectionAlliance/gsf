@@ -146,14 +146,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public new ConfigurationFrame Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -161,14 +155,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public ConfigurationCell ConfigurationFileCell
         {
-            get
-            {
-                return m_configurationFileCell;
-            }
-            set
-            {
-                m_configurationFileCell = value;
-            }
+            get => m_configurationFileCell;
+            set => m_configurationFileCell = value;
         }
 
         /// <summary>
@@ -178,7 +166,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.PhasorDefinitions;
 
                 return m_configurationFileCell.PhasorDefinitions;
@@ -192,14 +180,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.StationName;
 
                 return m_configurationFileCell.StationName;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     base.StationName = value;
                 else
                     m_configurationFileCell.StationName = value;
@@ -213,7 +201,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return m_sectionEntry;
 
                 return m_configurationFileCell.SectionEntry;
@@ -240,12 +228,12 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                 {
                     if (string.IsNullOrEmpty(m_sectionEntry))
                         return false;
 
-                    return (m_sectionEntry.Length > IDLabelLength);
+                    return m_sectionEntry.Length > IDLabelLength;
                 }
 
                 return m_configurationFileCell.IsPdcBlockSection;
@@ -259,14 +247,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.IDCode;
 
                 return m_configurationFileCell.IDCode;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     base.IDCode = value;
                 else
                     m_configurationFileCell.IDCode = value;
@@ -280,14 +268,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.FrequencyDefinition;
 
                 return m_configurationFileCell.FrequencyDefinition;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     base.FrequencyDefinition = value;
                 else
                     m_configurationFileCell.FrequencyDefinition = value;
@@ -301,14 +289,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.NominalFrequency;
 
                 return m_configurationFileCell.NominalFrequency;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                 {
                     base.NominalFrequency = value;
                 }
@@ -322,16 +310,11 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the maximum length of the <see cref="StationName"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int MaximumStationNameLength
-        {
-            get
-            {
-                // When the station name in the PDCstream is read from an INI file, there is no set limit.
-                // For the Macrodyne protocol the unit ID cannot exceed 8 characters - but this protocol
-                // is current read-only, so we don't worry about the limit...
-                return int.MaxValue;
-            }
-        }
+        public override int MaximumStationNameLength =>
+            // When the station name in the PDCstream is read from an INI file, there is no set limit.
+            // For the Macrodyne protocol the unit ID cannot exceed 8 characters - but this protocol
+            // is current read-only, so we don't worry about the limit...
+            int.MaxValue;
 
         /// <summary>
         /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="ConfigurationCellBase.PhasorDefinitions"/> of this <see cref="ConfigurationCell"/>.
@@ -342,10 +325,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <exception cref="NotSupportedException">Macrodyne only supports scaled data.</exception>
         public override DataFormat PhasorDataFormat
         {
-            get
-            {
-                return DataFormat.FixedInteger;
-            }
+            get => DataFormat.FixedInteger;
             set
             {
                 if (value != DataFormat.FixedInteger)
@@ -362,10 +342,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <exception cref="NotSupportedException">Macrodyne only supports rectangular phasor data.</exception>
         public override CoordinateFormat PhasorCoordinateFormat
         {
-            get
-            {
-                return CoordinateFormat.Rectangular;
-            }
+            get => CoordinateFormat.Rectangular;
             set
             {
                 if (value != CoordinateFormat.Rectangular)
@@ -382,10 +359,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <exception cref="NotSupportedException">Macrodyne only supports scaled data.</exception>
         public override DataFormat FrequencyDataFormat
         {
-            get
-            {
-                return DataFormat.FixedInteger;
-            }
+            get => DataFormat.FixedInteger;
             set
             {
                 if (value != DataFormat.FixedInteger)
@@ -404,10 +378,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override DataFormat AnalogDataFormat
         {
-            get
-            {
-                return DataFormat.FixedInteger;
-            }
+            get => DataFormat.FixedInteger;
             set
             {
                 if (value != DataFormat.FixedInteger)

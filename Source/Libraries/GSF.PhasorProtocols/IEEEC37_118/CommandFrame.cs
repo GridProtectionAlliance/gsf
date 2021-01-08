@@ -77,13 +77,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 throw new InvalidOperationException("Binary image does not represent an IEEE C37.118 command frame");
 
             if (length < m_frameHeader.FrameLength)
-                throw new ArgumentOutOfRangeException(nameof(length), string.Format("Buffer size, {0}, is not large enough to parse IEEE C37.118 command frame with a length of {1}", length, m_frameHeader.FrameLength));
+                throw new ArgumentOutOfRangeException(nameof(length), $"Buffer size, {length}, is not large enough to parse IEEE C37.118 command frame with a length of {m_frameHeader.FrameLength}");
 
             // Validate check-sum
             int sumLength = m_frameHeader.FrameLength - 2;
 
             if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
+                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
 
             m_frameHeader.State = new CommandFrameParsingState(m_frameHeader.FrameLength, m_frameHeader.DataLength, true, true);
             CommonHeader = m_frameHeader;
@@ -104,7 +104,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             base.IDCode = idCode;
             base.Timestamp = DateTime.UtcNow.Ticks;
-            this.Version = version;
+            Version = version;
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             get
             {
                 // Make sure frame header exists
-                if (m_frameHeader == null)
+                if (m_frameHeader is null)
                     m_frameHeader = new CommonFrameHeader(null, IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
@@ -140,12 +140,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                {
-                    State = m_frameHeader.State as ICommandFrameParsingState;
-                    base.IDCode = m_frameHeader.IDCode;
-                    base.Timestamp = m_frameHeader.Timestamp;
-                }
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as ICommandFrameParsingState;
+                base.IDCode = m_frameHeader.IDCode;
+                base.Timestamp = m_frameHeader.Timestamp;
             }
         }
 
@@ -157,10 +157,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         public override Ticks Timestamp
         {
-            get
-            {
-                return CommonHeader.Timestamp;
-            }
+            get => CommonHeader.Timestamp;
             set
             {
                 // Keep timestamp updates synchrnonized...
@@ -174,26 +171,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public byte Version
         {
-            get
-            {
-                return CommonHeader.Version;
-            }
-            set
-            {
-                CommonHeader.Version = value;
-            }
+            get => CommonHeader.Version;
+            set => CommonHeader.Version = value;
         }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonFrameHeader.FixedLength;
-            }
-        }
+        protected override int HeaderLength => CommonFrameHeader.FixedLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.

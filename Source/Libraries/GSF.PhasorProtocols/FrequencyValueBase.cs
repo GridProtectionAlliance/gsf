@@ -122,10 +122,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double Frequency
         {
-            get
-            {
-                return m_frequency;
-            }
+            get => m_frequency;
             set
             {
                 m_frequency = value;
@@ -138,10 +135,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double DfDt
         {
-            get
-            {
-                return m_dfdt;
-            }
+            get => m_dfdt;
             set
             {
                 m_dfdt = value;
@@ -191,24 +185,12 @@ namespace GSF.PhasorProtocols
         /// Gets boolean value that determines if none of the composite values of <see cref="FrequencyValueBase"/> have been assigned a value.
         /// </summary>
         /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
-        public override bool IsEmpty
-        {
-            get
-            {
-                return (!m_frequencyAssigned || !m_dfdtAssigned);
-            }
-        }
+        public override bool IsEmpty => !m_frequencyAssigned || !m_dfdtAssigned;
 
         /// <summary>
         /// Gets total number of composite values that this <see cref="FrequencyValueBase"/> provides.
         /// </summary>
-        public override int CompositeValueCount
-        {
-            get
-            {
-                return 2;
-            }
-        }
+        public override int CompositeValueCount => 2;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
@@ -224,8 +206,7 @@ namespace GSF.PhasorProtocols
             {
                 if (DataFormat == DataFormat.FixedInteger)
                     return 4;
-                else
-                    return 8;
+                return 8;
             }
         }
 
@@ -337,16 +318,14 @@ namespace GSF.PhasorProtocols
 
                 return 4;
             }
-            else
-            {
-                m_frequency = BigEndian.ToSingle(buffer, startIndex);
-                m_dfdt = BigEndian.ToSingle(buffer, startIndex + 4);
 
-                m_frequencyAssigned = true;
-                m_dfdtAssigned = true;
+            m_frequency = BigEndian.ToSingle(buffer, startIndex);
+            m_dfdt = BigEndian.ToSingle(buffer, startIndex + 4);
 
-                return 8;
-            }
+            m_frequencyAssigned = true;
+            m_dfdtAssigned = true;
+
+            return 8;
         }
 
         /// <summary>

@@ -83,14 +83,8 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public new DataFrame Parent
         {
-            get
-            {
-                return base.Parent as DataFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -98,14 +92,8 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public new ConfigurationCell ConfigurationCell
         {
-            get
-            {
-                return base.ConfigurationCell as ConfigurationCell;
-            }
-            set
-            {
-                base.ConfigurationCell = value;
-            }
+            get => base.ConfigurationCell as ConfigurationCell;
+            set => base.ConfigurationCell = value;
         }
 
         /// <summary>
@@ -113,10 +101,7 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public override bool DataIsValid
         {
-            get
-            {
-                return true;
-            }
+            get => true;
             set
             {
                 // We just ignore updates to this value; F-NET defines no flags to determine if data is valid
@@ -132,10 +117,7 @@ namespace GSF.PhasorProtocols.FNET
         /// </remarks>
         public override bool SynchronizationIsValid
         {
-            get
-            {
-                return ConfigurationCell.NumberOfSatellites > 0;
-            }
+            get => ConfigurationCell.NumberOfSatellites > 0;
             set
             {
                 // We just ignore updates to this value; F-NET defines synchronization validity as a derived value based on the number of available satellites
@@ -147,10 +129,7 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public override DataSortingType DataSortingType
         {
-            get
-            {
-                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
-            }
+            get => SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
             set
             {
                 // We just ignore updates to this value; data sorting type has been defined as a derived value based on synchronization validity
@@ -164,10 +143,7 @@ namespace GSF.PhasorProtocols.FNET
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool DeviceError
         {
-            get
-            {
-                return false;
-            }
+            get => false;
             set
             {
                 // We just ignore updates to this value; F-NET defines no flags for data errors
@@ -177,38 +153,20 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets date in F-NET format.
         /// </summary>
-        public string FNetDate
-        {
-            get
-            {
-                return ((DateTime)Parent.Timestamp).ToString("MMddyy");
-            }
-        }
+        public string FNetDate => ((DateTime)Parent.Timestamp).ToString("MMddyy");
 
         /// <summary>
         /// Gets time in F-NET format.
         /// </summary>
-        public string FNetTime
-        {
-            get
-            {
-                return ((DateTime)Parent.Timestamp).ToString("HHmmss");
-            }
-        }
+        public string FNetTime => ((DateTime)Parent.Timestamp).ToString("HHmmss");
 
         /// <summary>
         /// Gets or sets analog value for F-NET data row.
         /// </summary>
         public double AnalogValue
         {
-            get
-            {
-                return m_analogValue;
-            }
-            set
-            {
-                m_analogValue = value;
-            }
+            get => m_analogValue;
+            set => m_analogValue = value;
         }
 
         /// <summary>
@@ -245,24 +203,12 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return FNetDataRow.Length;
-            }
-        }
+        protected override int BodyLength => FNetDataRow.Length;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="DataCell"/> object.
         /// </summary>
-        protected override byte[] BodyImage
-        {
-            get
-            {
-                return Encoding.ASCII.GetBytes(FNetDataRow);
-            }
-        }
+        protected override byte[] BodyImage => Encoding.ASCII.GetBytes(FNetDataRow);
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
@@ -334,10 +280,10 @@ namespace GSF.PhasorProtocols.FNET
                 // Update (or create) frequency value
                 double frequency = double.Parse(data[Element.Frequency]);
 
-                if (FrequencyValue != null)
-                    FrequencyValue.Frequency = frequency;
-                else
+                if (FrequencyValue is null)
                     FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, frequency, 0.0D);
+                else
+                    FrequencyValue.Frequency = frequency;
 
                 // Update (or create) phasor value
                 Angle angle = double.Parse(data[Element.Angle]);
@@ -347,15 +293,15 @@ namespace GSF.PhasorProtocols.FNET
                 if (PhasorValues.Count > 0)
                     phasor = PhasorValues[0] as PhasorValue;
 
-                if (phasor != null)
-                {
-                    phasor.Angle = angle;
-                    phasor.Magnitude = magnitude;
-                }
-                else
+                if (phasor is null)
                 {
                     phasor = new PhasorValue(this, configurationCell.PhasorDefinitions[0] as PhasorDefinition, angle, magnitude);
                     PhasorValues.Add(phasor);
+                }
+                else
+                {
+                    phasor.Angle = angle;
+                    phasor.Magnitude = magnitude;
                 }
             }
 
@@ -387,7 +333,7 @@ namespace GSF.PhasorProtocols.FNET
             if (sampleIndex == 10)
                 return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), 0).AddSeconds(1.0D).Ticks;
 
-            return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), ((int)(sampleIndex / (double)frameRate * 1000.0D) % 1000)).Ticks;
+            return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), (int)(sampleIndex / (double)frameRate * 1000.0D) % 1000).Ticks;
         }
 
         // Delegate handler to create a new F-NET data cell

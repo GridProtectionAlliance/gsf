@@ -112,14 +112,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         DefaultValue(typeof(ProtocolVersion), "M")]
         public ProtocolVersion ProtocolVersion
         {
-            get
-            {
-                return m_protocolVersion;
-            }
-            set
-            {
-                m_protocolVersion = value;
-            }
+            get => m_protocolVersion;
+            set => m_protocolVersion = value;
         }
 
         /// <summary>
@@ -130,14 +124,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         Editor(typeof(IniFileNameEditor), typeof(UITypeEditor))]
         public string ConfigurationFileName
         {
-            get
-            {
-                return m_configurationFileName;
-            }
-            set
-            {
-                m_configurationFileName = value;
-            }
+            get => m_configurationFileName;
+            set => m_configurationFileName = value;
         }
 
         /// <summary>
@@ -147,14 +135,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         Description("Set to the Macrodyne device ID label as defined in the associated INI file as a [section] entry. This is only required when protocol version is 1690G.")]
         public string DeviceLabel
         {
-            get
-            {
-                return m_deviceLabel;
-            }
-            set
-            {
-                m_deviceLabel = value;
-            }
+            get => m_deviceLabel;
+            set => m_deviceLabel = value;
         }
 
         /// <summary>
@@ -165,14 +147,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         DefaultValue(true)]
         public bool RefreshConfigurationFileOnChange
         {
-            get
-            {
-                return m_refreshConfigurationFileOnChange;
-            }
-            set
-            {
-                m_refreshConfigurationFileOnChange = value;
-            }
+            get => m_refreshConfigurationFileOnChange;
+            set => m_refreshConfigurationFileOnChange = value;
         }
 
         /// <summary>

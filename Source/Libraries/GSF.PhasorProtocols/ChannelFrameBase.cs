@@ -55,18 +55,16 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private ushort m_idCode;                                                            // Numeric identifier of this frame of data (e.g., ID code of the PDC)
-        private readonly IChannelCellCollection<T> m_cells;                                 // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
-        private Ticks m_timestamp;                                                          // Time, represented as 100-nanosecond ticks, of this frame of data
-        private ShortTime m_lifespan;                                                       // Elapsed time since creation of this frame of data
-        private int m_parsedBinaryLength;                                                   // Binary length of frame as provided from parsed header
-        private SourceChannel m_source;                                                     // Defines source channel (e.g., data or command) for channel frame
-        private bool m_trustHeaderLength;                                                   // Determines if parsed header lengths should be trusted (normally true)
-        private bool m_validateCheckSum;                                                    // Allows bypass of check-sum validation if devices are behaving badly
-        private bool m_published;                                                           // Determines if this frame of data has been published (IFrame.Published)
-        private int m_sortedMeasurements;                                                   // Total measurements published into this frame        (IFrame.SortedMeasurements)
-        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements; // Collection of measurements published by this frame  (IFrame.Measurements)
-        private IMeasurement m_lastSortedMeasurement;                                       // Last measurement sorted into this frame             (IFrame.LastSortedMeasurement)
+        private ushort m_idCode;                            // Numeric identifier of this frame of data (e.g., ID code of the PDC)
+        private readonly IChannelCellCollection<T> m_cells; // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
+        private Ticks m_timestamp;                          // Time, represented as 100-nanosecond ticks, of this frame of data
+        private ShortTime m_lifespan;                       // Elapsed time since creation of this frame of data
+        private SourceChannel m_source;                     // Defines source channel (e.g., data or command) for channel frame
+        private bool m_trustHeaderLength;                   // Determines if parsed header lengths should be trusted (normally true)
+        private bool m_validateCheckSum;                    // Allows bypass of check-sum validation if devices are behaving badly
+        private bool m_published;                           // Determines if this frame of data has been published (IFrame.Published)
+        private int m_sortedMeasurements;                   // Total measurements published into this frame        (IFrame.SortedMeasurements)
+        private IMeasurement m_lastSortedMeasurement;       // Last measurement sorted into this frame             (IFrame.LastSortedMeasurement)
 
         #endregion
 
@@ -86,7 +84,7 @@ namespace GSF.PhasorProtocols
             m_lifespan = ShortTime.Now;
             m_trustHeaderLength = true;
             m_validateCheckSum = true;
-            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
+            Measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
             m_sortedMeasurements = -1;
         }
 
@@ -104,7 +102,7 @@ namespace GSF.PhasorProtocols
             m_lifespan = ShortTime.Now;
             m_trustHeaderLength = true;
             m_validateCheckSum = true;
-            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
+            Measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
             m_sortedMeasurements = -1;
         }
 
@@ -125,14 +123,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual SourceChannel Source
         {
-            get
-            {
-                return m_source;
-            }
-            set
-            {
-                m_source = value;
-            }
+            get => m_source;
+            set => m_source = value;
         }
 
         /// <summary>
@@ -159,21 +151,15 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Represents a dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
         /// </remarks>
-        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements => m_measurements;
+        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements { get; }
 
         /// <summary>
         /// Gets or sets the ID code of this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
         public virtual ushort IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
-            set
-            {
-                m_idCode = value;
-            }
+            get => m_idCode;
+            set => m_idCode = value;
         }
 
         /// <summary>
@@ -184,14 +170,8 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual Ticks Timestamp
         {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
+            get => m_timestamp;
+            set => m_timestamp = value;
         }
 
         /// <summary>
@@ -207,23 +187,14 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets UNIX based time representation of the ticks of this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
-        public virtual UnixTimeTag TimeTag
-        {
-            get
-            {
-                return new UnixTimeTag(Timestamp);
-            }
-        }
+        public virtual UnixTimeTag TimeTag => new UnixTimeTag(Timestamp);
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
         public new virtual IChannelFrameParsingState<T> State
         {
-            get
-            {
-                return base.State as IChannelFrameParsingState<T>;
-            }
+            get => base.State as IChannelFrameParsingState<T>;
             set
             {
                 base.State = value;
@@ -240,14 +211,8 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public IMeasurement LastSortedMeasurement
         {
-            get
-            {
-                return m_lastSortedMeasurement;
-            }
-            set
-            {
-                m_lastSortedMeasurement = value;
-            }
+            get => m_lastSortedMeasurement;
+            set => m_lastSortedMeasurement = value;
         }
 
         /// <summary>
@@ -255,14 +220,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public bool Published
         {
-            get
-            {
-                return m_published;
-            }
-            set
-            {
-                m_published = value;
-            }
+            get => m_published;
+            set => m_published = value;
         }
 
         /// <summary>
@@ -273,14 +232,11 @@ namespace GSF.PhasorProtocols
             get
             {
                 if (m_sortedMeasurements == -1)
-                    return m_measurements.Count;
+                    return Measurements.Count;
 
                 return m_sortedMeasurements;
             }
-            set
-            {
-                m_sortedMeasurements = value;
-            }
+            set => m_sortedMeasurements = value;
         }
 
         /// <summary>
@@ -296,8 +252,8 @@ namespace GSF.PhasorProtocols
                 // We override normal binary length so we can extend length to include checksum.
                 // Also, if frame length was parsed from stream header - we use that length
                 // instead of the calculated length...
-                if (m_parsedBinaryLength > 0)
-                    return m_parsedBinaryLength;
+                if (ParsedBinaryLength > 0)
+                    return ParsedBinaryLength;
 
                 return 2 + base.BinaryLength;
             }
@@ -332,14 +288,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual bool TrustHeaderLength
         {
-            get
-            {
-                return m_trustHeaderLength;
-            }
-            set
-            {
-                m_trustHeaderLength = value;
-            }
+            get => m_trustHeaderLength;
+            set => m_trustHeaderLength = value;
         }
 
         /// <summary>
@@ -347,14 +297,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual bool ValidateCheckSum
         {
-            get
-            {
-                return m_validateCheckSum;
-            }
-            set
-            {
-                m_validateCheckSum = value;
-            }
+            get => m_validateCheckSum;
+            set => m_validateCheckSum = value;
         }
 
         /// <summary>
@@ -363,13 +307,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// The length of the <see cref="ChannelFrameBase{T}"/> body image is the combined length of all the <see cref="Cells"/>.
         /// </remarks>
-        protected override int BodyLength
-        {
-            get
-            {
-                return m_cells.BinaryLength;
-            }
-        }
+        protected override int BodyLength => m_cells.BinaryLength;
 
         /// <summary>
         /// Gets the binary body image of this <see cref="ChannelFrameBase{T}"/>.
@@ -377,24 +315,12 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// The body image of the <see cref="ChannelFrameBase{T}"/> is the combined images of all the <see cref="Cells"/>.
         /// </remarks>
-        protected override byte[] BodyImage
-        {
-            get
-            {
-                return m_cells.BinaryImage();
-            }
-        }
+        protected override byte[] BodyImage => m_cells.BinaryImage();
 
         /// <summary>
         /// Gets the parsed binary length derived from the parsing state, if any.
         /// </summary>
-        protected int ParsedBinaryLength
-        {
-            get
-            {
-                return m_parsedBinaryLength;
-            }
-        }
+        protected int ParsedBinaryLength { get; private set; }
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ChannelFrameBase{T}"/> object.
@@ -405,7 +331,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                if ((object)Cells == null)
+                if (Cells is null)
                     baseAttributes.Add("Total Cells", "null");
                 else
                     baseAttributes.Add("Total Cells", Cells.Count.ToString());
@@ -441,7 +367,7 @@ namespace GSF.PhasorProtocols
         {
             // We use data length parsed from data stream if available - in many cases we'll have to as we won't enough
             // information about cell contents at this early parsing stage
-            m_parsedBinaryLength = State.ParsedBinaryLength;
+            ParsedBinaryLength = State.ParsedBinaryLength;
 
             // Normal binary image parsing is overridden for a frame so that checksum can be validated           
             if (!ChecksumIsValid(buffer, startIndex))
@@ -449,7 +375,7 @@ namespace GSF.PhasorProtocols
                 // If user selects incorrect protocol, image may be very large - so we don't log the image 
                 //  byte[] binaryImageErr = buffer.BlockCopy(startIndex, length);
                 //  + BitConverter.ToString(binaryImageErr)
-                throw new CrcException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
+                throw new CrcException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
             }
 
             if (TrustHeaderLength)
@@ -490,7 +416,7 @@ namespace GSF.PhasorProtocols
                 index += parsedLength;
             }
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -573,9 +499,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>This frame implementation compares itself by timestamp.</remarks>
         public virtual int CompareTo(object obj)
         {
-            IFrame other = obj as IFrame;
-
-            if (other != null)
+            if (obj is IFrame other)
                 return CompareTo(other);
 
             throw new ArgumentException("Frame can only be compared with other IFrames...");
@@ -592,7 +516,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>This frame implementation compares itself by timestamp.</remarks>
         public virtual bool Equals(IFrame other)
         {
-            return (CompareTo(other) == 0);
+            return CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -606,9 +530,7 @@ namespace GSF.PhasorProtocols
         /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="IFrame"/>.</exception>
         public override bool Equals(object obj)
         {
-            IFrame other = obj as IFrame;
-
-            if (other != null)
+            if (obj is IFrame other)
                 return Equals(other);
 
             return false;

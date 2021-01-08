@@ -111,14 +111,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public new DataFrame Parent
         {
-            get
-            {
-                return base.Parent as DataFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -126,14 +120,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public new ConfigurationCell ConfigurationCell
         {
-            get
-            {
-                return base.ConfigurationCell as ConfigurationCell;
-            }
-            set
-            {
-                base.ConfigurationCell = value;
-            }
+            get => base.ConfigurationCell as ConfigurationCell;
+            set => base.ConfigurationCell = value;
         }
 
         /// <summary>
@@ -141,14 +129,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public new StatusFlags StatusFlags
         {
-            get
-            {
-                return (StatusFlags)(base.StatusFlags & ~(ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask));
-            }
-            set
-            {
-                base.StatusFlags = (ushort)((base.StatusFlags & (ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
-            }
+            get => (StatusFlags)(base.StatusFlags & ~(ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask));
+            set => base.StatusFlags = (ushort)((base.StatusFlags & (ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
         }
 
         /// <summary>
@@ -156,14 +138,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public UnlockedTime UnlockedTime
         {
-            get
-            {
-                return (UnlockedTime)(base.StatusFlags & (ushort)StatusFlags.UnlockedTimeMask);
-            }
+            get => (UnlockedTime)(base.StatusFlags & (ushort)StatusFlags.UnlockedTimeMask);
             set
             {
                 base.StatusFlags = (ushort)((base.StatusFlags & ~(ushort)StatusFlags.UnlockedTimeMask) | (ushort)value);
-                SynchronizationIsValid = (value == UnlockedTime.SyncLocked);
+                SynchronizationIsValid = value == UnlockedTime.SyncLocked;
             }
         }
 
@@ -172,14 +151,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public TriggerReason TriggerReason
         {
-            get
-            {
-                return (TriggerReason)(base.StatusFlags & (short)StatusFlags.TriggerReasonMask);
-            }
+            get => (TriggerReason)(base.StatusFlags & (short)StatusFlags.TriggerReasonMask);
             set
             {
                 base.StatusFlags = (ushort)((base.StatusFlags & ~(short)StatusFlags.TriggerReasonMask) | (ushort)value);
-                DeviceTriggerDetected = (value != TriggerReason.Manual);
+                DeviceTriggerDetected = value != TriggerReason.Manual;
             }
         }
 
@@ -188,10 +164,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public override bool DataIsValid
         {
-            get
-            {
-                return (StatusFlags & StatusFlags.DataIsValid) == 0;
-            }
+            get => (StatusFlags & StatusFlags.DataIsValid) == 0;
             set
             {
                 if (value)
@@ -206,10 +179,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public override bool SynchronizationIsValid
         {
-            get
-            {
-                return (StatusFlags & StatusFlags.DeviceSynchronizationError) == 0;
-            }
+            get => (StatusFlags & StatusFlags.DeviceSynchronizationError) == 0;
             set
             {
                 if (value)
@@ -224,10 +194,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public override DataSortingType DataSortingType
         {
-            get
-            {
-                return (((StatusFlags & StatusFlags.DataSortingType) == 0) ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
-            }
+            get => (StatusFlags & StatusFlags.DataSortingType) == 0 ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
             set
             {
                 if (value == DataSortingType.ByTimestamp)
@@ -242,10 +209,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public override bool DeviceError
         {
-            get
-            {
-                return (StatusFlags & StatusFlags.DeviceError) > 0;
-            }
+            get => (StatusFlags & StatusFlags.DeviceError) > 0;
             set
             {
                 if (value)
@@ -260,10 +224,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public bool DeviceTriggerDetected
         {
-            get
-            {
-                return (StatusFlags & StatusFlags.DeviceTriggerDetected) > 0;
-            }
+            get => (StatusFlags & StatusFlags.DeviceTriggerDetected) > 0;
             set
             {
                 if (value)
@@ -278,10 +239,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public bool ConfigurationChangeDetected
         {
-            get
-            {
-                return (StatusFlags & StatusFlags.ConfigurationChanged) > 0;
-            }
+            get => (StatusFlags & StatusFlags.ConfigurationChanged) > 0;
             set
             {
                 if (value)

@@ -76,37 +76,19 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
         /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return 256;
-            }
-        }
+        public override int MaximumLabelLength => 256;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        protected override int BodyLength => 0;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="DigitalDefinition"/> object.
@@ -114,15 +96,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <remarks>
         /// BPA PDCstream does not include digital definition in descriptor packet.  Only a count of available values is defined in the data frame.
         /// </remarks>
-        protected override byte[] BodyImage
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected override byte[] BodyImage => null;
 
-        #endregion
+    #endregion
 
         #region [ Static ]
 

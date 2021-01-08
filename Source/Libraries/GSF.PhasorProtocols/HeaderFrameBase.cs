@@ -69,38 +69,20 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="HeaderFrameBase"/>.
         /// </summary>
-        public override FundamentalFrameType FrameType
-        {
-            get
-            {
-                return FundamentalFrameType.HeaderFrame;
-            }
-        }
+        public override FundamentalFrameType FrameType => FundamentalFrameType.HeaderFrame;
 
         /// <summary>
         /// Gets reference to the <see cref="HeaderCellCollection"/> for this <see cref="HeaderFrameBase"/>.
         /// </summary>
-        public new virtual HeaderCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as HeaderCellCollection;
-            }
-        }
+        public new virtual HeaderCellCollection Cells => base.Cells as HeaderCellCollection;
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="HeaderFrameBase"/>.
         /// </summary>
         public new virtual IHeaderFrameParsingState State
         {
-            get
-            {
-                return base.State as IHeaderFrameParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as IHeaderFrameParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
@@ -108,10 +90,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual string HeaderData
         {
-            get
-            {
-                return Encoding.ASCII.GetString(Cells.BinaryImage());
-            }
+            get => Encoding.ASCII.GetString(Cells.BinaryImage());
             set
             {
                 Cells.Clear();

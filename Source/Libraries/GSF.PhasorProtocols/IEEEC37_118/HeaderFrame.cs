@@ -96,10 +96,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         public override Ticks Timestamp
         {
-            get
-            {
-                return CommonHeader.Timestamp;
-            }
+            get => CommonHeader.Timestamp;
             set
             {
                 // Keep timestamp updates synchrnonized...
@@ -111,13 +108,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the identifier that is used to identify the IEEE C37.118 frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return IEEEC37_118.FrameType.HeaderFrame;
-            }
-        }
+        public FrameType TypeID => IEEEC37_118.FrameType.HeaderFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
@@ -128,7 +119,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader == null)
+                if (m_frameHeader is null)
                     m_frameHeader = new CommonFrameHeader(null, TypeID, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
@@ -137,62 +128,38 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                {
-                    State = m_frameHeader.State as IHeaderFrameParsingState;
-                    base.Timestamp = m_frameHeader.Timestamp;
-                }
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as IHeaderFrameParsingState;
+                base.Timestamp = m_frameHeader.Timestamp;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
         /// Gets the IEEE C37.118 protocol version of this <see cref="HeaderFrame"/>.
         /// </summary>
-        public byte Version
-        {
-            get
-            {
-                return CommonHeader.Version;
-            }
-        }
+        public byte Version => CommonHeader.Version;
 
         /// <summary>
         /// Gets the IEEE C37.118 timebase of this <see cref="HeaderFrame"/>.
         /// </summary>
-        public uint TimeBase
-        {
-            get
-            {
-                return CommonHeader.Timebase;
-            }
-        }
+        public uint TimeBase => CommonHeader.Timebase;
 
         /// <summary>
         /// Gets or sets the <see cref="TimeQualityFlags"/> associated with this <see cref="HeaderFrame"/>.
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
         {
-            get
-            {
-                return CommonHeader.TimeQualityFlags;
-            }
-            set
-            {
-                CommonHeader.TimeQualityFlags = value;
-            }
+            get => CommonHeader.TimeQualityFlags;
+            set => CommonHeader.TimeQualityFlags = value;
         }
 
         /// <summary>
@@ -200,26 +167,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public TimeQualityIndicatorCode TimeQualityIndicatorCode
         {
-            get
-            {
-                return CommonHeader.TimeQualityIndicatorCode;
-            }
-            set
-            {
-                CommonHeader.TimeQualityIndicatorCode = value;
-            }
+            get => CommonHeader.TimeQualityIndicatorCode;
+            set => CommonHeader.TimeQualityIndicatorCode = value;
         }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonFrameHeader.FixedLength;
-            }
-        }
+        protected override int HeaderLength => CommonFrameHeader.FixedLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="HeaderFrame"/> object.

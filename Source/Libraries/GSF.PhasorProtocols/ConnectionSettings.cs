@@ -112,7 +112,7 @@ namespace GSF.PhasorProtocols
             if (!int.TryParse(info.GetOrDefault("FrameRate", "30"), out FrameRate))
                 FrameRate = 30;
 
-            if (!(info.GetOrDefault("AutoRepeatPlayback", "false")).ParseBoolean())
+            if (!info.GetOrDefault("AutoRepeatPlayback", "false").ParseBoolean())
                 AutoRepeatPlayback = false;
 
             if (!int.TryParse(info.GetOrDefault("ByteEncodingDisplayFormat", "0"), out ByteEncodingDisplayFormat))

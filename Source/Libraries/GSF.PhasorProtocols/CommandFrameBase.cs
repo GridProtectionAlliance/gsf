@@ -79,38 +79,20 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="CommandFrameBase"/>.
         /// </summary>
-        public override FundamentalFrameType FrameType
-        {
-            get
-            {
-                return FundamentalFrameType.CommandFrame;
-            }
-        }
+        public override FundamentalFrameType FrameType => FundamentalFrameType.CommandFrame;
 
         /// <summary>
         /// Gets reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrameBase"/>.
         /// </summary>
-        public new virtual CommandCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as CommandCellCollection;
-            }
-        }
+        public new virtual CommandCellCollection Cells => base.Cells as CommandCellCollection;
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="CommandFrameBase"/>.
         /// </summary>
         public new virtual ICommandFrameParsingState State
         {
-            get
-            {
-                return base.State as ICommandFrameParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as ICommandFrameParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
@@ -118,14 +100,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual DeviceCommand Command
         {
-            get
-            {
-                return m_command;
-            }
-            set
-            {
-                m_command = value;
-            }
+            get => m_command;
+            set => m_command = value;
         }
 
         /// <summary>
@@ -133,10 +109,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual byte[] ExtendedData
         {
-            get
-            {
-                return Cells.BinaryImage();
-            }
+            get => Cells.BinaryImage();
             set
             {
                 Cells.Clear();
@@ -148,13 +121,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return base.BodyLength + 2;
-            }
-        }
+        protected override int BodyLength => base.BodyLength + 2;
 
         /// <summary>
         /// Gets the binary body image of this <see cref="CommandFrameBase"/>.

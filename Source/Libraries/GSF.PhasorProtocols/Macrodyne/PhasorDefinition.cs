@@ -31,6 +31,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.Macrodyne
 {
     /// <summary>
@@ -84,62 +85,44 @@ namespace GSF.PhasorProtocols.Macrodyne
             string entryType = entry[0].Trim().Substring(0, 1).ToUpper();
             PhasorDefinition defaultPhasor;
 
-            if (parent != null)
+            if (parent is null)
             {
-                ConfigurationFrame configFile = this.Parent.Parent;
-
-                if (entryType == "V")
-                {
-                    PhasorType = PhasorType.Voltage;
-                    defaultPhasor = configFile.DefaultPhasorV;
-                }
-                else if (entryType == "I")
-                {
-                    PhasorType = PhasorType.Current;
-                    defaultPhasor = configFile.DefaultPhasorI;
-                }
-                else
-                {
-                    PhasorType = PhasorType.Voltage;
-                    defaultPhasor = configFile.DefaultPhasorV;
-                }
+                defaultPhasor = new PhasorDefinition(null);
             }
             else
             {
-                defaultPhasor = new PhasorDefinition(null as ConfigurationCell);
+                ConfigurationFrame configFile = Parent.Parent;
+
+                switch (entryType)
+                {
+                    case "V":
+                        PhasorType = PhasorType.Voltage;
+                        defaultPhasor = configFile.DefaultPhasorV;
+                        break;
+                    case "I":
+                        PhasorType = PhasorType.Current;
+                        defaultPhasor = configFile.DefaultPhasorI;
+                        break;
+                    default:
+                        PhasorType = PhasorType.Voltage;
+                        defaultPhasor = configFile.DefaultPhasorV;
+                        break;
+                }
             }
 
-            if (entry.Length > 1)
-                Ratio = double.Parse(entry[1].Trim());
-            else
-                Ratio = defaultPhasor.Ratio;
+            
+            Ratio = entry.Length > 1 ? double.Parse(entry[1].Trim()) : defaultPhasor.Ratio;
 
             if (entry.Length > 2)
                 CalFactor = double.Parse(entry[2].Trim());
             else
                 ConversionFactor = defaultPhasor.ConversionFactor;
 
-            if (entry.Length > 3)
-                Offset = double.Parse(entry[3].Trim());
-            else
-                Offset = defaultPhasor.Offset;
-
-            if (entry.Length > 4)
-                Shunt = double.Parse(entry[4].Trim());
-            else
-                Shunt = defaultPhasor.Shunt;
-
-            if (entry.Length > 5)
-                VoltageReferenceIndex = (int)double.Parse(entry[5].Trim());
-            else
-                VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex;
-
-            if (entry.Length > 6)
-                Label = entry[6].Trim();
-            else
-                Label = defaultPhasor.Label;
-
-            this.Index = index;
+            Offset = entry.Length > 3 ? double.Parse(entry[3].Trim()) : defaultPhasor.Offset;
+            Shunt = entry.Length > 4 ? double.Parse(entry[4].Trim()) : defaultPhasor.Shunt;
+            VoltageReferenceIndex = entry.Length > 5 ? (int)double.Parse(entry[5].Trim()) : defaultPhasor.VoltageReferenceIndex;
+            Label = entry.Length > 6 ? entry[6].Trim() : defaultPhasor.Label;
+            Index = index;
         }
 
         /// <summary>
@@ -166,14 +149,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -187,10 +164,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         public override double ConversionFactor
         {
             // Macordyne uses a custom conversion factor (see shared overload below)
-            get
-            {
-                return 1.0D;
-            }
+            get => 1.0D;
             set
             {
                 // Ignore updates...
@@ -202,14 +176,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public double Ratio
         {
-            get
-            {
-                return m_ratio;
-            }
-            set
-            {
-                m_ratio = value;
-            }
+            get => m_ratio;
+            set => m_ratio = value;
         }
 
         /// <summary>
@@ -217,14 +185,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public double CalFactor
         {
-            get
-            {
-                return m_calFactor;
-            }
-            set
-            {
-                m_calFactor = value;
-            }
+            get => m_calFactor;
+            set => m_calFactor = value;
         }
 
         /// <summary>
@@ -232,14 +194,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public double Shunt
         {
-            get
-            {
-                return m_shunt;
-            }
-            set
-            {
-                m_shunt = value;
-            }
+            get => m_shunt;
+            set => m_shunt = value;
         }
 
         /// <summary>
@@ -247,26 +203,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public int VoltageReferenceIndex
         {
-            get
-            {
-                return m_voltageReferenceIndex;
-            }
-            set
-            {
-                m_voltageReferenceIndex = value;
-            }
+            get => m_voltageReferenceIndex;
+            set => m_voltageReferenceIndex = value;
         }
 
         /// <summary>
         /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="PhasorDefinition"/>.
         /// </summary>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return 256;
-            }
-        }
+        public override int MaximumLabelLength => 256;
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorDefinition"/> object.
@@ -324,21 +268,16 @@ namespace GSF.PhasorProtocols.Macrodyne
         // Creates phasor information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IPhasorDefinition definition)
         {
-            PhasorDefinition phasor = definition as PhasorDefinition;
-
-            if (phasor != null)
-            {
+            if (definition is PhasorDefinition phasor)
                 return (phasor.PhasorType == PhasorType.Voltage ? "V" : "I") + "," + phasor.Ratio + "," + phasor.CalFactor + "," + phasor.Offset + "," + phasor.Shunt + "," + phasor.VoltageReferenceIndex + "," + phasor.Label;
-            }
-            else if (definition != null)
-            {
-                if (definition.PhasorType == PhasorType.Voltage)
-                    return "V,4500.0,0.0060573,0,0,500," + definition.Label.ToNonNullString("Default 500kV");
-                else
-                    return "I,600.00,0.000040382,0,1,1," + definition.Label.ToNonNullString("Default Current");
-            }
 
-            return "";
+            if (definition is null)
+                return "";
+
+            if (definition.PhasorType == PhasorType.Voltage)
+                return "V,4500.0,0.0060573,0,0,500," + definition.Label.ToNonNullString("Default 500kV");
+            
+            return "I,600.00,0.000040382,0,1,1," + definition.Label.ToNonNullString("Default Current");
         }
 
         #endregion

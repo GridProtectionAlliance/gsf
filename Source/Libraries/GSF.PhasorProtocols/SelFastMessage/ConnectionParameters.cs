@@ -82,14 +82,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         DefaultValue(typeof(MessagePeriod), "DefaultRate")]
         public MessagePeriod MessagePeriod
         {
-            get
-            {
-                return m_messagePeriod;
-            }
-            set
-            {
-                m_messagePeriod = value;
-            }
+            get => m_messagePeriod;
+            set => m_messagePeriod = value;
         }
 
         #endregion

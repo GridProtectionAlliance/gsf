@@ -86,14 +86,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual IDataCell Parent
         {
-            get
-            {
-                return m_parent;
-            }
-            set
-            {
-                m_parent = value;
-            }
+            get => m_parent;
+            set => m_parent = value;
         }
 
         /// <summary>
@@ -101,14 +95,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual T Definition
         {
-            get
-            {
-                return m_definition;
-            }
-            set
-            {
-                m_definition = value;
-            }
+            get => m_definition;
+            set => m_definition = value;
         }
 
         /// <summary>
@@ -140,7 +128,7 @@ namespace GSF.PhasorProtocols
             get
             {
                 // Create a measurement instance for each composite value the derived channel value exposes
-                if ((object)m_measurements == null)
+                if (m_measurements is null)
                 {
                     m_measurements = new IMeasurement[CompositeValueCount];
 

@@ -79,14 +79,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -94,14 +88,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual FrequencyDefinition Definition
         {
-            get
-            {
-                return base.Definition as FrequencyDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as FrequencyDefinition;
+            set => base.Definition = value;
         }
 
         /// <summary>
@@ -119,8 +107,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 // PMUs in PDC block do not include Df/Dt
                 if (Definition.Parent.IsPdcBlockSection)
                     return 2;
-                else
-                    return base.BodyLength;
+                return base.BodyLength;
             }
         }
 
@@ -178,7 +165,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         internal static uint CalculateBinaryLength(IFrequencyDefinition definition)
         {
             // The frequency definition will determine the binary length based on data format
-            return (uint)(new FrequencyValue(null, definition)).BinaryLength;
+            return (uint)new FrequencyValue(null, definition).BinaryLength;
         }
 
         // Delegate handler to create a new BPA PDCstream frequency value

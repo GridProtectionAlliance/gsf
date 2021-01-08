@@ -81,7 +81,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             int sumLength = FrameLength - 2;
 
             if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
+                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
 
             ParseBinaryImage(buffer, startIndex, length);
         }
@@ -121,13 +121,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// Gets reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrame"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)] // IEEE 1344 command frame doesn't support extended data - so we hide cell collection property...
-        public override CommandCellCollection Cells
-        {
-            get
-            {
-                return base.Cells;
-            }
-        }
+        public override CommandCellCollection Cells => base.Cells;
 
         /// <summary>
         /// Gets or sets extended binary image data for this <see cref="CommandFrame"/>.
@@ -135,14 +129,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         [EditorBrowsable(EditorBrowsableState.Never)] // IEEE 1344 command frame doesn't support extended data - so we hide extended data property...
         public override byte[] ExtendedData
         {
-            get
-            {
-                return base.ExtendedData;
-            }
-            set
-            {
-                base.ExtendedData = value;
-            }
+            get => base.ExtendedData;
+            set => base.ExtendedData = value;
         }
 
         /// <summary>
@@ -150,10 +138,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new ulong IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
+            get => m_idCode;
             set
             {
                 m_idCode = value;
@@ -166,24 +151,12 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets NTP based time representation of the ticks of this <see cref="CommandFrame"/>.
         /// </summary>
-        public new NtpTimeTag TimeTag
-        {
-            get
-            {
-                return new NtpTimeTag(Timestamp);
-            }
-        }
+        public new NtpTimeTag TimeTag => new NtpTimeTag(Timestamp);
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return 12;
-            }
-        }
+        protected override int HeaderLength => 12;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="CommandFrame"/> object.
@@ -229,7 +202,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
         {
-            Timestamp = (new NtpTimeTag(BigEndian.ToUInt32(buffer, startIndex), 0)).ToDateTime().Ticks;
+            Timestamp = new NtpTimeTag(BigEndian.ToUInt32(buffer, startIndex), 0).ToDateTime().Ticks;
             m_idCode = BigEndian.ToUInt64(buffer, startIndex + 4);
             return 12;
         }

@@ -95,49 +95,25 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
-        public override DataFormat DataFormat
-        {
-            get
-            {
-                return Parent.PhasorDataFormat;
-            }
-        }
+        public override DataFormat DataFormat => Parent.PhasorDataFormat;
 
         /// <summary>
         /// Gets or sets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
-        public virtual CoordinateFormat CoordinateFormat
-        {
-            get
-            {
-                return Parent.PhasorCoordinateFormat;
-            }
-        }
+        public virtual CoordinateFormat CoordinateFormat => Parent.PhasorCoordinateFormat;
 
         /// <summary>
         /// Gets or sets the <see cref="GSF.PhasorProtocols.AngleFormat"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
-        public virtual AngleFormat AngleFormat
-        {
-            get
-            {
-                return Parent.PhasorAngleFormat;
-            }
-        }
+        public virtual AngleFormat AngleFormat => Parent.PhasorAngleFormat;
 
         /// <summary>
         /// Gets or sets the <see cref="PhasorType"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
         public virtual PhasorType PhasorType
         {
-            get
-            {
-                return m_type;
-            }
-            set
-            {
-                m_type = value;
-            }
+            get => m_type;
+            set => m_type = value;
         }
 
         /// <summary>
@@ -148,10 +124,7 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         public virtual IPhasorDefinition VoltageReference
         {
-            get
-            {
-                return m_voltageReference;
-            }
+            get => m_voltageReference;
             set
             {
                 if (m_type == PhasorType.Voltage)

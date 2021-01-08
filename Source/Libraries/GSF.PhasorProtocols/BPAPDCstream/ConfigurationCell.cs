@@ -112,14 +112,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new ConfigurationFrame Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -127,14 +121,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ConfigurationCell ConfigurationFileCell
         {
-            get
-            {
-                return m_configurationFileCell;
-            }
-            set
-            {
-                m_configurationFileCell = value;
-            }
+            get => m_configurationFileCell;
+            set => m_configurationFileCell = value;
         }
 
         /// <summary>
@@ -144,7 +132,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.PhasorDefinitions;
 
                 return m_configurationFileCell.PhasorDefinitions;
@@ -158,14 +146,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.StationName;
 
                 return m_configurationFileCell.StationName;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     base.StationName = value;
                 else
                     m_configurationFileCell.StationName = value;
@@ -175,25 +163,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets the length of the <see cref="ConfigurationCellBase.IDLabel"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int IDLabelLength
-        {
-            get
-            {
-                // BPA PDCstream ID label length is 4 characters - max!
-                return 4;
-            }
-        }
+        public override int IDLabelLength =>
+            // BPA PDCstream ID label length is 4 characters - max!
+            4;
 
         /// <summary>
         /// Gets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
-        public bool UsePhasorDataFileFormat
-        {
-            get
-            {
-                return Parent.UsePhasorDataFileFormat;
-            }
-        }
+        public bool UsePhasorDataFileFormat => Parent.UsePhasorDataFileFormat;
 
         /// <summary>
         /// Gets or sets section entry in INI based configuration file for this <see cref="ConfigurationCell"/>.
@@ -202,7 +179,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return m_sectionEntry;
 
                 return m_configurationFileCell.SectionEntry;
@@ -229,12 +206,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                 {
                     if (string.IsNullOrEmpty(m_sectionEntry))
                         return false;
 
-                    return (m_sectionEntry.Length > IDLabelLength);
+                    return m_sectionEntry.Length > IDLabelLength;
                 }
 
                 return m_configurationFileCell.IsPdcBlockSection;
@@ -248,14 +225,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.IDCode;
 
                 return m_configurationFileCell.IDCode;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     base.IDCode = value;
                 else
                     m_configurationFileCell.IDCode = value;
@@ -269,14 +246,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.FrequencyDefinition;
 
                 return m_configurationFileCell.FrequencyDefinition;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     base.FrequencyDefinition = value;
                 else
                     m_configurationFileCell.FrequencyDefinition = value;
@@ -290,14 +267,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                     return base.NominalFrequency;
 
                 return m_configurationFileCell.NominalFrequency;
             }
             set
             {
-                if (m_configurationFileCell == null)
+                if (m_configurationFileCell is null)
                 {
                     base.NominalFrequency = value;
                 }
@@ -311,28 +288,17 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets the maximum length of the <see cref="StationName"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int MaximumStationNameLength
-        {
-            get
-            {
-                // The station name in the PDCstream is read from an INI file, so there is no set limit
-                return int.MaxValue;
-            }
-        }
+        public override int MaximumStationNameLength =>
+            // The station name in the PDCstream is read from an INI file, so there is no set limit
+            int.MaxValue;
 
         /// <summary>
         /// Gets or sets BPA PDCstream descriptor offset of this <see cref="ConfigurationCell"/> in its data packet.
         /// </summary>
         public ushort Offset
         {
-            get
-            {
-                return m_offset;
-            }
-            set
-            {
-                m_offset = value;
-            }
+            get => m_offset;
+            set => m_offset = value;
         }
 
         /// <summary>
@@ -340,14 +306,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort Reserved
         {
-            get
-            {
-                return m_reserved;
-            }
-            set
-            {
-                m_reserved = value;
-            }
+            get => m_reserved;
+            set => m_reserved = value;
         }
 
         /// <summary>
@@ -359,14 +319,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public FormatFlags FormatFlags
         {
-            get
-            {
-                return m_formatFlags;
-            }
-            set
-            {
-                m_formatFlags = value;
-            }
+            get => m_formatFlags;
+            set => m_formatFlags = value;
         }
 
         /// <summary>
@@ -374,10 +328,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override DataFormat PhasorDataFormat
         {
-            get
-            {
-                return (((m_formatFlags & FormatFlags.Phasors) > 0) ? DataFormat.FloatingPoint : DataFormat.FixedInteger);
-            }
+            get => (m_formatFlags & FormatFlags.Phasors) > 0 ? DataFormat.FloatingPoint : DataFormat.FixedInteger;
             set
             {
                 if (value == DataFormat.FloatingPoint)
@@ -392,10 +343,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override CoordinateFormat PhasorCoordinateFormat
         {
-            get
-            {
-                return (((m_formatFlags & FormatFlags.Coordinates) > 0) ? CoordinateFormat.Polar : CoordinateFormat.Rectangular);
-            }
+            get => (m_formatFlags & FormatFlags.Coordinates) > 0 ? CoordinateFormat.Polar : CoordinateFormat.Rectangular;
             set
             {
                 if (value == CoordinateFormat.Polar)
@@ -410,10 +358,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override DataFormat FrequencyDataFormat
         {
-            get
-            {
-                return (((m_formatFlags & FormatFlags.Frequency) > 0) ? DataFormat.FloatingPoint : DataFormat.FixedInteger);
-            }
+            get => (m_formatFlags & FormatFlags.Frequency) > 0 ? DataFormat.FloatingPoint : DataFormat.FixedInteger;
             set
             {
                 if (value == DataFormat.FloatingPoint)
@@ -428,10 +373,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override DataFormat AnalogDataFormat
         {
-            get
-            {
-                return (((m_formatFlags & FormatFlags.Analog) > 0) ? DataFormat.FloatingPoint : DataFormat.FixedInteger);
-            }
+            get => (m_formatFlags & FormatFlags.Analog) > 0 ? DataFormat.FloatingPoint : DataFormat.FixedInteger;
             set
             {
                 if (value == DataFormat.FloatingPoint)
@@ -449,35 +391,17 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        protected override int HeaderLength => 0;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationCell"/> object.
         /// </summary>
-        protected override byte[] HeaderImage
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected override byte[] HeaderImage => null;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return FixedBodyLength;
-            }
-        }
+        protected override int BodyLength => FixedBodyLength;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="ConfigurationCell"/> object.
@@ -500,24 +424,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        protected override int FooterLength => 0;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="ConfigurationCell"/> object.
         /// </summary>
-        protected override byte[] FooterImage
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected override byte[] FooterImage => null;
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationCell"/> object.

@@ -38,6 +38,7 @@ using GSF.IO.Checksums;
 using GSF.Parsing;
 using GSF.Reflection;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
@@ -76,18 +77,13 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Fields
         private CommonFrameHeader m_frameHeader;
         private IniFile m_iniFile;
-        private ConfigurationCellCollection m_configurationFileCells;
-        private PhasorDefinition m_defaultPhasorV;
-        private PhasorDefinition m_defaultPhasorI;
-        private FrequencyDefinition m_defaultFrequency;
         private uint m_rowLength;
         private ushort m_packetsPerSample;
         private StreamType m_streamType;
         private RevisionNumber m_revisionNumber;
         private uint m_sampleIndex;
-        private bool m_usePhasorDataFileFormat;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -151,12 +147,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             // The usePhasorDataFileFormat flag and other new elements did not exist in prior versions so we protect against possible deserialization failures
             try
             {
-                m_usePhasorDataFileFormat = info.GetBoolean("usePhasorDataFileFormat");
+                UsePhasorDataFileFormat = info.GetBoolean("usePhasorDataFileFormat");
                 m_rowLength = info.GetUInt32("rowLength");
             }
             catch (SerializationException)
             {
-                m_usePhasorDataFileFormat = false;
+                UsePhasorDataFileFormat = false;
                 m_rowLength = 0;
             }
 
@@ -170,67 +166,41 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> loaded from the configuration file of this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public ConfigurationCellCollection ConfigurationFileCells
-        {
-            get
-            {
-                return m_configurationFileCells;
-            }
-        }
+        public ConfigurationCellCollection ConfigurationFileCells { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return BPAPDCstream.FrameType.ConfigurationFrame;
-            }
-        }
+        public FrameType TypeID => BPAPDCstream.FrameType.ConfigurationFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists
-                if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(Common.DescriptorPacketFlag);
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(Common.DescriptorPacketFlag));
             set
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
+                if (m_frameHeader is null)
+                    return;
+
+                UsePhasorDataFileFormat = m_frameHeader.UsePhasorDataFileFormat;
+                m_sampleIndex = m_frameHeader.StartSample;
+                Timestamp = m_frameHeader.RoughTimestamp;
+                m_rowLength = m_frameHeader.RowLength;
+
+                if (m_frameHeader.State is ConfigurationFrameParsingState parsingState)
                 {
-                    m_usePhasorDataFileFormat = m_frameHeader.UsePhasorDataFileFormat;
-                    m_sampleIndex = m_frameHeader.StartSample;
-                    Timestamp = m_frameHeader.RoughTimestamp;
-                    m_rowLength = m_frameHeader.RowLength;
-
-                    ConfigurationFrameParsingState parsingState = m_frameHeader.State as ConfigurationFrameParsingState;
-
-                    if (parsingState != null)
-                    {
-                        State = parsingState;
-                        m_iniFile = new IniFile(parsingState.ConfigurationFileName);
-                    }
+                    State = parsingState;
+                    m_iniFile = new IniFile(parsingState.ConfigurationFileName);
                 }
             }
         }
@@ -238,14 +208,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
@@ -253,14 +217,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public StreamType StreamType
         {
-            get
-            {
-                return m_streamType;
-            }
-            set
-            {
-                m_streamType = value;
-            }
+            get => m_streamType;
+            set => m_streamType = value;
         }
 
         /// <summary>
@@ -268,14 +226,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public RevisionNumber RevisionNumber
         {
-            get
-            {
-                return m_revisionNumber;
-            }
-            set
-            {
-                m_revisionNumber = value;
-            }
+            get => m_revisionNumber;
+            set => m_revisionNumber = value;
         }
 
         /// <summary>
@@ -283,14 +235,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort PacketsPerSample
         {
-            get
-            {
-                return m_packetsPerSample;
-            }
-            set
-            {
-                m_packetsPerSample = value;
-            }
+            get => m_packetsPerSample;
+            set => m_packetsPerSample = value;
         }
 
         /// <summary>
@@ -298,81 +244,39 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public uint SampleIndex
         {
-            get
-            {
-                return m_sampleIndex;
-            }
-            set
-            {
-                m_sampleIndex = value;
-            }
+            get => m_sampleIndex;
+            set => m_sampleIndex = value;
         }
 
         /// <summary>
         /// Gets the INI based configuration file name of this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public string ConfigurationFileName
-        {
-            get
-            {
-                return m_iniFile.FileName;
-            }
-        }
+        public string ConfigurationFileName => m_iniFile.FileName;
 
         /// <summary>
         /// Gets the default voltage phasor definition.
         /// </summary>
-        public PhasorDefinition DefaultPhasorV
-        {
-            get
-            {
-                return m_defaultPhasorV;
-            }
-        }
+        public PhasorDefinition DefaultPhasorV { get; private set; }
 
         /// <summary>
         /// Gets the default current phasor definition.
         /// </summary>
-        public PhasorDefinition DefaultPhasorI
-        {
-            get
-            {
-                return m_defaultPhasorI;
-            }
-        }
+        public PhasorDefinition DefaultPhasorI { get; private set; }
 
         /// <summary>
         /// Gets the default frequency definition.
         /// </summary>
-        public FrequencyDefinition DefaultFrequency
-        {
-            get
-            {
-                return m_defaultFrequency;
-            }
-        }
+        public FrequencyDefinition DefaultFrequency { get; private set; }
 
         /// <summary>
         /// Gets or sets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
-        public bool UsePhasorDataFileFormat
-        {
-            get
-            {
-                return m_usePhasorDataFileFormat;
-            }
-        }
+        public bool UsePhasorDataFileFormat { get; private set; }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return FixedHeaderLength;
-            }
-        }
+        protected override int HeaderLength => FixedHeaderLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationFrame"/> object.
@@ -381,7 +285,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (!m_usePhasorDataFileFormat)
+                if (!UsePhasorDataFileFormat)
                 {
                     // Make sure to provide proper frame length for use in the common header image
                     CommonHeader.FrameLength = unchecked((ushort)BinaryLength);
@@ -399,10 +303,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                     return buffer;
                 }
-                else
-                {
-                    throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
-                }
+
+                throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
             }
         }
 
@@ -417,7 +319,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                 CommonHeader.AppendHeaderAttributes(baseAttributes);
 
-                if (m_iniFile != null)
+                if (!(m_iniFile is null))
                     baseAttributes.Add("Configuration File Name", m_iniFile.FileName);
 
                 baseAttributes.Add("Stream Type", (int)m_streamType + ": " + m_streamType);
@@ -441,33 +343,31 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
         {
-            if (m_usePhasorDataFileFormat)
+            if (UsePhasorDataFileFormat)
             {
                 // Common frame header will have parsed all phasor data file header information at this point...
                 State.CellCount = unchecked((int)CommonHeader.PmuCount);
 
                 return CommonFrameHeader.DstHeaderFixedLength;
             }
-            else
-            {
-                // Skip past header that was already parsed...
-                startIndex += CommonFrameHeader.FixedLength;
 
-                // Only need to parse what wan't already parsed in common frame header
-                m_streamType = (StreamType)buffer[startIndex];
-                m_revisionNumber = (RevisionNumber)buffer[startIndex + 1];
-                FrameRate = BigEndian.ToUInt16(buffer, startIndex + 2);
-                m_rowLength = BigEndian.ToUInt32(buffer, startIndex + 4);
-                m_packetsPerSample = BigEndian.ToUInt16(buffer, startIndex + 8);
-                State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 10);
+            // Skip past header that was already parsed...
+            startIndex += CommonFrameHeader.FixedLength;
 
-                // The data that's in the data stream will take precedence over what's in the
-                // in the configuration file.  The configuration file may define more PMU's than
-                // are in the stream - in my opinion that's OK - it's when you have PMU's in the
-                // stream that aren't defined in the INI file that you'll have trouble...
+            // Only need to parse what wan't already parsed in common frame header
+            m_streamType = (StreamType)buffer[startIndex];
+            m_revisionNumber = (RevisionNumber)buffer[startIndex + 1];
+            FrameRate = BigEndian.ToUInt16(buffer, startIndex + 2);
+            m_rowLength = BigEndian.ToUInt32(buffer, startIndex + 4);
+            m_packetsPerSample = BigEndian.ToUInt16(buffer, startIndex + 8);
+            State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 10);
 
-                return FixedHeaderLength;
-            }
+            // The data that's in the data stream will take precedence over what's in the
+            // in the configuration file.  The configuration file may define more PMU's than
+            // are in the stream - in my opinion that's OK - it's when you have PMU's in the
+            // stream that aren't defined in the INI file that you'll have trouble...
+
+            return FixedHeaderLength;
         }
 
         /// <summary>
@@ -488,7 +388,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             Refresh(true);
 
             // Move past 4 EOH bytes, minus 2 since DST files do not contain a CRC at the end of each frame
-            if (m_usePhasorDataFileFormat)
+            if (UsePhasorDataFileFormat)
                 parsedLength += 2;
 
             return parsedLength;
@@ -517,18 +417,18 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     ConfigurationCell pmuCell;
                     int phasorCount, pmuCount, x, y;
 
-                    m_defaultPhasorV = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorV", DefaultVoltagePhasorEntry]);
-                    m_defaultPhasorI = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorI", DefaultCurrentPhasorEntry]);
-                    m_defaultFrequency = new FrequencyDefinition(null, m_iniFile["DEFAULT", "Frequency", DefaultFrequencyEntry]);
+                    DefaultPhasorV = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorV", DefaultVoltagePhasorEntry]);
+                    DefaultPhasorI = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorI", DefaultCurrentPhasorEntry]);
+                    DefaultFrequency = new FrequencyDefinition(null, m_iniFile["DEFAULT", "Frequency", DefaultFrequencyEntry]);
                     FrameRate = ushort.Parse(m_iniFile["CONFIG", "SampleRate", "30"]);
 
                     // We read all cells in the config file into their own configuration cell collection - cells parsed
                     // from the configuration frame will be mapped to their associated config file cell by ID label
                     // when the configuration cell is parsed from the configuration frame
-                    if (m_configurationFileCells == null)
-                        m_configurationFileCells = new ConfigurationCellCollection();
+                    if (ConfigurationFileCells is null)
+                        ConfigurationFileCells = new ConfigurationCellCollection();
 
-                    m_configurationFileCells.Clear();
+                    ConfigurationFileCells.Clear();
 
                     // Load phasor data for each section in config file...
                     foreach (string section in m_iniFile.GetSectionNames())
@@ -536,7 +436,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         if (section.Length > 0)
                         {
                             // Make sure this is not a special section
-                            if (string.Compare(section, "DEFAULT", true) != 0 && string.Compare(section, "CONFIG", true) != 0)
+                            if (!string.Equals(section, "DEFAULT", StringComparison.OrdinalIgnoreCase) && !string.Equals(section, "CONFIG", StringComparison.OrdinalIgnoreCase))
                             {
                                 // Create new PMU entry structure from config file settings...
                                 phasorCount = int.Parse(m_iniFile[section, "NumberPhasors", "0"]);
@@ -547,18 +447,21 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                 if (pdcID == -1)
                                 {
                                     // No PDC entry exists, assume this is a PMU
-                                    pmuCell = new ConfigurationCell(this, 0);
-                                    pmuCell.IDCode = ushort.Parse(m_iniFile[section, "PMU", Cells.Count.ToString()]);
-                                    pmuCell.SectionEntry = section; // This will automatically assign ID label as first 4 digits of section
-                                    pmuCell.StationName = m_iniFile[section, "Name", section];
+                                    pmuCell = new ConfigurationCell(this, 0)
+                                    {
+                                        IDCode = ushort.Parse(m_iniFile[section, "PMU", Cells.Count.ToString()]),
+                                        SectionEntry = section,
+                                        StationName = m_iniFile[section, "Name", section]
+                                    };
 
+                                    // This will automatically assign ID label as first 4 digits of section
                                     for (x = 0; x < phasorCount; x++)
                                     {
                                         pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, x + 1, m_iniFile[section, "Phasor" + (x + 1), DefaultVoltagePhasorEntry]));
                                     }
 
                                     pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
-                                    m_configurationFileCells.Add(pmuCell);
+                                    ConfigurationFileCells.Add(pmuCell);
                                 }
                                 else
                                 {
@@ -573,16 +476,16 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                         // For BPA INI files, PMUs tradionally have an ID number indexed starting at zero or one - so we multiply
                                         // ID by 1000 and add index to attempt to create a fairly unique ID to help optimize downstream parsing
                                         pmuCell.IDCode = unchecked((ushort)(pdcID * 1000 + x));
-                                        pmuCell.SectionEntry = string.Format("{0}pmu{1}", section, x); // This will automatically assign ID label as first 4 digits of section
-                                        pmuCell.StationName = string.Format("{0} - Device {1}", m_iniFile[section, "Name", section], (x + 1));
+                                        pmuCell.SectionEntry = $"{section}pmu{x}"; // This will automatically assign ID label as first 4 digits of section
+                                        pmuCell.StationName = $"{m_iniFile[section, "Name", section]} - Device {x + 1}";
 
                                         for (y = 0; y < 2; y++)
                                         {
-                                            pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, "Phasor" + ((x * 2) + (y + 1)), DefaultVoltagePhasorEntry]));
+                                            pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, "Phasor" + (x * 2 + y + 1), DefaultVoltagePhasorEntry]));
                                         }
 
                                         pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
-                                        m_configurationFileCells.Add(pmuCell);
+                                        ConfigurationFileCells.Add(pmuCell);
                                     }
                                 }
                             }
@@ -590,10 +493,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     }
 
                     // Associate parsed cells with cells defined in INI file
-                    if (m_configurationFileCells.Count > 0 && (Cells != null))
+                    if (ConfigurationFileCells.Count > 0 && !(Cells is null))
                     {
                         ConfigurationCell configurationFileCell = null;
-                        IConfigurationCell configurationCell = null;
 
                         if (refreshCausedByFrameParse)
                         {
@@ -609,10 +511,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                 cell = Cells[x];
 
                                 // Lookup INI file configuration cell by ID label
-                                m_configurationFileCells.TryGetByIDLabel(cell.IDLabel, out configurationCell);
+                                ConfigurationFileCells.TryGetByIDLabel(cell.IDLabel, out IConfigurationCell configurationCell);
                                 configurationFileCell = (ConfigurationCell)configurationCell;
 
-                                if (configurationFileCell == null)
+                                if (configurationFileCell is null)
                                 {
                                     // Couldn't find associated INI file cell - just append the parsed cell to the collection
                                     cellCollection.Add(cell);
@@ -627,15 +529,15 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                         do
                                         {
                                             // Lookup PMU by section name
-                                            m_configurationFileCells.TryGetBySectionEntry(string.Format("{0}pmu{1}", cell.IDLabel, index), ref configurationFileCell);
+                                            ConfigurationFileCells.TryGetBySectionEntry($"{cell.IDLabel}pmu{index}", ref configurationFileCell);
 
                                             // Add PDC block PMU configuration cell to the collection
-                                            if (configurationFileCell != null)
+                                            if (!(configurationFileCell is null))
                                                 cellCollection.Add(configurationFileCell);
 
                                             index++;
                                         }
-                                        while (configurationFileCell != null);
+                                        while (!(configurationFileCell is null));
                                     }
                                     else
                                     {
@@ -656,21 +558,21 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                             foreach (ConfigurationCell cell in Cells)
                             {
                                 // Attempt to associate this configuration cell with information read from external INI based configuration file
-                                m_configurationFileCells.TryGetBySectionEntry(cell.SectionEntry, ref configurationFileCell);
+                                ConfigurationFileCells.TryGetBySectionEntry(cell.SectionEntry, ref configurationFileCell);
                                 cell.ConfigurationFileCell = configurationFileCell;
                             }
                         }
                     }
                 }
                 else
+                {
                     throw new InvalidOperationException("PDC config file \"" + m_iniFile.FileName + "\" does not exist.");
+                }
             }
 
             // In case other classes want to know, we send out a notification that the config file has been reloaded (make sure
             // you do this after the write lock has been released to avoid possible dead-lock situations)
-            if (ConfigurationFileReloaded != null)
-                ConfigurationFileReloaded(this, EventArgs.Empty);
-
+            ConfigurationFileReloaded?.Invoke(this, EventArgs.Empty);
         }
 
         // RowLength property calculates cell offsets - so it must be called before
@@ -688,11 +590,11 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                     cell.Offset = unchecked((ushort)m_rowLength);
 
-                    m_rowLength += (8 + FrequencyValue.CalculateBinaryLength(cell.FrequencyDefinition));
+                    m_rowLength += 8 + FrequencyValue.CalculateBinaryLength(cell.FrequencyDefinition);
 
                     for (int y = 0; y < cell.PhasorDefinitions.Count; y++)
                     {
-                        m_rowLength += PhasorValue.CalculateBinaryLength(cell.PhasorDefinitions[y]);
+                        m_rowLength += PhasorValue.CalculateBinaryLength(y);
                     }
                 }
             }
@@ -738,16 +640,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </remarks>
         protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
         {
-            if (m_usePhasorDataFileFormat)
+            if (UsePhasorDataFileFormat)
             {
                 // DST files don't use checksums
                 return true;
             }
-            else
-            {
-                int sumLength = BinaryLength - 2;
-                return LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
-            }
+
+            int sumLength = BinaryLength - 2;
+            return LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
         }
 
         /// <summary>
@@ -765,7 +665,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             info.AddValue("streamType", m_streamType, typeof(StreamType));
             info.AddValue("revisionNumber", m_revisionNumber, typeof(RevisionNumber));
             info.AddValue("configurationFileName", m_iniFile.FileName);
-            info.AddValue("usePhasorDataFileFormat", m_usePhasorDataFileFormat);
+            info.AddValue("usePhasorDataFileFormat", UsePhasorDataFileFormat);
             info.AddValue("rowLength", m_rowLength);
         }
 

@@ -27,6 +27,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -37,9 +38,8 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private readonly IConfigurationFrame m_configurationFrame;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -54,11 +54,11 @@ namespace GSF.PhasorProtocols
         public DataFrameParsingState(int parsedBinaryLength, IConfigurationFrame configurationFrame, CreateNewCellFunction<IDataCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
             : base(parsedBinaryLength, createNewCellFunction, trustHeaderLength, validateCheckSum)
         {
-            if (configurationFrame != null)
-            {
-                CellCount = configurationFrame.Cells.Count;
-                m_configurationFrame = configurationFrame;
-            }
+            if (configurationFrame is null)
+                return;
+
+            CellCount = configurationFrame.Cells.Count;
+            ConfigurationFrame = configurationFrame;
         }
 
         #endregion
@@ -68,14 +68,8 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to the <see cref="IConfigurationFrame"/> associated with the <see cref="IDataFrame"/> being parsed.
         /// </summary>
-        public virtual IConfigurationFrame ConfigurationFrame
-        {
-            get
-            {
-                return m_configurationFrame;
-            }
-        }
+        public virtual IConfigurationFrame ConfigurationFrame { get; }
 
-        #endregion
+    #endregion
     }
 }

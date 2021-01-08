@@ -90,14 +90,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public new virtual DataCell Parent
         {
-            get
-            {
-                return base.Parent as DataCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -105,14 +99,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public new virtual PhasorDefinition Definition
         {
-            get
-            {
-                return base.Definition as PhasorDefinition;
-            }
-            set
-            {
-                base.Definition = value;
-            }
+            get => base.Definition as PhasorDefinition;
+            set => base.Definition = value;
         }
 
         #endregion

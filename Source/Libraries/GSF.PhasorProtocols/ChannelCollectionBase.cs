@@ -71,7 +71,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         protected ChannelCollectionBase()
         {
-            m_lastValidIndex = Int32.MaxValue;
+            m_lastValidIndex = int.MaxValue;
         }
 
         /// <summary>
@@ -114,14 +114,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual int MaximumCount
         {
-            get
-            {
-                return m_lastValidIndex + 1;
-            }
-            set
-            {
-                m_lastValidIndex = (value - 1);
-            }
+            get => m_lastValidIndex + 1;
+            set => m_lastValidIndex = value - 1;
         }
 
         /// <summary>
@@ -129,14 +123,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual IChannelParsingState State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
+            get => m_state;
+            set => m_state = value;
         }
 
         /// <summary>
@@ -155,8 +143,8 @@ namespace GSF.PhasorProtocols
 
                 if (count > 0)
                     return this[0].BinaryLength * count;
-                else
-                    return 0;
+
+                return 0;
             }
         }
 
@@ -168,12 +156,12 @@ namespace GSF.PhasorProtocols
             get
             {
                 // Create a new attributes dictionary or clear the contents of any existing one
-                if (m_attributes == null)
+                if (m_attributes is null)
                     m_attributes = new Dictionary<string, string>();
                 else
                     m_attributes.Clear();
 
-                m_attributes.Add("Derived Type", this.GetType().Name);
+                m_attributes.Add("Derived Type", GetType().Name);
                 m_attributes.Add("Binary Length", BinaryLength.ToString());
                 m_attributes.Add("Maximum Count", MaximumCount.ToString());
                 m_attributes.Add("Current Count", Count.ToString());
@@ -187,14 +175,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual object Tag
         {
-            get
-            {
-                return m_tag;
-            }
-            set
-            {
-                m_tag = value;
-            }
+            get => m_tag;
+            set => m_tag = value;
         }
 
         #endregion
@@ -224,7 +206,7 @@ namespace GSF.PhasorProtocols
                 this[x].CopyImage(buffer, ref index);
             }
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         // Collections are not designed to parse binary images
@@ -243,7 +225,7 @@ namespace GSF.PhasorProtocols
         /// <exception cref="ArgumentNullException"><paramref name="collection"/> is null.</exception>
         public virtual void AddRange(IEnumerable<T> collection)
         {
-            if (collection == null)
+            if (collection is null)
                 throw new ArgumentNullException(nameof(collection), "collection is null");
 
             foreach (T item in collection)
@@ -257,8 +239,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual void RefreshBinding()
         {
-            if (CollectionChanged != null)
-                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         /// <summary>
@@ -271,12 +252,11 @@ namespace GSF.PhasorProtocols
         {
             // Interception of inserted items occurs with this override (via Collection<T>) allowing maximum length to be validated
             if (Count > m_lastValidIndex)
-                throw new OverflowException("Maximum " + this.GetType().Name + " item limit reached");
+                throw new OverflowException("Maximum " + GetType().Name + " item limit reached");
 
             base.InsertItem(index, item);
 
-            if (CollectionChanged != null)
-                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
         }
 
         /// <summary>
@@ -285,14 +265,18 @@ namespace GSF.PhasorProtocols
         /// <param name="index">The zero-based index of the element to remove.</param>
         protected override void RemoveItem(int index)
         {
-            if (CollectionChanged != null)
+            if (CollectionChanged is null)
+            {
+                base.RemoveItem(index);
+            }
+            else
             {
                 T oldItem = Items[index];
                 base.RemoveItem(index);
+
+                // ReSharper disable once PossibleNullReferenceException
                 CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, oldItem, index));
             }
-            else
-                base.RemoveItem(index);
         }
 
         /// <summary>
@@ -302,14 +286,18 @@ namespace GSF.PhasorProtocols
         /// <param name="item">The new value for the element at the specified index. The value can be null for reference types.</param>
         protected override void SetItem(int index, T item)
         {
-            if (CollectionChanged != null)
+            if (CollectionChanged == null)
+            {
+                base.SetItem(index, item);
+            }
+            else
             {
                 T oldItem = Items[index];
                 base.SetItem(index, item);
+
+                // ReSharper disable once PossibleNullReferenceException
                 CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, item, oldItem, index));
             }
-            else
-                base.SetItem(index, item);
         }
 
         /// <summary>
@@ -318,9 +306,7 @@ namespace GSF.PhasorProtocols
         protected override void ClearItems()
         {
             base.ClearItems();
-
-            if (CollectionChanged != null)
-                CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         /// <summary>
@@ -329,8 +315,7 @@ namespace GSF.PhasorProtocols
         /// <param name="e">Changed event arguments.</param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (CollectionChanged != null)
-                CollectionChanged(this, e);
+            CollectionChanged?.Invoke(this, e);
         }
 
         /// <summary>

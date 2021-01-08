@@ -83,14 +83,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <param name="index">Index of value to get or set.</param>
         public new ConfigurationCell this[int index]
         {
-            get
-            {
-                return base[index] as ConfigurationCell;
-            }
-            set
-            {
-                base[index] = value;
-            }
+            get => base[index] as ConfigurationCell;
+            set => base[index] = value;
         }
 
         #endregion

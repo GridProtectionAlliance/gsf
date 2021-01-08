@@ -90,6 +90,6 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public int OriginalSourceIndex { get; }
 
-    #endregion
+        #endregion
     }
 }

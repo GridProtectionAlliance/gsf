@@ -369,27 +369,27 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Absolute maximum number of possible phasor values that could fit into a data frame.
         /// </summary>
-        public const ushort MaximumPhasorValues = (ushort)(ushort.MaxValue / 4 - CommonFrameHeader.FixedLength - 8);
+        public const ushort MaximumPhasorValues = ushort.MaxValue / 4 - CommonFrameHeader.FixedLength - 8;
 
         /// <summary>
         /// Absolute maximum number of possible analog values that could fit into a data frame.
         /// </summary>
-        public const ushort MaximumAnalogValues = (ushort)(ushort.MaxValue / 2 - CommonFrameHeader.FixedLength - 8);
+        public const ushort MaximumAnalogValues = ushort.MaxValue / 2 - CommonFrameHeader.FixedLength - 8;
 
         /// <summary>
         /// Absolute maximum number of possible digital values that could fit into a data frame.
         /// </summary>
-        public const ushort MaximumDigitalValues = (ushort)(ushort.MaxValue / 2 - CommonFrameHeader.FixedLength - 8);
+        public const ushort MaximumDigitalValues = ushort.MaxValue / 2 - CommonFrameHeader.FixedLength - 8;
 
         /// <summary>
         /// Absolute maximum data length (in bytes) that could fit into any frame.
         /// </summary>
-        public const ushort MaximumDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 2);
+        public const ushort MaximumDataLength = ushort.MaxValue - CommonFrameHeader.FixedLength - 2;
 
         /// <summary>
         /// Absolute maximum number of bytes of extended data that could fit into a command frame.
         /// </summary>
-        public const ushort MaximumExtendedDataLength = (ushort)(MaximumDataLength - 2);
+        public const ushort MaximumExtendedDataLength = MaximumDataLength - 2;
 
         /// <summary>
         /// Time quality flags mask.

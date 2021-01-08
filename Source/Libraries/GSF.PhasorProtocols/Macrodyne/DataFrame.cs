@@ -91,39 +91,21 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrame"/>.
         /// </summary>
-        public new DataCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as DataCellCollection;
-            }
-        }
+        public new DataCellCollection Cells => base.Cells as DataCellCollection;
 
         /// <summary>
         /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
         /// </summary>
         public new ConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return base.ConfigurationFrame as ConfigurationFrame;
-            }
-            set
-            {
-                base.ConfigurationFrame = value;
-            }
+            get => base.ConfigurationFrame as ConfigurationFrame;
+            set => base.ConfigurationFrame = value;
         }
 
         /// <summary>
         /// Gets the identifier that is used to identify the Macrodyne frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return Macrodyne.FrameType.DataFrame;
-            }
-        }
+        public FrameType TypeID => Macrodyne.FrameType.DataFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
@@ -133,7 +115,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             get
             {
                 // Make sure frame header exists
-                if (m_frameHeader == null)
+                if (m_frameHeader is null)
                     m_frameHeader = new CommonFrameHeader();
 
                 return m_frameHeader;
@@ -142,22 +124,18 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                    State = m_frameHeader.State as IDataFrameParsingState;
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as IDataFrameParsingState;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<int>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
@@ -181,26 +159,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonFrameHeader.FixedLength;
-            }
-        }
+        protected override int HeaderLength => CommonFrameHeader.FixedLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.
         /// </summary>
-        protected override byte[] HeaderImage
-        {
-            get
-            {
-                return CommonHeader.BinaryImage;
-            }
-        }
+        protected override byte[] HeaderImage => CommonHeader.BinaryImage;
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 
@@ -257,7 +223,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
             // Macrodyne uses 8-bit Xor checksum for frames
-            return (ushort)buffer.Xor8Checksum(offset, length);
+            return buffer.Xor8Checksum(offset, length);
         }
 
         /// <summary>

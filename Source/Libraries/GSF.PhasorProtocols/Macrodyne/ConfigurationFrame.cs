@@ -75,12 +75,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         private readonly IniFile m_iniFile;
         private ConfigurationCellCollection m_configurationFileCells;
         private OnlineDataFormatFlags m_onlineDataFormatFlags;
-        private PhasorDefinition m_defaultPhasorV;
-        private PhasorDefinition m_defaultPhasorI;
-        private FrequencyDefinition m_defaultFrequency;
-        private string m_stationName;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -112,7 +108,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             : base(0, new ConfigurationCellCollection(), 0, 0)
         {
             m_onlineDataFormatFlags = onlineDataFormatFlags;
-            m_stationName = unitID;
+            StationName = unitID;
 
             ConfigurationCell configCell = new ConfigurationCell(this, deviceLabel);
 
@@ -154,71 +150,45 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         /// <summary>
         /// Gets the identifier that is used to identify the Macrodyne frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return Macrodyne.FrameType.ConfigurationFrame;
-            }
-        }
+        public FrameType TypeID => Macrodyne.FrameType.ConfigurationFrame;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists
-                if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader();
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader());
             set
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
+                if (m_frameHeader is null)
+                    return;
+
+                if (m_frameHeader.State is ConfigurationFrameParsingState parsingState)
                 {
-                    ConfigurationFrameParsingState parsingState = m_frameHeader.State as ConfigurationFrameParsingState;
+                    State = parsingState;
 
-                    if (parsingState != null)
-                    {
-                        State = parsingState;
-
-                        // Cache station name for use when cell gets parsed
-                        m_stationName = parsingState.HeaderFrame.HeaderData;
-                    }
-
-                    if (m_frameHeader.ProtocolVersion == ProtocolVersion.G)
-                        TimestampIncluded = true;
+                    // Cache station name for use when cell gets parsed
+                    StationName = parsingState.HeaderFrame.HeaderData;
                 }
+
+                if (m_frameHeader.ProtocolVersion == ProtocolVersion.G)
+                    TimestampIncluded = true;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<int>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
@@ -233,80 +203,41 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                 return base.IDCode;
             }
-            set
-            {
-                base.IDCode = value;
-            }
+            set => base.IDCode = value;
         }
 
         /// <summary>
         /// Gets the INI based configuration file name of this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public string ConfigurationFileName
-        {
-            get
-            {
-                return m_iniFile.FileName;
-            }
-        }
+        public string ConfigurationFileName => m_iniFile.FileName;
 
         /// <summary>
         /// Gets the default voltage phasor definition.
         /// </summary>
-        public PhasorDefinition DefaultPhasorV
-        {
-            get
-            {
-                return m_defaultPhasorV;
-            }
-        }
+        public PhasorDefinition DefaultPhasorV { get; private set; }
 
         /// <summary>
         /// Gets the default current phasor definition.
         /// </summary>
-        public PhasorDefinition DefaultPhasorI
-        {
-            get
-            {
-                return m_defaultPhasorI;
-            }
-        }
+        public PhasorDefinition DefaultPhasorI { get; private set; }
 
         /// <summary>
         /// Gets the default frequency definition.
         /// </summary>
-        public FrequencyDefinition DefaultFrequency
-        {
-            get
-            {
-                return m_defaultFrequency;
-            }
-        }
+        public FrequencyDefinition DefaultFrequency { get; private set; }
 
         /// <summary>
         /// Gets station name retrieved from header frame.
         /// </summary>
-        public string StationName
-        {
-            get
-            {
-                return m_stationName;
-            }
-        }
+        public string StationName { get; private set; }
 
         /// <summary>
         /// Gets or sets the Macrodyne <see cref="Macrodyne.OnlineDataFormatFlags"/> of this <see cref="ConfigurationFrame"/>.
         /// </summary>
         public OnlineDataFormatFlags OnlineDataFormatFlags
         {
-            get
-            {
-                return m_onlineDataFormatFlags;
-            }
-            set
-            {
-                m_onlineDataFormatFlags = value;
-            }
+            get => m_onlineDataFormatFlags;
+            set => m_onlineDataFormatFlags = value;
         }
 
         /// <summary>
@@ -352,23 +283,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets flag that determines if status 2 flags are included in ON-LINE data.
         /// </summary>
-        public bool Status2Included
-        {
-            get
-            {
-                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.Status2ByteEnabled) == OnlineDataFormatFlags.Status2ByteEnabled;
-            }
-        }
+        public bool Status2Included => (m_onlineDataFormatFlags & OnlineDataFormatFlags.Status2ByteEnabled) == OnlineDataFormatFlags.Status2ByteEnabled;
 
         /// <summary>
         /// Gets flag that determines if timestamp is included in ON-LINE data.
         /// </summary>
         public bool TimestampIncluded
         {
-            get
-            {
-                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.TimestampEnabled) == OnlineDataFormatFlags.TimestampEnabled;
-            }
+            get => (m_onlineDataFormatFlags & OnlineDataFormatFlags.TimestampEnabled) == OnlineDataFormatFlags.TimestampEnabled;
             internal set
             {
                 if (value)
@@ -381,46 +303,22 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets flag that determines if reference phasor is included in ON-LINE data.
         /// </summary>
-        public bool ReferenceIncluded
-        {
-            get
-            {
-                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.ReferenceEnabled) == OnlineDataFormatFlags.ReferenceEnabled;
-            }
-        }
+        public bool ReferenceIncluded => (m_onlineDataFormatFlags & OnlineDataFormatFlags.ReferenceEnabled) == OnlineDataFormatFlags.ReferenceEnabled;
 
         /// <summary>
         /// Gets flag that determines if Digital 1 is included in ON-LINE data.
         /// </summary>
-        public bool Digital1Included
-        {
-            get
-            {
-                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.Digital1Enabled) == OnlineDataFormatFlags.Digital1Enabled;
-            }
-        }
+        public bool Digital1Included => (m_onlineDataFormatFlags & OnlineDataFormatFlags.Digital1Enabled) == OnlineDataFormatFlags.Digital1Enabled;
 
         /// <summary>
         /// Gets flag that determines if Digital 2 is included in ON-LINE data.
         /// </summary>
-        public bool Digital2Included
-        {
-            get
-            {
-                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.Digital2Enabled) == OnlineDataFormatFlags.Digital2Enabled;
-            }
-        }
+        public bool Digital2Included => (m_onlineDataFormatFlags & OnlineDataFormatFlags.Digital2Enabled) == OnlineDataFormatFlags.Digital2Enabled;
 
         /// <summary>
         /// Gets length of data frame based on enabled streaming data.
         /// </summary>
-        public ushort DataFrameLength
-        {
-            get
-            {
-                return (ushort)(7 + (CommonHeader.ProtocolVersion == ProtocolVersion.M ? 2 : 0) + PhasorCount * 4 + (Status2Included ? 1 : 0) + (TimestampIncluded ? 6 : 0) + (ReferenceIncluded ? 6 : 0) + (Digital1Included ? 2 : 0) + (Digital2Included ? 2 : 0));
-            }
-        }
+        public ushort DataFrameLength => (ushort)(7 + (CommonHeader.ProtocolVersion == ProtocolVersion.M ? 2 : 0) + PhasorCount * 4 + (Status2Included ? 1 : 0) + (TimestampIncluded ? 6 : 0) + (ReferenceIncluded ? 6 : 0) + (Digital1Included ? 2 : 0) + (Digital2Included ? 2 : 0));
 
         /// <summary>
         /// Gets the length of the <see cref="ConfigurationFrame"/>.
@@ -446,14 +344,9 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                // Common header plus two bytes for on-line data format flags
-                return CommonFrameHeader.FixedLength + 2;
-            }
-        }
+        protected override int HeaderLength =>
+            // Common header plus two bytes for on-line data format flags
+            CommonFrameHeader.FixedLength + 2;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.
@@ -482,7 +375,7 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                 baseAttributes.Add("ON-LINE Data Format Flags", (byte)OnlineDataFormatFlags + ": " + OnlineDataFormatFlags);
 
-                if ((object)m_iniFile != null)
+                if (!(m_iniFile is null))
                     baseAttributes.Add("Configuration File Name", m_iniFile.FileName);
 
                 return baseAttributes;
@@ -498,7 +391,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public void Refresh()
         {
-            if ((object)m_iniFile == null)
+            if (m_iniFile is null)
                 return;
 
             // The only time we need an access lock is when we reload the config file...
@@ -509,15 +402,15 @@ namespace GSF.PhasorProtocols.Macrodyne
                     ConfigurationCell pmuCell;
                     int phasorCount, pmuCount, x, y;
 
-                    m_defaultPhasorV = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorV", DefaultVoltagePhasorEntry]);
-                    m_defaultPhasorI = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorI", DefaultCurrentPhasorEntry]);
-                    m_defaultFrequency = new FrequencyDefinition(null, m_iniFile["DEFAULT", "Frequency", DefaultFrequencyEntry]);
+                    DefaultPhasorV = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorV", DefaultVoltagePhasorEntry]);
+                    DefaultPhasorI = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorI", DefaultCurrentPhasorEntry]);
+                    DefaultFrequency = new FrequencyDefinition(null, m_iniFile["DEFAULT", "Frequency", DefaultFrequencyEntry]);
                     FrameRate = ushort.Parse(m_iniFile["CONFIG", "SampleRate", "30"]);
 
                     // We read all cells in the config file into their own configuration cell collection - cells parsed
                     // from the configuration frame will be mapped to their associated config file cell by ID label
                     // when the configuration cell is parsed from the configuration frame
-                    if (m_configurationFileCells == null)
+                    if (m_configurationFileCells is null)
                         m_configurationFileCells = new ConfigurationCellCollection(int.MaxValue);
 
                     m_configurationFileCells.Clear();
@@ -528,7 +421,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                         if (section.Length > 0)
                         {
                             // Make sure this is not a special section
-                            if (string.Compare(section, "DEFAULT", true) != 0 && string.Compare(section, "CONFIG", true) != 0)
+                            if (!string.Equals(section, "DEFAULT", StringComparison.OrdinalIgnoreCase) && !string.Equals(section, "CONFIG", StringComparison.OrdinalIgnoreCase))
                             {
                                 // Create new PMU entry structure from config file settings...
                                 phasorCount = int.Parse(m_iniFile[section, "NumberPhasors", "0"]);
@@ -567,14 +460,14 @@ namespace GSF.PhasorProtocols.Macrodyne
                                         // For BPA INI files, PMUs tradionally have an ID number indexed starting at zero or one - so we multiply
                                         // ID by 1000 and add index to attempt to create a fairly unique ID to help optimize downstream parsing
                                         pmuCell.IDCode = unchecked((ushort)(pdcID * 1000 + x));
-                                        pmuCell.SectionEntry = string.Format("{0}pmu{1}", section, x); // This will automatically assign ID label as first 4 digits of section
-                                        pmuCell.StationName = string.Format("{0} - Device {1}", m_iniFile[section, "Name", section], (x + 1));
+                                        pmuCell.SectionEntry = $"{section}pmu{x}"; // This will automatically assign ID label as first 4 digits of section
+                                        pmuCell.StationName = $"{m_iniFile[section, "Name", section]} - Device {x + 1}";
 
                                         pmuCell.PhasorDefinitions.Clear();
 
                                         for (y = 0; y < 2; y++)
                                         {
-                                            pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, "Phasor" + ((x * 2) + (y + 1)), DefaultVoltagePhasorEntry]));
+                                            pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, "Phasor" + (x * 2 + y + 1), DefaultVoltagePhasorEntry]));
                                         }
 
                                         pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
@@ -586,7 +479,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                     }
 
                     // Associate single Macrodyne cell with its associated cell hopefully defined in INI file
-                    if (m_configurationFileCells.Count > 0 && (object)Cells != null && Cells.Count > 0)
+                    if (m_configurationFileCells.Count > 0 && !(Cells is null) && Cells.Count > 0)
                     {
                         ConfigurationCell configurationFileCell = null;
 
@@ -597,18 +490,18 @@ namespace GSF.PhasorProtocols.Macrodyne
                         m_configurationFileCells.TryGetBySectionEntry(cell.SectionEntry, ref configurationFileCell);
                         cell.ConfigurationFileCell = configurationFileCell;
                         m_onlineDataFormatFlags = Common.GetFormatFlagsFromPhasorCount(cell.PhasorDefinitions.Count);
-                        m_stationName = cell.StationName;
+                        StationName = cell.StationName;
                     }
                 }
                 else
+                {
                     throw new InvalidOperationException("Macrodyne config file \"" + m_iniFile.FileName + "\" does not exist.");
+                }
             }
 
             // In case other classes want to know, we send out a notification that the config file has been reloaded (make sure
             // you do this after the write lock has been released to avoid possible dead-lock situations)
-            if (ConfigurationFileReloaded != null)
-                ConfigurationFileReloaded(this, EventArgs.Empty);
-
+            ConfigurationFileReloaded?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -704,7 +597,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             // Serialize configuration frame
             info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
             info.AddValue("onlineDataFormatFlags", m_onlineDataFormatFlags, typeof(OnlineDataFormatFlags));
-            info.AddValue("configurationFileName", (object)m_iniFile == null ? null : m_iniFile.FileName);
+            info.AddValue("configurationFileName", m_iniFile is null ? null : m_iniFile.FileName);
         }
 
         #endregion

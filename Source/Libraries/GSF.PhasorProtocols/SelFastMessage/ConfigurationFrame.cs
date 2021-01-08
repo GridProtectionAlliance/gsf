@@ -43,8 +43,6 @@ namespace GSF.PhasorProtocols.SelFastMessage
         #region [ Members ]
 
         // Fields
-        private readonly FrameSize m_frameSize;
-        private readonly MessagePeriod m_messagePeriod;
         private uint m_idCode;
 
         #endregion
@@ -63,8 +61,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         public ConfigurationFrame(FrameSize frameSize, MessagePeriod messagePeriod, uint idCode)
             : base(0, new ConfigurationCellCollection(), 0, 0)
         {
-            m_frameSize = frameSize;
-            m_messagePeriod = messagePeriod;
+            FrameSize = frameSize;
+            MessagePeriod = messagePeriod;
             IDCode = idCode;
             ConfigurationCell configCell = new ConfigurationCell(this);
 
@@ -141,8 +139,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
             : base(info, context)
         {
             // Deserialize configuration frame
-            m_frameSize = (FrameSize)info.GetValue("frameSize", typeof(FrameSize));
-            m_messagePeriod = (MessagePeriod)info.GetValue("messagePeriod", typeof(MessagePeriod));
+            FrameSize = (FrameSize)info.GetValue("frameSize", typeof(FrameSize));
+            MessagePeriod = (MessagePeriod)info.GetValue("messagePeriod", typeof(MessagePeriod));
             m_idCode = info.GetUInt32("idCode32Bit");
         }
 
@@ -153,45 +151,24 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         /// <summary>
         /// Gets the SEL Fast Message frame size of this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public FrameSize FrameSize
-        {
-            get
-            {
-                return m_frameSize;
-            }
-        }
+        public FrameSize FrameSize { get; }
 
         /// <summary>
         /// Gets defined <see cref="SelFastMessage.MessagePeriod"/> for SEL device.
         /// </summary>
-        public MessagePeriod MessagePeriod
-        {
-            get
-            {
-                return m_messagePeriod;
-            }
-        }
+        public MessagePeriod MessagePeriod { get; }
 
         /// <summary>
         /// Gets or sets the ID code of this <see cref="ConfigurationFrame"/>.
         /// </summary>
         public new uint IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
+            get => m_idCode;
             set
             {
                 m_idCode = value;
@@ -259,8 +236,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
             base.GetObjectData(info, context);
 
             // Serialize configuration frame
-            info.AddValue("frameSize", m_frameSize, typeof(FrameSize));
-            info.AddValue("messagePeriod", m_messagePeriod, typeof(MessagePeriod));
+            info.AddValue("frameSize", FrameSize, typeof(FrameSize));
+            info.AddValue("messagePeriod", MessagePeriod, typeof(MessagePeriod));
             info.AddValue("idCode32Bit", m_idCode);
         }
 

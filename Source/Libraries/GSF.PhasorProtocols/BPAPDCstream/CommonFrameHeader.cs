@@ -59,7 +59,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         private byte m_packetNumber;
         private ushort m_wordCount;
         private uint m_rowFlags;
-        private readonly Ticks m_roughTimestamp;
         private bool m_usePhasorDataFileFormat;
         private FileType m_fileType;
         private FileVersion m_fileVersion;
@@ -128,13 +127,13 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         switch (m_fileType)
                         {
                             case FileType.PdcNtp:
-                                m_roughTimestamp = (new NtpTimeTag(secondOfCentury, 0)).ToDateTime().Ticks;
+                                RoughTimestamp = new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks;
                                 break;
                             case FileType.PdcUnix:
-                                m_roughTimestamp = (new UnixTimeTag(secondOfCentury)).ToDateTime().Ticks;
+                                RoughTimestamp = new UnixTimeTag(secondOfCentury).ToDateTime().Ticks;
                                 break;
                             default:
-                                m_roughTimestamp = 0;
+                                RoughTimestamp = 0;
                                 break;
                         }
 
@@ -148,10 +147,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         switch (m_fileType)
                         {
                             case FileType.PdcNtp:
-                                m_triggerTime = (new NtpTimeTag(secondOfCentury, 0)).ToDateTime().Ticks;
+                                m_triggerTime = new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks;
                                 break;
                             case FileType.PdcUnix:
-                                m_triggerTime = (new UnixTimeTag(secondOfCentury)).ToDateTime().Ticks;
+                                m_triggerTime = new UnixTimeTag(secondOfCentury).ToDateTime().Ticks;
                                 break;
                             default:
                                 m_triggerTime = 0;
@@ -175,30 +174,30 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     m_packetNumber = (byte)BPAPDCstream.FrameType.DataFrame;
                     m_rowFlags = BigEndian.ToUInt32(buffer, startIndex);
 
-                    if (configFrame != null)
+                    if (configFrame is null)
+                    {
+                        FrameLength = FixedLength;
+                    }
+                    else
                     {
                         uint sampleIndex = configFrame.SampleIndex;
                         configFrameHeader = configFrame.CommonHeader;
 
-                        if (configFrameHeader != null)
+                        if (configFrameHeader is null)
+                        {
+                            FrameLength = FixedLength;
+                        }
+                        else
                         {
                             // Assign row length to make sure parser knows how much data it needs
                             FrameLength = unchecked((ushort)configFrameHeader.RowLength);
 
                             // Calculate timestamp as offset plus sample index * frame rate
-                            m_roughTimestamp = configFrameHeader.RoughTimestamp + Ticks.FromSeconds(sampleIndex * (1.0D / configFrameHeader.FrameRate));
-                        }
-                        else
-                        {
-                            FrameLength = FixedLength;
+                            RoughTimestamp = configFrameHeader.RoughTimestamp + Ticks.FromSeconds(sampleIndex * (1.0D / configFrameHeader.FrameRate));
                         }
 
                         // Increment sample index for next row
-                        configFrame.SampleIndex = (sampleIndex + 1);
-                    }
-                    else
-                    {
-                        FrameLength = FixedLength;
+                        configFrame.SampleIndex = sampleIndex + 1;
                     }
                 }
             }
@@ -230,9 +229,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     // is greater than 3155673600 (SOC value for NTP timestamp 1/1/2007), then this is likely
                     // an NTP time stamp (else this is a Unix time tag for the year 2069 - not likely).
                     if (secondOfCentury > 3155673600)
-                        m_roughTimestamp = (new NtpTimeTag(secondOfCentury, 0)).ToDateTime().Ticks;
+                        RoughTimestamp = new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks;
                     else
-                        m_roughTimestamp = (new UnixTimeTag(secondOfCentury)).ToDateTime().Ticks;
+                        RoughTimestamp = new UnixTimeTag(secondOfCentury).ToDateTime().Ticks;
                 }
             }
         }
@@ -252,7 +251,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             try
             {
                 m_usePhasorDataFileFormat = info.GetBoolean("usePhasorDataFileFormat");
-                m_roughTimestamp = info.GetInt64("roughTimestamp");
+                RoughTimestamp = info.GetInt64("roughTimestamp");
                 m_fileType = (FileType)info.GetValue("fileType", typeof(FileType));
                 m_fileVersion = (FileVersion)info.GetValue("fileVersion", typeof(FileVersion));
                 m_sourceID = info.GetString("sourceID");
@@ -261,7 +260,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             catch (SerializationException)
             {
                 m_usePhasorDataFileFormat = false;
-                m_roughTimestamp = 0;
+                RoughTimestamp = 0;
                 m_fileType = FileType.PdcUnix;
                 m_fileVersion = FileVersion.PdcWithoutDbuf;
                 m_sourceID = "UNDF";
@@ -284,27 +283,15 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// This is the <see cref="ICommonHeader{TTypeIdentifier}.TypeID"/> implementation.
         /// </para>
         /// </remarks>
-        public FrameType TypeID
-        {
-            get
-            {
-                return (m_packetNumber == 0 ? BPAPDCstream.FrameType.ConfigurationFrame : BPAPDCstream.FrameType.DataFrame);
-            }
-        }
+        public FrameType TypeID => m_packetNumber == 0 ? BPAPDCstream.FrameType.ConfigurationFrame : BPAPDCstream.FrameType.DataFrame;
 
         /// <summary>
         /// Gets or sets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
         public bool UsePhasorDataFileFormat
         {
-            get
-            {
-                return m_usePhasorDataFileFormat;
-            }
-            set
-            {
-                m_usePhasorDataFileFormat = value;
-            }
+            get => m_usePhasorDataFileFormat;
+            set => m_usePhasorDataFileFormat = value;
         }
 
         /// <summary>
@@ -312,14 +299,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public byte PacketNumber
         {
-            get
-            {
-                return m_packetNumber;
-            }
-            set
-            {
-                m_packetNumber = value;
-            }
+            get => m_packetNumber;
+            set => m_packetNumber = value;
         }
 
         /// <summary>
@@ -327,14 +308,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort FrameLength
         {
-            get
-            {
-                return (ushort)(2 * m_wordCount);
-            }
-            set
-            {
-                m_wordCount = (ushort)(value / 2);
-            }
+            get => (ushort)(2 * m_wordCount);
+            set => m_wordCount = (ushort)(value / 2);
         }
 
         /// <summary>
@@ -342,14 +317,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort WordCount
         {
-            get
-            {
-                return m_wordCount;
-            }
-            set
-            {
-                m_wordCount = value;
-            }
+            get => m_wordCount;
+            set => m_wordCount = value;
         }
 
         /// <summary>
@@ -357,11 +326,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort DataLength
         {
-            get
-            {
+            get =>
                 // Data length will be frame length minus common header length minus crc16
-                return (ushort)(FrameLength - FixedLength - (m_usePhasorDataFileFormat ? 0 : 2));
-            }
+                (ushort)(FrameLength - FixedLength - (m_usePhasorDataFileFormat ? 0 : 2));
             set
             {
                 if (value > Common.MaximumDataLength)
@@ -374,27 +341,15 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets rough timestamp, accuarate to the second, that can be used until configuration frame arrives.
         /// </summary>
-        public Ticks RoughTimestamp
-        {
-            get
-            {
-                return m_roughTimestamp;
-            }
-        }
+        public Ticks RoughTimestamp { get; }
 
         /// <summary>
         /// Gets or sets row flags for this <see cref="CommonFrameHeader"/> when frame is a data frame and use phasor file format is true.
         /// </summary>
         public uint RowFlags
         {
-            get
-            {
-                return m_rowFlags;
-            }
-            set
-            {
-                m_rowFlags = value;
-            }
+            get => m_rowFlags;
+            set => m_rowFlags = value;
         }
 
         /// <summary>
@@ -402,14 +357,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public FileType FileType
         {
-            get
-            {
-                return m_fileType;
-            }
-            set
-            {
-                m_fileType = value;
-            }
+            get => m_fileType;
+            set => m_fileType = value;
         }
 
         /// <summary>
@@ -417,14 +366,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public FileVersion FileVersion
         {
-            get
-            {
-                return m_fileVersion;
-            }
-            set
-            {
-                m_fileVersion = value;
-            }
+            get => m_fileVersion;
+            set => m_fileVersion = value;
         }
 
         /// <summary>
@@ -432,10 +375,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public string SourceID
         {
-            get
-            {
-                return m_sourceID;
-            }
+            get => m_sourceID;
             set
             {
                 value = value.Trim();
@@ -457,14 +397,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public uint StartSample
         {
-            get
-            {
-                return m_startSample;
-            }
-            set
-            {
-                m_startSample = value;
-            }
+            get => m_startSample;
+            set => m_startSample = value;
         }
 
         /// <summary>
@@ -472,14 +406,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort SampleInterval
         {
-            get
-            {
-                return m_sampleInterval;
-            }
-            set
-            {
-                m_sampleInterval = value;
-            }
+            get => m_sampleInterval;
+            set => m_sampleInterval = value;
         }
 
         /// <summary>
@@ -487,40 +415,22 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort SampleRate
         {
-            get
-            {
-                return m_sampleRate;
-            }
-            set
-            {
-                m_sampleRate = value;
-            }
+            get => m_sampleRate;
+            set => m_sampleRate = value;
         }
 
         /// <summary>
         /// Gets frame rate based on sample rate and sample interval for the <see cref="CommonFrameHeader"/> object.
         /// </summary>
-        public double FrameRate
-        {
-            get
-            {
-                return m_sampleRate / (double)m_sampleInterval;
-            }
-        }
+        public double FrameRate => m_sampleRate / (double)m_sampleInterval;
 
         /// <summary>
         /// Gets or sets row length for the <see cref="CommonFrameHeader"/> object when use phasor file format is true.
         /// </summary>
         public uint RowLength
         {
-            get
-            {
-                return m_rowLength;
-            }
-            set
-            {
-                m_rowLength = value;
-            }
+            get => m_rowLength;
+            set => m_rowLength = value;
         }
 
         /// <summary>
@@ -528,14 +438,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public uint TotalRows
         {
-            get
-            {
-                return m_totalRows;
-            }
-            set
-            {
-                m_totalRows = value;
-            }
+            get => m_totalRows;
+            set => m_totalRows = value;
         }
 
         /// <summary>
@@ -543,14 +447,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public Ticks TriggerTime
         {
-            get
-            {
-                return m_triggerTime;
-            }
-            set
-            {
-                m_triggerTime = value;
-            }
+            get => m_triggerTime;
+            set => m_triggerTime = value;
         }
 
         /// <summary>
@@ -558,14 +456,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public uint TriggerSample
         {
-            get
-            {
-                return m_triggerSample;
-            }
-            set
-            {
-                m_triggerSample = value;
-            }
+            get => m_triggerSample;
+            set => m_triggerSample = value;
         }
 
         /// <summary>
@@ -573,14 +465,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public uint PreTriggerRows
         {
-            get
-            {
-                return m_preTriggerRows;
-            }
-            set
-            {
-                m_preTriggerRows = value;
-            }
+            get => m_preTriggerRows;
+            set => m_preTriggerRows = value;
         }
 
         /// <summary>
@@ -588,14 +474,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort TriggerPMU
         {
-            get
-            {
-                return m_triggerPMU;
-            }
-            set
-            {
-                m_triggerPMU = value;
-            }
+            get => m_triggerPMU;
+            set => m_triggerPMU = value;
         }
 
         /// <summary>
@@ -603,14 +483,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort TriggerType
         {
-            get
-            {
-                return m_triggerType;
-            }
-            set
-            {
-                m_triggerType = value;
-            }
+            get => m_triggerType;
+            set => m_triggerType = value;
         }
 
         /// <summary>
@@ -618,10 +492,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public string UserInformation
         {
-            get
-            {
-                return m_userInformation;
-            }
+            get => m_userInformation;
             set
             {
                 if (!string.IsNullOrWhiteSpace(value))
@@ -639,14 +510,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public uint PmuCount
         {
-            get
-            {
-                return m_pmuCount;
-            }
-            set
-            {
-                m_pmuCount = value;
-            }
+            get => m_pmuCount;
+            set => m_pmuCount = value;
         }
 
         /// <summary>
@@ -654,27 +519,15 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public IChannelParsingState State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
+            get => m_state;
+            set => m_state = value;
         }
 
         // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value as IChannelParsingState;
-            }
+            get => m_state;
+            set => m_state = value as IChannelParsingState;
         }
 
         /// <summary>
@@ -717,10 +570,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                     return buffer;
                 }
-                else
-                {
-                    throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
-                }
+
+                throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
             }
         }
 
@@ -752,7 +603,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             info.AddValue("packetNumber", m_packetNumber);
             info.AddValue("wordCount", m_wordCount);
             info.AddValue("usePhasorDataFileFormat", m_usePhasorDataFileFormat);
-            info.AddValue("roughTimestamp", (long)m_roughTimestamp);
+            info.AddValue("roughTimestamp", (long)RoughTimestamp);
             info.AddValue("fileType", m_fileType, typeof(FileType));
             info.AddValue("fileVersion", m_fileVersion, typeof(FileVersion));
             info.AddValue("sourceID", m_sourceID);

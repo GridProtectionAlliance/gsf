@@ -37,12 +37,8 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private readonly CreateNewDefinitionFunction<IPhasorDefinition> m_createNewPhasorDefinition;
-        private readonly CreateNewDefinitionFunction<IFrequencyDefinition> m_createNewFrequencyDefinition;
-        private readonly CreateNewDefinitionFunction<IAnalogDefinition> m_createNewAnalogDefinition;
-        private readonly CreateNewDefinitionFunction<IDigitalDefinition> m_createNewDigitalDefinition;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -55,10 +51,10 @@ namespace GSF.PhasorProtocols
         /// <param name="createNewDigitalDefinition">Reference to delegate to create new <see cref="IDigitalDefinition"/> instances.</param>
         public ConfigurationCellParsingState(CreateNewDefinitionFunction<IPhasorDefinition> createNewPhasorDefinition, CreateNewDefinitionFunction<IFrequencyDefinition> createNewFrequencyDefinition, CreateNewDefinitionFunction<IAnalogDefinition> createNewAnalogDefinition, CreateNewDefinitionFunction<IDigitalDefinition> createNewDigitalDefinition)
         {
-            m_createNewPhasorDefinition = createNewPhasorDefinition;
-            m_createNewFrequencyDefinition = createNewFrequencyDefinition;
-            m_createNewAnalogDefinition = createNewAnalogDefinition;
-            m_createNewDigitalDefinition = createNewDigitalDefinition;
+            CreateNewPhasorDefinition = createNewPhasorDefinition;
+            CreateNewFrequencyDefinition = createNewFrequencyDefinition;
+            CreateNewAnalogDefinition = createNewAnalogDefinition;
+            CreateNewDigitalDefinition = createNewDigitalDefinition;
         }
 
         #endregion
@@ -68,47 +64,23 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IPhasorDefinition"/> objects.
         /// </summary>
-        public virtual CreateNewDefinitionFunction<IPhasorDefinition> CreateNewPhasorDefinition
-        {
-            get
-            {
-                return m_createNewPhasorDefinition;
-            }
-        }
+        public virtual CreateNewDefinitionFunction<IPhasorDefinition> CreateNewPhasorDefinition { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IFrequencyDefinition"/> objects.
         /// </summary>
-        public virtual CreateNewDefinitionFunction<IFrequencyDefinition> CreateNewFrequencyDefinition
-        {
-            get
-            {
-                return m_createNewFrequencyDefinition;
-            }
-        }
+        public virtual CreateNewDefinitionFunction<IFrequencyDefinition> CreateNewFrequencyDefinition { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IAnalogDefinition"/> objects.
         /// </summary>
-        public virtual CreateNewDefinitionFunction<IAnalogDefinition> CreateNewAnalogDefinition
-        {
-            get
-            {
-                return m_createNewAnalogDefinition;
-            }
-        }
+        public virtual CreateNewDefinitionFunction<IAnalogDefinition> CreateNewAnalogDefinition { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IDigitalDefinition"/> objects.
         /// </summary>
-        public virtual CreateNewDefinitionFunction<IDigitalDefinition> CreateNewDigitalDefinition
-        {
-            get
-            {
-                return m_createNewDigitalDefinition;
-            }
-        }
+        public virtual CreateNewDefinitionFunction<IDigitalDefinition> CreateNewDigitalDefinition { get; }
 
-        #endregion
+    #endregion
     }
 }

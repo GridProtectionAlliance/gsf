@@ -88,14 +88,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -106,7 +100,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             get
             {
                 byte[] buffer = new byte[ConversionFactorLength];
-                UInt24 scalingFactor = (ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue);
+                UInt24 scalingFactor = ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue;
 
                 buffer[0] = (byte)(PhasorType == PhasorType.Voltage ? 0 : 1);
 
@@ -128,7 +122,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         internal int ParseConversionFactor(byte[] buffer, int startIndex)
         {
             // Get phasor type from first byte
-            PhasorType = (buffer[startIndex] == 0) ? PhasorType.Voltage : PhasorType.Current;
+            PhasorType = buffer[startIndex] == 0 ? PhasorType.Voltage : PhasorType.Current;
 
             // Last three bytes represent scaling factor
             ScalingValue = BigEndian.ToUInt24(buffer, startIndex + 1);

@@ -113,14 +113,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = CastToDerivedConfigurationFrame(value);
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = CastToDerivedConfigurationFrame(value);
         }
 
         /// <summary>
@@ -129,16 +123,11 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <remarks>
         /// The IEEE 1344 protocol does not use synchronization bytes, as a result this property returns <c>false</c>.
         /// </remarks>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                // IEEE 1344 doesn't use synchronization bytes
-                return false;
-            }
-        }
+        public override bool ProtocolUsesSyncBytes =>
+            // IEEE 1344 doesn't use synchronization bytes
+            false;
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 
@@ -225,20 +214,16 @@ namespace GSF.PhasorProtocols.IEEE1344
         protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
             // IEEE 1344 configuration frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
-            ISupportFrameImage<FrameType> frameImage = frame as ISupportFrameImage<FrameType>;
 
-            if (frameImage != null)
+            if (frame is ISupportFrameImage<FrameType> frameImage)
             {
-                CommonFrameHeader commonHeader = frameImage.CommonHeader as CommonFrameHeader;
-
-                if (commonHeader != null && commonHeader.IsLastFrame)
+                if (frameImage.CommonHeader is CommonFrameHeader commonHeader && commonHeader.IsLastFrame)
                 {
                     base.OnReceivedConfigurationFrame(frame);
 
                     // Cache new configuration frame for parsing subsequent data frames...
-                    ConfigurationFrame configurationFrame = frame as ConfigurationFrame;
 
-                    if (configurationFrame != null)
+                    if (frame is ConfigurationFrame configurationFrame)
                         m_configurationFrame = configurationFrame;
                 }
             }
@@ -251,13 +236,10 @@ namespace GSF.PhasorProtocols.IEEE1344
         protected override void OnReceivedHeaderFrame(IHeaderFrame frame)
         {
             // IEEE 1344 header frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
-            ISupportFrameImage<FrameType> frameImage = frame as ISupportFrameImage<FrameType>;
 
-            if (frameImage != null)
+            if (frame is ISupportFrameImage<FrameType> frameImage)
             {
-                CommonFrameHeader commonHeader = frameImage.CommonHeader as CommonFrameHeader;
-
-                if (commonHeader != null && commonHeader.IsLastFrame)
+                if (frameImage.CommonHeader is CommonFrameHeader commonHeader && commonHeader.IsLastFrame)
                     base.OnReceivedHeaderFrame(frame);
             }
         }
@@ -268,9 +250,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <param name="frame"><see cref="IDataFrame"/> to send to <see cref="FrameParserBase{TFrameIdentifier}.ReceivedDataFrame"/> event.</param>
         protected override void OnReceivedDataFrame(IDataFrame frame)
         {
-            DataFrame dataFrame = frame as DataFrame;
-
-            if ((object)dataFrame != null)
+            if (frame is DataFrame dataFrame)
             {
                 // Keep track of the minimum number of samples between
                 // data frames as the number of samples per frame
@@ -284,7 +264,7 @@ namespace GSF.PhasorProtocols.IEEE1344
 
                 // Calculate subsecond time information based on sample count,
                 // then add this fraction of time to current seconds value
-                if ((object)dataFrame.ConfigurationFrame != null)
+                if (!(dataFrame.ConfigurationFrame is null))
                 {
                     int frameIndex = sampleCount / m_samplesPerFrame;
                     long subsecondTicks = frameIndex * Ticks.PerSecond / dataFrame.ConfigurationFrame.FrameRate;
@@ -305,44 +285,30 @@ namespace GSF.PhasorProtocols.IEEE1344
             base.OnReceivedChannelFrame(frame);
 
             // Raise IEEE 1344 specific channel frame events, if any have been subscribed
-            if (frame != null && (ReceivedDataFrame != null || ReceivedConfigurationFrame != null || ReceivedHeaderFrame != null || ReceivedCommandFrame != null))
+            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null))
+                return;
+
+            switch (frame)
             {
-                DataFrame dataFrame = frame as DataFrame;
-
-                if (dataFrame != null)
+                case DataFrame dataFrame:
                 {
-                    if (ReceivedDataFrame != null)
-                        ReceivedDataFrame(this, new EventArgs<DataFrame>(dataFrame));
+                    ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
                 }
-                else
+                case ConfigurationFrame configFrame when configFrame.CommonHeader.IsLastFrame:
                 {
-                    ConfigurationFrame configFrame = frame as ConfigurationFrame;
-
-                    if (configFrame != null && configFrame.CommonHeader.IsLastFrame)
-                    {
-                        if (ReceivedConfigurationFrame != null)
-                            ReceivedConfigurationFrame(this, new EventArgs<ConfigurationFrame>(configFrame));
-                    }
-                    else
-                    {
-                        HeaderFrame headerFrame = frame as HeaderFrame;
-
-                        if (headerFrame != null && headerFrame.CommonHeader.IsLastFrame)
-                        {
-                            if (ReceivedHeaderFrame != null)
-                                ReceivedHeaderFrame(this, new EventArgs<HeaderFrame>(headerFrame));
-                        }
-                        else
-                        {
-                            CommandFrame commandFrame = frame as CommandFrame;
-
-                            if (commandFrame != null)
-                            {
-                                if (ReceivedCommandFrame != null)
-                                    ReceivedCommandFrame(this, new EventArgs<CommandFrame>(commandFrame));
-                            }
-                        }
-                    }
+                    ReceivedConfigurationFrame?.Invoke(this, new EventArgs<ConfigurationFrame>(configFrame));
+                    break;
+                }
+                case HeaderFrame headerFrame when headerFrame.CommonHeader.IsLastFrame:
+                {
+                    ReceivedHeaderFrame?.Invoke(this, new EventArgs<HeaderFrame>(headerFrame));
+                    break;
+                }
+                case CommandFrame commandFrame:
+                {
+                    ReceivedCommandFrame?.Invoke(this, new EventArgs<CommandFrame>(commandFrame));
+                    break;
                 }
             }
         }
@@ -386,9 +352,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
             // See if frame is already an IEEE 1344 configuration frame (if so, we don't need to do any work)
-            ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
-            if (derivedFrame == null)
+            if (!(sourceFrame is ConfigurationFrame derivedFrame))
             {
                 // Create a new IEEE 1344 configuration frame converted from equivalent configuration information
                 ConfigurationCell derivedCell;
@@ -410,7 +375,7 @@ namespace GSF.PhasorProtocols.IEEE1344
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    if (sourceFrequency != null)
+                    if (!(sourceFrequency is null))
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                     // IEEE 1344 does not define analog values...

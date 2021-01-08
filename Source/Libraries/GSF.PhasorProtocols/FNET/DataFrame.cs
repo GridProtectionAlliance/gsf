@@ -95,54 +95,31 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrame"/>.
         /// </summary>
-        public new DataCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as DataCellCollection;
-            }
-        }
+        public new DataCellCollection Cells => base.Cells as DataCellCollection;
 
         /// <summary>
         /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
         /// </summary>
         public new ConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return base.ConfigurationFrame as ConfigurationFrame;
-            }
-            set
-            {
-                base.ConfigurationFrame = value;
-            }
+            get => base.ConfigurationFrame as ConfigurationFrame;
+            set => base.ConfigurationFrame = value;
         }
 
         /// <summary>
         /// Gets the identifier that is used to identify the F-NET frame.
         /// </summary>
-        public int TypeID
-        {
-            get
-            {
-                // F-NET only defines a single frame type...
-                return 0;
-            }
-        }
+        public int TypeID =>
+            // F-NET only defines a single frame type...
+            0;
 
         /// <summary>
         /// Gets or sets the sample index of this <see cref="DataFrame"/>.
         /// </summary>
         public uint SampleIndex
         {
-            get
-            {
-                return m_sampleIndex;
-            }
-            set
-            {
-                m_sampleIndex = value;
-            }
+            get => m_sampleIndex;
+            set => m_sampleIndex = value;
         }
 
         /// <summary>
@@ -150,15 +127,12 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                return m_frameHeader;
-            }
+            get => m_frameHeader;
             set
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
+                if (!(m_frameHeader is null))
                     State = m_frameHeader.State as IDataFrameParsingState;
             }
         }
@@ -166,14 +140,8 @@ namespace GSF.PhasorProtocols.FNET
         // This interface implementation satisfies ISupportFrameImage<int>.CommonHeader
         ICommonHeader<int> ISupportFrameImage<int>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>

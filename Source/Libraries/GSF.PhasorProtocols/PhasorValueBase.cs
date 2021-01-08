@@ -146,14 +146,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual Angle Angle
         {
-            get
-            {
-                return m_phasor.Angle;
-            }
-            set
-            {
-                m_phasor.Angle = value;
-            }
+            get => m_phasor.Angle;
+            set => m_phasor.Angle = value;
         }
 
         /// <summary>
@@ -161,14 +155,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double Magnitude
         {
-            get
-            {
-                return m_phasor.Magnitude;
-            }
-            set
-            {
-                m_phasor.Magnitude = value;
-            }
+            get => m_phasor.Magnitude;
+            set => m_phasor.Magnitude = value;
         }
 
         /// <summary>
@@ -176,14 +164,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double Real
         {
-            get
-            {
-                return m_phasor.Real;
-            }
-            set
-            {
-                m_phasor.Real = value;
-            }
+            get => m_phasor.Real;
+            set => m_phasor.Real = value;
         }
 
         /// <summary>
@@ -191,14 +173,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual double Imaginary
         {
-            get
-            {
-                return m_phasor.Imaginary;
-            }
-            set
-            {
-                m_phasor.Imaginary = value;
-            }
+            get => m_phasor.Imaginary;
+            set => m_phasor.Imaginary = value;
         }
 
         /// <summary>
@@ -213,10 +189,7 @@ namespace GSF.PhasorProtocols
                     return (int)(m_phasor.Real / Definition.ConversionFactor);
                 }
             }
-            set
-            {
-                m_phasor.Real = value * Definition.ConversionFactor;
-            }
+            set => m_phasor.Real = value * Definition.ConversionFactor;
         }
 
         /// <summary>
@@ -231,10 +204,7 @@ namespace GSF.PhasorProtocols
                     return (int)(m_phasor.Imaginary / Definition.ConversionFactor);
                 }
             }
-            set
-            {
-                m_phasor.Imaginary = value * Definition.ConversionFactor;
-            }
+            set => m_phasor.Imaginary = value * Definition.ConversionFactor;
         }
 
         /// <summary>
@@ -479,10 +449,10 @@ namespace GSF.PhasorProtocols
         /// <returns>Calculated watts from imaginary and real components of specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
         public static Power CalculatePower(IPhasorValue voltage, IPhasorValue current)
         {
-            if (voltage == null)
+            if (voltage is null)
                 throw new ArgumentNullException(nameof(voltage), "No voltage specified");
 
-            if (current == null)
+            if (current is null)
                 throw new ArgumentNullException(nameof(current), "No current specified");
 
             return Phasor.CalculateActivePower(voltage.Phasor, current.Phasor);
@@ -503,10 +473,10 @@ namespace GSF.PhasorProtocols
         /// <returns>Calculated vars (total volt-amperes of reactive power) from imaginary and real components of specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
         public static Power CalculateVars(IPhasorValue voltage, IPhasorValue current)
         {
-            if (voltage == null)
+            if (voltage is null)
                 throw new ArgumentNullException(nameof(voltage), "No voltage specified");
 
-            if (current == null)
+            if (current is null)
                 throw new ArgumentNullException(nameof(current), "No current specified");
 
             return Phasor.CalculateReactivePower(voltage.Phasor, current.Phasor);

@@ -87,7 +87,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public new event EventHandler<EventArgs<CommandFrame>> ReceivedCommandFrame;
 
         // Fields
-        private DraftRevision m_draftRevision;
         private ConfigurationFrame2 m_configurationFrame2;
         private bool m_configurationChangeHandled;
         private long m_unexpectedCommandFrames;
@@ -108,7 +107,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { PhasorProtocols.Common.SyncByte };
 
-            m_draftRevision = draftRevision;
+            DraftRevision = draftRevision;
         }
 
         #endregion
@@ -124,30 +123,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame2;
-            }
-            set
-            {
-                m_configurationFrame2 = CastToDerivedConfigurationFrame(value, m_draftRevision);
-            }
+            get => m_configurationFrame2;
+            set => m_configurationFrame2 = CastToDerivedConfigurationFrame(value, DraftRevision);
         }
 
         /// <summary>
         /// Gets or sets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.
         /// </summary>
-        public DraftRevision DraftRevision
-        {
-            get
-            {
-                return m_draftRevision;
-            }
-            set
-            {
-                m_draftRevision = value;
-            }
-        }
+        public DraftRevision DraftRevision { get; set; }
 
         /// <summary>
         /// Gets the IEEE C37.118 resolution of fractional timestamps of the current <see cref="ConfigurationFrame"/>, if one has been parsed.
@@ -156,7 +139,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             get
             {
-                if (m_configurationFrame2 == null)
+                if (m_configurationFrame2 is null)
                     return 0;
 
                 return m_configurationFrame2.Timebase;
@@ -166,13 +149,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ProtocolUsesSyncBytes => true;
 
         /// <summary>
         /// Gets current descriptive status of the <see cref="FrameParser"/>.
@@ -184,7 +161,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 StringBuilder status = new StringBuilder();
 
                 status.Append("IEEE C37.118-2005 revision: ");
-                status.Append(m_draftRevision);
+                status.Append(DraftRevision);
                 status.AppendLine();
                 status.Append("         Current time base: ");
                 status.Append(Timebase);
@@ -211,7 +188,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             m_unexpectedCommandFrames = 0;
 
             // We narrow down parsing types to just those needed...
-            switch (m_draftRevision)
+            switch (DraftRevision)
             {
                 case DraftRevision.Draft6:
                     base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1Draft6), typeof(ConfigurationFrame2Draft6), typeof(HeaderFrame) });
@@ -355,9 +332,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             base.OnReceivedConfigurationFrame(frame);
 
             // Cache new configuration frame for parsing subsequent data frames...
-            ConfigurationFrame2 configurationFrame2 = frame as ConfigurationFrame2;
 
-            if (configurationFrame2 != null)
+            if (frame is ConfigurationFrame2 configurationFrame2)
                 m_configurationFrame2 = configurationFrame2;
 
             // TODO: Add handler for config3 frame
@@ -374,9 +350,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             bool configurationChangeDetected = false;
 
-            DataCellCollection dataCells = frame.Cells as DataCellCollection;
-
-            if (dataCells != null)
+            if (frame.Cells is DataCellCollection dataCells)
             {
                 // Check for a configuration change notification from any data cell
                 for (int x = 0; x < dataCells.Count; x++)
@@ -413,55 +387,36 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             base.OnReceivedChannelFrame(frame);
 
             // Raise IEEE C37.118 specific channel frame events, if any have been subscribed
-            if (frame != null && (ReceivedDataFrame != null || ReceivedConfigurationFrame2 != null || ReceivedConfigurationFrame1 != null || ReceivedHeaderFrame != null || ReceivedCommandFrame != null))
+            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame2 is null && ReceivedConfigurationFrame1 is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null))
+                return;
+
+            switch (frame)
             {
-                DataFrame dataFrame = frame as DataFrame;
-
-                if (dataFrame != null)
+                case DataFrame dataFrame:
                 {
-                    if (ReceivedDataFrame != null)
-                        ReceivedDataFrame(this, new EventArgs<DataFrame>(dataFrame));
+                    ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
                 }
-                else
+                // Configuration frame type 2 is more specific than type 1 (and more common), so we check it first
+                case ConfigurationFrame2 configFrame2:
                 {
-                    // Configuration frame type 2 is more specific than type 1 (and more common), so we check it first
-                    ConfigurationFrame2 configFrame2 = frame as ConfigurationFrame2;
-
-                    if (configFrame2 != null)
-                    {
-                        if (ReceivedConfigurationFrame2 != null)
-                            ReceivedConfigurationFrame2(this, new EventArgs<ConfigurationFrame2>(configFrame2));
-                    }
-                    else
-                    {
-                        ConfigurationFrame1 configFrame1 = frame as ConfigurationFrame1;
-
-                        if (configFrame1 != null)
-                        {
-                            if (ReceivedConfigurationFrame1 != null)
-                                ReceivedConfigurationFrame1(this, new EventArgs<ConfigurationFrame1>(configFrame1));
-                        }
-                        else
-                        {
-                            HeaderFrame headerFrame = frame as HeaderFrame;
-
-                            if (headerFrame != null)
-                            {
-                                if (ReceivedHeaderFrame != null)
-                                    ReceivedHeaderFrame(this, new EventArgs<HeaderFrame>(headerFrame));
-                            }
-                            else
-                            {
-                                CommandFrame commandFrame = frame as CommandFrame;
-
-                                if (commandFrame != null)
-                                {
-                                    if (ReceivedCommandFrame != null)
-                                        ReceivedCommandFrame(this, new EventArgs<CommandFrame>(commandFrame));
-                                }
-                            }
-                        }
-                    }
+                    ReceivedConfigurationFrame2?.Invoke(this, new EventArgs<ConfigurationFrame2>(configFrame2));
+                    break;
+                }
+                case ConfigurationFrame1 configFrame1:
+                {
+                    ReceivedConfigurationFrame1?.Invoke(this, new EventArgs<ConfigurationFrame1>(configFrame1));
+                    break;
+                }
+                case HeaderFrame headerFrame:
+                {
+                    ReceivedHeaderFrame?.Invoke(this, new EventArgs<HeaderFrame>(headerFrame));
+                    break;
+                }
+                case CommandFrame commandFrame:
+                {
+                    ReceivedCommandFrame?.Invoke(this, new EventArgs<CommandFrame>(commandFrame));
+                    break;
                 }
             }
         }
@@ -475,10 +430,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // It is unusual, but not all that uncommon, for a device to send a command frame to its host. Normally the host sends to commands
             // to the device. However, since some devices seem to do this frequently we suppress reporting that the frame is "undefined".
             // Technically the frame is defined, but it is not part of the valid set of frames intended for reception.
-            if (frameType != FrameType.CommandFrame)
-                base.OnUnknownFrameTypeEncountered(frameType);
-            else
+            if (frameType is FrameType.CommandFrame)
                 m_unexpectedCommandFrames++;
+            else
+                base.OnUnknownFrameTypeEncountered(frameType);
         }
 
         #endregion
@@ -492,9 +447,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         internal static ConfigurationFrame2 CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame, DraftRevision draftRevision)
         {
             // See if frame is already an IEEE C37.118 configuration frame, type 2 (if so, we don't need to do any work)
-            ConfigurationFrame2 derivedFrame = sourceFrame as ConfigurationFrame2;
 
-            if (derivedFrame == null)
+            if (!(sourceFrame is ConfigurationFrame2 derivedFrame))
             {
                 // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
                 ConfigurationCell derivedCell;
@@ -533,7 +487,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    if (sourceFrequency != null)
+                    if (!(sourceFrequency is null))
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                     // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)

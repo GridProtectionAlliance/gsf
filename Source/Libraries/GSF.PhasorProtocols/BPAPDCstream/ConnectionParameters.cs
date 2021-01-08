@@ -113,14 +113,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         Editor(typeof(IniFileNameEditor), typeof(UITypeEditor))]
         public string ConfigurationFileName
         {
-            get
-            {
-                return m_configurationFileName;
-            }
-            set
-            {
-                m_configurationFileName = value;
-            }
+            get => m_configurationFileName;
+            set => m_configurationFileName = value;
         }
 
         /// <summary>
@@ -131,14 +125,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         DefaultValue(false)]
         public bool ParseWordCountFromByte
         {
-            get
-            {
-                return m_parseWordCountFromByte;
-            }
-            set
-            {
-                m_parseWordCountFromByte = value;
-            }
+            get => m_parseWordCountFromByte;
+            set => m_parseWordCountFromByte = value;
         }
 
         /// <summary>
@@ -149,14 +137,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         DefaultValue(true)]
         public bool RefreshConfigurationFileOnChange
         {
-            get
-            {
-                return m_refreshConfigurationFileOnChange;
-            }
-            set
-            {
-                m_refreshConfigurationFileOnChange = value;
-            }
+            get => m_refreshConfigurationFileOnChange;
+            set => m_refreshConfigurationFileOnChange = value;
         }
 
         /// <summary>
@@ -167,29 +149,17 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         DefaultValue(false)]
         public bool UsePhasorDataFileFormat
         {
-            get
-            {
-                return m_usePhasorDataFileFormat;
-            }
-            set
-            {
-                m_usePhasorDataFileFormat = value;
-            }
+            get => m_usePhasorDataFileFormat;
+            set => m_usePhasorDataFileFormat = value;
         }
 
         /// <summary>
         /// Determines if selected BPA PDCstream configuration file exists.
         /// </summary>
         [Browsable(false)]
-        public override bool ValuesAreValid
-        {
-            get
-            {
-                return File.Exists(m_configurationFileName);
-            }
-        }
+        public override bool ValuesAreValid => File.Exists(m_configurationFileName);
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 

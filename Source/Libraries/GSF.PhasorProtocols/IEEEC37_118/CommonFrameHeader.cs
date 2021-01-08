@@ -78,12 +78,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             m_version = 1;
             m_timebase = (UInt24)100000;
 
-            if ((object)configurationFrame != null)
-            {
-                // Hang on to configured frame rate and ticks per frame
-                m_framesPerSecond = configurationFrame.FrameRate;
-                m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
-            }
+            if (configurationFrame is null)
+                return;
+
+            // Hang on to configured frame rate and ticks per frame
+            m_framesPerSecond = configurationFrame.FrameRate;
+            m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
         }
 
         /// <summary>
@@ -110,12 +110,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             uint fractionOfSecond = BigEndian.ToUInt32(buffer, startIndex + 10);
 
             // Without timebase, the best timestamp you can get is down to the whole second
-            m_timestamp = (new UnixTimeTag((decimal)secondOfCentury)).ToDateTime().Ticks;
+            m_timestamp = new UnixTimeTag((decimal)secondOfCentury).ToDateTime().Ticks;
 
-            if ((object)configurationFrame != null)
+            if (!(configurationFrame is null))
             {
-                long ticksBeyondSecond;
-
                 // If config frame is available, frames have enough information for sub-second time resolution
                 m_timebase = configurationFrame.Timebase;
 
@@ -123,7 +121,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 // Since we are converting to ticks, we need to multiply by Ticks.PerSecond.
                 // We do the multiplication first so that the whole operation can be done using integer arithmetic.
                 // m_timebase / 2L is added before dividing by timebase in order to round the result.
-                ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
+                long ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
                 m_timestamp += (ticksBeyondSecond + m_timebase / 2L) / m_timebase;
 
                 // Hang on to configured frame rate and ticks per frame
@@ -158,14 +156,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public Ticks Timestamp
         {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
+            get => m_timestamp;
+            set => m_timestamp = value;
         }
 
         /// <summary>
@@ -181,14 +173,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         public FrameType TypeID
         {
-            get
-            {
-                return m_frameType;
-            }
-            set
-            {
-                m_frameType = value;
-            }
+            get => m_frameType;
+            set => m_frameType = value;
         }
 
         /// <summary>
@@ -196,14 +182,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public byte Version
         {
-            get
-            {
-                return m_version;
-            }
-            set
-            {
-                m_version = value;
-            }
+            get => m_version;
+            set => m_version = value;
         }
 
         /// <summary>
@@ -211,14 +191,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public ushort FrameLength
         {
-            get
-            {
-                return m_frameLength;
-            }
-            set
-            {
-                m_frameLength = value;
-            }
+            get => m_frameLength;
+            set => m_frameLength = value;
         }
 
         /// <summary>
@@ -226,11 +200,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public ushort DataLength
         {
-            get
-            {
+            get =>
                 // Data length will be frame length minus common header length minus crc16
-                return (ushort)(FrameLength - FixedLength - 2);
-            }
+                (ushort)(FrameLength - FixedLength - 2);
             set
             {
                 if (value > Common.MaximumDataLength)
@@ -245,14 +217,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public ushort IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
-            set
-            {
-                m_idCode = value;
-            }
+            get => m_idCode;
+            set => m_idCode = value;
         }
 
         /// <summary>
@@ -260,14 +226,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public uint Timebase
         {
-            get
-            {
-                return m_timebase;
-            }
-            set
-            {
-                m_timebase = value;
-            }
+            get => m_timebase;
+            set => m_timebase = value;
         }
 
         /// <summary>
@@ -312,14 +272,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
         {
-            get
-            {
-                return (TimeQualityFlags)(m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
-            }
-            set
-            {
-                m_timeQualityFlags = (m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
-            }
+            get => (TimeQualityFlags)(m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
+            set => m_timeQualityFlags = (m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
         }
 
         /// <summary>
@@ -327,53 +281,29 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public TimeQualityIndicatorCode TimeQualityIndicatorCode
         {
-            get
-            {
-                return (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
-            }
-            set
-            {
-                m_timeQualityFlags = (m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
-            }
+            get => (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
+            set => m_timeQualityFlags = (m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
         }
 
         /// <summary>
         /// Gets time as a <see cref="UnixTimeTag"/> representing seconds of current <see cref="Timestamp"/>.
         /// </summary>
-        public UnixTimeTag TimeTag
-        {
-            get
-            {
-                return new UnixTimeTag(m_timestamp);
-            }
-        }
+        public UnixTimeTag TimeTag => new UnixTimeTag(m_timestamp);
 
         /// <summary>
         /// Gets or sets the parsing state for the <see cref="CommonFrameHeader"/> object.
         /// </summary>
         public IChannelParsingState State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
+            get => m_state;
+            set => m_state = value;
         }
 
         // Gets or sets any additional state information - satisfies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value as IChannelParsingState;
-            }
+            get => m_state;
+            set => m_state = value as IChannelParsingState;
         }
 
         /// <summary>

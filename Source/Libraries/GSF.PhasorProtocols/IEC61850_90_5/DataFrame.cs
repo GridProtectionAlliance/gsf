@@ -147,27 +147,15 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrame"/>.
         /// </summary>
-        public new DataCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as DataCellCollection;
-            }
-        }
+        public new DataCellCollection Cells => base.Cells as DataCellCollection;
 
         /// <summary>
         /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
         /// </summary>
         public new ConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return base.ConfigurationFrame as ConfigurationFrame;
-            }
-            set
-            {
-                base.ConfigurationFrame = value;
-            }
+            get => base.ConfigurationFrame as ConfigurationFrame;
+            set => base.ConfigurationFrame = value;
         }
 
         /// <summary>
@@ -178,10 +166,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </remarks>
         public override Ticks Timestamp
         {
-            get
-            {
-                return CommonHeader.Timestamp;
-            }
+            get => CommonHeader.Timestamp;
             set
             {
                 // Keep timestamp updates synchrnonized...
@@ -193,27 +178,15 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets the identifier that is used to identify the IEC 61850-90-5 frame.
         /// </summary>
-        public FrameType TypeID
-        {
-            get
-            {
-                return IEC61850_90_5.FrameType.DataFrame;
-            }
-        }
+        public FrameType TypeID => IEC61850_90_5.FrameType.DataFrame;
 
         /// <summary>
         /// Gets or sets IEC 61850-90-5 sample synchronization state.
         /// </summary>
         public byte SampleSynchronization
         {
-            get
-            {
-                return m_sampleSynchronization;
-            }
-            set
-            {
-                m_sampleSynchronization = value;
-            }
+            get => m_sampleSynchronization;
+            set => m_sampleSynchronization = value;
         }
 
         /// <summary>
@@ -221,14 +194,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public ushort SampleCount
         {
-            get
-            {
-                return m_sampleCount;
-            }
-            set
-            {
-                m_sampleCount = value;
-            }
+            get => m_sampleCount;
+            set => m_sampleCount = value;
         }
 
         /// <summary>
@@ -240,7 +207,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
-                if ((object)m_frameHeader == null)
+                if (m_frameHeader is null)
                 {
                     m_frameHeader = new CommonFrameHeader(ConfigurationFrame, TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
                     {
@@ -254,30 +221,24 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                {
-                    State = m_frameHeader.State as IDataFrameParsingState;
-                    base.Timestamp = m_frameHeader.Timestamp;
-                    m_qualityFlags = ((uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode);
+                if (m_frameHeader is null)
+                    return;
 
-                    // Reference header MSVID in data frame if it's defined
-                    if ((object)m_frameHeader.MsvID != null)
-                        m_msvID = m_frameHeader.MsvID;
-                }
+                State = m_frameHeader.State as IDataFrameParsingState;
+                base.Timestamp = m_frameHeader.Timestamp;
+                m_qualityFlags = (uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode;
+
+                // Reference header MSVID in data frame if it's defined
+                if (!(m_frameHeader.MsvID is null))
+                    m_msvID = m_frameHeader.MsvID;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
@@ -285,10 +246,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public override uint QualityFlags
         {
-            get
-            {
-                return m_qualityFlags;
-            }
+            get => m_qualityFlags;
             set
             {
                 m_qualityFlags = value;
@@ -306,14 +264,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
         {
-            get
-            {
-                return CommonHeader.TimeQualityFlags;
-            }
-            set
-            {
-                CommonHeader.TimeQualityFlags = value;
-            }
+            get => CommonHeader.TimeQualityFlags;
+            set => CommonHeader.TimeQualityFlags = value;
         }
 
         /// <summary>
@@ -321,37 +273,19 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public TimeQualityIndicatorCode TimeQualityIndicatorCode
         {
-            get
-            {
-                return CommonHeader.TimeQualityIndicatorCode;
-            }
-            set
-            {
-                CommonHeader.TimeQualityIndicatorCode = value;
-            }
+            get => CommonHeader.TimeQualityIndicatorCode;
+            set => CommonHeader.TimeQualityIndicatorCode = value;
         }
 
         /// <summary>
         /// Gets the length of the header image.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonHeader.Length;
-            }
-        }
+        protected override int HeaderLength => CommonHeader.Length;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.
         /// </summary>
-        protected override byte[] HeaderImage
-        {
-            get
-            {
-                return CommonHeader.BinaryImage;
-            }
-        }
+        protected override byte[] HeaderImage => CommonHeader.BinaryImage;
 
         /// <summary>
         /// Gets the length of the <see cref="BinaryImage"/>.
@@ -360,32 +294,23 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
-                if ((object)m_binaryImage == null)
+                if (m_binaryImage is null)
                 {
                     // If parsing instead of publishing, we just return parsed frame length
-                    if ((object)m_asduImages == null)
+                    if (m_asduImages is null)
                         return CommonHeader.FrameLength;
 
                     m_binaryImage = GenerateBinaryImage();
                 }
 
-                if ((object)m_binaryImage != null)
-                    return m_binaryImage.Length;
-
-                return 0;
+                return m_binaryImage?.Length ?? 0;
             }
         }
 
         /// <summary>
         /// Gets the binary image of this <see cref="DataFrame"/> object.
         /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                return m_binaryImage;
-            }
-        }
+        public override byte[] BinaryImage => m_binaryImage;
 
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
@@ -419,7 +344,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     buffer[0] = 0x85;
 
                     // KeyID in common header is technically a lookup into derived rotating keys, but all implementations are using dummy key for now
-                    HMAC hmac = (byte)algorithm <= (byte)SignatureAlgorithm.Sha256 ? (HMAC)(new CommonFrameHeader.ShaHmac(Common.DummyKey)) : (HMAC)(new CommonFrameHeader.AesHmac(Common.DummyKey));
+                    HMAC hmac = (byte)algorithm <= (byte)SignatureAlgorithm.Sha256 ? new CommonFrameHeader.ShaHmac(Common.DummyKey) : (HMAC)new CommonFrameHeader.AesHmac(Common.DummyKey);
 
                     switch (algorithm)
                     {
@@ -439,7 +364,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 32), 0, buffer, 1, 32);
                             break;
                         default:
-                            throw new NotSupportedException(string.Format("IEC 61850-90-5 signature algorithm \"{0}\" is not currently supported: ", algorithm));
+                            throw new NotSupportedException($"IEC 61850-90-5 signature algorithm \"{algorithm}\" is not currently supported: ");
                     }
                 }
 
@@ -501,7 +426,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             m_configurationRevision.EncodeTagValue(SampledValueTag.ConfRev, asduImage, ref index);
 
             // Encode timestamp
-            ulong timestamp = Word.MakeQuadWord(header.SecondOfCentury, (uint)(((uint)header.FractionOfSecond << 8) | (uint)header.TimeQualityFlags));
+            ulong timestamp = Word.MakeQuadWord(header.SecondOfCentury, ((uint)header.FractionOfSecond << 8) | (uint)header.TimeQualityFlags);
             timestamp.EncodeTagValue(SampledValueTag.RefrTm, asduImage, ref index);
 
             // Defaulting sample synchronization state to true - not sure what value this has
@@ -544,7 +469,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             // Make sure ASDU image buffers are initialized (first time through they will all be null)
             for (int i = 0; i < m_asduCount - 1; i++)
             {
-                if ((object)m_asduImages[i] == null)
+                if (m_asduImages[i] is null)
                     m_asduImages[i] = m_asduImages[m_asduCount - 1];
             }
 
@@ -590,10 +515,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             IConfigurationFrame configurationFrame = state.ConfigurationFrame;
 
             // Make sure configuration frame gets assigned before parsing begins, if available...
-            if (configurationFrame != null)
+            if (!(configurationFrame is null))
                 ConfigurationFrame = configurationFrame as ConfigurationFrame;
 
-            int tagLength, index = startIndex;
+            int index = startIndex;
 
             // Header has already been parsed, skip past it
             index += header.Length;
@@ -680,21 +605,21 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
                 index++;
-                tagLength = buffer.ParseTagLength(ref index);
+                int tagLength = buffer.ParseTagLength(ref index);
 
                 if (tagLength < 8)
-                    throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", SampledValueTag.RefrTm, tagLength));
+                    throw new InvalidOperationException($"Unexpected length for \"{SampledValueTag.RefrTm}\" tag: {tagLength}");
 
                 uint secondOfCentury = BigEndian.ToUInt32(buffer, index);
                 UInt24 fractionOfSecond = BigEndian.ToUInt24(buffer, index + 4);
                 index += 7;
 
                 // Get whole seconds of timestamp
-                long timestamp = (new UnixTimeTag((decimal)secondOfCentury)).ToDateTime().Ticks;
+                long timestamp = new UnixTimeTag((decimal)secondOfCentury).ToDateTime().Ticks;
 
                 // Add fraction seconds of timestamp
                 decimal fractionalSeconds = fractionOfSecond / (decimal)header.Timebase;
-                timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
+                timestamp += (long)(fractionalSeconds * Ticks.PerSecond);
 
                 // Apply parsed timestamp to common header
                 header.Timestamp = timestamp;
@@ -715,18 +640,18 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 tagLength = buffer.ParseTagLength(ref index);
 
                 // Attempt to derive a configuration if none is defined
-                if ((object)m_configurationFrame == null)
+                if (m_configurationFrame is null)
                 {
                     // If requested, attempt to load configuration from an associated ETR file
                     if (header.UseETRConfiguration)
                         ParseETRConfiguration();
 
                     // If we still have no configuration, see if a "guess" is requested
-                    if ((object)m_configurationFrame == null && header.GuessConfiguration)
+                    if (m_configurationFrame is null && header.GuessConfiguration)
                         GuessAtConfiguration(tagLength);
                 }
 
-                if ((object)m_configurationFrame == null)
+                if (m_configurationFrame is null)
                 {
                     // If the configuration is still unavailable, skip past sample values - don't know the details otherwise
                     index += tagLength;
@@ -776,7 +701,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 if (!foundETRFile)
                 {
                     // Also test for ETR in configuration cache folder
-                    etrFilePath = FilePath.GetAbsolutePath(string.Format("ConfigurationCache{0}{1}", Path.DirectorySeparatorChar, etrFileName));
+                    etrFilePath = FilePath.GetAbsolutePath($"ConfigurationCache{Path.DirectorySeparatorChar}{etrFileName}");
                     foundETRFile = File.Exists(etrFilePath);
                 }
 
@@ -809,7 +734,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 // If ETR is defining a new device, exit and handle current device
                                 if (signalType == SignalType.FLAG && statusDefined)
                                 {
-                                    badOrder = (lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI);
+                                    badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI;
                                     lastSignalType = SignalType.FLAG;
                                     break;
                                 }
@@ -823,7 +748,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                         break;
                                     case SignalType.VPHM:
                                     case SignalType.IPHM:
-                                        badOrder = (lastSignalType != SignalType.FLAG && lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA);
+                                        badOrder = lastSignalType != SignalType.FLAG && lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA;
                                         PhasorDefinition phasor = new PhasorDefinition(configCell, label, 1, 0.0D, signalType == SignalType.VPHM ? PhasorType.Voltage : PhasorType.Current, null);
                                         configCell.PhasorDefinitions.Add(phasor);
                                         magnitudeSignals++;
@@ -837,19 +762,19 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                         angleSignals++;
                                         break;
                                     case SignalType.FREQ:
-                                        badOrder = (lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA);
+                                        badOrder = lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA;
                                         break;
                                     case SignalType.DFDT:
                                         badOrder = lastSignalType != SignalType.FREQ;
                                         configCell.FrequencyDefinition = new FrequencyDefinition(configCell, "Frequency");
                                         break;
                                     case SignalType.ALOG:
-                                        badOrder = (lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG);
+                                        badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG;
                                         AnalogDefinition analog = new AnalogDefinition(configCell, label, 1, 0.0D, AnalogType.SinglePointOnWave);
                                         configCell.AnalogDefinitions.Add(analog);
                                         break;
                                     case SignalType.DIGI:
-                                        badOrder = (lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI);
+                                        badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI;
                                         DigitalDefinition digital = new DigitalDefinition(configCell, label, 0, 1);
                                         configCell.DigitalDefinitions.Add(digital);
                                         break;
@@ -861,7 +786,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             }
 
                             if (badOrder)
-                                throw new InvalidOperationException(string.Format("Invalid signal order encountered - {0} cannot follow {1}. Standard synchrophasor order is: status flags, one or more phasor magnitude/angle pairs, frequency, dF/dt, optional analogs, optional digitals", signalType, lastSignalType));
+                                throw new InvalidOperationException($"Invalid signal order encountered - {signalType} cannot follow {lastSignalType}. Standard synchrophasor order is: status flags, one or more phasor magnitude/angle pairs, frequency, dF/dt, optional analogs, optional digitals");
 
                             if (!statusDefined)
                                 throw new InvalidOperationException("No status flag signal was defined.");
@@ -872,7 +797,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             if (magnitudeSignals != angleSignals)
                                 throw new InvalidOperationException("Phasor magnitude/angle signal pair mismatch - there must be a one-to-one definition between angle and magnitude signals.");
 
-                            if (configCell.FrequencyDefinition == null)
+                            if (configCell.FrequencyDefinition is null)
                                 throw new InvalidOperationException("No frequency and dF/dt signal pair was defined.");
 
                             // Add cell to configuration frame
@@ -889,7 +814,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     }
                     catch (Exception ex)
                     {
-                        throw new InvalidOperationException(string.Format("Failed to parse associated ETR configuration \"{0}\": {1}", etrFilePath, ex.Message), ex);
+                        throw new InvalidOperationException($"Failed to parse associated ETR configuration \"{etrFilePath}\": {ex.Message}", ex);
                     }
                 }
             }
@@ -899,33 +824,33 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         // Note that current parsing depends on sample tag name format defined in the IEC 61850-90-5 implementation agreement
         private static bool ParseNextSampleDefinition(StreamReader reader, out SignalType signalType, out string label, out bool endOfFile)
         {
-            string signalLabel, dataType, signalDetail;
             bool result = false;
 
             signalType = SignalType.NONE;
             label = null;
 
             // Attempt to read signal definition and label line
-            signalLabel = reader.ReadLine();
+            string signalLabel = reader.ReadLine();
 
-            if (signalLabel != null)
+            if (!(signalLabel is null))
             {
                 // Attempt to reader data type line
-                dataType = reader.ReadLine();
+                string dataType = reader.ReadLine();
 
-                if (dataType != null)
+                if (!(dataType is null))
                 {
                     // Clean up data type
                     dataType = dataType.Trim().ToLower();
 
-                    int index = signalLabel.IndexOf("-");
+                    int index = signalLabel.IndexOf("-", StringComparison.Ordinal);
 
                     // Get defined signal label
                     label = signalLabel.Substring(index + 1).Trim();
 
                     // See if signal type contains ST
-                    index = signalLabel.IndexOf(".ST.");
+                    index = signalLabel.IndexOf(".ST.", StringComparison.Ordinal);
 
+                    string signalDetail;
                     if (index > 0)
                     {
                         // Get detail portion of signal type label
@@ -938,7 +863,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             signalType = SignalType.FLAG;
 
                             if (dataType != "i2")
-                                throw new InvalidOperationException(string.Format("Invalid data type size {0} specified for signal type {1} parsed from {2}", dataType, signalType, signalLabel));
+                                throw new InvalidOperationException($"Invalid data type size {dataType} specified for signal type {signalType} parsed from {signalLabel}");
 
                             result = true;
                         }
@@ -948,20 +873,20 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             signalType = SignalType.DIGI;
 
                             if (dataType != "i2")
-                                throw new InvalidOperationException(string.Format("Invalid data type size {0} specified for signal type {1} parsed from {2}", dataType, signalType, signalLabel));
+                                throw new InvalidOperationException($"Invalid data type size {dataType} specified for signal type {signalType} parsed from {signalLabel}");
 
                             result = true;
                         }
                         else
                         {
                             // Unable to determine signal type
-                            throw new InvalidOperationException(string.Format("Unable to determine ETR signal type for {0} ({1})", signalLabel, dataType));
+                            throw new InvalidOperationException($"Unable to determine ETR signal type for {signalLabel} ({dataType})");
                         }
                     }
                     else
                     {
                         // See if signal type contains MX
-                        index = signalLabel.IndexOf(".MX.");
+                        index = signalLabel.IndexOf(".MX.", StringComparison.Ordinal);
 
                         if (index > 0)
                         {
@@ -975,7 +900,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 signalType = SignalType.DFDT;
 
                                 if (dataType != "f4")
-                                    throw new InvalidOperationException(string.Format("Invalid data type size {0} specified for signal type {1} parsed from {2}", dataType, signalType, signalLabel));
+                                    throw new InvalidOperationException($"Invalid data type size {dataType} specified for signal type {signalType} parsed from {signalLabel}");
 
                                 result = true;
                             }
@@ -985,7 +910,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 signalType = SignalType.FREQ;
 
                                 if (dataType != "f4")
-                                    throw new InvalidOperationException(string.Format("Invalid data type size {0} specified for signal type {1} parsed from {2}", dataType, signalType, signalLabel));
+                                    throw new InvalidOperationException($"Invalid data type size {dataType} specified for signal type {signalType} parsed from {signalLabel}");
 
                                 result = true;
                             }
@@ -1004,11 +929,11 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 else
                                 {
                                     // Unable to determine signal type
-                                    throw new InvalidOperationException(string.Format("Unable to determine ETR signal type for {0} ({1})", signalLabel, dataType));
+                                    throw new InvalidOperationException($"Unable to determine ETR signal type for {signalLabel} ({dataType})");
                                 }
 
                                 if (dataType != "f4")
-                                    throw new InvalidOperationException(string.Format("Invalid data type size {0} specified for signal type {1} parsed from {2}", dataType, signalType, signalLabel));
+                                    throw new InvalidOperationException($"Invalid data type size {dataType} specified for signal type {signalType} parsed from {signalLabel}");
 
                                 result = true;
                             }
@@ -1027,18 +952,18 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 else
                                 {
                                     // Unable to determine signal type
-                                    throw new InvalidOperationException(string.Format("Unable to determine ETR signal type for {0} ({1})", signalLabel, dataType));
+                                    throw new InvalidOperationException($"Unable to determine ETR signal type for {signalLabel} ({dataType})");
                                 }
 
                                 if (dataType != "f4")
-                                    throw new InvalidOperationException(string.Format("Invalid data type size {0} specified for signal type {1} parsed from {2}", dataType, signalType, signalLabel));
+                                    throw new InvalidOperationException($"Invalid data type size {dataType} specified for signal type {signalType} parsed from {signalLabel}");
 
                                 result = true;
                             }
                             else
                             {
                                 // Unable to determine signal type
-                                throw new InvalidOperationException(string.Format("Unable to determine ETR signal type for {0} ({1})", signalLabel, dataType));
+                                throw new InvalidOperationException($"Unable to determine ETR signal type for {signalLabel} ({dataType})");
                             }
                         }
                         else
@@ -1047,7 +972,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             signalType = SignalType.ALOG;
 
                             if (dataType != "f4")
-                                throw new InvalidOperationException(string.Format("Invalid data type size {0} specified for assumed analog signal type parsed from {1}", dataType, signalLabel));
+                                throw new InvalidOperationException($"Invalid data type size {dataType} specified for assumed analog signal type parsed from {signalLabel}");
 
                             result = true;
                         }
@@ -1119,7 +1044,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             bool trustHeaderLength = true;
             bool validateCheckSum = true;
 
-            if ((object)State != null)
+            if (!(State is null))
             {
                 trustHeaderLength = State.TrustHeaderLength;
                 validateCheckSum = State.ValidateCheckSum;

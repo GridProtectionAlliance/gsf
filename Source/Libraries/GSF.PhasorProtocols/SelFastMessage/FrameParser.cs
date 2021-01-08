@@ -62,9 +62,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
 
         // Fields
         private ConfigurationFrame m_configurationFrame;
-        private MessagePeriod m_messagePeriod;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -80,7 +79,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { Common.HeaderByte1, Common.HeaderByte2 };
 
-            m_messagePeriod = messagePeriod;
+            MessagePeriod = messagePeriod;
         }
 
         #endregion
@@ -96,41 +95,19 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = CastToDerivedConfigurationFrame(value, m_messagePeriod);
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = CastToDerivedConfigurationFrame(value, MessagePeriod);
         }
 
         /// <summary>
         /// Gets flag that determines if SEL Fast Message protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ProtocolUsesSyncBytes => true;
 
         /// <summary>
         /// Gets or sets the desired message period for the SEL device.
         /// </summary>
-        public MessagePeriod MessagePeriod
-        {
-            get
-            {
-                return m_messagePeriod;
-            }
-            set
-            {
-                m_messagePeriod = value;
-            }
-        }
+        public MessagePeriod MessagePeriod { get; set; }
 
         /// <summary>
         /// Gets current descriptive status of the <see cref="FrameParser"/>.
@@ -142,7 +119,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
                 StringBuilder status = new StringBuilder();
 
                 status.Append("    Defined message period: ");
-                status.Append(m_messagePeriod);
+                status.Append(MessagePeriod);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -155,20 +132,15 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public override IConnectionParameters ConnectionParameters
         {
-            get
-            {
-                return base.ConnectionParameters;
-            }
+            get => base.ConnectionParameters;
             set
             {
-                ConnectionParameters parameters = value as ConnectionParameters;
-
-                if (parameters != null)
+                if (value is ConnectionParameters parameters)
                 {
                     base.ConnectionParameters = parameters;
 
                     // Assign new incoming connection parameter values
-                    m_messagePeriod = parameters.MessagePeriod;
+                    MessagePeriod = parameters.MessagePeriod;
                 }
             }
         }
@@ -222,25 +194,25 @@ namespace GSF.PhasorProtocols.SelFastMessage
                 if (length >= frameLength)
                 {
                     // Create configuration frame if it doesn't exist or frame size has changed
-                    if (m_configurationFrame == null || m_configurationFrame.FrameSize != parsedFrameHeader.FrameSize)
+                    if (m_configurationFrame is null || m_configurationFrame.FrameSize != parsedFrameHeader.FrameSize)
                     {
                         // Create virtual configuration frame
-                        m_configurationFrame = new ConfigurationFrame(parsedFrameHeader.FrameSize, m_messagePeriod, parsedFrameHeader.IDCode);
+                        m_configurationFrame = new ConfigurationFrame(parsedFrameHeader.FrameSize, MessagePeriod, parsedFrameHeader.IDCode);
 
                         // Notify clients of new configuration frame
                         OnReceivedChannelFrame(m_configurationFrame);
                     }
 
-                    if (m_configurationFrame != null)
-                    {
-                        // Assign common header and data frame parsing state
-                        parsedFrameHeader.State = new DataFrameParsingState(frameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
+                    if (m_configurationFrame is null)
+                        return null;
 
-                        // Expose the frame buffer image in case client needs this data for any reason
-                        OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, frameLength);
+                    // Assign common header and data frame parsing state
+                    parsedFrameHeader.State = new DataFrameParsingState(frameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
-                        return parsedFrameHeader;
-                    }
+                    // Expose the frame buffer image in case client needs this data for any reason
+                    OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, frameLength);
+
+                    return parsedFrameHeader;
                 }
             }
 
@@ -297,24 +269,20 @@ namespace GSF.PhasorProtocols.SelFastMessage
             base.OnReceivedChannelFrame(frame);
 
             // Raise SEL Fast Message specific channel frame events, if any have been subscribed
-            if (frame != null && (ReceivedDataFrame != null || ReceivedConfigurationFrame != null))
+            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null))
+                return;
+            
+            switch (frame)
             {
-                DataFrame dataFrame = frame as DataFrame;
-
-                if (dataFrame != null)
+                case DataFrame dataFrame:
                 {
-                    if (ReceivedDataFrame != null)
-                        ReceivedDataFrame(this, new EventArgs<DataFrame>(dataFrame));
+                    ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
                 }
-                else
+                case ConfigurationFrame configFrame:
                 {
-                    ConfigurationFrame configFrame = frame as ConfigurationFrame;
-
-                    if (configFrame != null)
-                    {
-                        if (ReceivedConfigurationFrame != null)
-                            ReceivedConfigurationFrame(this, new EventArgs<ConfigurationFrame>(configFrame));
-                    }
+                    ReceivedConfigurationFrame?.Invoke(this, new EventArgs<ConfigurationFrame>(configFrame));
+                    break;
                 }
             }
         }
@@ -330,7 +298,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             // See if frame is already a SEL Fast Message frame (if so, we don't need to do any work)
             ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
-            if (derivedFrame == null)
+            if (derivedFrame is null)
             {
                 // Create a new SEL Fast Message configuration frame converted from equivalent configuration information; SEL Fast Message only supports one device
                 if (sourceFrame.Cells.Count > 0)
@@ -363,7 +331,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    if (sourceFrequency != null)
+                    if (!(sourceFrequency is null))
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                     // Add cell to frame

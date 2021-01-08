@@ -87,14 +87,8 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public new ConfigurationFrame Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -103,10 +97,7 @@ namespace GSF.PhasorProtocols.FNET
         public override ushort IDCode
         {
             // F-NET protocol only allows one device, so we share ID code with parent frame...
-            get
-            {
-                return Parent.IDCode;
-            }
+            get => Parent.IDCode;
             set
             {
                 Parent.IDCode = value;
@@ -123,10 +114,7 @@ namespace GSF.PhasorProtocols.FNET
         /// <exception cref="NotSupportedException">F-NET only supports floating-point data.</exception>
         public override DataFormat PhasorDataFormat
         {
-            get
-            {
-                return DataFormat.FloatingPoint;
-            }
+            get => DataFormat.FloatingPoint;
             set
             {
                 if (value != DataFormat.FloatingPoint)
@@ -143,10 +131,7 @@ namespace GSF.PhasorProtocols.FNET
         /// <exception cref="NotSupportedException">F-NET only supports polar phasor data.</exception>
         public override CoordinateFormat PhasorCoordinateFormat
         {
-            get
-            {
-                return CoordinateFormat.Polar;
-            }
+            get => CoordinateFormat.Polar;
             set
             {
                 if (value != CoordinateFormat.Polar)
@@ -163,10 +148,7 @@ namespace GSF.PhasorProtocols.FNET
         /// <exception cref="NotSupportedException">F-NET only supports floating-point data.</exception>
         public override DataFormat FrequencyDataFormat
         {
-            get
-            {
-                return DataFormat.FloatingPoint;
-            }
+            get => DataFormat.FloatingPoint;
             set
             {
                 if (value != DataFormat.FloatingPoint)
@@ -183,10 +165,7 @@ namespace GSF.PhasorProtocols.FNET
         /// <exception cref="NotSupportedException">F-NET only supports floating-point data.</exception>
         public override DataFormat AnalogDataFormat
         {
-            get
-            {
-                return DataFormat.FloatingPoint;
-            }
+            get => DataFormat.FloatingPoint;
             set
             {
                 if (value != DataFormat.FloatingPoint)
@@ -203,14 +182,8 @@ namespace GSF.PhasorProtocols.FNET
         /// </remarks>
         public Ticks TimeOffset
         {
-            get
-            {
-                return m_timeOffset;
-            }
-            set
-            {
-                m_timeOffset = value;
-            }
+            get => m_timeOffset;
+            set => m_timeOffset = value;
         }
 
         /// <summary>
@@ -218,14 +191,8 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public double Longitude
         {
-            get
-            {
-                return m_longitude;
-            }
-            set
-            {
-                m_longitude = value;
-            }
+            get => m_longitude;
+            set => m_longitude = value;
         }
 
         /// <summary>
@@ -233,14 +200,8 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public double Latitude
         {
-            get
-            {
-                return m_latitude;
-            }
-            set
-            {
-                m_latitude = value;
-            }
+            get => m_latitude;
+            set => m_latitude = value;
         }
 
         /// <summary>
@@ -248,27 +209,16 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public int NumberOfSatellites
         {
-            get
-            {
-                return m_numberOfSatellites;
-            }
-            set
-            {
-                m_numberOfSatellites = value;
-            }
+            get => m_numberOfSatellites;
+            set => m_numberOfSatellites = value;
         }
 
         /// <summary>
         /// Gets the maximum length of the <see cref="ConfigurationCellBase.StationName"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int MaximumStationNameLength
-        {
-            get
-            {
-                // The station name is defined external to the protocol, so there is no set limit
-                return int.MaxValue;
-            }
-        }
+        public override int MaximumStationNameLength =>
+            // The station name is defined external to the protocol, so there is no set limit
+            int.MaxValue;
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationCell"/> object.

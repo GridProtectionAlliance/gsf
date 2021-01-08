@@ -84,7 +84,7 @@ namespace GSF.PhasorProtocols
         public virtual bool TryGetByStationName(string stationName, out IConfigurationCell configurationCell)
         {
             configurationCell = this.FirstOrDefault(cell => stationName.TruncateRight(cell.MaximumStationNameLength).Equals(cell.StationName, StringComparison.OrdinalIgnoreCase));
-            return (object)configurationCell != null;
+            return !(configurationCell is null);
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace GSF.PhasorProtocols
         public virtual bool TryGetByIDLabel(string label, out IConfigurationCell configurationCell)
         {
             configurationCell = this.FirstOrDefault(cell => label.Equals(cell.IDLabel.TruncateRight(cell.IDLabelLength), StringComparison.OrdinalIgnoreCase));
-            return (object)configurationCell != null;
+            return !(configurationCell is null);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace GSF.PhasorProtocols
         public virtual bool TryGetByIDCode(ushort idCode, out IConfigurationCell configurationCell)
         {
             configurationCell = this.FirstOrDefault(cell => cell.IDCode == idCode);
-            return (object)configurationCell != null;
+            return !(configurationCell is null);
         }
 
         /// <summary>

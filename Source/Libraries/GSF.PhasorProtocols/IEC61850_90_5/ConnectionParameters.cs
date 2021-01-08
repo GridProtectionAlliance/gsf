@@ -127,14 +127,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         DefaultValue(DefaultUseETRConfiguration)]
         public bool UseETRConfiguration
         {
-            get
-            {
-                return m_useETRConfiguration;
-            }
-            set
-            {
-                m_useETRConfiguration = value;
-            }
+            get => m_useETRConfiguration;
+            set => m_useETRConfiguration = value;
         }
 
         /// <summary>
@@ -145,14 +139,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         DefaultValue(DefaultGuessConfiguration)]
         public bool GuessConfiguration
         {
-            get
-            {
-                return m_guessConfiguration;
-            }
-            set
-            {
-                m_guessConfiguration = value;
-            }
+            get => m_guessConfiguration;
+            set => m_guessConfiguration = value;
         }
 
         /// <summary>
@@ -163,14 +151,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         DefaultValue(DefaultParseRedundantASDUs)]
         public bool ParseRedundantASDUs
         {
-            get
-            {
-                return m_parseRedundantASDUs;
-            }
-            set
-            {
-                m_parseRedundantASDUs = value;
-            }
+            get => m_parseRedundantASDUs;
+            set => m_parseRedundantASDUs = value;
         }
 
         /// <summary>
@@ -181,14 +163,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         DefaultValue(DefaultIgnoreSignatureValidationFailures)]
         public bool IgnoreSignatureValidationFailures
         {
-            get
-            {
-                return m_ignoreSignatureValidationFailures;
-            }
-            set
-            {
-                m_ignoreSignatureValidationFailures = value;
-            }
+            get => m_ignoreSignatureValidationFailures;
+            set => m_ignoreSignatureValidationFailures = value;
         }
 
         /// <summary>
@@ -199,14 +175,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         DefaultValue(DefaultIgnoreSampleSizeValidationFailures)]
         public bool IgnoreSampleSizeValidationFailures
         {
-            get
-            {
-                return m_ignoreSampleSizeValidationFailures;
-            }
-            set
-            {
-                m_ignoreSampleSizeValidationFailures = value;
-            }
+            get => m_ignoreSampleSizeValidationFailures;
+            set => m_ignoreSampleSizeValidationFailures = value;
         }
 
         /// <summary>
@@ -217,14 +187,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         DefaultValue(typeof(AngleFormat), DefaultPhasorAngleFormat)]
         public AngleFormat PhasorAngleFormat
         {
-            get
-            {
-                return m_phasorAngleFormat;
-            }
-            set
-            {
-                m_phasorAngleFormat = value;
-            }
+            get => m_phasorAngleFormat;
+            set => m_phasorAngleFormat = value;
         }
 
         #endregion

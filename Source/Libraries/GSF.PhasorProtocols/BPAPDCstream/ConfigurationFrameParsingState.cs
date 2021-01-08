@@ -35,9 +35,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         #region [ Members ]
 
         // Fields
-        private string m_configurationFileName;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -52,7 +51,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         public ConfigurationFrameParsingState(int parsedBinaryLength, string configurationFileName, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
             : base(parsedBinaryLength, createNewCellFunction, trustHeaderLength, validateCheckSum)
         {
-            m_configurationFileName = configurationFileName;
+            ConfigurationFileName = configurationFileName;
         }
 
         #endregion
@@ -62,18 +61,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets or sets required external BPA PDCstream INI based configuration file.
         /// </summary>
-        public string ConfigurationFileName
-        {
-            get
-            {
-                return m_configurationFileName;
-            }
-            set
-            {
-                m_configurationFileName = value;
-            }
-        }
+        public string ConfigurationFileName { get; set; }
 
-        #endregion
+    #endregion
     }
 }

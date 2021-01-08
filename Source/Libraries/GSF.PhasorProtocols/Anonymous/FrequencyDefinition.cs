@@ -67,14 +67,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -83,14 +77,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <remarks>
         /// This length is not restricted for anonymous protocol definitions.
         /// </remarks>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return int.MaxValue;
-            }
-        }
+        public override int MaximumLabelLength => int.MaxValue;
 
-        #endregion
+    #endregion
     }
 }

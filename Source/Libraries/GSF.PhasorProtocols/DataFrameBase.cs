@@ -79,53 +79,29 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="DataFrameBase"/>.
         /// </summary>
-        public override FundamentalFrameType FrameType
-        {
-            get
-            {
-                return FundamentalFrameType.DataFrame;
-            }
-        }
+        public override FundamentalFrameType FrameType => FundamentalFrameType.DataFrame;
 
         /// <summary>
         /// Gets or sets <see cref="IConfigurationFrame"/> associated with this <see cref="DataFrameBase"/>.
         /// </summary>
         public virtual IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = value;
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = value;
         }
 
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrameBase"/>.
         /// </summary>
-        public new virtual DataCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as DataCellCollection;
-            }
-        }
+        public new virtual DataCellCollection Cells => base.Cells as DataCellCollection;
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="DataFrameBase"/>.
         /// </summary>
         public new virtual IDataFrameParsingState State
         {
-            get
-            {
-                return base.State as IDataFrameParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as IDataFrameParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
@@ -147,17 +123,8 @@ namespace GSF.PhasorProtocols
         /// <exception cref="NotSupportedException">IDCode of a data frame is read-only, change IDCode is associated configuration frame instead.</exception>
         public override ushort IDCode
         {
-            get
-            {
-                if ((object)m_configurationFrame != null)
-                    return m_configurationFrame.IDCode;
-
-                return 0;
-            }
-            set
-            {
-                throw new NotSupportedException("IDCode of a data frame is read-only, change IDCode is associated configuration frame instead");
-            }
+            get => m_configurationFrame?.IDCode ?? 0;
+            set => throw new NotSupportedException("IDCode of a data frame is read-only, change IDCode is associated configuration frame instead");
         }
 
         #endregion
@@ -180,16 +147,13 @@ namespace GSF.PhasorProtocols
             IDataFrameParsingState state = State;
             IConfigurationFrame configurationFrame = state.ConfigurationFrame;
 
-            if (configurationFrame != null)
-            {
-                ConfigurationFrame = configurationFrame;
+            if (configurationFrame is null)
+                return state.ParsedBinaryLength;
 
-                // Handle normal parsing
-                return base.ParseBinaryImage(buffer, startIndex, length);
-            }
+            ConfigurationFrame = configurationFrame;
 
-            // Otherwise we just skip parsing this frame...
-            return state.ParsedBinaryLength;
+            // Handle normal parsing
+            return base.ParseBinaryImage(buffer, startIndex, length);
         }
 
         /// <summary>

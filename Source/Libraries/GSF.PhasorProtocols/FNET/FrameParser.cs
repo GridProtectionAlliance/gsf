@@ -62,12 +62,8 @@ namespace GSF.PhasorProtocols.FNET
 
         // Fields
         private ConfigurationFrame m_configurationFrame;
-        private Ticks m_timeOffset;
-        private ushort m_frameRate;
-        private LineFrequency m_nominalFrequency;
-        private string m_stationName;
 
-        #endregion
+    #endregion
 
         #region [ Constructors ]
 
@@ -86,10 +82,10 @@ namespace GSF.PhasorProtocols.FNET
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { Common.StartByte };
 
-            m_frameRate = frameRate;
-            m_nominalFrequency = nominalFrequency;
-            m_timeOffset = timeOffset;
-            m_stationName = stationName;
+            FrameRate = frameRate;
+            NominalFrequency = nominalFrequency;
+            TimeOffset = timeOffset;
+            StationName = stationName;
         }
 
         #endregion
@@ -105,26 +101,14 @@ namespace GSF.PhasorProtocols.FNET
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = CastToDerivedConfigurationFrame(value);
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = CastToDerivedConfigurationFrame(value);
         }
 
         /// <summary>
         /// Gets flag that determines if F-NET protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ProtocolUsesSyncBytes => true;
 
         /// <summary>
         /// Gets or sets time offset of F-NET device in <see cref="Ticks"/>.
@@ -133,17 +117,7 @@ namespace GSF.PhasorProtocols.FNET
         /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this this artificial delay.
         /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10000000 ticks.
         /// </remarks>
-        public Ticks TimeOffset
-        {
-            get
-            {
-                return m_timeOffset;
-            }
-            set
-            {
-                m_timeOffset = value;
-            }
-        }
+        public Ticks TimeOffset { get; set; }
 
         /// <summary>
         /// Gets or sets the configured frame rate for the F-NET device.
@@ -151,47 +125,17 @@ namespace GSF.PhasorProtocols.FNET
         /// <remarks>
         /// This is typically set to 10 frames per second.
         /// </remarks>
-        public ushort FrameRate
-        {
-            get
-            {
-                return m_frameRate;
-            }
-            set
-            {
-                m_frameRate = value;
-            }
-        }
+        public ushort FrameRate { get; set; }
 
         /// <summary>
         /// Gets or sets the nominal <see cref="LineFrequency"/> of the F-NET device.
         /// </summary>
-        public LineFrequency NominalFrequency
-        {
-            get
-            {
-                return m_nominalFrequency;
-            }
-            set
-            {
-                m_nominalFrequency = value;
-            }
-        }
+        public LineFrequency NominalFrequency { get; set; }
 
         /// <summary>
         /// Gets or sets the station name for the F-NET device.
         /// </summary>
-        public string StationName
-        {
-            get
-            {
-                return m_stationName;
-            }
-            set
-            {
-                m_stationName = value;
-            }
-        }
+        public string StationName { get; set; }
 
         /// <summary>
         /// Gets current descriptive status of the <see cref="FrameParser"/>.
@@ -200,29 +144,27 @@ namespace GSF.PhasorProtocols.FNET
         {
             get
             {
-                if (m_configurationFrame == null)
+                if (m_configurationFrame is null)
                 {
                     return base.Status;
                 }
-                else
-                {
-                    StringBuilder status = new StringBuilder();
 
-                    status.Append("        Reported longitude: ");
-                    status.Append(m_configurationFrame.Longitude);
-                    status.Append('°');
-                    status.AppendLine();
-                    status.Append("         Reported latitude: ");
-                    status.Append(m_configurationFrame.Latitude);
-                    status.Append('°');
-                    status.AppendLine();
-                    status.Append("      Number of satellites: ");
-                    status.Append(m_configurationFrame.NumberOfSatellites);
-                    status.AppendLine();
-                    status.Append(base.Status);
+                StringBuilder status = new StringBuilder();
 
-                    return status.ToString();
-                }
+                status.Append("        Reported longitude: ");
+                status.Append(m_configurationFrame.Longitude);
+                status.Append('°');
+                status.AppendLine();
+                status.Append("         Reported latitude: ");
+                status.Append(m_configurationFrame.Latitude);
+                status.Append('°');
+                status.AppendLine();
+                status.Append("      Number of satellites: ");
+                status.Append(m_configurationFrame.NumberOfSatellites);
+                status.AppendLine();
+                status.Append(base.Status);
+
+                return status.ToString();
             }
         }
 
@@ -231,23 +173,18 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public override IConnectionParameters ConnectionParameters
         {
-            get
-            {
-                return base.ConnectionParameters;
-            }
+            get => base.ConnectionParameters;
             set
             {
-                ConnectionParameters parameters = value as ConnectionParameters;
-
-                if (parameters != null)
+                if (value is ConnectionParameters parameters)
                 {
                     base.ConnectionParameters = parameters;
 
                     // Assign new incoming connection parameter values
-                    m_timeOffset = parameters.TimeOffset;
-                    m_frameRate = parameters.FrameRate;
-                    m_nominalFrequency = parameters.NominalFrequency;
-                    m_stationName = parameters.StationName;
+                    TimeOffset = parameters.TimeOffset;
+                    FrameRate = parameters.FrameRate;
+                    NominalFrequency = parameters.NominalFrequency;
+                    StationName = parameters.StationName;
                 }
             }
         }
@@ -307,32 +244,32 @@ namespace GSF.PhasorProtocols.FNET
                 if (parsedLength > 0)
                 {
                     // Create configuration frame if it doesn't exist
-                    if (m_configurationFrame == null)
+                    if (m_configurationFrame is null)
                     {
                         string[] data = parsedFrameHeader.DataElements;
 
                         // Create virtual configuration frame
-                        m_configurationFrame = new ConfigurationFrame(ushort.Parse(data[Element.UnitID]), DateTime.UtcNow.Ticks, m_frameRate, m_nominalFrequency, m_timeOffset, m_stationName);
+                        m_configurationFrame = new ConfigurationFrame(ushort.Parse(data[Element.UnitID]), DateTime.UtcNow.Ticks, FrameRate, NominalFrequency, TimeOffset, StationName);
 
                         // Notify clients of new configuration frame
                         OnReceivedChannelFrame(m_configurationFrame);
                     }
 
-                    if (m_configurationFrame != null)
-                    {
-                        // Assign common header and data frame parsing state
-                        parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
+                    if (m_configurationFrame is null)
+                        return null;
 
-                        // Expose the frame buffer image in case client needs this data for any reason
-                        OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);
+                    // Assign common header and data frame parsing state
+                    parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
-                        return parsedFrameHeader;
-                    }
+                    // Expose the frame buffer image in case client needs this data for any reason
+                    OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);
+
+                    return parsedFrameHeader;
                 }
             }
             else if (scanLength == Common.MaximumPracticalFrameSize)
             {
-                throw new InvalidOperationException(string.Format("Possible bad F-NET data stream, scanned {0} bytes without finding an expected termination byte 0x0", Common.MaximumPracticalFrameSize));
+                throw new InvalidOperationException($"Possible bad F-NET data stream, scanned {Common.MaximumPracticalFrameSize} bytes without finding an expected termination byte 0x0");
             }
 
             return null;
@@ -348,24 +285,20 @@ namespace GSF.PhasorProtocols.FNET
             base.OnReceivedChannelFrame(frame);
 
             // Raise F-NET specific channel frame events, if any have been subscribed
-            if (frame != null && (ReceivedDataFrame != null || ReceivedConfigurationFrame != null))
+            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null))
+                return;
+
+            switch (frame)
             {
-                DataFrame dataFrame = frame as DataFrame;
-
-                if (dataFrame != null)
+                case DataFrame dataFrame:
                 {
-                    if (ReceivedDataFrame != null)
-                        ReceivedDataFrame(this, new EventArgs<DataFrame>(dataFrame));
+                    ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
                 }
-                else
+                case ConfigurationFrame configFrame:
                 {
-                    ConfigurationFrame configFrame = frame as ConfigurationFrame;
-
-                    if (configFrame != null)
-                    {
-                        if (ReceivedConfigurationFrame != null)
-                            ReceivedConfigurationFrame(this, new EventArgs<ConfigurationFrame>(configFrame));
-                    }
+                    ReceivedConfigurationFrame?.Invoke(this, new EventArgs<ConfigurationFrame>(configFrame));
+                    break;
                 }
             }
         }
@@ -379,16 +312,14 @@ namespace GSF.PhasorProtocols.FNET
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
             // See if frame is already a F-NET frame (if so, we don't need to do any work)
-            ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
+            if (sourceFrame is ConfigurationFrame derivedFrame)
+                return derivedFrame;
 
-            if (derivedFrame == null)
-            {
-                // Create a new F-NET configuration frame converted from equivalent configuration information; F-NET only supports one device
-                if (sourceFrame.Cells.Count > 0)
-                    derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, sourceFrame.Cells[0].NominalFrequency, Common.DefaultTimeOffset, Common.DefaultStationName);
-                else
-                    derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, LineFrequency.Hz60, Common.DefaultTimeOffset, Common.DefaultStationName);
-            }
+            // Create a new F-NET configuration frame converted from equivalent configuration information; F-NET only supports one device
+            if (sourceFrame.Cells.Count > 0)
+                derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, sourceFrame.Cells[0].NominalFrequency, Common.DefaultTimeOffset, Common.DefaultStationName);
+            else
+                derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, LineFrequency.Hz60, Common.DefaultTimeOffset, Common.DefaultStationName);
 
             return derivedFrame;
         }

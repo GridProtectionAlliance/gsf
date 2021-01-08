@@ -106,14 +106,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return m_configurationFrame;
-            }
-            set
-            {
-                m_configurationFrame = CastToDerivedConfigurationFrame(value);
-            }
+            get => m_configurationFrame;
+            set => m_configurationFrame = CastToDerivedConfigurationFrame(value);
         }
 
         /// <summary>
@@ -123,24 +117,18 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
-                if (m_configurationFrame == null)
+                if (m_configurationFrame is null)
                     return 0;
-                else
-                    return m_configurationFrame.Timebase;
+                return m_configurationFrame.Timebase;
             }
         }
 
         /// <summary>
         /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                // Since this implementation can parse both IEEE C37.118 configuration frames and IEC 61850-90-5 data frames, there is no common sync byte
-                return false;
-            }
-        }
+        public override bool ProtocolUsesSyncBytes =>
+            // Since this implementation can parse both IEEE C37.118 configuration frames and IEC 61850-90-5 data frames, there is no common sync byte
+            false;
 
         /// <summary>
         /// Gets the number of redundant frames in each packet.
@@ -154,7 +142,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
-                if ((object)m_configurationFrame == null || !m_configurationFrame.CommonHeader.ParseRedundantASDUs)
+                if (m_configurationFrame is null || !m_configurationFrame.CommonHeader.ParseRedundantASDUs)
                     return base.RedundantFramesPerPacket;
 
                 return m_configurationFrame.CommonHeader.AsduCount - 1;
@@ -203,15 +191,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public override IConnectionParameters ConnectionParameters
         {
-            get
-            {
-                return base.ConnectionParameters;
-            }
+            get => base.ConnectionParameters;
             set
             {
-                ConnectionParameters parameters = value as ConnectionParameters;
-
-                if (parameters != null)
+                if (value is ConnectionParameters parameters)
                 {
                     base.ConnectionParameters = parameters;
 
@@ -298,7 +281,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             DataFrameParsingState parsingState = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
                             // Assume one device if no configuration frame is available
-                            if (m_configurationFrame == null)
+                            if (m_configurationFrame is null)
                                 parsingState.CellCount = 1;
 
                             parsedFrameHeader.State = parsingState;
@@ -326,9 +309,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             base.OnReceivedConfigurationFrame(frame);
 
             // Cache new configuration frame for parsing subsequent data frames...
-            ConfigurationFrame configurationFrame = frame as ConfigurationFrame;
 
-            if (configurationFrame != null)
+            if (frame is ConfigurationFrame configurationFrame)
                 m_configurationFrame = configurationFrame;
         }
 
@@ -343,9 +325,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             bool configurationChangeDetected = false;
 
-            DataCellCollection dataCells = frame.Cells as DataCellCollection;
-
-            if (dataCells != null)
+            if (frame.Cells is DataCellCollection dataCells)
             {
                 // Check for a configuration change notification from any data cell
                 for (int x = 0; x < dataCells.Count; x++)
@@ -382,34 +362,25 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             base.OnReceivedChannelFrame(frame);
 
             // Raise IEC 61850-90-5 specific channel frame events, if any have been subscribed
-            if (frame != null && (ReceivedDataFrame != null || ReceivedConfigurationFrame != null || ReceivedCommandFrame != null))
+            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedCommandFrame is null))
+                return;
+
+            switch (frame)
             {
-                DataFrame dataFrame = frame as DataFrame;
-
-                if (dataFrame != null)
+                case DataFrame dataFrame:
                 {
-                    if (ReceivedDataFrame != null)
-                        ReceivedDataFrame(this, new EventArgs<DataFrame>(dataFrame));
+                    ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
                 }
-                else
+                case ConfigurationFrame configFrame:
                 {
-                    ConfigurationFrame configFrame = frame as ConfigurationFrame;
-
-                    if (configFrame != null)
-                    {
-                        if (ReceivedConfigurationFrame != null)
-                            ReceivedConfigurationFrame(this, new EventArgs<ConfigurationFrame>(configFrame));
-                    }
-                    else
-                    {
-                        CommandFrame commandFrame = frame as CommandFrame;
-
-                        if (commandFrame != null)
-                        {
-                            if (ReceivedCommandFrame != null)
-                                ReceivedCommandFrame(this, new EventArgs<CommandFrame>(commandFrame));
-                        }
-                    }
+                    ReceivedConfigurationFrame?.Invoke(this, new EventArgs<ConfigurationFrame>(configFrame));
+                    break;
+                }
+                case CommandFrame commandFrame:
+                {
+                    ReceivedCommandFrame?.Invoke(this, new EventArgs<CommandFrame>(commandFrame));
+                    break;
                 }
             }
         }
@@ -440,9 +411,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
             // See if frame is already an IEC 61850-90-5 configuration frame (if so, we don't need to do any work)
-            ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
-            if (derivedFrame == null)
+            if (!(sourceFrame is ConfigurationFrame derivedFrame))
             {
                 // Create a new IEC 61850-90-5 configuration frame converted from equivalent configuration information
                 ConfigurationCell derivedCell;
@@ -474,7 +444,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    if (sourceFrequency != null)
+                    if (!(sourceFrequency is null))
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                     // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)

@@ -31,6 +31,8 @@ using System;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
+// ReSharper disable RedundantOverriddenMember
 namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
@@ -69,26 +71,20 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             : base(parent)
         {
             string[] entry = entryValue.Split(',');
-            FrequencyDefinition defaultFrequency;
             int index = 0;
-            uint iValue;
-            double dValue;
 
-            if (parent != null)
-                defaultFrequency = parent.Parent.DefaultFrequency;
-            else
-                defaultFrequency = new FrequencyDefinition(null as ConfigurationCell);
+            FrequencyDefinition defaultFrequency = parent is null ? new FrequencyDefinition(null) : parent.Parent.DefaultFrequency;
 
             // If initial entry is an F - we just ignore this
-            if (string.Compare(entry[index].Trim(), "F", true) == 0)
+            if (string.Equals(entry[index].Trim(), "F", StringComparison.OrdinalIgnoreCase))
                 index++;
 
-            if (entry.Length > index && uint.TryParse(entry[index++].Trim(), out iValue))
+            if (entry.Length > index && uint.TryParse(entry[index++].Trim(), out uint iValue))
                 ScalingValue = iValue;
             else
                 ScalingValue = defaultFrequency.ScalingValue;
 
-            if (entry.Length > index && double.TryParse(entry[index++].Trim(), out dValue))
+            if (entry.Length > index && double.TryParse(entry[index++].Trim(), out double dValue))
                 Offset = dValue;
             else
                 Offset = defaultFrequency.Offset;
@@ -108,10 +104,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             else
                 m_dummy = defaultFrequency.m_dummy;
 
-            if (entry.Length > index)
-                Label = entry[index++].Trim();
-            else
-                Label = defaultFrequency.Label;
+            Label = entry.Length > index ? entry[index].Trim() : defaultFrequency.Label;
         }
 
         /// <summary>
@@ -133,14 +126,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -148,16 +135,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override double Offset
         {
-            get
-            {
-                if (Parent == null)
-                    return m_frequencyOffset;
-                else
-                    return base.Offset;
-            }
+            get => Parent is null ? m_frequencyOffset : base.Offset;
             set
             {
-                if (Parent == null)
+                if (Parent is null)
                 {
                     // Store local value for default frequency definition
                     m_frequencyOffset = value;
@@ -165,10 +146,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 else
                 {
                     // Frequency offset is stored as nominal frequency of parent cell
-                    if (value >= 60.0F)
-                        Parent.NominalFrequency = LineFrequency.Hz60;
-                    else
-                        Parent.NominalFrequency = LineFrequency.Hz50;
+                    Parent.NominalFrequency = value >= 60.0F ? LineFrequency.Hz60 : LineFrequency.Hz50;
                 }
             }
         }
@@ -176,24 +154,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="FrequencyDefinition"/>.
         /// </summary>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return 256;
-            }
-        }
+        public override int MaximumLabelLength => 256;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        protected override int BodyLength => 0;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="FrequencyDefinition"/> object.
@@ -201,15 +167,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <remarks>
         /// BPA PDCstream does not include frequency definition in descriptor packet.
         /// </remarks>
-        protected override byte[] BodyImage
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected override byte[] BodyImage => null;
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 
@@ -232,17 +192,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Creates frequency information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IFrequencyDefinition definition)
         {
-            FrequencyDefinition frequency = definition as FrequencyDefinition;
-
             // type, scale, offset, dF/dt scale, dF/dt offset, dummy, label 
             //   F,  1000,    60,      1000,         0,          0,   Frequency
-
-            if (frequency != null)
+            if (definition is FrequencyDefinition frequency)
                 return "F," + frequency.ScalingValue + "," + frequency.Offset + "," + frequency.DfDtScalingValue + "," + frequency.DfDtOffset + "," + frequency.m_dummy + "," + frequency.Label;
-            else if (definition != null)
-                return "F," + definition.ScalingValue + "," + definition.Offset + "," + definition.DfDtScalingValue + "," + definition.DfDtOffset + ",0," + definition.Label;
 
-            return "";
+            return definition is null ? "" : "F," + definition.ScalingValue + "," + definition.Offset + "," + definition.DfDtScalingValue + "," + definition.DfDtOffset + ",0," + definition.Label;
         }
 
         // Delegate handler to create a new BPA PDCstream frequency definition

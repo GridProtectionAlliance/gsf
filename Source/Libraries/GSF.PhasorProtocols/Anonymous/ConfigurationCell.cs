@@ -124,14 +124,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public override DataFormat AnalogDataFormat
         {
-            get
-            {
-                return m_analogDataFormat;
-            }
-            set
-            {
-                m_analogDataFormat = value;
-            }
+            get => m_analogDataFormat;
+            set => m_analogDataFormat = value;
         }
 
         /// <summary>
@@ -139,14 +133,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public override DataFormat FrequencyDataFormat
         {
-            get
-            {
-                return m_frequencyDataFormat;
-            }
-            set
-            {
-                m_frequencyDataFormat = value;
-            }
+            get => m_frequencyDataFormat;
+            set => m_frequencyDataFormat = value;
         }
 
         /// <summary>
@@ -154,14 +142,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public override DataFormat PhasorDataFormat
         {
-            get
-            {
-                return m_phasorDataFormat;
-            }
-            set
-            {
-                m_phasorDataFormat = value;
-            }
+            get => m_phasorDataFormat;
+            set => m_phasorDataFormat = value;
         }
 
         /// <summary>
@@ -169,14 +151,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public override CoordinateFormat PhasorCoordinateFormat
         {
-            get
-            {
-                return m_phasorCoordinateFormat;
-            }
-            set
-            {
-                m_phasorCoordinateFormat = value;
-            }
+            get => m_phasorCoordinateFormat;
+            set => m_phasorCoordinateFormat = value;
         }
 
         /// <summary>
@@ -184,14 +160,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public Ticks LastReportTime
         {
-            get
-            {
-                return m_lastReportTime;
-            }
-            set
-            {
-                m_lastReportTime = value;
-            }
+            get => m_lastReportTime;
+            set => m_lastReportTime = value;
         }
 
         /// <summary>
@@ -199,14 +169,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long TotalFrames
         {
-            get
-            {
-                return m_totalFrames;
-            }
-            set
-            {
-                m_totalFrames = value;
-            }
+            get => m_totalFrames;
+            set => m_totalFrames = value;
         }
 
         /// <summary>
@@ -214,14 +178,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long DataQualityErrors
         {
-            get
-            {
-                return m_dataQualityErrors;
-            }
-            set
-            {
-                m_dataQualityErrors = value;
-            }
+            get => m_dataQualityErrors;
+            set => m_dataQualityErrors = value;
         }
 
         /// <summary>
@@ -229,14 +187,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long TimeQualityErrors
         {
-            get
-            {
-                return m_timeQualityErrors;
-            }
-            set
-            {
-                m_timeQualityErrors = value;
-            }
+            get => m_timeQualityErrors;
+            set => m_timeQualityErrors = value;
         }
 
         /// <summary>
@@ -244,14 +196,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long DeviceErrors
         {
-            get
-            {
-                return m_deviceErrors;
-            }
-            set
-            {
-                m_deviceErrors = value;
-            }
+            get => m_deviceErrors;
+            set => m_deviceErrors = value;
         }
 
         /// <summary>
@@ -259,14 +205,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long MeasurementsReceived
         {
-            get
-            {
-                return m_measurementsReceived;
-            }
-            set
-            {
-                m_measurementsReceived = value;
-            }
+            get => m_measurementsReceived;
+            set => m_measurementsReceived = value;
         }
 
         /// <summary>
@@ -274,14 +214,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long MeasurementsExpected
         {
-            get
-            {
-                return m_measurementsExpected;
-            }
-            set
-            {
-                m_measurementsExpected = value;
-            }
+            get => m_measurementsExpected;
+            set => m_measurementsExpected = value;
         }
 
         /// <summary>
@@ -289,14 +223,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long MeasurementsWithError
         {
-            get
-            {
-                return m_measurementsWithError;
-            }
-            set
-            {
-                m_measurementsWithError = value;
-            }
+            get => m_measurementsWithError;
+            set => m_measurementsWithError = value;
         }
 
         /// <summary>
@@ -304,14 +232,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public long MeasurementsDefined
         {
-            get
-            {
-                return m_measurementsDefined;
-            }
-            set
-            {
-                m_measurementsDefined = value;
-            }
+            get => m_measurementsDefined;
+            set => m_measurementsDefined = value;
         }
 
         /// <summary>
@@ -319,14 +241,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public object Source
         {
-            get
-            {
-                return m_source;
-            }
-            set
-            {
-                m_source = value;
-            }
+            get => m_source;
+            set => m_source = value;
         }
 
         #endregion
@@ -342,13 +258,12 @@ namespace GSF.PhasorProtocols.Anonymous
         {
             // We cache non-indexed signal reference strings so they don't need to be generated at each mapping call.
             // This helps with performance since the mappings for each signal occur 30 times per second.
-            string[] references;
             int typeIndex = (int)type;
 
             // Look up synonym in dictionary based on signal type, if found return single element
-            references = m_generatedSignalReferenceCache[typeIndex];
+            string[] references = m_generatedSignalReferenceCache[typeIndex];
 
-            if ((object)references != null)
+            if (!(references is null))
                 return references[0];
 
             // Create a new signal reference array (for single element)
@@ -376,22 +291,18 @@ namespace GSF.PhasorProtocols.Anonymous
             // This helps with performance since the mappings for each signal occur 30 times per second.
             // For speed purposes we intentionally do not validate that signalIndex falls within signalCount, be
             // sure calling procedures are very careful with parameters...
-            string[] references;
             int typeIndex = (int)type;
 
             // Look up synonym in dictionary based on signal type
-            references = m_generatedSignalReferenceCache[typeIndex];
+            string[] references = m_generatedSignalReferenceCache[typeIndex];
 
-            if ((object)references != null)
+            if (!(references is null))
             {
                 // Verify signal count has not changed (we may have received new configuration from device)
                 if (count == references.Length)
                 {
                     // Create and cache new signal reference if it doesn't exist
-                    if ((object)references[index] == null)
-                        references[index] = SignalReference.ToString(IDLabel, type, index + 1);
-
-                    return references[index];
+                    return references[index] ?? (references[index] = SignalReference.ToString(IDLabel, type, index + 1));
                 }
             }
 
@@ -430,7 +341,7 @@ namespace GSF.PhasorProtocols.Anonymous
             MeasurementKey[] keyArray = m_generatedMeasurementKeyCache[typeIndex];
 
             // If this SignalKind is null, create the sub array and generate all item lookups
-            if ((object)keyArray == null)
+            if (keyArray is null)
             {
                 keyArray = new MeasurementKey[1];
                 m_generatedMeasurementKeyCache[typeIndex] = keyArray;
@@ -471,7 +382,7 @@ namespace GSF.PhasorProtocols.Anonymous
 
             // If this SignalKind is null, create the sub array and generate all item lookups, also, rebuild
             // if the count is not the same. This could be because a new config frame was received.
-            if ((object)keyArray == null || keyArray.Length != count)
+            if (keyArray is null || keyArray.Length != count)
             {
                 keyArray = new MeasurementKey[count];
                 m_generatedMeasurementKeyCache[typeIndex] = keyArray;

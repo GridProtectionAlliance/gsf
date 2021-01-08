@@ -120,14 +120,9 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets the length of the <see cref="BinaryImage"/>.
         /// </summary>
-        public override int BinaryLength
-        {
-            get
-            {
-                // Total frame size
-                return 2;
-            }
-        }
+        public override int BinaryLength =>
+            // Total frame size
+            2;
 
         /// <summary>
         /// Gets the binary body image of this <see cref="CommandFrame"/>.

@@ -99,11 +99,9 @@ namespace GSF.PhasorProtocols
                     // Cells will be constant length, so we can quickly calculate lengths
                     return base.BinaryLength;
                 }
-                else
-                {
-                    // Cells will be different lengths, so we must manually sum lengths
-                    return this.Sum(frame => frame.BinaryLength);
-                }
+
+                // Cells will be different lengths, so we must manually sum lengths
+                return this.Sum(frame => frame.BinaryLength);
             }
         }
 

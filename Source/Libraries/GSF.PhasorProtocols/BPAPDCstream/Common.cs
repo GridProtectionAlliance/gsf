@@ -276,6 +276,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Absolute maximum data length (in bytes) that could fit into any frame.
         /// </summary>
-        public const ushort MaximumDataLength = (ushort)(ushort.MaxValue - CommonFrameHeader.FixedLength - 2);
+        public const ushort MaximumDataLength = ushort.MaxValue - CommonFrameHeader.FixedLength - 2;
     }
 }

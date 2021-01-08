@@ -89,14 +89,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -104,10 +98,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public bool FrequencyIsAvailable
         {
-            get
-            {
-                return (m_statusFlags & (ushort)Bits.Bit08) == 0;
-            }
+            get => (m_statusFlags & (ushort)Bits.Bit08) == 0;
             set
             {
                 if (value)
@@ -122,10 +113,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         public bool DfDtIsAvailable
         {
-            get
-            {
-                return (m_statusFlags & (ushort)Bits.Bit09) == 0;
-            }
+            get => (m_statusFlags & (ushort)Bits.Bit09) == 0;
             set
             {
                 if (value)
@@ -138,13 +126,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 2;
-            }
-        }
+        protected override int BodyLength => 2;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="FrequencyDefinition"/> object.
@@ -197,7 +179,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             m_statusFlags = BigEndian.ToUInt16(buffer, startIndex);
 
-            Parent.NominalFrequency = ((m_statusFlags & (ushort)Bits.Bit00) > 0) ? LineFrequency.Hz50 : LineFrequency.Hz60;
+            Parent.NominalFrequency = (m_statusFlags & (ushort)Bits.Bit00) > 0 ? LineFrequency.Hz50 : LineFrequency.Hz60;
 
             return 2;
         }

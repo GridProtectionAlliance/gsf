@@ -85,7 +85,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public ConfigurationFrame1(uint timebase, ushort idCode, Ticks timestamp, ushort frameRate)
             : base(idCode, new ConfigurationCellCollection(), timestamp, frameRate)
         {
-            this.Timebase = timebase;
+            Timebase = timebase;
         }
 
         /// <summary>
@@ -108,35 +108,17 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrame1"/>.
         /// </summary>
-        public new ConfigurationCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as ConfigurationCellCollection;
-            }
-        }
+        public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         /// <summary>
         /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
-        public virtual DraftRevision DraftRevision
-        {
-            get
-            {
-                return DraftRevision.Draft7;
-            }
-        }
+        public virtual DraftRevision DraftRevision => DraftRevision.Draft7;
 
         /// <summary>
         /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
-        public virtual FrameType TypeID
-        {
-            get
-            {
-                return IEEEC37_118.FrameType.ConfigurationFrame1;
-            }
-        }
+        public virtual FrameType TypeID => IEEEC37_118.FrameType.ConfigurationFrame1;
 
         /// <summary>
         /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ConfigurationFrame1"/>.
@@ -146,10 +128,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         public override Ticks Timestamp
         {
-            get
-            {
-                return CommonHeader.Timestamp;
-            }
+            get => CommonHeader.Timestamp;
             set
             {
                 // Keep timestamp updates synchronized...
@@ -163,39 +142,27 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists
-                if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(this, TypeID, base.IDCode, base.Timestamp);
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(this, TypeID, base.IDCode, base.Timestamp));
             set
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                {
-                    State = m_frameHeader.State as IConfigurationFrameParsingState;
-                    base.IDCode = m_frameHeader.IDCode;
-                    base.Timestamp = m_frameHeader.Timestamp;
-                    m_timebase = m_frameHeader.Timebase;
-                }
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as IConfigurationFrameParsingState;
+                base.IDCode = m_frameHeader.IDCode;
+                base.Timestamp = m_frameHeader.Timestamp;
+                m_timebase = m_frameHeader.Timebase;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
         ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
@@ -203,14 +170,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public byte Version
         {
-            get
-            {
-                return CommonHeader.Version;
-            }
-            set
-            {
-                CommonHeader.Version = value;
-            }
+            get => CommonHeader.Version;
+            set => CommonHeader.Version = value;
         }
 
         /// <summary>
@@ -218,13 +179,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public uint Timebase
         {
-            get
-            {
-                return m_timebase;
-            }
+            get => m_timebase;
             set
             {
-                m_timebase = (value & ~Common.TimeQualityFlagsMask);
+                m_timebase = value & ~Common.TimeQualityFlagsMask;
                 CommonHeader.Timebase = m_timebase;
             }
         }
@@ -234,14 +192,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
         {
-            get
-            {
-                return CommonHeader.TimeQualityFlags;
-            }
-            set
-            {
-                CommonHeader.TimeQualityFlags = value;
-            }
+            get => CommonHeader.TimeQualityFlags;
+            set => CommonHeader.TimeQualityFlags = value;
         }
 
         /// <summary>
@@ -249,26 +201,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public TimeQualityIndicatorCode TimeQualityIndicatorCode
         {
-            get
-            {
-                return CommonHeader.TimeQualityIndicatorCode;
-            }
-            set
-            {
-                CommonHeader.TimeQualityIndicatorCode = value;
-            }
+            get => CommonHeader.TimeQualityIndicatorCode;
+            set => CommonHeader.TimeQualityIndicatorCode = value;
         }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return FixedHeaderLength;
-            }
-        }
+        protected override int HeaderLength => FixedHeaderLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationFrame1"/> object.
@@ -297,13 +237,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength
-        {
-            get
-            {
-                return 2;
-            }
-        }
+        protected override int FooterLength => 2;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="ConfigurationFrame1"/> object.

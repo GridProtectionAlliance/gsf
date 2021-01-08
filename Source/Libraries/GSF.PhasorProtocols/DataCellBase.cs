@@ -150,14 +150,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public new virtual IDataFrame Parent
         {
-            get
-            {
-                return base.Parent as IDataFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as IDataFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -165,14 +159,8 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public virtual IConfigurationCell ConfigurationCell
         {
-            get
-            {
-                return m_configurationCell;
-            }
-            set
-            {
-                m_configurationCell = value;
-            }
+            get => m_configurationCell;
+            set => m_configurationCell = value;
         }
 
         /// <summary>
@@ -180,53 +168,28 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public new virtual IDataCellParsingState State
         {
-            get
-            {
-                return base.State as IDataCellParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
+            get => base.State as IDataCellParsingState;
+            set => base.State = value;
         }
 
         /// <summary>
         /// Gets station name of this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual string StationName
-        {
-            get
-            {
-                if ((object)m_configurationCell != null)
-                    return m_configurationCell.StationName.ToNonNullString();
-
-                return "";
-            }
-        }
+        public virtual string StationName => 
+            m_configurationCell is null ? "" : m_configurationCell.StationName.ToNonNullString();
 
         /// <summary>
         /// Gets ID label of this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual string IDLabel
-        {
-            get
-            {
-                if ((object)m_configurationCell != null)
-                    return m_configurationCell.IDLabel.ToNonNullString();
-
-                return "";
-            }
-        }
+        public virtual string IDLabel => 
+            m_configurationCell is null ? "" : m_configurationCell.IDLabel.ToNonNullString();
 
         /// <summary>
         /// Gets or sets 16-bit status flags of this <see cref="DataCellBase"/>.
         /// </summary>
         public virtual ushort StatusFlags
         {
-            get
-            {
-                return m_statusFlags;
-            }
+            get => m_statusFlags;
             set
             {
                 m_statusFlags = value;
@@ -244,17 +207,8 @@ namespace GSF.PhasorProtocols
         /// <exception cref="NotSupportedException">IDCode of a data cell is read-only, change IDCode is associated configuration cell instead.</exception>
         public override ushort IDCode
         {
-            get
-            {
-                if ((object)m_configurationCell != null)
-                    return m_configurationCell.IDCode;
-
-                return 0;
-            }
-            set
-            {
-                throw new NotSupportedException("IDCode of a data cell is read-only, change IDCode is associated configuration cell instead");
-            }
+            get => m_configurationCell?.IDCode ?? 0;
+            set => throw new NotSupportedException("IDCode of a data cell is read-only, change IDCode is associated configuration cell instead");
         }
 
         /// <summary>
@@ -294,70 +248,40 @@ namespace GSF.PhasorProtocols
                 // Derive common states via common status flags
                 DataIsValid = (value & (uint)PhasorProtocols.CommonStatusFlags.DataIsValid) == 0;
                 SynchronizationIsValid = (value & (uint)PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) == 0;
-                DataSortingType = ((value & (uint)PhasorProtocols.CommonStatusFlags.DataSortingType) == 0) ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
-                DeviceError = ((value & (uint)PhasorProtocols.CommonStatusFlags.DeviceError) > 0);
-                m_isDiscarded = ((value & (uint)PhasorProtocols.CommonStatusFlags.DataDiscarded) > 0);
+                DataSortingType = (value & (uint)PhasorProtocols.CommonStatusFlags.DataSortingType) == 0 ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
+                DeviceError = (value & (uint)PhasorProtocols.CommonStatusFlags.DeviceError) > 0;
+                m_isDiscarded = (value & (uint)PhasorProtocols.CommonStatusFlags.DataDiscarded) > 0;
             }
         }
 
         /// <summary>
         /// Gets flag that determines if all values of this <see cref="DataCellBase"/> have been assigned.
         /// </summary>
-        public virtual bool AllValuesAssigned
-        {
-            get
-            {
-                return m_statusAssigned && PhasorValues.AllValuesAssigned && !FrequencyValue.IsEmpty && AnalogValues.AllValuesAssigned && DigitalValues.AllValuesAssigned;
-            }
-        }
+        public virtual bool AllValuesAssigned => m_statusAssigned && PhasorValues.AllValuesAssigned && !FrequencyValue.IsEmpty && AnalogValues.AllValuesAssigned && DigitalValues.AllValuesAssigned;
 
         /// <summary>
         /// Gets <see cref="PhasorValueCollection"/> of this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual PhasorValueCollection PhasorValues
-        {
-            get
-            {
-                return m_phasorValues;
-            }
-        }
+        public virtual PhasorValueCollection PhasorValues => m_phasorValues;
 
         /// <summary>
         /// Gets <see cref="IFrequencyValue"/> of this <see cref="DataCellBase"/>.
         /// </summary>
         public virtual IFrequencyValue FrequencyValue
         {
-            get
-            {
-                return m_frequencyValue;
-            }
-            set
-            {
-                m_frequencyValue = value;
-            }
+            get => m_frequencyValue;
+            set => m_frequencyValue = value;
         }
 
         /// <summary>
         /// Gets <see cref="AnalogValueCollection"/>of this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual AnalogValueCollection AnalogValues
-        {
-            get
-            {
-                return m_analogValues;
-            }
-        }
+        public virtual AnalogValueCollection AnalogValues => m_analogValues;
 
         /// <summary>
         /// Gets <see cref="DigitalValueCollection"/>of this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual DigitalValueCollection DigitalValues
-        {
-            get
-            {
-                return m_digitalValues;
-            }
-        }
+        public virtual DigitalValueCollection DigitalValues => m_digitalValues;
 
         /// <summary>
         /// Gets or sets flag that determines if data of this <see cref="DataCellBase"/> is valid.
@@ -410,13 +334,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                return 2 + m_phasorValues.BinaryLength + m_frequencyValue.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength;
-            }
-        }
+        protected override int BodyLength => 2 + m_phasorValues.BinaryLength + m_frequencyValue.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="DataCellBase"/> object.
@@ -529,7 +447,7 @@ namespace GSF.PhasorProtocols
             }
 
             // Return total parsed length
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>

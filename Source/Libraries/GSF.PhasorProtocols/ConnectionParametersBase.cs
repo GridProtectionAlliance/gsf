@@ -47,13 +47,7 @@ namespace GSF.PhasorProtocols
         /// Determines if custom connection parameters are valid.
         /// </summary>
         [Browsable(false)]
-        public virtual bool ValuesAreValid
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool ValuesAreValid => true;
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.

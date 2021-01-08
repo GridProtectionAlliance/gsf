@@ -96,27 +96,15 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrame"/>.
         /// </summary>
-        public new DataCellCollection Cells
-        {
-            get
-            {
-                return base.Cells as DataCellCollection;
-            }
-        }
+        public new DataCellCollection Cells => base.Cells as DataCellCollection;
 
         /// <summary>
         /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
         /// </summary>
         public new ConfigurationFrame ConfigurationFrame
         {
-            get
-            {
-                return base.ConfigurationFrame as ConfigurationFrame;
-            }
-            set
-            {
-                base.ConfigurationFrame = value;
-            }
+            get => base.ConfigurationFrame as ConfigurationFrame;
+            set => base.ConfigurationFrame = value;
         }
 
         /// <summary>
@@ -124,14 +112,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public new uint IDCode
         {
-            get
-            {
-                return CommonHeader.IDCode;
-            }
-            set
-            {
-                CommonHeader.IDCode = value;
-            }
+            get => CommonHeader.IDCode;
+            set => CommonHeader.IDCode = value;
         }
 
         /// <summary>
@@ -139,17 +121,14 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public FrameSize FrameSize
         {
-            get
-            {
-                return CommonHeader.FrameSize;
-            }
+            get => CommonHeader.FrameSize;
             set
             {
                 CommonHeader.FrameSize = value;
 
                 // We dynamically define the configuration based on frame size, SEL Fast Message
                 // defines three distinct configurations (one per frame size)
-                if (ConfigurationFrame == null || ConfigurationFrame.FrameSize != value)
+                if (ConfigurationFrame is null || ConfigurationFrame.FrameSize != value)
                     ConfigurationFrame = new ConfigurationFrame(value, MessagePeriod.DefaultRate, CommonHeader.IDCode);
             }
         }
@@ -162,10 +141,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </remarks>
         public override Ticks Timestamp
         {
-            get
-            {
-                return CommonHeader.Timestamp;
-            }
+            get => CommonHeader.Timestamp;
             set
             {
                 // Keep timestamp updates synchrnonized...
@@ -177,25 +153,14 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public new NtpTimeTag TimeTag
-        {
-            get
-            {
-                return CommonHeader.TimeTag;
-            }
-        }
+        public new NtpTimeTag TimeTag => CommonHeader.TimeTag;
 
         /// <summary>
         /// Gets the identifier that is used to identify the SEL Fast Message frame.
         /// </summary>
-        public int TypeID
-        {
-            get
-            {
-                // SEL Fast Message only defines a single frame type...
-                return 0;
-            }
-        }
+        public int TypeID =>
+            // SEL Fast Message only defines a single frame type...
+            0;
 
         /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
@@ -206,7 +171,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader == null)
+                if (m_frameHeader is null)
                     m_frameHeader = new CommonFrameHeader(FrameSize.A, base.Timestamp);
 
                 return m_frameHeader;
@@ -215,48 +180,30 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
-                {
-                    State = m_frameHeader.State as IDataFrameParsingState;
-                    base.Timestamp = m_frameHeader.Timestamp;
-                }
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as IDataFrameParsingState;
+                base.Timestamp = m_frameHeader.Timestamp;
             }
         }
 
         // This interface implementation satisfies ISupportFrameImage<int>.CommonHeader
         ICommonHeader<int> ISupportFrameImage<int>.CommonHeader
         {
-            get
-            {
-                return CommonHeader;
-            }
-            set
-            {
-                CommonHeader = value as CommonFrameHeader;
-            }
+            get => CommonHeader;
+            set => CommonHeader = value as CommonFrameHeader;
         }
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return CommonFrameHeader.FixedLength;
-            }
-        }
+        protected override int HeaderLength => CommonFrameHeader.FixedLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="DataFrame"/> object.
         /// </summary>
-        protected override byte[] HeaderImage
-        {
-            get
-            {
-                return CommonHeader.BinaryImage;
-            }
-        }
+        protected override byte[] HeaderImage => CommonHeader.BinaryImage;
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.

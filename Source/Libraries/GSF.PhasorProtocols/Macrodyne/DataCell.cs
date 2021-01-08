@@ -109,14 +109,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public new DataFrame Parent
         {
-            get
-            {
-                return base.Parent as DataFrame;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as DataFrame;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -124,40 +118,22 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public new ConfigurationCell ConfigurationCell
         {
-            get
-            {
-                return base.ConfigurationCell as ConfigurationCell;
-            }
-            set
-            {
-                base.ConfigurationCell = value;
-            }
+            get => base.ConfigurationCell as ConfigurationCell;
+            set => base.ConfigurationCell = value;
         }
 
         /// <summary>
         /// Gets the numeric ID code for this <see cref="DataCell"/>.
         /// </summary>
-        public new uint IDCode
-        {
-            get
-            {
-                return ConfigurationCell.IDCode;
-            }
-        }
+        public new uint IDCode => ConfigurationCell.IDCode;
 
         /// <summary>
         /// Gets or sets <see cref="Macrodyne.ClockStatusFlags"/> for this <see cref="DataCell"/>.
         /// </summary>
         public ClockStatusFlags ClockStatusFlags
         {
-            get
-            {
-                return m_clockStatusFlags;
-            }
-            set
-            {
-                m_clockStatusFlags = value;
-            }
+            get => m_clockStatusFlags;
+            set => m_clockStatusFlags = value;
         }
 
         /// <summary>
@@ -165,10 +141,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public StatusFlags Status1Flags
         {
-            get
-            {
-                return Parent.CommonHeader.StatusFlags;
-            }
+            get => Parent.CommonHeader.StatusFlags;
             set
             {
                 Parent.CommonHeader.StatusFlags = value;
@@ -181,10 +154,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public byte Status2Flags
         {
-            get
-            {
-                return m_status2Flags;
-            }
+            get => m_status2Flags;
             set
             {
                 m_status2Flags = value;
@@ -197,14 +167,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public TriggerReason TriggerReason
         {
-            get
-            {
-                return (TriggerReason)(m_status2Flags & (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02));
-            }
-            set
-            {
-                m_status2Flags = (byte)((m_status2Flags & ~(byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02)) | (byte)value);
-            }
+            get => (TriggerReason)(m_status2Flags & (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02));
+            set => m_status2Flags = (byte)((m_status2Flags & ~(byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02)) | (byte)value);
         }
 
         /// <summary>
@@ -212,14 +176,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public GpsStatus GpsStatus
         {
-            get
-            {
-                return (GpsStatus)(m_status2Flags & (byte)(Bits.Bit03 | Bits.Bit04));
-            }
-            set
-            {
-                m_status2Flags = (byte)((m_status2Flags & ~(byte)(Bits.Bit03 | Bits.Bit04)) | (byte)value);
-            }
+            get => (GpsStatus)(m_status2Flags & (byte)(Bits.Bit03 | Bits.Bit04));
+            set => m_status2Flags = (byte)((m_status2Flags & ~(byte)(Bits.Bit03 | Bits.Bit04)) | (byte)value);
         }
 
         /// <summary>
@@ -227,10 +185,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override bool DataIsValid
         {
-            get
-            {
-                return !((Status1Flags & Macrodyne.StatusFlags.OperationalLimitReached) > 0);
-            }
+            get => !((Status1Flags & Macrodyne.StatusFlags.OperationalLimitReached) > 0);
             set
             {
                 if (value)
@@ -245,10 +200,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override bool SynchronizationIsValid
         {
-            get
-            {
-                return !((Status1Flags & Macrodyne.StatusFlags.TimeError) > 0);
-            }
+            get => !((Status1Flags & Macrodyne.StatusFlags.TimeError) > 0);
             set
             {
                 if (value)
@@ -263,10 +215,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override DataSortingType DataSortingType
         {
-            get
-            {
-                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
-            }
+            get => SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
             set
             {
                 // We just ignore this value as we have defined data sorting type as a derived value based on synchronization validity
@@ -280,10 +229,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool DeviceError
         {
-            get
-            {
-                return false;
-            }
+            get => false;
             set
             {
                 // We just ignore this value as Macrodyne defines no flags for data errors
@@ -295,14 +241,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public ushort ReferenceSampleNumber
         {
-            get
-            {
-                return m_referenceSampleNumber;
-            }
-            set
-            {
-                m_referenceSampleNumber = value;
-            }
+            get => m_referenceSampleNumber;
+            set => m_referenceSampleNumber = value;
         }
 
         /// <summary>
@@ -310,14 +250,8 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public PhasorValue ReferencePhasor
         {
-            get
-            {
-                return m_referencePhasor;
-            }
-            set
-            {
-                m_referencePhasor = value;
-            }
+            get => m_referencePhasor;
+            set => m_referencePhasor = value;
         }
 
         /// <summary>
@@ -327,13 +261,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// Macrodyne doesn't define any analog values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override AnalogValueCollection AnalogValues
-        {
-            get
-            {
-                return base.AnalogValues;
-            }
-        }
+        public override AnalogValueCollection AnalogValues => base.AnalogValues;
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
@@ -575,7 +503,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             }
 
             // Return total parsed length
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
