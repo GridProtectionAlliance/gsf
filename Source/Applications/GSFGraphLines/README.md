@@ -1,4 +1,4 @@
-![Logo](https://www.gridprotectionalliance.org/images/products/productTitles75/GEPct.png)
+![Logo](https://www.gridprotectionalliance.org/images/products/productTitles75/GEPct.png?rev=1)
 
 The Gateway Exchange Protocol (GEP) Subscription Tester is a tool used to validate that a GEP subscription based connection is working as expected. It can also be used to validate filter expressions that can be used to select a set of points in the openPDC and other GPA synchrophasor products, e.g., SIEGate for use as inputs or outputs for any adapter.
 
