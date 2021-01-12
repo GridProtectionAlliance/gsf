@@ -1,3 +1,11 @@
+![Logo](https://www.gridprotectionalliance.org/images/products/ProductTitles75/gep.png)
+
+The Gateway Exchange Protocol (GEP) is a measurement-based publish/subscribe transport protocol used for efficiently exchanging time-series data. Through use of a command channel it can also automatically synchronize meta-data among applications. The protocol supports sending real-time and historical data at full or down-sampled resolutions. When sending historical data, the communications speed can be controlled dynamically to provide data as quickly as possible, e.g., a data download, or slowed for visualization streaming.
+
+The wire protocol employed by GEP implements a publish/subscribe data exchange model using a simple command driven service with tightly compressed, fast binary serialization of time-series values. The protocol does not require a predefined or fixed configuration – that is, the time-series values arriving in one data packet can be different than those arriving in another. Each packet data consists of a collection of time-series values; each time-series value is a structure containing an ID, a time-stamp, a value and associated flags.
+
+--------------------
+
 This is the C++ implementation of the Gateway Exchange Protocol.
 
 This code includes functionality for both "subscriber" and "publisher" in GEP.
