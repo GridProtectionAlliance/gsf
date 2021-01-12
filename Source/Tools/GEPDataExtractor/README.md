@@ -1,0 +1,3 @@
+![Logo](https://www.gridprotectionalliance.org/images/products/productTitles75/GEPde.png)
+
+The Gateway Exchange Protocol (GEP) Data Extraction Utility is used to export data from a system that has access to a time-series archive and is automatically included with GPA time-series products, e.g., the openHistorian. The tool is used to export selected signals from a given time-range to a CSV file with options to separate exported files based on signal type and exclude points that do not meet minimum quality criteria. The tool allows exports from any system that supports a GEP data publisher and has an attached time-series archive by making a temporal subscription to historical data.
