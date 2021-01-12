@@ -1173,6 +1173,28 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Resets the internal file index so all files can be reprocessed.
+        /// </summary>
+        /// <remarks>
+        /// As an optimization, the internal file index allows the file processor to enumerate
+        /// the folder without raising events for files that were already processed, enabling
+        /// the file processor to process files that were missed by the file watcher. However,
+        /// because of this optimization, it can instead be difficult to force the file processor
+        /// to reprocess files it has already processed once before. This method clears the
+        /// internal file index, allowing for reprocessing of files that have already been processed.
+        /// </remarks>
+        public void ResetIndexAndStatistics()
+        {
+            m_processingThread.Push(2, () =>
+            {
+                m_touchedFiles.Clear();
+                Interlocked.Exchange(ref m_processedFileCount, 0);
+                Interlocked.Exchange(ref m_skippedFileCount, 0);
+                Interlocked.Exchange(ref m_requeuedFileCount, 0);
+            });
+        }
+
+        /// <summary>
         /// Releases all the resources used by the <see cref="FileProcessor"/> object.
         /// </summary>
         [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_waitObject", Justification = "Thread pool threads could still be using this object.")]
