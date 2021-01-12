@@ -1,0 +1,3 @@
+![Logo](https://www.gridprotectionalliance.org/images/products/icons%2064/NoInternetFix.png)
+
+The No-Internet File Utility tool is used to update GPA products to better operate on a system that does not have access to an Internet connection and is automatically included with all GPA products. GPA products use TLS certificates and executable code signing which will automatically attempt Internet based validation, without an Internet connection these types of operations will timeout and cause slower than normal start times. The No-Internet File Utility tool can be used to bypass specific Internet based validations for GPA tools to increase product load times.
