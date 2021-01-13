@@ -41,7 +41,10 @@ jobs:
       uses: github/codeql-action/init@v1
       with:
         languages: ${{ matrix.language }}
-
+    
+    - name: Restore .NET SDK style project NuGet packages
+      run: dotnet restore ${{ github.workspace }}\Source\Applications\PhasorMapperTest\PhasorMapperTest.csproj
+    
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
