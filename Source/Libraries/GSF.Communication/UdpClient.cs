@@ -325,7 +325,28 @@ namespace GSF.Communication
         /// Gets the server URI of the <see cref="UdpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri => $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
+        public override string ServerUri
+        {
+            get
+            {
+                if (m_connectData is null)
+                    return $"{TransportProtocol}://0.0.0.0:0";
+
+                if (m_connectData.ContainsKey("server"))
+                    return $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
+                
+                if (!m_connectData.TryGetValue("interface", out string targetInterface) || string.IsNullOrWhiteSpace(targetInterface))
+                {
+                    IPStack ipStack = m_ipStack == IPStack.Default ? Transport.GetDefaultIPStack() : m_ipStack;
+                    targetInterface = ipStack == IPStack.IPv6 ? "[::0]" : "0.0.0.0";
+                }
+
+                if (!m_connectData.TryGetValue("port", out string targetPort) || !ushort.TryParse(targetPort, out ushort port))
+                    port = 0;
+
+                return $"{TransportProtocol}://{targetInterface}:{port}".ToLower();
+            }
+        }
 
         /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.

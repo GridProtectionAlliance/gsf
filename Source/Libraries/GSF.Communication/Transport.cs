@@ -131,7 +131,7 @@ namespace GSF.Communication
         #if !MONO
             if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
                 throw new NotSupportedException($"IPv4 stack is not available for socket creation on {hostNameOrAddress.ToNonNullNorWhiteSpace("localhost")}:{port}");
-#endif
+        #endif
 
             // No host name or IP address was specified, use local IPs
             if (string.IsNullOrWhiteSpace(hostNameOrAddress))
