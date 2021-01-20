@@ -63,11 +63,11 @@ namespace SELPDCImporter
 
         private static TemplatedExpressionParser s_pointTagExpressionParser;
         private static Dictionary<string, DataRow> s_signalTypes;
-        private static int s_ieeeC37_118ProtocolID;
+        private static int? s_ieeeC37_118ProtocolID;
         private static string s_companyAcronym;
         private static int s_companyID;
 
-        public int IeeeC37_118ProtocolID => s_ieeeC37_118ProtocolID != default ? s_ieeeC37_118ProtocolID : s_ieeeC37_118ProtocolID = Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='IeeeC37_118V1'");
+        public int IeeeC37_118ProtocolID => s_ieeeC37_118ProtocolID ??= Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='IeeeC37_118V1'");
 
         public string CompanyAcronym
         {
@@ -128,7 +128,7 @@ namespace SELPDCImporter
             Dictionary<string, string> substitutions;
 
             if (!s_signalTypes.TryGetValue(signalTypeAcronym, out DataRow signalTypeValues))
-                throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
+                throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), $"No database definition was found for signal type \"{signalTypeAcronym}\"");
 
             // Validate key acronyms
             if (companyAcronym is null)
@@ -170,10 +170,8 @@ namespace SELPDCImporter
 
         private Dictionary<string, DataRow> InitializeSignalTypes()
         {
-            Dictionary<string, DataRow> signalTypes;
-
             // It is expected that when a point tag is needing to be created that the database will be available
-            signalTypes = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, DataRow> signalTypes = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
 
             foreach (DataRow row in Connection.RetrieveData("SELECT * FROM SignalType").AsEnumerable())
                 signalTypes.AddOrUpdate(row["Acronym"].ToString(), row);

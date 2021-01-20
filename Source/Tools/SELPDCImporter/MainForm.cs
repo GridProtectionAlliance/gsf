@@ -40,7 +40,7 @@ namespace SELPDCImporter
     {
         private Settings m_settings;
         private readonly LogPublisher m_log;
-        private string m_sourceApp;
+        private string m_hostApp;
         private bool m_formLoaded;
         private volatile bool m_formClosing;
         private AdoDataConnection m_connection;
@@ -54,13 +54,13 @@ namespace SELPDCImporter
             m_log = Logger.CreatePublisher(typeof(MainForm), MessageClass.Application);
         }
 
-        private string SourceApp
+        private string HostApp
         {
-            get => m_sourceApp;
+            get => m_hostApp;
             set
             {
-                m_sourceApp = value;
-                Text = string.IsNullOrWhiteSpace(m_sourceApp) ? Tag.ToString() : $"{Tag} - Targeting {m_sourceApp}";
+                m_hostApp = value;
+                Text = string.IsNullOrWhiteSpace(m_hostApp) ? Tag.ToString() : $"{Tag} - Targeting {m_hostApp}";
             }
         }
 
@@ -148,7 +148,7 @@ namespace SELPDCImporter
 
                 if (File.Exists(absolutePath))
                 {
-                    SourceApp = sourceApp;
+                    HostApp = sourceApp;
                     return absolutePath;
                 }
             }
@@ -181,7 +181,7 @@ namespace SELPDCImporter
 
                 if (applicationName.Trim().Equals(FilePath.GetFileNameWithoutExtension(FilePath.GetFileNameWithoutExtension(configFile)), StringComparison.OrdinalIgnoreCase))
                 {
-                    SourceApp = applicationName;
+                    HostApp = applicationName;
                     return true;
                 }
             }
@@ -227,7 +227,7 @@ namespace SELPDCImporter
                     RedirectStandardInput = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     CreateNoWindow = true,
-                    FileName = $"{FilePath.AddPathSuffix(Path.GetDirectoryName(configFile))}{SourceApp}Console.exe"
+                    FileName = $"{FilePath.AddPathSuffix(Path.GetDirectoryName(configFile))}{HostApp}Console.exe"
                 }
             };
 
