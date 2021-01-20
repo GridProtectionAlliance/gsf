@@ -44,7 +44,6 @@ namespace BulkCalculationState
 {
     public partial class BulkCalculationState : Form
     {
-
         private Settings m_settings;
         private readonly LogPublisher m_log;
         private string m_sourceApp;
