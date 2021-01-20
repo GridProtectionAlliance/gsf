@@ -269,15 +269,15 @@ namespace GSF.PhasorProtocols.Macrodyne
         internal static string ConfigFileFormat(IPhasorDefinition definition)
         {
             if (definition is PhasorDefinition phasor)
-                return (phasor.PhasorType == PhasorType.Voltage ? "V" : "I") + "," + phasor.Ratio + "," + phasor.CalFactor + "," + phasor.Offset + "," + phasor.Shunt + "," + phasor.VoltageReferenceIndex + "," + phasor.Label;
+                return $"{(phasor.PhasorType == PhasorType.Voltage ? "V" : "I")},{phasor.Ratio},{phasor.CalFactor},{phasor.Offset},{phasor.Shunt},{phasor.VoltageReferenceIndex},{phasor.Label}";
 
             if (definition is null)
                 return "";
 
             if (definition.PhasorType == PhasorType.Voltage)
-                return "V,4500.0,0.0060573,0,0,500," + definition.Label.ToNonNullString("Default 500kV");
+                return $"V,4500.0,0.0060573,0,0,500,{definition.Label.ToNonNullString("Default 500kV")}";
             
-            return "I,600.00,0.000040382,0,1,1," + definition.Label.ToNonNullString("Default Current");
+            return $"I,600.00,0.000040382,0,1,1,{definition.Label.ToNonNullString("Default Current")}";
         }
 
         #endregion

@@ -189,9 +189,9 @@ namespace GSF.PhasorProtocols.Macrodyne
             set
             {
                 if (value)
-                    Status1Flags = Status1Flags & ~Macrodyne.StatusFlags.OperationalLimitReached;
+                    Status1Flags &= ~Macrodyne.StatusFlags.OperationalLimitReached;
                 else
-                    Status1Flags = Status1Flags | Macrodyne.StatusFlags.OperationalLimitReached;
+                    Status1Flags |= Macrodyne.StatusFlags.OperationalLimitReached;
             }
         }
 
@@ -204,9 +204,9 @@ namespace GSF.PhasorProtocols.Macrodyne
             set
             {
                 if (value)
-                    Status1Flags = Status1Flags & ~Macrodyne.StatusFlags.TimeError;
+                    Status1Flags &= ~Macrodyne.StatusFlags.TimeError;
                 else
-                    Status1Flags = Status1Flags | Macrodyne.StatusFlags.TimeError;
+                    Status1Flags |= Macrodyne.StatusFlags.TimeError;
             }
         }
 
@@ -272,11 +272,11 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Status 1 Flags", (int)Status1Flags + ": " + Status1Flags);
+                baseAttributes.Add("Status 1 Flags", $"{(int)Status1Flags}: {Status1Flags}");
                 baseAttributes.Add("Status 2 Flags", Status2Flags.ToString());
-                baseAttributes.Add("Clock Status Flags", (int)ClockStatusFlags + ": " + ClockStatusFlags);
-                baseAttributes.Add("GPS Status", (int)GpsStatus + ": " + GpsStatus);
-                baseAttributes.Add("Trigger Reason", (int)TriggerReason + ": " + TriggerReason);
+                baseAttributes.Add("Clock Status Flags", $"{(int)ClockStatusFlags}: {ClockStatusFlags}");
+                baseAttributes.Add("GPS Status", $"{(int)GpsStatus}: {GpsStatus}");
+                baseAttributes.Add("Trigger Reason", $"{(int)TriggerReason}: {TriggerReason}");
 
                 return baseAttributes;
             }
@@ -300,7 +300,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             ProtocolVersion protocolVersion = configFrame.CommonHeader.ProtocolVersion;
             IPhasorValue phasorValue;
             IDigitalValue digitalValue;
-            int parsedLength, index = startIndex;
+            int index = startIndex;
 
             if (protocolVersion == ProtocolVersion.M)
             {
@@ -362,7 +362,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             int phasorIndex = 0;
 
             // Phasor 1 (always present)
-            phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+            phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out int parsedLength);
             PhasorValues.Add(phasorValue);
             index += parsedLength;
 

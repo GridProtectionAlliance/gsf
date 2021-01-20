@@ -38,6 +38,7 @@ using GSF.IO.Checksums;
 using GSF.Parsing;
 using GSF.Reflection;
 
+// ReSharper disable PossibleInvalidCastExceptionInForeachLoop
 // ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.BPAPDCstream
 {
@@ -285,26 +286,24 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (!UsePhasorDataFileFormat)
-                {
-                    // Make sure to provide proper frame length for use in the common header image
-                    CommonHeader.FrameLength = unchecked((ushort)BinaryLength);
+                if (UsePhasorDataFileFormat)
+                    throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
 
-                    byte[] buffer = new byte[FixedHeaderLength];
-                    int index = 0;
+                // Make sure to provide proper frame length for use in the common header image
+                CommonHeader.FrameLength = unchecked((ushort)BinaryLength);
 
-                    CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
-                    buffer[4] = (byte)StreamType;
-                    buffer[5] = (byte)RevisionNumber;
-                    BigEndian.CopyBytes(FrameRate, buffer, 6);
-                    BigEndian.CopyBytes(RowLength(true), buffer, 8); // <-- Important: This step calculates all PMU row offsets!
-                    BigEndian.CopyBytes(PacketsPerSample, buffer, 12);
-                    BigEndian.CopyBytes((ushort)Cells.Count, buffer, 14);
+                byte[] buffer = new byte[FixedHeaderLength];
+                int index = 0;
 
-                    return buffer;
-                }
+                CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
+                buffer[4] = (byte)StreamType;
+                buffer[5] = (byte)RevisionNumber;
+                BigEndian.CopyBytes(FrameRate, buffer, 6);
+                BigEndian.CopyBytes(RowLength(true), buffer, 8); // <-- Important: This step calculates all PMU row offsets!
+                BigEndian.CopyBytes(PacketsPerSample, buffer, 12);
+                BigEndian.CopyBytes((ushort)Cells.Count, buffer, 14);
 
-                throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
+                return buffer;
             }
         }
 
@@ -322,8 +321,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 if (!(m_iniFile is null))
                     baseAttributes.Add("Configuration File Name", m_iniFile.FileName);
 
-                baseAttributes.Add("Stream Type", (int)m_streamType + ": " + m_streamType);
-                baseAttributes.Add("Revision Number", (int)m_revisionNumber + ": " + m_revisionNumber);
+                baseAttributes.Add("Stream Type", $"{(int)m_streamType}: {m_streamType}");
+                baseAttributes.Add("Revision Number", $"{(int)m_revisionNumber}: {m_revisionNumber}");
                 baseAttributes.Add("Packets Per Sample", m_packetsPerSample.ToString());
 
                 return baseAttributes;
@@ -347,7 +346,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 // Common frame header will have parsed all phasor data file header information at this point...
                 State.CellCount = unchecked((int)CommonHeader.PmuCount);
-
                 return CommonFrameHeader.DstHeaderFixedLength;
             }
 
@@ -414,9 +412,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 if (File.Exists(m_iniFile.FileName))
                 {
-                    ConfigurationCell pmuCell;
-                    int phasorCount, pmuCount, x, y;
-
                     DefaultPhasorV = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorV", DefaultVoltagePhasorEntry]);
                     DefaultPhasorI = new PhasorDefinition(null, 0, m_iniFile["DEFAULT", "PhasorI", DefaultCurrentPhasorEntry]);
                     DefaultFrequency = new FrequencyDefinition(null, m_iniFile["DEFAULT", "Frequency", DefaultFrequencyEntry]);
@@ -433,61 +428,56 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     // Load phasor data for each section in config file...
                     foreach (string section in m_iniFile.GetSectionNames())
                     {
-                        if (section.Length > 0)
+                        // Make sure this is not a special section
+                        if (section.Length == 0 || string.Equals(section, "DEFAULT", StringComparison.OrdinalIgnoreCase) || string.Equals(section, "CONFIG", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        // Create new PMU entry structure from config file settings...
+                        int phasorCount = int.Parse(m_iniFile[section, "NumberPhasors", "0"]);
+
+                        // Check for PDC code
+                        int pdcID = int.Parse(m_iniFile[section, "PDC", "-1"]);
+
+                        if (pdcID == -1)
                         {
-                            // Make sure this is not a special section
-                            if (!string.Equals(section, "DEFAULT", StringComparison.OrdinalIgnoreCase) && !string.Equals(section, "CONFIG", StringComparison.OrdinalIgnoreCase))
+                            // No PDC entry exists, assume this is a PMU
+                            ConfigurationCell pmuCell = new ConfigurationCell(this, 0)
                             {
-                                // Create new PMU entry structure from config file settings...
-                                phasorCount = int.Parse(m_iniFile[section, "NumberPhasors", "0"]);
+                                IDCode = ushort.Parse(m_iniFile[section, "PMU", Cells.Count.ToString()]),
+                                SectionEntry = section,
+                                StationName = m_iniFile[section, "Name", section]
+                            };
 
-                                // Check for PDC code
-                                int pdcID = int.Parse(m_iniFile[section, "PDC", "-1"]);
+                            // This will automatically assign ID label as first 4 digits of section
+                            for (int x = 0; x < phasorCount; x++)
+                                pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, x + 1, m_iniFile[section, $"Phasor{(x + 1)}", DefaultVoltagePhasorEntry]));
 
-                                if (pdcID == -1)
+                            pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
+                            ConfigurationFileCells.Add(pmuCell);
+                        }
+                        else
+                        {
+                            // This is a PDC, need to define one virtual entry for each PMU
+                            int pmuCount = int.Parse(m_iniFile[section, "NumberPMUs", "0"]);
+
+                            for (int x = 0; x < pmuCount; x++)
+                            {
+                                // Create a new PMU cell for each PDC entry that exists
+                                // For BPA INI files, PMUs tradionally have an ID number indexed starting at zero or one - so we multiply
+                                // ID by 1000 and add index to attempt to create a fairly unique ID to help optimize downstream parsing
+                                ConfigurationCell pmuCell = new ConfigurationCell(this, 0)
                                 {
-                                    // No PDC entry exists, assume this is a PMU
-                                    pmuCell = new ConfigurationCell(this, 0)
-                                    {
-                                        IDCode = ushort.Parse(m_iniFile[section, "PMU", Cells.Count.ToString()]),
-                                        SectionEntry = section,
-                                        StationName = m_iniFile[section, "Name", section]
-                                    };
+                                    IDCode = unchecked((ushort)(pdcID * 1000 + x)),
+                                    SectionEntry = $"{section}pmu{x}",
+                                    StationName = $"{m_iniFile[section, "Name", section]} - Device {x + 1}"
+                                };
 
-                                    // This will automatically assign ID label as first 4 digits of section
-                                    for (x = 0; x < phasorCount; x++)
-                                    {
-                                        pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, x + 1, m_iniFile[section, "Phasor" + (x + 1), DefaultVoltagePhasorEntry]));
-                                    }
+                                // This will automatically assign ID label as first 4 digits of section
+                                for (int y = 0; y < 2; y++)
+                                    pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, $"Phasor{(x * 2 + y + 1)}", DefaultVoltagePhasorEntry]));
 
-                                    pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
-                                    ConfigurationFileCells.Add(pmuCell);
-                                }
-                                else
-                                {
-                                    // This is a PDC, need to define one virtual entry for each PMU
-                                    pmuCount = int.Parse(m_iniFile[section, "NumberPMUs", "0"]);
-
-                                    for (x = 0; x < pmuCount; x++)
-                                    {
-                                        // Create a new PMU cell for each PDC entry that exists
-                                        pmuCell = new ConfigurationCell(this, 0);
-
-                                        // For BPA INI files, PMUs tradionally have an ID number indexed starting at zero or one - so we multiply
-                                        // ID by 1000 and add index to attempt to create a fairly unique ID to help optimize downstream parsing
-                                        pmuCell.IDCode = unchecked((ushort)(pdcID * 1000 + x));
-                                        pmuCell.SectionEntry = $"{section}pmu{x}"; // This will automatically assign ID label as first 4 digits of section
-                                        pmuCell.StationName = $"{m_iniFile[section, "Name", section]} - Device {x + 1}";
-
-                                        for (y = 0; y < 2; y++)
-                                        {
-                                            pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, "Phasor" + (x * 2 + y + 1), DefaultVoltagePhasorEntry]));
-                                        }
-
-                                        pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
-                                        ConfigurationFileCells.Add(pmuCell);
-                                    }
-                                }
+                                pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
+                                ConfigurationFileCells.Add(pmuCell);
                             }
                         }
                     }
@@ -495,24 +485,21 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     // Associate parsed cells with cells defined in INI file
                     if (ConfigurationFileCells.Count > 0 && !(Cells is null))
                     {
-                        ConfigurationCell configurationFileCell = null;
-
                         if (refreshCausedByFrameParse)
                         {
                             // Create a new configuration cell collection that will account for PDC block cells
                             ConfigurationCellCollection cellCollection = new ConfigurationCellCollection();
-                            ConfigurationCell cell;
 
                             // For freshly parsed configuration frames we'll have no PMU's in configuration
                             // frame for PDCxchng blocks - so we'll need to dynamically create them
-                            for (x = 0; x < Cells.Count; x++)
+                            for (int x = 0; x < Cells.Count; x++)
                             {
                                 // Get current configuration cell
-                                cell = Cells[x];
+                                ConfigurationCell cell = Cells[x];
 
                                 // Lookup INI file configuration cell by ID label
                                 ConfigurationFileCells.TryGetByIDLabel(cell.IDLabel, out IConfigurationCell configurationCell);
-                                configurationFileCell = (ConfigurationCell)configurationCell;
+                                ConfigurationCell configurationFileCell = (ConfigurationCell)configurationCell;
 
                                 if (configurationFileCell is null)
                                 {
@@ -529,7 +516,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                         do
                                         {
                                             // Lookup PMU by section name
-                                            ConfigurationFileCells.TryGetBySectionEntry($"{cell.IDLabel}pmu{index}", ref configurationFileCell);
+                                            ConfigurationFileCells.TryGetBySectionEntry($"{cell.IDLabel}pmu{index}", out configurationFileCell);
 
                                             // Add PDC block PMU configuration cell to the collection
                                             if (!(configurationFileCell is null))
@@ -558,7 +545,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                             foreach (ConfigurationCell cell in Cells)
                             {
                                 // Attempt to associate this configuration cell with information read from external INI based configuration file
-                                ConfigurationFileCells.TryGetBySectionEntry(cell.SectionEntry, ref configurationFileCell);
+                                ConfigurationFileCells.TryGetBySectionEntry(cell.SectionEntry, out ConfigurationCell configurationFileCell);
                                 cell.ConfigurationFileCell = configurationFileCell;
                             }
                         }
@@ -566,7 +553,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 }
                 else
                 {
-                    throw new InvalidOperationException("PDC config file \"" + m_iniFile.FileName + "\" does not exist.");
+                    throw new InvalidOperationException($"PDC config file \"{m_iniFile.FileName}\" does not exist.");
                 }
             }
 
@@ -592,10 +579,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                     m_rowLength += 8 + FrequencyValue.CalculateBinaryLength(cell.FrequencyDefinition);
 
-                    for (int y = 0; y < cell.PhasorDefinitions.Count; y++)
-                    {
-                        m_rowLength += PhasorValue.CalculateBinaryLength(y);
-                    }
+                    foreach (IPhasorDefinition definition in cell.PhasorDefinitions)
+                        m_rowLength += PhasorValue.CalculateBinaryLength(definition);
                 }
             }
 
@@ -641,10 +626,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
         {
             if (UsePhasorDataFileFormat)
-            {
-                // DST files don't use checksums
-                return true;
-            }
+                return true; // DST files don't use checksums
 
             int sumLength = BinaryLength - 2;
             return LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
@@ -682,10 +664,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             StringBuilder fileImage = new StringBuilder();
 
-            fileImage.AppendLine("; BPA PDCstream IniFile for Configuration " + configFrame.IDCode);
-            fileImage.AppendLine("; Auto-generated on " + DateTime.Now);
-            fileImage.AppendLine(";    Assembly: " + AssemblyInfo.ExecutingAssembly.Name);
-            fileImage.AppendLine(";    Compiled: " + File.GetLastWriteTime(AssemblyInfo.ExecutingAssembly.Location));
+            fileImage.AppendLine($"; BPA PDCstream IniFile for Configuration {configFrame.IDCode}");
+            fileImage.AppendLine($"; Auto-generated on {DateTime.Now}");
+            fileImage.AppendLine($";    Assembly: {AssemblyInfo.ExecutingAssembly.Name}");
+            fileImage.AppendLine($";    Compiled: {File.GetLastWriteTime(AssemblyInfo.ExecutingAssembly.Location)}");
             fileImage.AppendLine(";");
             fileImage.AppendLine(";");
             fileImage.AppendLine("; Format:");
@@ -726,27 +708,27 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             fileImage.AppendLine(";");
 
             fileImage.AppendLine("[DEFAULT]");
-            fileImage.AppendLine("PhasorV=" + DefaultVoltagePhasorEntry); //PhasorDefinition.ConfigFileFormat(DefaultPhasorV));
-            fileImage.AppendLine("PhasorI=" + DefaultCurrentPhasorEntry); //PhasorDefinition.ConfigFileFormat(DefaultPhasorI));
-            fileImage.AppendLine("Frequency=" + DefaultFrequencyEntry);   //FrequencyDefinition.ConfigFileFormat(DefaultFrequency));
+            fileImage.AppendLine($"PhasorV={DefaultVoltagePhasorEntry}"); //PhasorDefinition.ConfigFileFormat(DefaultPhasorV));
+            fileImage.AppendLine($"PhasorI={DefaultCurrentPhasorEntry}"); //PhasorDefinition.ConfigFileFormat(DefaultPhasorI));
+            fileImage.AppendLine($"Frequency={DefaultFrequencyEntry}");   //FrequencyDefinition.ConfigFileFormat(DefaultFrequency));
             fileImage.AppendLine();
 
             fileImage.AppendLine("[CONFIG]");
-            fileImage.AppendLine("SampleRate=" + configFrame.FrameRate);
-            fileImage.AppendLine("NumberOfPMUs=" + configFrame.Cells.Count);
+            fileImage.AppendLine($"SampleRate={configFrame.FrameRate}");
+            fileImage.AppendLine($"NumberOfPMUs={configFrame.Cells.Count}");
             fileImage.AppendLine();
 
             for (int x = 0; x < configFrame.Cells.Count; x++)
             {
-                fileImage.AppendLine("[" + configFrame.Cells[x].IDLabel + "]");
-                fileImage.AppendLine("Name=" + configFrame.Cells[x].StationName);
-                fileImage.AppendLine("PMU=" + x);
-                fileImage.AppendLine("NumberPhasors=" + configFrame.Cells[x].PhasorDefinitions.Count);
+                fileImage.AppendLine($"[{configFrame.Cells[x].IDLabel}]");
+                fileImage.AppendLine($"Name={configFrame.Cells[x].StationName}");
+                fileImage.AppendLine($"PMU={x}");
+                fileImage.AppendLine($"NumberPhasors={configFrame.Cells[x].PhasorDefinitions.Count}");
+
                 for (int y = 0; y < configFrame.Cells[x].PhasorDefinitions.Count; y++)
-                {
-                    fileImage.AppendLine("Phasor" + (y + 1) + "=" + PhasorDefinition.ConfigFileFormat(configFrame.Cells[x].PhasorDefinitions[y]));
-                }
-                fileImage.AppendLine("Frequency=" + FrequencyDefinition.ConfigFileFormat(configFrame.Cells[x].FrequencyDefinition));
+                    fileImage.AppendLine($"Phasor{(y + 1)}={PhasorDefinition.ConfigFileFormat(configFrame.Cells[x].PhasorDefinitions[y])}");
+
+                fileImage.AppendLine($"Frequency={FrequencyDefinition.ConfigFileFormat(configFrame.Cells[x].FrequencyDefinition)}");
                 fileImage.AppendLine();
             }
 

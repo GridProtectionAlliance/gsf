@@ -67,7 +67,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             ConfigurationCell configCell = new ConfigurationCell(this);
 
             // Assign station name
-            configCell.StationName = "SEL Unit - " + idCode;
+            configCell.StationName = $"SEL Unit - {idCode}";
 
             // Add a single frequency definition
             configCell.FrequencyDefinition = new FrequencyDefinition(configCell, "Line frequency");
@@ -187,8 +187,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Frame Size", (byte)FrameSize + ": " + FrameSize);
-                baseAttributes.Add("Defined Message Period", (ushort)MessagePeriod + ": " + MessagePeriod);
+                baseAttributes.Add("Frame Size", $"{(byte)FrameSize}: {FrameSize}");
+                baseAttributes.Add("Defined Message Period", $"{(ushort)MessagePeriod}: {MessagePeriod}");
                 baseAttributes.Add("32-Bit ID Code", IDCode.ToString());
 
                 return baseAttributes;

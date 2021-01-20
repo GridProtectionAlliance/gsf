@@ -118,7 +118,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Extended Data Byte", "0x" + ExtendedDataByte.ToString("x"));
+                baseAttributes.Add("Extended Data Byte", $"0x{ExtendedDataByte:x}");
 
                 return baseAttributes;
             }

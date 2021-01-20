@@ -113,22 +113,14 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets the IEC 61850-90-5 resolution of fractional timestamps of the current <see cref="ConfigurationFrame"/>, if one has been parsed.
         /// </summary>
-        public uint Timebase
-        {
-            get
-            {
-                if (m_configurationFrame is null)
-                    return 0;
-                return m_configurationFrame.Timebase;
-            }
-        }
+        public uint Timebase => 
+            m_configurationFrame?.Timebase ?? (uint)0;
 
         /// <summary>
         /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
         /// </summary>
-        public override bool ProtocolUsesSyncBytes =>
-            // Since this implementation can parse both IEEE C37.118 configuration frames and IEC 61850-90-5 data frames, there is no common sync byte
-            false;
+        // Since this implementation can parse both IEEE C37.118 configuration frames and IEC 61850-90-5 data frames, there is no common sync byte
+        public override bool ProtocolUsesSyncBytes => false;
 
         /// <summary>
         /// Gets the number of redundant frames in each packet.
@@ -258,42 +250,42 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         protected override ICommonHeader<FrameType> ParseCommonHeader(byte[] buffer, int offset, int length)
         {
             // See if there is enough data in the buffer to parse the common frame header.
-            if (length >= CommonFrameHeader.FixedLength)
+            if (length < CommonFrameHeader.FixedLength)
+                return null;
+
+            // Parse common frame header
+            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame, m_useETRConfiguration, m_guessConfiguration, m_parseRedundantASDUs, m_ignoreSignatureValidationFailures, m_ignoreSampleSizeValidationFailures, m_phasorAngleFormat, buffer, offset, length)
             {
-                // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame, m_useETRConfiguration, m_guessConfiguration, m_parseRedundantASDUs, m_ignoreSignatureValidationFailures, m_ignoreSampleSizeValidationFailures, m_phasorAngleFormat, buffer, offset, length)
+                PublishFrame = OnReceivedChannelFrame
+            };
+
+            // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
+            // we eliminate the need to validate length on all subsequent data elements that comprise the frame
+            if (length >= parsedFrameHeader.FrameLength)
+            {
+                // Expose the frame buffer image in case client needs this data for any reason
+                OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
+
+                // Handle special parsing states
+                switch (parsedFrameHeader.TypeID)
                 {
-                    PublishFrame = OnReceivedChannelFrame
-                };
+                    case FrameType.DataFrame:
+                        // Assign data frame parsing state                            
+                        DataFrameParsingState parsingState = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
-                // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
-                // we eliminate the need to validate length on all subsequent data elements that comprise the frame
-                if (length >= parsedFrameHeader.FrameLength)
-                {
-                    // Expose the frame buffer image in case client needs this data for any reason
-                    OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
+                        // Assume one device if no configuration frame is available
+                        if (m_configurationFrame is null)
+                            parsingState.CellCount = 1;
 
-                    // Handle special parsing states
-                    switch (parsedFrameHeader.TypeID)
-                    {
-                        case FrameType.DataFrame:
-                            // Assign data frame parsing state                            
-                            DataFrameParsingState parsingState = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
-
-                            // Assume one device if no configuration frame is available
-                            if (m_configurationFrame is null)
-                                parsingState.CellCount = 1;
-
-                            parsedFrameHeader.State = parsingState;
-                            break;
-                        case FrameType.ConfigurationFrame:
-                            // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
-                            break;
-                    }
-
-                    return parsedFrameHeader;
+                        parsedFrameHeader.State = parsingState;
+                        break;
+                    case FrameType.ConfigurationFrame:
+                        // Assign configuration frame parsing state
+                        parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
+                        break;
                 }
+
+                return parsedFrameHeader;
             }
 
             return null;
@@ -362,7 +354,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             base.OnReceivedChannelFrame(frame);
 
             // Raise IEC 61850-90-5 specific channel frame events, if any have been subscribed
-            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedCommandFrame is null))
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedCommandFrame is null)
                 return;
 
             switch (frame)
@@ -411,57 +403,47 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
             // See if frame is already an IEC 61850-90-5 configuration frame (if so, we don't need to do any work)
+            if (sourceFrame is ConfigurationFrame derivedFrame)
+                return derivedFrame;
 
-            if (!(sourceFrame is ConfigurationFrame derivedFrame))
+            // Create a new IEC 61850-90-5 configuration frame converted from equivalent configuration information
+            // Assuming timebase = 16777216
+            derivedFrame = new ConfigurationFrame(Common.Timebase, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+
+            foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
-                // Create a new IEC 61850-90-5 configuration frame converted from equivalent configuration information
-                ConfigurationCell derivedCell;
-                IFrequencyDefinition sourceFrequency;
+                // Create new derived configuration cell
+                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
-                // Assuming timebase = 16777216
-                derivedFrame = new ConfigurationFrame(Common.Timebase, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+                string stationName = sourceCell.StationName;
+                string idLabel = sourceCell.IDLabel;
 
-                foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
-                {
-                    // Create new derived configuration cell
-                    derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                if (!string.IsNullOrWhiteSpace(stationName))
+                    derivedCell.StationName = stationName.TruncateLeft(derivedCell.MaximumStationNameLength);
 
-                    string stationName = sourceCell.StationName;
-                    string idLabel = sourceCell.IDLabel;
+                if (!string.IsNullOrWhiteSpace(idLabel))
+                    derivedCell.IDLabel = idLabel.TruncateLeft(derivedCell.IDLabelLength);
 
-                    if (!string.IsNullOrWhiteSpace(stationName))
-                        derivedCell.StationName = stationName.TruncateLeft(derivedCell.MaximumStationNameLength);
+                // Create equivalent derived phasor definitions
+                foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
+                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
 
-                    if (!string.IsNullOrWhiteSpace(idLabel))
-                        derivedCell.IDLabel = idLabel.TruncateLeft(derivedCell.IDLabelLength);
+                // Create equivalent derived frequency definition
+                IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    // Create equivalent derived phasor definitions
-                    foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                    {
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
-                    }
+                if (!(sourceFrequency is null))
+                    derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
-                    // Create equivalent derived frequency definition
-                    sourceFrequency = sourceCell.FrequencyDefinition;
+                // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
+                foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
+                    derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
 
-                    if (!(sourceFrequency is null))
-                        derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
+                // Create equivalent derived digital definitions
+                foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
+                    derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
 
-                    // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
-                    foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
-                    {
-                        derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
-                    }
-
-                    // Create equivalent derived digital definitions
-                    foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                    {
-                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
-                    }
-
-                    // Add cell to frame
-                    derivedFrame.Cells.Add(derivedCell);
-                }
+                // Add cell to frame
+                derivedFrame.Cells.Add(derivedCell);
             }
 
             return derivedFrame;

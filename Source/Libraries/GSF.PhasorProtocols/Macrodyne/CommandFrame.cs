@@ -54,7 +54,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             : base(new CommandCellCollection(0), command)
         {
             if (command != PhasorProtocols.DeviceCommand.EnableRealTimeData && command != PhasorProtocols.DeviceCommand.DisableRealTimeData && command != PhasorProtocols.DeviceCommand.SendConfigurationFrame1 && command != PhasorProtocols.DeviceCommand.SendConfigurationFrame2 && command != PhasorProtocols.DeviceCommand.SendHeaderFrame)
-                throw new ArgumentException("Macrodyne does not support " + command + " device command.", nameof(command));
+                throw new ArgumentException($"Macrodyne does not support {command} device command.", nameof(command));
         }
 
         /// <summary>

@@ -73,11 +73,11 @@ namespace GSF.PhasorProtocols.SelFastMessage
 
             // Validate check-sum
             if (!ChecksumIsValid(buffer, startIndex))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
+                throw new InvalidOperationException($"Invalid binary image detected - check sum of {GetType().Name} did not match");
 
             // Validate SEL Fast Message data image
             if (buffer[startIndex] != Common.HeaderByte1 || buffer[startIndex + 1] != Common.HeaderByte2)
-                throw new InvalidOperationException("Bad data stream, expected header bytes 0xA546 as first bytes in SEL Fast Message command frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0') + buffer[startIndex + 1].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Bad data stream, expected header bytes 0xA546 as first bytes in SEL Fast Message command frame, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}{buffer[startIndex + 1].ToString("X").PadLeft(2, '0')}");
 
             Command = (DeviceCommand)buffer[startIndex + 9];
 
@@ -88,7 +88,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             int sumLength = FrameSize - 2;
 
             if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
+                throw new InvalidOperationException($"Invalid binary image detected - check sum of {GetType().Name} did not match");
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             : base(new CommandCellCollection(0), command)
         {
             if (command != PhasorProtocols.DeviceCommand.EnableRealTimeData && command != PhasorProtocols.DeviceCommand.DisableRealTimeData)
-                throw new ArgumentException("SEL Fast Message does not support " + command + " device command.", nameof(command));
+                throw new ArgumentException($"SEL Fast Message does not support {command} device command.", nameof(command));
 
             m_messagePeriod = messagePeriod;
         }
@@ -232,7 +232,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Defined Message Period", (ushort)MessagePeriod + ": " + MessagePeriod);
+                baseAttributes.Add("Defined Message Period", $"{(ushort)MessagePeriod}: {MessagePeriod}");
 
                 return baseAttributes;
             }

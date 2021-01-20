@@ -35,7 +35,7 @@ namespace GSF.PhasorProtocols.Anonymous
     /// </summary>
     [Serializable]
     public class AnalogDefinition : AnalogDefinitionBase
-	{
+    {
         #region [ Constructors ]
 
         /// <summary>

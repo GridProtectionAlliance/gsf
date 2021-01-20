@@ -101,7 +101,7 @@ namespace GSF.PhasorProtocols
 
             for (int x = 0; x < info.GetInt32("count"); x++)
             {
-                Add((T)info.GetValue("item" + x, typeof(T)));
+                Add((T)info.GetValue($"item{x}", typeof(T)));
             }
         }
 
@@ -252,7 +252,7 @@ namespace GSF.PhasorProtocols
         {
             // Interception of inserted items occurs with this override (via Collection<T>) allowing maximum length to be validated
             if (Count > m_lastValidIndex)
-                throw new OverflowException("Maximum " + GetType().Name + " item limit reached");
+                throw new OverflowException($"Maximum {GetType().Name} item limit reached");
 
             base.InsertItem(index, item);
 
@@ -331,7 +331,7 @@ namespace GSF.PhasorProtocols
 
             for (int x = 0; x < Count; x++)
             {
-                info.AddValue("item" + x, this[x], typeof(T));
+                info.AddValue($"item{x}", this[x], typeof(T));
             }
         }
 

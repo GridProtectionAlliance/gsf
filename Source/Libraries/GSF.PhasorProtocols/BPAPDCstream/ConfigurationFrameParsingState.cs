@@ -32,12 +32,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
     /// </summary>
     public class ConfigurationFrameParsingState : PhasorProtocols.ConfigurationFrameParsingState
     {
-        #region [ Members ]
-
-        // Fields
-
-    #endregion
-
         #region [ Constructors ]
 
         /// <summary>

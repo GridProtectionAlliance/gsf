@@ -29,6 +29,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
@@ -81,7 +82,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             int sumLength = m_frameHeader.FrameLength - 2;
 
             if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
+                throw new InvalidOperationException($"Invalid binary image detected - check sum of {GetType().Name} did not match");
 
             m_frameHeader.State = new CommandFrameParsingState(m_frameHeader.FrameLength, m_frameHeader.DataLength, true, true);
             CommonHeader = m_frameHeader;
@@ -126,14 +127,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists
-                if (m_frameHeader is null)
-                    m_frameHeader = new CommonFrameHeader(null, IEC61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp);
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(null, IEC61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp));
             set
             {
                 m_frameHeader = value;

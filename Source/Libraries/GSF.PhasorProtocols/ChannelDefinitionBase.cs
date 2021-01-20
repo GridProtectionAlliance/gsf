@@ -168,7 +168,7 @@ namespace GSF.PhasorProtocols
             set
             {
                 if (value > MaximumScalingValue)
-                    throw new OverflowException("Scaling value cannot exceed " + MaximumScalingValue);
+                    throw new OverflowException($"Scaling value cannot exceed {MaximumScalingValue}");
 
                 m_scale = value;
             }
@@ -198,7 +198,7 @@ namespace GSF.PhasorProtocols
                 value = value.GetValidLabel();
 
                 if (value.Length > MaximumLabelLength)
-                    throw new OverflowException("Label length cannot exceed " + MaximumLabelLength + " characters.");
+                    throw new OverflowException($"Label length cannot exceed {MaximumLabelLength} characters.");
 
                 m_label = value;
             }
@@ -238,7 +238,7 @@ namespace GSF.PhasorProtocols
                 baseAttributes.Add("Label", Label.ToNonNullString("Undefined"));
                 baseAttributes.Add("Index", Index.ToString());
                 baseAttributes.Add("Offset", Offset.ToString());
-                baseAttributes.Add("Data Format", (int)DataFormat + ": " + DataFormat);
+                baseAttributes.Add("Data Format", $"{(int)DataFormat}: {DataFormat}");
                 baseAttributes.Add("Conversion Factor", ConversionFactor.ToString());
                 baseAttributes.Add("Scaling Value", ScalingValue.ToString());
                 baseAttributes.Add("Scale per Bit", ScalePerBit.ToString());

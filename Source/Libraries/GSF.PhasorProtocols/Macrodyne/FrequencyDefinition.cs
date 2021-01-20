@@ -26,7 +26,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
@@ -37,7 +36,6 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// Represents the Macrodyne implementation of a <see cref="IFrequencyDefinition"/>.
     /// </summary>
     [Serializable]
-    [SuppressMessage("Microsoft.Usage", "CA2240:ImplementISerializableCorrectly")]
     public class FrequencyDefinition : FrequencyDefinitionBase
     {
         #region [ Members ]
@@ -150,9 +148,9 @@ namespace GSF.PhasorProtocols.Macrodyne
             // type, scale, offset, dF/dt scale, dF/dt offset, dummy, label 
             //   F,  1000,    60,      1000,         0,          0,   Frequency
             if (definition is FrequencyDefinition frequency)
-                return "F," + frequency.ScalingValue + "," + frequency.Offset + "," + frequency.DfDtScalingValue + "," + frequency.DfDtOffset + "," + frequency.m_dummy + "," + frequency.Label;
+                return $"F,{frequency.ScalingValue},{frequency.Offset},{frequency.DfDtScalingValue},{frequency.DfDtOffset},{frequency.m_dummy},{frequency.Label}";
 
-            return definition is null ? "" : "F," + definition.ScalingValue + "," + definition.Offset + "," + definition.DfDtScalingValue + "," + definition.DfDtOffset + ",0," + definition.Label;
+            return definition is null ? "" : $"F,{definition.ScalingValue},{definition.Offset},{definition.DfDtScalingValue},{definition.DfDtOffset},0,{definition.Label}";
         }
 
         #endregion

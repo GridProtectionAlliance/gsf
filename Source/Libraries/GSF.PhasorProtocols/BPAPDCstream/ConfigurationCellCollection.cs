@@ -84,12 +84,13 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <param name="sectionEntry"><see cref="ConfigurationCell.SectionEntry"/> value to try to find.</param>
         /// <param name="configurationCell"><see cref="ConfigurationCell"/> with the specified <paramref name="sectionEntry"/> if found; otherwise <c>null</c>.</param>
         /// <returns><c>true</c> if <see cref="ConfigurationCell"/> with the specified <paramref name="sectionEntry"/> is found; otherwise <c>false</c>.</returns>
-        public bool TryGetBySectionEntry(string sectionEntry, ref ConfigurationCell configurationCell)
+        public bool TryGetBySectionEntry(string sectionEntry, out ConfigurationCell configurationCell)
         {
             for (int i = 0; i < Count; i++)
             {
                 configurationCell = this[i];
-                if (string.Compare(configurationCell.SectionEntry, sectionEntry, true) == 0)
+
+                if (string.Equals(configurationCell.SectionEntry, sectionEntry, StringComparison.OrdinalIgnoreCase))
                     return true;
             }
 

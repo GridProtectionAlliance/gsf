@@ -152,13 +152,13 @@ namespace GSF.PhasorProtocols
                 int compositeValues = CompositeValueCount;
 
                 baseAttributes.Add("Label", Label);
-                baseAttributes.Add("Data Format", (int)DataFormat + ": " + DataFormat);
+                baseAttributes.Add("Data Format", $"{(int)DataFormat}: {DataFormat}");
                 baseAttributes.Add("Is Empty", IsEmpty.ToString());
                 baseAttributes.Add("Total Composite Values", compositeValues.ToString());
 
                 for (int x = 0; x < compositeValues; x++)
                 {
-                    baseAttributes.Add("     Composite Value " + x, " => " + GetCompositeValue(x).ToString());
+                    baseAttributes.Add($"     Composite Value {x}", $" => {GetCompositeValue(x)}");
                 }
 
                 return baseAttributes;

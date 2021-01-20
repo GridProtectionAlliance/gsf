@@ -97,7 +97,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             const byte VersionNumberMask = (byte)IEEEC37_118.FrameType.VersionNumberMask;
 
             if (buffer[startIndex] != PhasorProtocols.Common.SyncByte)
-                throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
 
             // Strip out frame type and version information...
             m_frameType = (FrameType)(buffer[startIndex + 1] & ~VersionNumberMask);
@@ -206,7 +206,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value > Common.MaximumDataLength)
-                    throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
+                    throw new OverflowException($"Data length value cannot exceed {Common.MaximumDataLength}");
 
                 FrameLength = (ushort)(value + FixedLength + 2);
             }
@@ -365,7 +365,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="attributes">Dictionary to append header specific attributes to.</param>
         internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
         {
-            attributes.Add("Frame Type", (ushort)TypeID + ": " + TypeID);
+            attributes.Add("Frame Type", $"{(ushort)TypeID}: {TypeID}");
             attributes.Add("Frame Length", FrameLength.ToString());
             attributes.Add("Version", Version.ToString());
             attributes.Add("Second of Century", SecondOfCentury.ToString());
@@ -380,7 +380,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             else
                 attributes.Add("Leap Second State", "No leap second is currently pending");
 
-            attributes.Add("Time Quality Indicator Code", (uint)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
+            attributes.Add("Time Quality Indicator Code", $"{(uint)TimeQualityIndicatorCode}: {TimeQualityIndicatorCode}");
             attributes.Add("Time Base", Timebase.ToString());
         }
 

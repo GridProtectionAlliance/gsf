@@ -269,7 +269,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             base.OnReceivedChannelFrame(frame);
 
             // Raise SEL Fast Message specific channel frame events, if any have been subscribed
-            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null))
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null)
                 return;
             
             switch (frame)

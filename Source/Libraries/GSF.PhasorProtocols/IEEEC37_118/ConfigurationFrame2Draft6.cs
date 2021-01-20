@@ -27,7 +27,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using GSF.Parsing;
 
@@ -36,7 +35,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     /// <summary>
     /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/>, type 2, that can be sent or received.
     /// </summary>
-    [Serializable, SuppressMessage("Microsoft.Maintainability", "CA1501")]
+    [Serializable]
     public class ConfigurationFrame2Draft6 : ConfigurationFrame2
     {
         #region [ Constructors ]

@@ -90,7 +90,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
     }
 
     /// <summary>
-    /// 
+    /// File version type.
     /// </summary>
     [Serializable]
     public enum FileVersion : byte

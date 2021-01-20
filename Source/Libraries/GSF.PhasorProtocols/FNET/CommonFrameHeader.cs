@@ -41,12 +41,6 @@ namespace GSF.PhasorProtocols.FNET
     /// </remarks>
     public class CommonFrameHeader : CommonHeaderBase<int>
     {
-        #region [ Members ]
-
-        // Fields
-
-    #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -59,18 +53,18 @@ namespace GSF.PhasorProtocols.FNET
         {
             // Validate F-NET data image
             if (buffer[startIndex] != Common.StartByte)
-                throw new InvalidOperationException("Bad data stream, expected start byte 0x01 as first byte in F-NET frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Bad data stream, expected start byte 0x01 as first byte in F-NET frame, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
 
             int endIndex = -1, stopIndex = Array.IndexOf(buffer, Common.EndByte, startIndex, length);
 
             if (stopIndex < 0)
                 throw new InvalidOperationException("Bad data stream, did not find stop byte 0x00 in F-NET frame");
 
-            for (int x = stopIndex; x < length; x++)
+            for (int i = stopIndex; i < length; i++)
             {
                 // We continue to scan through duplicate end bytes (nulls)
-                if (buffer[x] == Common.EndByte)
-                    endIndex = x;
+                if (buffer[i] == Common.EndByte)
+                    endIndex = i;
                 else if (endIndex >= 0)
                     break;
             }
@@ -82,13 +76,11 @@ namespace GSF.PhasorProtocols.FNET
 
                 // Make sure all the needed data elements exist (could be a bad frame)
                 if (DataElements.Length != 8)
-                    throw new InvalidOperationException("Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"" + Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim() + "\".  Got " + DataElements.Length + " elements, expected 8.");
+                    throw new InvalidOperationException($"Bad data stream, invalid number of data elements encountered in F-NET data stream line: \"{Encoding.ASCII.GetString(buffer, startIndex + 1, stopIndex - startIndex - 1).RemoveControlCharacters().Trim()}\".  Got {DataElements.Length} elements, expected 8.");
 
                 // Remove any extraneous spaces or control characters that may have been injected by the source device
                 for (int i = 0; i < DataElements.Length; i++)
-                {
                     DataElements[i] = DataElements[i].RemoveWhiteSpace().RemoveControlCharacters();
-                }
 
                 // Calculate total bytes parsed including start and stop bytes
                 ParsedLength = endIndex - startIndex + 1;
@@ -109,6 +101,6 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         public int ParsedLength { get; }
 
-    #endregion
+        #endregion
     }
 }

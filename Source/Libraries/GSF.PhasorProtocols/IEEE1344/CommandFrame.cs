@@ -32,6 +32,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
@@ -78,10 +79,10 @@ namespace GSF.PhasorProtocols.IEEE1344
                 throw new ArgumentOutOfRangeException(nameof(length));
 
             // Validate check-sum
-            int sumLength = FrameLength - 2;
+            const int sumLength = FrameLength - 2;
 
             if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
+                throw new InvalidOperationException($"Invalid binary image detected - check sum of {GetType().Name} did not match");
 
             ParseBinaryImage(buffer, startIndex, length);
         }

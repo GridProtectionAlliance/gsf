@@ -83,6 +83,12 @@ namespace GSF.PhasorProtocols
         /// <returns><c>true</c> if the <see cref="ConfigurationCellCollection"/> contains an element with the specified <paramref name="stationName"/>; otherwise, <c>false</c>.</returns>
         public virtual bool TryGetByStationName(string stationName, out IConfigurationCell configurationCell)
         {
+            if (string.IsNullOrEmpty(stationName))
+            {
+                configurationCell = null;
+                return false;
+            }
+
             configurationCell = this.FirstOrDefault(cell => stationName.TruncateRight(cell.MaximumStationNameLength).Equals(cell.StationName, StringComparison.OrdinalIgnoreCase));
             return !(configurationCell is null);
         }
@@ -98,6 +104,12 @@ namespace GSF.PhasorProtocols
         /// <returns><c>true</c> if the <see cref="ConfigurationCellCollection"/> contains an element with the specified <paramref name="label"/>; otherwise, <c>false</c>.</returns>
         public virtual bool TryGetByIDLabel(string label, out IConfigurationCell configurationCell)
         {
+            if (string.IsNullOrEmpty(label))
+            {
+                configurationCell = null;
+                return false;
+            }
+
             configurationCell = this.FirstOrDefault(cell => label.Equals(cell.IDLabel.TruncateRight(cell.IDLabelLength), StringComparison.OrdinalIgnoreCase));
             return !(configurationCell is null);
         }
@@ -124,6 +136,9 @@ namespace GSF.PhasorProtocols
         /// <returns>Index of the <see cref="ConfigurationCellCollection"/> that contains the specified <paramref name="label"/>; otherwise, <c>-1</c>.</returns>
         public virtual int IndexOfIDLabel(string label)
         {
+            if (string.IsNullOrEmpty(label))
+                return -1;
+
             return this.IndexOf(cell => label.Equals(cell.IDLabel.TruncateRight(cell.IDLabelLength), StringComparison.OrdinalIgnoreCase));
         }
 
@@ -134,6 +149,9 @@ namespace GSF.PhasorProtocols
         /// <returns>Index of the <see cref="ConfigurationCellCollection"/> that contains the specified <paramref name="stationName"/>; otherwise, <c>-1</c>.</returns>
         public virtual int IndexOfStationName(string stationName)
         {
+            if (string.IsNullOrEmpty(stationName))
+                return -1;
+
             return this.IndexOf(cell => stationName.TruncateRight(cell.MaximumStationNameLength).Equals(cell.StationName, StringComparison.OrdinalIgnoreCase));
         }
 

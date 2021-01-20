@@ -32,12 +32,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
     /// </summary>
     public class DataFrameParsingState : PhasorProtocols.DataFrameParsingState
     {
-        #region [ Members ]
-
-        // Fields
-
-    #endregion
-
         #region [ Constructors ]
 
         /// <summary>

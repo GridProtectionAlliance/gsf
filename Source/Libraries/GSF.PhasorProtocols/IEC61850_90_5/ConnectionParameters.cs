@@ -122,9 +122,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets flag that determines if system should find associated ETR file using MSVID with same name for configuration.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Determines if system should find associated ETR file using MSVID with same name for configuration."),
-        DefaultValue(DefaultUseETRConfiguration)]
+        [Category("Optional Connection Parameters")]
+        [Description("Determines if system should find associated ETR file using MSVID with same name for configuration.")]
+        [DefaultValue(DefaultUseETRConfiguration)]
         public bool UseETRConfiguration
         {
             get => m_useETRConfiguration;
@@ -134,9 +134,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets flag that determines if system should try to guess at a possible configuration given payload size.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Determines if system should try to guess at a possible configuration given payload size."),
-        DefaultValue(DefaultGuessConfiguration)]
+        [Category("Optional Connection Parameters")]
+        [Description("Determines if system should try to guess at a possible configuration given payload size.")]
+        [DefaultValue(DefaultGuessConfiguration)]
         public bool GuessConfiguration
         {
             get => m_guessConfiguration;
@@ -146,9 +146,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets flag that determines if system should expose redundantly parsed ASDUs.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Determines if system should expose redundantly parsed ASDUs."),
-        DefaultValue(DefaultParseRedundantASDUs)]
+        [Category("Optional Connection Parameters")]
+        [Description("Determines if system should expose redundantly parsed ASDUs.")]
+        [DefaultValue(DefaultParseRedundantASDUs)]
         public bool ParseRedundantASDUs
         {
             get => m_parseRedundantASDUs;
@@ -158,9 +158,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets flag that determines if system should ignore checksum signature validation errors.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Determines if system should ignore checksum signature validation errors."),
-        DefaultValue(DefaultIgnoreSignatureValidationFailures)]
+        [Category("Optional Connection Parameters")]
+        [Description("Determines if system should ignore checksum signature validation errors.")]
+        [DefaultValue(DefaultIgnoreSignatureValidationFailures)]
         public bool IgnoreSignatureValidationFailures
         {
             get => m_ignoreSignatureValidationFailures;
@@ -170,9 +170,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets flag that determines if system should ignore sample size validation errors.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Determines if system should ignore sample size validation errors."),
-        DefaultValue(DefaultIgnoreSampleSizeValidationFailures)]
+        [Category("Optional Connection Parameters")]
+        [Description("Determines if system should ignore sample size validation errors.")]
+        [DefaultValue(DefaultIgnoreSampleSizeValidationFailures)]
         public bool IgnoreSampleSizeValidationFailures
         {
             get => m_ignoreSampleSizeValidationFailures;
@@ -182,9 +182,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets flag that determines the phasor angle parsing format.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Determines the phasor angle parsing format."),
-        DefaultValue(typeof(AngleFormat), DefaultPhasorAngleFormat)]
+        [Category("Optional Connection Parameters")]
+        [Description("Determines the phasor angle parsing format.")]
+        [DefaultValue(typeof(AngleFormat), DefaultPhasorAngleFormat)]
         public AngleFormat PhasorAngleFormat
         {
             get => m_phasorAngleFormat;

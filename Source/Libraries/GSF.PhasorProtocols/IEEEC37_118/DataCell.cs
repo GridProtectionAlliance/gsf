@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
@@ -65,31 +66,23 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public DataCell(DataFrame parent, ConfigurationCell configurationCell, bool addEmptyValues)
             : this(parent, configurationCell)
         {
-            if (addEmptyValues)
-            {
-                int x;
+            if (!addEmptyValues)
+                return;
 
-                // Define needed phasor values
-                for (x = 0; x < configurationCell.PhasorDefinitions.Count; x++)
-                {
-                    PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[x]));
-                }
+            // Define needed phasor values
+            foreach (IPhasorDefinition phasorDefinition in configurationCell.PhasorDefinitions)
+                PhasorValues.Add(new PhasorValue(this, phasorDefinition));
 
-                // Define a frequency and df/dt
-                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
+            // Define a frequency and df/dt
+            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
 
-                // Define any analog values
-                for (x = 0; x < configurationCell.AnalogDefinitions.Count; x++)
-                {
-                    AnalogValues.Add(new AnalogValue(this, configurationCell.AnalogDefinitions[x]));
-                }
+            // Define any analog values
+            foreach (IAnalogDefinition analogDefinition in configurationCell.AnalogDefinitions)
+                AnalogValues.Add(new AnalogValue(this, analogDefinition));
 
-                // Define any digital values
-                for (x = 0; x < configurationCell.DigitalDefinitions.Count; x++)
-                {
-                    DigitalValues.Add(new DigitalValue(this, configurationCell.DigitalDefinitions[x]));
-                }
-            }
+            // Define any digital values
+            foreach (IDigitalDefinition digitalDefinition in configurationCell.DigitalDefinitions)
+                DigitalValues.Add(new DigitalValue(this, digitalDefinition));
         }
 
         /// <summary>
@@ -168,9 +161,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags & ~StatusFlags.DataIsValid;
+                    StatusFlags &= ~StatusFlags.DataIsValid;
                 else
-                    StatusFlags = StatusFlags | StatusFlags.DataIsValid;
+                    StatusFlags |= StatusFlags.DataIsValid;
             }
         }
 
@@ -183,9 +176,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags & ~StatusFlags.DeviceSynchronizationError;
+                    StatusFlags &= ~StatusFlags.DeviceSynchronizationError;
                 else
-                    StatusFlags = StatusFlags | StatusFlags.DeviceSynchronizationError;
+                    StatusFlags |= StatusFlags.DeviceSynchronizationError;
             }
         }
 
@@ -198,9 +191,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value == DataSortingType.ByTimestamp)
-                    StatusFlags = StatusFlags & ~StatusFlags.DataSortingType;
+                    StatusFlags &= ~StatusFlags.DataSortingType;
                 else
-                    StatusFlags = StatusFlags | StatusFlags.DataSortingType;
+                    StatusFlags |= StatusFlags.DataSortingType;
             }
         }
 
@@ -213,9 +206,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | StatusFlags.DeviceError;
+                    StatusFlags |= StatusFlags.DeviceError;
                 else
-                    StatusFlags = StatusFlags & ~StatusFlags.DeviceError;
+                    StatusFlags &= ~StatusFlags.DeviceError;
             }
         }
 
@@ -228,9 +221,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | StatusFlags.DeviceTriggerDetected;
+                    StatusFlags |= StatusFlags.DeviceTriggerDetected;
                 else
-                    StatusFlags = StatusFlags & ~StatusFlags.DeviceTriggerDetected;
+                    StatusFlags &= ~StatusFlags.DeviceTriggerDetected;
             }
         }
 
@@ -243,9 +236,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | StatusFlags.ConfigurationChanged;
+                    StatusFlags |= StatusFlags.ConfigurationChanged;
                 else
-                    StatusFlags = StatusFlags & ~StatusFlags.ConfigurationChanged;
+                    StatusFlags &= ~StatusFlags.ConfigurationChanged;
             }
         }
 
@@ -258,9 +251,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Unlocked Time", (int)UnlockedTime + ": " + UnlockedTime);
+                baseAttributes.Add("Unlocked Time", $"{(int)UnlockedTime}: {UnlockedTime}");
                 baseAttributes.Add("Device Trigger Detected", DeviceTriggerDetected.ToString());
-                baseAttributes.Add("Trigger Reason", (int)TriggerReason + ": " + TriggerReason);
+                baseAttributes.Add("Trigger Reason", $"{(int)TriggerReason}: {TriggerReason}");
                 baseAttributes.Add("Configuration Change Detected", ConfigurationChangeDetected.ToString());
 
                 return baseAttributes;

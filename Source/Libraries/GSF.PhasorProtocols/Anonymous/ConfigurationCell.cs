@@ -347,9 +347,8 @@ namespace GSF.PhasorProtocols.Anonymous
                 m_generatedMeasurementKeyCache[typeIndex] = keyArray;
 
                 string signalReference = GetSignalReference(type);
-                MeasurementKey key;
 
-                if (lookup.TryGetValue(signalReference, out key))
+                if (lookup.TryGetValue(signalReference, out MeasurementKey key))
                     keyArray[0] = key;
             }
 
@@ -390,9 +389,8 @@ namespace GSF.PhasorProtocols.Anonymous
                 for (int x = 0; x < count; x++)
                 {
                     string signalReference = GetSignalReference(type, x, count);
-                    MeasurementKey key;
 
-                    if (lookup.TryGetValue(signalReference, out key))
+                    if (lookup.TryGetValue(signalReference, out MeasurementKey key))
                         keyArray[x] = key;
                     else
                         keyArray[x] = MeasurementKey.Undefined;

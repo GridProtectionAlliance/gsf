@@ -262,7 +262,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnParsingException(new InvalidOperationException("Failed to publish configuration frame due to exception: " + ex.Message, ex));
+                OnParsingException(new InvalidOperationException($"Failed to publish configuration frame due to exception: {ex.Message}", ex));
             }
         }
 
@@ -498,7 +498,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             base.OnReceivedChannelFrame(frame);
 
             // Raise Macrodyne specific channel frame events, if any have been subscribed
-            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedHeaderFrame is null))
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedHeaderFrame is null)
                 return;
 
             switch (frame)
@@ -554,7 +554,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                     string stationName = sourceCell.StationName;
 
                     if (string.IsNullOrEmpty(stationName))
-                        stationName = "Unit " + sourceCell.IDCode.ToString();
+                        stationName = $"Unit {sourceCell.IDCode}";
 
                     stationName = stationName.TruncateLeft(8);
                     derivedFrame = new ConfigurationFrame(Common.GetFormatFlagsFromPhasorCount(sourceFrame.Cells[0].PhasorDefinitions.Count), stationName, configurationFileName, deviceLabel);

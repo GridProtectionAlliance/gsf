@@ -257,7 +257,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 CommonHeader.AppendHeaderAttributes(baseAttributes);
-                baseAttributes.Add("Draft Revision", (int)DraftRevision + ": " + DraftRevision);
+                baseAttributes.Add("Draft Revision", $"{(int)DraftRevision}: {DraftRevision}");
 
                 return baseAttributes;
             }

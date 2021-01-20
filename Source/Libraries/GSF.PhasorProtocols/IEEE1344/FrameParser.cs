@@ -123,11 +123,9 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <remarks>
         /// The IEEE 1344 protocol does not use synchronization bytes, as a result this property returns <c>false</c>.
         /// </remarks>
-        public override bool ProtocolUsesSyncBytes =>
-            // IEEE 1344 doesn't use synchronization bytes
-            false;
+        public override bool ProtocolUsesSyncBytes => false; // IEEE 1344 doesn't use synchronization bytes
 
-    #endregion
+        #endregion
 
         #region [ Methods ]
 
@@ -165,46 +163,44 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             // See if there is enough data in the buffer to parse the common frame header.
             // Note that in order to get status flags (which contain frame length), we need at least two more bytes
-            if (length >= CommonFrameHeader.FixedLength + 2)
+            if (length < CommonFrameHeader.FixedLength + 2)
+                return null;
+
+            // Parse common frame header
+            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
+
+            // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
+            // we eliminate the need to validate length on all subsequent data elements that comprise the frame
+            if (length < parsedFrameHeader.FrameLength)
+                return null;
+
+            // Expose the frame buffer image in case client needs this data for any reason
+            OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
+
+            // Handle special parsing states
+            switch (parsedFrameHeader.TypeID)
             {
-                // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
+                case FrameType.DataFrame:
+                    // Assign data frame parsing state
+                    parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
+                    break;
+                case FrameType.ConfigurationFrame:
+                    // Assign configuration frame parsing state (note that IEEE 1344 only supports a single device, hence 1 cell)
+                    parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum, 1);
 
-                // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
-                // we eliminate the need to validate length on all subsequent data elements that comprise the frame
-                if (length >= parsedFrameHeader.FrameLength)
-                {
-                    // Expose the frame buffer image in case client needs this data for any reason
-                    OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
+                    // Cumulate configuration frame images...
+                    CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_configurationFrameImages);
+                    break;
+                case FrameType.HeaderFrame:
+                    // Assign header frame parsing state
+                    parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength, TrustHeaderLength, ValidateHeaderFrameCheckSum);
 
-                    // Handle special parsing states
-                    switch (parsedFrameHeader.TypeID)
-                    {
-                        case FrameType.DataFrame:
-                            // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
-                            break;
-                        case FrameType.ConfigurationFrame:
-                            // Assign configuration frame parsing state (note that IEEE 1344 only supports a single device, hence 1 cell)
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum, 1);
-
-                            // Cumulate configuration frame images...
-                            CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_configurationFrameImages);
-                            break;
-                        case FrameType.HeaderFrame:
-                            // Assign header frame parsing state
-                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength, TrustHeaderLength, ValidateHeaderFrameCheckSum);
-
-                            // Cumulate header frame images...
-                            CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_headerFrameImages);
-                            break;
-                    }
-
-                    return parsedFrameHeader;
-                }
+                    // Cumulate header frame images...
+                    CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_headerFrameImages);
+                    break;
             }
 
-            return null;
+            return parsedFrameHeader;
         }
 
         /// <summary>
@@ -214,19 +210,17 @@ namespace GSF.PhasorProtocols.IEEE1344
         protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
             // IEEE 1344 configuration frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
+            if (!(frame is ISupportFrameImage<FrameType> frameImage))
+                return;
 
-            if (frame is ISupportFrameImage<FrameType> frameImage)
-            {
-                if (frameImage.CommonHeader is CommonFrameHeader commonHeader && commonHeader.IsLastFrame)
-                {
-                    base.OnReceivedConfigurationFrame(frame);
+            if (!(frameImage.CommonHeader is CommonFrameHeader commonHeader) || !commonHeader.IsLastFrame)
+                return;
 
-                    // Cache new configuration frame for parsing subsequent data frames...
+            base.OnReceivedConfigurationFrame(frame);
 
-                    if (frame is ConfigurationFrame configurationFrame)
-                        m_configurationFrame = configurationFrame;
-                }
-            }
+            // Cache new configuration frame for parsing subsequent data frames...
+            if (frame is ConfigurationFrame configurationFrame)
+                m_configurationFrame = configurationFrame;
         }
 
         /// <summary>
@@ -236,12 +230,11 @@ namespace GSF.PhasorProtocols.IEEE1344
         protected override void OnReceivedHeaderFrame(IHeaderFrame frame)
         {
             // IEEE 1344 header frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
+            if (!(frame is ISupportFrameImage<FrameType> frameImage))
+                return;
 
-            if (frame is ISupportFrameImage<FrameType> frameImage)
-            {
-                if (frameImage.CommonHeader is CommonFrameHeader commonHeader && commonHeader.IsLastFrame)
-                    base.OnReceivedHeaderFrame(frame);
-            }
+            if (frameImage.CommonHeader is CommonFrameHeader commonHeader && commonHeader.IsLastFrame)
+                base.OnReceivedHeaderFrame(frame);
         }
 
         /// <summary>
@@ -285,7 +278,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             base.OnReceivedChannelFrame(frame);
 
             // Raise IEEE 1344 specific channel frame events, if any have been subscribed
-            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null))
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null)
                 return;
 
             switch (frame)
@@ -352,46 +345,38 @@ namespace GSF.PhasorProtocols.IEEE1344
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame)
         {
             // See if frame is already an IEEE 1344 configuration frame (if so, we don't need to do any work)
+            if (sourceFrame is ConfigurationFrame derivedFrame)
+                return derivedFrame;
 
-            if (!(sourceFrame is ConfigurationFrame derivedFrame))
+            // Create a new IEEE 1344 configuration frame converted from equivalent configuration information
+            derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+
+            foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
-                // Create a new IEEE 1344 configuration frame converted from equivalent configuration information
-                ConfigurationCell derivedCell;
-                IFrequencyDefinition sourceFrequency;
+                // Create new derived configuration cell
+                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
-                derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+                // Create equivalent derived phasor definitions
+                foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
+                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
 
-                foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
-                {
-                    // Create new derived configuration cell
-                    derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                // Create equivalent derived frequency definition
+                IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    // Create equivalent derived phasor definitions
-                    foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                    {
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
-                    }
+                if (!(sourceFrequency is null))
+                    derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
-                    // Create equivalent derived frequency definition
-                    sourceFrequency = sourceCell.FrequencyDefinition;
+                // IEEE 1344 does not define analog values...
 
-                    if (!(sourceFrequency is null))
-                        derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
+                // Create equivalent derived digital definitions
+                foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
+                    derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
 
-                    // IEEE 1344 does not define analog values...
+                // Add cell to frame
+                derivedFrame.Cells.Add(derivedCell);
 
-                    // Create equivalent derived digital definitions
-                    foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                    {
-                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
-                    }
-
-                    // Add cell to frame
-                    derivedFrame.Cells.Add(derivedCell);
-
-                    // IEEE-1344 only supports one cell
-                    break;
-                }
+                // IEEE-1344 only supports one cell
+                break;
             }
 
             return derivedFrame;

@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using System.Diagnostics.CodeAnalysis;
 using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.FNET
@@ -35,7 +34,6 @@ namespace GSF.PhasorProtocols.FNET
     /// <summary>
     /// F-NET data elements enumeration structure.
     /// </summary>
-    [SuppressMessage("Microsoft.Performance", "CA1815")]
     internal struct Element
     {
         // This is a structure to avoid having to cast when using elements as an index

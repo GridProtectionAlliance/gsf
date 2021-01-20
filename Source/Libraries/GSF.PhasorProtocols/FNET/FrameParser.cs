@@ -145,9 +145,7 @@ namespace GSF.PhasorProtocols.FNET
             get
             {
                 if (m_configurationFrame is null)
-                {
                     return base.Status;
-                }
 
                 StringBuilder status = new StringBuilder();
 
@@ -176,16 +174,16 @@ namespace GSF.PhasorProtocols.FNET
             get => base.ConnectionParameters;
             set
             {
-                if (value is ConnectionParameters parameters)
-                {
-                    base.ConnectionParameters = parameters;
+                if (!(value is ConnectionParameters parameters))
+                    return;
 
-                    // Assign new incoming connection parameter values
-                    TimeOffset = parameters.TimeOffset;
-                    FrameRate = parameters.FrameRate;
-                    NominalFrequency = parameters.NominalFrequency;
-                    StationName = parameters.StationName;
-                }
+                base.ConnectionParameters = parameters;
+
+                // Assign new incoming connection parameter values
+                TimeOffset = parameters.TimeOffset;
+                FrameRate = parameters.FrameRate;
+                NominalFrequency = parameters.NominalFrequency;
+                StationName = parameters.StationName;
             }
         }
 
@@ -225,13 +223,8 @@ namespace GSF.PhasorProtocols.FNET
         /// </remarks>
         protected override ICommonHeader<int> ParseCommonHeader(byte[] buffer, int offset, int length)
         {
-            int scanLength;
-
             // Calculate a maximum reasonable scan size for the buffer
-            if (length > Common.MaximumPracticalFrameSize)
-                scanLength = Common.MaximumPracticalFrameSize;
-            else
-                scanLength = length;
+            int scanLength = length > Common.MaximumPracticalFrameSize ? Common.MaximumPracticalFrameSize : length;
 
             // See if there is enough data in the buffer to parse the common frame header by scanning for the F-NET termination byte
             if (scanLength > 0 && Array.IndexOf(buffer, Common.EndByte, offset, scanLength) >= 0)
@@ -269,7 +262,7 @@ namespace GSF.PhasorProtocols.FNET
             }
             else if (scanLength == Common.MaximumPracticalFrameSize)
             {
-                throw new InvalidOperationException($"Possible bad F-NET data stream, scanned {Common.MaximumPracticalFrameSize} bytes without finding an expected termination byte 0x0");
+                throw new InvalidOperationException($"Possible bad F-NET data stream, scanned {Common.MaximumPracticalFrameSize:N0} bytes without finding an expected termination byte 0x0");
             }
 
             return null;
@@ -285,7 +278,7 @@ namespace GSF.PhasorProtocols.FNET
             base.OnReceivedChannelFrame(frame);
 
             // Raise F-NET specific channel frame events, if any have been subscribed
-            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame is null))
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null)
                 return;
 
             switch (frame)
@@ -316,10 +309,9 @@ namespace GSF.PhasorProtocols.FNET
                 return derivedFrame;
 
             // Create a new F-NET configuration frame converted from equivalent configuration information; F-NET only supports one device
-            if (sourceFrame.Cells.Count > 0)
-                derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, sourceFrame.Cells[0].NominalFrequency, Common.DefaultTimeOffset, Common.DefaultStationName);
-            else
-                derivedFrame = new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, LineFrequency.Hz60, Common.DefaultTimeOffset, Common.DefaultStationName);
+            derivedFrame = sourceFrame.Cells.Count > 0 ? 
+                new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, sourceFrame.Cells[0].NominalFrequency, Common.DefaultTimeOffset, Common.DefaultStationName) : 
+                new ConfigurationFrame(sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate, LineFrequency.Hz60, Common.DefaultTimeOffset, Common.DefaultStationName);
 
             return derivedFrame;
         }

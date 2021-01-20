@@ -114,14 +114,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     // Bail out and leave frame length zero if there's not enough buffer to parse complete fixed portion of header
                     if (length >= DstHeaderFixedLength)
                     {
-                        uint headerLength;
-
                         // Read full DST header
                         m_packetNumber = (byte)BPAPDCstream.FrameType.ConfigurationFrame;
                         m_fileType = (FileType)buffer[startIndex + 2];
                         m_fileVersion = (FileVersion)buffer[startIndex + 3];
                         m_sourceID = Encoding.ASCII.GetString(buffer, startIndex + 4, 4);
-                        headerLength = BigEndian.ToUInt32(buffer, startIndex + 8);
+                        uint headerLength = BigEndian.ToUInt32(buffer, startIndex + 8);
                         secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 12);
 
                         switch (m_fileType)
@@ -169,8 +167,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 else
                 {
                     // Must assume this is a data row if there are no sync bytes
-                    CommonFrameHeader configFrameHeader;
-
                     m_packetNumber = (byte)BPAPDCstream.FrameType.DataFrame;
                     m_rowFlags = BigEndian.ToUInt32(buffer, startIndex);
 
@@ -181,7 +177,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     else
                     {
                         uint sampleIndex = configFrame.SampleIndex;
-                        configFrameHeader = configFrame.CommonHeader;
+                        CommonFrameHeader configFrameHeader = configFrame.CommonHeader;
 
                         if (configFrameHeader is null)
                         {
@@ -205,7 +201,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 // Handle streaming data protocol steps
                 if (buffer[startIndex] != PhasorProtocols.Common.SyncByte)
-                    throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in BPA PDCstream frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+                    throw new InvalidOperationException($"Bad data stream, expected sync byte 0xAA as first byte in BPA PDCstream frame, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
 
                 // Get packet number
                 m_packetNumber = buffer[startIndex + 1];
@@ -213,10 +209,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 // Some older streams have a bad word count (e.g., some data streams have a 0x01 as the third byte
                 // in the stream - this should be a 0x00 to make the word count come out correctly).  The following
                 // compensates for this erratic behavior
-                if (parseWordCountFromByte)
-                    m_wordCount = buffer[startIndex + 3];
-                else
-                    m_wordCount = BigEndian.ToUInt16(buffer, startIndex + 2);
+                m_wordCount = parseWordCountFromByte ? buffer[startIndex + 3] : BigEndian.ToUInt16(buffer, startIndex + 2);
 
                 // If this is a data frame get a rough timestamp down to the second (full parse will get accurate timestamp), this way
                 // data frames that don't get fully parsed because configuration hasn't been received will still show a timestamp
@@ -228,10 +221,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     // used for display purposes until a configuration frame arrives.  If second of century
                     // is greater than 3155673600 (SOC value for NTP timestamp 1/1/2007), then this is likely
                     // an NTP time stamp (else this is a Unix time tag for the year 2069 - not likely).
-                    if (secondOfCentury > 3155673600)
-                        RoughTimestamp = new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks;
-                    else
-                        RoughTimestamp = new UnixTimeTag(secondOfCentury).ToDateTime().Ticks;
+                    RoughTimestamp = secondOfCentury > 3155673600 ? 
+                        new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks : 
+                        new UnixTimeTag(secondOfCentury).ToDateTime().Ticks;
                 }
             }
         }
@@ -326,13 +318,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public ushort DataLength
         {
-            get =>
-                // Data length will be frame length minus common header length minus crc16
-                (ushort)(FrameLength - FixedLength - (m_usePhasorDataFileFormat ? 0 : 2));
+            // Data length will be frame length minus common header length minus crc16
+            get => (ushort)(FrameLength - FixedLength - (m_usePhasorDataFileFormat ? 0 : 2));
             set
             {
                 if (value > Common.MaximumDataLength)
-                    throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
+                    throw new OverflowException($"Data length value cannot exceed {Common.MaximumDataLength}");
 
                 FrameLength = (ushort)(value + FixedLength + (m_usePhasorDataFileFormat ? 0 : 2));
             }
@@ -380,10 +371,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 value = value.Trim();
 
-                if (!string.IsNullOrEmpty(value))
-                    m_sourceID = value;
-                else
-                    m_sourceID = "UNDF";
+                m_sourceID = string.IsNullOrEmpty(value) ? "UNDF" : value;
 
                 if (m_sourceID.Length > 4)
                     m_sourceID = m_sourceID.Substring(0, 4);
@@ -495,10 +483,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             get => m_userInformation;
             set
             {
-                if (!string.IsNullOrWhiteSpace(value))
-                    m_userInformation = value;
-                else
-                    m_userInformation = "";
+                m_userInformation = string.IsNullOrWhiteSpace(value) ? "" : value;
 
                 if (m_userInformation.Length > 80)
                     m_userInformation = m_userInformation.Substring(0, 80);
@@ -560,18 +545,16 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                if (!m_usePhasorDataFileFormat)
-                {
-                    byte[] buffer = new byte[FixedLength];
+                if (m_usePhasorDataFileFormat)
+                    throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
 
-                    buffer[0] = PhasorProtocols.Common.SyncByte;
-                    buffer[1] = m_packetNumber;
-                    BigEndian.CopyBytes(m_wordCount, buffer, 2);
+                byte[] buffer = new byte[FixedLength];
 
-                    return buffer;
-                }
+                buffer[0] = PhasorProtocols.Common.SyncByte;
+                buffer[1] = m_packetNumber;
+                BigEndian.CopyBytes(m_wordCount, buffer, 2);
 
-                throw new NotSupportedException("Creation of the phasor file format (i.e., DST files) is not currently supported.");
+                return buffer;
             }
         }
 
@@ -585,7 +568,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <param name="attributes">Dictionary to append header specific attributes to.</param>
         internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
         {
-            attributes.Add("Frame Type", (ushort)TypeID + ": " + TypeID);
+            attributes.Add("Frame Type", $"{(ushort)TypeID}: {TypeID}");
             attributes.Add("Using Phasor File Format", UsePhasorDataFileFormat.ToString());
             attributes.Add("Frame Length", FrameLength.ToString());
             attributes.Add("Packet Number", PacketNumber.ToString());

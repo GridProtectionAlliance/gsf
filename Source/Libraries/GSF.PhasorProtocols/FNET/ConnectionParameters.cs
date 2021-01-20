@@ -91,9 +91,9 @@ namespace GSF.PhasorProtocols.FNET
         /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this this artificial delay.
         /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10,000,000 ticks.
         /// </remarks>
-        [Category("Optional Connection Parameters"),
-        Description("F-NET devices normally report time in 11 seconds past real-time, this parameter adjusts for this artificial delay.  Note parameter is in ticks (1 second = 10,000,000 ticks)."),
-        DefaultValue(Common.DefaultTimeOffset)]
+        [Category("Optional Connection Parameters")]
+        [Description("F-NET devices normally report time in 11 seconds past real-time, this parameter adjusts for this artificial delay.  Note parameter is in ticks (1 second = 10,000,000 ticks).")]
+        [DefaultValue(Common.DefaultTimeOffset)]
         public long TimeOffset
         {
             get => m_timeOffset;
@@ -106,27 +106,21 @@ namespace GSF.PhasorProtocols.FNET
         /// <remarks>
         /// This is typically set to 10 frames per second.
         /// </remarks>
-        [Category("Optional Connection Parameters"),
-        Description("Configured frame rate for F-NET device."),
-        DefaultValue(Common.DefaultFrameRate)]
+        [Category("Optional Connection Parameters")]
+        [Description("Configured frame rate for F-NET device.")]
+        [DefaultValue(Common.DefaultFrameRate)]
         public ushort FrameRate
         {
             get => m_frameRate;
-            set
-            {
-                if (value < 1)
-                    m_frameRate = Common.DefaultFrameRate;
-                else
-                    m_frameRate = value;
-            }
+            set => m_frameRate = value < 1 ? Common.DefaultFrameRate : value;
         }
 
         /// <summary>
         /// Gets or sets the nominal <see cref="LineFrequency"/> of this F-NET device.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Configured nominal frequency for F-NET device."),
-        DefaultValue(typeof(LineFrequency), "Hz60")]
+        [Category("Optional Connection Parameters")]
+        [Description("Configured nominal frequency for F-NET device.")]
+        [DefaultValue(typeof(LineFrequency), "Hz60")]
         public LineFrequency NominalFrequency
         {
             get => m_nominalFrequency;
@@ -136,9 +130,9 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets or sets the station name for the F-NET device.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Station name to use for F-NET device."),
-        DefaultValue(Common.DefaultStationName)]
+        [Category("Optional Connection Parameters")]
+        [Description("Station name to use for F-NET device.")]
+        [DefaultValue(Common.DefaultStationName)]
         public string StationName
         {
             get => m_stationName;

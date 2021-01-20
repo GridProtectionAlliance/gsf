@@ -123,9 +123,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value == DataFormat.FloatingPoint)
-                    m_formatFlags = m_formatFlags | FormatFlags.Phasors;
+                    m_formatFlags |= FormatFlags.Phasors;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Phasors;
+                    m_formatFlags &= ~FormatFlags.Phasors;
             }
         }
 
@@ -138,9 +138,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value == CoordinateFormat.Polar)
-                    m_formatFlags = m_formatFlags | FormatFlags.Coordinates;
+                    m_formatFlags |= FormatFlags.Coordinates;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Coordinates;
+                    m_formatFlags &= ~FormatFlags.Coordinates;
             }
         }
 
@@ -153,9 +153,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value == DataFormat.FloatingPoint)
-                    m_formatFlags = m_formatFlags | FormatFlags.Frequency;
+                    m_formatFlags |= FormatFlags.Frequency;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Frequency;
+                    m_formatFlags &= ~FormatFlags.Frequency;
             }
         }
 
@@ -168,9 +168,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 if (value == DataFormat.FloatingPoint)
-                    m_formatFlags = m_formatFlags | FormatFlags.Analog;
+                    m_formatFlags |= FormatFlags.Analog;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Analog;
+                    m_formatFlags &= ~FormatFlags.Analog;
             }
         }
 
@@ -254,7 +254,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Format Flags", (int)m_formatFlags + ": " + m_formatFlags);
+                baseAttributes.Add("Format Flags", $"{(int)m_formatFlags}: {m_formatFlags}");
 
                 return baseAttributes;
             }

@@ -203,20 +203,12 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
+            // Make sure frame header exists - using base class timestamp to
+            // prevent recursion (m_frameHeader doesn't exist yet)
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(ConfigurationFrame, TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
             {
-                // Make sure frame header exists - using base class timestamp to
-                // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader is null)
-                {
-                    m_frameHeader = new CommonFrameHeader(ConfigurationFrame, TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
-                    {
-                        ConfigurationFrame = ConfigurationFrame
-                    };
-                }
-
-                return m_frameHeader;
-            }
+                ConfigurationFrame = ConfigurationFrame
+            });
             set
             {
                 m_frameHeader = value;
@@ -315,16 +307,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength
-        {
-            get
-            {
-                if (CommonHeader.SecurityAlgorithm != SecurityAlgorithm.None)
-                    return 64;
-
-                return 0;
-            }
-        }
+        protected override int FooterLength => 
+            CommonHeader.SecurityAlgorithm != SecurityAlgorithm.None ? 64 : 0;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="DataFrame"/> object.
@@ -335,37 +319,37 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 int length = FooterLength;
 
-                if (length > 0)
+                if (length <= 0)
+                    return null;
+
+                SignatureAlgorithm algorithm = CommonHeader.SignatureAlgorithm;
+                byte[] buffer = new byte[length];
+
+                // Set signature tag
+                buffer[0] = 0x85;
+
+                // KeyID in common header is technically a lookup into derived rotating keys, but all implementations are using dummy key for now
+                HMAC hmac = (byte)algorithm <= (byte)SignatureAlgorithm.Sha256 ? new CommonFrameHeader.ShaHmac(Common.DummyKey) : (HMAC)new CommonFrameHeader.AesHmac(Common.DummyKey);
+
+                switch (algorithm)
                 {
-                    SignatureAlgorithm algorithm = CommonHeader.SignatureAlgorithm;
-                    byte[] buffer = new byte[length];
-
-                    // Set signature tag
-                    buffer[0] = 0x85;
-
-                    // KeyID in common header is technically a lookup into derived rotating keys, but all implementations are using dummy key for now
-                    HMAC hmac = (byte)algorithm <= (byte)SignatureAlgorithm.Sha256 ? new CommonFrameHeader.ShaHmac(Common.DummyKey) : (HMAC)new CommonFrameHeader.AesHmac(Common.DummyKey);
-
-                    switch (algorithm)
-                    {
-                        case SignatureAlgorithm.None:
-                            break;
-                        case SignatureAlgorithm.Aes64:
-                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 8), 0, buffer, 1, 8);
-                            break;
-                        case SignatureAlgorithm.Sha80:
-                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 10), 0, buffer, 1, 10);
-                            break;
-                        case SignatureAlgorithm.Sha128:
-                        case SignatureAlgorithm.Aes128:
-                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 16), 0, buffer, 1, 16);
-                            break;
-                        case SignatureAlgorithm.Sha256:
-                            Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 32), 0, buffer, 1, 32);
-                            break;
-                        default:
-                            throw new NotSupportedException($"IEC 61850-90-5 signature algorithm \"{algorithm}\" is not currently supported: ");
-                    }
+                    case SignatureAlgorithm.None:
+                        break;
+                    case SignatureAlgorithm.Aes64:
+                        Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 8), 0, buffer, 1, 8);
+                        break;
+                    case SignatureAlgorithm.Sha80:
+                        Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 10), 0, buffer, 1, 10);
+                        break;
+                    case SignatureAlgorithm.Sha128:
+                    case SignatureAlgorithm.Aes128:
+                        Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 16), 0, buffer, 1, 16);
+                        break;
+                    case SignatureAlgorithm.Sha256:
+                        Buffer.BlockCopy(hmac.ComputeHash(BodyImage, 0, BodyLength).BlockCopy(0, 32), 0, buffer, 1, 32);
+                        break;
+                    default:
+                        throw new NotSupportedException($"IEC 61850-90-5 signature algorithm \"{algorithm}\" is not currently supported: ");
                 }
 
                 return null;
@@ -385,7 +369,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 baseAttributes.Add("MSVID", m_msvID.ToNonNullString());
                 baseAttributes.Add("Sample Count", m_sampleCount.ToString());
                 baseAttributes.Add("Configuration Revision", m_configurationRevision.ToString());
-                baseAttributes.Add("Sample Synchronization", SampleSynchronization + ": " + (SampleSynchronization == 0 ? "Not Synchronized" : "Synchronized"));
+                baseAttributes.Add("Sample Synchronization", $"{SampleSynchronization}: {(SampleSynchronization == 0 ? "Not Synchronized" : "Synchronized")}");
                 baseAttributes.Add("Sample Rate", m_sampleRate.ToString());
 
                 return baseAttributes;
@@ -402,11 +386,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             CommonFrameHeader header = CommonHeader;
             ConfigurationFrame configurationFrame = ConfigurationFrame;
-            byte[] asduImage = null;
             int index = 0;
 
             // Get a buffer with extra room for variable length tags to hold new image 
-            asduImage = new byte[100 + configurationFrame.GetCalculatedSampleLength() + m_msvID.Length];
+            byte[] asduImage = new byte[100 + configurationFrame.GetCalculatedSampleLength() + m_msvID.Length];
 
             //
             // Generate current ASDU image
@@ -459,9 +442,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             // Cascade old ASDU images up one in buffer (newest last)
             for (int i = 0; i < m_asduCount - 1; i++)
-            {
                 m_asduImages[i] = m_asduImages[i + 1];
-            }
 
             // Cache current ASDU image into image cache
             m_asduImages[m_asduCount - 1] = asduImage.BlockCopy(0, header.AsduLength);
@@ -491,9 +472,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             // Publish each ASDU image in outgoing frame (e.g, DataCell(t-2), DataCell(t-1), DataCell(t))
             for (int i = 0; i < m_asduCount; i++)
-            {
                 m_asduImages[i].CopyImage(buffer, ref index, m_asduImages[i].Length);
-            }
 
             return buffer;
         }
@@ -564,7 +543,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 // If formatted according to implementation agreement, MSVID value will contain an ID code and station name
                 if (!string.IsNullOrWhiteSpace(m_msvID))
                 {
-                    int underscoreIndex = m_msvID.IndexOf("_");
+                    int underscoreIndex = m_msvID.IndexOf("_", StringComparison.Ordinal);
 
                     if (underscoreIndex > 0)
                     {
@@ -602,7 +581,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                 // Parse refresh time
                 if ((SampledValueTag)buffer[index] != SampledValueTag.RefrTm)
-                    throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+                    throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
 
                 index++;
                 int tagLength = buffer.ParseTagLength(ref index);
@@ -634,7 +613,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                 // Validate that next tag is for sample values
                 if ((SampledValueTag)buffer[index] != SampledValueTag.Samples)
-                    throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+                    throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
 
                 index++;
                 tagLength = buffer.ParseTagLength(ref index);
@@ -691,132 +670,133 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         // Attempt to parse an associated ETR configuration
         private void ParseETRConfiguration()
         {
-            if (!string.IsNullOrWhiteSpace(m_msvID))
+            if (string.IsNullOrWhiteSpace(m_msvID))
+                return;
+
+            // See if an associated ETR file exists
+            string etrFileName = $"{m_msvID}.etr";
+            string etrFilePath = FilePath.GetAbsolutePath(etrFileName);
+            bool foundETRFile = File.Exists(etrFilePath);
+
+            if (!foundETRFile)
             {
-                // See if an associated ETR file exists
-                string etrFileName = m_msvID + ".etr";
-                string etrFilePath = FilePath.GetAbsolutePath(etrFileName);
-                bool foundETRFile = File.Exists(etrFilePath);
+                // Also test for ETR in configuration cache folder
+                etrFilePath = FilePath.GetAbsolutePath($"ConfigurationCache{Path.DirectorySeparatorChar}{etrFileName}");
+                foundETRFile = File.Exists(etrFilePath);
+            }
 
-                if (!foundETRFile)
-                {
-                    // Also test for ETR in configuration cache folder
-                    etrFilePath = FilePath.GetAbsolutePath($"ConfigurationCache{Path.DirectorySeparatorChar}{etrFileName}");
-                    foundETRFile = File.Exists(etrFilePath);
-                }
+            if (!foundETRFile)
+                return;
 
-                if (foundETRFile)
+            try
+            {
+                StreamReader reader = new StreamReader(etrFilePath);
+                SignalType lastSignalType = SignalType.NONE;
+                bool statusDefined = false;
+                bool endOfFile;
+                int magnitudeSignals = 0;
+                int angleSignals = 0;
+
+                ConfigurationFrame configFrame = new ConfigurationFrame(Common.Timebase, 1, DateTime.UtcNow.Ticks, m_sampleRate);
+
+                do
                 {
-                    try
+                    bool badOrder = false;
+
+                    ConfigurationCell configCell = new ConfigurationCell(configFrame, (ushort)(m_idCode + configFrame.Cells.Count), LineFrequency.Hz60)
                     {
-                        StreamReader reader = new StreamReader(etrFilePath);
-                        SignalType signalType, lastSignalType = SignalType.NONE;
-                        string label;
-                        bool statusDefined = false;
-                        bool endOfFile;
-                        int magnitudeSignals = 0;
-                        int angleSignals = 0;
+                        StationName = m_stationName + (configFrame.Cells.Count + 1)
+                    };
 
-                        ConfigurationFrame configFrame = new ConfigurationFrame(Common.Timebase, 1, DateTime.UtcNow.Ticks, m_sampleRate);
+                    // Keep parsing records until there are no more...
+                    SignalType signalType;
 
-                        do
+                    while (ParseNextSampleDefinition(reader, out signalType, out string label, out endOfFile))
+                    {
+                        // If ETR is defining a new device, exit and handle current device
+                        if (signalType == SignalType.FLAG && statusDefined)
                         {
-                            bool badOrder = false;
-
-                            ConfigurationCell configCell = new ConfigurationCell(configFrame, (ushort)(m_idCode + configFrame.Cells.Count), LineFrequency.Hz60)
-                            {
-                                StationName = m_stationName + (configFrame.Cells.Count + 1)
-                            };
-
-                            // Keep parsing records until there are no more...
-                            while (ParseNextSampleDefinition(reader, out signalType, out label, out endOfFile))
-                            {
-                                // If ETR is defining a new device, exit and handle current device
-                                if (signalType == SignalType.FLAG && statusDefined)
-                                {
-                                    badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI;
-                                    lastSignalType = SignalType.FLAG;
-                                    break;
-                                }
-
-                                // Validate signal order
-                                switch (signalType)
-                                {
-                                    case SignalType.FLAG:
-                                        badOrder = lastSignalType != SignalType.NONE;
-                                        statusDefined = true;
-                                        break;
-                                    case SignalType.VPHM:
-                                    case SignalType.IPHM:
-                                        badOrder = lastSignalType != SignalType.FLAG && lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA;
-                                        PhasorDefinition phasor = new PhasorDefinition(configCell, label, 1, 0.0D, signalType == SignalType.VPHM ? PhasorType.Voltage : PhasorType.Current, null);
-                                        configCell.PhasorDefinitions.Add(phasor);
-                                        magnitudeSignals++;
-                                        break;
-                                    case SignalType.VPHA:
-                                        badOrder = lastSignalType != SignalType.VPHM;
-                                        angleSignals++;
-                                        break;
-                                    case SignalType.IPHA:
-                                        badOrder = lastSignalType != SignalType.IPHM;
-                                        angleSignals++;
-                                        break;
-                                    case SignalType.FREQ:
-                                        badOrder = lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA;
-                                        break;
-                                    case SignalType.DFDT:
-                                        badOrder = lastSignalType != SignalType.FREQ;
-                                        configCell.FrequencyDefinition = new FrequencyDefinition(configCell, "Frequency");
-                                        break;
-                                    case SignalType.ALOG:
-                                        badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG;
-                                        AnalogDefinition analog = new AnalogDefinition(configCell, label, 1, 0.0D, AnalogType.SinglePointOnWave);
-                                        configCell.AnalogDefinitions.Add(analog);
-                                        break;
-                                    case SignalType.DIGI:
-                                        badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI;
-                                        DigitalDefinition digital = new DigitalDefinition(configCell, label, 0, 1);
-                                        configCell.DigitalDefinitions.Add(digital);
-                                        break;
-                                    default:
-                                        throw new InvalidOperationException("Unxpected signal type enecountered: " + signalType);
-                                }
-
-                                lastSignalType = signalType;
-                            }
-
-                            if (badOrder)
-                                throw new InvalidOperationException($"Invalid signal order encountered - {signalType} cannot follow {lastSignalType}. Standard synchrophasor order is: status flags, one or more phasor magnitude/angle pairs, frequency, dF/dt, optional analogs, optional digitals");
-
-                            if (!statusDefined)
-                                throw new InvalidOperationException("No status flag signal was defined.");
-
-                            if (configCell.PhasorDefinitions.Count == 0)
-                                throw new InvalidOperationException("No phasor magnitude/angle signal pairs were defined.");
-
-                            if (magnitudeSignals != angleSignals)
-                                throw new InvalidOperationException("Phasor magnitude/angle signal pair mismatch - there must be a one-to-one definition between angle and magnitude signals.");
-
-                            if (configCell.FrequencyDefinition is null)
-                                throw new InvalidOperationException("No frequency and dF/dt signal pair was defined.");
-
-                            // Add cell to configuration frame
-                            configFrame.Cells.Add(configCell);
-
-                            // Reset counters
-                            magnitudeSignals = 0;
-                            angleSignals = 0;
+                            badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI;
+                            lastSignalType = SignalType.FLAG;
+                            break;
                         }
-                        while (!endOfFile);
 
-                        // Publish configuration frame
-                        PublishNewConfigurationFrame(configFrame);
+                        // Validate signal order
+                        switch (signalType)
+                        {
+                            case SignalType.FLAG:
+                                badOrder = lastSignalType != SignalType.NONE;
+                                statusDefined = true;
+                                break;
+                            case SignalType.VPHM:
+                            case SignalType.IPHM:
+                                badOrder = lastSignalType != SignalType.FLAG && lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA;
+                                PhasorDefinition phasor = new PhasorDefinition(configCell, label, 1, 0.0D, signalType == SignalType.VPHM ? PhasorType.Voltage : PhasorType.Current, null);
+                                configCell.PhasorDefinitions.Add(phasor);
+                                magnitudeSignals++;
+                                break;
+                            case SignalType.VPHA:
+                                badOrder = lastSignalType != SignalType.VPHM;
+                                angleSignals++;
+                                break;
+                            case SignalType.IPHA:
+                                badOrder = lastSignalType != SignalType.IPHM;
+                                angleSignals++;
+                                break;
+                            case SignalType.FREQ:
+                                badOrder = lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA;
+                                break;
+                            case SignalType.DFDT:
+                                badOrder = lastSignalType != SignalType.FREQ;
+                                configCell.FrequencyDefinition = new FrequencyDefinition(configCell, "Frequency");
+                                break;
+                            case SignalType.ALOG:
+                                badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG;
+                                AnalogDefinition analog = new AnalogDefinition(configCell, label, 1, 0.0D, AnalogType.SinglePointOnWave);
+                                configCell.AnalogDefinitions.Add(analog);
+                                break;
+                            case SignalType.DIGI:
+                                badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI;
+                                DigitalDefinition digital = new DigitalDefinition(configCell, label, 0, 1);
+                                configCell.DigitalDefinitions.Add(digital);
+                                break;
+                            default:
+                                throw new InvalidOperationException($"Unxpected signal type enecountered: {signalType}");
+                        }
+
+                        lastSignalType = signalType;
                     }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException($"Failed to parse associated ETR configuration \"{etrFilePath}\": {ex.Message}", ex);
-                    }
+
+                    if (badOrder)
+                        throw new InvalidOperationException($"Invalid signal order encountered - {signalType} cannot follow {lastSignalType}. Standard synchrophasor order is: status flags, one or more phasor magnitude/angle pairs, frequency, dF/dt, optional analogs, optional digitals");
+
+                    if (!statusDefined)
+                        throw new InvalidOperationException("No status flag signal was defined.");
+
+                    if (configCell.PhasorDefinitions.Count == 0)
+                        throw new InvalidOperationException("No phasor magnitude/angle signal pairs were defined.");
+
+                    if (magnitudeSignals != angleSignals)
+                        throw new InvalidOperationException("Phasor magnitude/angle signal pair mismatch - there must be a one-to-one definition between angle and magnitude signals.");
+
+                    if (configCell.FrequencyDefinition is null)
+                        throw new InvalidOperationException("No frequency and dF/dt signal pair was defined.");
+
+                    // Add cell to configuration frame
+                    configFrame.Cells.Add(configCell);
+
+                    // Reset counters
+                    magnitudeSignals = 0;
+                    angleSignals = 0;
                 }
+                while (!endOfFile);
+
+                // Publish configuration frame
+                PublishNewConfigurationFrame(configFrame);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to parse associated ETR configuration \"{etrFilePath}\": {ex.Message}", ex);
             }
         }
 
@@ -1012,7 +992,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 for (int i = 0; i < phasors; i++)
                 {
                     PhasorType type = i < phasors / 2 ? PhasorType.Voltage : PhasorType.Current;
-                    PhasorDefinition phasor = new PhasorDefinition(configCell, "Phasor " + (i + 1), 1, 0.0D, type, null);
+                    PhasorDefinition phasor = new PhasorDefinition(configCell, $"Phasor {(i + 1)}", 1, 0.0D, type, null);
                     configCell.PhasorDefinitions.Add(phasor);
                 }
 
@@ -1022,7 +1002,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 // Add digitals
                 for (int i = 0; i < digitals; i++)
                 {
-                    DigitalDefinition digital = new DigitalDefinition(configCell, "Digital " + (i + 1), 0, 1);
+                    DigitalDefinition digital = new DigitalDefinition(configCell, $"Digital {(i + 1)}", 0, 1);
                     configCell.DigitalDefinitions.Add(digital);
                 }
 

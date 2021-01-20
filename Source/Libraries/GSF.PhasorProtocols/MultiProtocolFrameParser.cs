@@ -2095,9 +2095,9 @@ namespace GSF.PhasorProtocols
             get
             {
                 if (string.IsNullOrWhiteSpace(SourceName))
-                    return "ID " + DeviceID + " using " + m_phasorProtocol.GetFormattedProtocolName() + " over " + m_transportProtocol;
+                    return $"ID {DeviceID} using {m_phasorProtocol.GetFormattedProtocolName()} over {m_transportProtocol}";
 
-                return SourceName + " (" + DeviceID + ")";
+                return $"{SourceName} ({DeviceID})";
             }
         }
 
@@ -2608,7 +2608,7 @@ namespace GSF.PhasorProtocols
                     fileClient.AutoRepeat = AutoRepeatCapturedPlayback;
 
                     // Setup synchronized read operation for file client operations
-                    m_readNextBuffer = new ShortSynchronizedOperation(ReadNextFileBuffer, ex => OnParsingException(new InvalidOperationException("Encountered an exception while reading file data: " + ex.Message, ex)));
+                    m_readNextBuffer = new ShortSynchronizedOperation(ReadNextFileBuffer, ex => OnParsingException(new InvalidOperationException($"Encountered an exception while reading file data: {ex.Message}", ex)));
                     break;
                 default:
                     throw new InvalidOperationException($"Transport protocol \"{m_transportProtocol}\" is not recognized, failed to initialize data channel");
@@ -3297,7 +3297,7 @@ namespace GSF.PhasorProtocols
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnParsingException(new InvalidOperationException("Failed to queue file read operation due to exception: " + ex.Message, ex));
+                OnParsingException(new InvalidOperationException($"Failed to queue file read operation due to exception: {ex.Message}", ex));
             }
         }
 

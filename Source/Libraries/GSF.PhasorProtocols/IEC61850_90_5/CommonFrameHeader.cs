@@ -287,7 +287,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                         frameLength += 9;
                                         break;
                                     default:
-                                        throw new InvalidOperationException("Invalid IEC 61850-90-5 signature algorithm detected: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                                        throw new InvalidOperationException($"Invalid IEC 61850-90-5 signature algorithm detected: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
                                 }
 
                                 // Check signature algorithm packet checksum here, this step is skipped in data frame parsing due to non-standard location...
@@ -348,7 +348,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                                 // Confirm payload type tag is sampled values
                                 if (buffer[index] != 0x82)
-                                    throw new InvalidOperationException("Encountered a payload that is not tagged 0x82 for sampled values: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                                    throw new InvalidOperationException($"Encountered a payload that is not tagged 0x82 for sampled values: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
                                 index++;
 
@@ -384,7 +384,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                         }
                         else
                         {
-                            throw new InvalidOperationException("Bad data stream, encountered an invalid session header size: " + headerSize);
+                            throw new InvalidOperationException($"Bad data stream, encountered an invalid session header size: {headerSize}");
                         }
                     }
                     else
@@ -395,7 +395,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             }
             else
             {
-                throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA or 0x01 as first byte in IEC 61850-90-5 frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Bad data stream, expected sync byte 0xAA or 0x01 as first byte in IEC 61850-90-5 frame, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
             }
         }
 
@@ -413,19 +413,19 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             m_timebase = info.GetUInt32("timebase");
             m_timeQualityFlags = info.GetUInt32("timeQualityFlags");
 
-            if (m_frameType == IEC61850_90_5.FrameType.DataFrame)
-            {
-                m_headerLength = info.GetUInt16("headerLength");
-                m_dataLength = info.GetUInt16("dataLength");
-                m_packetNumber = info.GetUInt32("packetNumber");
-                m_signatureAlgorithm = (SignatureAlgorithm)info.GetValue("signatureAlgorithm", typeof(SignatureAlgorithm));
-                m_securityAlgorithm = (SecurityAlgorithm)info.GetValue("securityAlgorithm", typeof(SecurityAlgorithm));
-                m_asduCount = info.GetInt32("adsuCount");
-                m_simulatedData = info.GetBoolean("simulatedData");
-                m_applicationID = info.GetUInt16("applicationID");
-                m_payloadSize = info.GetUInt16("payloadSize");
-                m_keyID = info.GetUInt32("keyID");
-            }
+            if (m_frameType != IEC61850_90_5.FrameType.DataFrame)
+                return;
+
+            m_headerLength = info.GetUInt16("headerLength");
+            m_dataLength = info.GetUInt16("dataLength");
+            m_packetNumber = info.GetUInt32("packetNumber");
+            m_signatureAlgorithm = (SignatureAlgorithm)info.GetValue("signatureAlgorithm", typeof(SignatureAlgorithm));
+            m_securityAlgorithm = (SecurityAlgorithm)info.GetValue("securityAlgorithm", typeof(SecurityAlgorithm));
+            m_asduCount = info.GetInt32("adsuCount");
+            m_simulatedData = info.GetBoolean("simulatedData");
+            m_applicationID = info.GetUInt16("applicationID");
+            m_payloadSize = info.GetUInt16("payloadSize");
+            m_keyID = info.GetUInt32("keyID");
         }
 
         #endregion
@@ -488,10 +488,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     return FixedLength;
 
                 // If calculated length is available, prefer that
-                if (m_headerLength > 0)
-                    return m_headerLength;
-
-                return IECFixedLength;
+                return m_headerLength > 0 ? m_headerLength : IECFixedLength;
             }
         }
 
@@ -558,7 +555,6 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 // Data length will be frame length minus common header length minus crc16
                 if (m_frameType != IEC61850_90_5.FrameType.DataFrame)
-
                     return (ushort)(FrameLength - FixedLength - 2);
 
                 return m_dataLength;
@@ -569,7 +565,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 if (m_frameType != IEC61850_90_5.FrameType.DataFrame)
                 {
                     if (value > Common.MaximumDataLength)
-                        throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
+                        throw new OverflowException($"Data length value cannot exceed {Common.MaximumDataLength}");
 
                     FrameLength = (ushort)(value + FixedLength + 2);
                 }
@@ -794,7 +790,6 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             get
             {
                 byte[] buffer;
-                int index;
 
                 if (m_frameType == IEC61850_90_5.FrameType.DataFrame)
                 {
@@ -821,7 +816,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     buffer[3] = Common.SessionHeaderSize;
                     buffer[4] = 0x80;
                     buffer[5] = 0x16;
-                    index = 6;
+                    
+                    int index = 6;
 
                     // Encode SPDU length
                     index += BigEndian.CopyBytes(SpduLength, buffer, index);
@@ -899,7 +895,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <param name="attributes">Dictionary to append header specific attributes to.</param>
         internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
         {
-            attributes.Add("Frame Type", (ushort)TypeID + ": " + TypeID);
+            attributes.Add("Frame Type", $"{(ushort)TypeID}: {TypeID}");
             attributes.Add("Frame Length", FrameLength.ToString());
             attributes.Add("Header Length", Length.ToString());
             attributes.Add("Payload Length", DataLength.ToString());
@@ -915,7 +911,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             else
                 attributes.Add("Leap Second State", "No leap second is currently pending");
 
-            attributes.Add("Time Quality Indicator Code", (uint)TimeQualityIndicatorCode + ": " + TimeQualityIndicatorCode);
+            attributes.Add("Time Quality Indicator Code", $"{(uint)TimeQualityIndicatorCode}: {TimeQualityIndicatorCode}");
             attributes.Add("Time Base", Timebase + (Timebase != Common.Timebase ? " - NON STANDARD" : ""));
 
             if (m_frameType != IEC61850_90_5.FrameType.DataFrame)
@@ -928,8 +924,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 attributes.Add("ASDU Payload Length", m_payloadSize.ToString());
                 attributes.Add("Packet Number", PacketNumber.ToString());
                 attributes.Add("Key ID", m_keyID.ToString("X").PadLeft(8, '0'));
-                attributes.Add("Security Algorithm", (byte)m_securityAlgorithm + ": " + m_securityAlgorithm);
-                attributes.Add("Signature Algorithm", (byte)m_signatureAlgorithm + ": " + m_signatureAlgorithm);
+                attributes.Add("Security Algorithm", $"{(byte)m_securityAlgorithm}: {m_securityAlgorithm}");
+                attributes.Add("Signature Algorithm", $"{(byte)m_signatureAlgorithm}: {m_signatureAlgorithm}");
 
                 if (m_sourceHash is null || m_sourceHash.Length == 0)
                     attributes.Add("Parsed Signature Hash", "null");

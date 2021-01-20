@@ -30,11 +30,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
@@ -80,7 +80,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <param name="parent">The reference to parent <see cref="ConfigurationFrame"/> of this <see cref="ConfigurationCell"/>.</param>
         /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCell"/>.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.</param>
-        [SuppressMessage("Microsoft.Design", "CA1026")]
         public ConfigurationCell(ConfigurationFrame parent, ushort idCode, LineFrequency nominalFrequency = LineFrequency.Hz60)
             : this(parent)
         {
@@ -128,29 +127,15 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets a reference to the <see cref="PhasorDefinitionCollection"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override PhasorDefinitionCollection PhasorDefinitions
-        {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.PhasorDefinitions;
-
-                return m_configurationFileCell.PhasorDefinitions;
-            }
-        }
+        public override PhasorDefinitionCollection PhasorDefinitions => 
+            m_configurationFileCell is null ? base.PhasorDefinitions : m_configurationFileCell.PhasorDefinitions;
 
         /// <summary>
         /// Gets or sets the station name of this <see cref="ConfigurationCell"/>.
         /// </summary>
         public override string StationName
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.StationName;
-
-                return m_configurationFileCell.StationName;
-            }
+            get => m_configurationFileCell is null ? base.StationName : m_configurationFileCell.StationName;
             set
             {
                 if (m_configurationFileCell is null)
@@ -163,9 +148,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets the length of the <see cref="ConfigurationCellBase.IDLabel"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int IDLabelLength =>
-            // BPA PDCstream ID label length is 4 characters - max!
-            4;
+        public override int IDLabelLength => 4; // BPA PDCstream ID label length is 4 characters - max!
 
         /// <summary>
         /// Gets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
@@ -177,25 +160,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public string SectionEntry
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return m_sectionEntry;
-
-                return m_configurationFileCell.SectionEntry;
-            }
+            get => m_configurationFileCell is null ? m_sectionEntry : m_configurationFileCell.SectionEntry;
             set
             {
                 m_sectionEntry = value.Trim();
 
                 // Get ID label as substring of section entry
                 if (!string.IsNullOrEmpty(m_sectionEntry))
-                {
-                    if (m_sectionEntry.Length > IDLabelLength)
-                        IDLabel = m_sectionEntry.Substring(0, IDLabelLength);
-                    else
-                        IDLabel = m_sectionEntry;
-                }
+                    IDLabel = m_sectionEntry.Length > IDLabelLength ? m_sectionEntry.Substring(0, IDLabelLength) : m_sectionEntry;
             }
         }
 
@@ -223,13 +195,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override ushort IDCode
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.IDCode;
-
-                return m_configurationFileCell.IDCode;
-            }
+            get => m_configurationFileCell?.IDCode ?? base.IDCode;
             set
             {
                 if (m_configurationFileCell is null)
@@ -244,13 +210,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override IFrequencyDefinition FrequencyDefinition
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.FrequencyDefinition;
-
-                return m_configurationFileCell.FrequencyDefinition;
-            }
+            get => m_configurationFileCell is null ? base.FrequencyDefinition : m_configurationFileCell.FrequencyDefinition;
             set
             {
                 if (m_configurationFileCell is null)
@@ -265,32 +225,20 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public override LineFrequency NominalFrequency
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.NominalFrequency;
-
-                return m_configurationFileCell.NominalFrequency;
-            }
+            get => m_configurationFileCell?.NominalFrequency ?? base.NominalFrequency;
             set
             {
                 if (m_configurationFileCell is null)
-                {
                     base.NominalFrequency = value;
-                }
                 else
-                {
                     m_configurationFileCell.NominalFrequency = value;
-                }
             }
         }
 
         /// <summary>
         /// Gets the maximum length of the <see cref="StationName"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int MaximumStationNameLength =>
-            // The station name in the PDCstream is read from an INI file, so there is no set limit
-            int.MaxValue;
+        public override int MaximumStationNameLength => int.MaxValue; // The station name in the PDCstream is read from an INI file, so there is no set limit
 
         /// <summary>
         /// Gets or sets BPA PDCstream descriptor offset of this <see cref="ConfigurationCell"/> in its data packet.
@@ -332,9 +280,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value == DataFormat.FloatingPoint)
-                    m_formatFlags = m_formatFlags | FormatFlags.Phasors;
+                    m_formatFlags |= FormatFlags.Phasors;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Phasors;
+                    m_formatFlags &= ~FormatFlags.Phasors;
             }
         }
 
@@ -347,9 +295,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value == CoordinateFormat.Polar)
-                    m_formatFlags = m_formatFlags | FormatFlags.Coordinates;
+                    m_formatFlags |= FormatFlags.Coordinates;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Coordinates;
+                    m_formatFlags &= ~FormatFlags.Coordinates;
             }
         }
 
@@ -362,9 +310,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value == DataFormat.FloatingPoint)
-                    m_formatFlags = m_formatFlags | FormatFlags.Frequency;
+                    m_formatFlags |= FormatFlags.Frequency;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Frequency;
+                    m_formatFlags &= ~FormatFlags.Frequency;
             }
         }
 
@@ -377,9 +325,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value == DataFormat.FloatingPoint)
-                    m_formatFlags = m_formatFlags | FormatFlags.Analog;
+                    m_formatFlags |= FormatFlags.Analog;
                 else
-                    m_formatFlags = m_formatFlags & ~FormatFlags.Analog;
+                    m_formatFlags &= ~FormatFlags.Analog;
             }
         }
 

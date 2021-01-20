@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
@@ -79,31 +80,23 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         public DataCell(DataFrame parent, ConfigurationCell configurationCell, bool addEmptyValues)
             : this(parent, configurationCell)
         {
-            if (addEmptyValues)
-            {
-                int x;
+            if (!addEmptyValues)
+                return;
 
-                // Define needed phasor values
-                for (x = 0; x < configurationCell.PhasorDefinitions.Count; x++)
-                {
-                    PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[x]));
-                }
+            // Define needed phasor values
+            foreach (IPhasorDefinition phasorDefinition in configurationCell.PhasorDefinitions)
+                PhasorValues.Add(new PhasorValue(this, phasorDefinition));
 
-                // Define a frequency and df/dt
-                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
+            // Define a frequency and df/dt
+            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
 
-                // Define any analog values
-                for (x = 0; x < configurationCell.AnalogDefinitions.Count; x++)
-                {
-                    AnalogValues.Add(new AnalogValue(this, configurationCell.AnalogDefinitions[x]));
-                }
+            // Define any analog values
+            foreach (IAnalogDefinition analogDefinition in configurationCell.AnalogDefinitions)
+                AnalogValues.Add(new AnalogValue(this, analogDefinition));
 
-                // Define any digital values
-                for (x = 0; x < configurationCell.DigitalDefinitions.Count; x++)
-                {
-                    DigitalValues.Add(new DigitalValue(this, configurationCell.DigitalDefinitions[x]));
-                }
-            }
+            // Define any digital values
+            foreach (IDigitalDefinition digitalDefinition in configurationCell.DigitalDefinitions)
+                DigitalValues.Add(new DigitalValue(this, digitalDefinition));
         }
 
         /// <summary>
@@ -173,12 +166,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public byte DataRate
         {
-            get
-            {
-                if (Parent.ConfigurationFrame.RevisionNumber >= RevisionNumber.Revision2)
-                    return (byte)Parent.ConfigurationFrame.FrameRate;
-                return m_dataRate;
-            }
+            get => Parent.ConfigurationFrame.RevisionNumber >= RevisionNumber.Revision2 ? (byte)Parent.ConfigurationFrame.FrameRate : m_dataRate;
             set => m_dataRate = value;
         }
 
@@ -209,9 +197,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_reservedFlags = m_reservedFlags | ReservedFlags.Reserved0;
+                    m_reservedFlags |= ReservedFlags.Reserved0;
                 else
-                    m_reservedFlags = m_reservedFlags & ~ReservedFlags.Reserved0;
+                    m_reservedFlags &= ~ReservedFlags.Reserved0;
             }
         }
 
@@ -224,9 +212,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_reservedFlags = m_reservedFlags | ReservedFlags.Reserved1;
+                    m_reservedFlags |= ReservedFlags.Reserved1;
                 else
-                    m_reservedFlags = m_reservedFlags & ~ReservedFlags.Reserved1;
+                    m_reservedFlags &= ~ReservedFlags.Reserved1;
             }
         }
 
@@ -239,9 +227,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.DataIsValid;
+                    m_channelFlags &= ~ChannelFlags.DataIsValid;
                 else
-                    m_channelFlags = m_channelFlags | ChannelFlags.DataIsValid;
+                    m_channelFlags |= ChannelFlags.DataIsValid;
             }
         }
 
@@ -254,9 +242,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.PmuSynchronized;
+                    m_channelFlags &= ~ChannelFlags.PmuSynchronized;
                 else
-                    m_channelFlags = m_channelFlags | ChannelFlags.PmuSynchronized;
+                    m_channelFlags |= ChannelFlags.PmuSynchronized;
             }
         }
 
@@ -269,9 +257,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value == DataSortingType.ByArrival)
-                    m_channelFlags = m_channelFlags | ChannelFlags.DataSortedByArrival;
+                    m_channelFlags |= ChannelFlags.DataSortedByArrival;
                 else
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.DataSortedByArrival;
+                    m_channelFlags &= ~ChannelFlags.DataSortedByArrival;
             }
         }
 
@@ -284,9 +272,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags | ChannelFlags.TransmissionErrors;
+                    m_channelFlags |= ChannelFlags.TransmissionErrors;
                 else
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.TransmissionErrors;
+                    m_channelFlags &= ~ChannelFlags.TransmissionErrors;
             }
         }
 
@@ -299,9 +287,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags | ChannelFlags.PdcExchangeFormat;
+                    m_channelFlags |= ChannelFlags.PdcExchangeFormat;
                 else
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.PdcExchangeFormat;
+                    m_channelFlags &= ~ChannelFlags.PdcExchangeFormat;
             }
         }
 
@@ -314,9 +302,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags | ChannelFlags.MacrodyneFormat;
+                    m_channelFlags |= ChannelFlags.MacrodyneFormat;
                 else
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.MacrodyneFormat;
+                    m_channelFlags &= ~ChannelFlags.MacrodyneFormat;
             }
         }
 
@@ -329,9 +317,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.MacrodyneFormat;
+                    m_channelFlags &= ~ChannelFlags.MacrodyneFormat;
                 else
-                    m_channelFlags = m_channelFlags | ChannelFlags.MacrodyneFormat;
+                    m_channelFlags |= ChannelFlags.MacrodyneFormat;
             }
         }
 
@@ -345,9 +333,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.DataSortedByTimestamp;
+                    m_channelFlags &= ~ChannelFlags.DataSortedByTimestamp;
                 else
-                    m_channelFlags = m_channelFlags | ChannelFlags.DataSortedByTimestamp;
+                    m_channelFlags |= ChannelFlags.DataSortedByTimestamp;
             }
         }
 
@@ -361,9 +349,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.TimestampIncluded;
+                    m_channelFlags &= ~ChannelFlags.TimestampIncluded;
                 else
-                    m_channelFlags = m_channelFlags | ChannelFlags.TimestampIncluded;
+                    m_channelFlags |= ChannelFlags.TimestampIncluded;
             }
         }
 
@@ -439,8 +427,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Channel Flags", (int)ChannelFlags + ": " + ChannelFlags);
-                baseAttributes.Add("Reserved Flags", (int)ReservedFlags + ": " + ReservedFlags);
+                baseAttributes.Add("Channel Flags", $"{(int)ChannelFlags}: {ChannelFlags}");
+                baseAttributes.Add("Reserved Flags", $"{(int)ReservedFlags}: {ReservedFlags}");
                 baseAttributes.Add("Sample Number", SampleNumber.ToString());
                 baseAttributes.Add("Using PDC Exchange Format", UsingPdcExchangeFormat.ToString());
                 baseAttributes.Add("Using Macrodyne Format", UsingMacrodyneFormat.ToString());
@@ -484,7 +472,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             IDataCellParsingState state = State;
             RevisionNumber revision = parentFrame.ConfigurationFrame.RevisionNumber;
             int x, index = startIndex;
-            byte analogs, digitals, phasors;
+            byte digitals, phasors;
 
             // Read data buffer if using phasor data file format
             if (UsePhasorDataFileFormat && frameState.RemainingPdcBlockPmus == 0)
@@ -495,7 +483,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
             // Get data cell flags
             m_channelFlags = (ChannelFlags)buffer[index];
-            analogs = buffer[index + 1];
+            byte analogs = buffer[index + 1];
             index += 2;
 
             // Parse PDCstream specific header image
@@ -587,10 +575,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
             // At least this number of phasors should be already defined in BPA PDCstream configuration file
             if (phasors > ConfigurationCell.PhasorDefinitions.Count)
-                throw new InvalidOperationException(
-                    "Stream/Config File Mismatch: Phasor value count in stream (" + phasors +
-                    ") does not match defined count in configuration file (" + ConfigurationCell.PhasorDefinitions.Count +
-                    ") for " + ConfigurationCell.IDLabel);
+                throw new InvalidOperationException($"Stream/Config File Mismatch: Phasor value count in stream ({phasors}) does not match defined count in configuration file ({ConfigurationCell.PhasorDefinitions.Count}) for {ConfigurationCell.IDLabel}");
 
             // If analog values get a clear definition in INI file at some point, we can validate the number in the
             // stream to the number in the config file, in the mean time we dyanmically add analog definitions to
@@ -598,9 +583,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             if (analogs > ConfigurationCell.AnalogDefinitions.Count)
             {
                 for (x = ConfigurationCell.AnalogDefinitions.Count; x < analogs; x++)
-                {
-                    ConfigurationCell.AnalogDefinitions.Add(new AnalogDefinition(ConfigurationCell, "Analog " + (x + 1), 1, 0.0D, AnalogType.SinglePointOnWave));
-                }
+                    ConfigurationCell.AnalogDefinitions.Add(new AnalogDefinition(ConfigurationCell, $"Analog {(x + 1)}", 1, 0.0D, AnalogType.SinglePointOnWave));
             }
 
             // If digital values get a clear definition in INI file at some point, we can validate the number in the
@@ -609,9 +592,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             if (digitals > ConfigurationCell.DigitalDefinitions.Count)
             {
                 for (x = ConfigurationCell.DigitalDefinitions.Count; x < digitals; x++)
-                {
-                    ConfigurationCell.DigitalDefinitions.Add(new DigitalDefinition(ConfigurationCell, "Digital Word " + (x + 1)));
-                }
+                    ConfigurationCell.DigitalDefinitions.Add(new DigitalDefinition(ConfigurationCell, $"Digital Word {(x + 1)}"));
             }
 
             // Unlike most all other protocols the counts defined for phasors, analogs and digitals in the data frame
@@ -650,7 +631,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Delegate handler to create a new BPA PDCstream data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
+            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

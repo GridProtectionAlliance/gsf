@@ -130,7 +130,7 @@ namespace GSF.PhasorProtocols
                 value = value.GetValidLabel();
 
                 if (value.Length > MaximumStationNameLength)
-                    throw new OverflowException("Station name length cannot exceed " + MaximumStationNameLength + " characters.");
+                    throw new OverflowException($"Station name length cannot exceed {MaximumStationNameLength} characters.");
 
                 m_stationName = value;
             }
@@ -162,7 +162,7 @@ namespace GSF.PhasorProtocols
                 value = value.GetValidLabel();
 
                 if (value.Length > IDLabelLength)
-                    throw new OverflowException("ID label length cannot exceed " + IDLabelLength + " characters.");
+                    throw new OverflowException($"ID label length cannot exceed {IDLabelLength} characters.");
 
                 m_idLabel = value;
             }
@@ -356,15 +356,15 @@ namespace GSF.PhasorProtocols
 
                 baseAttributes.Add("Station Name", StationName);
                 baseAttributes.Add("ID Label", IDLabel);
-                baseAttributes.Add("Phasor Coordinate Format", (int)PhasorCoordinateFormat + ": " + PhasorCoordinateFormat);
-                baseAttributes.Add("Phasor Data Format", (int)PhasorDataFormat + ": " + PhasorDataFormat);
-                baseAttributes.Add("Phasor Angle Format", (int)PhasorAngleFormat + ": " + PhasorAngleFormat);
-                baseAttributes.Add("Frequency Data Format", (int)FrequencyDataFormat + ": " + FrequencyDataFormat);
-                baseAttributes.Add("Analog Data Format", (int)AnalogDataFormat + ": " + AnalogDataFormat);
+                baseAttributes.Add("Phasor Coordinate Format", $"{(int)PhasorCoordinateFormat}: {PhasorCoordinateFormat}");
+                baseAttributes.Add("Phasor Data Format", $"{(int)PhasorDataFormat}: {PhasorDataFormat}");
+                baseAttributes.Add("Phasor Angle Format", $"{(int)PhasorAngleFormat}: {PhasorAngleFormat}");
+                baseAttributes.Add("Frequency Data Format", $"{(int)FrequencyDataFormat}: {FrequencyDataFormat}");
+                baseAttributes.Add("Analog Data Format", $"{(int)AnalogDataFormat}: {AnalogDataFormat}");
                 baseAttributes.Add("Total Phasor Definitions", PhasorDefinitions.Count.ToString());
                 baseAttributes.Add("Total Analog Definitions", AnalogDefinitions.Count.ToString());
                 baseAttributes.Add("Total Digital Definitions", DigitalDefinitions.Count.ToString());
-                baseAttributes.Add("Nominal Frequency", (int)NominalFrequency + "Hz");
+                baseAttributes.Add("Nominal Frequency", $"{(int)NominalFrequency}Hz");
                 baseAttributes.Add("Revision Count", RevisionCount.ToString());
                 baseAttributes.Add("Maximum Station Name Length", MaximumStationNameLength.ToString());
                 baseAttributes.Add("ID Label Length", IDLabelLength.ToString());
@@ -453,9 +453,8 @@ namespace GSF.PhasorProtocols
         protected override int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
             // Parse nominal frequency definition from footer...
-            int parsedLength;
 
-            m_frequencyDefinition = State.CreateNewFrequencyDefinition(this, buffer, startIndex, out parsedLength);
+            m_frequencyDefinition = State.CreateNewFrequencyDefinition(this, buffer, startIndex, out int parsedLength);
 
             return parsedLength;
         }

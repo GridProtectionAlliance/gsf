@@ -301,8 +301,8 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Phasor Type", (int)Type + ": " + Type);
-                baseAttributes.Add("Angle Value", Angle.ToDegrees() + "°");
+                baseAttributes.Add("Phasor Type", $"{(int)Type}: {Type}");
+                baseAttributes.Add("Angle Value", $"{Angle.ToDegrees()}°");
                 baseAttributes.Add("Magnitude Value", Magnitude.ToString());
                 baseAttributes.Add("Real Value", Real.ToString());
                 baseAttributes.Add("Imaginary Value", Imaginary.ToString());

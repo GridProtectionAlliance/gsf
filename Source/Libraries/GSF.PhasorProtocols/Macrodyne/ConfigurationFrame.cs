@@ -296,7 +296,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 if (value)
                     m_onlineDataFormatFlags |= OnlineDataFormatFlags.TimestampEnabled;
                 else
-                    m_onlineDataFormatFlags = m_onlineDataFormatFlags & ~OnlineDataFormatFlags.TimestampEnabled;
+                    m_onlineDataFormatFlags &= ~OnlineDataFormatFlags.TimestampEnabled;
             }
         }
 
@@ -373,7 +373,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("ON-LINE Data Format Flags", (byte)OnlineDataFormatFlags + ": " + OnlineDataFormatFlags);
+                baseAttributes.Add("ON-LINE Data Format Flags", $"{(byte)OnlineDataFormatFlags}: {OnlineDataFormatFlags}");
 
                 if (!(m_iniFile is null))
                     baseAttributes.Add("Configuration File Name", m_iniFile.FileName);
@@ -441,7 +441,7 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                                     for (x = 0; x < phasorCount; x++)
                                     {
-                                        pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, x + 1, m_iniFile[section, "Phasor" + (x + 1), DefaultVoltagePhasorEntry]));
+                                        pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, x + 1, m_iniFile[section, $"Phasor{(x + 1)}", DefaultVoltagePhasorEntry]));
                                     }
 
                                     pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
@@ -467,7 +467,7 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                                         for (y = 0; y < 2; y++)
                                         {
-                                            pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, "Phasor" + (x * 2 + y + 1), DefaultVoltagePhasorEntry]));
+                                            pmuCell.PhasorDefinitions.Add(new PhasorDefinition(pmuCell, y + 1, m_iniFile[section, $"Phasor{(x * 2 + y + 1)}", DefaultVoltagePhasorEntry]));
                                         }
 
                                         pmuCell.FrequencyDefinition = new FrequencyDefinition(pmuCell, m_iniFile[section, "Frequency", DefaultFrequencyEntry]);
@@ -495,7 +495,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 }
                 else
                 {
-                    throw new InvalidOperationException("Macrodyne config file \"" + m_iniFile.FileName + "\" does not exist.");
+                    throw new InvalidOperationException($"Macrodyne config file \"{m_iniFile.FileName}\" does not exist.");
                 }
             }
 
@@ -613,10 +613,10 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             StringBuilder fileImage = new StringBuilder();
 
-            fileImage.AppendLine("; BPA PDCstream Style IniFile for Macrodyne Configuration " + configFrame.IDCode);
-            fileImage.AppendLine("; Auto-generated on " + DateTime.Now);
-            fileImage.AppendLine(";    Assembly: " + AssemblyInfo.ExecutingAssembly.Name);
-            fileImage.AppendLine(";    Compiled: " + File.GetLastWriteTime(AssemblyInfo.ExecutingAssembly.Location));
+            fileImage.AppendLine($"; BPA PDCstream Style IniFile for Macrodyne Configuration {configFrame.IDCode}");
+            fileImage.AppendLine($"; Auto-generated on {DateTime.Now}");
+            fileImage.AppendLine($";    Assembly: {AssemblyInfo.ExecutingAssembly.Name}");
+            fileImage.AppendLine($";    Compiled: {File.GetLastWriteTime(AssemblyInfo.ExecutingAssembly.Location)}");
             fileImage.AppendLine(";");
             fileImage.AppendLine(";");
             fileImage.AppendLine("; Format:");
@@ -657,27 +657,27 @@ namespace GSF.PhasorProtocols.Macrodyne
             fileImage.AppendLine(";");
 
             fileImage.AppendLine("[DEFAULT]");
-            fileImage.AppendLine("PhasorV=" + DefaultVoltagePhasorEntry); //PhasorDefinition.ConfigFileFormat(DefaultPhasorV));
-            fileImage.AppendLine("PhasorI=" + DefaultCurrentPhasorEntry); //PhasorDefinition.ConfigFileFormat(DefaultPhasorI));
-            fileImage.AppendLine("Frequency=" + DefaultFrequencyEntry);   //FrequencyDefinition.ConfigFileFormat(DefaultFrequency));
+            fileImage.AppendLine($"PhasorV={DefaultVoltagePhasorEntry}"); //PhasorDefinition.ConfigFileFormat(DefaultPhasorV));
+            fileImage.AppendLine($"PhasorI={DefaultCurrentPhasorEntry}"); //PhasorDefinition.ConfigFileFormat(DefaultPhasorI));
+            fileImage.AppendLine($"Frequency={DefaultFrequencyEntry}");   //FrequencyDefinition.ConfigFileFormat(DefaultFrequency));
             fileImage.AppendLine();
 
             fileImage.AppendLine("[CONFIG]");
-            fileImage.AppendLine("SampleRate=" + configFrame.FrameRate);
-            fileImage.AppendLine("NumberOfPMUs=" + configFrame.Cells.Count);
+            fileImage.AppendLine($"SampleRate={configFrame.FrameRate}");
+            fileImage.AppendLine($"NumberOfPMUs={configFrame.Cells.Count}");
             fileImage.AppendLine();
 
             for (int x = 0; x < configFrame.Cells.Count; x++)
             {
-                fileImage.AppendLine("[" + configFrame.Cells[x].IDLabel + "]");
-                fileImage.AppendLine("Name=" + configFrame.Cells[x].StationName);
-                fileImage.AppendLine("PMU=" + x);
-                fileImage.AppendLine("NumberPhasors=" + configFrame.Cells[x].PhasorDefinitions.Count);
+                fileImage.AppendLine($"[{configFrame.Cells[x].IDLabel}]");
+                fileImage.AppendLine($"Name={configFrame.Cells[x].StationName}");
+                fileImage.AppendLine($"PMU={x}");
+                fileImage.AppendLine($"NumberPhasors={configFrame.Cells[x].PhasorDefinitions.Count}");
                 for (int y = 0; y < configFrame.Cells[x].PhasorDefinitions.Count; y++)
                 {
-                    fileImage.AppendLine("Phasor" + (y + 1) + "=" + PhasorDefinition.ConfigFileFormat(configFrame.Cells[x].PhasorDefinitions[y]));
+                    fileImage.AppendLine($"Phasor{(y + 1)}={PhasorDefinition.ConfigFileFormat(configFrame.Cells[x].PhasorDefinitions[y])}");
                 }
-                fileImage.AppendLine("Frequency=" + FrequencyDefinition.ConfigFileFormat(configFrame.Cells[x].FrequencyDefinition));
+                fileImage.AppendLine($"Frequency={FrequencyDefinition.ConfigFileFormat(configFrame.Cells[x].FrequencyDefinition)}");
                 fileImage.AppendLine();
             }
 

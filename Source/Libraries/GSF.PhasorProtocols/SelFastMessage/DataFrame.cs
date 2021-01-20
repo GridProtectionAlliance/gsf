@@ -214,7 +214,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Frame Size", (byte)FrameSize + ": " + FrameSize);
+                baseAttributes.Add("Frame Size", $"{(byte)FrameSize}: {FrameSize}");
                 baseAttributes.Add("32-Bit ID Code", IDCode.ToString());
                 baseAttributes.Add("Register Count", CommonHeader.RegisterCount.ToString());
                 baseAttributes.Add("Sample Number", CommonHeader.SampleNumber.ToString());

@@ -32,6 +32,8 @@ using System.Runtime.Serialization;
 using System.Text;
 using GSF.Units;
 
+// ReSharper disable RedundantOverriddenMember
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
@@ -248,10 +250,9 @@ namespace GSF.PhasorProtocols.FNET
             CommonFrameHeader commonHeader = parent.CommonHeader;
             string[] data = commonHeader.DataElements;
             ConfigurationCell configurationCell = ConfigurationCell;
-            uint sampleIndex;
 
             // Attempt to parse sample index
-            if (uint.TryParse(data[Element.SampleIndex], out sampleIndex))
+            if (uint.TryParse(data[Element.SampleIndex], out uint sampleIndex))
             {
                 parent.SampleIndex = sampleIndex;
 
@@ -330,16 +331,23 @@ namespace GSF.PhasorProtocols.FNET
             fnetDate = fnetDate.PadLeft(6, '0');
             fnetTime = fnetTime.PadLeft(6, '0');
 
-            if (sampleIndex == 10)
-                return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), 0).AddSeconds(1.0D).Ticks;
+            DateTime timestamp = new DateTime(
+                /*  year */ 2000 + int.Parse(fnetDate.Substring(4, 2)), 
+                /* month */ int.Parse(fnetDate.Substring(0, 2).Trim()), 
+                /*  day  */ int.Parse(fnetDate.Substring(2, 2)), 
+                /*  hour */ int.Parse(fnetTime.Substring(0, 2)), 
+                /*  min  */ int.Parse(fnetTime.Substring(2, 2)), 
+                /*  sec  */ int.Parse(fnetTime.Substring(4, 2)));
 
-            return new DateTime(2000 + int.Parse(fnetDate.Substring(4, 2)), int.Parse(fnetDate.Substring(0, 2).Trim()), int.Parse(fnetDate.Substring(2, 2)), int.Parse(fnetTime.Substring(0, 2)), int.Parse(fnetTime.Substring(2, 2)), int.Parse(fnetTime.Substring(4, 2)), (int)(sampleIndex / (double)frameRate * 1000.0D) % 1000).Ticks;
+            return sampleIndex == 10 ? 
+                timestamp.AddSeconds(1.0D).Ticks :
+                timestamp.AddMilliseconds((int)(sampleIndex / (double)frameRate * 1000.0D) % 1000).Ticks;
         }
 
         // Delegate handler to create a new F-NET data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
+            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
@@ -35,7 +34,6 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// Represents the Macrodyne implementation of a <see cref="IHeaderFrame"/> that can be sent or received.
     /// </summary>
     [Serializable]
-    [SuppressMessage("Microsoft.Usage", "CA2240:ImplementISerializableCorrectly")]
     public class HeaderFrame : HeaderFrameBase, ISupportSourceIdentifiableFrameImage<SourceChannel, FrameType>
     {
         #region [ Members ]

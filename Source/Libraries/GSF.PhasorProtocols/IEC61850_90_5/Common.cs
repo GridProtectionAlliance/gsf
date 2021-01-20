@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -502,7 +501,6 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Temporary key used by IEC 61850-90-5 draft implementations.
         /// </summary>
-        [SuppressMessage("Microsoft.Usage", "CA2211:NonConstantFieldsShouldNotBeVisible")]
         public static byte[] DummyKey = 
         {
             0x01, 0x33, 0x34, 0x35, 0x36, 0x37, 0x01, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x66, 0x77, 0x88,
@@ -554,7 +552,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static int ValidateTag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
             if ((SampledValueTag)buffer[index] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
             index++;
             return buffer.ParseTagLength(ref index);
@@ -569,7 +567,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static byte ParseByteTag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
             if ((SampledValueTag)buffer[index] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
             index++;
             int tagLength = buffer.ParseTagLength(ref index);
@@ -592,7 +590,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static ushort ParseUInt16Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
             if ((SampledValueTag)buffer[index] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
             index++;
             int tagLength = buffer.ParseTagLength(ref index);
@@ -615,7 +613,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static UInt24 ParseUInt24Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
             if ((SampledValueTag)buffer[index] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
             index++;
             int tagLength = buffer.ParseTagLength(ref index);
@@ -638,7 +636,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static uint ParseUInt32Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
             if ((SampledValueTag)buffer[index] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
             index++;
             int tagLength = buffer.ParseTagLength(ref index);
@@ -661,7 +659,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static ulong ParseUInt64Tag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
             if ((SampledValueTag)buffer[index] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
             index++;
             int tagLength = buffer.ParseTagLength(ref index);
@@ -684,7 +682,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static string ParseStringTag(this byte[] buffer, SampledValueTag tag, ref int index)
         {
             if ((SampledValueTag)buffer[index] != tag)
-                throw new InvalidOperationException("Encountered out-of-sequence or unknown sampled value tag: 0x" + buffer[index].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Encountered out-of-sequence or unknown sampled value tag: 0x{buffer[index].ToString("X").PadLeft(2, '0')}");
 
             index++;
             int tagLength = buffer.ParseTagLength(ref index);
@@ -709,6 +707,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             buffer[index++] = (byte)((length & 0xFF00) >> 8);
             buffer[index++] = (byte)(length & 0x00FF);
         }
+
         /// <summary>
         /// Encodes primitive type sampled value tag.
         /// </summary>
@@ -763,7 +762,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 value = "";
 
             if (value.Length > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(value), "Current implementation will not encode a string larger than " + ushort.MaxValue);
+                throw new ArgumentOutOfRangeException(nameof(value), $"Current implementation will not encode a string larger than {ushort.MaxValue}");
 
             ushort length = (ushort)value.Length;
 

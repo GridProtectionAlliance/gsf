@@ -184,7 +184,8 @@ namespace GSF.PhasorProtocols.IEEE1344
             set
             {
                 if (value > Common.MaximumFrameCount)
-                    throw new OverflowException("Frame count value cannot exceed " + Common.MaximumFrameCount);
+                    throw new OverflowException($"Frame count value cannot exceed {Common.MaximumFrameCount}");
+
                 m_sampleCount = (ushort)((m_sampleCount & ~Common.FrameCountMask) | value);
             }
         }
@@ -248,7 +249,8 @@ namespace GSF.PhasorProtocols.IEEE1344
             set
             {
                 if (value > Common.MaximumFrameLength)
-                    throw new OverflowException("Frame length value cannot exceed " + Common.MaximumFrameLength);
+                    throw new OverflowException($"Frame length value cannot exceed {Common.MaximumFrameLength}");
+
                 m_statusFlags = (ushort)((m_statusFlags & ~Common.FrameLengthMask) | value);
             }
         }
@@ -264,7 +266,8 @@ namespace GSF.PhasorProtocols.IEEE1344
             set
             {
                 if (value > Common.MaximumDataLength)
-                    throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
+                    throw new OverflowException($"Data length value cannot exceed {Common.MaximumDataLength}");
+
                 FrameLength = (ushort)(value + FixedLength + 2);
             }
         }
@@ -278,7 +281,8 @@ namespace GSF.PhasorProtocols.IEEE1344
             set
             {
                 if (value > Common.MaximumSampleCount)
-                    throw new OverflowException("Sample count value cannot exceed " + Common.MaximumSampleCount);
+                    throw new OverflowException($"Sample count value cannot exceed {Common.MaximumSampleCount}");
+
                 m_sampleCount = (ushort)((m_sampleCount & Common.FrameTypeMask) | value);
             }
         }
@@ -312,7 +316,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <param name="attributes">Dictionary to append header specific attributes to.</param>
         internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
         {
-            attributes.Add("Frame Type", (ushort)TypeID + ": " + TypeID);
+            attributes.Add("Frame Type", $"{(ushort)TypeID}: {TypeID}");
 
             if (FrameImages is null)
             {

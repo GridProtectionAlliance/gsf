@@ -112,9 +112,7 @@ namespace GSF.PhasorProtocols.Anonymous
                     value = "undefined";
 
                 if (value.Trim().Length > MaximumLabelLength)
-                {
-                    throw new OverflowException("Label length cannot exceed " + MaximumLabelLength);
-                }
+                    throw new OverflowException($"Label length cannot exceed {MaximumLabelLength}");
 
                 // We override this function since base class automatically "fixes-up" labels
                 // by removing duplicate white space characters - this can throw off the fixed

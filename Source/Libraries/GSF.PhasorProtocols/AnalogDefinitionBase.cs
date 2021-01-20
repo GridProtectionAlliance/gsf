@@ -110,7 +110,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Analog Type", (int)AnalogType + ": " + AnalogType);
+                baseAttributes.Add("Analog Type", $"{(int)AnalogType}: {AnalogType}");
 
                 return baseAttributes;
             }

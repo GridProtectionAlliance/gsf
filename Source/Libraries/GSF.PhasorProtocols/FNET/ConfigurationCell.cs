@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
@@ -216,9 +217,7 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets the maximum length of the <see cref="ConfigurationCellBase.StationName"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override int MaximumStationNameLength =>
-            // The station name is defined external to the protocol, so there is no set limit
-            int.MaxValue;
+        public override int MaximumStationNameLength => int.MaxValue; // The station name is defined external to the protocol, so there is no set limit
 
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationCell"/> object.

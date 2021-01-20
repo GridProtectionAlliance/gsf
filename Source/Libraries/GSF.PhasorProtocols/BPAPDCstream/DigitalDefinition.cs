@@ -98,7 +98,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </remarks>
         protected override byte[] BodyImage => null;
 
-    #endregion
+        #endregion
 
         #region [ Static ]
 

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
@@ -237,9 +238,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Ratio", m_ratio.ToString());
-                baseAttributes.Add("CalFactor", m_calFactor.ToString());
-                baseAttributes.Add("Shunt", m_shunt.ToString());
+                baseAttributes.Add("Ratio", m_ratio.ToString(CultureInfo.InvariantCulture));
+                baseAttributes.Add("CalFactor", m_calFactor.ToString(CultureInfo.InvariantCulture));
+                baseAttributes.Add("Shunt", m_shunt.ToString(CultureInfo.InvariantCulture));
                 baseAttributes.Add("Voltage Reference Index", m_voltageReferenceIndex.ToString());
 
                 return baseAttributes;
@@ -284,17 +285,17 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Creates phasor information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IPhasorDefinition definition)
         {
-            if (definition is PhasorDefinition phasor)
-                return (phasor.PhasorType == PhasorType.Voltage ? "V" : "I") + "," + phasor.Ratio + "," + phasor.CalFactor + "," + phasor.Offset + "," + phasor.Shunt + "," + phasor.VoltageReferenceIndex + "," + phasor.Label;
+            switch (definition)
+            {
+                case PhasorDefinition phasor:
+                    return $"{(phasor.PhasorType == PhasorType.Voltage ? "V" : "I")},{phasor.Ratio},{phasor.CalFactor},{phasor.Offset},{phasor.Shunt},{phasor.VoltageReferenceIndex},{phasor.Label}";
+                case null:
+                    return "";
+            }
 
-            if (definition is null)
-                return "";
-
-            if (definition.PhasorType == PhasorType.Voltage)
-                return "V,4500.0,0.0060573,0,0,500," + definition.Label.ToNonNullString("Default 500kV");
-                
-            return "I,600.00,0.000040382,0,1,1," + definition.Label.ToNonNullString("Default Current");
-
+            return definition.PhasorType == PhasorType.Voltage ? 
+                $"V,4500.0,0.0060573,0,0,500,{definition.Label.ToNonNullString("Default 500kV")}" : 
+                $"I,600.00,0.000040382,0,1,1,{definition.Label.ToNonNullString("Default Current")}";
         }
 
         // Delegate handler to create a new BPA PDCstream phasor definition

@@ -238,7 +238,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                         if (syncBytesPosition > -1)
                         {
-                            count = count - (syncBytesPosition - offset);
+                            count -= syncBytesPosition - offset;
                             offset = syncBytesPosition;
                         }
                         else
@@ -387,7 +387,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             base.OnReceivedChannelFrame(frame);
 
             // Raise IEEE C37.118 specific channel frame events, if any have been subscribed
-            if (frame is null || (ReceivedDataFrame is null && ReceivedConfigurationFrame2 is null && ReceivedConfigurationFrame1 is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null))
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame2 is null && ReceivedConfigurationFrame1 is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null)
                 return;
 
             switch (frame)

@@ -62,10 +62,7 @@ namespace GSF.PhasorProtocols.FNET
             Cells.Add(configCell);
 
             // Assign station name
-            if (string.IsNullOrEmpty(stationName))
-                configCell.StationName = "F-NET Unit-" + idCode;
-            else
-                configCell.StationName = stationName;
+            configCell.StationName = string.IsNullOrEmpty(stationName) ? $"F-NET Unit-{idCode}" : stationName;
 
             // Add a single frequency definition
             configCell.FrequencyDefinition = new FrequencyDefinition(configCell, "Line frequency");

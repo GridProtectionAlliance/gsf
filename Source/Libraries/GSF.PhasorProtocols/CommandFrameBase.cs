@@ -149,7 +149,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Device Command", (int)Command + ": " + Command);
+                baseAttributes.Add("Device Command", $"{(int)Command}: {Command}");
 
                 if (Cells.Count > 0)
                     baseAttributes.Add("Extended Data", ByteEncoding.Hexadecimal.GetString(Cells.BinaryImage()));

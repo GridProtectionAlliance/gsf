@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
@@ -66,25 +67,19 @@ namespace GSF.PhasorProtocols.IEEE1344
         public DataCell(DataFrame parent, ConfigurationCell configurationCell, bool addEmptyValues)
             : this(parent, configurationCell)
         {
-            if (addEmptyValues)
-            {
-                int x;
+            if (!addEmptyValues)
+                return;
 
-                // Define needed phasor values
-                for (x = 0; x < configurationCell.PhasorDefinitions.Count; x++)
-                {
-                    PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[x]));
-                }
+            // Define needed phasor values
+            foreach (IPhasorDefinition phasorDefinition in configurationCell.PhasorDefinitions)
+                PhasorValues.Add(new PhasorValue(this, phasorDefinition));
 
-                // Define a frequency and df/dt
-                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
+            // Define a frequency and df/dt
+            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
 
-                // Define any digital values
-                for (x = 0; x < configurationCell.DigitalDefinitions.Count; x++)
-                {
-                    DigitalValues.Add(new DigitalValue(this, configurationCell.DigitalDefinitions[x]));
-                }
-            }
+            // Define any digital values
+            foreach (IDigitalDefinition digitalDefinition in configurationCell.DigitalDefinitions)
+                DigitalValues.Add(new DigitalValue(this, digitalDefinition));
         }
 
         /// <summary>
@@ -207,7 +202,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Trigger Status", (int)TriggerStatus + ": " + TriggerStatus);
+                baseAttributes.Add("Trigger Status", $"{(int)TriggerStatus}: {TriggerStatus}");
 
                 return baseAttributes;
             }
@@ -222,7 +217,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         // Delegate handler to create a new IEEE 1344 data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
+            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

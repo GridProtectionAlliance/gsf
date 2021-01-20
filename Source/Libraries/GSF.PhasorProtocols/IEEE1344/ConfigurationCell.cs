@@ -31,6 +31,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
@@ -275,20 +276,18 @@ namespace GSF.PhasorProtocols.IEEE1344
             get
             {
                 byte[] buffer = new byte[FooterLength];
-                PhasorDefinition phasorDefinition;
-                DigitalDefinition digitalDefinition;
                 int x, index = 0;
 
                 // Include conversion factors in configuration cell footer
                 for (x = 0; x < PhasorDefinitions.Count; x++)
                 {
-                    phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
+                    PhasorDefinition phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
                     phasorDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
                 }
 
                 for (x = 0; x < DigitalDefinitions.Count; x++)
                 {
-                    digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
+                    DigitalDefinition digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
                     digitalDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
                 }
 
@@ -311,7 +310,7 @@ namespace GSF.PhasorProtocols.IEEE1344
                 baseAttributes.Add("Status Flags", StatusFlags.ToString());
                 baseAttributes.Add("Synchronization Is Valid", SynchronizationIsValid.ToString());
                 baseAttributes.Add("Data Is Valid", DataIsValid.ToString());
-                baseAttributes.Add("Trigger Status", (int)TriggerStatus + ": " + TriggerStatus);
+                baseAttributes.Add("Trigger Status", $"{(int)TriggerStatus}: {TriggerStatus}");
 
                 return baseAttributes;
             }
@@ -358,24 +357,18 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
-            PhasorDefinition phasorDefinition;
-            DigitalDefinition digitalDefinition;
-            int x, index = startIndex;
+            int index = startIndex;
 
             // Parse conversion factors from configuration cell footer
-            for (x = 0; x < PhasorDefinitions.Count; x++)
+            for (int x = 0; x < PhasorDefinitions.Count; x++)
             {
-                phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
-
-                if (!(phasorDefinition is null))
+                if (PhasorDefinitions[x] is PhasorDefinition phasorDefinition)
                     index += phasorDefinition.ParseConversionFactor(buffer, index);
             }
 
-            for (x = 0; x < DigitalDefinitions.Count; x++)
+            for (int x = 0; x < DigitalDefinitions.Count; x++)
             {
-                digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
-
-                if (!(digitalDefinition is null))
+                if (DigitalDefinitions[x] is DigitalDefinition digitalDefinition)
                     index += digitalDefinition.ParseConversionFactor(buffer, index);
             }
 

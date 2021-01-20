@@ -142,11 +142,11 @@ namespace GSF.PhasorProtocols.IEEE1344
 
                 baseAttributes.Add("Normal Status", NormalStatus.ToString());
                 baseAttributes.Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes));
-                baseAttributes.Add("Normal Status (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(normalStatusBytes));
+                baseAttributes.Add("Normal Status (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(normalStatusBytes)}");
 
                 baseAttributes.Add("Valid Inputs", ValidInputs.ToString());
                 baseAttributes.Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes));
-                baseAttributes.Add("Valid Inputs (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(validInputsBytes));
+                baseAttributes.Add("Valid Inputs (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(validInputsBytes)}");
 
                 return baseAttributes;
             }

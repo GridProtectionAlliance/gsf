@@ -90,7 +90,7 @@ namespace GSF.PhasorProtocols.Macrodyne
 
             // Validate Macrodyne data image
             if (firstByte != 0xAA && firstByte != 0xBB)
-                throw new InvalidOperationException("Bad data stream, expected 0xAA or 0xBB as first byte in Macrodyne ON-LINE data frame or configuration frame request response, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Bad data stream, expected 0xAA or 0xBB as first byte in Macrodyne ON-LINE data frame or configuration frame request response, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
 
             // Determine frame type (it's either the sync byte of a data frame or the response by from a command request)
             if (firstByte == 0xAA)
@@ -108,7 +108,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                         TypeID = Macrodyne.FrameType.HeaderFrame;
                         break;
                     default:
-                        throw new InvalidOperationException("Bad data stream, expected 0xBB24 or 0xBB48 in response to Macrodyne device command, got 0xBB" + buffer[startIndex + 1].ToString("X").PadLeft(2, '0'));
+                        throw new InvalidOperationException($"Bad data stream, expected 0xBB24 or 0xBB48 in response to Macrodyne device command, got 0xBB{buffer[startIndex + 1].ToString("X").PadLeft(2, '0')}");
                 }
             }
 
@@ -125,7 +125,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                         break;
                     case ProtocolVersion.G:
                         if (buffer[startIndex + 1] != 0x02)
-                            throw new InvalidOperationException("Bad data stream, expected 0xAA02 for Macrodyne 1690G version devices, got 0xAA" + buffer[startIndex + 1].ToString("X").PadLeft(2, '0'));
+                            throw new InvalidOperationException($"Bad data stream, expected 0xAA02 for Macrodyne 1690G version devices, got 0xAA{buffer[startIndex + 1].ToString("X").PadLeft(2, '0')}");
                         break;
                 }
             }

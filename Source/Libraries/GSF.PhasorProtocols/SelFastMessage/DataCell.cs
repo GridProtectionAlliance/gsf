@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.SelFastMessage
 {
     /// <summary>
@@ -59,19 +60,15 @@ namespace GSF.PhasorProtocols.SelFastMessage
         public DataCell(DataFrame parent, ConfigurationCell configurationCell, bool addEmptyValues)
             : this(parent, configurationCell)
         {
-            if (addEmptyValues)
-            {
-                int x;
+            if (!addEmptyValues)
+                return;
 
-                // Define needed phasor values
-                for (x = 0; x < configurationCell.PhasorDefinitions.Count; x++)
-                {
-                    PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[x]));
-                }
+            // Define needed phasor values
+            foreach (IPhasorDefinition phasorDefinition in configurationCell.PhasorDefinitions)
+                PhasorValues.Add(new PhasorValue(this, phasorDefinition));
 
-                // Define a frequency and df/dt
-                FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
-            }
+            // Define a frequency and df/dt
+            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
         }
 
         /// <summary>
@@ -129,9 +126,9 @@ namespace GSF.PhasorProtocols.SelFastMessage
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | StatusFlags.PMDOK;
+                    StatusFlags |= StatusFlags.PMDOK;
                 else
-                    StatusFlags = StatusFlags & ~StatusFlags.PMDOK;
+                    StatusFlags &= ~StatusFlags.PMDOK;
             }
         }
 
@@ -144,9 +141,9 @@ namespace GSF.PhasorProtocols.SelFastMessage
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | StatusFlags.TSOK;
+                    StatusFlags |= StatusFlags.TSOK;
                 else
-                    StatusFlags = StatusFlags & ~StatusFlags.TSOK;
+                    StatusFlags &= ~StatusFlags.TSOK;
             }
         }
 
@@ -203,7 +200,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("SEL Status Flags", (int)StatusFlags + ": " + StatusFlags);
+                baseAttributes.Add("SEL Status Flags", $"{(int)StatusFlags}: {StatusFlags}");
 
                 return baseAttributes;
             }
@@ -224,10 +221,10 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             ConfigurationCell configCell = ConfigurationCell;
             IPhasorValue phasorValue;
-            int x, parsedLength, index = startIndex;
+            int x, index = startIndex;
 
             // Parse out frequency value
-            FrequencyValue = SelFastMessage.FrequencyValue.CreateNewValue(this, configCell.FrequencyDefinition, buffer, index, out parsedLength);
+            FrequencyValue = SelFastMessage.FrequencyValue.CreateNewValue(this, configCell.FrequencyDefinition, buffer, index, out int parsedLength);
             index += parsedLength;
 
             // Parse out phasor values

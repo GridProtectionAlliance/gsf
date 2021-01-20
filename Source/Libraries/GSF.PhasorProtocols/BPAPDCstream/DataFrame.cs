@@ -139,12 +139,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             {
                 m_frameHeader = value;
 
-                if (!(m_frameHeader is null))
-                {
-                    State = m_frameHeader.State as DataFrameParsingState;
-                    Timestamp = m_frameHeader.RoughTimestamp;
-                    UsePhasorDataFileFormat = m_frameHeader.UsePhasorDataFileFormat;
-                }
+                if (m_frameHeader is null)
+                    return;
+
+                State = m_frameHeader.State as DataFrameParsingState;
+                Timestamp = m_frameHeader.RoughTimestamp;
+                UsePhasorDataFileFormat = m_frameHeader.UsePhasorDataFileFormat;
             }
         }
 
@@ -264,9 +264,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     baseAttributes.Add("Legacy Label Count", LegacyLabels.Length.ToString());
 
                     for (int x = 0; x < LegacyLabels.Length; x++)
-                    {
-                        baseAttributes.Add("    Legacy Label " + x, LegacyLabels[x]);
-                    }
+                        baseAttributes.Add($"    Legacy Label {x}", LegacyLabels[x]);
                 }
 
                 return baseAttributes;
@@ -320,7 +318,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 state.CellCount = unchecked((int)configurationFrame.CommonHeader.PmuCount);
 
                 if (state.CellCount > configurationFrame.Cells.Count)
-                    throw new InvalidOperationException("Stream/Config File Mismatch: PMU count (" + state.CellCount + ") in stream does not match defined count in configuration file (" + configurationFrame.Cells.Count + ")");
+                    throw new InvalidOperationException($"Stream/Config File Mismatch: PMU count ({state.CellCount}) in stream does not match defined count in configuration file ({configurationFrame.Cells.Count})");
 
                 return CommonFrameHeader.FixedLength;
             }
@@ -344,7 +342,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             index += 2;
 
             if (state.CellCount > configurationFrame.Cells.Count)
-                throw new InvalidOperationException("Stream/Config File Mismatch: PMU count (" + state.CellCount + ") in stream does not match defined count in configuration file (" + configurationFrame.Cells.Count + ")");
+                throw new InvalidOperationException($"Stream/Config File Mismatch: PMU count ({state.CellCount}) in stream does not match defined count in configuration file ({configurationFrame.Cells.Count})");
 
             // We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
             if (configurationFrame.StreamType == StreamType.Legacy)
@@ -354,6 +352,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 for (int x = 0; x < state.CellCount; x++)
                 {
                     LegacyLabels[x] = Encoding.ASCII.GetString(buffer, index, 4);
+
                     // We don't need offsets, so we skip them...
                     index += 8;
                 }

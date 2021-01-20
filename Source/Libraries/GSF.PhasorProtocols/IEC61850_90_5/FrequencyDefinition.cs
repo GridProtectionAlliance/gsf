@@ -27,6 +27,7 @@ using System;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
@@ -89,7 +90,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets the binary body image of the <see cref="FrequencyDefinition"/> object.
         /// </summary>
-        protected override byte[] BodyImage => BigEndian.GetBytes((ushort)(Parent.NominalFrequency == LineFrequency.Hz50 ? Bits.Bit00 : Bits.Nil));
+        protected override byte[] BodyImage =>
+            BigEndian.GetBytes((ushort)(Parent.NominalFrequency == LineFrequency.Hz50 ? Bits.Bit00 : Bits.Nil));
 
     #endregion
 

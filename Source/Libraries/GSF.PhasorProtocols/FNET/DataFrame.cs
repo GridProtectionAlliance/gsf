@@ -109,9 +109,7 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Gets the identifier that is used to identify the F-NET frame.
         /// </summary>
-        public int TypeID =>
-            // F-NET only defines a single frame type...
-            0;
+        public int TypeID => 0; // F-NET only defines a single frame type...
 
         /// <summary>
         /// Gets or sets the sample index of this <see cref="DataFrame"/>.

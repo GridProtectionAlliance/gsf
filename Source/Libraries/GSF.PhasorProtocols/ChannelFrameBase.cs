@@ -336,7 +336,7 @@ namespace GSF.PhasorProtocols
                 else
                     baseAttributes.Add("Total Cells", Cells.Count.ToString());
 
-                baseAttributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
+                baseAttributes.Add("Fundamental Frame Type", $"{(int)FrameType}: {FrameType}");
                 baseAttributes.Add("ID Code", IDCode.ToString());
                 baseAttributes.Add("Published", Published.ToString());
                 baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
@@ -375,7 +375,7 @@ namespace GSF.PhasorProtocols
                 // If user selects incorrect protocol, image may be very large - so we don't log the image 
                 //  byte[] binaryImageErr = buffer.BlockCopy(startIndex, length);
                 //  + BitConverter.ToString(binaryImageErr)
-                throw new CrcException("Invalid binary image detected - check sum of " + GetType().Name + " did not match");
+                throw new CrcException($"Invalid binary image detected - check sum of {GetType().Name} did not match");
             }
 
             if (TrustHeaderLength)
@@ -406,12 +406,12 @@ namespace GSF.PhasorProtocols
         {
             IChannelFrameParsingState<T> state = State;
             T cell;
-            int parsedLength, index = startIndex;
+            int index = startIndex;
 
             // Parse all frame cells
             for (int x = 0; x < state.CellCount; x++)
             {
-                cell = state.CreateNewCell(this, state, x, buffer, index, out parsedLength);
+                cell = state.CreateNewCell(this, state, x, buffer, index, out int parsedLength);
                 m_cells.Add(cell);
                 index += parsedLength;
             }

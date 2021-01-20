@@ -100,16 +100,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// integers and floating point values are represented as 32-bit single-precision floating-point
         /// values (i.e., short and float data types respectively).
         /// </remarks>
-        protected override int BodyLength
-        {
-            get
-            {
-                // PMUs in PDC block do not include Df/Dt
-                if (Definition.Parent.IsPdcBlockSection)
-                    return 2;
-                return base.BodyLength;
-            }
-        }
+        protected override int BodyLength => 
+            Definition.Parent.IsPdcBlockSection ? 2 : base.BodyLength; // PMUs in PDC block do not include Df/Dt
 
         /// <summary>
         /// Gets the binary body image of the <see cref="FrequencyValue"/> object.
@@ -119,16 +111,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             get
             {
                 // PMUs in PDC block do not include Df/Dt
-                if (Definition.Parent.IsPdcBlockSection)
-                {
-                    byte[] buffer = new byte[2];
+                if (!Definition.Parent.IsPdcBlockSection)
+                    return base.BodyImage;
 
-                    BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
+                byte[] buffer = new byte[2];
 
-                    return buffer;
-                }
+                BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
 
-                return base.BodyImage;
+                return buffer;
             }
         }
 

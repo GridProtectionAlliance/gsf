@@ -951,31 +951,31 @@ namespace GSF.PhasorProtocols.Macrodyne
             OnlineDataFormatFlags flags = OnlineDataFormatFlags.TimestampEnabled;
 
             if (count > 1)
-                flags = flags | OnlineDataFormatFlags.Phasor2Enabled;
+                flags |= OnlineDataFormatFlags.Phasor2Enabled;
 
             if (count > 2)
-                flags = flags | OnlineDataFormatFlags.Phasor3Enabled;
+                flags |= OnlineDataFormatFlags.Phasor3Enabled;
 
             if (count > 3)
-                flags = flags | OnlineDataFormatFlags.Phasor4Enabled;
+                flags |= OnlineDataFormatFlags.Phasor4Enabled;
 
             if (count > 4)
-                flags = flags | OnlineDataFormatFlags.Phasor5Enabled;
+                flags |= OnlineDataFormatFlags.Phasor5Enabled;
 
             if (count > 5)
-                flags = flags | OnlineDataFormatFlags.Phasor6Enabled;
+                flags |= OnlineDataFormatFlags.Phasor6Enabled;
 
             if (count > 6)
-                flags = flags | OnlineDataFormatFlags.Phasor7Enabled;
+                flags |= OnlineDataFormatFlags.Phasor7Enabled;
 
             if (count > 7)
-                flags = flags | OnlineDataFormatFlags.Phasor8Enabled;
+                flags |= OnlineDataFormatFlags.Phasor8Enabled;
 
             if (count > 8)
-                flags = flags | OnlineDataFormatFlags.Phasor9Enabled;
+                flags |= OnlineDataFormatFlags.Phasor9Enabled;
 
             if (count > 9)
-                flags = flags | OnlineDataFormatFlags.Phasor10Enabled;
+                flags |= OnlineDataFormatFlags.Phasor10Enabled;
 
             return flags;
         }

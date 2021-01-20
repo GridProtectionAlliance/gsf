@@ -28,7 +28,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace GSF.PhasorProtocols.IEEE1344
@@ -36,7 +35,6 @@ namespace GSF.PhasorProtocols.IEEE1344
     /// <summary>
     /// Collects frame images until a full IEEE 1344 frame has been received.
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1001")]  // See constructor note below...
     public class FrameImageCollector
     {
         #region [ Members ]
@@ -44,14 +42,13 @@ namespace GSF.PhasorProtocols.IEEE1344
         // Fields
         private readonly MemoryStream m_frameQueue;
 
-    #endregion
+        #endregion
 
         #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="FrameImageCollector"/>.
         /// </summary>
-        [SuppressMessage("Microsoft.Usage", "CA1816")]
         public FrameImageCollector()
         {
             // As an optimization in context of usage, we don't implement IDisposable for

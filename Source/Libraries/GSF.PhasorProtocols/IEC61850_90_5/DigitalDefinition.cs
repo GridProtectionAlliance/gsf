@@ -129,15 +129,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets the number of labels defined in this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public int LabelCount
-        {
-            get
-            {
-                if (DraftRevision == DraftRevision.Draft6)
-                    return 1;
-                return 16;
-            }
-        }
+        public int LabelCount => 
+            DraftRevision == DraftRevision.Draft6 ? 1 : 16;
 
         /// <summary>
         /// Gets or sets the combined set of label images of this <see cref="DigitalDefinition"/>.
@@ -154,9 +147,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     value = "undefined";
 
                 if (value.Trim().Length > MaximumLabelLength)
-                {
-                    throw new OverflowException("Label length cannot exceed " + MaximumLabelLength);
-                }
+                    throw new OverflowException($"Label length cannot exceed {MaximumLabelLength}");
 
                 // We override this function since base class automatically "fixes-up" labels
                 // by removing duplicate white space characters - this can throw off the
@@ -176,9 +167,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             get
             {
                 if (m_parentAquired)
-                {
                     return m_draftRevision;
-                }
 
                 // We must assume version 1 until a parent reference is available. The parent class,
                 // being higher up in the chain, is not available during early points of
@@ -191,6 +180,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                 m_parentAquired = true;
                 m_draftRevision = Parent.Parent.DraftRevision;
+                
                 return m_draftRevision;
             }
         }
@@ -225,20 +215,18 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                 baseAttributes.Add("Normal Status", NormalStatus.ToString());
                 baseAttributes.Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes));
-                baseAttributes.Add("Normal Status (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(normalStatusBytes));
+                baseAttributes.Add("Normal Status (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(normalStatusBytes)}");
 
                 baseAttributes.Add("Valid Inputs", ValidInputs.ToString());
                 baseAttributes.Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes));
-                baseAttributes.Add("Valid Inputs (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(validInputsBytes));
+                baseAttributes.Add("Valid Inputs (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(validInputsBytes)}");
 
                 if (DraftRevision > DraftRevision.Draft6)
                 {
                     baseAttributes.Add("Bit Label Count", LabelCount.ToString());
 
                     for (int x = 0; x < LabelCount; x++)
-                    {
-                        baseAttributes.Add("     Bit " + x + " Label", GetLabel(x));
-                    }
+                        baseAttributes.Add($"     Bit {x} Label", GetLabel(x));
                 }
 
                 return baseAttributes;
@@ -261,7 +249,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public string GetLabel(int index)
         {
             if (index < 0 || index >= LabelCount)
-                throw new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + DraftRevision + " of the IEC 61850-90-5 protocol");
+                throw new IndexOutOfRangeException($"Invalid label index specified.  Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEC 61850-90-5 protocol");
 
             return Label.PadRight(MaximumLabelLength).Substring(index * 16, 16).GetValidLabel();
         }
@@ -278,10 +266,11 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public void SetLabel(int index, string value)
         {
             if (index < 0 || index >= LabelCount)
-                throw new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + DraftRevision + " of the IEC 61850-90-5 protocol");
+                throw new IndexOutOfRangeException($"Invalid label index specified. Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEC 61850-90-5 protocol");
 
             if (value.Trim().Length > 16)
-                throw new OverflowException("Individual label length cannot exceed " + 16);
+                throw new OverflowException("Individual label length cannot exceed 16");
+
             string current = Label.PadRight(MaximumLabelLength);
             string left = "";
             string right = "";
@@ -304,11 +293,9 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
+            // Handle single label the standard way (parsing out null value)
             if (DraftRevision == DraftRevision.Draft6)
-            {
-                // Handle single label the standard way (parsing out null value)
                 return base.ParseBodyImage(buffer, startIndex, length);
-            }
 
             int parseLength = MaximumLabelLength;
             byte[] labelBuffer = new byte[16];

@@ -80,7 +80,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             // Validate SEL Fast Message data image
             if (buffer[startIndex] != Common.HeaderByte1 || buffer[startIndex + 1] != Common.HeaderByte2)
-                throw new InvalidOperationException("Bad data stream, expected header bytes 0xA546 as first bytes in SEL Fast Message frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0') + buffer[startIndex + 1].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException($"Bad data stream, expected header bytes 0xA546 as first bytes in SEL Fast Message frame, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}{buffer[startIndex + 1].ToString("X").PadLeft(2, '0')}");
 
             ushort sampleCount;
             uint secondOfCentury;

@@ -108,9 +108,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets or sets required external BPA PDCstream INI based configuration file.
         /// </summary>
-        [Category("Required Connection Parameters"),
-        Description("Defines required external BPA PDCstream INI based configuration file."),
-        Editor(typeof(IniFileNameEditor), typeof(UITypeEditor))]
+        [Category("Required Connection Parameters")]
+        [Description("Defines required external BPA PDCstream INI based configuration file.")]
+        [Editor(typeof(IniFileNameEditor), typeof(UITypeEditor))]
         public string ConfigurationFileName
         {
             get => m_configurationFileName;
@@ -120,9 +120,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets or sets flag that interprets word count in packet header from a byte instead of a word.
         /// </summary>
-        [Category("Required Connection Parameters"),
-        Description("Set to True to interpret word count in packet header from a byte instead of a word - if the sync byte (0xAA) is at position one, then the word count would be interpreted from byte four.  Some older BPA PDC stream implementations have a 0x01 in byte three where there should be a 0x00 and this throws off the frame length, setting this property to True will correctly interpret the word count."),
-        DefaultValue(false)]
+        [Category("Required Connection Parameters")]
+        [Description("Set to True to interpret word count in packet header from a byte instead of a word - if the sync byte (0xAA) is at position one, then the word count would be interpreted from byte four.  Some older BPA PDC stream implementations have a 0x01 in byte three where there should be a 0x00 and this throws off the frame length, setting this property to True will correctly interpret the word count.")]
+        [DefaultValue(false)]
         public bool ParseWordCountFromByte
         {
             get => m_parseWordCountFromByte;
@@ -132,9 +132,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets or sets flag that determines if configuration file is automatically reloaded when it has changed on disk.
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Set to True to automatically reload configuration file when it has changed on disk."),
-        DefaultValue(true)]
+        [Category("Optional Connection Parameters")]
+        [Description("Set to True to automatically reload configuration file when it has changed on disk.")]
+        [DefaultValue(true)]
         public bool RefreshConfigurationFileOnChange
         {
             get => m_refreshConfigurationFileOnChange;
@@ -144,9 +144,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets or sets flag that determines if source data is in the Phasor Data File Format (i.e., a DST file).
         /// </summary>
-        [Category("Optional Connection Parameters"),
-        Description("Set to True to use the Phasor Data File Format (i.e., use a DST file)."),
-        DefaultValue(false)]
+        [Category("Optional Connection Parameters")]
+        [Description("Set to True to use the Phasor Data File Format (i.e., use a DST file).")]
+        [DefaultValue(false)]
         public bool UsePhasorDataFileFormat
         {
             get => m_usePhasorDataFileFormat;
@@ -159,7 +159,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         [Browsable(false)]
         public override bool ValuesAreValid => File.Exists(m_configurationFileName);
 
-    #endregion
+        #endregion
 
         #region [ Methods ]
 

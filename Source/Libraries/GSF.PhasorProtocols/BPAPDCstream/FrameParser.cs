@@ -89,7 +89,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { PhasorProtocols.Common.SyncByte };
             m_syncLock = new object();
-
             m_configurationFileName = configurationFileName;
         }
 
@@ -120,12 +119,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public string ConfigurationFileName
         {
-            get
-            {
-                if (m_configurationFrame is null)
-                    return m_configurationFileName;
-                return m_configurationFrame.ConfigurationFileName;
-            }
+            get => m_configurationFrame?.ConfigurationFileName ?? m_configurationFileName;
             set
             {
                 m_configurationFileName = value;
@@ -209,17 +203,17 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             get => base.ConnectionParameters;
             set
             {
-                if (value is ConnectionParameters parameters)
-                {
-                    base.ConnectionParameters = parameters;
+                if (!(value is ConnectionParameters parameters))
+                    return;
 
-                    // Assign new incoming connection parameter values
-                    m_configurationFileName = parameters.ConfigurationFileName;
-                    ParseWordCountFromByte = parameters.ParseWordCountFromByte;
-                    m_refreshConfigurationFileOnChange = parameters.RefreshConfigurationFileOnChange;
-                    UsePhasorDataFileFormat = parameters.UsePhasorDataFileFormat;
-                    ResetFileWatcher();
-                }
+                base.ConnectionParameters = parameters;
+
+                // Assign new incoming connection parameter values
+                m_configurationFileName = parameters.ConfigurationFileName;
+                ParseWordCountFromByte = parameters.ParseWordCountFromByte;
+                m_refreshConfigurationFileOnChange = parameters.RefreshConfigurationFileOnChange;
+                UsePhasorDataFileFormat = parameters.UsePhasorDataFileFormat;
+                ResetFileWatcher();
             }
         }
 
@@ -289,36 +283,34 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override ICommonHeader<FrameType> ParseCommonHeader(byte[] buffer, int offset, int length)
         {
             // See if there is enough data in the buffer to parse the common frame header.
-            if (length >= CommonFrameHeader.FixedLength)
+            if (length < CommonFrameHeader.FixedLength)
+                return null;
+
+            // Parse common frame header
+            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ParseWordCountFromByte, UsePhasorDataFileFormat, m_configurationFrame, buffer, offset, length);
+
+            // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
+            // we eliminate the need to validate length on all subsequent data elements that comprise the frame
+            if (length < parsedFrameHeader.FrameLength)
+                return null;
+
+            // Expose the frame buffer image in case client needs this data for any reason
+            OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
+
+            // Handle special parsing states
+            switch (parsedFrameHeader.TypeID)
             {
-                // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ParseWordCountFromByte, UsePhasorDataFileFormat, m_configurationFrame, buffer, offset, length);
-
-                // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
-                // we eliminate the need to validate length on all subsequent data elements that comprise the frame
-                if (length >= parsedFrameHeader.FrameLength)
-                {
-                    // Expose the frame buffer image in case client needs this data for any reason
-                    OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
-
-                    // Handle special parsing states
-                    switch (parsedFrameHeader.TypeID)
-                    {
-                        case FrameType.DataFrame:
-                            // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
-                            break;
-                        case FrameType.ConfigurationFrame:
-                            // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFileName, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
-                            break;
-                    }
-
-                    return parsedFrameHeader;
-                }
+                case FrameType.DataFrame:
+                    // Assign data frame parsing state
+                    parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
+                    break;
+                case FrameType.ConfigurationFrame:
+                    // Assign configuration frame parsing state
+                    parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFileName, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
+                    break;
             }
 
-            return null;
+            return parsedFrameHeader;
         }
 
         // Handler for file watcher - we notify consumer when changes have occured to configuration file
@@ -343,26 +335,26 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
                 m_configurationFileWatcher.Dispose();
             }
+
             m_configurationFileWatcher = null;
 
             string configurationFile = ConfigurationFileName;
 
-            if (m_refreshConfigurationFileOnChange && !string.IsNullOrEmpty(configurationFile) && File.Exists(configurationFile))
+            if (!m_refreshConfigurationFileOnChange || string.IsNullOrEmpty(configurationFile) || !File.Exists(configurationFile))
+                return;
+
+            try
             {
-                try
-                {
-                    // Create a new file watcher for configuration file - we'll automatically refresh configuration file
-                    // when this file gets updated...
-                    m_configurationFileWatcher = new SafeFileWatcher(FilePath.GetDirectoryName(configurationFile), FilePath.GetFileName(configurationFile));
-                    m_configurationFileWatcher.Changed += m_configurationFileWatcher_Changed;
-                    m_configurationFileWatcher.EnableRaisingEvents = true;
-                    m_configurationFileWatcher.IncludeSubdirectories = false;
-                    m_configurationFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-                }
-                catch (Exception ex)
-                {
-                    OnParsingException(ex);
-                }
+                // Create a new file watcher for configuration file - we'll automatically refresh configuration file when this file gets updated...
+                m_configurationFileWatcher = new SafeFileWatcher(FilePath.GetDirectoryName(configurationFile), FilePath.GetFileName(configurationFile));
+                m_configurationFileWatcher.Changed += m_configurationFileWatcher_Changed;
+                m_configurationFileWatcher.EnableRaisingEvents = true;
+                m_configurationFileWatcher.IncludeSubdirectories = false;
+                m_configurationFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            }
+            catch (Exception ex)
+            {
+                OnParsingException(ex);
             }
         }
 
@@ -376,7 +368,6 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             base.OnReceivedConfigurationFrame(frame);
 
             // Cache new configuration frame for parsing subsequent data frames...
-
             if (frame is ConfigurationFrame configurationFrame)
                 m_configurationFrame = configurationFrame;
         }
@@ -433,9 +424,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                 // Create equivalent derived phasor definitions
                 foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                {
                     derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
-                }
 
                 // Create equivalent derived frequency definition
                 IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
@@ -445,15 +434,11 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                 // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
                 foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
-                {
                     derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
-                }
 
                 // Create equivalent derived digital definitions
                 foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                {
                     derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
-                }
 
                 // Add cell to frame
                 derivedFrame.Cells.Add(derivedCell);

@@ -32,7 +32,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols
 {
@@ -148,7 +147,7 @@ namespace GSF.PhasorProtocols
 
                 baseAttributes.Add("Digital Value", Value.ToString());
                 baseAttributes.Add("Digital Value (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(valueBytes));
-                baseAttributes.Add("Digital Value (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(valueBytes));
+                baseAttributes.Add("Digital Value (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(valueBytes)}");
 
                 return baseAttributes;
             }

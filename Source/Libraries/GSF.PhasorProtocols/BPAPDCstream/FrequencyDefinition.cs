@@ -139,15 +139,11 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set
             {
                 if (Parent is null)
-                {
                     // Store local value for default frequency definition
                     m_frequencyOffset = value;
-                }
                 else
-                {
                     // Frequency offset is stored as nominal frequency of parent cell
                     Parent.NominalFrequency = value >= 60.0F ? LineFrequency.Hz60 : LineFrequency.Hz50;
-                }
             }
         }
 
@@ -169,7 +165,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </remarks>
         protected override byte[] BodyImage => null;
 
-    #endregion
+        #endregion
 
         #region [ Methods ]
 
@@ -195,9 +191,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             // type, scale, offset, dF/dt scale, dF/dt offset, dummy, label 
             //   F,  1000,    60,      1000,         0,          0,   Frequency
             if (definition is FrequencyDefinition frequency)
-                return "F," + frequency.ScalingValue + "," + frequency.Offset + "," + frequency.DfDtScalingValue + "," + frequency.DfDtOffset + "," + frequency.m_dummy + "," + frequency.Label;
+                return $"F,{frequency.ScalingValue},{frequency.Offset},{frequency.DfDtScalingValue},{frequency.DfDtOffset},{frequency.m_dummy},{frequency.Label}";
 
-            return definition is null ? "" : "F," + definition.ScalingValue + "," + definition.Offset + "," + definition.DfDtScalingValue + "," + definition.DfDtOffset + ",0," + definition.Label;
+            return definition is null ? "" : $"F,{definition.ScalingValue},{definition.Offset},{definition.DfDtScalingValue},{definition.DfDtOffset},0,{definition.Label}";
         }
 
         // Delegate handler to create a new BPA PDCstream frequency definition

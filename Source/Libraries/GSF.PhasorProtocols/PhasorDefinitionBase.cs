@@ -143,7 +143,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Phasor Type", (int)PhasorType + ": " + PhasorType);
+                baseAttributes.Add("Phasor Type", $"{(int)PhasorType}: {PhasorType}");
 
                 return baseAttributes;
             }

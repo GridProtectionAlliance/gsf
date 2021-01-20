@@ -202,25 +202,25 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             get
             {
                 byte[] buffer = new byte[FooterLength];
-                int x, index = 0;
+                int index = 0;
 
                 // Include conversion factors in configuration cell footer
-                for (x = 0; x < PhasorDefinitions.Count; x++)
+                for (int x = 0; x < PhasorDefinitions.Count; x++)
                 {
-                    PhasorDefinition phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
-                    phasorDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
+                    if (PhasorDefinitions[x] is PhasorDefinition phasorDefinition)
+                        phasorDefinition.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
                 }
 
-                for (x = 0; x < AnalogDefinitions.Count; x++)
+                for (int x = 0; x < AnalogDefinitions.Count; x++)
                 {
-                    AnalogDefinition analogDefinition = AnalogDefinitions[x] as AnalogDefinition;
-                    analogDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, AnalogDefinition.ConversionFactorLength);
+                    if (AnalogDefinitions[x] is AnalogDefinition analogDefinition)
+                        analogDefinition.ConversionFactorImage.CopyImage(buffer, ref index, AnalogDefinition.ConversionFactorLength);
                 }
 
-                for (x = 0; x < DigitalDefinitions.Count; x++)
+                for (int x = 0; x < DigitalDefinitions.Count; x++)
                 {
-                    DigitalDefinition digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
-                    digitalDefinition?.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
+                    if (DigitalDefinitions[x] is DigitalDefinition digitalDefinition)
+                        digitalDefinition.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
                 }
 
                 // Include nominal frequency
@@ -243,7 +243,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Format Flags", (int)m_formatFlags + ": " + m_formatFlags);
+                baseAttributes.Add("Format Flags", $"{(int)m_formatFlags}: {m_formatFlags}");
 
                 return baseAttributes;
             }
@@ -289,22 +289,22 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
-            int x, index = startIndex;
+            int index = startIndex;
 
             // Parse conversion factors from configuration cell footer
-            for (x = 0; x < PhasorDefinitions.Count; x++)
+            for (int x = 0; x < PhasorDefinitions.Count; x++)
             {
                 if (PhasorDefinitions[x] is PhasorDefinition phasorDefinition)
                     index += phasorDefinition.ParseConversionFactor(buffer, index);
             }
 
-            for (x = 0; x < AnalogDefinitions.Count; x++)
+            for (int x = 0; x < AnalogDefinitions.Count; x++)
             {
                 if (AnalogDefinitions[x] is AnalogDefinition analogDefinition)
                     index += analogDefinition.ParseConversionFactor(buffer, index);
             }
 
-            for (x = 0; x < DigitalDefinitions.Count; x++)
+            for (int x = 0; x < DigitalDefinitions.Count; x++)
             {
                 if (DigitalDefinitions[x] is DigitalDefinition digitalDefinition)
                     index += digitalDefinition.ParseConversionFactor(buffer, index);

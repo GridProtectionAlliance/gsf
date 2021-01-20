@@ -159,7 +159,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                 if (value.Trim().Length > MaximumLabelLength)
                 {
-                    throw new OverflowException("Label length cannot exceed " + MaximumLabelLength);
+                    throw new OverflowException($"Label length cannot exceed {MaximumLabelLength}");
                 }
 
                 // We override this function since base class automatically "fixes-up" labels
@@ -231,11 +231,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                 baseAttributes.Add("Normal Status", NormalStatus.ToString());
                 baseAttributes.Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes));
-                baseAttributes.Add("Normal Status (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(normalStatusBytes));
+                baseAttributes.Add("Normal Status (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(normalStatusBytes)}");
 
                 baseAttributes.Add("Valid Inputs", ValidInputs.ToString());
                 baseAttributes.Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes));
-                baseAttributes.Add("Valid Inputs (Hexadecimal)", "0x" + ByteEncoding.Hexadecimal.GetString(validInputsBytes));
+                baseAttributes.Add("Valid Inputs (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(validInputsBytes)}");
 
                 if (DraftRevision > DraftRevision.Draft6)
                 {
@@ -243,7 +243,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                     for (int x = 0; x < LabelCount; x++)
                     {
-                        baseAttributes.Add("     Bit " + x + " Label", GetLabel(x));
+                        baseAttributes.Add($"     Bit {x} Label", GetLabel(x));
                     }
                 }
 
@@ -267,7 +267,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public string GetLabel(int index)
         {
             if (index < 0 || index >= LabelCount)
-                throw new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + DraftRevision + " of the IEEE C37.118 protocol");
+                throw new IndexOutOfRangeException($"Invalid label index specified.  Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEEE C37.118 protocol");
 
             return Label.PadRight(MaximumLabelLength).Substring(index * 16, 16).GetValidLabel();
         }
@@ -284,10 +284,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public void SetLabel(int index, string value)
         {
             if (index < 0 || index >= LabelCount)
-                throw new IndexOutOfRangeException("Invalid label index specified.  Note that there are " + LabelCount + " labels per digital available in " + DraftRevision + " of the IEEE C37.118 protocol");
+                throw new IndexOutOfRangeException($"Invalid label index specified.  Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEEE C37.118 protocol");
 
             if (value.Trim().Length > 16)
-                throw new OverflowException("Individual label length cannot exceed " + 16);
+                throw new OverflowException($"Individual label length cannot exceed {16}");
             string current = Label.PadRight(MaximumLabelLength);
             string left = "";
             string right = "";

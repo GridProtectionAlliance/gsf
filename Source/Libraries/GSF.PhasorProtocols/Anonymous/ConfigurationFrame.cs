@@ -28,7 +28,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -80,7 +79,7 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
-    #endregion
+        #endregion
 
         #region [ Methods ]
 
@@ -107,7 +106,6 @@ namespace GSF.PhasorProtocols.Anonymous
         private static int s_configurationBackups;
 
         // Static Constructor
-        [SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static ConfigurationFrame()
         {
             s_configurationBackups = -1;
@@ -203,11 +201,11 @@ namespace GSF.PhasorProtocols.Anonymous
                 // Create multiple backup configurations, if requested
                 for (int i = ConfigurationBackups; i > 0; i--)
                 {
-                    string origConfigFile = configurationCacheFileName + ".backup" + (i == 1 ? "" : (i - 1).ToString());
+                    string origConfigFile = $"{configurationCacheFileName}.backup{(i == 1 ? "" : (i - 1).ToString())}";
 
                     if (File.Exists(origConfigFile))
                     {
-                        string nextConfigFile = configurationCacheFileName + ".backup" + i;
+                        string nextConfigFile = $"{configurationCacheFileName}.backup{i}";
 
                         if (File.Exists(nextConfigFile))
                             File.Delete(nextConfigFile);
@@ -228,7 +226,7 @@ namespace GSF.PhasorProtocols.Anonymous
                     // Back up current configuration file, if any
                     if (File.Exists(configurationCacheFileName))
                     {
-                        string backupConfigFile = configurationCacheFileName + ".backup";
+                        string backupConfigFile = $"{configurationCacheFileName}.backup";
 
                         if (File.Exists(backupConfigFile))
                             File.Delete(backupConfigFile);
@@ -245,9 +243,11 @@ namespace GSF.PhasorProtocols.Anonymous
             try
             {
                 // Serialize configuration frame to a file
-                SoapFormatter xmlSerializer = new SoapFormatter();
-                xmlSerializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
-                xmlSerializer.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
+                SoapFormatter xmlSerializer = new SoapFormatter
+                {
+                    AssemblyFormat = FormatterAssemblyStyle.Simple,
+                    TypeFormat = FormatterTypeStyle.TypesWhenNeeded
+                };
 
                 configFile = File.Create(configurationCacheFileName);
                 xmlSerializer.Serialize(configFile, configurationFrame);
@@ -293,12 +293,7 @@ namespace GSF.PhasorProtocols.Anonymous
         public static IConfigurationFrame GetCachedConfiguration(string configurationName, bool fromCache)
         {
             IConfigurationFrame configFrame = null;
-            string configFileName;
-
-            if (fromCache)
-                configFileName = GetConfigurationCacheFileName(configurationName);
-            else
-                configFileName = configurationName;
+            string configFileName = fromCache ? GetConfigurationCacheFileName(configurationName) : configurationName;
 
             if (File.Exists(configFileName))
                 configFrame = Common.DeserializeConfigurationFrame(configFileName);
