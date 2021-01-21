@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigurationFrame.cs" />
     <Compile Include="Model\Device.cs" />
     <Compile Include="Model\Measurement.cs" />
     <Compile Include="Model\Phasor.cs" />
@@ -83,9 +84,17 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="MainForm.SaveConfiguration.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.ManageHostConfig.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SELPDCConfig.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SaveConfiguration.cs" />
     <Compile Include="ImportParameters.cs" />
     <Compile Include="Settings.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

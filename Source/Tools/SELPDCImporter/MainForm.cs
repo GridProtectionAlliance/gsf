@@ -27,12 +27,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using GSF.ComponentModel;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Diagnostics;
-using GSF.IO;
 using GSF.Windows.Forms;
+using SELPDCImporter.Model;
 
 namespace SELPDCImporter
 {
@@ -42,9 +42,12 @@ namespace SELPDCImporter
         private readonly LogPublisher m_log;
         private string m_hostApp;
         private bool m_formLoaded;
+        private bool m_initialShow;
         private volatile bool m_formClosing;
+        private ConfigurationFrame m_configFrame;
         private AdoDataConnection m_connection;
         private Process m_consoleProcess;
+        private Guid m_nodeID;
 
         public MainForm()
         {
@@ -52,6 +55,7 @@ namespace SELPDCImporter
 
             // Create a new log publisher instance
             m_log = Logger.CreatePublisher(typeof(MainForm), MessageClass.Application);
+            m_initialShow = true;
         }
 
         private string HostApp
@@ -60,7 +64,7 @@ namespace SELPDCImporter
             set
             {
                 m_hostApp = value;
-                Text = string.IsNullOrWhiteSpace(m_hostApp) ? Tag.ToString() : $"{Tag} - Targeting {m_hostApp}";
+                Text = string.IsNullOrWhiteSpace(m_hostApp) ? Tag.ToString() : $"{Tag} => Targeting \"{m_hostApp}\"";
             }
         }
 
@@ -84,7 +88,7 @@ namespace SELPDCImporter
             }
             catch (Exception ex)
             {
-                m_log.Publish(MessageLevel.Error, "FormLoad", "Failed while loading settings", exception: ex);
+                m_log.Publish(MessageLevel.Error, "FormLoad", exception: ex);
 
             #if DEBUG
                 throw;
@@ -93,6 +97,19 @@ namespace SELPDCImporter
                 Application.Exit();
             #endif
             }
+        }
+
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            if (!m_initialShow || m_formClosing)
+                return;
+
+            m_initialShow = false;
+
+            if (string.IsNullOrWhiteSpace(textBoxHostConfig.Text))
+                textBoxHostConfig.Focus();
+            else
+                textBoxPDCConfig.Focus();
         }
 
         private void SELPDCImporter_FormClosing(object sender, FormClosingEventArgs e)
@@ -107,12 +124,15 @@ namespace SELPDCImporter
                 // Save any updates to current screen values
                 m_settings.Save();
 
+                // Close any active database connection
+                m_connection?.Dispose();
+
                 // Close associated console process
-                m_consoleProcess.Close();
+                m_consoleProcess?.Close();
             }
             catch (Exception ex)
             {
-                m_log.Publish(MessageLevel.Error, "FormClosing", "Failed while saving settings", exception: ex);
+                m_log.Publish(MessageLevel.Error, "FormClosing", exception: ex);
 
             #if DEBUG
                 throw;
@@ -138,104 +158,83 @@ namespace SELPDCImporter
             }
         }
 
-        // Attempt to auto-load initial host configuration file (useful when running from host service folder)
-        private string LookupHostConfig()
+        private void buttonBrowseHostConfig_Click(object sender, EventArgs e)
         {
-            // Search through list of known source applications (faster than manual search)
-            foreach (string sourceApp in new[] { "openPDC", "openHistorian", "SIEGate" })
-            {
-                string absolutePath = FilePath.GetAbsolutePath($"{sourceApp}.exe.config");
+            openFileDialogHostConfig.FileName = textBoxHostConfig.Text;
 
-                if (File.Exists(absolutePath))
-                {
-                    HostApp = sourceApp;
-                    return absolutePath;
-                }
-            }
+            if (openFileDialogHostConfig.ShowDialog(this) != DialogResult.OK)
+                return;
 
-            // Fall back on manual search
-            foreach (string configFile in FilePath.GetFileList($"{FilePath.AddPathSuffix(FilePath.GetAbsolutePath(""))}*.exe.config"))
-            {
-                if (IsHostConfig(configFile))
-                    return configFile;
-            }
-
-            return "";
+            textBoxHostConfig.Text = openFileDialogHostConfig.FileName;
         }
 
-        private bool IsHostConfig(string configFile)
+        private void buttonBrowsePDCConfig_Click(object sender, EventArgs e)
         {
+            openFileDialogPDCConfig.FileName = textBoxPDCConfig.Text;
+
+            if (openFileDialogPDCConfig.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            textBoxPDCConfig.Text = openFileDialogPDCConfig.FileName;
+        }
+
+        private void buttonAnalyze_Click(object sender, EventArgs e)
+        {
+            string hostConfigFile = textBoxHostConfig.Text;
+
+            if (!File.Exists(hostConfigFile))
+            {
+                MessageBox.Show(this, $"Analyze failed: The specified host service configuration file \"{hostConfigFile}\" does not exist.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string pdcConfigFile = textBoxPDCConfig.Text;
+
+            if (!File.Exists(pdcConfigFile))
+            {
+                MessageBox.Show(this, $"Analyze failed: The specified PDC configuration file \"{pdcConfigFile}\" does not exist.", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!LoadHostConfigFile(hostConfigFile))
+                return;
+
             try
             {
-                XDocument serviceConfig = XDocument.Load(configFile);
-
-                string applicationName = serviceConfig
-                     .Descendants("securityProvider")
-                     .SelectMany(systemSettings => systemSettings.Elements("add"))
-                     .Where(element => "ApplicationName".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                     .Select(element => (string)element.Attribute("value"))
-                     .FirstOrDefault();
-
-                if (string.IsNullOrWhiteSpace(applicationName))
-                    return false;
-
-                if (applicationName.Trim().Equals(FilePath.GetFileNameWithoutExtension(FilePath.GetFileNameWithoutExtension(configFile)), StringComparison.OrdinalIgnoreCase))
-                {
-                    HostApp = applicationName;
-                    return true;
-                }
+                m_configFrame = SELPDCConfig.Parse(pdcConfigFile);
             }
             catch (Exception ex)
             {
-                m_log.Publish(MessageLevel.Warning, "IsHostConfig", $"Failed parse config file \"{configFile}\".", exception: ex);
-            }
-
-            return false;
-        }
-
-        private void LoadHostConfigFile(string configFile)
-        {
-            if (!IsHostConfig(configFile))
-            {
-                MessageBox.Show(this, $"Import failed: The configuration file \"{configFile}\" is not a valid host service configuration.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(this, $"Analyze failed: Failed while parsing PDC configuration \"{pdcConfigFile}\": {ex.Message}", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            
-            XDocument serviceConfig = XDocument.Load(configFile);
 
-            string connectionString = serviceConfig
-                .Descendants("systemSettings")
-                .SelectMany(systemSettings => systemSettings.Elements("add"))
-                .Where(element => "ConnectionString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                .Select(element => (string)element.Attribute("value"))
-                .FirstOrDefault();
+            buttonImport.Enabled = m_configFrame.Cells.Count > 0;
 
-            string dataProviderString = serviceConfig
-                .Descendants("systemSettings")
-                .SelectMany(systemSettings => systemSettings.Elements("add"))
-                .Where(element => "DataProviderString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                .Select(element => (string)element.Attribute("value"))
-                .FirstOrDefault();
-
-            m_connection = new AdoDataConnection(connectionString, dataProviderString);
-
-            m_consoleProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = true,
-                    FileName = $"{FilePath.AddPathSuffix(Path.GetDirectoryName(configFile))}{HostApp}Console.exe"
-                }
-            };
-
-            // Example to send command to console:
-            // m_consoleProcess.StandardInput.WriteLine("ReloadConfig");
-
-            m_consoleProcess.Start();
+        #if DEBUG
+            MessageBox.Show(this, $"Loaded {m_configFrame.Cells.Count:N0} PMU configurations");
+        #endif
         }
 
+        private void buttonImport_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                TableOperations<Device> deviceTable = new TableOperations<Device>(m_connection);
+
+                SaveDeviceConfiguration(m_configFrame, new ImportParameters
+                {
+                    Connection = m_connection,
+                    DeviceTable = deviceTable,
+                    NodeID = m_nodeID,
+                    HostConfig = textBoxHostConfig.Text,
+                    Devices = deviceTable.QueryRecords().ToArray()
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Import failed: Failed while importing PDC configuration: {ex.Message}", "Import PDC Config Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }

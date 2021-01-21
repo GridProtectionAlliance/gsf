@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  SaveConfiguration.cs - Gbtc
+//  MainForm.SaveConfiguration.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -42,7 +42,7 @@ namespace SELPDCImporter
     {
         public static Device FindDeviceByEndPoint(this Device[] devices, string endPoint)
         {
-            // Lookup by DNS?
+            // TODO: Lookup by DNS?
             //IPEndPoint resolvedEndPoint = new IPEndPoint(IPAddress.TryParse)
 
             foreach (Device device in devices)
@@ -97,38 +97,31 @@ namespace SELPDCImporter
 
         public static Phasor QueryPhasorForDevice(this TableOperations<Phasor> phasorTable, int deviceID, int sourceIndex) => 
             phasorTable.QueryRecordWhere("DeviceID = {0} AND SourceIndex = {1}", deviceID, sourceIndex) ?? phasorTable.NewPhasor();
+
+        // Remove any invalid characters from acronym
+        public static string GetCleanAcronym(this string acronym) => 
+            Regex.Replace(acronym.ToUpperInvariant().Replace(" ", "_"), @"[^A-Z0-9\-!_\.@#\$]", "", RegexOptions.IgnoreCase);
     }
 
     partial class MainForm
     {
         // Connection string template
-        private const string ConnectionStringTemplate = "transportProtocol=Serial; port=COM{0}; baudrate={1}; parity={2}; stopbits={3}; databits={4}; dtrenable={5}; rtsenable={6}; {7}";
-
-        // Connection string parameters of system that is controlling COM connection
-        private const string ControllingConnectionString = "autoStartDataParsingSequence = true; skipDisableRealTimeData = false; disableRealTimeDataOnStop = false";
-
-        // Connection string parameters of system that is only listening to COM connection
-        private const string ListeningConnectionString = "autoStartDataParsingSequence = false; skipDisableRealTimeData = true; disableRealTimeDataOnStop = false";
+        private const string ConnectionStringTemplate = "transportProtocol=TCP; server={0}; autoStartDataParsingSequence = true; skipDisableRealTimeData = false; disableRealTimeDataOnStop = false";
 
         private Dictionary<string, SignalType> m_deviceSignalTypes;
         private Dictionary<string, SignalType> m_phasorSignalTypes;
 
-        private string GetCleanAcronym(string acronym)
-        {
-            // Remove any invalid characters from acronym
-            return Regex.Replace(acronym, @"[^A-Z0-9\-!_\.@#\$]", "", RegexOptions.IgnoreCase);
-        }
-
-        private bool SaveDeviceConfiguration(IConfigurationFrame configFrame, string endPoint, int idCode, ImportParameters importParams)
+        private bool SaveDeviceConfiguration(ConfigurationFrame configFrame, ImportParameters importParams)
         {
             try
             {
                 AdoDataConnection connection = importParams.Connection;
                 TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(connection);
 
-                // TODO: Fix connection string
-                //string configConnectionMode = ControllingConnectionString;
-                string connectionString = ""; // string.Format(ConnectionStringTemplate, comPort, Settings.BaudRate, Settings.Parity, Settings.StopBits, Settings.DataBits, Settings.DtrEnable, Settings.RtsEnable, configConnectionMode);
+                // TODO: Fix connection string based on connection type info
+                string endPoint = "localhost:4712"; // configFrame.NICIPs.Values
+
+                string connectionString = string.Format(ConnectionStringTemplate, endPoint);
 
                 //ShowUpdateMessage($"{Tab2}Saving \"{configFrame.Cells[0].StationName}\" configuration received on COM{comPort} with ID code {idCode}...");
 
@@ -138,7 +131,7 @@ namespace SELPDCImporter
                 if (m_phasorSignalTypes is null)
                     m_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-                SaveDeviceConnection(configFrame, connectionString, endPoint, idCode, importParams);
+                SaveDeviceConnection(configFrame, connectionString, endPoint, importParams);
                 
                 return true;
             }
@@ -151,7 +144,7 @@ namespace SELPDCImporter
             }
         }
 
-        private void SaveDeviceConnection(IConfigurationFrame configFrame, string connectionString, string endPoint, int idCode, ImportParameters importParams)
+        private void SaveDeviceConnection(ConfigurationFrame configFrame, string connectionString, string endPoint, ImportParameters importParams)
         {
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
@@ -179,13 +172,13 @@ namespace SELPDCImporter
                 connectionString = connectionStringMap.JoinKeyValuePairs();
             }
 
-            IConfigurationCell deviceConfig = configFrame.Cells[0];
+            ConfigurationCell deviceConfig = configFrame.Cells[0];
 
             string deviceAcronym = deviceConfig.IDLabel;
             string deviceName = null;
 
             if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(deviceConfig.StationName))
-                deviceAcronym = GetCleanAcronym(deviceConfig.StationName.ToUpperInvariant().Replace(" ", "_"));
+                deviceAcronym = deviceConfig.StationName.GetCleanAcronym();
             else
                 throw new InvalidOperationException("Unable to get station name or ID label from device configuration frame");
 
@@ -197,7 +190,7 @@ namespace SELPDCImporter
             device.Name = deviceName ?? deviceAcronym;
             device.ProtocolID = importParams.IeeeC37_118ProtocolID;
             device.FramesPerSecond = configFrame.FrameRate;
-            device.AccessID = idCode;
+            device.AccessID = configFrame.IDCode;
             device.IsConcentrator = false;
             device.ConnectionString = connectionString;
             device.AutoStartDataParsingSequence = autoStartDataParsingSequence;
@@ -226,11 +219,11 @@ namespace SELPDCImporter
             }
         }
 
-        private void SaveDeviceRecords(IConfigurationFrame configFrame, Device device, ImportParameters importParams)
+        private void SaveDeviceRecords(ConfigurationFrame configFrame, Device device, ImportParameters importParams)
         {
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
-            IConfigurationCell cell = configFrame.Cells[0];
+            ConfigurationCell cell = configFrame.Cells[0];
 
             // Add frequency
             SaveFixedMeasurement(m_deviceSignalTypes["FREQ"], device, measurementTable, importParams, cell.FrequencyDefinition.Label);
@@ -246,8 +239,10 @@ namespace SELPDCImporter
 
             for (int i = 0; i < cell.AnalogDefinitions.Count; i++)
             {
+                if (cell.AnalogDefinitions[i] is not AnalogDefinition analogDefinition)
+                    continue;
+
                 int index = i + 1;
-                IAnalogDefinition analogDefinition = cell.AnalogDefinitions[i];
                 string signalReference = $"{device.Acronym}-{analogSignalType.Suffix}{index}";
 
                 // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
@@ -256,7 +251,7 @@ namespace SELPDCImporter
                 measurement.DeviceID = device.ID;
                 measurement.PointTag = pointTag;
                 measurement.AlternateTag = analogDefinition.Label;
-                measurement.Description = $"{device.Acronym} Analog Value {index} {analogDefinition.AnalogType}: {analogDefinition.Label}";
+                measurement.Description = analogDefinition.Description ?? $"{device.Acronym} Analog Value {index} {analogDefinition.AnalogType}: {analogDefinition.Label}";
                 measurement.SignalReference = signalReference;
                 measurement.SignalTypeID = analogSignalType.ID;
                 measurement.Internal = true;
@@ -270,8 +265,10 @@ namespace SELPDCImporter
 
             for (int i = 0; i < cell.DigitalDefinitions.Count; i++)
             {
+                if (cell.DigitalDefinitions[i] is not DigitalDefinition digitialDefinition)
+                    continue;
+                
                 int index = i + 1;
-                IDigitalDefinition digitialDefinition = cell.DigitalDefinitions[i];
                 string signalReference = $"{device.Acronym}-{digitalSignalType.Suffix}{index}";
 
                 // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
@@ -280,7 +277,7 @@ namespace SELPDCImporter
                 measurement.DeviceID = device.ID;
                 measurement.PointTag = pointTag;
                 measurement.AlternateTag = digitialDefinition.Label;
-                measurement.Description = $"{device.Acronym} Digital Value {index}: {digitialDefinition.Label}";
+                measurement.Description = digitialDefinition.Description ?? $"{device.Acronym} Digital Value {index}: {digitialDefinition.Label}";
                 measurement.SignalReference = signalReference;
                 measurement.SignalTypeID = digitalSignalType.ID;
                 measurement.Internal = true;
@@ -311,7 +308,7 @@ namespace SELPDCImporter
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
 
-        private void SaveDevicePhasors(IConfigurationCell cell, Device device, TableOperations<Measurement> measurementTable, ImportParameters importParams)
+        private void SaveDevicePhasors(ConfigurationCell cell, Device device, TableOperations<Measurement> measurementTable, ImportParameters importParams)
         {
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
@@ -344,16 +341,19 @@ namespace SELPDCImporter
                 if (cell.PhasorDefinitions.Count > 0)
                     connection.DeletePhasorsForDevice(device.ID);
 
-                foreach (IPhasorDefinition phasorDefinition in cell.PhasorDefinitions)
+                foreach (IPhasorDefinition definition in cell.PhasorDefinitions)
                 {
+                    if (definition is not PhasorDefinition phasorDefinition)
+                        continue;
+
                     bool isVoltage = phasorDefinition.PhasorType == PhasorType.Voltage;
 
                     Phasor phasor = phasorTable.NewPhasor();
                     phasor.DeviceID = device.ID;
                     phasor.Label = phasorDefinition.Label;
                     phasor.Type = isVoltage ? 'V' : 'I';
-                    phasor.Phase = '+';     // TODO: Make a guess later
-                    phasor.BaseKV = 500;    // TODO: Make a guess later
+                    phasor.Phase = phasorDefinition.Phase;
+                    phasor.BaseKV = 500;
                     phasor.DestinationPhasorID = null;
                     phasor.SourceIndex = phasorDefinition.Index;
 
@@ -364,8 +364,11 @@ namespace SELPDCImporter
             }
             else
             {
-                foreach (IPhasorDefinition phasorDefinition in cell.PhasorDefinitions)
+                foreach (IPhasorDefinition definition in cell.PhasorDefinitions)
                 {
+                    if (definition is not PhasorDefinition phasorDefinition)
+                        continue;
+
                     bool isVoltage = phasorDefinition.PhasorType == PhasorType.Voltage;
 
                     Phasor phasor = phasorTable.QueryPhasorForDevice(device.ID, phasorDefinition.Index);
@@ -380,17 +383,17 @@ namespace SELPDCImporter
             }
         }
 
-        private void SavePhasorMeasurement(SignalType signalType, Device device, IPhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable, ImportParameters importParams)
+        private void SavePhasorMeasurement(SignalType signalType, Device device, PhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable, ImportParameters importParams)
         {
             string signalReference = $"{device.Acronym}-{signalType.Suffix}{index}";
 
             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
             Measurement measurement = measurementTable.QueryMeasurement(signalReference);
-            string pointTag = importParams.CreatePhasorPointTag(device.Acronym, signalType.Acronym, phasorDefinition.Label, "+", index, 0);
+            string pointTag = importParams.CreatePhasorPointTag(device.Acronym, signalType.Acronym, phasorDefinition.Label, phasorDefinition.Phase.ToString(), index, 500);
 
             measurement.DeviceID = device.ID;
             measurement.PointTag = pointTag;
-            measurement.Description = $"{device.Acronym} {phasorDefinition.Label} {signalType.Name}";
+            measurement.Description = phasorDefinition.Description ?? $"{device.Acronym} {phasorDefinition.Label} {signalType.Name}";
             measurement.PhasorSourceIndex = index;
             measurement.SignalReference = signalReference;
             measurement.SignalTypeID = signalType.ID;
