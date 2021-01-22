@@ -26,6 +26,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using GSF;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -114,7 +115,18 @@ namespace SELPDCImporter
                 .Select(element => (string)element.Attribute("value"))
                 .FirstOrDefault();
 
+            if (m_connection is not null)
+                m_connection.Dispose();
+
             m_connection = new AdoDataConnection(connectionString, dataProviderString);
+
+            StartConsoleProcess(configFile);
+        }
+
+        private void StartConsoleProcess(string configFile)
+        {
+            // Stop any existing running process
+            StopConsoleProcess();
 
             m_consoleProcess = new Process
             {
@@ -122,16 +134,81 @@ namespace SELPDCImporter
                 {
                     UseShellExecute = false,
                     RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     CreateNoWindow = true,
                     FileName = $"{FilePath.AddPathSuffix(Path.GetDirectoryName(configFile))}{HostApp}Console.exe"
-                }
+                },
+                EnableRaisingEvents = true
             };
 
             // Example to send command to console:
             // m_consoleProcess.StandardInput.WriteLine("ReloadConfig");
 
+            m_consoleProcess.OutputDataReceived += m_consoleProcess_DataReceived;
+            m_consoleProcess.ErrorDataReceived += m_consoleProcess_DataReceived;
+            m_consoleProcess.Exited += m_consoleProcess_Exited;
             m_consoleProcess.Start();
+            m_consoleProcess.BeginOutputReadLine();
+        }
+
+        private void StopConsoleProcess()
+        {
+            if (m_consoleProcess is null)
+                return;
+
+            m_consoleProcess.OutputDataReceived -= m_consoleProcess_DataReceived;
+            m_consoleProcess.ErrorDataReceived -= m_consoleProcess_DataReceived;
+            m_consoleProcess.Exited -= m_consoleProcess_Exited;
+            m_consoleProcess.Close();
+            m_consoleProcess.Dispose();
+            m_consoleProcess = null;
+        }
+
+        private void m_consoleProcess_Exited(object sender, EventArgs e)
+        {
+            if (m_formClosing)
+                return;
+
+            AppendConsoleText($"Console process exited. Attempting restart...{Environment.NewLine}");
+
+            try
+            {
+                StartConsoleProcess(textBoxHostConfig.Text);
+            }
+            catch (Exception ex)
+            {
+                AppendConsoleText($"Exception attempting to start console process: {ex.Message}{Environment.NewLine}");
+            }
+        }
+
+        private void m_consoleProcess_DataReceived(object sender, DataReceivedEventArgs e) => 
+            AppendConsoleText(e.Data);
+
+        private void AppendConsoleText(string text)
+        {
+            if (m_formClosing)
+                return;
+
+            BeginInvoke(new Action(() =>
+            {
+                if (m_formClosing)
+                    return;
+
+                int maxOutput = textBoxConsoleOutput.MaxLength;
+
+                string output = $"{textBoxConsoleOutput.Text}{text}{Environment.NewLine}";
+
+                if (output.Length > maxOutput)
+                    output = output.TruncateLeft(maxOutput);
+
+                textBoxConsoleOutput.Text = output;
+                textBoxConsoleOutput.SelectionStart = output.Length;
+                textBoxConsoleOutput.ScrollToCaret();
+
+                tabPageHostConnection.ToolTipText = $"{textBoxConsoleOutput.Lines.Length / 2:N0} messages...";
+            }));
         }
     }
 }

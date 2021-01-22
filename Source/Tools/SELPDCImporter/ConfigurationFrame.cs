@@ -138,10 +138,11 @@ namespace SELPDCImporter
 
     public sealed class ConfigurationFrame : ConfigurationFrameBase
     {
-        public ConfigurationFrame(ushort idCode, ushort frameRate, string description)
+        public ConfigurationFrame(ushort idCode, ushort frameRate, string name)
             : base(idCode, new ConfigurationCellCollection(), DateTime.UtcNow.Ticks, frameRate)
         {
-            Description = description;
+            Name = name;
+            Acronym = name.GetCleanAcronym();
         }
 
         public Dictionary<string, string> Settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -152,7 +153,9 @@ namespace SELPDCImporter
 
         public string TargetDeviceIP;
 
-        public string Description { get; }
+        public string Name { get; }
+
+        public string Acronym { get; }
 
         public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 

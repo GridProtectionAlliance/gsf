@@ -38,6 +38,7 @@ namespace SELPDCImporter
     // in the host GPA synchrophasor application, e.g., openPDC.
     public static class SELPDCConfig
     {
+        public const string IPAddressToken = "[[ipAddress]]";
         public const string DefaultLineFrequency = "60";
         public const string DefaultServerName = "SELPDC";
         public const ushort DefaultIDCode = 1;
@@ -231,7 +232,7 @@ namespace SELPDCImporter
                 return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
                     [nameof(TransportProtocol)] = nameof(TransportProtocol.Tcp),
-                    ["server"] = $"{{0}}:{port}", // Parameter {0} for replacement with actual IP later
+                    ["server"] = $"{IPAddressToken}:{port}",
                     ["isListener"] = "false",
                     ["interface"] = "0.0.0.0"
                 };

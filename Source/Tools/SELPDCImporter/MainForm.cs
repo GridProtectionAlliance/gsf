@@ -26,7 +26,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using GSF;
 using GSF.ComponentModel;
 using GSF.Data;
 using GSF.Data.Model;
@@ -74,6 +76,9 @@ namespace SELPDCImporter
             {
                 // Save original title text in form tag
                 Tag = Text;
+
+                // Save original label text in its tag
+                labelAnalyzeStatus.Tag = labelAnalyzeStatus.Text;
 
                 // Load current settings registering a symbolic reference to this form instance for use by default value expressions
                 m_settings = new Settings(new Dictionary<string, object> {{ "Form", this }}.RegisterSymbols());
@@ -128,7 +133,7 @@ namespace SELPDCImporter
                 m_connection?.Dispose();
 
                 // Close associated console process
-                m_consoleProcess?.Close();
+                StopConsoleProcess();
             }
             catch (Exception ex)
             {
@@ -158,6 +163,13 @@ namespace SELPDCImporter
             }
         }
 
+        private void textBoxPDCConfig_TextChanged(object sender, EventArgs e)
+        {
+            buttonAnalyze.Enabled = true;
+            labelAnalyzeStatus.Text = $"{labelAnalyzeStatus.Tag}";
+            textBoxPDCDetails.Text = "";
+        }
+
         private void buttonBrowseHostConfig_Click(object sender, EventArgs e)
         {
             openFileDialogHostConfig.FileName = textBoxHostConfig.Text;
@@ -176,6 +188,12 @@ namespace SELPDCImporter
                 return;
 
             textBoxPDCConfig.Text = openFileDialogPDCConfig.FileName;
+
+            string hostConfigFile = textBoxHostConfig.Text;
+
+            // Auto analyze after PDC config file selection assuming host config looks OK
+            if (File.Exists(hostConfigFile) && IsHostConfig(hostConfigFile))
+                buttonAnalyze_Click(sender, e);
         }
 
         private void buttonAnalyze_Click(object sender, EventArgs e)
@@ -196,8 +214,23 @@ namespace SELPDCImporter
                 return;
             }
 
-            if (!LoadHostConfigFile(hostConfigFile))
+            Ticks startTime = DateTime.UtcNow.Ticks;
+
+            if (!IsHostConfig(hostConfigFile))
+            {
+                MessageBox.Show(this, $"Analyze failed: The configuration file \"{hostConfigFile}\" is not a valid host service configuration.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
+            }
+
+            try
+            {
+                LoadHostConfigFile(hostConfigFile);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Analyze failed: Iniitialization failure using specified host service configuration \"{hostConfigFile}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             try
             {
@@ -209,11 +242,75 @@ namespace SELPDCImporter
                 return;
             }
 
-            buttonImport.Enabled = m_configFrame.Cells.Count > 0;
+            labelAnalyzeStatus.Text = $"Analyze completed in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2)}.";
 
-        #if DEBUG
-            MessageBox.Show(this, $"Loaded {m_configFrame.Cells.Count:N0} PMU configurations");
-        #endif
+            StringBuilder pdcDetails = new StringBuilder();
+
+            pdcDetails.AppendLine($"Acronym: {m_configFrame.Acronym}");
+            pdcDetails.AppendLine($"Name: {m_configFrame.Name}");
+            pdcDetails.AppendLine($"ID Code: {m_configFrame.IDCode:N0}");
+            pdcDetails.AppendLine($"Data Rate: {m_configFrame.FrameRate:N0} frames / second");
+            pdcDetails.AppendLine($"IP Addresses: {string.Join(", ", m_configFrame.DeviceIPs.Values)}");
+            pdcDetails.AppendLine($"PMU Count: {m_configFrame.Cells.Count:N0}");
+
+            for (int i = 0; i < m_configFrame.Cells.Count; i++)
+            {
+                ConfigurationCell configCell = m_configFrame.Cells[i];
+
+                pdcDetails.AppendLine();
+                pdcDetails.AppendLine($"PMU {i + 1:N0} Details:");
+                pdcDetails.AppendLine($"   Acronym: {configCell.IDLabel}");
+                pdcDetails.AppendLine($"   Name: {configCell.StationName}");
+                pdcDetails.AppendLine($"   ID Code: {configCell.IDCode:N0}");
+                pdcDetails.AppendLine($"   Nominal Frequency: {(int)configCell.NominalFrequency}Hz");
+                pdcDetails.AppendLine($"   Phasor Count: {configCell.PhasorDefinitions.Count:N0}");
+                pdcDetails.AppendLine($"   Analog Count: {configCell.AnalogDefinitions.Count:N0}");
+                pdcDetails.AppendLine($"   Digital Count: {configCell.DigitalDefinitions.Count:N0}");
+
+                for (int j = 0; j < configCell.PhasorDefinitions.Count; j++)
+                {
+                    if (configCell.PhasorDefinitions[j] is not PhasorDefinition phasor)
+                        continue;
+
+                    pdcDetails.AppendLine();
+                    pdcDetails.AppendLine($"   Phasor {j + 1:N0} Details:");
+                    pdcDetails.AppendLine($"      Name: {phasor.Label}");
+                    pdcDetails.AppendLine($"      Type: {phasor.PhasorType}");
+                    pdcDetails.AppendLine($"      Phase: {phasor.Phase}");
+                    pdcDetails.AppendLine($"      Description: {phasor.Description}");
+                }
+
+                for (int j = 0; j < configCell.AnalogDefinitions.Count; j++)
+                {
+                    if (configCell.AnalogDefinitions[j] is not AnalogDefinition analog)
+                        continue;
+
+                    pdcDetails.AppendLine();
+                    pdcDetails.AppendLine($"   Analog {j + 1:N0} Details:");
+                    pdcDetails.AppendLine($"      Name: {analog.Label}");
+                    pdcDetails.AppendLine($"      Type: {analog.AnalogType}");
+                    pdcDetails.AppendLine($"      Description: {analog.Description}");
+                }
+
+                for (int j = 0; j < configCell.DigitalDefinitions.Count; j++)
+                {
+                    if (configCell.DigitalDefinitions[j] is not DigitalDefinition digital)
+                        continue;
+
+                    pdcDetails.AppendLine();
+                    pdcDetails.AppendLine($"   Digital {j + 1:N0} Details:");
+                    pdcDetails.AppendLine($"      Name: {digital.Label}");
+                    pdcDetails.AppendLine($"      Description: {digital.Description}");
+                }
+            }
+
+            textBoxPDCDetails.Text = pdcDetails.ToString();
+
+            buttonImport.Enabled = m_configFrame.Cells.Count > 0;
+            buttonAnalyze.Enabled = !buttonImport.Enabled;
+
+            comboBoxIPAddresses.DataSource = new BindingSource(m_configFrame.DeviceIPs, null);
+            comboBoxIPAddresses.SelectedValue = m_configFrame.TargetDeviceIP;
         }
 
         private void buttonImport_Click(object sender, EventArgs e)
@@ -235,6 +332,12 @@ namespace SELPDCImporter
             {
                 MessageBox.Show(this, $"Import failed: Failed while importing PDC configuration: {ex.Message}", "Import PDC Config Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void comboBoxIPAddresses_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxIPAddresses.SelectedItem is KeyValuePair<string, string> kvp)
+                textBoxConnectionString.Text = m_configFrame.ConnectionString.Replace(SELPDCConfig.IPAddressToken, kvp.Value);
         }
     }
 }
