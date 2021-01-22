@@ -30,7 +30,6 @@ using SELPDCImporter.Model;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Diagnostics;
 using GSF.PhasorProtocols;
 using GSF.Units.EE;
 using Phasor = SELPDCImporter.Model.Phasor;
@@ -40,9 +39,8 @@ namespace SELPDCImporter
 {
     public static class TableOperationExtensions
     {
-        public static Device FindDeviceByEndPoint(this Device[] devices, string endPoint)
+        public static Device FindDeviceByEndPoint(this Device[] devices, string connectionString)
         {
-            // TODO: Lookup by DNS?
             //IPEndPoint resolvedEndPoint = new IPEndPoint(IPAddress.TryParse)
 
             foreach (Device device in devices)
@@ -103,6 +101,7 @@ namespace SELPDCImporter
             Regex.Replace(acronym.ToUpperInvariant().Replace(" ", "_"), @"[^A-Z0-9\-!_\.@#\$]", "", RegexOptions.IgnoreCase);
     }
 
+    // TODO: No need for partial form here
     partial class MainForm
     {
         // Connection string template
@@ -111,65 +110,137 @@ namespace SELPDCImporter
         private Dictionary<string, SignalType> m_deviceSignalTypes;
         private Dictionary<string, SignalType> m_phasorSignalTypes;
 
-        private bool SaveDeviceConfiguration(ConfigurationFrame configFrame, ImportParameters importParams)
+        private void SaveDeviceConfiguration(ImportParameters importParams)
         {
-            try
-            {
-                AdoDataConnection connection = importParams.Connection;
-                TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(connection);
+            AdoDataConnection connection = importParams.Connection;
+            TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(connection);
 
-                // TODO: Fix connection string based on connection type info
-                string endPoint = "localhost:4712"; // configFrame.NICIPs.Values
+            // Apply other connection string parameters that are specific to device operation
+            importParams.ConnectionString = string.Format(ConnectionStringTemplate, importParams.ConnectionString);
 
-                string connectionString = string.Format(ConnectionStringTemplate, endPoint);
+            if (m_deviceSignalTypes is null)
+                m_deviceSignalTypes = signalTypeTable.LoadSignalTypes("PMU").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-                //ShowUpdateMessage($"{Tab2}Saving \"{configFrame.Cells[0].StationName}\" configuration received on COM{comPort} with ID code {idCode}...");
+            if (m_phasorSignalTypes is null)
+                m_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-                if (m_deviceSignalTypes is null)
-                    m_deviceSignalTypes = signalTypeTable.LoadSignalTypes("PMU").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
-
-                if (m_phasorSignalTypes is null)
-                    m_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
-
-                SaveDeviceConnection(configFrame, connectionString, endPoint, importParams);
-                
-                return true;
-            }
-            catch (Exception ex)
-            {
-                //ShowUpdateMessage($"{Tab2}ERROR: Failed while saving \"{configFrame.Cells[0].StationName}\" configuration: {ex.Message}");
-                m_log.Publish(MessageLevel.Error, nameof(SELPDCImporter), exception: ex);
-                
-                return false;
-            }
+            SavePDCDeviceConnection(importParams);
         }
 
-        private void SaveDeviceConnection(ConfigurationFrame configFrame, string connectionString, string endPoint, ImportParameters importParams)
+        private void SavePDCDeviceConnection(ImportParameters importParams)
         {
+            string connectionString = importParams.ConnectionString;
+            ConfigurationFrame configFrame = importParams.ConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
 
-            //ShowUpdateMessage($"{Tab2}Saving device connection...");
-            // TODO: Consider alternatives for this existing device lookup
-            Device device = importParams.Devices.FindDeviceByEndPoint(endPoint) ?? deviceTable.NewDevice();
-            Dictionary<string, string> connectionStringMap = connectionString.ParseKeyValuePairs();
+            // TODO: Consider best options for existing device lookup - is destination UDP port unique? (should be)
+            Device device = /*importParams.Devices.FindDeviceByEndPoint(connectionString) ??*/ deviceTable.NewDevice();
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             bool autoStartDataParsingSequence = true;
             bool skipDisableRealTimeData = false;
 
             // Handle connection string parameters that are fields in the device table
-            if (connectionStringMap.ContainsKey("autoStartDataParsingSequence"))
+            if (settings.ContainsKey("autoStartDataParsingSequence"))
             {
-                autoStartDataParsingSequence = bool.Parse(connectionStringMap["autoStartDataParsingSequence"]);
-                connectionStringMap.Remove("autoStartDataParsingSequence");
-                connectionString = connectionStringMap.JoinKeyValuePairs();
+                autoStartDataParsingSequence = bool.Parse(settings["autoStartDataParsingSequence"]);
+                settings.Remove("autoStartDataParsingSequence");
+                connectionString = settings.JoinKeyValuePairs();
             }
 
-            if (connectionStringMap.ContainsKey("skipDisableRealTimeData"))
+            if (settings.ContainsKey("skipDisableRealTimeData"))
             {
-                skipDisableRealTimeData = bool.Parse(connectionStringMap["skipDisableRealTimeData"]);
-                connectionStringMap.Remove("skipDisableRealTimeData");
-                connectionString = connectionStringMap.JoinKeyValuePairs();
+                skipDisableRealTimeData = bool.Parse(settings["skipDisableRealTimeData"]);
+                settings.Remove("skipDisableRealTimeData");
+                connectionString = settings.JoinKeyValuePairs();
+            }
+
+            ConfigurationCell deviceConfig = configFrame.Cells[0];
+
+            string deviceAcronym = deviceConfig.IDLabel;
+            string deviceName = null;
+
+            if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(deviceConfig.StationName))
+                deviceAcronym = deviceConfig.StationName.GetCleanAcronym();
+            else
+                throw new InvalidOperationException("Unable to get station name or ID label from device configuration frame");
+
+            if (!string.IsNullOrWhiteSpace(deviceConfig.StationName))
+                deviceName = deviceConfig.StationName;
+
+            device.NodeID = nodeID;
+            device.Acronym = deviceAcronym;
+            device.Name = deviceName ?? deviceAcronym;
+            device.ProtocolID = importParams.IeeeC37_118ProtocolID;
+            device.FramesPerSecond = configFrame.FrameRate;
+            device.AccessID = configFrame.IDCode;
+            device.IsConcentrator = true;
+            device.ConnectionString = connectionString;
+            device.AutoStartDataParsingSequence = autoStartDataParsingSequence;
+            device.SkipDisableRealTimeData = skipDisableRealTimeData;
+            device.Enabled = true;
+
+            // Check if this is a new device or an edit to an existing one
+            if (device.ID == 0)
+            {
+                // Add new device record
+                deviceTable.AddNewDevice(device);
+
+                // Get newly added device with auto-incremented ID
+                Device newDevice = deviceTable.QueryDevice(device.Acronym);
+
+                // Save associated PMU records
+                SavePMUDevices(importParams, newDevice);
+            }
+            else
+            {
+                // Update existing device record
+                deviceTable.UpdateDevice(device);
+
+                // Save associated PMU records
+                SavePMUDevices(importParams, device);
+            }
+        }
+
+        private void SavePMUDevices(ImportParameters importParams, Device parentDevice)
+        {
+            ConfigurationFrame configFrame = importParams.ConfigFrame;
+
+            foreach (IConfigurationCell cell in configFrame.Cells)
+            {
+                if (cell is ConfigurationCell configCell)
+                    SavePMUDevice(importParams, configCell, parentDevice);
+            }
+        }
+
+        private void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
+        {
+            string connectionString = importParams.ConnectionString;
+            ConfigurationFrame configFrame = importParams.ConfigFrame;
+            TableOperations<Device> deviceTable = importParams.DeviceTable;
+            Guid nodeID = importParams.NodeID;
+
+            // TODO: Consider best options for existing device lookup - is destination UDP port unique? (should be)
+            Device device = /*importParams.Devices.FindDeviceByEndPoint(connectionString) ??*/ deviceTable.NewDevice();
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+            bool autoStartDataParsingSequence = true;
+            bool skipDisableRealTimeData = false;
+
+            // Handle connection string parameters that are fields in the device table
+            if (settings.ContainsKey("autoStartDataParsingSequence"))
+            {
+                autoStartDataParsingSequence = bool.Parse(settings["autoStartDataParsingSequence"]);
+                settings.Remove("autoStartDataParsingSequence");
+                connectionString = settings.JoinKeyValuePairs();
+            }
+
+            if (settings.ContainsKey("skipDisableRealTimeData"))
+            {
+                skipDisableRealTimeData = bool.Parse(settings["skipDisableRealTimeData"]);
+                settings.Remove("skipDisableRealTimeData");
+                connectionString = settings.JoinKeyValuePairs();
             }
 
             ConfigurationCell deviceConfig = configFrame.Cells[0];
@@ -207,32 +278,33 @@ namespace SELPDCImporter
                 Device newDevice = deviceTable.QueryDevice(device.Acronym);
 
                 // Save associated device records
-                SaveDeviceRecords(configFrame, newDevice, importParams);
+                SaveDeviceRecords(importParams, newDevice);
             }
             else
             {
                 // Update existing device record
                 deviceTable.UpdateDevice(device);
-                
+
                 // Save associated device records
-                SaveDeviceRecords(configFrame, device, importParams);
+                SaveDeviceRecords(importParams, device);
             }
         }
 
-        private void SaveDeviceRecords(ConfigurationFrame configFrame, Device device, ImportParameters importParams)
+        private void SaveDeviceRecords(ImportParameters importParams, Device device)
         {
+            ConfigurationFrame configFrame = importParams.ConfigFrame;
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
             ConfigurationCell cell = configFrame.Cells[0];
 
             // Add frequency
-            SaveFixedMeasurement(m_deviceSignalTypes["FREQ"], device, measurementTable, importParams, cell.FrequencyDefinition.Label);
+            SaveFixedMeasurement(importParams, m_deviceSignalTypes["FREQ"], device, measurementTable, cell.FrequencyDefinition.Label);
 
             // Add dF/dt
-            SaveFixedMeasurement(m_deviceSignalTypes["DFDT"], device, measurementTable, importParams);
+            SaveFixedMeasurement(importParams, m_deviceSignalTypes["DFDT"], device, measurementTable);
 
             // Add status flags
-            SaveFixedMeasurement(m_deviceSignalTypes["FLAG"], device, measurementTable, importParams);
+            SaveFixedMeasurement(importParams, m_deviceSignalTypes["FLAG"], device, measurementTable);
 
             // Add analogs
             SignalType analogSignalType = m_deviceSignalTypes["ALOG"];
@@ -287,10 +359,10 @@ namespace SELPDCImporter
             }
 
             // Add phasors
-            SaveDevicePhasors(cell, device, measurementTable, importParams);
+            SaveDevicePhasors(importParams, cell, device, measurementTable);
         }
 
-        private void SaveFixedMeasurement(SignalType signalType, Device device, TableOperations<Measurement> measurementTable, ImportParameters importParams, string label = null)
+        private void SaveFixedMeasurement(ImportParameters importParams, SignalType signalType, Device device, TableOperations<Measurement> measurementTable, string label = null)
         {
             string signalReference = $"{device.Acronym}-{signalType.Suffix}";
 
@@ -308,7 +380,7 @@ namespace SELPDCImporter
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
 
-        private void SaveDevicePhasors(ConfigurationCell cell, Device device, TableOperations<Measurement> measurementTable, ImportParameters importParams)
+        private void SaveDevicePhasors(ImportParameters importParams, ConfigurationCell cell, Device device, TableOperations<Measurement> measurementTable)
         {
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
@@ -358,8 +430,8 @@ namespace SELPDCImporter
                     phasor.SourceIndex = phasorDefinition.Index;
 
                     phasorTable.AddNewPhasor(phasor);
-                    SavePhasorMeasurement(isVoltage ? vphmSignalType : iphmSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable, importParams);
-                    SavePhasorMeasurement(isVoltage ? vphaSignalType : iphaSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable, importParams);
+                    SavePhasorMeasurement(importParams, isVoltage ? vphmSignalType : iphmSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable);
+                    SavePhasorMeasurement(importParams, isVoltage ? vphaSignalType : iphaSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable);
                 }
             }
             else
@@ -377,13 +449,13 @@ namespace SELPDCImporter
                     phasor.Type = isVoltage ? 'V' : 'I';
 
                     phasorTable.AddNewPhasor(phasor);
-                    SavePhasorMeasurement(isVoltage ? vphmSignalType : iphmSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable, importParams);
-                    SavePhasorMeasurement(isVoltage ? vphaSignalType : iphaSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable, importParams);
+                    SavePhasorMeasurement(importParams, isVoltage ? vphmSignalType : iphmSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable);
+                    SavePhasorMeasurement(importParams, isVoltage ? vphaSignalType : iphaSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable);
                 }
             }
         }
 
-        private void SavePhasorMeasurement(SignalType signalType, Device device, PhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable, ImportParameters importParams)
+        private void SavePhasorMeasurement(ImportParameters importParams, SignalType signalType, Device device, PhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable)
         {
             string signalReference = $"{device.Acronym}-{signalType.Suffix}{index}";
 

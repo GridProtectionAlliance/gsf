@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using SELPDCImporter.Model;
 using GSF;
@@ -36,13 +37,58 @@ using GSF.Parsing;
 
 namespace SELPDCImporter
 {
-    public class ImportParameters
+    public class ImportParameters : IDisposable
     {
-        public AdoDataConnection Connection;
-        public TableOperations<Device> DeviceTable;
-        public Guid NodeID;
-        public string HostConfig;
-        public Device[] Devices;
+        public ConfigurationFrame ConfigFrame { get; set; }
+
+        public AdoDataConnection Connection { get; private set; }
+        
+        public TableOperations<Device> DeviceTable { get; private set; }
+
+        public Device[] Devices { get; private set; }
+
+        public Guid NodeID { get; private set; }
+        
+        public string HostConfig { get; set; }
+
+        public string ConnectionString { get; set; }
+
+        private bool m_disposed;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_disposed)
+                return;
+
+            try
+            {
+                if (!disposing)
+                    return;
+
+                Connection?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true;
+            }
+        }
+
+        public void InitializeConnection(string connectionString, string dataProviderString, Guid nodeID)
+        {
+            Connection?.Dispose();
+
+            Connection = new AdoDataConnection(connectionString, dataProviderString);
+            NodeID = nodeID;
+            
+            DeviceTable = new TableOperations<Device>(Connection);
+            Devices = DeviceTable.QueryRecords().ToArray();
+        }
 
         public IEnumerable<SignalType> LoadSignalTypes(string source)
         {

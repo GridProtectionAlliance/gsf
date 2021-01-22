@@ -27,7 +27,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using GSF;
-using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
 
@@ -35,6 +34,8 @@ namespace SELPDCImporter
 {
     partial class MainForm
     {
+        private Process m_consoleProcess;
+
         // Attempt to auto-load initial host configuration file (useful when running from host service folder)
         private string LookupHostConfig()
         {
@@ -90,16 +91,9 @@ namespace SELPDCImporter
             return false;
         }
 
-        private void LoadHostConfigFile(string configFile)
+        private void LoadHostConfigFile(string configFile, ImportParameters importParams)
         {
             XDocument serviceConfig = XDocument.Load(configFile);
-
-            m_nodeID = Guid.Parse(serviceConfig
-                .Descendants("systemSettings")
-                .SelectMany(systemSettings => systemSettings.Elements("add"))
-                .Where(element => "NodeID".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                .Select(element => (string)element.Attribute("value"))
-                .FirstOrDefault() ?? Guid.Empty.ToString());
 
             string connectionString = serviceConfig
                 .Descendants("systemSettings")
@@ -115,10 +109,14 @@ namespace SELPDCImporter
                 .Select(element => (string)element.Attribute("value"))
                 .FirstOrDefault();
 
-            if (m_connection is not null)
-                m_connection.Dispose();
+            Guid nodeID = Guid.Parse(serviceConfig
+                .Descendants("systemSettings")
+                .SelectMany(systemSettings => systemSettings.Elements("add"))
+                .Where(element => "NodeID".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                .Select(element => (string)element.Attribute("value"))
+                .FirstOrDefault() ?? Guid.Empty.ToString());
 
-            m_connection = new AdoDataConnection(connectionString, dataProviderString);
+            importParams.InitializeConnection(connectionString, dataProviderString, nodeID);
 
             StartConsoleProcess(configFile);
         }

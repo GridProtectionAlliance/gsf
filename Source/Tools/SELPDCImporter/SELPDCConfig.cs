@@ -53,6 +53,7 @@ namespace SELPDCImporter
         public const string DefaultMulticastGroup = "224.0.1.0";
         public const string DefaultGatewayIP = "192.168.1.1";
 
+        // TODO: Add to GSF common XML functions
         private static IEnumerable<Tuple<XElement, string>> WhereAttribute(this IEnumerable<XElement> source, string attributeName) =>
             source.Select(element => new Tuple<XElement, string>(element, element.Attribute(attributeName)?.Value))
             .Where(tuple => !string.IsNullOrWhiteSpace(tuple.Item2));
@@ -205,6 +206,8 @@ namespace SELPDCImporter
                 .WhereAttribute("Name").Is("TransportProtocol")
                 .GetValue(DefaultTransportProtocol)
                 .ToUpperInvariant();
+
+            configFrame.TransportProtocol = transportProtocol;
 
             ushort commandPort = serverGatewaySettings
                .WhereAttribute("Name").Is("CommandPort")

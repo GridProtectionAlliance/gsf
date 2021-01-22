@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using GSF;
 using GSF.PhasorProtocols;
 using GSF.Units.EE;
@@ -153,6 +154,8 @@ namespace SELPDCImporter
 
         public string TargetDeviceIP;
 
+        public string TransportProtocol;
+
         public string Name { get; }
 
         public string Acronym { get; }
@@ -160,5 +163,71 @@ namespace SELPDCImporter
         public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length) => 0;
+
+        public string GeneratePDCDetails()
+        {
+            StringBuilder pdcDetails = new StringBuilder();
+
+            pdcDetails.AppendLine($"Acronym: {Acronym}");
+            pdcDetails.AppendLine($"Name: {Name}");
+            pdcDetails.AppendLine($"ID Code: {IDCode:N0}");
+            pdcDetails.AppendLine($"Data Rate: {FrameRate:N0} frames / second");
+            pdcDetails.AppendLine($"IP Addresses: {string.Join(", ", DeviceIPs.Values)}");
+            pdcDetails.AppendLine($"Transport Protocol: {TransportProtocol}");
+            pdcDetails.AppendLine($"PMU Count: {Cells.Count:N0}");
+
+            for (int i = 0; i < Cells.Count; i++)
+            {
+                ConfigurationCell configCell = Cells[i];
+
+                pdcDetails.AppendLine();
+                pdcDetails.AppendLine($"PMU {i + 1:N0} Details:");
+                pdcDetails.AppendLine($"   Acronym: {configCell.IDLabel}");
+                pdcDetails.AppendLine($"   Name: {configCell.StationName}");
+                pdcDetails.AppendLine($"   ID Code: {configCell.IDCode:N0}");
+                pdcDetails.AppendLine($"   Nominal Frequency: {(int)configCell.NominalFrequency}Hz");
+                pdcDetails.AppendLine($"   Phasor Count: {configCell.PhasorDefinitions.Count:N0}");
+                pdcDetails.AppendLine($"   Analog Count: {configCell.AnalogDefinitions.Count:N0}");
+                pdcDetails.AppendLine($"   Digital Count: {configCell.DigitalDefinitions.Count:N0}");
+
+                for (int j = 0; j < configCell.PhasorDefinitions.Count; j++)
+                {
+                    if (configCell.PhasorDefinitions[j] is not PhasorDefinition phasor)
+                        continue;
+
+                    pdcDetails.AppendLine();
+                    pdcDetails.AppendLine($"   Phasor {j + 1:N0} Details:");
+                    pdcDetails.AppendLine($"      Name: {phasor.Label}");
+                    pdcDetails.AppendLine($"      Type: {phasor.PhasorType}");
+                    pdcDetails.AppendLine($"      Phase: {phasor.Phase}");
+                    pdcDetails.AppendLine($"      Description: {phasor.Description}");
+                }
+
+                for (int j = 0; j < configCell.AnalogDefinitions.Count; j++)
+                {
+                    if (configCell.AnalogDefinitions[j] is not AnalogDefinition analog)
+                        continue;
+
+                    pdcDetails.AppendLine();
+                    pdcDetails.AppendLine($"   Analog {j + 1:N0} Details:");
+                    pdcDetails.AppendLine($"      Name: {analog.Label}");
+                    pdcDetails.AppendLine($"      Type: {analog.AnalogType}");
+                    pdcDetails.AppendLine($"      Description: {analog.Description}");
+                }
+
+                for (int j = 0; j < configCell.DigitalDefinitions.Count; j++)
+                {
+                    if (configCell.DigitalDefinitions[j] is not DigitalDefinition digital)
+                        continue;
+
+                    pdcDetails.AppendLine();
+                    pdcDetails.AppendLine($"   Digital {j + 1:N0} Details:");
+                    pdcDetails.AppendLine($"      Name: {digital.Label}");
+                    pdcDetails.AppendLine($"      Description: {digital.Description}");
+                }
+            }
+
+            return pdcDetails.ToString();
+        }
     }
 }
