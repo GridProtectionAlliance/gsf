@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using GSF;
 using GSF.PhasorProtocols;
 using GSF.Units.EE;
 
@@ -137,15 +138,22 @@ namespace SELPDCImporter
 
     public sealed class ConfigurationFrame : ConfigurationFrameBase
     {
-        public ConfigurationFrame(ushort idCode, ushort frameRate)
+        public ConfigurationFrame(ushort idCode, ushort frameRate, string description)
             : base(idCode, new ConfigurationCellCollection(), DateTime.UtcNow.Ticks, frameRate)
         {
+            Description = description;
         }
 
-        public Dictionary<string, string> NICIPs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> Settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public Dictionary<string, string> ConnectionString = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        
+        public string ConnectionString => Settings.JoinKeyValuePairs();
+
+        public Dictionary<string, string> DeviceIPs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public string TargetDeviceIP;
+
+        public string Description { get; }
+
         public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length) => 0;
