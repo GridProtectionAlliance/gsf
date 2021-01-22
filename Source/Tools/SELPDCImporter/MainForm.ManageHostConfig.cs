@@ -25,7 +25,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using System.Xml.Linq;
 using GSF.Data;
 using GSF.Diagnostics;
@@ -90,65 +89,49 @@ namespace SELPDCImporter
             return false;
         }
 
-        private bool LoadHostConfigFile(string configFile)
+        private void LoadHostConfigFile(string configFile)
         {
-            if (!IsHostConfig(configFile))
+            XDocument serviceConfig = XDocument.Load(configFile);
+
+            m_nodeID = Guid.Parse(serviceConfig
+                .Descendants("systemSettings")
+                .SelectMany(systemSettings => systemSettings.Elements("add"))
+                .Where(element => "NodeID".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                .Select(element => (string)element.Attribute("value"))
+                .FirstOrDefault() ?? Guid.Empty.ToString());
+
+            string connectionString = serviceConfig
+                .Descendants("systemSettings")
+                .SelectMany(systemSettings => systemSettings.Elements("add"))
+                .Where(element => "ConnectionString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                .Select(element => (string)element.Attribute("value"))
+                .FirstOrDefault();
+
+            string dataProviderString = serviceConfig
+                .Descendants("systemSettings")
+                .SelectMany(systemSettings => systemSettings.Elements("add"))
+                .Where(element => "DataProviderString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                .Select(element => (string)element.Attribute("value"))
+                .FirstOrDefault();
+
+            m_connection = new AdoDataConnection(connectionString, dataProviderString);
+
+            m_consoleProcess = new Process
             {
-                MessageBox.Show(this, $"Analyze failed: The configuration file \"{configFile}\" is not a valid host service configuration.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
-            try
-            {
-                XDocument serviceConfig = XDocument.Load(configFile);
-
-                m_nodeID = Guid.Parse(serviceConfig
-                    .Descendants("systemSettings")
-                    .SelectMany(systemSettings => systemSettings.Elements("add"))
-                    .Where(element => "NodeID".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                    .Select(element => (string)element.Attribute("value"))
-                    .FirstOrDefault() ?? Guid.Empty.ToString());
-
-                string connectionString = serviceConfig
-                    .Descendants("systemSettings")
-                    .SelectMany(systemSettings => systemSettings.Elements("add"))
-                    .Where(element => "ConnectionString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                    .Select(element => (string)element.Attribute("value"))
-                    .FirstOrDefault();
-
-                string dataProviderString = serviceConfig
-                    .Descendants("systemSettings")
-                    .SelectMany(systemSettings => systemSettings.Elements("add"))
-                    .Where(element => "DataProviderString".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
-                    .Select(element => (string)element.Attribute("value"))
-                    .FirstOrDefault();
-
-                m_connection = new AdoDataConnection(connectionString, dataProviderString);
-
-                m_consoleProcess = new Process
+                StartInfo = new ProcessStartInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        UseShellExecute = false,
-                        RedirectStandardInput = true,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        CreateNoWindow = true,
-                        FileName = $"{FilePath.AddPathSuffix(Path.GetDirectoryName(configFile))}{HostApp}Console.exe"
-                    }
-                };
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true,
+                    FileName = $"{FilePath.AddPathSuffix(Path.GetDirectoryName(configFile))}{HostApp}Console.exe"
+                }
+            };
 
-                // Example to send command to console:
-                // m_consoleProcess.StandardInput.WriteLine("ReloadConfig");
+            // Example to send command to console:
+            // m_consoleProcess.StandardInput.WriteLine("ReloadConfig");
 
-                m_consoleProcess.Start();
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, $"Analyze failed: Iniitialization failure using specified host service configuration \"{configFile}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
+            m_consoleProcess.Start();
         }
     }
 }

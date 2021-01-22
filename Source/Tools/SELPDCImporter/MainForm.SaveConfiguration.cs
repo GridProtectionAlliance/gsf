@@ -106,7 +106,7 @@ namespace SELPDCImporter
     partial class MainForm
     {
         // Connection string template
-        private const string ConnectionStringTemplate = "transportProtocol=TCP; server={0}; autoStartDataParsingSequence = true; skipDisableRealTimeData = false; disableRealTimeDataOnStop = false";
+        private const string ConnectionStringTemplate = "{0}; autoStartDataParsingSequence = true; skipDisableRealTimeData = false; disableRealTimeDataOnStop = true";
 
         private Dictionary<string, SignalType> m_deviceSignalTypes;
         private Dictionary<string, SignalType> m_phasorSignalTypes;
