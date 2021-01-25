@@ -231,7 +231,7 @@ namespace SELPDCImporter
                 {
                     [useSimpleKey ? "protocol" : nameof(TransportProtocol)] = nameof(TransportProtocol.Tcp),
                     ["server"] = IPAddressToken,
-                    ["port"] = $"{port}",
+                    ["port"] = $"{commandPort}",
                     ["isListener"] = "false",
                     ["interface"] = "0.0.0.0"
                 };
@@ -263,7 +263,7 @@ namespace SELPDCImporter
                 if (multicastEnabled)
                 {
                     settings["server"] = multicastGroup;
-                    settings["remotePort"] = $"{commandPort}";
+                    settings["remotePort"] = $"{port}";
                 }
             }
             else
