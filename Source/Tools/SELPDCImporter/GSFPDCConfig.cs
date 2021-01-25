@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MainForm.SaveConfiguration.cs - Gbtc
+//  GSFPDCConfig.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -66,6 +66,12 @@ namespace SELPDCImporter
         public static Device QueryDevice(this TableOperations<Device> deviceTable, string acronym) => 
             deviceTable.QueryRecordWhere("Acronym = {0}", acronym) ?? deviceTable.NewDevice();
 
+        public static Device QueryDeviceByID(this TableOperations<Device> deviceTable, int deviceID) =>
+            deviceTable.QueryRecordWhere("ID = {0}", deviceID) ?? deviceTable.NewDevice();
+
+        public static IEnumerable<Device> QueryChildDevices(this TableOperations<Device> deviceTable, int deviceID) =>
+            deviceTable.QueryRecordsWhere("ParentID = {0}", deviceID);
+
         public static void UpdateDevice(this TableOperations<Device> deviceTable, Device device) => 
             deviceTable.UpdateRecord(device);
 
@@ -101,22 +107,25 @@ namespace SELPDCImporter
             Regex.Replace(acronym.ToUpperInvariant().Replace(" ", "_"), @"[^A-Z0-9\-!_\.@#\$]", "", RegexOptions.IgnoreCase);
     }
 
-    // TODO: No need for partial form here
-    partial class MainForm
+    public static class GSFPDCConfig
     {
         // Connection string template
         private const string ConnectionStringTemplate = "{0}; autoStartDataParsingSequence = true; skipDisableRealTimeData = false; disableRealTimeDataOnStop = true";
 
-        private Dictionary<string, SignalType> m_deviceSignalTypes;
-        private Dictionary<string, SignalType> m_phasorSignalTypes;
+        private static Dictionary<string, SignalType> m_deviceSignalTypes;
+        private static Dictionary<string, SignalType> m_phasorSignalTypes;
 
-        private void SaveDeviceConfiguration(ImportParameters importParams)
+        public static void SaveConnection(ImportParameters importParams)
         {
             AdoDataConnection connection = importParams.Connection;
+            ConfigurationFrame configFrame = importParams.ConfigFrame;
+            TableOperations<Device> deviceTable = importParams.DeviceTable;
             TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(connection);
+            Guid nodeID = importParams.NodeID;
+            string connectionString = importParams.EditedConnectionString;
 
             // Apply other connection string parameters that are specific to device operation
-            importParams.ConnectionString = string.Format(ConnectionStringTemplate, importParams.ConnectionString);
+            importParams.EditedConnectionString = string.Format(ConnectionStringTemplate, importParams.EditedConnectionString);
 
             if (m_deviceSignalTypes is null)
                 m_deviceSignalTypes = signalTypeTable.LoadSignalTypes("PMU").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
@@ -124,15 +133,6 @@ namespace SELPDCImporter
             if (m_phasorSignalTypes is null)
                 m_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-            SavePDCDeviceConnection(importParams);
-        }
-
-        private void SavePDCDeviceConnection(ImportParameters importParams)
-        {
-            string connectionString = importParams.ConnectionString;
-            ConfigurationFrame configFrame = importParams.ConfigFrame;
-            TableOperations<Device> deviceTable = importParams.DeviceTable;
-            Guid nodeID = importParams.NodeID;
 
             // TODO: Consider best options for existing device lookup - is destination UDP port unique? (should be)
             Device device = /*importParams.Devices.FindDeviceByEndPoint(connectionString) ??*/ deviceTable.NewDevice();
@@ -203,7 +203,7 @@ namespace SELPDCImporter
             }
         }
 
-        private void SavePMUDevices(ImportParameters importParams, Device parentDevice)
+        private static void SavePMUDevices(ImportParameters importParams, Device parentDevice)
         {
             ConfigurationFrame configFrame = importParams.ConfigFrame;
 
@@ -214,34 +214,14 @@ namespace SELPDCImporter
             }
         }
 
-        private void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
+        private static void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
         {
-            string connectionString = importParams.ConnectionString;
             ConfigurationFrame configFrame = importParams.ConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
 
             // TODO: Consider best options for existing device lookup - is destination UDP port unique? (should be)
             Device device = /*importParams.Devices.FindDeviceByEndPoint(connectionString) ??*/ deviceTable.NewDevice();
-            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-
-            bool autoStartDataParsingSequence = true;
-            bool skipDisableRealTimeData = false;
-
-            // Handle connection string parameters that are fields in the device table
-            if (settings.ContainsKey("autoStartDataParsingSequence"))
-            {
-                autoStartDataParsingSequence = bool.Parse(settings["autoStartDataParsingSequence"]);
-                settings.Remove("autoStartDataParsingSequence");
-                connectionString = settings.JoinKeyValuePairs();
-            }
-
-            if (settings.ContainsKey("skipDisableRealTimeData"))
-            {
-                skipDisableRealTimeData = bool.Parse(settings["skipDisableRealTimeData"]);
-                settings.Remove("skipDisableRealTimeData");
-                connectionString = settings.JoinKeyValuePairs();
-            }
 
             ConfigurationCell deviceConfig = configFrame.Cells[0];
 
@@ -263,9 +243,6 @@ namespace SELPDCImporter
             device.FramesPerSecond = configFrame.FrameRate;
             device.AccessID = configFrame.IDCode;
             device.IsConcentrator = false;
-            device.ConnectionString = connectionString;
-            device.AutoStartDataParsingSequence = autoStartDataParsingSequence;
-            device.SkipDisableRealTimeData = skipDisableRealTimeData;
             device.Enabled = true;
 
             // Check if this is a new device or an edit to an existing one
@@ -290,7 +267,7 @@ namespace SELPDCImporter
             }
         }
 
-        private void SaveDeviceRecords(ImportParameters importParams, Device device)
+        private static void SaveDeviceRecords(ImportParameters importParams, Device device)
         {
             ConfigurationFrame configFrame = importParams.ConfigFrame;
             AdoDataConnection connection = importParams.Connection;
@@ -362,7 +339,7 @@ namespace SELPDCImporter
             SaveDevicePhasors(importParams, cell, device, measurementTable);
         }
 
-        private void SaveFixedMeasurement(ImportParameters importParams, SignalType signalType, Device device, TableOperations<Measurement> measurementTable, string label = null)
+        private static void SaveFixedMeasurement(ImportParameters importParams, SignalType signalType, Device device, TableOperations<Measurement> measurementTable, string label = null)
         {
             string signalReference = $"{device.Acronym}-{signalType.Suffix}";
 
@@ -380,7 +357,7 @@ namespace SELPDCImporter
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
 
-        private void SaveDevicePhasors(ImportParameters importParams, ConfigurationCell cell, Device device, TableOperations<Measurement> measurementTable)
+        private static void SaveDevicePhasors(ImportParameters importParams, ConfigurationCell cell, Device device, TableOperations<Measurement> measurementTable)
         {
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
@@ -455,7 +432,7 @@ namespace SELPDCImporter
             }
         }
 
-        private void SavePhasorMeasurement(ImportParameters importParams, SignalType signalType, Device device, PhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable)
+        private static void SavePhasorMeasurement(ImportParameters importParams, SignalType signalType, Device device, PhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable)
         {
             string signalReference = $"{device.Acronym}-{signalType.Suffix}{index}";
 
@@ -474,5 +451,136 @@ namespace SELPDCImporter
 
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
+
+        public static ConfigurationFrame ExtractConfigurationFrame(AdoDataConnection connection, int deviceID)
+        {
+            TableOperations<Device> deviceTable = new TableOperations<Device>(connection);
+            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
+            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
+            Device pdc = deviceTable.QueryDeviceByID(deviceID);
+
+            if (pdc.ID == 0)
+                return null;
+
+            ushort idCode = (ushort)pdc.AccessID;
+            ushort frameRate = (ushort)pdc.FramesPerSecond.GetValueOrDefault();
+
+            ConfigurationFrame configFrame = new ConfigurationFrame(idCode, frameRate, pdc.Name, pdc.Acronym)
+            {
+                Settings = pdc.ConnectionString.ParseKeyValuePairs()
+            };
+
+            if (pdc.ParentID == null)
+            {
+                IEnumerable<Device> pmus = deviceTable.QueryChildDevices(deviceID);
+
+                foreach (Device pmu in pmus)
+                {
+                    idCode = (ushort)pmu.AccessID;
+
+                    // Create new configuration cell
+                    ConfigurationCell configCell = new ConfigurationCell(configFrame, pmu.Name, idCode, pmu.Acronym)
+                    {
+                        ID = pmu.ID,
+                        ParentID = pdc.ID,
+                    };
+
+                    configCell.FrequencyDefinition = new FrequencyDefinition(configCell) 
+                    {
+                        Label = "Frequency"
+                    };
+
+                    // Extract phasor definitions
+                    foreach (Phasor phasor in phasorTable.QueryPhasorsForDevice(pmu.ID))
+                    {
+                        string description = measurementTable.QueryMeasurement(SignalReference.ToString(configCell.IDLabel, SignalKind.Angle, phasor.SourceIndex))?.Description ?? phasor.Label;
+                        PhasorType phasorType = phasor.Type == 'I' ? PhasorType.Current : PhasorType.Voltage;
+
+                        configCell.PhasorDefinitions.Add(new PhasorDefinition(configCell, phasor.Label, description, phasorType, phasor.Phase)
+                        {
+                            ID = phasor.ID,
+                            SourceIndex = phasor.SourceIndex
+                        });
+                    }
+
+                    // Add cell to frame
+                    configFrame.Cells.Add(configCell);
+                }
+
+                if (configFrame.Cells.Count > 0)
+                {
+                    configFrame.IsConcentrator = true;
+                }
+                else
+                {
+                    // This is a directly connected device
+                    configFrame.IsConcentrator = false;
+
+                    ConfigurationCell configCell = new ConfigurationCell(configFrame, pdc.Name, configFrame.IDCode, pdc.Acronym)
+                    {
+                        ID = pdc.ID,
+                        ParentID = null,
+                    };
+
+                    configCell.FrequencyDefinition = new FrequencyDefinition(configCell)
+                    {
+                        Label = "Frequency"
+                    };
+
+                    // Extract phasor definitions
+                    foreach (Phasor phasor in phasorTable.QueryPhasorsForDevice(pdc.ID))
+                    {
+                        string description = measurementTable.QueryMeasurement(SignalReference.ToString(configCell.IDLabel, SignalKind.Angle, phasor.SourceIndex))?.Description ?? phasor.Label;
+                        PhasorType phasorType = phasor.Type == 'I' ? PhasorType.Current : PhasorType.Voltage;
+
+                        configCell.PhasorDefinitions.Add(new PhasorDefinition(configCell, phasor.Label, description, phasorType, phasor.Phase)
+                        {
+                            ID = phasor.ID,
+                            SourceIndex = phasor.SourceIndex
+                        });
+                    }
+
+                    // Add cell to frame
+                    configFrame.Cells.Add(configCell);
+                }
+            }
+            else
+            {
+                // Extracting a single PMU from a PDC configuration
+                configFrame.IsConcentrator = true;
+
+                // Create new configuration cell
+                ConfigurationCell configCell = new ConfigurationCell(configFrame, pdc.Name, configFrame.IDCode, pdc.Acronym)
+                {
+                    ID = pdc.ID,
+                    ParentID = null,
+                };
+
+
+                configCell.FrequencyDefinition = new FrequencyDefinition(configCell)
+                { 
+                    Label = "Frequency"
+                };
+
+                // Extract phasor definitions
+                foreach (Phasor phasor in phasorTable.QueryPhasorsForDevice(pdc.ID))
+                {
+                    string description = measurementTable.QueryMeasurement(SignalReference.ToString(configCell.IDLabel, SignalKind.Angle, phasor.SourceIndex))?.Description ?? phasor.Label;
+                    PhasorType phasorType = phasor.Type == 'I' ? PhasorType.Current : PhasorType.Voltage;
+
+                    configCell.PhasorDefinitions.Add(new PhasorDefinition(configCell, phasor.Label, description, phasorType, phasor.Phase)
+                    {
+                        ID = phasor.ID,
+                        SourceIndex = phasor.SourceIndex
+                    });
+                }
+
+                // Add cell to frame
+                configFrame.Cells.Add(configCell);
+            }
+
+            return configFrame;
+        }
+
     }
 }
