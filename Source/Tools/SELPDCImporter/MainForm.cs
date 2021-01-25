@@ -23,12 +23,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.Serialization.Formatters;
+using System.Runtime.Serialization.Formatters.Soap;
 using System.Windows.Forms;
 using GSF;
+using GSF.Communication;
 using GSF.ComponentModel;
 using GSF.Diagnostics;
+using GSF.IO;
+using GSF.PhasorProtocols;
 using GSF.Windows.Forms;
+
+#pragma warning disable IDE1006 // Naming Styles
 
 namespace SELPDCImporter
 {
@@ -39,7 +47,9 @@ namespace SELPDCImporter
         private string m_hostApp;
         private bool m_formLoaded;
         private bool m_initialShow;
-        private volatile bool m_formClosing;
+        private bool m_formClosing;
+        private bool m_analyzeInProgress;
+        private bool m_connectionStringManuallyEdited;
         private ImportParameters m_importParams;
 
         public MainForm()
@@ -159,6 +169,9 @@ namespace SELPDCImporter
         private void textBoxPDCConfig_TextChanged(object sender, EventArgs e)
         {
             buttonAnalyze.Enabled = true;
+            buttonImport.Enabled = false;
+            buttonTestConnection.Enabled = false;
+
             labelAnalyzeStatus.Text = $"{labelAnalyzeStatus.Tag}";
             textBoxPDCDetails.Text = "";
         }
@@ -192,62 +205,78 @@ namespace SELPDCImporter
         private void buttonAnalyze_Click(object sender, EventArgs e)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
-
-            string hostConfigFile = textBoxHostConfig.Text;
-
-            if (!File.Exists(hostConfigFile))
-            {
-                MessageBox.Show(this, $"Analyze failed: The specified host service configuration file \"{hostConfigFile}\" does not exist.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            string pdcConfigFile = textBoxPDCConfig.Text;
-
-            if (!File.Exists(pdcConfigFile))
-            {
-                MessageBox.Show(this, $"Analyze failed: The specified PDC configuration file \"{pdcConfigFile}\" does not exist.", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (!IsHostConfig(hostConfigFile))
-            {
-                MessageBox.Show(this, $"Analyze failed: The configuration file \"{hostConfigFile}\" is not a valid host service configuration.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            
+            m_analyzeInProgress = true;
 
             try
             {
-                LoadHostConfigFile(hostConfigFile, m_importParams);
+                string hostConfigFile = textBoxHostConfig.Text;
+
+                if (!File.Exists(hostConfigFile))
+                {
+                    MessageBox.Show(this, $"Analyze failed: The specified host service configuration file \"{hostConfigFile}\" does not exist.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                string pdcConfigFile = textBoxPDCConfig.Text;
+
+                if (!File.Exists(pdcConfigFile))
+                {
+                    MessageBox.Show(this, $"Analyze failed: The specified PDC configuration file \"{pdcConfigFile}\" does not exist.", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (!IsHostConfig(hostConfigFile))
+                {
+                    MessageBox.Show(this, $"Analyze failed: The configuration file \"{hostConfigFile}\" is not a valid host service configuration.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                try
+                {
+                    LoadHostConfigFile(hostConfigFile, m_importParams);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Analyze failed: Iniitialization failure using specified host service configuration \"{hostConfigFile}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                try
+                {
+                    m_importParams.ConfigFrame = SELPDCConfig.Parse(pdcConfigFile);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Analyze failed: Failed while parsing PDC configuration \"{pdcConfigFile}\": {ex.Message}", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                ConfigurationFrame configFrame = m_importParams.ConfigFrame;
+
+                // Show PDC hierarchy
+                textBoxPDCDetails.Text = configFrame.GeneratePDCDetails();
+
+                // Initialize IP address drop-down from device IP dictionary
+                comboBoxIPAddresses.DataSource = new BindingSource(configFrame.DeviceIPs, null);
+                comboBoxIPAddresses.ValueMember = "Key";
+                comboBoxIPAddresses.DisplayMember = "Value";
+                comboBoxIPAddresses.SelectedValue = configFrame.TargetDeviceIP;
+
+                // Reset manually edited state flag for connection string
+                m_connectionStringManuallyEdited = false;
+
+                // Enable button sequence based on parse success
+                buttonTestConnection.Enabled = buttonImport.Enabled = configFrame.Cells.Count > 0;
+                buttonAnalyze.Enabled = !buttonImport.Enabled;
             }
-            catch (Exception ex)
+            finally
             {
-                MessageBox.Show(this, $"Analyze failed: Iniitialization failure using specified host service configuration \"{hostConfigFile}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                m_analyzeInProgress = false;
             }
 
-            ConfigurationFrame configFrame;
-
-            try
-            {
-                configFrame = SELPDCConfig.Parse(pdcConfigFile);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, $"Analyze failed: Failed while parsing PDC configuration \"{pdcConfigFile}\": {ex.Message}", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
+            // Provide user feedback on analyze operation completion
             labelAnalyzeStatus.Text = $"Analyze completed in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2)}.";
-
-            textBoxPDCDetails.Text = configFrame.GeneratePDCDetails();
-
-            buttonImport.Enabled = configFrame.Cells.Count > 0;
-            buttonAnalyze.Enabled = !buttonImport.Enabled;
-
-            comboBoxIPAddresses.DataSource = new BindingSource(configFrame.DeviceIPs, null);
-            comboBoxIPAddresses.SelectedValue = configFrame.TargetDeviceIP;
-
-            m_importParams.ConfigFrame = configFrame;
         }
 
         private void buttonImport_Click(object sender, EventArgs e)
@@ -255,9 +284,9 @@ namespace SELPDCImporter
             try
             {
                 m_importParams.HostConfig = textBoxHostConfig.Text;
-                m_importParams.ConnectionString = textBoxConnectionString.Text;
+                m_importParams.EditedConnectionString = textBoxConnectionString.Text;
 
-                SaveDeviceConfiguration(m_importParams);
+                GSFPDCConfig.SaveConnection(m_importParams);
             }
             catch (Exception ex)
             {
@@ -265,15 +294,91 @@ namespace SELPDCImporter
             }
         }
 
+        private void textBoxConnectionString_TextChanged(object sender, EventArgs e)
+        {
+            if (!m_analyzeInProgress)
+                m_connectionStringManuallyEdited = true;
+        }
+
         private void comboBoxIPAddresses_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBoxIPAddresses.SelectedItem is KeyValuePair<string, string> kvp)
-                textBoxConnectionString.Text = m_importParams.ConfigFrame.ConnectionString.Replace(SELPDCConfig.IPAddressToken, kvp.Value);
+            string connectionString = m_importParams?.ConfigFrame?.ConnectionString;
+
+            if (!string.IsNullOrWhiteSpace(connectionString) && comboBoxIPAddresses.SelectedItem is KeyValuePair<string, string> kvp)
+            {
+                if (m_connectionStringManuallyEdited && MessageBox.Show(this, "Manual changes to connection string are about to be overwritten, continue?", "Update Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+
+                textBoxConnectionString.Text = connectionString.Replace(SELPDCConfig.IPAddressToken, kvp.Value);
+                m_connectionStringManuallyEdited = false;
+            }
         }
 
         private void buttonTestConnection_Click(object sender, EventArgs e)
         {
-            // TODO: Write connection string to .PMUConnection file and launch with connection tester
+            try
+            {
+                if (string.IsNullOrWhiteSpace(textBoxConnectionString.Text))
+                {
+                    MessageBox.Show(this, "No connection string defined, cannot launch PMU Connection Tester.", "Missing Connection String", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                ConfigurationFrame configFrame = m_importParams.ConfigFrame;
+
+                if (configFrame is null)
+                {
+                    MessageBox.Show(this, "No configuration data has been analyzed, cannot launch PMU Connection Tester.", "Missing Configuration Frame", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                Dictionary<string, string> settings = textBoxConnectionString.Text.ParseKeyValuePairs();
+
+                if (!settings.TryGetValue(nameof(PhasorProtocol), out string setting) || !Enum.TryParse(setting, out PhasorProtocol phasorProtocol))
+                {
+                    MessageBox.Show(this, "Failed to parse phasor protocol from connection string, cannot launch PMU Connection Tester.", "Connection String Parse Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                settings.Remove(nameof(PhasorProtocol));
+
+                if (!settings.TryGetValue(nameof(TransportProtocol), out setting) || !Enum.TryParse(setting, out TransportProtocol transportProtocol))
+                {
+                    MessageBox.Show(this, "Failed to parse transport protocol from connection string, cannot launch PMU Connection Tester.", "Connection String Parse Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                settings.Remove(nameof(TransportProtocol));
+
+                ConnectionSettings connectionSettings = new ConnectionSettings
+                {
+                    PhasorProtocol = phasorProtocol,
+                    TransportProtocol = transportProtocol,
+                    ConnectionString = settings.JoinKeyValuePairs(),
+                    PmuID = configFrame.IDCode,
+                    FrameRate = configFrame.FrameRate,
+                    AutoRepeatPlayback = false,
+                    ByteEncodingDisplayFormat = 0,
+                    ConnectionParameters = null
+                };
+
+                SoapFormatter formatter = new SoapFormatter
+                {
+                    AssemblyFormat = FormatterAssemblyStyle.Simple,
+                    TypeFormat = FormatterTypeStyle.TypesWhenNeeded
+                };
+
+                string fileName = Path.Combine(FilePath.GetApplicationDataFolder(), $"{configFrame.Acronym}.PmuConnection");
+                using FileStream settingsFile = File.Create(fileName);
+                formatter.Serialize(settingsFile, connectionSettings);
+                settingsFile.Close();
+
+                Process.Start(fileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Failed to launch PMU Connection Tester: {ex.Message}", "External Tool Launch Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void linkLabelEditPDCDetails_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

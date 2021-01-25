@@ -51,7 +51,7 @@ namespace SELPDCImporter
         
         public string HostConfig { get; set; }
 
-        public string ConnectionString { get; set; }
+        public string EditedConnectionString { get; set; }
 
         private bool m_disposed;
 

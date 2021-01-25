@@ -65,6 +65,10 @@ namespace SELPDCImporter
 
         public char Phase { get; }
 
+        public int ID { get; set; }
+
+        public int SourceIndex { get; set; }
+
         public override int MaximumLabelLength => int.MaxValue;
     }
 
@@ -106,13 +110,16 @@ namespace SELPDCImporter
 
     public sealed class ConfigurationCell : ConfigurationCellBase
     {
-        public ConfigurationCell(ConfigurationFrame parent, string name, ushort idCode)
+        public ConfigurationCell(ConfigurationFrame parent, string name, ushort idCode, string acronym = null)
             : base(parent, idCode, int.MaxValue, int.MaxValue, int.MaxValue)
         {
             StationName = name;
-            IDLabel = name.GetCleanAcronym();
+            IDLabel = acronym ?? name.GetCleanAcronym();
             FrequencyDefinition = new FrequencyDefinition(this);
         }
+        public int ID { get; set; }
+
+        public int? ParentID { get; set; }
 
         public override DataFormat AnalogDataFormat { get; set; } = DataFormat.FloatingPoint;
 
@@ -139,11 +146,11 @@ namespace SELPDCImporter
 
     public sealed class ConfigurationFrame : ConfigurationFrameBase
     {
-        public ConfigurationFrame(ushort idCode, ushort frameRate, string name)
+        public ConfigurationFrame(ushort idCode, ushort frameRate, string name, string acronym = null)
             : base(idCode, new ConfigurationCellCollection(), DateTime.UtcNow.Ticks, frameRate)
         {
             Name = name;
-            Acronym = name.GetCleanAcronym();
+            Acronym = acronym ?? name.GetCleanAcronym();
         }
 
         public Dictionary<string, string> Settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -159,6 +166,10 @@ namespace SELPDCImporter
         public string Name { get; }
 
         public string Acronym { get; }
+
+        public int ID { get; set; }
+
+        public bool IsConcentrator { get; set; }
 
         public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 

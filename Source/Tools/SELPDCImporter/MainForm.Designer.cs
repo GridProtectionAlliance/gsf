@@ -226,6 +226,7 @@ namespace SELPDCImporter
             this.textBoxConnectionString.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBoxConnectionString.Size = new System.Drawing.Size(301, 244);
             this.textBoxConnectionString.TabIndex = 2;
+            this.textBoxConnectionString.TextChanged += new System.EventHandler(this.textBoxConnectionString_TextChanged);
             // 
             // labelSelectIPAddress
             // 
