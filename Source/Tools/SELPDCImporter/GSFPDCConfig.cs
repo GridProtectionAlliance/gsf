@@ -86,8 +86,8 @@ namespace SELPDCImporter
         public static Phasor QueryPhasorForDevice(this TableOperations<Phasor> phasorTable, int deviceID, int sourceIndex) => 
             phasorTable.QueryRecordWhere("DeviceID = {0} AND SourceIndex = {1}", deviceID, sourceIndex) ?? phasorTable.NewPhasor();
 
-        public static Device FindDeviceByIDCode(this Device[] devices, ushort idCode) =>
-            devices.FirstOrDefault(device => device.AccessID == idCode);
+        public static Device FindDeviceByIDCode(this Device[] devices, ushort idCode, int? parentID = null) =>
+            devices.FirstOrDefault(device => device.ParentID == parentID && device.AccessID == idCode);
 
         // Remove any invalid characters from acronym
         public static string GetCleanAcronym(this string acronym) => 
@@ -203,7 +203,7 @@ namespace SELPDCImporter
             ConfigurationFrame configFrame = importParams.ConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
-            Device device = importParams.Devices?.FindDeviceByIDCode(configFrame.IDCode) ?? deviceTable.NewDevice();
+            Device device = importParams.Devices?.FindDeviceByIDCode(configFrame.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
             string deviceAcronym = configCell.IDLabel;
             string deviceName = null;
 
