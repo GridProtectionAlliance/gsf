@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
 using SELPDCImporter.Model;
 using GSF;
@@ -39,24 +38,6 @@ namespace SELPDCImporter
 {
     public static class TableOperationExtensions
     {
-        public static Device FindDeviceByEndPoint(this Device[] devices, string connectionString)
-        {
-            //IPEndPoint resolvedEndPoint = new IPEndPoint(IPAddress.TryParse)
-
-            foreach (Device device in devices)
-            {
-                Dictionary<string, string> settings = device.ConnectionString?.ParseKeyValuePairs();
-
-                if (settings is null)
-                    continue;
-
-                //if (settings.TryGetValue("server", out string endPoint) && port.Equals(portName, StringComparison.OrdinalIgnoreCase))
-                //    return device;
-            }
-
-            return null;
-        }
-
         public static void AddNewDevice(this TableOperations<Device> deviceTable, Device device) => 
             deviceTable.AddNewRecord(device);
 
@@ -68,6 +49,9 @@ namespace SELPDCImporter
 
         public static Device QueryDeviceByID(this TableOperations<Device> deviceTable, int deviceID) =>
             deviceTable.QueryRecordWhere("ID = {0}", deviceID) ?? deviceTable.NewDevice();
+
+        public static Device QueryDeviceByIDCode(this TableOperations<Device> deviceTable, ushort idCode) =>
+            deviceTable.QueryRecordWhere("AccessID = {0}", idCode) ?? deviceTable.NewDevice();
 
         public static IEnumerable<Device> QueryChildDevices(this TableOperations<Device> deviceTable, int deviceID) =>
             deviceTable.QueryRecordsWhere("ParentID = {0}", deviceID);
@@ -102,6 +86,9 @@ namespace SELPDCImporter
         public static Phasor QueryPhasorForDevice(this TableOperations<Phasor> phasorTable, int deviceID, int sourceIndex) => 
             phasorTable.QueryRecordWhere("DeviceID = {0} AND SourceIndex = {1}", deviceID, sourceIndex) ?? phasorTable.NewPhasor();
 
+        public static Device FindDeviceByIDCode(this Device[] devices, ushort idCode) =>
+            devices.FirstOrDefault(device => device.AccessID == idCode);
+
         // Remove any invalid characters from acronym
         public static string GetCleanAcronym(this string acronym) => 
             Regex.Replace(acronym.ToUpperInvariant().Replace(" ", "_"), @"[^A-Z0-9\-!_\.@#\$]", "", RegexOptions.IgnoreCase);
@@ -133,9 +120,7 @@ namespace SELPDCImporter
             if (m_phasorSignalTypes is null)
                 m_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-
-            // TODO: Consider best options for existing device lookup - is destination UDP port unique? (should be)
-            Device device = /*importParams.Devices.FindDeviceByEndPoint(connectionString) ??*/ deviceTable.NewDevice();
+            Device device = importParams.Devices?.FindDeviceByIDCode(configFrame.IDCode) ?? deviceTable.NewDevice();
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             bool autoStartDataParsingSequence = true;
@@ -156,20 +141,19 @@ namespace SELPDCImporter
                 connectionString = settings.JoinKeyValuePairs();
             }
 
-            ConfigurationCell deviceConfig = configFrame.Cells[0];
-
-            string deviceAcronym = deviceConfig.IDLabel;
+            string deviceAcronym = configFrame.Acronym;
             string deviceName = null;
 
-            if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(deviceConfig.StationName))
-                deviceAcronym = deviceConfig.StationName.GetCleanAcronym();
+            if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(configFrame.Name))
+                deviceAcronym = configFrame.Name.GetCleanAcronym();
             else
-                throw new InvalidOperationException("Unable to get station name or ID label from device configuration frame");
+                throw new InvalidOperationException("Unable to get name or acronym for PDC from parsed configuration frame");
 
-            if (!string.IsNullOrWhiteSpace(deviceConfig.StationName))
-                deviceName = deviceConfig.StationName;
+            if (!string.IsNullOrWhiteSpace(configFrame.Name))
+                deviceName = configFrame.Name;
 
             device.NodeID = nodeID;
+            device.ParentID = null;
             device.Acronym = deviceAcronym;
             device.Name = deviceName ?? deviceAcronym;
             device.ProtocolID = importParams.IeeeC37_118ProtocolID;
@@ -219,29 +203,25 @@ namespace SELPDCImporter
             ConfigurationFrame configFrame = importParams.ConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
-
-            // TODO: Consider best options for existing device lookup - is destination UDP port unique? (should be)
-            Device device = /*importParams.Devices.FindDeviceByEndPoint(connectionString) ??*/ deviceTable.NewDevice();
-
-            ConfigurationCell deviceConfig = configFrame.Cells[0];
-
-            string deviceAcronym = deviceConfig.IDLabel;
+            Device device = importParams.Devices?.FindDeviceByIDCode(configFrame.IDCode) ?? deviceTable.NewDevice();
+            string deviceAcronym = configCell.IDLabel;
             string deviceName = null;
 
-            if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(deviceConfig.StationName))
-                deviceAcronym = deviceConfig.StationName.GetCleanAcronym();
+            if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(configCell.StationName))
+                deviceAcronym = configCell.StationName.GetCleanAcronym();
             else
-                throw new InvalidOperationException("Unable to get station name or ID label from device configuration frame");
+                throw new InvalidOperationException("Unable to get station name or ID label for PMU from parsed device configuration cell");
 
-            if (!string.IsNullOrWhiteSpace(deviceConfig.StationName))
-                deviceName = deviceConfig.StationName;
+            if (!string.IsNullOrWhiteSpace(configCell.StationName))
+                deviceName = configCell.StationName;
 
             device.NodeID = nodeID;
+            device.ParentID = parentDevice.ID;
             device.Acronym = deviceAcronym;
             device.Name = deviceName ?? deviceAcronym;
             device.ProtocolID = importParams.IeeeC37_118ProtocolID;
-            device.FramesPerSecond = configFrame.FrameRate;
-            device.AccessID = configFrame.IDCode;
+            device.FramesPerSecond = configCell.FrameRate;
+            device.AccessID = configCell.IDCode;
             device.IsConcentrator = false;
             device.Enabled = true;
 
@@ -452,17 +432,16 @@ namespace SELPDCImporter
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
 
-        public static ConfigurationFrame ExtractConfigurationFrame(AdoDataConnection connection, int deviceID)
+        public static ConfigurationFrame ExtractConfigurationFrame(AdoDataConnection connection, ushort idCode)
         {
             TableOperations<Device> deviceTable = new TableOperations<Device>(connection);
             TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
             TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
-            Device pdc = deviceTable.QueryDeviceByID(deviceID);
+            Device pdc = deviceTable.QueryDeviceByIDCode(idCode);
 
             if (pdc.ID == 0)
                 return null;
 
-            ushort idCode = (ushort)pdc.AccessID;
             ushort frameRate = (ushort)pdc.FramesPerSecond.GetValueOrDefault();
 
             ConfigurationFrame configFrame = new ConfigurationFrame(idCode, frameRate, pdc.Name, pdc.Acronym)
@@ -472,7 +451,7 @@ namespace SELPDCImporter
 
             if (pdc.ParentID == null)
             {
-                IEnumerable<Device> pmus = deviceTable.QueryChildDevices(deviceID);
+                IEnumerable<Device> pmus = deviceTable.QueryChildDevices(pdc.ID);
 
                 foreach (Device pmu in pmus)
                 {

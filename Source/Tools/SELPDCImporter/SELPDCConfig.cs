@@ -30,6 +30,7 @@ using GSF.Communication;
 using GSF.FuzzyStrings;
 using GSF.PhasorProtocols;
 using GSF.Units.EE;
+using GSF.Xml;
 
 namespace SELPDCImporter
 {
@@ -52,15 +53,6 @@ namespace SELPDCImporter
         public const bool DefaultMulticastEnabled = false;
         public const string DefaultMulticastGroup = "224.0.1.0";
         public const string DefaultGatewayIP = "192.168.1.1";
-
-        // TODO: Add to GSF common XML functions
-        private static IEnumerable<Tuple<XElement, string>> WhereAttribute(this IEnumerable<XElement> source, string attributeName) =>
-            source.Select(element => new Tuple<XElement, string>(element, element.Attribute(attributeName)?.Value))
-            .Where(tuple => !string.IsNullOrWhiteSpace(tuple.Item2));
-
-        private static IEnumerable<XElement> Is(this IEnumerable<Tuple<XElement, string>> source, string attributeValue) =>
-            source.Where(tuple => string.Equals(tuple.Item2, attributeValue, StringComparison.OrdinalIgnoreCase))
-            .Select(tuple => tuple.Item1);
 
         public static ConfigurationFrame Parse(string configFile)
         {
