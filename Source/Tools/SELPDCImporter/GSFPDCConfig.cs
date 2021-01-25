@@ -144,10 +144,13 @@ namespace SELPDCImporter
             string deviceAcronym = configFrame.Acronym;
             string deviceName = null;
 
-            if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(configFrame.Name))
+            if (string.IsNullOrWhiteSpace(deviceAcronym))
+            {
+                if (string.IsNullOrWhiteSpace(configFrame.Name))
+                    throw new InvalidOperationException("Unable to get name or acronym for PDC from parsed configuration frame");
+                
                 deviceAcronym = configFrame.Name.GetCleanAcronym();
-            else
-                throw new InvalidOperationException("Unable to get name or acronym for PDC from parsed configuration frame");
+            }
 
             if (!string.IsNullOrWhiteSpace(configFrame.Name))
                 deviceName = configFrame.Name;
@@ -203,14 +206,17 @@ namespace SELPDCImporter
             ConfigurationFrame configFrame = importParams.ConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
-            Device device = importParams.Devices?.FindDeviceByIDCode(configFrame.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
+            Device device = importParams.Devices?.FindDeviceByIDCode(configCell.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
             string deviceAcronym = configCell.IDLabel;
             string deviceName = null;
 
-            if (string.IsNullOrWhiteSpace(deviceAcronym) && !string.IsNullOrWhiteSpace(configCell.StationName))
+            if (string.IsNullOrWhiteSpace(deviceAcronym))
+            {
+                if (string.IsNullOrWhiteSpace(configCell.StationName))
+                    throw new InvalidOperationException("Unable to get station name or ID label for PMU from parsed device configuration cell");
+                
                 deviceAcronym = configCell.StationName.GetCleanAcronym();
-            else
-                throw new InvalidOperationException("Unable to get station name or ID label for PMU from parsed device configuration cell");
+            }
 
             if (!string.IsNullOrWhiteSpace(configCell.StationName))
                 deviceName = configCell.StationName;

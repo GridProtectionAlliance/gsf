@@ -285,11 +285,13 @@ namespace SELPDCImporter
             {
                 m_importParams.HostConfig = textBoxHostConfig.Text;
                 m_importParams.EditedConnectionString = textBoxConnectionString.Text;
+                m_importParams.LoadExistingDevices();
 
                 GSFPDCConfig.SaveConnection(m_importParams);
 
                 // Initialize new connection from host service
                 m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.ConfigFrame.Acronym}");
+                m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.ConfigFrame.Acronym}");
             }
             catch (Exception ex)
             {

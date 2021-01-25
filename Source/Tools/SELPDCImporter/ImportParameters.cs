@@ -85,7 +85,10 @@ namespace SELPDCImporter
 
             Connection = new AdoDataConnection(connectionString, dataProviderString);
             NodeID = nodeID;
-            
+        }
+
+        public void LoadExistingDevices()
+        {
             DeviceTable = new TableOperations<Device>(Connection);
             Devices = DeviceTable.QueryRecords().ToArray();
         }
