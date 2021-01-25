@@ -287,6 +287,9 @@ namespace SELPDCImporter
                 m_importParams.EditedConnectionString = textBoxConnectionString.Text;
 
                 GSFPDCConfig.SaveConnection(m_importParams);
+
+                // Initialize new connection from host service
+                m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.ConfigFrame.Acronym}");
             }
             catch (Exception ex)
             {
