@@ -34,6 +34,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -52,13 +53,10 @@ namespace GSF.Xml
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         /// <remarks>This overload just allows the start of the given XML document by using its root element.</remarks>
         /// <param name="xmlDoc">An <see cref="XmlDocument"/> to query.</param>
-        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
+        /// <param name="xpath">A <see cref="string"/> xpath query.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
-        public static XmlNode GetXmlNode(this XmlDocument xmlDoc, string xpath)
-        {
-            bool isDirty;
-            return xmlDoc.DocumentElement.GetXmlNode(xpath, out isDirty);
-        }
+        public static XmlNode GetXmlNode(this XmlDocument xmlDoc, string xpath) => 
+            xmlDoc.DocumentElement.GetXmlNode(xpath, out bool _);
 
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         /// <remarks>
@@ -67,55 +65,47 @@ namespace GSF.Xml
         /// the tree.</para>
         /// </remarks>
         /// <param name="xmlDoc">An <see cref="XmlDocument"/> to query.</param>
-        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
+        /// <param name="xpath">A <see cref="string"/> xpath query.</param>
         /// <param name="isDirty">A <see cref="System.Boolean"/> value indicating if items were added to the tree.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
-        public static XmlNode GetXmlNode(this XmlDocument xmlDoc, string xpath, out bool isDirty)
-        {
-            return xmlDoc.DocumentElement.GetXmlNode(xpath, out isDirty);
-        }
+        public static XmlNode GetXmlNode(this XmlDocument xmlDoc, string xpath, out bool isDirty) => 
+            xmlDoc.DocumentElement.GetXmlNode(xpath, out isDirty);
 
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         /// <param name="parentNode">An <see cref="XmlNode"/> parent node to query.</param>
-        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
+        /// <param name="xpath">A <see cref="string"/> xpath query.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
-        public static XmlNode GetXmlNode(this XmlNode parentNode, string xpath)
-        {
-            bool isDirty;
-            return parentNode.GetXmlNode(xpath, out isDirty);
-        }
+        public static XmlNode GetXmlNode(this XmlNode parentNode, string xpath) => 
+            parentNode.GetXmlNode(xpath, out bool _);
 
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         /// <remarks>Note that the <paramref name="isDirty" /> parameter will be set to True if any items were added to
         /// the tree.</remarks>
         /// <param name="parentNode">An <see cref="XmlNode"/> parent node to query.</param>
-        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
+        /// <param name="xpath">A <see cref="string"/> xpath query.</param>
         /// <param name="isDirty">A <see cref="System.Boolean"/> value indicating if items were added to the tree.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
         public static XmlNode GetXmlNode(this XmlNode parentNode, string xpath, out bool isDirty)
         {
             XmlNode node = null;
-            string[] elements;
 
             isDirty = false;
 
             // Removes any slash prefixes.
             while (xpath[0] == '/')
-            {
                 xpath = xpath.Substring(1);
-            }
 
-            elements = xpath.Split('/');
+            string[] elements = xpath.Split('/');
 
             if (elements.Length == 1)
             {
                 XmlNodeList nodes = parentNode.SelectNodes(xpath);
 
-                if ((object)nodes != null)
+                if (nodes is not null)
                 {
                     if (nodes.Count == 0)
                     {
-                        if ((object)parentNode.OwnerDocument != null)
+                        if (parentNode.OwnerDocument is not null)
                         {
                             node = parentNode.OwnerDocument.CreateElement(xpath);
                             parentNode.AppendChild(node);
@@ -142,38 +132,35 @@ namespace GSF.Xml
 
         /// <summary>Safely gets or sets an XML node's attribute.</summary>
         /// <remarks>If you get an attribute that does not exist, null will be returned.</remarks>
-        /// <param name="name">A <see cref="System.String"/> name of the value to get.</param>
+        /// <param name="name">A <see cref="string"/> name of the value to get.</param>
         /// <param name="node">A <see cref="XmlNode"/> to query.</param>
-        /// <returns>A <see cref="System.String"/> value returned for the attribute's value.</returns>
+        /// <returns>A <see cref="string"/> value returned for the attribute's value.</returns>
         public static string GetAttributeValue(this XmlNode node, string name)
         {
-            if ((object)node == null || (object)node.Attributes == null)
+            if (node?.Attributes is null)
                 return null;
 
             XmlAttribute attribute = node.Attributes[name];
 
-            if ((object)attribute == null)
-                return null;
-
-            return attribute.Value;
+            return attribute?.Value;
         }
 
         /// <summary>Safely sets an XML node's attribute.</summary>
         /// <remarks>If you assign a value to an attribute that does not exist, the attribute will be created.</remarks>
-        /// <param name="name">A <see cref="System.String"/> indicating the node name to use.</param>
+        /// <param name="name">A <see cref="string"/> indicating the node name to use.</param>
         /// <param name="node">An <see cref="XmlNode"/> node to operate on.</param>
-        /// <param name="value">A <see cref="System.String"/> value to set the node attribute's value to.</param>
+        /// <param name="value">A <see cref="string"/> value to set the node attribute's value to.</param>
         public static void SetAttributeValue(this XmlNode node, string name, string value)
         {
-            if ((object)node == null || (object)node.Attributes == null)
+            if (node?.Attributes is null)
                 return;
 
             XmlAttribute attribute = node.Attributes[name];
 
-            if ((object)attribute == null)
+            if (attribute is null)
             {
                 // Add the attribute.
-                if ((object)node.OwnerDocument != null)
+                if (node.OwnerDocument != null)
                 {
                     attribute = node.OwnerDocument.CreateAttribute(name);
                     attribute.Value = value;
@@ -280,24 +267,55 @@ namespace GSF.Xml
         /// </remarks>
         public static object Format(this XElement element)
         {
-            IFormattable formattable;
+            Type elementType = Type.GetType((string)element.Attribute("type"), false);
+            string formatString = (string)element.Attribute("spec");
 
-            Type elementType;
-            string formatString;
-            string value;
-
-            elementType = Type.GetType((string)element.Attribute("type"), false);
-            formatString = (string)element.Attribute("spec");
-
-            if ((object)elementType == null || (object)formatString == null)
+            if (elementType is null || formatString is null)
                 return element.Nodes();
 
             if (!typeof(IFormattable).IsAssignableFrom(elementType))
                 return element.Nodes();
 
-            value = (string)element;
-            formattable = (IFormattable)Convert.ChangeType(value, elementType);
+            string value = (string)element;
+            IFormattable formattable = (IFormattable)Convert.ChangeType(value, elementType);
             return new XText(formattable.ToString(formatString, null));
         }
+
+        /// <summary>
+        /// Finds all attributes in an enumeration of <see cref="XElement"/> items that match the specified <paramref name="attributeName"/>.
+        /// </summary>
+        /// <param name="source">Set of <see cref="XElement"/> values to search.</param>
+        /// <param name="attributeName">Attribute name to match.</param>
+        /// <returns>Matching sets of <see cref="XElement"/> items and associated attribute values.</returns>
+        /// <remarks>
+        /// When used in conjuction with the <see cref="Is"/> extension, allows for expressions like:
+        /// <code>
+        /// var globals = XDocument.Load(configFile)
+        ///     .Descendants("SettingsGroup")
+        ///     .WhereAttribute("Type").Is("Globals");
+        /// </code>
+        /// </remarks>
+        public static IEnumerable<Tuple<XElement, string>> WhereAttribute(this IEnumerable<XElement> source, string attributeName) =>
+            source.Select(element => new Tuple<XElement, string>(element, element.Attribute(attributeName)?.Value))
+            .Where(tuple => !string.IsNullOrWhiteSpace(tuple.Item2));
+
+        /// <summary>
+        /// Finds all attributes queried from <see cref="WhereAttribute"/> that match <paramref name="attributeValue"/>.
+        /// </summary>
+        /// <param name="source">Attributes queried from <see cref="WhereAttribute"/> extension.</param>
+        /// <param name="attributeValue">Attribute value to match.</param>
+        /// <param name="ignoreCase">Flag that determines if attribute value match is case sensitive.</param>
+        /// <returns><see cref="XElement"/> items that match <paramref name="attributeValue"/>.</returns>
+        /// <remarks>
+        /// When used in conjuction with the <see cref="WhereAttribute"/> extension, allows for expressions like:
+        /// <code>
+        /// var globals = XDocument.Load(configFile)
+        ///     .Descendants("SettingsGroup")
+        ///     .WhereAttribute("Type").Is("Globals");
+        /// </code>
+        /// </remarks>
+        public static IEnumerable<XElement> Is(this IEnumerable<Tuple<XElement, string>> source, string attributeValue, bool ignoreCase = true) =>
+            source.Where(tuple => string.Equals(tuple.Item2, attributeValue, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            .Select(tuple => tuple.Item1);
     }
 }
