@@ -291,6 +291,9 @@ namespace SELPDCImporter
 
                 // Initialize new connection from host service
                 m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.ConfigFrame.Acronym}");
+
+                MessageBox.Show(this, $"Successfully imported {m_importParams.ConfigFrame.Cells.Count:N0} PMU devices.", "PDC Import Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
                 m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.ConfigFrame.Acronym}");
             }
             catch (Exception ex)
