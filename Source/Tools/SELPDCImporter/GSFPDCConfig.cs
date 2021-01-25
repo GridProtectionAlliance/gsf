@@ -50,8 +50,8 @@ namespace SELPDCImporter
         public static Device QueryDeviceByID(this TableOperations<Device> deviceTable, int deviceID) =>
             deviceTable.QueryRecordWhere("ID = {0}", deviceID) ?? deviceTable.NewDevice();
 
-        public static Device QueryDeviceByIDCode(this TableOperations<Device> deviceTable, ushort idCode) =>
-            deviceTable.QueryRecordWhere("AccessID = {0}", idCode) ?? deviceTable.NewDevice();
+        public static Device QueryParentDeviceByIDCode(this TableOperations<Device> deviceTable, ushort idCode) =>
+            deviceTable.QueryRecordWhere("ParentID IS NULL AND AccessID = {0}", idCode) ?? deviceTable.NewDevice();
 
         public static IEnumerable<Device> QueryChildDevices(this TableOperations<Device> deviceTable, int deviceID) =>
             deviceTable.QueryRecordsWhere("ParentID = {0}", deviceID);
@@ -437,7 +437,7 @@ namespace SELPDCImporter
             TableOperations<Device> deviceTable = new TableOperations<Device>(connection);
             TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
             TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
-            Device pdc = deviceTable.QueryDeviceByIDCode(idCode);
+            Device pdc = deviceTable.QueryParentDeviceByIDCode(idCode);
 
             if (pdc.ID == 0)
                 return null;
