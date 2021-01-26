@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -52,9 +53,14 @@ namespace SELPDCImporter
                 gsfPDCConfigFrame?.Acronym ?? selPDCConfigFrame.Acronym);
 
             textBoxSCFConnectionName.Text = selPDCConfigFrame.Acronym;
+            textBoxSCFConnectionName.Click += ConnectionNameOnClick;
+            
             textBoxGCFConnectionName.Text = gsfPDCConfigFrame?.Acronym;
+            textBoxGCFConnectionName.Click += ConnectionNameOnClick;
+            
             textBoxTCFConnectionName.Text = TargetConfigFrame.Acronym;
             textBoxTCFConnectionName.TextChanged += (_, _) => TargetConfigFrame.Acronym = textBoxTCFConnectionName.Text;
+            textBoxTCFConnectionName.Leave += (_, _) => textBoxTCFConnectionName.Text = textBoxTCFConnectionName.Text.GetCleanAcronym();
 
             HashSet<ConfigurationCell> matchedCells = new HashSet<ConfigurationCell>();
 
@@ -92,6 +98,12 @@ namespace SELPDCImporter
             // TODO: Add unmatched cells
         }
 
+        private void ConnectionNameOnClick(object sender, EventArgs _)
+        {
+            if (sender is TextBox textBox && !string.IsNullOrWhiteSpace(textBox.Text))
+                textBoxTCFConnectionName.Text = textBox.Text;
+        }
+
         private TextBox AddRow(string dataItemLabel, string selValue, string gsfValue)
         {
             TableLayoutPanel table = tableLayoutPanelConfigDetails;
@@ -113,7 +125,17 @@ namespace SELPDCImporter
 
             TextBox targetTextBox = NewTextBox(false);
             targetTextBox.Text = gsfValue ?? selValue;
+            targetTextBox.Leave += (_, _) => targetTextBox.Text = targetTextBox.Text.GetCleanAcronym();
             table.Controls.Add(targetTextBox, 3, rowIndex);
+
+            void textBoxOnClick(object sender, EventArgs _)
+            {
+                if (sender is TextBox textBox && !string.IsNullOrWhiteSpace(textBox.Text))
+                    targetTextBox.Text = textBox.Text;
+            }
+
+            selTextBox.Click += textBoxOnClick;
+            gsfTextBox.Click += textBoxOnClick;
 
             return targetTextBox;
         }
@@ -133,6 +155,7 @@ namespace SELPDCImporter
             return new TextBox
             {
                 Dock = DockStyle.Fill,
+                CharacterCasing = CharacterCasing.Upper,
                 ReadOnly = readOnly
             };
         }

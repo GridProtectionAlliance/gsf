@@ -77,6 +77,7 @@ namespace SELPDCImporter
             // 
             // textBoxTCFConnectionName
             // 
+            this.textBoxTCFConnectionName.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.textBoxTCFConnectionName.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBoxTCFConnectionName.Location = new System.Drawing.Point(553, 25);
             this.textBoxTCFConnectionName.Name = "textBoxTCFConnectionName";
