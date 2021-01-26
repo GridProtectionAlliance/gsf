@@ -245,7 +245,8 @@ namespace SELPDCImporter
 
                 try
                 {
-                    m_importParams.ConfigFrame = SELPDCConfig.Parse(pdcConfigFile);
+                    m_importParams.SELPDCConfigFrame = SELPDCConfig.Parse(pdcConfigFile);
+                    m_importParams.GSFPDCConfigFrame = GSFPDCConfig.Extract(m_importParams.Connection, m_importParams.SELPDCConfigFrame.IDCode);
                 }
                 catch (Exception ex)
                 {
@@ -253,7 +254,7 @@ namespace SELPDCImporter
                     return;
                 }
 
-                ConfigurationFrame configFrame = m_importParams.ConfigFrame;
+                ConfigurationFrame configFrame = m_importParams.SELPDCConfigFrame;
 
                 // Show PDC hierarchy
                 textBoxPDCDetails.Text = configFrame.GeneratePDCDetails();
@@ -283,6 +284,12 @@ namespace SELPDCImporter
 
         private void buttonImport_Click(object sender, EventArgs e)
         {
+            EditDetails editDetails = new EditDetails { ImportParams = m_importParams };
+
+            editDetails.ShowDialog(this);
+
+            return;
+
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
@@ -294,11 +301,11 @@ namespace SELPDCImporter
                 GSFPDCConfig.SaveConnection(m_importParams);
 
                 // Initialize new connection from host service
-                m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.ConfigFrame.Acronym}");
+                m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.SELPDCConfigFrame.Acronym}");
 
-                MessageBox.Show(this, $"Successfully imported {m_importParams.ConfigFrame.Cells.Count:N0} PMU devices.", "PDC Import Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, $"Successfully imported {m_importParams.SELPDCConfigFrame.Cells.Count:N0} PMU devices.", "PDC Import Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.ConfigFrame.Acronym}");
+                m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.SELPDCConfigFrame.Acronym}");
             }
             catch (Exception ex)
             {
@@ -318,7 +325,7 @@ namespace SELPDCImporter
 
         private void comboBoxIPAddresses_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string connectionString = m_importParams?.ConfigFrame?.ConnectionString;
+            string connectionString = m_importParams?.SELPDCConfigFrame?.ConnectionString;
 
             if (!string.IsNullOrWhiteSpace(connectionString) && comboBoxIPAddresses.SelectedItem is KeyValuePair<string, string> kvp)
             {
@@ -340,7 +347,7 @@ namespace SELPDCImporter
                     return;
                 }
 
-                ConfigurationFrame configFrame = m_importParams.ConfigFrame;
+                ConfigurationFrame configFrame = m_importParams.SELPDCConfigFrame;
 
                 if (configFrame is null)
                 {
@@ -395,11 +402,6 @@ namespace SELPDCImporter
             {
                 MessageBox.Show(this, $"Failed to launch PMU Connection Tester: {ex.Message}", "External Tool Launch Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void linkLabelEditPDCDetails_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            // TODO: Launch form to edit configuration frame
         }
     }
 }

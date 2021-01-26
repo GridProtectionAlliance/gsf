@@ -51,7 +51,6 @@ namespace SELPDCImporter
             this.tabPageHostConnection = new System.Windows.Forms.TabPage();
             this.textBoxConsoleOutput = new System.Windows.Forms.TextBox();
             this.buttonTestConnection = new System.Windows.Forms.Button();
-            this.linkLabelEditPDCDetails = new System.Windows.Forms.LinkLabel();
             this.tabControlImportOptions.SuspendLayout();
             this.tabPageConnectionString.SuspendLayout();
             this.tabPageHostConnection.SuspendLayout();
@@ -306,25 +305,11 @@ namespace SELPDCImporter
             this.buttonTestConnection.UseVisualStyleBackColor = true;
             this.buttonTestConnection.Click += new System.EventHandler(this.buttonTestConnection_Click);
             // 
-            // linkLabelEditPDCDetails
-            // 
-            this.linkLabelEditPDCDetails.AutoSize = true;
-            this.linkLabelEditPDCDetails.Enabled = false;
-            this.linkLabelEditPDCDetails.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.linkLabelEditPDCDetails.Location = new System.Drawing.Point(79, 74);
-            this.linkLabelEditPDCDetails.Name = "linkLabelEditPDCDetails";
-            this.linkLabelEditPDCDetails.Size = new System.Drawing.Size(25, 13);
-            this.linkLabelEditPDCDetails.TabIndex = 10;
-            this.linkLabelEditPDCDetails.TabStop = true;
-            this.linkLabelEditPDCDetails.Text = "Edit";
-            this.linkLabelEditPDCDetails.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelEditPDCDetails_LinkClicked);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 411);
-            this.Controls.Add(this.linkLabelEditPDCDetails);
             this.Controls.Add(this.buttonTestConnection);
             this.Controls.Add(this.buttonAnalyze);
             this.Controls.Add(this.tabControlImportOptions);
@@ -381,7 +366,6 @@ namespace SELPDCImporter
         private System.Windows.Forms.TabPage tabPageHostConnection;
         private System.Windows.Forms.TextBox textBoxConsoleOutput;
         private System.Windows.Forms.Button buttonTestConnection;
-        private System.Windows.Forms.LinkLabel linkLabelEditPDCDetails;
     }
 }
 

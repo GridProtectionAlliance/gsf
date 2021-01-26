@@ -74,6 +74,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigurationFrame.cs" />
+    <Compile Include="EditDetails.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditDetails.Designer.cs">
+      <DependentUpon>EditDetails.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\Device.cs" />
     <Compile Include="Model\Measurement.cs" />
     <Compile Include="Model\Phasor.cs" />
@@ -95,6 +101,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ImportParameters.cs" />
     <Compile Include="Settings.cs" />
+    <EmbeddedResource Include="EditDetails.resx">
+      <DependentUpon>EditDetails.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

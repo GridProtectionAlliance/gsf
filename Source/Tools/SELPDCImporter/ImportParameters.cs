@@ -39,7 +39,14 @@ namespace SELPDCImporter
 {
     public class ImportParameters : IDisposable
     {
-        public ConfigurationFrame ConfigFrame { get; set; }
+        // Config frame parsed from SEL PDC config file
+        public ConfigurationFrame SELPDCConfigFrame { get; set; }
+        
+        // Config frame extracted from GSF PDC database config
+        public ConfigurationFrame GSFPDCConfigFrame { get; set; }
+
+        // Config frame as edited by user, i.e., target config
+        public ConfigurationFrame TargetConfigFrame { get; set; }
 
         public AdoDataConnection Connection { get; private set; }
         

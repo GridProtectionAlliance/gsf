@@ -165,7 +165,7 @@ namespace SELPDCImporter
 
         public string Name { get; }
 
-        public string Acronym { get; }
+        public string Acronym { get; set; }
 
         public int ID { get; set; }
 

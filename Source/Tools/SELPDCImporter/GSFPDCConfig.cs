@@ -105,7 +105,7 @@ namespace SELPDCImporter
         public static void SaveConnection(ImportParameters importParams)
         {
             AdoDataConnection connection = importParams.Connection;
-            ConfigurationFrame configFrame = importParams.ConfigFrame;
+            ConfigurationFrame configFrame = importParams.SELPDCConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(connection);
             Guid nodeID = importParams.NodeID;
@@ -192,7 +192,7 @@ namespace SELPDCImporter
 
         private static void SavePMUDevices(ImportParameters importParams, Device parentDevice)
         {
-            ConfigurationFrame configFrame = importParams.ConfigFrame;
+            ConfigurationFrame configFrame = importParams.SELPDCConfigFrame;
 
             foreach (IConfigurationCell cell in configFrame.Cells)
             {
@@ -444,11 +444,11 @@ namespace SELPDCImporter
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
 
-        public static ConfigurationFrame ExtractConfigurationFrame(AdoDataConnection connection, ushort idCode)
+        public static ConfigurationFrame Extract(AdoDataConnection connection, ushort idCode)
         {
-            TableOperations<Device> deviceTable = new TableOperations<Device>(connection);
-            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
-            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
+            TableOperations<Device> deviceTable = new TableOperations<Device>(connection, _ => { });
+            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection, _ => { });
+            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection, _ => { });
             Device pdc = deviceTable.QueryParentDeviceByIDCode(idCode);
 
             if (pdc.ID == 0)
