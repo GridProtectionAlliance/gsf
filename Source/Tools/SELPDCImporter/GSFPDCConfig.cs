@@ -203,7 +203,6 @@ namespace SELPDCImporter
 
         private static void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
         {
-            ConfigurationFrame configFrame = importParams.ConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
             Device device = importParams.Devices?.FindDeviceByIDCode(configCell.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
@@ -241,7 +240,7 @@ namespace SELPDCImporter
                 Device newDevice = deviceTable.QueryDevice(device.Acronym);
 
                 // Save associated device records
-                SaveDeviceRecords(importParams, newDevice);
+                SaveDeviceRecords(importParams, configCell, newDevice);
             }
             else
             {
@@ -249,19 +248,17 @@ namespace SELPDCImporter
                 deviceTable.UpdateDevice(device);
 
                 // Save associated device records
-                SaveDeviceRecords(importParams, device);
+                SaveDeviceRecords(importParams, configCell, device);
             }
         }
 
-        private static void SaveDeviceRecords(ImportParameters importParams, Device device)
+        private static void SaveDeviceRecords(ImportParameters importParams, ConfigurationCell configCell, Device device)
         {
-            ConfigurationFrame configFrame = importParams.ConfigFrame;
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
-            ConfigurationCell cell = configFrame.Cells[0];
 
             // Add frequency
-            SaveFixedMeasurement(importParams, m_deviceSignalTypes["FREQ"], device, measurementTable, cell.FrequencyDefinition.Label);
+            SaveFixedMeasurement(importParams, m_deviceSignalTypes["FREQ"], device, measurementTable);
 
             // Add dF/dt
             SaveFixedMeasurement(importParams, m_deviceSignalTypes["DFDT"], device, measurementTable);
@@ -272,9 +269,9 @@ namespace SELPDCImporter
             // Add analogs
             SignalType analogSignalType = m_deviceSignalTypes["ALOG"];
 
-            for (int i = 0; i < cell.AnalogDefinitions.Count; i++)
+            for (int i = 0; i < configCell.AnalogDefinitions.Count; i++)
             {
-                if (cell.AnalogDefinitions[i] is not AnalogDefinition analogDefinition)
+                if (configCell.AnalogDefinitions[i] is not AnalogDefinition analogDefinition)
                     continue;
 
                 int index = i + 1;
@@ -286,7 +283,7 @@ namespace SELPDCImporter
                 measurement.DeviceID = device.ID;
                 measurement.PointTag = pointTag;
                 measurement.AlternateTag = analogDefinition.Label;
-                measurement.Description = analogDefinition.Description ?? $"{device.Acronym} Analog Value {index} {analogDefinition.AnalogType}: {analogDefinition.Label}";
+                measurement.Description = $"{device.Acronym} Analog Value {index} {analogDefinition.AnalogType}: {analogDefinition.Label}{(string.IsNullOrWhiteSpace(analogDefinition.Description) ? "" : $" - {analogDefinition.Description}")}";
                 measurement.SignalReference = signalReference;
                 measurement.SignalTypeID = analogSignalType.ID;
                 measurement.Internal = true;
@@ -298,9 +295,9 @@ namespace SELPDCImporter
             // Add digitals
             SignalType digitalSignalType = m_deviceSignalTypes["DIGI"];
 
-            for (int i = 0; i < cell.DigitalDefinitions.Count; i++)
+            for (int i = 0; i < configCell.DigitalDefinitions.Count; i++)
             {
-                if (cell.DigitalDefinitions[i] is not DigitalDefinition digitialDefinition)
+                if (configCell.DigitalDefinitions[i] is not DigitalDefinition digitalDefinition)
                     continue;
                 
                 int index = i + 1;
@@ -311,8 +308,8 @@ namespace SELPDCImporter
                 string pointTag = importParams.CreateIndexedPointTag(device.Acronym, digitalSignalType.Acronym, index);
                 measurement.DeviceID = device.ID;
                 measurement.PointTag = pointTag;
-                measurement.AlternateTag = digitialDefinition.Label;
-                measurement.Description = digitialDefinition.Description ?? $"{device.Acronym} Digital Value {index}: {digitialDefinition.Label}";
+                measurement.AlternateTag = digitalDefinition.Label;
+                measurement.Description = $"{device.Acronym} Digital Value {index}: {digitalDefinition.Label}{(string.IsNullOrWhiteSpace(digitalDefinition.Description) ? "" : $" - {digitalDefinition.Description}")}";
                 measurement.SignalReference = signalReference;
                 measurement.SignalTypeID = digitalSignalType.ID;
                 measurement.Internal = true;
@@ -322,10 +319,10 @@ namespace SELPDCImporter
             }
 
             // Add phasors
-            SaveDevicePhasors(importParams, cell, device, measurementTable);
+            SaveDevicePhasors(importParams, configCell, device, measurementTable);
         }
 
-        private static void SaveFixedMeasurement(ImportParameters importParams, SignalType signalType, Device device, TableOperations<Measurement> measurementTable, string label = null)
+        private static void SaveFixedMeasurement(ImportParameters importParams, SignalType signalType, Device device, TableOperations<Measurement> measurementTable, string description = null)
         {
             string signalReference = $"{device.Acronym}-{signalType.Suffix}";
 
@@ -334,7 +331,7 @@ namespace SELPDCImporter
             string pointTag = importParams.CreatePointTag(device.Acronym, signalType.Acronym);
             measurement.DeviceID = device.ID;
             measurement.PointTag = pointTag;
-            measurement.Description = $"{device.Acronym} {signalType.Name}{(string.IsNullOrWhiteSpace(label) ? "" : $" - {label}")}";
+            measurement.Description = $"{device.Acronym} {signalType.Name}{(string.IsNullOrWhiteSpace(description) ? "" : $" - {description}")}";
             measurement.SignalReference = signalReference;
             measurement.SignalTypeID = signalType.ID;
             measurement.Internal = true;
@@ -343,7 +340,7 @@ namespace SELPDCImporter
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
 
-        private static void SaveDevicePhasors(ImportParameters importParams, ConfigurationCell cell, Device device, TableOperations<Measurement> measurementTable)
+        private static void SaveDevicePhasors(ImportParameters importParams, ConfigurationCell configCell, Device device, TableOperations<Measurement> measurementTable)
         {
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
@@ -356,7 +353,7 @@ namespace SELPDCImporter
 
             Phasor[] phasors = phasorTable.QueryPhasorsForDevice(device.ID).ToArray();
 
-            bool dropAndAdd = phasors.Length != cell.PhasorDefinitions.Count;
+            bool dropAndAdd = phasors.Length != configCell.PhasorDefinitions.Count;
 
             if (!dropAndAdd)
             {
@@ -373,10 +370,10 @@ namespace SELPDCImporter
 
             if (dropAndAdd)
             {
-                if (cell.PhasorDefinitions.Count > 0)
+                if (configCell.PhasorDefinitions.Count > 0)
                     connection.DeletePhasorsForDevice(device.ID);
 
-                foreach (IPhasorDefinition definition in cell.PhasorDefinitions)
+                foreach (IPhasorDefinition definition in configCell.PhasorDefinitions)
                 {
                     if (definition is not PhasorDefinition phasorDefinition)
                         continue;
@@ -399,7 +396,7 @@ namespace SELPDCImporter
             }
             else
             {
-                foreach (IPhasorDefinition definition in cell.PhasorDefinitions)
+                foreach (IPhasorDefinition definition in configCell.PhasorDefinitions)
                 {
                     if (definition is not PhasorDefinition phasorDefinition)
                         continue;
@@ -425,10 +422,19 @@ namespace SELPDCImporter
             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
             Measurement measurement = measurementTable.QueryMeasurement(signalReference);
             string pointTag = importParams.CreatePhasorPointTag(device.Acronym, signalType.Acronym, phasorDefinition.Label, phasorDefinition.Phase.ToString(), index, 500);
+            char phase = phasorDefinition.Phase;
+
+            string phaseDescription = phase switch
+            {
+                '+' => "Positive Sequence",
+                '-' => "Negative Sequence",
+                '0' => "Zero Sequence",
+                 _  => $"{phase}-Phase"
+            };
 
             measurement.DeviceID = device.ID;
             measurement.PointTag = pointTag;
-            measurement.Description = phasorDefinition.Description ?? $"{device.Acronym} {phasorDefinition.Label} {signalType.Name}";
+            measurement.Description = $"{device.Acronym} {phasorDefinition.Label.Trim()} {signalType.Name} ({phaseDescription}){(string.IsNullOrWhiteSpace(phasorDefinition.Description) ? "" : $" - {phasorDefinition.Description}")}";
             measurement.PhasorSourceIndex = index;
             measurement.SignalReference = signalReference;
             measurement.SignalTypeID = signalType.ID;
@@ -472,7 +478,7 @@ namespace SELPDCImporter
 
                     configCell.FrequencyDefinition = new FrequencyDefinition(configCell) 
                     {
-                        Label = "Frequency"
+                        Label = $"{configCell.IDLabel} Frequency"
                     };
 
                     // Extract phasor definitions
@@ -509,7 +515,7 @@ namespace SELPDCImporter
 
                     configCell.FrequencyDefinition = new FrequencyDefinition(configCell)
                     {
-                        Label = "Frequency"
+                        Label = $"{configCell.IDLabel} Frequency"
                     };
 
                     // Extract phasor definitions
@@ -541,10 +547,9 @@ namespace SELPDCImporter
                     ParentID = null,
                 };
 
-
                 configCell.FrequencyDefinition = new FrequencyDefinition(configCell)
-                { 
-                    Label = "Frequency"
+                {
+                    Label = $"{configCell.IDLabel} Frequency"
                 };
 
                 // Extract phasor definitions
@@ -566,6 +571,5 @@ namespace SELPDCImporter
 
             return configFrame;
         }
-
     }
 }

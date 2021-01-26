@@ -205,11 +205,12 @@ namespace SELPDCImporter
         private void buttonAnalyze_Click(object sender, EventArgs e)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
-            
-            m_analyzeInProgress = true;
 
             try
             {
+                m_analyzeInProgress = true;
+                Cursor.Current = Cursors.WaitCursor;
+
                 string hostConfigFile = textBoxHostConfig.Text;
 
                 if (!File.Exists(hostConfigFile))
@@ -273,6 +274,7 @@ namespace SELPDCImporter
             finally
             {
                 m_analyzeInProgress = false;
+                Cursor.Current = Cursors.Default;
             }
 
             // Provide user feedback on analyze operation completion
@@ -283,6 +285,8 @@ namespace SELPDCImporter
         {
             try
             {
+                Cursor.Current = Cursors.WaitCursor;
+
                 m_importParams.HostConfig = textBoxHostConfig.Text;
                 m_importParams.EditedConnectionString = textBoxConnectionString.Text;
                 m_importParams.LoadExistingDevices();
@@ -299,6 +303,10 @@ namespace SELPDCImporter
             catch (Exception ex)
             {
                 MessageBox.Show(this, $"Import failed: Failed while importing PDC configuration: {ex.Message}", "Import PDC Config Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor.Current = Cursors.Default;
             }
         }
 

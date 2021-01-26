@@ -222,16 +222,16 @@ namespace SELPDCImporter
                 .GetValue(DefaultMulticastGroup);
 
             // Setup MultiProtocolFrameParser style connection string
-            Dictionary<string, string> getTcpSettings(bool useSimpleKey = false)
+            Dictionary<string, string> getTcpSettings(bool commandChannel = false)
             {
                 // Use of simple "protocol" key in commandChannel and separation of
                 // server/port keys are required to create a proper "PmuConnection"
                 // file that can be successfully parsed by the PMU Connection Tester
                 return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    [useSimpleKey ? "protocol" : nameof(TransportProtocol)] = nameof(TransportProtocol.Tcp),
+                    [commandChannel ? "protocol" : nameof(TransportProtocol)] = nameof(TransportProtocol.Tcp),
                     ["server"] = IPAddressToken,
-                    ["port"] = useSimpleKey ? $"{commandPort}" : $"{port}",
+                    ["port"] = commandChannel ? $"{commandPort}" : $"{port}",
                     ["isListener"] = "false",
                     ["interface"] = "0.0.0.0"
                 };

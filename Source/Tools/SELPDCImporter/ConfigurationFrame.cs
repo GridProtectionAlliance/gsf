@@ -33,7 +33,7 @@ namespace SELPDCImporter
     public sealed class FrequencyDefinition : FrequencyDefinitionBase
     {
         public FrequencyDefinition(ConfigurationCell parent)
-            : base(parent, $"{parent.StationName} Freq", 1000, 100, 0.0D)
+            : base(parent, null, 1000, 100, 0.0D)
         {
         }
 
