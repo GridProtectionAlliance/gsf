@@ -87,6 +87,8 @@ namespace SELPDCImporter
         }
 
         public string Description { get; }
+
+        public override int MaximumLabelLength => int.MaxValue;
     }
 
     public sealed class DigitalDefinition : DigitalDefinitionBase
@@ -130,6 +132,10 @@ namespace SELPDCImporter
         public override DataFormat PhasorDataFormat { get; set; } = DataFormat.FloatingPoint;
 
         public override CoordinateFormat PhasorCoordinateFormat { get; set; } = CoordinateFormat.Polar;
+
+        public override int MaximumStationNameLength => int.MaxValue;
+
+        public override int IDLabelLength => int.MaxValue; 
     }
 
     public sealed class ConfigurationCellCollection : GSF.PhasorProtocols.ConfigurationCellCollection
@@ -241,6 +247,27 @@ namespace SELPDCImporter
             }
 
             return pdcDetails.ToString();
+        }
+
+        public static ConfigurationFrame Clone(ConfigurationFrame source, bool cloneCells)
+        {
+            ConfigurationFrame clone = new ConfigurationFrame(source.IDCode, source.FrameRate, source.Name, source.Acronym)
+            {
+                Settings = new Dictionary<string, string>(source.Settings, StringComparer.OrdinalIgnoreCase),
+                DeviceIPs = new Dictionary<string, string>(source.DeviceIPs, StringComparer.OrdinalIgnoreCase),
+                TargetDeviceIP = source.TargetDeviceIP,
+                TransportProtocol = source.TransportProtocol,
+                ID = source.ID,
+                IsConcentrator = source.IsConcentrator,
+            };
+
+            if (cloneCells)
+            {
+                foreach (IConfigurationCell cell in source.Cells)
+                    clone.Cells.Add(cell);
+            }
+
+            return clone;
         }
     }
 }
