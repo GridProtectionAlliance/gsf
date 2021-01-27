@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using SELPDCImporter.Model;
 using GSF;
 using GSF.Data;
@@ -51,7 +52,7 @@ namespace SELPDCImporter
             deviceTable.QueryRecordWhere("ID = {0}", deviceID) ?? deviceTable.NewDevice();
 
         public static Device QueryParentDeviceByIDCode(this TableOperations<Device> deviceTable, ushort idCode) =>
-            deviceTable.QueryRecordWhere("ParentID IS NULL AND AccessID = {0}", idCode) ?? deviceTable.NewDevice();
+            deviceTable.QueryRecordWhere("ParentID IS NULL AND AccessID = {0}", (int)idCode) ?? deviceTable.NewDevice();
 
         public static IEnumerable<Device> QueryChildDevices(this TableOperations<Device> deviceTable, int deviceID) =>
             deviceTable.QueryRecordsWhere("ParentID = {0}", deviceID);
@@ -89,6 +90,14 @@ namespace SELPDCImporter
         public static Device FindDeviceByIDCode(this Device[] devices, ushort idCode, int? parentID = null) =>
             devices.FirstOrDefault(device => device.ParentID == parentID && device.AccessID == idCode);
 
+        public static void DeleteDeviceByIDCode(this Device[] devices, TableOperations<Device> deviceTable, ushort idCode, int parentID)
+        {
+            Device device = devices.FindDeviceByIDCode(idCode, parentID);
+
+            if (device is not null)
+                deviceTable?.DeleteRecord(device);
+        }
+
         // Remove any invalid characters from acronym
         public static string GetCleanAcronym(this string acronym) => 
             Regex.Replace(acronym.ToUpperInvariant().Replace(" ", "_"), @"[^A-Z0-9\-!_\.@#\$]", "", RegexOptions.IgnoreCase);
@@ -105,7 +114,7 @@ namespace SELPDCImporter
         public static void SaveConnection(ImportParameters importParams)
         {
             AdoDataConnection connection = importParams.Connection;
-            ConfigurationFrame configFrame = importParams.SELPDCConfigFrame;
+            ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(connection);
             Guid nodeID = importParams.NodeID;
@@ -178,7 +187,7 @@ namespace SELPDCImporter
                 Device newDevice = deviceTable.QueryDevice(device.Acronym);
 
                 // Save associated PMU records
-                SavePMUDevices(importParams, newDevice);
+                UpdatePMUDevices(importParams, newDevice);
             }
             else
             {
@@ -186,20 +195,28 @@ namespace SELPDCImporter
                 deviceTable.UpdateDevice(device);
 
                 // Save associated PMU records
-                SavePMUDevices(importParams, device);
+                UpdatePMUDevices(importParams, device);
             }
         }
 
-        private static void SavePMUDevices(ImportParameters importParams, Device parentDevice)
+        private static void UpdatePMUDevices(ImportParameters importParams, Device parentDevice)
         {
-            ConfigurationFrame configFrame = importParams.SELPDCConfigFrame;
+            ConfigurationFrame configFrame = importParams.TargetConfigFrame;
 
             foreach (IConfigurationCell cell in configFrame.Cells)
             {
                 if (cell is ConfigurationCell configCell)
-                    SavePMUDevice(importParams, configCell, parentDevice);
+                {
+                    if (configCell.Delete)
+                        DeletePMUDevice(importParams, configCell, parentDevice);
+                    else
+                        SavePMUDevice(importParams, configCell, parentDevice);
+                }
             }
         }
+
+        private static void DeletePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice) => 
+            importParams.Devices?.DeleteDeviceByIDCode(importParams.DeviceTable, configCell.IDCode, parentDevice.ID);
 
         private static void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
         {
@@ -446,9 +463,9 @@ namespace SELPDCImporter
 
         public static ConfigurationFrame Extract(AdoDataConnection connection, ushort idCode)
         {
-            TableOperations<Device> deviceTable = new TableOperations<Device>(connection, _ => { });
-            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection, _ => { });
-            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection, _ => { });
+            TableOperations<Device> deviceTable = new TableOperations<Device>(connection, ex => { MessageBox.Show(ex.Message, "Database Query Exception", MessageBoxButtons.OK, MessageBoxIcon.Error); });
+            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection, ex => { MessageBox.Show(ex.Message, "Database Query Exception", MessageBoxButtons.OK, MessageBoxIcon.Error); });
+            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection, ex => { MessageBox.Show(ex.Message, "Database Query Exception", MessageBoxButtons.OK, MessageBoxIcon.Error); });
             Device pdc = deviceTable.QueryParentDeviceByIDCode(idCode);
 
             if (pdc.ID == 0)

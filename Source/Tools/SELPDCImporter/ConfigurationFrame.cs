@@ -121,6 +121,8 @@ namespace SELPDCImporter
 
         public int? ParentID { get; set; }
 
+        public bool Delete { get; set; }
+
         public override DataFormat AnalogDataFormat { get; set; } = DataFormat.FloatingPoint;
 
         public override DataFormat FrequencyDataFormat { get; set; } = DataFormat.FloatingPoint;

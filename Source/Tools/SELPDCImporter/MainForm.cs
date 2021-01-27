@@ -169,11 +169,15 @@ namespace SELPDCImporter
         private void textBoxPDCConfig_TextChanged(object sender, EventArgs e)
         {
             buttonAnalyze.Enabled = true;
-            buttonImport.Enabled = false;
+            buttonReview.Enabled = false;
             buttonTestConnection.Enabled = false;
 
             labelAnalyzeStatus.Text = $"{labelAnalyzeStatus.Tag}";
             textBoxPDCDetails.Text = "";
+            textBoxConnectionString.Text = "";
+            comboBoxIPAddresses.DataSource = null;
+            comboBoxIPAddresses.Items.Clear();
+            m_connectionStringManuallyEdited = false;
         }
 
         private void buttonBrowseHostConfig_Click(object sender, EventArgs e)
@@ -269,8 +273,8 @@ namespace SELPDCImporter
                 m_connectionStringManuallyEdited = false;
 
                 // Enable button sequence based on parse success
-                buttonTestConnection.Enabled = buttonImport.Enabled = configFrame.Cells.Count > 0;
-                buttonAnalyze.Enabled = !buttonImport.Enabled;
+                buttonTestConnection.Enabled = buttonReview.Enabled = configFrame.Cells.Count > 0;
+                buttonAnalyze.Enabled = !buttonReview.Enabled;
             }
             finally
             {
@@ -282,13 +286,12 @@ namespace SELPDCImporter
             labelAnalyzeStatus.Text = $"Analyze completed in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2)}.";
         }
 
-        private void buttonImport_Click(object sender, EventArgs e)
+        private void buttonReview_Click(object sender, EventArgs e)
         {
             EditDetails editDetails = new EditDetails { ImportParams = m_importParams };
 
-            editDetails.ShowDialog(this);
-
-            return;
+            if (editDetails.ShowDialog(this) == DialogResult.Cancel)
+                return;
 
             try
             {
@@ -301,11 +304,14 @@ namespace SELPDCImporter
                 GSFPDCConfig.SaveConnection(m_importParams);
 
                 // Initialize new connection from host service
-                m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.SELPDCConfigFrame.Acronym}");
+                m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.TargetConfigFrame.Acronym}");
 
-                MessageBox.Show(this, $"Successfully imported {m_importParams.SELPDCConfigFrame.Cells.Count:N0} PMU devices.", "PDC Import Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, $"Successfully imported {m_importParams.TargetConfigFrame.Cells.Count:N0} PMU devices.", "PDC Import Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.SELPDCConfigFrame.Acronym}");
+                m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.TargetConfigFrame.Acronym}");
+
+                // Clear PDC donfig text to ready for next
+                BeginInvoke(new Action(() => textBoxPDCConfig.Text = ""));
             }
             catch (Exception ex)
             {

@@ -37,7 +37,7 @@ namespace SELPDCImporter
             this.textBoxPDCConfig = new System.Windows.Forms.TextBox();
             this.labelPDCConfig = new System.Windows.Forms.Label();
             this.buttonAnalyze = new System.Windows.Forms.Button();
-            this.buttonImport = new System.Windows.Forms.Button();
+            this.buttonReview = new System.Windows.Forms.Button();
             this.openFileDialogHostConfig = new System.Windows.Forms.OpenFileDialog();
             this.openFileDialogPDCConfig = new System.Windows.Forms.OpenFileDialog();
             this.comboBoxIPAddresses = new System.Windows.Forms.ComboBox();
@@ -138,17 +138,17 @@ namespace SELPDCImporter
             this.buttonAnalyze.UseVisualStyleBackColor = true;
             this.buttonAnalyze.Click += new System.EventHandler(this.buttonAnalyze_Click);
             // 
-            // buttonImport
+            // buttonReview
             // 
-            this.buttonImport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonImport.Enabled = false;
-            this.buttonImport.Location = new System.Drawing.Point(695, 377);
-            this.buttonImport.Name = "buttonImport";
-            this.buttonImport.Size = new System.Drawing.Size(75, 23);
-            this.buttonImport.TabIndex = 9;
-            this.buttonImport.Text = "&Import";
-            this.buttonImport.UseVisualStyleBackColor = true;
-            this.buttonImport.Click += new System.EventHandler(this.buttonImport_Click);
+            this.buttonReview.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonReview.Enabled = false;
+            this.buttonReview.Location = new System.Drawing.Point(695, 377);
+            this.buttonReview.Name = "buttonReview";
+            this.buttonReview.Size = new System.Drawing.Size(75, 23);
+            this.buttonReview.TabIndex = 9;
+            this.buttonReview.Text = "&Review";
+            this.buttonReview.UseVisualStyleBackColor = true;
+            this.buttonReview.Click += new System.EventHandler(this.buttonReview_Click);
             // 
             // openFileDialogHostConfig
             // 
@@ -316,7 +316,7 @@ namespace SELPDCImporter
             this.Controls.Add(this.labelAnalyzeStatus);
             this.Controls.Add(this.textBoxPDCDetails);
             this.Controls.Add(this.labelPDCDetails);
-            this.Controls.Add(this.buttonImport);
+            this.Controls.Add(this.buttonReview);
             this.Controls.Add(this.buttonBrowsePDCConfig);
             this.Controls.Add(this.textBoxPDCConfig);
             this.Controls.Add(this.labelPDCConfig);
@@ -352,7 +352,7 @@ namespace SELPDCImporter
         public System.Windows.Forms.TextBox textBoxPDCConfig;
         private System.Windows.Forms.Label labelPDCConfig;
         private System.Windows.Forms.Button buttonAnalyze;
-        private System.Windows.Forms.Button buttonImport;
+        private System.Windows.Forms.Button buttonReview;
         private System.Windows.Forms.OpenFileDialog openFileDialogHostConfig;
         private System.Windows.Forms.OpenFileDialog openFileDialogPDCConfig;
         private System.Windows.Forms.ComboBox comboBoxIPAddresses;
