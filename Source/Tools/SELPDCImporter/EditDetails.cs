@@ -50,11 +50,7 @@ namespace SELPDCImporter
             ConfigurationFrame selPDCConfigFrame = ImportParams.SELPDCConfigFrame;
             ConfigurationFrame gsfPDCConfigFrame = ImportParams.GSFPDCConfigFrame;
 
-            TargetConfigFrame = new ConfigurationFrame(
-                gsfPDCConfigFrame?.IDCode ?? selPDCConfigFrame.IDCode,
-                gsfPDCConfigFrame?.FrameRate ?? selPDCConfigFrame.FrameRate,
-                gsfPDCConfigFrame?.Name ?? selPDCConfigFrame.Name,
-                gsfPDCConfigFrame?.Acronym ?? selPDCConfigFrame.Acronym);
+            TargetConfigFrame = ConfigurationFrame.Clone(gsfPDCConfigFrame ?? selPDCConfigFrame, false);
 
             textBoxSCFConnectionName.Text = selPDCConfigFrame.Acronym;
             textBoxSCFConnectionName.Click += ConnectionNameOnClick;
@@ -65,8 +61,13 @@ namespace SELPDCImporter
             textBoxTCFConnectionName.TextChanged += (_, _) =>
             {
                 TargetConfigFrame.Acronym = textBoxTCFConnectionName.Text;
-                textBoxSCFConnectionName.BackColor = string.Equals(textBoxTCFConnectionName.Text, textBoxSCFConnectionName.Text) ? m_matchedColor : m_unmatchedColor;
-                textBoxGCFConnectionName.BackColor = string.Equals(textBoxTCFConnectionName.Text, textBoxGCFConnectionName.Text) ? m_matchedColor : m_unmatchedColor;
+                
+                bool matchesSCF = string.Equals(textBoxTCFConnectionName.Text, textBoxSCFConnectionName.Text);
+                bool matchesGSF = string.Equals(textBoxTCFConnectionName.Text, textBoxGCFConnectionName.Text);
+                
+                textBoxTCFConnectionName.BackColor = matchesSCF || matchesGSF ? m_matchedColor : m_unmatchedColor;
+                textBoxSCFConnectionName.BackColor = matchesSCF ? m_matchedColor : m_unmatchedColor;
+                textBoxGCFConnectionName.BackColor = matchesGSF ? m_matchedColor : m_unmatchedColor;
             };
 
             textBoxTCFConnectionName.Leave += (_, _) => textBoxTCFConnectionName.Text = textBoxTCFConnectionName.Text.GetCleanAcronym();
@@ -185,8 +186,12 @@ namespace SELPDCImporter
             TextBox targetTextBox = NewTextBox(false);
             targetTextBox.TextChanged += (_, _) =>
             {
-                selTextBox.BackColor = string.Equals(targetTextBox.Text, selTextBox.Text) ? m_matchedColor : m_unmatchedColor;
-                gsfTextBox.BackColor = string.Equals(targetTextBox.Text, gsfTextBox.Text) ? m_matchedColor : m_unmatchedColor;
+                bool matchesSCF = string.Equals(targetTextBox.Text, selTextBox.Text);
+                bool matchesGSF = string.Equals(targetTextBox.Text, gsfTextBox.Text);
+                
+                targetTextBox.BackColor = matchesSCF || matchesGSF ? m_matchedColor : m_unmatchedColor;
+                selTextBox.BackColor = matchesSCF ? m_matchedColor : m_unmatchedColor;
+                gsfTextBox.BackColor = matchesGSF ? m_matchedColor : m_unmatchedColor;
             };
             targetTextBox.Leave += (_, _) => targetTextBox.Text = targetTextBox.Text.GetCleanAcronym();
             targetTextBox.Text = gsfValue ?? selValue;
