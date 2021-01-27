@@ -237,6 +237,10 @@ namespace SELPDCImporter
             if (!string.IsNullOrWhiteSpace(configCell.StationName))
                 deviceName = configCell.StationName;
 
+            // Keep old device acronym for measurement updates
+            device.OldAcronym = string.IsNullOrWhiteSpace(device.Acronym) ? deviceAcronym : device.Acronym;
+
+            // Assign new device fields
             device.NodeID = nodeID;
             device.ParentID = parentDevice.ID;
             device.Acronym = deviceAcronym;
@@ -292,16 +296,18 @@ namespace SELPDCImporter
                     continue;
 
                 int index = i + 1;
-                string signalReference = $"{device.Acronym}-{analogSignalType.Suffix}{index}";
+                string oldSignalReference = $"{device.OldAcronym}-{analogSignalType.Suffix}{index}";
+                string newSignalReference = $"{device.Acronym}-{analogSignalType.Suffix}{index}";
 
                 // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-                Measurement measurement = measurementTable.QueryMeasurement(signalReference);
+                Measurement measurement = measurementTable.QueryMeasurement(oldSignalReference);
                 string pointTag = importParams.CreateIndexedPointTag(device.Acronym, analogSignalType.Acronym, index);
+                
                 measurement.DeviceID = device.ID;
                 measurement.PointTag = pointTag;
                 measurement.AlternateTag = analogDefinition.Label;
                 measurement.Description = $"{device.Acronym} Analog Value {index} {analogDefinition.AnalogType}: {analogDefinition.Label}{(string.IsNullOrWhiteSpace(analogDefinition.Description) ? "" : $" - {analogDefinition.Description}")}";
-                measurement.SignalReference = signalReference;
+                measurement.SignalReference = newSignalReference;
                 measurement.SignalTypeID = analogSignalType.ID;
                 measurement.Internal = true;
                 measurement.Enabled = true;
@@ -318,16 +324,18 @@ namespace SELPDCImporter
                     continue;
                 
                 int index = i + 1;
-                string signalReference = $"{device.Acronym}-{digitalSignalType.Suffix}{index}";
+                string oldSignalReference = $"{device.OldAcronym}-{digitalSignalType.Suffix}{index}";
+                string newSignalReference = $"{device.Acronym}-{digitalSignalType.Suffix}{index}";
 
                 // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-                Measurement measurement = measurementTable.QueryMeasurement(signalReference);
+                Measurement measurement = measurementTable.QueryMeasurement(oldSignalReference);
                 string pointTag = importParams.CreateIndexedPointTag(device.Acronym, digitalSignalType.Acronym, index);
+                
                 measurement.DeviceID = device.ID;
                 measurement.PointTag = pointTag;
                 measurement.AlternateTag = digitalDefinition.Label;
                 measurement.Description = $"{device.Acronym} Digital Value {index}: {digitalDefinition.Label}{(string.IsNullOrWhiteSpace(digitalDefinition.Description) ? "" : $" - {digitalDefinition.Description}")}";
-                measurement.SignalReference = signalReference;
+                measurement.SignalReference = newSignalReference;
                 measurement.SignalTypeID = digitalSignalType.ID;
                 measurement.Internal = true;
                 measurement.Enabled = true;
@@ -341,15 +349,17 @@ namespace SELPDCImporter
 
         private static void SaveFixedMeasurement(ImportParameters importParams, SignalType signalType, Device device, TableOperations<Measurement> measurementTable, string description = null)
         {
-            string signalReference = $"{device.Acronym}-{signalType.Suffix}";
+            string oldSignalReference = $"{device.OldAcronym}-{signalType.Suffix}";
+            string newSignalReference = $"{device.Acronym}-{signalType.Suffix}";
 
             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-            Measurement measurement = measurementTable.QueryMeasurement(signalReference);
+            Measurement measurement = measurementTable.QueryMeasurement(oldSignalReference);
             string pointTag = importParams.CreatePointTag(device.Acronym, signalType.Acronym);
+            
             measurement.DeviceID = device.ID;
             measurement.PointTag = pointTag;
             measurement.Description = $"{device.Acronym} {signalType.Name}{(string.IsNullOrWhiteSpace(description) ? "" : $" - {description}")}";
-            measurement.SignalReference = signalReference;
+            measurement.SignalReference = newSignalReference;
             measurement.SignalTypeID = signalType.ID;
             measurement.Internal = true;
             measurement.Enabled = true;
@@ -434,10 +444,11 @@ namespace SELPDCImporter
 
         private static void SavePhasorMeasurement(ImportParameters importParams, SignalType signalType, Device device, PhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable)
         {
-            string signalReference = $"{device.Acronym}-{signalType.Suffix}{index}";
+            string oldSignalReference = $"{device.OldAcronym}-{signalType.Suffix}{index}";
+            string newSignalReference = $"{device.Acronym}-{signalType.Suffix}{index}";
 
             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
-            Measurement measurement = measurementTable.QueryMeasurement(signalReference);
+            Measurement measurement = measurementTable.QueryMeasurement(oldSignalReference);
             string pointTag = importParams.CreatePhasorPointTag(device.Acronym, signalType.Acronym, phasorDefinition.Label, phasorDefinition.Phase.ToString(), index, 500);
             char phase = phasorDefinition.Phase;
 
@@ -453,7 +464,7 @@ namespace SELPDCImporter
             measurement.PointTag = pointTag;
             measurement.Description = $"{device.Acronym} {phasorDefinition.Label.Trim()} {signalType.Name} ({phaseDescription}){(string.IsNullOrWhiteSpace(phasorDefinition.Description) ? "" : $" - {phasorDefinition.Description}")}";
             measurement.PhasorSourceIndex = index;
-            measurement.SignalReference = signalReference;
+            measurement.SignalReference = newSignalReference;
             measurement.SignalTypeID = signalType.ID;
             measurement.Internal = true;
             measurement.Enabled = true;
@@ -463,9 +474,9 @@ namespace SELPDCImporter
 
         public static ConfigurationFrame Extract(AdoDataConnection connection, ushort idCode)
         {
-            TableOperations<Device> deviceTable = new TableOperations<Device>(connection, ex => { MessageBox.Show(ex.Message, "Database Query Exception", MessageBoxButtons.OK, MessageBoxIcon.Error); });
-            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection, ex => { MessageBox.Show(ex.Message, "Database Query Exception", MessageBoxButtons.OK, MessageBoxIcon.Error); });
-            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection, ex => { MessageBox.Show(ex.Message, "Database Query Exception", MessageBoxButtons.OK, MessageBoxIcon.Error); });
+            TableOperations<Device> deviceTable = new TableOperations<Device>(connection);
+            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
+            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
             Device pdc = deviceTable.QueryParentDeviceByIDCode(idCode);
 
             if (pdc.ID == 0)
