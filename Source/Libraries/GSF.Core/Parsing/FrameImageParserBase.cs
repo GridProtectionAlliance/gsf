@@ -38,6 +38,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 using GSF.Collections;
+using GSF.Diagnostics;
 
 namespace GSF.Parsing
 {
@@ -283,6 +284,67 @@ namespace GSF.Parsing
         /// <param name="length">Maximum length of valid data from offset.</param>
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFrame(byte[] buffer, int offset, int length)
+        {
+            if (StreamInitialized)
+                return ParseNextFrame(buffer, offset, length);
+
+            if (!ProtocolUsesSyncBytes)
+            {
+                StreamInitialized = true;
+                return ParseNextFrame(buffer, offset, length);
+            }
+
+            // Attempt multiple sync-byte frame alignments until a successful frame is parsed
+            int startIndex = offset;
+            int count = length;
+
+            while (true)
+            {
+                try
+                {
+                    // Attempt to parse frame at current location, location will be
+                    // will at sync bytes, but frame alignment may not be valid
+                    int parsedLength = ParseNextFrame(buffer, offset, count);
+
+                    // If there is not enough buffer to parse header or full frame, bail out early
+                    // instructing BinaryImageParserBase to hold on to buffer and wait for more data
+                    if (parsedLength == 0)
+                        return 0;
+
+                    StreamInitialized = true;
+                    return parsedLength + (offset - startIndex);
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, "Handling frame realignment during stream initialization");
+
+                    offset++;
+                    count--;
+
+                    if (count > 0)
+                    {
+                        // Scan ahead to next set of sync bytes
+                        int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
+
+                        if (syncBytesPosition > -1)
+                        {
+                            count -= syncBytesPosition - offset;
+                            offset = syncBytesPosition;
+                        }
+                        else
+                        {
+                            return length;
+                        }
+                    }
+                    else
+                    {
+                        return length;
+                    }
+                }
+            }
+        }
+
+        private int ParseNextFrame(byte[] buffer, int offset, int length)
         {
             int parsedLength;
 

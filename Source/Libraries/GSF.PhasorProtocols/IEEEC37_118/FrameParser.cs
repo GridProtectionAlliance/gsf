@@ -203,58 +203,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Output type specific frame parsing algorithm.
-        /// </summary>
-        /// <param name="buffer">Buffer containing data to parse.</param>
-        /// <param name="offset">Offset index into buffer that represents where to start parsing.</param>
-        /// <param name="length">Maximum length of valid data from offset.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        protected override int ParseFrame(byte[] buffer, int offset, int length)
-        {
-            if (StreamInitialized && buffer[offset] == PhasorProtocols.Common.SyncByte)
-                return base.ParseFrame(buffer, offset, length);
-
-            // Attempt multiple sync-byte frame alignments until a successful frame is parsed
-            int startIndex = offset;
-            int count = length;
-
-            while (true)
-            {
-                try
-                {
-                    ParseCommonHeader(buffer, offset, count);
-                    int parsedLength = base.ParseFrame(buffer, offset, count);
-                    StreamInitialized = true;
-                    return parsedLength + (offset - startIndex);
-                }
-                catch
-                {
-                    offset++;
-                    count--;
-
-                    if (count > 0)
-                    {
-                        int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset, count);
-
-                        if (syncBytesPosition > -1)
-                        {
-                            count -= syncBytesPosition - offset;
-                            offset = syncBytesPosition;
-                        }
-                        else
-                        {
-                            return length;
-                        }
-                    }
-                    else
-                    {
-                        return length;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Parses a common header instance that implements <see cref="ICommonHeader{TTypeIdentifier}"/> for the output type represented
         /// in the binary image.
         /// </summary>
