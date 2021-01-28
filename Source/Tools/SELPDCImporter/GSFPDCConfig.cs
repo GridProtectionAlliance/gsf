@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using SELPDCImporter.Model;
 using GSF;
 using GSF.Data;
@@ -54,8 +53,14 @@ namespace SELPDCImporter
         public static Device QueryParentDeviceByIDCode(this TableOperations<Device> deviceTable, ushort idCode) =>
             deviceTable.QueryRecordWhere("ParentID IS NULL AND AccessID = {0}", (int)idCode) ?? deviceTable.NewDevice();
 
-        public static IEnumerable<Device> QueryChildDevices(this TableOperations<Device> deviceTable, int deviceID) =>
-            deviceTable.QueryRecordsWhere("ParentID = {0}", deviceID);
+        public static IEnumerable<Device> QueryChildDevices(this TableOperations<Device> deviceTable, int parentID) =>
+            deviceTable.QueryRecordsWhere("ParentID = {0}", parentID);
+
+        public static bool ParentDeviceIsUnique(this TableOperations<Device> deviceTable, string acronym, ushort idCode) =>
+            deviceTable.QueryRecordWhere("ParentID IS NULL AND AccessID <> {0} AND Acronym = {1}", (int)idCode, acronym) is null;
+        
+        public static bool ChildDeviceIsUnique(this TableOperations<Device> deviceTable, int parentID, string acronym, ushort idCode) =>
+            deviceTable.QueryRecordWhere("(ParentID <> {0} OR AccessID <> {1}) AND Acronym = {2}", parentID, (int)idCode, acronym) is null;
 
         public static void UpdateDevice(this TableOperations<Device> deviceTable, Device device) => 
             deviceTable.UpdateRecord(device);
@@ -108,8 +113,9 @@ namespace SELPDCImporter
         // Connection string template
         private const string ConnectionStringTemplate = "{0}; autoStartDataParsingSequence = true; skipDisableRealTimeData = false; disableRealTimeDataOnStop = true";
 
-        private static Dictionary<string, SignalType> m_deviceSignalTypes;
-        private static Dictionary<string, SignalType> m_phasorSignalTypes;
+        private static Dictionary<string, SignalType> s_deviceSignalTypes;
+        private static Dictionary<string, SignalType> s_phasorSignalTypes;
+        private static Device[] s_devices;
 
         public static void SaveConnection(ImportParameters importParams)
         {
@@ -120,16 +126,19 @@ namespace SELPDCImporter
             Guid nodeID = importParams.NodeID;
             string connectionString = importParams.EditedConnectionString;
 
+            // Load a list of all existing device records
+            s_devices = deviceTable.QueryRecords().ToArray();
+
             // Apply other connection string parameters that are specific to device operation
             importParams.EditedConnectionString = string.Format(ConnectionStringTemplate, importParams.EditedConnectionString);
 
-            if (m_deviceSignalTypes is null)
-                m_deviceSignalTypes = signalTypeTable.LoadSignalTypes("PMU").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
+            if (s_deviceSignalTypes is null)
+                s_deviceSignalTypes = signalTypeTable.LoadSignalTypes("PMU").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-            if (m_phasorSignalTypes is null)
-                m_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
+            if (s_phasorSignalTypes is null)
+                s_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-            Device device = importParams.Devices?.FindDeviceByIDCode(configFrame.IDCode) ?? deviceTable.NewDevice();
+            Device device = s_devices.FindDeviceByIDCode(configFrame.IDCode) ?? deviceTable.NewDevice();
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             bool autoStartDataParsingSequence = true;
@@ -216,13 +225,13 @@ namespace SELPDCImporter
         }
 
         private static void DeletePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice) => 
-            importParams.Devices?.DeleteDeviceByIDCode(importParams.DeviceTable, configCell.IDCode, parentDevice.ID);
+            s_devices.DeleteDeviceByIDCode(importParams.DeviceTable, configCell.IDCode, parentDevice.ID);
 
         private static void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
         {
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
-            Device device = importParams.Devices?.FindDeviceByIDCode(configCell.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
+            Device device = s_devices.FindDeviceByIDCode(configCell.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
             string deviceAcronym = configCell.IDLabel;
             string deviceName = null;
 
@@ -279,16 +288,16 @@ namespace SELPDCImporter
             TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
 
             // Add frequency
-            SaveFixedMeasurement(importParams, m_deviceSignalTypes["FREQ"], device, measurementTable);
+            SaveFixedMeasurement(importParams, s_deviceSignalTypes["FREQ"], device, measurementTable);
 
             // Add dF/dt
-            SaveFixedMeasurement(importParams, m_deviceSignalTypes["DFDT"], device, measurementTable);
+            SaveFixedMeasurement(importParams, s_deviceSignalTypes["DFDT"], device, measurementTable);
 
             // Add status flags
-            SaveFixedMeasurement(importParams, m_deviceSignalTypes["FLAG"], device, measurementTable);
+            SaveFixedMeasurement(importParams, s_deviceSignalTypes["FLAG"], device, measurementTable);
 
             // Add analogs
-            SignalType analogSignalType = m_deviceSignalTypes["ALOG"];
+            SignalType analogSignalType = s_deviceSignalTypes["ALOG"];
 
             for (int i = 0; i < configCell.AnalogDefinitions.Count; i++)
             {
@@ -316,7 +325,7 @@ namespace SELPDCImporter
             }
 
             // Add digitals
-            SignalType digitalSignalType = m_deviceSignalTypes["DIGI"];
+            SignalType digitalSignalType = s_deviceSignalTypes["DIGI"];
 
             for (int i = 0; i < configCell.DigitalDefinitions.Count; i++)
             {
@@ -373,10 +382,10 @@ namespace SELPDCImporter
             TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
 
             // Get phasor signal types
-            SignalType iphmSignalType = m_phasorSignalTypes["IPHM"];
-            SignalType iphaSignalType = m_phasorSignalTypes["IPHA"];
-            SignalType vphmSignalType = m_phasorSignalTypes["VPHM"];
-            SignalType vphaSignalType = m_phasorSignalTypes["VPHA"];
+            SignalType iphmSignalType = s_phasorSignalTypes["IPHM"];
+            SignalType iphaSignalType = s_phasorSignalTypes["IPHA"];
+            SignalType vphmSignalType = s_phasorSignalTypes["VPHM"];
+            SignalType vphaSignalType = s_phasorSignalTypes["VPHA"];
 
             Phasor[] phasors = phasorTable.QueryPhasorsForDevice(device.ID).ToArray();
 

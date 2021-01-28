@@ -299,7 +299,6 @@ namespace SELPDCImporter
 
                 m_importParams.HostConfig = textBoxHostConfig.Text;
                 m_importParams.EditedConnectionString = textBoxConnectionString.Text;
-                m_importParams.LoadExistingDevices();
 
                 GSFPDCConfig.SaveConnection(m_importParams);
 

@@ -52,8 +52,6 @@ namespace SELPDCImporter
         
         public TableOperations<Device> DeviceTable { get; private set; }
 
-        public Device[] Devices { get; private set; }
-
         public Guid NodeID { get; private set; }
         
         public string HostConfig { get; set; }
@@ -92,12 +90,7 @@ namespace SELPDCImporter
 
             Connection = new AdoDataConnection(connectionString, dataProviderString);
             NodeID = nodeID;
-        }
-
-        public void LoadExistingDevices()
-        {
             DeviceTable = new TableOperations<Device>(Connection);
-            Devices = DeviceTable.QueryRecords().ToArray();
         }
 
         public IEnumerable<SignalType> LoadSignalTypes(string source)

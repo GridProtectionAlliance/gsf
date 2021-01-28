@@ -29,6 +29,7 @@ namespace SELPDCImporter
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditDetails));
             this.tableLayoutPanelConfigDetails = new System.Windows.Forms.TableLayoutPanel();
             this.textBoxTCFConnectionName = new System.Windows.Forms.TextBox();
@@ -44,9 +45,11 @@ namespace SELPDCImporter
             this.flowLayoutPanelActionButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonImport = new System.Windows.Forms.Button();
+            this.errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
             this.tableLayoutPanelConfigDetails.SuspendLayout();
             this.panelDataItem.SuspendLayout();
             this.flowLayoutPanelActionButtons.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).BeginInit();
             this.SuspendLayout();
             // 
             // tableLayoutPanelConfigDetails
@@ -82,6 +85,7 @@ namespace SELPDCImporter
             // 
             this.textBoxTCFConnectionName.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.textBoxTCFConnectionName.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.errorProvider.SetIconPadding(this.textBoxTCFConnectionName, -20);
             this.textBoxTCFConnectionName.Location = new System.Drawing.Point(553, 27);
             this.textBoxTCFConnectionName.Name = "textBoxTCFConnectionName";
             this.textBoxTCFConnectionName.Size = new System.Drawing.Size(177, 20);
@@ -172,7 +176,6 @@ namespace SELPDCImporter
             this.checkBoxDeleteAll.Text = "Delete?";
             this.checkBoxDeleteAll.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.checkBoxDeleteAll.UseVisualStyleBackColor = true;
-            this.checkBoxDeleteAll.CheckedChanged += new System.EventHandler(this.checkBoxDeleteAll_CheckedChanged);
             // 
             // labelDataItem
             // 
@@ -215,7 +218,10 @@ namespace SELPDCImporter
             this.buttonImport.TabIndex = 1;
             this.buttonImport.Text = "&Import";
             this.buttonImport.UseVisualStyleBackColor = true;
-            this.buttonImport.Click += new System.EventHandler(this.buttonImport_Click);
+            // 
+            // errorProvider
+            // 
+            this.errorProvider.ContainerControl = this;
             // 
             // EditDetails
             // 
@@ -237,6 +243,7 @@ namespace SELPDCImporter
             this.panelDataItem.ResumeLayout(false);
             this.panelDataItem.PerformLayout();
             this.flowLayoutPanelActionButtons.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -257,5 +264,6 @@ namespace SELPDCImporter
         private System.Windows.Forms.Panel panelDataItem;
         private System.Windows.Forms.CheckBox checkBoxDeleteAll;
         private System.Windows.Forms.Label labelDataItem;
+        private System.Windows.Forms.ErrorProvider errorProvider;
     }
 }

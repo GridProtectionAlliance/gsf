@@ -35,6 +35,7 @@ namespace SELPDCImporter
         private readonly Color m_matchedColor = Color.FromArgb(192, 255, 192);
         private readonly Color m_unmatchedColor = SystemColors.Control;
         private readonly List<CheckBox> m_deleteCheckBoxes = new List<CheckBox>();
+        private readonly List<Control> m_validatedControls = new List<Control>();
 
         public EditDetails()
         {
@@ -51,6 +52,35 @@ namespace SELPDCImporter
             ConfigurationFrame gsfPDCConfigFrame = ImportParams.GSFPDCConfigFrame;
 
             TargetConfigFrame = ConfigurationFrame.Clone(gsfPDCConfigFrame ?? selPDCConfigFrame, false);
+
+            checkBoxDeleteAll.CheckedChanged += (_, _) =>
+            {
+                foreach (CheckBox checkBox in m_deleteCheckBoxes)
+                    checkBox.Checked = checkBoxDeleteAll.Checked;
+            };
+
+            buttonImport.Click += (_, _) =>
+            {
+                int validationErrors = m_validatedControls.Count(control => !string.IsNullOrWhiteSpace(errorProvider.GetError(control)));
+
+                if (validationErrors > 0)
+                {
+                    MessageBox.Show(this, $"Cannot Import: {validationErrors:N0} acronym{(validationErrors == 1 ? " is" : "s are")} not unique and must be corrected before PDC can be imported.", "Validation Errors", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (m_deleteCheckBoxes.All(checkBox => checkBox.Checked))
+                {
+                    if (MessageBox.Show(this, $"All {TargetConfigFrame.Cells.Count:N0} PMUs are marked for deletion, are you sure this is the desired operation?", "Delete All Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                        return;
+
+                    MessageBox.Show(this, $"All PMUs will now be deleted. Note that assoicated connection \"{textBoxTCFConnectionName.Text}\" will need to manually removed from GSF host application.", "Deleting All PMUs", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }
+
+                DialogResult = DialogResult.OK;
+                ImportParams.TargetConfigFrame = TargetConfigFrame;
+                Close();
+            };
 
             textBoxSCFConnectionName.Text = selPDCConfigFrame.Acronym;
             textBoxSCFConnectionName.Click += ConnectionNameOnClick;
@@ -69,6 +99,10 @@ namespace SELPDCImporter
                 textBoxSCFConnectionName.BackColor = matchesSCF ? m_matchedColor : m_unmatchedColor;
                 textBoxGCFConnectionName.BackColor = matchesGSF ? m_matchedColor : m_unmatchedColor;
             };
+
+            textBoxTCFConnectionName.Validated += (_, _) => errorProvider.SetError(textBoxTCFConnectionName, ImportParams.DeviceTable.ParentDeviceIsUnique(textBoxTCFConnectionName.Text, TargetConfigFrame.IDCode) ? string.Empty : "Acronym already exists with different ID Code!");
+
+            m_validatedControls.Add(textBoxTCFConnectionName);
 
             textBoxTCFConnectionName.Leave += (_, _) => textBoxTCFConnectionName.Text = textBoxTCFConnectionName.Text.GetCleanAcronym();
 
@@ -110,6 +144,9 @@ namespace SELPDCImporter
 
                 TextBox targetTextBox = dataControls.Item1;
                 targetTextBox.TextChanged += (_, _) => targetConfigCell.IDLabel = targetTextBox.Text;
+                targetTextBox.Validated += (_, _) => errorProvider.SetError(targetTextBox, ImportParams.DeviceTable.ChildDeviceIsUnique(TargetConfigFrame.ID, targetTextBox.Text, targetConfigCell.IDCode) ? string.Empty : "Acronym already exists with different ID Code!");
+
+                m_validatedControls.Add(targetTextBox);
 
                 CheckBox deletedCheckBox = dataControls.Item2;
                 deletedCheckBox.CheckedChanged += (_, _) => targetConfigCell.Delete = deletedCheckBox.Checked;
@@ -151,6 +188,9 @@ namespace SELPDCImporter
 
                     TextBox targetTextBox = dataControls.Item1;
                     targetTextBox.TextChanged += (_, _) => targetConfigCell.IDLabel = targetTextBox.Text;
+                    targetTextBox.Validated += (_, _) => errorProvider.SetError(targetTextBox, ImportParams.DeviceTable.ChildDeviceIsUnique(TargetConfigFrame.ID, targetTextBox.Text, targetConfigCell.IDCode) ? string.Empty : "Acronym already exists with different ID Code!");
+
+                    m_validatedControls.Add(targetTextBox);
 
                     CheckBox deletedCheckBox = dataControls.Item2;
                     deletedCheckBox.CheckedChanged += (_, _) => targetConfigCell.Delete = deletedCheckBox.Checked;
@@ -184,6 +224,8 @@ namespace SELPDCImporter
             table.Controls.Add(gsfTextBox, 2, rowIndex);
 
             TextBox targetTextBox = NewTextBox(false);
+            errorProvider.SetIconPadding(targetTextBox, errorProvider.GetIconPadding(textBoxTCFConnectionName));
+
             targetTextBox.TextChanged += (_, _) =>
             {
                 bool matchesSCF = string.Equals(targetTextBox.Text, selTextBox.Text);
@@ -193,7 +235,9 @@ namespace SELPDCImporter
                 selTextBox.BackColor = matchesSCF ? m_matchedColor : m_unmatchedColor;
                 gsfTextBox.BackColor = matchesGSF ? m_matchedColor : m_unmatchedColor;
             };
+
             targetTextBox.Leave += (_, _) => targetTextBox.Text = targetTextBox.Text.GetCleanAcronym();
+            
             targetTextBox.Text = gsfValue ?? selValue;
 
             table.Controls.Add(targetTextBox, 3, rowIndex);
@@ -227,7 +271,7 @@ namespace SELPDCImporter
             return panel;
         }
 
-        private CheckBox NewCheckBox(bool deleted)
+        private CheckBox NewCheckBox(bool @checked)
         {
             CheckBox checkBox = new CheckBox
             {
@@ -236,7 +280,7 @@ namespace SELPDCImporter
                 Padding = new Padding(10, 2, 0, 0),
                 TextAlign = ContentAlignment.MiddleCenter,
                 UseVisualStyleBackColor = true,
-                Checked = deleted
+                Checked = @checked
             };
 
             m_deleteCheckBoxes.Add(checkBox);
@@ -264,27 +308,6 @@ namespace SELPDCImporter
                 CharacterCasing = CharacterCasing.Upper,
                 ReadOnly = readOnly
             };
-        }
-
-        private void buttonImport_Click(object sender, EventArgs e)
-        {
-            if (m_deleteCheckBoxes.All(checkBox => checkBox.Checked))
-            {
-                if (MessageBox.Show(this, $"All {TargetConfigFrame.Cells.Count:N0} PMUs are marked for deletion, are you sure this is the desired operation?", "Delete All Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                    return;
-
-                MessageBox.Show(this, $"All PMUs will now be deleted. Note that assoicated connection \"{textBoxTCFConnectionName.Text}\" will need to manually removed from GSF host application.", "Deleting All PMUs", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            }
-
-            DialogResult = DialogResult.OK;
-            ImportParams.TargetConfigFrame = TargetConfigFrame;
-            Close();
-        }
-
-        private void checkBoxDeleteAll_CheckedChanged(object sender, EventArgs e)
-        {
-            foreach (CheckBox checkBox in m_deleteCheckBoxes)
-                checkBox.Checked = checkBoxDeleteAll.Checked;
         }
     }
 }
