@@ -55,6 +55,7 @@ namespace SELPDCImporter
             // tableLayoutPanelConfigDetails
             // 
             this.tableLayoutPanelConfigDetails.AutoScroll = true;
+            this.tableLayoutPanelConfigDetails.AutoScrollMargin = new System.Drawing.Size(10, 30);
             this.tableLayoutPanelConfigDetails.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanelConfigDetails.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
             this.tableLayoutPanelConfigDetails.ColumnCount = 4;
@@ -99,6 +100,7 @@ namespace SELPDCImporter
             this.textBoxGCFConnectionName.ReadOnly = true;
             this.textBoxGCFConnectionName.Size = new System.Drawing.Size(176, 20);
             this.textBoxGCFConnectionName.TabIndex = 6;
+            this.textBoxGCFConnectionName.TabStop = false;
             // 
             // labelConnectionName
             // 
@@ -153,6 +155,7 @@ namespace SELPDCImporter
             this.textBoxSCFConnectionName.ReadOnly = true;
             this.textBoxSCFConnectionName.Size = new System.Drawing.Size(176, 20);
             this.textBoxSCFConnectionName.TabIndex = 5;
+            this.textBoxSCFConnectionName.TabStop = false;
             // 
             // panelDataItem
             // 
@@ -173,6 +176,7 @@ namespace SELPDCImporter
             this.checkBoxDeleteAll.Padding = new System.Windows.Forms.Padding(10, 3, 0, 0);
             this.checkBoxDeleteAll.Size = new System.Drawing.Size(73, 22);
             this.checkBoxDeleteAll.TabIndex = 2;
+            this.checkBoxDeleteAll.TabStop = false;
             this.checkBoxDeleteAll.Text = "Delete?";
             this.checkBoxDeleteAll.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.checkBoxDeleteAll.UseVisualStyleBackColor = true;

@@ -495,7 +495,8 @@ namespace SELPDCImporter
 
             ConfigurationFrame configFrame = new ConfigurationFrame(idCode, frameRate, pdc.Name, pdc.Acronym)
             {
-                Settings = pdc.ConnectionString.ParseKeyValuePairs()
+                Settings = pdc.ConnectionString.ParseKeyValuePairs(),
+                ID = pdc.ID
             };
 
             if (pdc.ParentID == null)
@@ -535,7 +536,7 @@ namespace SELPDCImporter
                     configFrame.Cells.Add(configCell);
                 }
 
-                if (configFrame.Cells.Count > 0)
+                if (configFrame.Cells.Count > 0 || pdc.IsConcentrator)
                 {
                     configFrame.IsConcentrator = true;
                 }

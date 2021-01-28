@@ -46,8 +46,20 @@ namespace SELPDCImporter
 
         public ConfigurationFrame TargetConfigFrame { get; private set; }
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000; // Turn on WS_EX_COMPOSITED
+                return cp;
+            }
+        }
+
         private void EditDetails_Load(object sender, EventArgs e)
         {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.DoubleBuffer, true);
+
             ConfigurationFrame selPDCConfigFrame = ImportParams.SELPDCConfigFrame;
             ConfigurationFrame gsfPDCConfigFrame = ImportParams.GSFPDCConfigFrame;
 
@@ -98,9 +110,11 @@ namespace SELPDCImporter
                 textBoxTCFConnectionName.BackColor = matchesSCF || matchesGSF ? m_matchedColor : m_unmatchedColor;
                 textBoxSCFConnectionName.BackColor = matchesSCF ? m_matchedColor : m_unmatchedColor;
                 textBoxGCFConnectionName.BackColor = matchesGSF ? m_matchedColor : m_unmatchedColor;
+
+                ValidateChildren();
             };
 
-            textBoxTCFConnectionName.Validated += (_, _) => errorProvider.SetError(textBoxTCFConnectionName, ImportParams.DeviceTable.ParentDeviceIsUnique(textBoxTCFConnectionName.Text, TargetConfigFrame.IDCode) ? string.Empty : "Acronym already exists with different ID Code!");
+            textBoxTCFConnectionName.Validated += (_, _) => errorProvider.SetError(textBoxTCFConnectionName, ParentDeviceIsUnique() ? string.Empty : "Acronym already exists with different ID Code!");
 
             m_validatedControls.Add(textBoxTCFConnectionName);
 
@@ -144,7 +158,7 @@ namespace SELPDCImporter
 
                 TextBox targetTextBox = dataControls.Item1;
                 targetTextBox.TextChanged += (_, _) => targetConfigCell.IDLabel = targetTextBox.Text;
-                targetTextBox.Validated += (_, _) => errorProvider.SetError(targetTextBox, ImportParams.DeviceTable.ChildDeviceIsUnique(TargetConfigFrame.ID, targetTextBox.Text, targetConfigCell.IDCode) ? string.Empty : "Acronym already exists with different ID Code!");
+                targetTextBox.Validated += (_, _) => ValidateChildDevice(targetTextBox, targetConfigCell);
 
                 m_validatedControls.Add(targetTextBox);
 
@@ -188,7 +202,7 @@ namespace SELPDCImporter
 
                     TextBox targetTextBox = dataControls.Item1;
                     targetTextBox.TextChanged += (_, _) => targetConfigCell.IDLabel = targetTextBox.Text;
-                    targetTextBox.Validated += (_, _) => errorProvider.SetError(targetTextBox, ImportParams.DeviceTable.ChildDeviceIsUnique(TargetConfigFrame.ID, targetTextBox.Text, targetConfigCell.IDCode) ? string.Empty : "Acronym already exists with different ID Code!");
+                    targetTextBox.Validated += (_, _) => ValidateChildDevice(targetTextBox, targetConfigCell);
 
                     m_validatedControls.Add(targetTextBox);
 
@@ -197,7 +211,70 @@ namespace SELPDCImporter
                 }
             }
 
+            // Add a final blank row
+            table.RowCount++;
+            table.RowStyles.Add(new RowStyle(SizeType.Absolute, 10F));
+            
             table.ResumeLayout();
+
+            // Update tab ordering
+            int tabIndex = 0;
+
+            foreach (Control control in m_validatedControls)
+                control.TabIndex = tabIndex++;
+
+            buttonImport.TabIndex = tabIndex++;
+            buttonCancel.TabIndex = tabIndex;
+
+            // Perform initial validation
+            ValidateChildren();
+
+            textBoxTCFConnectionName.Focus();
+
+            if (!tableLayoutPanelConfigDetails.VerticalScroll.Visible)
+                return;
+
+            Width += 20;
+        }
+
+        private bool LocalAcronymIsUnique(string acronym) => 
+            m_validatedControls.Count(control => string.Equals(control.Text, acronym)) == 1;
+        
+        private bool LocalIDCodeIsUnique(ushort idCode) =>
+            TargetConfigFrame.Cells.Count(cell => cell.IDCode == idCode) == 1;
+
+        private bool ParentDeviceIsUnique() =>
+            ImportParams.DeviceTable.ParentDeviceIsUnique(textBoxTCFConnectionName.Text, TargetConfigFrame.IDCode) &&
+            LocalAcronymIsUnique(textBoxTCFConnectionName.Text);
+
+        private bool ChildDeviceIsUnique(TextBox targetTextBox, ConfigurationCell targetConfigCell) =>
+            targetConfigCell.Delete ||
+            ImportParams.DeviceTable.ChildDeviceIsUnique(TargetConfigFrame.ID, targetTextBox.Text, targetConfigCell.IDCode) &&
+            LocalAcronymIsUnique(targetTextBox.Text);
+
+        private void ValidateChildDevice(TextBox targetTextBox, ConfigurationCell targetConfigCell)
+        {
+            string errorMessage = "";
+
+            if (!ChildDeviceIsUnique(targetTextBox, targetConfigCell))
+            {
+                errorMessage = $"PMU acronym \"{targetTextBox.Text}\" already exists!";
+                errorProvider.SetError(targetTextBox, errorMessage);
+                return;
+            }
+
+            if (!LocalIDCodeIsUnique(targetConfigCell.IDCode))
+            {
+                if (!string.IsNullOrWhiteSpace(errorMessage))
+                    errorMessage = $"{errorMessage}{Environment.NewLine}";
+
+                errorMessage = $"{errorMessage}PMU \"{targetTextBox.Text}\" ID Code \"{targetConfigCell.IDCode}\" is not unique for this connection!";
+
+                errorProvider.SetError(targetTextBox, errorMessage);
+                return;
+            }
+
+            errorProvider.SetError(targetTextBox,  string.Empty);
         }
 
         private void ConnectionNameOnClick(object sender, EventArgs _)
@@ -214,11 +291,13 @@ namespace SELPDCImporter
             table.Controls.Add(NewPanel(dataItemLabel, deleted, out CheckBox checkBox), 0, rowIndex);
 
             TextBox selTextBox = NewTextBox(true);
+            selTextBox.TabStop = false;
             selTextBox.Text = selValue;
 
             table.Controls.Add(selTextBox, 1, rowIndex);
 
             TextBox gsfTextBox = NewTextBox(true);
+            gsfTextBox.TabStop = false;
             gsfTextBox.Text = gsfValue;
 
             table.Controls.Add(gsfTextBox, 2, rowIndex);
@@ -234,6 +313,8 @@ namespace SELPDCImporter
                 targetTextBox.BackColor = matchesSCF || matchesGSF ? m_matchedColor : m_unmatchedColor;
                 selTextBox.BackColor = matchesSCF ? m_matchedColor : m_unmatchedColor;
                 gsfTextBox.BackColor = matchesGSF ? m_matchedColor : m_unmatchedColor;
+
+                ValidateChildren();
             };
 
             targetTextBox.Leave += (_, _) => targetTextBox.Text = targetTextBox.Text.GetCleanAcronym();
@@ -280,7 +361,8 @@ namespace SELPDCImporter
                 Padding = new Padding(10, 2, 0, 0),
                 TextAlign = ContentAlignment.MiddleCenter,
                 UseVisualStyleBackColor = true,
-                Checked = @checked
+                Checked = @checked,
+                TabStop = false
             };
 
             m_deleteCheckBoxes.Add(checkBox);
