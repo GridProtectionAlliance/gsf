@@ -58,8 +58,6 @@ namespace SELPDCImporter
 
         private void EditDetails_Load(object sender, EventArgs e)
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.DoubleBuffer, true);
-
             ConfigurationFrame selPDCConfigFrame = ImportParams.SELPDCConfigFrame;
             ConfigurationFrame gsfPDCConfigFrame = ImportParams.GSFPDCConfigFrame;
 
@@ -266,7 +264,7 @@ namespace SELPDCImporter
             if (!LocalIDCodeIsUnique(targetConfigCell.IDCode))
             {
                 if (!string.IsNullOrWhiteSpace(errorMessage))
-                    errorMessage = $"{errorMessage}{Environment.NewLine}";
+                    errorMessage = $"{errorMessage.Substring(0, errorMessage.Length - 1)} and ";
 
                 errorMessage = $"{errorMessage}PMU \"{targetTextBox.Text}\" ID Code \"{targetConfigCell.IDCode}\" is not unique for this connection!";
 
@@ -344,6 +342,7 @@ namespace SELPDCImporter
 
             panel.Controls.Add(checkBox);
             panel.Controls.Add(NewLabel(labelText));
+            panel.Dock = DockStyle.Fill;
             panel.Margin = panelDataItem.Margin;
 
             panel.ResumeLayout();
