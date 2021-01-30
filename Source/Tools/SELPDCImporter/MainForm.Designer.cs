@@ -160,7 +160,8 @@ namespace SELPDCImporter
             // openFileDialogPDCConfig
             // 
             this.openFileDialogPDCConfig.DefaultExt = "3573";
-            this.openFileDialogPDCConfig.Filter = "SEL PDC Config Files (*.3373;*.3573)|*.3373;*.3573|All Files (*.*)|*.*";
+            this.openFileDialogPDCConfig.Filter = "SEL PDC Config Files (*.3373;*.3573;*.cfgx)|*.3373;*.3573;*.cfgx|All Files (*.*)|" +
+    "*.*";
             this.openFileDialogPDCConfig.Title = "Select SEL PDC Configuration File to Import";
             // 
             // comboBoxIPAddresses
