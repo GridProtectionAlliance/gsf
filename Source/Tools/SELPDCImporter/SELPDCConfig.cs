@@ -23,7 +23,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using System.Xml.Linq;
 using GSF;
 using GSF.Communication;
@@ -31,6 +33,7 @@ using GSF.FuzzyStrings;
 using GSF.PhasorProtocols;
 using GSF.Units.EE;
 using GSF.Xml;
+using ShowMessageFunc = System.Func<string, string, System.Windows.Forms.MessageBoxButtons, System.Windows.Forms.MessageBoxIcon, System.Windows.Forms.DialogResult>;
 
 namespace SELPDCImporter
 {
@@ -54,7 +57,7 @@ namespace SELPDCImporter
         public const string DefaultMulticastGroup = "224.0.1.0";
         public const string DefaultGatewayIP = "192.168.1.1";
 
-        public static ConfigurationFrame Parse(string configFile)
+        public static ConfigurationFrame Parse(string configFile, ShowMessageFunc showMessage)
         {
             XDocument config = XDocument.Load(configFile);
 
@@ -72,16 +75,51 @@ namespace SELPDCImporter
                 LineFrequency.Hz50 :
                 LineFrequency.Hz60;
 
-            // Load all "Setting" elements from "ServerGateway" settings group
-            XElement[] serverGatewaySettings = settingsGroups
+            // Get server gateway instances
+            XElement[] serverGatewayInstances = settingsGroups
                 .WhereAttribute("Type").Is("ServerGateway")
+                .Descendants("Instance")
+                .WhereAttribute("Type").Is("Server")
+                .ToArray();
+
+            if (serverGatewayInstances.Length == 0)
+                throw new NullReferenceException($"No server gateway instances where defined in \"{Path.GetFileName(configFile)}\".");
+
+            int enabledInstanceCount = serverGatewayInstances
+                .Count(elem => elem.Descendants("Setting")
+                .WhereAttribute("Name").Is("Enabled")
+                .GetValue(false));
+
+            XElement serverGatewayInstance = null;
+
+            if (enabledInstanceCount == 0)
+            {
+                if (showMessage($"No enabled server gateway instances where found in \"{Path.GetFileName(configFile)}\", do you want to load a disabled instance?", "No Enabled Server Gateways Found", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    throw new NullReferenceException("Failed to load an enabled server gateway instance.");
+
+                serverGatewayInstance = serverGatewayInstances.FirstOrDefault();
+            }
+            else
+            {
+                if (enabledInstanceCount > 1 && showMessage($"Found {enabledInstanceCount:N0} enabled server gateway instances in \"{Path.GetFileName(configFile)}\", do you want to load first enabled instance?", "Multiple Enabled Server Gateways Found", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    throw new NullReferenceException("Failed to load an enabled server gateway instance.");
+
+                serverGatewayInstance = serverGatewayInstances
+                    .FirstOrDefault(elem => elem.Descendants("Setting")
+                    .WhereAttribute("Name").Is("Enabled")
+                    .GetValue(false));
+            }
+
+            if (serverGatewayInstance is null)
+                throw new NullReferenceException("Failed to load any server gateway instance.");
+
+            // Load all "Setting" elements from server gateway instance
+            XElement[] serverGatewaySettings = serverGatewayInstance
                 .Descendants("Setting")
                 .ToArray();
 
             // Load server name setting
-            string serverName = serverGatewaySettings
-                .WhereAttribute("Name").Is("ServerName")
-                .GetValue(DefaultServerName);
+            string serverName = Path.GetFileNameWithoutExtension(configFile).GetCleanAcronym();
 
             // Load ID code setting
             ushort idCode = serverGatewaySettings
@@ -281,7 +319,7 @@ namespace SELPDCImporter
 
             if (networkSettingsGroup is null)
             {
-                deviceIPs["error"] = "No valid devices IPs detected";
+                deviceIPs["loopback"] = "127.0.0.1";
             }
             else
             {
@@ -322,6 +360,9 @@ namespace SELPDCImporter
                 configFrame.TargetDeviceIP = deviceIPs
                     .ToDictionary(pair => pair.Key, pair => gatewayIP.OverlapCoefficient(pair.Value))
                     .Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
+
+                if (string.IsNullOrWhiteSpace(configFrame.TargetDeviceIP) && deviceIPs.Count > 0)
+                    configFrame.TargetDeviceIP = deviceIPs.First().Key;
             }
 
             return configFrame;

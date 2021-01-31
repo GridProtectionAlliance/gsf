@@ -219,7 +219,7 @@ namespace SELPDCImporter
 
                 if (!File.Exists(hostConfigFile))
                 {
-                    MessageBox.Show(this, $"Analyze failed: The specified host service configuration file \"{hostConfigFile}\" does not exist.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Analyze failed: The specified host service configuration file \"{Path.GetFileName(hostConfigFile)}\" does not exist.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -227,13 +227,13 @@ namespace SELPDCImporter
 
                 if (!File.Exists(pdcConfigFile))
                 {
-                    MessageBox.Show(this, $"Analyze failed: The specified PDC configuration file \"{pdcConfigFile}\" does not exist.", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Analyze failed: The specified PDC configuration file \"{Path.GetFileName(pdcConfigFile)}\" does not exist.", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 if (!IsHostConfig(hostConfigFile))
                 {
-                    MessageBox.Show(this, $"Analyze failed: The configuration file \"{hostConfigFile}\" is not a valid host service configuration.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Analyze failed: The configuration file \"{Path.GetFileName(hostConfigFile)}\" is not a valid host service configuration.", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -243,18 +243,27 @@ namespace SELPDCImporter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, $"Analyze failed: Iniitialization failure using specified host service configuration \"{hostConfigFile}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Analyze failed: Iniitialization failure using specified host service configuration \"{Path.GetFileName(hostConfigFile)}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 try
                 {
-                    m_importParams.SELPDCConfigFrame = SELPDCConfig.Parse(pdcConfigFile);
+                    m_importParams.SELPDCConfigFrame = SELPDCConfig.Parse(pdcConfigFile, (message, title, buttons, icon) => MessageBox.Show(this, message, title, buttons, icon));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Analyze failed: Failed while parsing PDC configuration \"{Path.GetFileName(pdcConfigFile)}\": {ex.Message}", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                try
+                {
                     m_importParams.GSFPDCConfigFrame = GSFPDCConfig.Extract(m_importParams.Connection, m_importParams.SELPDCConfigFrame.IDCode);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, $"Analyze failed: Failed while parsing PDC configuration \"{pdcConfigFile}\": {ex.Message}", "Load PDC Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Analyze failed: Failed while attempting to load existing GSF configuration from database connection as defined in host service configuration \"{Path.GetFileName(hostConfigFile)}\": {ex.Message}", "Load GSF Database Config Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -267,7 +276,9 @@ namespace SELPDCImporter
                 comboBoxIPAddresses.DataSource = new BindingSource(configFrame.DeviceIPs, null);
                 comboBoxIPAddresses.ValueMember = "Key";
                 comboBoxIPAddresses.DisplayMember = "Value";
-                comboBoxIPAddresses.SelectedValue = configFrame.TargetDeviceIP;
+
+                if (!string.IsNullOrWhiteSpace(configFrame.TargetDeviceIP))
+                    comboBoxIPAddresses.SelectedValue = configFrame.TargetDeviceIP;
 
                 // Reset manually edited state flag for connection string
                 m_connectionStringManuallyEdited = false;
