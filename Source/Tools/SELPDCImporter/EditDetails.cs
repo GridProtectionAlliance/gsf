@@ -182,7 +182,8 @@ namespace SELPDCImporter
                         gsfConfigCell.IDCode,
                         gsfConfigCell.IDLabel)
                     {
-                        FrequencyDefinition = gsfConfigCell.FrequencyDefinition
+                        FrequencyDefinition = gsfConfigCell.FrequencyDefinition,
+                        Delete = true
                     };
 
                     foreach (IPhasorDefinition phasorDefinition in gsfConfigCell.PhasorDefinitions)
@@ -237,9 +238,9 @@ namespace SELPDCImporter
 
         private bool LocalAcronymIsUnique(string acronym) => 
             m_validatedControls.Count(control => string.Equals(control.Text, acronym)) == 1;
-        
+
         private bool LocalIDCodeIsUnique(ushort idCode) =>
-            TargetConfigFrame.Cells.Count(cell => cell.IDCode == idCode) == 1;
+            TargetConfigFrame.Cells.Cast<ConfigurationCell>().Count(cell => cell.IDCode == idCode && !cell.Delete) == 1;
 
         private bool ParentDeviceIsUnique() =>
             ImportParams.DeviceTable.ParentDeviceIsUnique(textBoxTCFConnectionName.Text, TargetConfigFrame.IDCode) &&
@@ -258,7 +259,6 @@ namespace SELPDCImporter
             {
                 errorMessage = $"PMU acronym \"{targetTextBox.Text}\" already exists!";
                 errorProvider.SetError(targetTextBox, errorMessage);
-                return;
             }
 
             if (!LocalIDCodeIsUnique(targetConfigCell.IDCode))
@@ -267,12 +267,9 @@ namespace SELPDCImporter
                     errorMessage = $"{errorMessage.Substring(0, errorMessage.Length - 1)} and ";
 
                 errorMessage = $"{errorMessage}PMU \"{targetTextBox.Text}\" ID Code \"{targetConfigCell.IDCode}\" is not unique for this connection!";
-
-                errorProvider.SetError(targetTextBox, errorMessage);
-                return;
             }
 
-            errorProvider.SetError(targetTextBox,  string.Empty);
+            errorProvider.SetError(targetTextBox,  errorMessage);
         }
 
         private void ConnectionNameOnClick(object sender, EventArgs _)
@@ -287,6 +284,8 @@ namespace SELPDCImporter
 
             table.RowStyles.Add(new RowStyle(SizeType.Absolute, 25F));
             table.Controls.Add(NewPanel(dataItemLabel, deleted, out CheckBox checkBox), 0, rowIndex);
+
+            checkBox.CheckedChanged += (_, _) => ValidateChildren();
 
             TextBox selTextBox = NewTextBox(true);
             selTextBox.TabStop = false;
