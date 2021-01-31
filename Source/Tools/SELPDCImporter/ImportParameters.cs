@@ -24,11 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 using SELPDCImporter.Model;
 using GSF;
 using GSF.Collections;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Diagnostics;
@@ -107,7 +108,7 @@ namespace SELPDCImporter
         public string CreatePhasorPointTag(string deviceAcronym, string signalTypeAcronym, string phasorLabel, string phase, int signalIndex, int baseKV) => 
             CreatePointTag(CompanyAcronym, deviceAcronym, null, signalTypeAcronym, phasorLabel, signalIndex, string.IsNullOrWhiteSpace(phase) ? '_' : phase.Trim()[0], baseKV);
 
-        private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:{VendorAcronym}{SignalType.Abbreviation}[?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";
+        private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-eval{'{PhasorLabel}'.Trim().ToUpper().Replace(' ','_')}_eval{'{SignalType.Abbreviation}'.Substring(0,1)}eval{'{Phase}'=='+' ? '1' : ('{Phase}'=='-' ? '2' : '{Phase}')}[?{BaseKV}&gt;0[_{BaseKV}]][?{SignalType.Suffix}=PA[:ANG]][?{SignalType.Suffix}=PM[:MAG]]]][?{SignalType.Source}!=Phasor[:{SignalType.Acronym}[?{SignalIndex}!=-1[{SignalIndex}]]]]";
 
         private static TemplatedExpressionParser s_pointTagExpressionParser;
         private static Dictionary<string, DataRow> s_signalTypes;
@@ -126,9 +127,14 @@ namespace SELPDCImporter
 
                 try
                 {
-                    ConfigurationFile configFile = ConfigurationFile.Open(HostConfig);
-                    CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-                    s_companyAcronym = systemSettings["CompanyAcronym"]?.Value;
+                    XDocument serviceConfig = XDocument.Load(HostConfig);
+
+                    s_companyAcronym = serviceConfig
+                        .Descendants("systemSettings")
+                        .SelectMany(systemSettings => systemSettings.Elements("add"))
+                        .Where(element => "CompanyAcronym".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                        .Select(element => (string)element.Attribute("value"))
+                        .FirstOrDefault() ?? "GPA";
 
                     if (string.IsNullOrWhiteSpace(s_companyAcronym))
                         s_companyAcronym = "GPA";
@@ -227,23 +233,25 @@ namespace SELPDCImporter
             return signalTypes;
         }
 
-        private static TemplatedExpressionParser InitializePointTagExpressionParser()
+        private TemplatedExpressionParser InitializePointTagExpressionParser()
         {
             TemplatedExpressionParser pointTagExpressionParser;
 
             // Get point tag name expression from configuration
             try
             {
-                // Note that both manager and service application may need this expression and each will have their own setting, users
-                // will need to synchronize these expressions in both config files for consistent custom point tag naming
-                ConfigurationFile configFile = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = configFile.Settings["systemSettings"];
+                XDocument serviceConfig = XDocument.Load(HostConfig);
 
-                settings.Add("PointTagNameExpression", DefaultPointTagNameExpression, "Defines the expression used to create point tag names. NOTE: if updating this setting, synchronize value in both the manager and service config files.");
+                string pointTagNameExpression = serviceConfig
+                    .Descendants("systemSettings")
+                    .SelectMany(systemSettings => systemSettings.Elements("add"))
+                    .Where(element => "PointTagNameExpression".Equals((string)element.Attribute("name"), StringComparison.OrdinalIgnoreCase))
+                    .Select(element => (string)element.Attribute("value"))
+                    .FirstOrDefault() ?? DefaultPointTagNameExpression;
 
                 pointTagExpressionParser = new TemplatedExpressionParser()
                 {
-                    TemplatedExpression = configFile.Settings["systemSettings"]["PointTagNameExpression"].Value
+                    TemplatedExpression = pointTagNameExpression
                 };
             }
             catch
