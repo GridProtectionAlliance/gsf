@@ -84,7 +84,7 @@ namespace SELPDCImporter
                     if (MessageBox.Show(this, $"All {TargetConfigFrame.Cells.Count:N0} PMUs are marked for deletion, are you sure this is the desired operation?", "Delete All Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
                         return;
 
-                    MessageBox.Show(this, $"All PMUs will now be deleted. Note that assoicated connection \"{textBoxTCFConnectionName.Text}\" will need to manually removed from GSF host application.", "Deleting All PMUs", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    MessageBox.Show(this, $"All PMUs will now be deleted. Note that associated connection \"{textBoxTCFConnectionName.Text}\" will need to be manually removed from GSF host application.", "Deleting All PMUs", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
 
                 DialogResult = DialogResult.OK;
@@ -256,10 +256,7 @@ namespace SELPDCImporter
             string errorMessage = "";
 
             if (!ChildDeviceIsUnique(targetTextBox, targetConfigCell))
-            {
                 errorMessage = $"PMU acronym \"{targetTextBox.Text}\" already exists!";
-                errorProvider.SetError(targetTextBox, errorMessage);
-            }
 
             if (!LocalIDCodeIsUnique(targetConfigCell.IDCode))
             {

@@ -328,7 +328,7 @@ namespace SELPDCImporter
                     .WhereAttribute("Name").Is("Gateway")
                     .GetValue(DefaultGatewayIP);
 
-                // Get array of settings for each nic interface
+                // Get array of settings for each NIC interface
                 IEnumerable<XElement[]> interfaceSettingsMap = networkSettingsGroup
                     .Descendants("SettingsGroup")
                     .WhereAttribute("Type").Is("NetworkGroup")

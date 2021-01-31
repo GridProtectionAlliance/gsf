@@ -243,7 +243,7 @@ namespace SELPDCImporter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, $"Analyze failed: Iniitialization failure using specified host service configuration \"{Path.GetFileName(hostConfigFile)}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Analyze failed: Initialization failure using specified host service configuration \"{Path.GetFileName(hostConfigFile)}\": {ex.Message}", "Load Host Config File Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -320,7 +320,7 @@ namespace SELPDCImporter
 
                 m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.TargetConfigFrame.Acronym}");
 
-                // Clear PDC donfig text to ready for next
+                // Clear PDC config text to ready for next
                 BeginInvoke(new Action(() => textBoxPDCConfig.Text = ""));
             }
             catch (Exception ex)
