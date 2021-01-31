@@ -26,7 +26,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using GSF.Configuration;
+using GSF.Data.Model;
 using GSF.PhasorProtocols;
+using SELPDCImporter.Model;
 
 namespace SELPDCImporter
 {
@@ -56,6 +59,50 @@ namespace SELPDCImporter
             }
         }
 
+        private void LoadHistorians()
+        {
+            ConfigurationFile configurationFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection systemSettings = configurationFile.Settings["systemSettings"];
+            string targetHistorianIDValue = systemSettings["TargetHistorianID"]?.Value ?? "0";
+
+            TableOperations<Historian> historianTable = new TableOperations<Historian>(ImportParams.Connection);
+            Dictionary<int, string> historians = historianTable.QueryHistorians().ToDictionary(historian => historian.ID, historian => historian.Acronym);
+            historians.Add(0, "None");
+
+            comboBoxHistorian.DataSource = new BindingSource(historians, null);
+            comboBoxHistorian.ValueMember = "Key";
+            comboBoxHistorian.DisplayMember = "Value";
+
+            void updateSelectedHistorian()
+            {
+                if (!int.TryParse(comboBoxHistorian.SelectedValue.ToString(), out int historianID))
+                    historianID = -1;
+
+                TargetConfigFrame.HistorianID = historianID <= 0 ? null : historianID;
+                systemSettings["TargetHistorianID", true].Update(historianID, "Target historian ID.", false, SettingScope.User);
+            }
+
+            comboBoxHistorian.SelectedValueChanged += (_, _) => updateSelectedHistorian();
+            
+            if (!int.TryParse(targetHistorianIDValue, out int targetHistorianID) || !historians.ContainsKey(targetHistorianID))
+                targetHistorianID = -1;
+
+            if (targetHistorianID == -1)
+            {
+                // Attempt to select an ideal initial target historian
+                if (historians.ContainsValue("PPA"))
+                    targetHistorianID = historians.FirstOrDefault(kvp => string.Equals(kvp.Value, "PPA")).Key;
+                else if (historians.Count > 1)
+                    targetHistorianID = historians.FirstOrDefault(kvp => kvp.Key > 0).Key;
+
+                if (targetHistorianID == -1)
+                    targetHistorianID = 0;
+            }
+
+            comboBoxHistorian.SelectedValue = targetHistorianID;
+            updateSelectedHistorian();
+        }
+
         private void EditDetails_Load(object sender, EventArgs e)
         {
             ConfigurationFrame selPDCConfigFrame = ImportParams.SELPDCConfigFrame;
@@ -75,13 +122,13 @@ namespace SELPDCImporter
 
                 if (validationErrors > 0)
                 {
-                    MessageBox.Show(this, $"Cannot Import: {validationErrors:N0} acronym{(validationErrors == 1 ? " is" : "s are")} not unique and must be corrected before PDC can be imported.", "Validation Errors", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, $"Cannot Import: There {(validationErrors == 1 ? "is" : "are")} {validationErrors:N0} validation error{(validationErrors == 1 ? "" : "s")} that must be corrected before PDC can be imported.", "Validation Errors", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 if (m_deleteCheckBoxes.All(checkBox => checkBox.Checked))
                 {
-                    if (MessageBox.Show(this, $"All {TargetConfigFrame.Cells.Count:N0} PMUs are marked for deletion, are you sure this is the desired operation?", "Delete All Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                    if (MessageBox.Show(this, $"All PMUs ({TargetConfigFrame.Cells.Count:N0} total) are marked for deletion, are you sure this is the desired operation?", "Delete All Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
                         return;
 
                     MessageBox.Show(this, $"All PMUs will now be deleted. Note that associated connection \"{textBoxTCFConnectionName.Text}\" will need to be manually removed from GSF host application.", "Deleting All PMUs", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -225,6 +272,9 @@ namespace SELPDCImporter
             buttonImport.TabIndex = tabIndex++;
             buttonCancel.TabIndex = tabIndex;
 
+            // Load target historian list
+            LoadHistorians();
+
             // Perform initial validation
             ValidateChildren();
 
@@ -236,11 +286,14 @@ namespace SELPDCImporter
             Width += 20;
         }
 
+        private void EditDetails_Resize(object sender, EventArgs e) =>
+            panelHistorian.Width = Width - 180;
+
         private bool LocalAcronymIsUnique(string acronym) => 
             m_validatedControls.Count(control => string.Equals(control.Text, acronym)) == 1;
 
         private bool LocalIDCodeIsUnique(ushort idCode) =>
-            TargetConfigFrame.Cells.Cast<ConfigurationCell>().Count(cell => cell.IDCode == idCode && !cell.Delete) == 1;
+            TargetConfigFrame.Cells.Cast<ConfigurationCell>().Count(cell => cell.IDCode == idCode && !cell.Delete) < 2;
 
         private bool ParentDeviceIsUnique() =>
             ImportParams.DeviceTable.ParentDeviceIsUnique(textBoxTCFConnectionName.Text, TargetConfigFrame.IDCode) &&

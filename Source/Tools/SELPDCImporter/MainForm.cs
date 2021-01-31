@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
 using System.Windows.Forms;
@@ -304,6 +305,14 @@ namespace SELPDCImporter
             if (editDetails.ShowDialog(this) == DialogResult.Cancel)
                 return;
 
+            ConfigurationCell[] cells = m_importParams.TargetConfigFrame.Cells.Cast<ConfigurationCell>().ToArray();
+
+            if (cells.Length == 0)
+            {
+                MessageBox.Show(this, "Import Canceled: No PMU devices defined for import.", "Import Canceled", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
@@ -316,7 +325,21 @@ namespace SELPDCImporter
                 // Initialize new connection from host service
                 m_consoleProcess?.StandardInput.WriteLine($"init {m_importParams.TargetConfigFrame.Acronym}");
 
-                MessageBox.Show(this, $"Successfully imported {m_importParams.TargetConfigFrame.Cells.Count:N0} PMU devices.", "PDC Import Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                string summaryMessage;
+                int deletedCount = cells.Count(cell => cell.Delete);
+
+                if (deletedCount > 0)
+                {
+                    summaryMessage = deletedCount == cells.Length ? 
+                        $"Successfully deleted {deletedCount:N0} PMU devices." : 
+                        $"Successfully imported {m_importParams.TargetConfigFrame.Cells.Count - deletedCount:N0} and deleted {deletedCount:N0} PMU devices.";
+                }
+                else
+                {
+                    summaryMessage = $"Successfully imported {m_importParams.TargetConfigFrame.Cells.Count:N0} PMU devices.";
+                }
+
+                MessageBox.Show(this, summaryMessage, "PDC Import Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 m_consoleProcess?.StandardInput.WriteLine($"connect {m_importParams.TargetConfigFrame.Acronym}");
 

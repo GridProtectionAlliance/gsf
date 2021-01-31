@@ -177,6 +177,8 @@ namespace SELPDCImporter
 
         public int ID { get; set; }
 
+        public int? HistorianID { get; set; }
+
         public bool IsConcentrator { get; set; }
 
         public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
@@ -258,7 +260,8 @@ namespace SELPDCImporter
                 TargetDeviceIP = source.TargetDeviceIP,
                 TransportProtocol = source.TransportProtocol,
                 ID = source.ID,
-                IsConcentrator = source.IsConcentrator,
+                HistorianID = source.HistorianID,
+                IsConcentrator = source.IsConcentrator
             };
 
             if (cloneCells)

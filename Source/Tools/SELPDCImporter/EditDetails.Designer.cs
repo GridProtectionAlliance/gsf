@@ -45,10 +45,14 @@ namespace SELPDCImporter
             this.flowLayoutPanelActionButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonImport = new System.Windows.Forms.Button();
+            this.panelHistorian = new System.Windows.Forms.Panel();
+            this.comboBoxHistorian = new System.Windows.Forms.ComboBox();
+            this.labelHistorian = new System.Windows.Forms.Label();
             this.errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
             this.tableLayoutPanelConfigDetails.SuspendLayout();
             this.panelDataItem.SuspendLayout();
             this.flowLayoutPanelActionButtons.SuspendLayout();
+            this.panelHistorian.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).BeginInit();
             this.SuspendLayout();
             // 
@@ -197,12 +201,14 @@ namespace SELPDCImporter
             // 
             this.flowLayoutPanelActionButtons.Controls.Add(this.buttonCancel);
             this.flowLayoutPanelActionButtons.Controls.Add(this.buttonImport);
+            this.flowLayoutPanelActionButtons.Controls.Add(this.panelHistorian);
             this.flowLayoutPanelActionButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.flowLayoutPanelActionButtons.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.flowLayoutPanelActionButtons.Location = new System.Drawing.Point(0, 332);
             this.flowLayoutPanelActionButtons.Name = "flowLayoutPanelActionButtons";
             this.flowLayoutPanelActionButtons.Size = new System.Drawing.Size(734, 29);
             this.flowLayoutPanelActionButtons.TabIndex = 1;
+            this.flowLayoutPanelActionButtons.WrapContents = false;
             // 
             // buttonCancel
             // 
@@ -210,7 +216,7 @@ namespace SELPDCImporter
             this.buttonCancel.Location = new System.Drawing.Point(656, 3);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-            this.buttonCancel.TabIndex = 0;
+            this.buttonCancel.TabIndex = 1;
             this.buttonCancel.Text = "&Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
@@ -219,9 +225,36 @@ namespace SELPDCImporter
             this.buttonImport.Location = new System.Drawing.Point(575, 3);
             this.buttonImport.Name = "buttonImport";
             this.buttonImport.Size = new System.Drawing.Size(75, 23);
-            this.buttonImport.TabIndex = 1;
+            this.buttonImport.TabIndex = 0;
             this.buttonImport.Text = "&Import";
             this.buttonImport.UseVisualStyleBackColor = true;
+            // 
+            // panelHistorian
+            // 
+            this.panelHistorian.Controls.Add(this.comboBoxHistorian);
+            this.panelHistorian.Controls.Add(this.labelHistorian);
+            this.panelHistorian.Location = new System.Drawing.Point(2, 0);
+            this.panelHistorian.Margin = new System.Windows.Forms.Padding(0);
+            this.panelHistorian.Name = "panelHistorian";
+            this.panelHistorian.Size = new System.Drawing.Size(570, 30);
+            this.panelHistorian.TabIndex = 2;
+            // 
+            // comboBoxHistorian
+            // 
+            this.comboBoxHistorian.FormattingEnabled = true;
+            this.comboBoxHistorian.Location = new System.Drawing.Point(60, 6);
+            this.comboBoxHistorian.Name = "comboBoxHistorian";
+            this.comboBoxHistorian.Size = new System.Drawing.Size(121, 21);
+            this.comboBoxHistorian.TabIndex = 1;
+            // 
+            // labelHistorian
+            // 
+            this.labelHistorian.Location = new System.Drawing.Point(3, 4);
+            this.labelHistorian.Name = "labelHistorian";
+            this.labelHistorian.Size = new System.Drawing.Size(51, 23);
+            this.labelHistorian.TabIndex = 0;
+            this.labelHistorian.Text = "&Historian:";
+            this.labelHistorian.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // errorProvider
             // 
@@ -242,11 +275,13 @@ namespace SELPDCImporter
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Edit Target PDC Config Details";
             this.Load += new System.EventHandler(this.EditDetails_Load);
+            this.Resize += new System.EventHandler(this.EditDetails_Resize);
             this.tableLayoutPanelConfigDetails.ResumeLayout(false);
             this.tableLayoutPanelConfigDetails.PerformLayout();
             this.panelDataItem.ResumeLayout(false);
             this.panelDataItem.PerformLayout();
             this.flowLayoutPanelActionButtons.ResumeLayout(false);
+            this.panelHistorian.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).EndInit();
             this.ResumeLayout(false);
 
@@ -269,5 +304,8 @@ namespace SELPDCImporter
         private System.Windows.Forms.CheckBox checkBoxDeleteAll;
         private System.Windows.Forms.Label labelDataItem;
         private System.Windows.Forms.ErrorProvider errorProvider;
+        private System.Windows.Forms.Panel panelHistorian;
+        private System.Windows.Forms.ComboBox comboBoxHistorian;
+        private System.Windows.Forms.Label labelHistorian;
     }
 }

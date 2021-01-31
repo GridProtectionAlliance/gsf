@@ -92,6 +92,9 @@ namespace SELPDCImporter
         public static Phasor QueryPhasorForDevice(this TableOperations<Phasor> phasorTable, int deviceID, int sourceIndex) => 
             phasorTable.QueryRecordWhere("DeviceID = {0} AND SourceIndex = {1}", deviceID, sourceIndex) ?? phasorTable.NewPhasor();
 
+        public static IEnumerable<Historian> QueryHistorians(this TableOperations<Historian> historianTable) =>
+            historianTable.QueryRecords();
+
         public static Device FindDeviceByIDCode(this Device[] devices, ushort idCode, int? parentID = null) =>
             devices.FirstOrDefault(device => device.ParentID == parentID && device.AccessID == idCode);
 
@@ -175,6 +178,7 @@ namespace SELPDCImporter
 
             device.NodeID = nodeID;
             device.ParentID = null;
+            device.HistorianID = configFrame.HistorianID;
             device.Acronym = deviceAcronym;
             device.Name = deviceName ?? deviceAcronym;
             device.ProtocolID = importParams.IeeeC37_118ProtocolID;
@@ -229,6 +233,7 @@ namespace SELPDCImporter
 
         private static void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
         {
+            ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
             Device device = s_devices.FindDeviceByIDCode(configCell.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
@@ -252,6 +257,7 @@ namespace SELPDCImporter
             // Assign new device fields
             device.NodeID = nodeID;
             device.ParentID = parentDevice.ID;
+            device.HistorianID = configFrame.HistorianID;
             device.Acronym = deviceAcronym;
             device.Name = deviceName ?? deviceAcronym;
             device.ProtocolID = importParams.IeeeC37_118ProtocolID;
@@ -284,6 +290,7 @@ namespace SELPDCImporter
 
         private static void SaveDeviceRecords(ImportParameters importParams, ConfigurationCell configCell, Device device)
         {
+            ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             AdoDataConnection connection = importParams.Connection;
             TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
 
@@ -313,6 +320,7 @@ namespace SELPDCImporter
                 string pointTag = importParams.CreateIndexedPointTag(device.Acronym, analogSignalType.Acronym, index);
                 
                 measurement.DeviceID = device.ID;
+                measurement.HistorianID = configFrame.HistorianID;
                 measurement.PointTag = pointTag;
                 measurement.AlternateTag = analogDefinition.Label;
                 measurement.Description = $"{device.Acronym} Analog Value {index} {analogDefinition.AnalogType}: {analogDefinition.Label}{(string.IsNullOrWhiteSpace(analogDefinition.Description) ? "" : $" - {analogDefinition.Description}")}";
@@ -341,6 +349,7 @@ namespace SELPDCImporter
                 string pointTag = importParams.CreateIndexedPointTag(device.Acronym, digitalSignalType.Acronym, index);
                 
                 measurement.DeviceID = device.ID;
+                measurement.HistorianID = configFrame.HistorianID;
                 measurement.PointTag = pointTag;
                 measurement.AlternateTag = digitalDefinition.Label;
                 measurement.Description = $"{device.Acronym} Digital Value {index}: {digitalDefinition.Label}{(string.IsNullOrWhiteSpace(digitalDefinition.Description) ? "" : $" - {digitalDefinition.Description}")}";
@@ -358,6 +367,7 @@ namespace SELPDCImporter
 
         private static void SaveFixedMeasurement(ImportParameters importParams, SignalType signalType, Device device, TableOperations<Measurement> measurementTable, string description = null)
         {
+            ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             string oldSignalReference = $"{device.OldAcronym}-{signalType.Suffix}";
             string newSignalReference = $"{device.Acronym}-{signalType.Suffix}";
 
@@ -366,6 +376,7 @@ namespace SELPDCImporter
             string pointTag = importParams.CreatePointTag(device.Acronym, signalType.Acronym);
             
             measurement.DeviceID = device.ID;
+            measurement.HistorianID = configFrame.HistorianID;
             measurement.PointTag = pointTag;
             measurement.Description = $"{device.Acronym} {signalType.Name}{(string.IsNullOrWhiteSpace(description) ? "" : $" - {description}")}";
             measurement.SignalReference = newSignalReference;
@@ -453,6 +464,7 @@ namespace SELPDCImporter
 
         private static void SavePhasorMeasurement(ImportParameters importParams, SignalType signalType, Device device, PhasorDefinition phasorDefinition, int index, TableOperations<Measurement> measurementTable)
         {
+            ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             string oldSignalReference = $"{device.OldAcronym}-{signalType.Suffix}{index}";
             string newSignalReference = $"{device.Acronym}-{signalType.Suffix}{index}";
 
@@ -470,6 +482,7 @@ namespace SELPDCImporter
             };
 
             measurement.DeviceID = device.ID;
+            measurement.HistorianID = configFrame.HistorianID;
             measurement.PointTag = pointTag;
             measurement.Description = $"{device.Acronym} {phasorDefinition.Label.Trim()} {signalType.Name} ({phaseDescription}){(string.IsNullOrWhiteSpace(phasorDefinition.Description) ? "" : $" - {phasorDefinition.Description}")}";
             measurement.PhasorSourceIndex = index;
