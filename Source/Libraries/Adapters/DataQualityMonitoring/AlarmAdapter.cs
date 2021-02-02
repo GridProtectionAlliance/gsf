@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  02/02/2021 - C. Lackner
+//       Added Settings for Alarm Retention
 //
 //******************************************************************************************************
 
@@ -71,7 +73,7 @@ namespace DataQualityMonitoring
         // Constants
         private const int UpToDate = 0;
         private const int Modified = 1;
-
+        private const int DefaultAlarmRetention = 24;
         // Fields
         private readonly object m_alarmLock;
 
@@ -95,6 +97,7 @@ namespace DataQualityMonitoring
         private bool m_supportsTemporalProcessing;
         private bool m_disposed;
 
+        private int m_alarmRetention;
         #endregion
 
         #region [ Constructors ]
@@ -206,6 +209,24 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
+        /// Gets or sets the amount of time, in hours, an Alarm change will be kept n the database.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the amount of time, in hour, the alarms will be kept in the AlarmTable."),
+        DefaultValue(false)]
+        public int AlarmRetention
+        {
+            get
+            {
+                return m_alarmRetention;
+            }
+            set
+            {
+                m_alarmRetention = value;
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the data input source.
         /// </summary>
         public override string Status
@@ -248,6 +269,9 @@ namespace DataQualityMonitoring
 
             if (!settings.TryGetValue("bulkInsertLimit", out setting) || !int.TryParse(setting, out m_bulkInsertLimit))
                 m_bulkInsertLimit = 300;
+
+            if (!settings.TryGetValue("alarmRetention", out setting) || !int.TryParse(setting, out m_alarmRetention))
+                m_alarmRetention = DefaultAlarmRetention;
 
             if (settings.TryGetValue("logProcessingDelay", out setting) && double.TryParse(setting, out logProcessingDelay))
                 m_logProcessingDelay = (int)(logProcessingDelay * 1000.0D);
@@ -780,7 +804,7 @@ namespace DataQualityMonitoring
                     insertParameters.Add(stateChange.Value);
 
                     deleteParameters.Add(stateChange.SignalID);
-                    deleteParameters.Add(stateChange.Timestamp.AddHours(-24.0D).Ticks);
+                    deleteParameters.Add(stateChange.Timestamp.AddHours(-m_alarmRetention).Ticks);
 
                     count++;
 
