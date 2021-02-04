@@ -93,7 +93,7 @@ namespace SELPDCImporter
                 if (historians.ContainsValue("PPA"))
                     targetHistorianID = historians.FirstOrDefault(kvp => string.Equals(kvp.Value, "PPA")).Key;
                 else if (historians.Count > 1)
-                    targetHistorianID = historians.FirstOrDefault(kvp => kvp.Key > 0).Key;
+                    targetHistorianID = historians.FirstOrDefault(kvp => kvp.Key > 0 && !string.Equals(kvp.Value, "STAT")).Key;
 
                 if (targetHistorianID == -1)
                     targetHistorianID = 0;
