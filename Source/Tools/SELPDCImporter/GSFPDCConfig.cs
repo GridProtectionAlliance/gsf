@@ -434,7 +434,7 @@ namespace SELPDCImporter
                     phasor.Phase = phasorDefinition.Phase;
                     phasor.BaseKV = 500;
                     phasor.DestinationPhasorID = null;
-                    phasor.SourceIndex = phasorDefinition.Index;
+                    phasor.SourceIndex = phasorDefinition.Index + 1;
 
                     phasorTable.AddNewPhasor(phasor);
                     SavePhasorMeasurement(importParams, isVoltage ? vphmSignalType : iphmSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable);
@@ -450,7 +450,7 @@ namespace SELPDCImporter
 
                     bool isVoltage = phasorDefinition.PhasorType == PhasorType.Voltage;
 
-                    Phasor phasor = phasorTable.QueryPhasorForDevice(device.ID, phasorDefinition.Index);
+                    Phasor phasor = phasorTable.QueryPhasorForDevice(device.ID, phasorDefinition.Index + 1);
                     phasor.DeviceID = device.ID;
                     phasor.Label = phasorDefinition.Label;
                     phasor.Type = isVoltage ? 'V' : 'I';
