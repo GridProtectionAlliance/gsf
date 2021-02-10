@@ -80,7 +80,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void Acronym_TextChanged(object sender, TextChangedEventArgs e)
         {
-            SourcePrefix.Content = $"Use Source Prefix: \"{Acronym.Text}!\"";
+            if (!(SourcePrefix?.Content is null))
+                SourcePrefix.Content = $"Use Source Prefix: \"{Acronym?.Text}!\"";
         }
 
         private void STTP_Checked(object sender, RoutedEventArgs e)
