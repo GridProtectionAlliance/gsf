@@ -238,6 +238,8 @@ namespace GSF.PQDIF.Logical
             {
                 CollectionElement collectionElement = m_physicalRecord.Body.Collection;
                 VectorElement dataSourceNameElement = collectionElement.GetVectorByTag(DataSourceOwnerTag);
+                if ((object)dataSourceNameElement == null)
+                    return null;
                 return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
             }
             set
