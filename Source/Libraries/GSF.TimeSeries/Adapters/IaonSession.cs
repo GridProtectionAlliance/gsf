@@ -26,7 +26,6 @@
 using System;
 using System.Data;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using GSF.Annotations;
 using GSF.Collections;
@@ -126,7 +125,6 @@ namespace GSF.TimeSeries.Adapters
         private readonly int m_measurementWarningThreshold;
         private readonly int m_measurementDumpingThreshold;
         private readonly int m_defaultSampleSizeWarningThreshold;
-        private readonly object m_requestTemporalSupportLock;
         private string m_name;
         private bool m_disposed;
 
@@ -215,17 +213,12 @@ namespace GSF.TimeSeries.Adapters
             m_allAdapters.Add(m_filterAdapters);
             m_allAdapters.Add(m_inputAdapters);
             m_allAdapters.Add(m_actionAdapters);
-
-            m_requestTemporalSupportLock = new object();
         }
 
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="IaonSession"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~IaonSession()
-        {
-            Dispose(false);
-        }
+        ~IaonSession() => Dispose(false);
 
         #endregion
 
@@ -234,82 +227,40 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the all adapters collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public virtual AllAdaptersCollection AllAdapters
-        {
-            get
-            {
-                return m_allAdapters;
-            }
-        }
+        public virtual AllAdaptersCollection AllAdapters => m_allAdapters;
 
         /// <summary>
         /// Gets the filter adapter collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public virtual FilterAdapterCollection FilterAdapters
-        {
-            get
-            {
-                return m_filterAdapters;
-            }
-        }
+        public virtual FilterAdapterCollection FilterAdapters => m_filterAdapters;
 
         /// <summary>
         /// Gets the input adapter collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public virtual InputAdapterCollection InputAdapters
-        {
-            get
-            {
-                return m_inputAdapters;
-            }
-        }
+        public virtual InputAdapterCollection InputAdapters => m_inputAdapters;
 
         /// <summary>
         /// Gets the action adapter collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public virtual ActionAdapterCollection ActionAdapters
-        {
-            get
-            {
-                return m_actionAdapters;
-            }
-        }
+        public virtual ActionAdapterCollection ActionAdapters => m_actionAdapters;
 
         /// <summary>
         /// Gets the output adapter collection for this <see cref="IaonSession"/>.
         /// </summary>
-        public virtual OutputAdapterCollection OutputAdapters
-        {
-            get
-            {
-                return m_outputAdapters;
-            }
-        }
+        public virtual OutputAdapterCollection OutputAdapters => m_outputAdapters;
 
         /// <summary>
         /// Gets the routing tables for this <see cref="IaonSession"/>.
         /// </summary>
-        public virtual RoutingTables RoutingTables
-        {
-            get
-            {
-                return m_routingTables;
-            }
-        }
+        public virtual RoutingTables RoutingTables => m_routingTables;
 
         /// <summary>
         /// Gets or sets a routing table restriction for a collection of input measurement keys.
         /// </summary>
         public virtual MeasurementKey[] InputMeasurementKeysRestriction
         {
-            get
-            {
-                return m_inputMeasurementKeysRestriction;
-            }
-            set
-            {
-                m_inputMeasurementKeysRestriction = value;
-            }
+            get => m_inputMeasurementKeysRestriction;
+            set => m_inputMeasurementKeysRestriction = value;
         }
 
         /// <summary>
@@ -317,14 +268,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual DataSet DataSource
         {
-            get
-            {
-                return m_allAdapters.DataSource;
-            }
-            set
-            {
-                m_allAdapters.DataSource = value;
-            }
+            get => m_allAdapters.DataSource;
+            set => m_allAdapters.DataSource = value;
         }
 
         /// <summary>
@@ -332,14 +277,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
-            set
-            {
-                m_nodeID = value;
-            }
+            get => m_nodeID;
+            set => m_nodeID = value;
         }
 
         /// <summary>
@@ -347,14 +286,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual string Name
         {
-            get
-            {
-                return m_name.ToNonNullString();
-            }
-            set
-            {
-                m_name = value;
-            }
+            get => m_name.ToNonNullString();
+            set => m_name = value;
         }
 
         /// <summary>
@@ -370,28 +303,28 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine(">> Filter Adapters:");
                 status.AppendLine();
 
-                if (m_filterAdapters != null)
+                if (!(m_filterAdapters is null))
                     status.AppendLine(m_filterAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Input Adapters:");
                 status.AppendLine();
 
-                if (m_inputAdapters != null)
+                if (!(m_inputAdapters is null))
                     status.AppendLine(m_inputAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Action Adapters:");
                 status.AppendLine();
 
-                if (m_actionAdapters != null)
+                if (!(m_actionAdapters is null))
                     status.AppendLine(m_actionAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Output Adapters:");
                 status.AppendLine();
 
-                if (m_outputAdapters != null)
+                if (!(m_outputAdapters is null))
                     status.AppendLine(m_outputAdapters.Status);
 
                 return status.ToString();
@@ -417,85 +350,82 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+            
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                DataSet dataSource = DataSource;
+
+                // Dispose filter adapters collection
+                if (!(m_filterAdapters is null))
                 {
-                    if (disposing)
-                    {
-                        DataSet dataSource = DataSource;
-
-                        // Dispose filter adapters collection
-                        if ((object)m_filterAdapters != null)
-                        {
-                            m_filterAdapters.Stop();
-                            m_filterAdapters.Dispose();
-                        }
-                        m_filterAdapters = null;
-
-                        // Dispose input adapters collection
-                        if ((object)m_inputAdapters != null)
-                        {
-                            m_inputAdapters.Stop();
-                            m_inputAdapters.NewMeasurements -= NewMeasurementsHandler;
-                            m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
-                            m_inputAdapters.Dispose();
-                        }
-                        m_inputAdapters = null;
-
-                        // Dispose action adapters collection
-                        if ((object)m_actionAdapters != null)
-                        {
-                            m_actionAdapters.Stop();
-                            m_actionAdapters.NewMeasurements -= NewMeasurementsHandler;
-                            m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
-                            m_actionAdapters.RequestTemporalSupport -= RequestTemporalSupportHandler;
-                            m_actionAdapters.Dispose();
-                        }
-                        m_actionAdapters = null;
-
-                        // Dispose output adapters collection
-                        if ((object)m_outputAdapters != null)
-                        {
-                            m_outputAdapters.Stop();
-                            m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
-                            m_outputAdapters.Dispose();
-                        }
-                        m_outputAdapters = null;
-
-                        // Dispose all adapters collection
-                        if (m_allAdapters != null)
-                        {
-                            m_allAdapters.StatusMessage -= StatusMessageHandler;
-                            m_allAdapters.ProcessException -= ProcessExceptionHandler;
-                            m_allAdapters.InputMeasurementKeysUpdated -= InputMeasurementKeysUpdatedHandler;
-                            m_allAdapters.OutputMeasurementsUpdated -= OutputMeasurementsUpdatedHandler;
-                            m_allAdapters.ConfigurationChanged -= ConfigurationChangedHandler;
-                            m_allAdapters.Disposed -= DisposedHandler;
-                            m_allAdapters.Dispose();
-                        }
-                        m_allAdapters = null;
-
-                        // Dispose of routing tables
-                        if (m_routingTables != null)
-                        {
-                            m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
-                            m_routingTables.ProcessException -= m_routingTables_ProcessException;
-                            m_routingTables.Dispose();
-                        }
-                        m_routingTables = null;
-
-                        if ((object)dataSource != null)
-                            dataSource.Dispose();
-                    }
+                    m_filterAdapters.Stop();
+                    m_filterAdapters.Dispose();
                 }
-                finally
+                m_filterAdapters = null;
+
+                // Dispose input adapters collection
+                if (!(m_inputAdapters is null))
                 {
-                    m_disposed = true; // Prevent duplicate dispose.
-
-                    if (Disposed != null)
-                        Disposed(this, EventArgs.Empty);
+                    m_inputAdapters.Stop();
+                    m_inputAdapters.NewMeasurements -= NewMeasurementsHandler;
+                    m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
+                    m_inputAdapters.Dispose();
                 }
+                m_inputAdapters = null;
+
+                // Dispose action adapters collection
+                if (!(m_actionAdapters is null))
+                {
+                    m_actionAdapters.Stop();
+                    m_actionAdapters.NewMeasurements -= NewMeasurementsHandler;
+                    m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
+                    m_actionAdapters.RequestTemporalSupport -= RequestTemporalSupportHandler;
+                    m_actionAdapters.Dispose();
+                }
+                m_actionAdapters = null;
+
+                // Dispose output adapters collection
+                if (!(m_outputAdapters is null))
+                {
+                    m_outputAdapters.Stop();
+                    m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
+                    m_outputAdapters.Dispose();
+                }
+                m_outputAdapters = null;
+
+                // Dispose all adapters collection
+                if (!(m_allAdapters is null))
+                {
+                    m_allAdapters.StatusMessage -= StatusMessageHandler;
+                    m_allAdapters.ProcessException -= ProcessExceptionHandler;
+                    m_allAdapters.InputMeasurementKeysUpdated -= InputMeasurementKeysUpdatedHandler;
+                    m_allAdapters.OutputMeasurementsUpdated -= OutputMeasurementsUpdatedHandler;
+                    m_allAdapters.ConfigurationChanged -= ConfigurationChangedHandler;
+                    m_allAdapters.Disposed -= DisposedHandler;
+                    m_allAdapters.Dispose();
+                }
+                m_allAdapters = null;
+
+                // Dispose of routing tables
+                if (!(m_routingTables is null))
+                {
+                    m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
+                    m_routingTables.ProcessException -= m_routingTables_ProcessException;
+                    m_routingTables.Dispose();
+                }
+                m_routingTables = null;
+
+                dataSource?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
+                Disposed?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -508,12 +438,10 @@ namespace GSF.TimeSeries.Adapters
             // Initialize all adapters
             m_allAdapters.Initialize();
 
+            // Start all adapters if they
+            // haven't started already
             if (autoStart)
-            {
-                // Start all adapters if they
-                // haven't started already
                 m_allAdapters.Start();
-            }
         }
 
         /// <summary>
@@ -527,7 +455,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 DataTable temporalSupport = m_allAdapters?.DataSource?.Tables["TemporalSupport"];
 
-                if ((object)temporalSupport == null)
+                if (temporalSupport is null)
                     return false;
 
                 if (string.IsNullOrWhiteSpace(collection))
@@ -550,12 +478,16 @@ namespace GSF.TimeSeries.Adapters
         public virtual string GetDerivedName(object sender)
         {
             string name = null;
-            IProvideStatus statusProvider = sender as IProvideStatus;
 
-            if ((object)statusProvider != null)
-                name = statusProvider.Name;
-            else if (sender is string)
-                name = (string)sender;
+            switch (sender)
+            {
+                case IProvideStatus statusProvider:
+                    name = statusProvider.Name;
+                    break;
+                case string nameValue:
+                    name = nameValue;
+                    break;
+            }
 
             if (string.IsNullOrWhiteSpace(name))
                 name = sender.GetType().Name;
@@ -571,8 +503,10 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual void RecalculateRoutingTables()
         {
-            if ((object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
-                m_routingTables.CalculateRoutingTables(m_inputMeasurementKeysRestriction);
+            if (m_routingTables is null || m_allAdapters is null || !m_allAdapters.Initialized)
+                return;
+
+            m_routingTables.CalculateRoutingTables(m_inputMeasurementKeysRestriction);
         }
 
         /// <summary>
@@ -583,15 +517,15 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
         protected virtual void OnStatusMessage(object sender, string status, UpdateType type = UpdateType.Information)
         {
-            if ((object)StatusMessage != null)
-            {
-                // When using default informational update type, see if an update type code was embedded in the status message - this allows for compatibility for event
-                // handlers that are normally unaware of the update type
-                if (type == UpdateType.Information && (object)status != null && status.Length > 3 && status.StartsWith("0x") && Enum.TryParse(status[2].ToString(), out type))
-                    status = status.Substring(3);
+            if (StatusMessage is null)
+                return;
 
-                StatusMessage(sender, new EventArgs<string, UpdateType>(status, type));
-            }
+            // When using default informational update type, see if an update type code was embedded in the status message - this allows for compatibility for event
+            // handlers that are normally unaware of the update type
+            if (type == UpdateType.Information && !(status is null) && status.Length > 3 && status.StartsWith("0x") && Enum.TryParse(status[2].ToString(), out type))
+                status = status.Substring(3);
+
+            StatusMessage(sender, new EventArgs<string, UpdateType>(status, type));
         }
 
         /// <summary>
@@ -607,7 +541,7 @@ namespace GSF.TimeSeries.Adapters
         [StringFormatMethod("formattedStatus")]
         protected virtual void OnStatusMessage(object sender, string formattedStatus, UpdateType type, params object[] args)
         {
-            if ((object)StatusMessage != null)
+            if (!(StatusMessage is null))
                 OnStatusMessage(sender, string.Format(formattedStatus, args), type);
         }
 
@@ -616,95 +550,69 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected virtual void OnProcessException(object sender, Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(sender, new EventArgs<Exception>(ex));
-        }
+        protected virtual void OnProcessException(object sender, Exception ex) => 
+            ProcessException?.Invoke(sender, new EventArgs<Exception>(ex));
 
         /// <summary>
         /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
-        protected virtual void OnInputMeasurementKeysUpdated(object sender)
-        {
-            if ((object)InputMeasurementKeysUpdated != null)
-                InputMeasurementKeysUpdated(sender, EventArgs.Empty);
-        }
+        protected virtual void OnInputMeasurementKeysUpdated(object sender) => 
+            InputMeasurementKeysUpdated?.Invoke(sender, EventArgs.Empty);
 
         /// <summary>
         /// Raises <see cref="OutputMeasurementsUpdated"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
-        protected virtual void OnOutputMeasurementsUpdated(object sender)
-        {
-            if ((object)OutputMeasurementsUpdated != null)
-                OutputMeasurementsUpdated(sender, EventArgs.Empty);
-        }
+        protected virtual void OnOutputMeasurementsUpdated(object sender) => 
+            OutputMeasurementsUpdated?.Invoke(sender, EventArgs.Empty);
 
         /// <summary>
         /// Raises <see cref="ConfigurationChanged"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
-        protected virtual void OnConfigurationChanged(object sender)
-        {
-            if ((object)ConfigurationChanged != null)
-                ConfigurationChanged(sender, EventArgs.Empty);
-        }
+        protected virtual void OnConfigurationChanged(object sender) => 
+            ConfigurationChanged?.Invoke(sender, EventArgs.Empty);
 
         /// <summary>
         /// Raises the <see cref="UnpublishedSamples"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
-        protected virtual void OnUnpublishedSamples(object sender, int seconds)
-        {
-            if ((object)UnpublishedSamples != null)
-                UnpublishedSamples(sender, new EventArgs<int>(seconds));
-        }
+        protected virtual void OnUnpublishedSamples(object sender, int seconds) => 
+            UnpublishedSamples?.Invoke(sender, new EventArgs<int>(seconds));
 
         /// <summary>
         /// Raises the <see cref="UnprocessedMeasurements"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
         /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
-        protected virtual void OnUnprocessedMeasurements(object sender, int unprocessedMeasurements)
-        {
-            if ((object)UnprocessedMeasurements != null)
-                UnprocessedMeasurements(sender, new EventArgs<int>(unprocessedMeasurements));
-        }
+        protected virtual void OnUnprocessedMeasurements(object sender, int unprocessedMeasurements) => 
+            UnprocessedMeasurements?.Invoke(sender, new EventArgs<int>(unprocessedMeasurements));
 
         /// <summary>
         /// Raises the <see cref="ProcessingComplete"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
         /// <param name="e"><see cref="EventArgs"/>, if any.</param>
-        protected virtual void OnProcessingComplete(object sender, EventArgs e = null)
-        {
-            if ((object)ProcessingComplete != null)
-                ProcessingComplete(sender, e ?? EventArgs.Empty);
-        }
+        protected virtual void OnProcessingComplete(object sender, EventArgs e = null) => 
+            ProcessingComplete?.Invoke(sender, e ?? EventArgs.Empty);
 
         /// <summary>
         /// Raises the <see cref="Disposed"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
-        protected virtual void OnDisposed(object sender)
-        {
-            if ((object)Disposed != null)
-                Disposed(sender, EventArgs.Empty);
-        }
+        protected virtual void OnDisposed(object sender) => 
+            Disposed?.Invoke(sender, EventArgs.Empty);
 
         /// <summary>
         /// Event handler for reporting status messages.
         /// </summary>
         /// <param name="sender">Event source of the status message.</param>
         /// <param name="e">Event arguments containing the status message to report.</param>
-        public virtual void StatusMessageHandler(object sender, EventArgs<string> e)
-        {
+        public virtual void StatusMessageHandler(object sender, EventArgs<string> e) =>
             // Bubble message up to any event subscribers
             OnStatusMessage(sender, "[{0}] {1}", UpdateType.Information, GetDerivedName(sender), e.Argument);
-        }
 
         /// <summary>
         /// Event handler for processing reported exceptions.
@@ -752,11 +660,9 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event arguments, if any.</param>
-        public virtual void ConfigurationChangedHandler(object sender, EventArgs e)
-        {
+        public virtual void ConfigurationChangedHandler(object sender, EventArgs e) =>
             // Bubble message up to any event subscribers
             OnConfigurationChanged(sender);
-        }
 
         /// <summary>
         /// Event handler for monitoring unpublished samples.
@@ -772,16 +678,14 @@ namespace GSF.TimeSeries.Adapters
             int secondsOfData = e.Argument;
             int threshold = m_defaultSampleSizeWarningThreshold;
             int processingInterval = -1;
-            ConcentratorBase concentrator = sender as ConcentratorBase;
-            IAdapter adapter = sender as IAdapter;
 
             // Most action adapters will be based on a concentrator, if so we monitor the unpublished sample queue size compared to the defined
             // lag time - if the queue size is over twice the lag size, the action adapter could be falling behind
-            if ((object)concentrator != null)
+            if (sender is ConcentratorBase concentrator)
                 threshold = (int)(2 * Math.Ceiling(concentrator.LagTime));
 
             // Get processing interval for adapter
-            if ((object)adapter != null)
+            if (sender is IAdapter adapter)
                 processingInterval = adapter.ProcessingInterval;
 
             // Allow much more time before warning for when a fast processing interval has been defined
@@ -805,29 +709,27 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual void RequestTemporalSupportHandler(object sender, EventArgs e)
         {
-            lock (m_requestTemporalSupportLock)
+            lock (s_requestTemporalSupportLock)
             {
-                if (!m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
+                if (m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
+                    return;
+
+                // Create a new temporal support identification table
+                DataTable temporalSupport = new DataTable("TemporalSupport");
+
+                temporalSupport.Columns.Add("Source", typeof(string));
+                temporalSupport.Columns.Add("ID", typeof(uint));
+
+                // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
+                lock (m_allAdapters)
                 {
-                    // Create a new temporal support identification table
-                    DataTable temporalSupport = new DataTable("TemporalSupport");
-
-                    temporalSupport.Columns.Add("Source", typeof(string));
-                    temporalSupport.Columns.Add("ID", typeof(uint));
-
-                    // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
-                    lock (m_allAdapters)
+                    foreach (IAdapterCollection collection in m_allAdapters)
                     {
-                        foreach (IAdapterCollection collection in m_allAdapters)
-                        {
-                            foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
-                            {
-                                temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
-                            }
-                        }
-
-                        m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
+                        foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
+                            temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
                     }
+
+                    m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
                 }
             }
         }
@@ -847,9 +749,7 @@ namespace GSF.TimeSeries.Adapters
 
             if (unprocessedMeasurements > m_measurementDumpingThreshold)
             {
-                IOutputAdapter outputAdapter = sender as IOutputAdapter;
-
-                if (outputAdapter != null)
+                if (sender is IOutputAdapter outputAdapter)
                 {
                     // If an output adapter queue size exceeds the defined measurement dumping threshold,
                     // then the queue will be truncated before system runs out of memory
@@ -881,10 +781,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="sender">Event source reference to the adapter that is reporting new measurements.</param>
         /// <param name="e">Event arguments for event that contains references to the new measurements.</param>
-        public virtual void NewMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e)
-        {
+        public virtual void NewMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e) => 
             m_filterAdapters?.HandleNewMeasurements(e.Argument);
-        }
 
         /// <summary>
         /// Event handler for processing complete notifications from input adapters.
@@ -912,24 +810,20 @@ namespace GSF.TimeSeries.Adapters
             OnDisposed(sender);
         }
 
-        // Bubble routing table messages out through Iaon session
-        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e)
-        {
+        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e) =>
+            // Bubble routing table messages out through Iaon session
             OnStatusMessage(this, e.Argument);
-        }
 
-        // Bubble routing table exceptions out through Iaon session
-        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e)
-        {
+        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e) =>
+            // Bubble routing table exceptions out through Iaon session
             ProcessExceptionHandler(sender, e);
-        }
 
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(IaonSession), MessageClass.Framework);
+        private static readonly object s_requestTemporalSupportLock = new object();
         private static DataSet s_currentRealTimeConfiguration;
         private static DataSet s_currentTemporalConfiguration;
 
@@ -940,75 +834,74 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="realtimeConfiguration">Real-time <see cref="DataSet"/> configuration.</param>
         /// <returns>A new <see cref="DataSet"/> configuration for adapters that support temporal processing.</returns>
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public static DataSet ExtractTemporalConfiguration(DataSet realtimeConfiguration)
         {
-            // Since the same real-time configuration is shared among all adapters we can return
-            // existing cached temporal configuration if real-time configuration hasn't changed
-            if ((object)s_currentRealTimeConfiguration != null && (object)s_currentTemporalConfiguration != null && ReferenceEquals(s_currentRealTimeConfiguration, realtimeConfiguration))
-                return s_currentTemporalConfiguration;
+           lock (s_requestTemporalSupportLock)
+           {
+                // Since the same real-time configuration is shared among all adapters we can return
+                // existing cached temporal configuration if real-time configuration hasn't changed
+                if (!(s_currentRealTimeConfiguration is null) && !(s_currentTemporalConfiguration is null) && ReferenceEquals(s_currentRealTimeConfiguration, realtimeConfiguration))
+                    return s_currentTemporalConfiguration;
 
-            try
-            {
-                // Duplicate current run-time session configuration that has temporal support
-                DataSet temporalConfiguration = new DataSet("IaonTemporal");
-                DataTable temporalSupport = realtimeConfiguration.Tables["TemporalSupport"];
-                string tableName;
-
-                foreach (DataTable table in realtimeConfiguration.Tables)
+                try
                 {
-                    tableName = table.TableName;
+                    // Duplicate current run-time session configuration that has temporal support
+                    DataSet temporalConfiguration = new DataSet("IaonTemporal");
+                    DataTable temporalSupport = realtimeConfiguration.Tables["TemporalSupport"];
 
-                    switch (tableName.ToLower())
+                    foreach (DataTable table in realtimeConfiguration.Tables)
                     {
-                        case "inputadapters":
-                        case "actionadapters":
-                        case "outputadapters":
-                            // For Iaon adapter tables, we only copy in adapters that support temporal processing
-                            temporalConfiguration.Tables.Add(table.Clone());
+                        string tableName = table.TableName;
 
-                            // Check for adapters with temporal support in this adapter collection
-                            DataRow[] temporalAdapters = temporalSupport.Select($"Source = '{tableName}'");
+                        switch (tableName.ToLower())
+                        {
+                            case "inputadapters":
+                            case "actionadapters":
+                            case "outputadapters":
+                                // For Iaon adapter tables, we only copy in adapters that support temporal processing
+                                temporalConfiguration.Tables.Add(table.Clone());
 
-                            // If any adapters support temporal processing, add them to the temporal configuration
-                            if (temporalAdapters.Length > 0)
-                            {
-                                DataTable realtimeTable = realtimeConfiguration.Tables[tableName];
-                                DataTable temporalTable = temporalConfiguration.Tables[tableName];
+                                // Check for adapters with temporal support in this adapter collection
+                                DataRow[] temporalAdapters = temporalSupport?.Select($"Source = '{tableName}'") ?? Array.Empty<DataRow>();
 
-                                foreach (DataRow row in realtimeTable.Select($"ID IN ({temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(',')})"))
+                                // If any adapters support temporal processing, add them to the temporal configuration
+                                if (temporalAdapters.Length > 0)
                                 {
-                                    DataRow newRow = temporalTable.NewRow();
+                                    DataTable realtimeTable = realtimeConfiguration.Tables[tableName];
+                                    DataTable temporalTable = temporalConfiguration.Tables[tableName];
 
-                                    for (int x = 0; x < realtimeTable.Columns.Count; x++)
+                                    foreach (DataRow row in realtimeTable.Select($"ID IN ({temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(',')})"))
                                     {
-                                        newRow[x] = row[x];
+                                        DataRow newRow = temporalTable.NewRow();
+
+                                        for (int i = 0; i < realtimeTable.Columns.Count; i++)
+                                            newRow[i] = row[i];
+
+                                        temporalConfiguration.Tables[tableName].Rows.Add(newRow);
                                     }
-
-                                    temporalConfiguration.Tables[tableName].Rows.Add(newRow);
                                 }
-                            }
 
-                            break;
-                        default:
-                            // For all other tables we add configuration information as-is
-                            temporalConfiguration.Tables.Add(table.Copy());
-                            break;
+                                break;
+                            default:
+                                // For all other tables we add configuration information as-is
+                                temporalConfiguration.Tables.Add(table.Copy());
+                                break;
+                        }
                     }
+
+                    // Cache new temporal configuration
+                    s_currentRealTimeConfiguration = realtimeConfiguration;
+                    s_currentTemporalConfiguration = temporalConfiguration;
+
+                    return temporalConfiguration;
                 }
-
-                // Cache new temporal configuration
-                s_currentRealTimeConfiguration = realtimeConfiguration;
-                s_currentTemporalConfiguration = temporalConfiguration;
-
-                return temporalConfiguration;
-            }
-            catch
-            {
-                s_currentRealTimeConfiguration = null;
-                s_currentTemporalConfiguration = null;
-                throw;
-            }
+                catch
+                {
+                    s_currentRealTimeConfiguration = null;
+                    s_currentTemporalConfiguration = null;
+                    throw;
+                }
+           }
         }
 
         #endregion
