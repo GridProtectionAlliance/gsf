@@ -61,6 +61,7 @@ function PagedViewModel() {
     self.hubName = "{name}";                                        // Full class name of data hub
     self.pageName = "{name}";                                       // Name of page implementing model (helps with unique cookie name)
     self.filterText = "";                                           // Search filter text
+    self.addNewEditDialogVisible = false;                           // Flag that indicates when add new / edit dialog is visible
 
     // Observable fields
     self.pageRecords = ko.observableArray();                        // Records queried for current page
@@ -78,6 +79,7 @@ function PagedViewModel() {
     self._currentPageSize = ko.observable(1);
     self._currentPage = ko.observable(0);
     self._currentRecord = ko.observable();
+    self._currentRecordWatcher = function () { return { dispose: function () { } }; }();
     self._recordMode = ko.observable(RecordMode.View);
     self._isDirty = ko.observable(false);
     self._columnWidths = [];
@@ -123,14 +125,20 @@ function PagedViewModel() {
     // Gets or sets current record on page
     self.currentRecord = ko.pureComputed({
         read: self._currentRecord,
-        write: function(value) {
+        write: function (value) {
+            self._currentRecordWatcher.dispose();
             self._currentRecord(value);
             self.isDirty(false);
             $(self).trigger("currentRecordChanged");
             self.applyValidationParameters();
 
             // Watch for changes to fields in current record
-            ko.watch(self._currentRecord(), function(parents, child, item) {
+            self._currentRecordWatcher = ko.watch(self._currentRecord(), function (parents, child, item) {
+                // Do not trigger field changed operations until dialog is visible
+                // so that updates will only be for user triggered changed
+                if (!viewModel.addNewEditDialogVisible)
+                    return;
+
                 self.isDirty(true);
                 $(self).trigger("currentRecordUpdated", [child]);
 
@@ -496,7 +504,8 @@ function PagedViewModel() {
     }
 
     self.viewPageRecord = function(record) {
-        self.deriveObservableRecord(record).done(function(observableRecord) {
+        self.deriveObservableRecord(record).done(function (observableRecord) {
+            self.addNewEditDialogVisible = false;
             self.recordMode(RecordMode.View);
             self.currentRecord(observableRecord);
             $("#addNewEditDialog").modal("show");
@@ -507,7 +516,8 @@ function PagedViewModel() {
         if (!self.canEdit())
             return;
 
-        self.deriveObservableRecord(record).done(function(observableRecord) {
+        self.deriveObservableRecord(record).done(function (observableRecord) {
+            self.addNewEditDialogVisible = false;
             self.recordMode(RecordMode.Edit);
             self.currentRecord(observableRecord);
             $("#addNewEditDialog").modal("show");
@@ -523,7 +533,8 @@ function PagedViewModel() {
                 // Raise event to allow any new record initialization
                 $(self).trigger("newRecord", [emptyRecord, sourceRecord]);
 
-                self.deriveObservableRecord(emptyRecord).done(function(observableRecord) {
+                self.deriveObservableRecord(emptyRecord).done(function (observableRecord) {
+                    self.addNewEditDialogVisible = false;
                     self.recordMode(RecordMode.AddNew);
                     self.currentRecord(observableRecord);
                     $("#addNewEditDialog").modal("show");
@@ -593,6 +604,7 @@ var viewModel = new PagedViewModel();
     $("#addNewEditDialog").on("shown.bs.modal", function() {
         viewModel.setFocusOnInitialField();
         $("[data-toggle='tooltip']").tooltip();
+        viewModel.addNewEditDialogVisible = true;
     });
 
     $(window).resize(
