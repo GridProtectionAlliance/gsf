@@ -62,10 +62,8 @@ namespace GSF.Web.Model.Handlers
         {
             private readonly HttpResponse m_reponse;
 
-            public HttpResponseCancellationToken(HttpResponse response) : base(CancellationToken.None)
-            {
+            public HttpResponseCancellationToken(HttpResponse response) : base(CancellationToken.None) => 
                 m_reponse = response;
-            }
 
             public override bool IsCancelled => !m_reponse.IsClientConnected;
         }
@@ -121,7 +119,7 @@ namespace GSF.Web.Model.Handlers
             response.ClearContent();
             response.Clear();
             response.AddHeader("Content-Type", CsvContentType);
-            response.AddHeader("Content-Disposition", "attachment;filename=" + GetModelFileName(requestParameters["ModelName"]));
+            response.AddHeader("Content-Disposition", "attachment;filename=" + GetExportFileName(requestParameters));
             response.BufferOutput = true;
 
             try
@@ -149,7 +147,7 @@ namespace GSF.Web.Model.Handlers
         {
             NameValueCollection requestParameters = request.RequestUri.ParseQueryString();
 
-            response.Content = new PushStreamContent((stream, content, context) =>
+            response.Content = new PushStreamContent((stream, _, _) =>
             {
                 try
                 {
@@ -170,17 +168,17 @@ namespace GSF.Web.Model.Handlers
 
             response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
             {
-                FileName = GetModelFileName(requestParameters["ModelName"])
+                FileName = GetExportFileName(requestParameters)
             };
 
-#if MONO
+        #if MONO
             return Task.FromResult(false);
-#else
+        #else
             return Task.CompletedTask;
-#endif
+        #endif
         }
 
-        private void CopyModelAsCsvToStream(SecurityPrincipal securityPrincipal, NameValueCollection requestParameters, Stream responseStream, Action flushResponse, CompatibleCancellationToken cancellationToken)
+        private static void CopyModelAsCsvToStream(SecurityPrincipal securityPrincipal, NameValueCollection requestParameters, Stream responseStream, Action flushResponse, CompatibleCancellationToken cancellationToken)
         {
             string modelName = requestParameters["ModelName"];
             string hubName = requestParameters["HubName"];
@@ -199,12 +197,12 @@ namespace GSF.Web.Model.Handlers
 
             Type modelType = AssemblyInfo.FindType(modelName);
 
-            if ((object)modelType == null)
+            if (modelType is null)
                 throw new InvalidOperationException($"Cannot download CSV data: failed to find model type \"{modelName}\" in loaded assemblies.");
 
             Type hubType = AssemblyInfo.FindType(hubName);
 
-            if ((object)hubType == null)
+            if (hubType is null)
                 throw new InvalidOperationException($"Cannot download CSV data: failed to find hub type \"{hubName}\" in loaded assemblies.");
 
             IRecordOperationsHub hub;
@@ -219,7 +217,7 @@ namespace GSF.Web.Model.Handlers
                 // Create a local record operations hub instance so that CSV export can query same record set that is visible in active hub context
                 hub = Activator.CreateInstance(hubType) as IRecordOperationsHub;
 
-                if ((object)hub == null)
+                if (hub is null)
                     throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" is not a IRecordOperationsHub, access cannot be validated.");
 
                 // Assign provided connection ID from active hub context to our local hub instance so that any session based data will be available to query functions
@@ -232,7 +230,7 @@ namespace GSF.Web.Model.Handlers
                     // Get any authorized query roles as defined in hub records operations for modeled table, default to read allowed for query
                     recordOperations = hub.RecordOperationsCache.GetRecordOperations(modelType);
 
-                    if ((object)recordOperations == null)
+                    if (recordOperations is null)
                         throw new NullReferenceException();
                 }
                 catch (KeyNotFoundException ex)
@@ -243,13 +241,13 @@ namespace GSF.Web.Model.Handlers
                 // Get record operation for querying record count
                 queryRecordCountOperation = recordOperations[(int)RecordOperation.QueryRecordCount];
 
-                if ((object)queryRecordCountOperation == null)
+                if (queryRecordCountOperation is null)
                     throw new NullReferenceException();
 
                 // Get record operation for querying records
                 queryRecordsOperation = recordOperations[(int)RecordOperation.QueryRecords];
 
-                if ((object)queryRecordsOperation == null)
+                if (queryRecordsOperation is null)
                     throw new NullReferenceException();
 
                 // Get any defined role restrictions for record query operation - access to CSV download will based on these roles
@@ -274,15 +272,9 @@ namespace GSF.Web.Model.Handlers
             object writeBufferLock = new object();
             bool readComplete = false;
 
-            ITableOperations table;
-            string[] fieldNames;
-            bool hasDeletedField;
-
-            table = dataContext.Table(modelType);
-
-            fieldNames = table.GetFieldNames(false).Where(field =>  (!(table.FieldHasAttribute<GSF.Data.Model.CSVExcludeFieldAttribute>(field)))).ToArray();
-           
-            hasDeletedField = !string.IsNullOrEmpty(dataContext.GetIsDeletedFlag(modelType));
+            ITableOperations table = dataContext.Table(modelType);
+            string[] fieldNames = table.GetFieldNames(false).Where(field => !table.FieldHasAttribute<CSVExcludeFieldAttribute>(field)).ToArray();
+            bool hasDeletedField = !string.IsNullOrEmpty(dataContext.GetIsDeletedFlag(modelType));
 
             Task readTask = Task.Factory.StartNew(() =>
             {
@@ -293,6 +285,9 @@ namespace GSF.Web.Model.Handlers
                     // Get query operation methods
                     MethodInfo queryRecordCount = hubType.GetMethod(queryRecordCountOperation.Item1);
                     MethodInfo queryRecords = hubType.GetMethod(queryRecordsOperation.Item1);
+
+                    if (queryRecordCount is null || queryRecords is null)
+                        throw new NullReferenceException("Query record operations are null");
 
                     // Setup query parameters
                     List<object> queryRecordCountParameters = new List<object>();
@@ -389,44 +384,43 @@ namespace GSF.Web.Model.Handlers
             },
             cancellationToken);
 
-            Task writeTask = Task.Factory.StartNew(() =>
+            Task writeTask = Task.Factory.StartNew(() => 
             {
-                using (StreamWriter writer = new StreamWriter(responseStream))
+                //Ticks exportStart = DateTime.UtcNow.Ticks;
+
+                using StreamWriter writer = new StreamWriter(responseStream);
+
+                void flushStream()
                 {
-                    //Ticks exportStart = DateTime.UtcNow.Ticks;
+                    writer.Flush();
+                    flushResponse?.Invoke();
+                }
+
+                // Write column headers
+                writer.WriteLine(string.Join(",", fieldNames.Select(fieldName => $"\"{fieldName}\"")));
+                flushStream();
+
+                while ((writeBuffer.Count > 0 || !readComplete) && !cancellationToken.IsCancelled)
+                {
+                    bufferReady.Wait(cancellationToken);
+                    bufferReady.Reset();
+
                     string[] localBuffer;
 
-                    Action flushStream = () =>
+                    lock (writeBufferLock)
                     {
-                        writer.Flush();
-
-                        if ((object)flushResponse != null)
-                            flushResponse();
-                    };
-
-                    // Write column headers
-                    writer.WriteLine(string.Join(",", fieldNames.Select(fieldName => $"\"{fieldName}\"")));
-                    flushStream();
-
-                    while ((writeBuffer.Count > 0 || !readComplete) && !cancellationToken.IsCancelled)
-                    {
-                        bufferReady.Wait(cancellationToken);
-                        bufferReady.Reset();
-
-                        lock (writeBufferLock)
-                        {
-                            localBuffer = writeBuffer.ToArray();
-                            writeBuffer.Clear();
-                        }
-
-                        foreach (string buffer in localBuffer)
-                            writer.Write(buffer);
+                        localBuffer = writeBuffer.ToArray();
+                        writeBuffer.Clear();
                     }
 
-                    // Flush stream
-                    flushStream();
-                    //Debug.WriteLine("Export time: " + (DateTime.UtcNow.Ticks - exportStart).ToElapsedTimeString(3));
+                    foreach (string buffer in localBuffer)
+                        writer.Write(buffer);
                 }
+
+                // Flush stream
+                flushStream();
+
+                //Debug.WriteLine("Export time: " + (DateTime.UtcNow.Ticks - exportStart).ToElapsedTimeString(3));
             },
             cancellationToken);
 
@@ -437,6 +431,9 @@ namespace GSF.Web.Model.Handlers
         /// Defines any exception handler for any thrown exceptions.
         /// </summary>
         public static Action<Exception> LogExceptionHandler;
+
+        private static string GetExportFileName(NameValueCollection requestParameters) => 
+            requestParameters["ExportName"] ?? GetModelFileName(requestParameters["ModelName"]);
 
         private static string GetModelFileName(string modelName)
         {

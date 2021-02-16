@@ -26,11 +26,11 @@ using System;
 namespace GSF.Data.Model
 {
     /// <summary>
-    /// Defines an attribute that will exclude this Field in any CSV exports.
+    /// Defines an attribute that will exclude a field from a CSV export.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
     public sealed class CSVExcludeFieldAttribute : Attribute
     {
-        //Note No Content Neccesarrry since the logic is in the CSV creation
+        // Note: no content necessary since the logic is in the CSV creation
     }
 }
