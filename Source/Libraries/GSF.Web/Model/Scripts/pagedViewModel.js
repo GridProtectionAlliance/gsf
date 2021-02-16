@@ -136,7 +136,7 @@ function PagedViewModel() {
             self._currentRecordWatcher = ko.watch(self._currentRecord(), function (parents, child, item) {
                 // Do not trigger field changed operations until dialog is visible
                 // so that updates will only be for user triggered changed
-                if (!viewModel.addNewEditDialogVisible)
+                if (!self.addNewEditDialogVisible)
                     return;
 
                 self.isDirty(true);
