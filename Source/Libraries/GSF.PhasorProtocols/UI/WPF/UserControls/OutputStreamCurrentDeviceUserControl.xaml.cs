@@ -41,10 +41,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
         #region [ Members ]
 
         private readonly int m_outputStreamID;
-        //private string m_outputStreamAcronym;
         private ObservableCollection<OutputStreamDevice> m_currentDevices;
         private ObservableCollection<Device> m_newDevices;
-        //private TsfPopup popupSettings;
 
         #endregion
 
@@ -57,12 +55,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
         public OutputStreamCurrentDeviceUserControl(int outputStreamID)
         {
             InitializeComponent();
+            
             m_outputStreamID = outputStreamID;
-            //m_outputStreamAcronym = outputStreamAcronym;
             m_currentDevices = new ObservableCollection<OutputStreamDevice>();
             m_newDevices = new ObservableCollection<Device>();
-            this.Loaded += OutputStreamCurrentDeviceUserControl_Loaded;
-            this.KeyUp += OutputStreamCurrentDeviceUserControl_KeyUp;
+            
+            Loaded += OutputStreamCurrentDeviceUserControl_Loaded;
+            KeyUp += OutputStreamCurrentDeviceUserControl_KeyUp;
         }
 
         #endregion
@@ -79,7 +78,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             IList<int> keys = OutputStreamDevice.LoadKeys(null, m_outputStreamID);
             m_currentDevices = OutputStreamDevice.Load(null, keys);
+            
             DataGridCurrentDevices.ItemsSource = m_currentDevices;
+            
             if (m_currentDevices.Count == 0)
                 PopupAddMore.IsOpen = true;
         }
@@ -127,25 +128,23 @@ namespace GSF.PhasorProtocols.UI.UserControls
             PopupAddMore.IsOpen = true;
         }
 
-        #region [ Popup Code]
-
         private void LoadNewDevices(string filterText)
         {
 
-            if (String.IsNullOrEmpty(filterText))
+            if (string.IsNullOrEmpty(filterText))
             {
                 m_newDevices = Device.GetNewDevicesForOutputStream(null, m_outputStreamID);
             }
             else
             {
                 filterText = filterText.ToLower();
-                m_newDevices = new ObservableCollection<Device>(
-                    Device.GetNewDevicesForOutputStream(null, m_outputStreamID).Where(d => d.Acronym.ToNonNullString().ToLower().Contains(filterText) ||
-                                                                                            d.Name.ToNonNullString().ToLower().Contains(filterText) ||
-                                                                                            d.CompanyAcronym.ToNonNullString().ToLower().Contains(filterText) ||
-                                                                                            d.CompanyName.ToNonNullString().ToLower().Contains(filterText) ||
-                                                                                            d.ParentAcronym.ToNonNullString().ToLower().Contains(filterText))
-                    );
+                m_newDevices = new ObservableCollection<Device>(Device.GetNewDevicesForOutputStream(null, m_outputStreamID).Where(device =>
+                    device.Acronym.ToNonNullString().ToLower().Contains(filterText) ||
+                    device.Name.ToNonNullString().ToLower().Contains(filterText) ||
+                    device.CompanyAcronym.ToNonNullString().ToLower().Contains(filterText) ||
+                    device.CompanyName.ToNonNullString().ToLower().Contains(filterText) ||
+                    device.ParentAcronym.ToNonNullString().ToLower().Contains(filterText))
+                );
             }
 
             DataGridAddDevices.ItemsSource = m_newDevices;
@@ -168,7 +167,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             try
             {
                 OutputStreamDevice.AddDevices(null, m_outputStreamID, new ObservableCollection<Device>(m_newDevices.Where(d => d.Enabled)),
-                    (bool)CheckBoxAddDigitals.IsChecked, (bool)CheckBoxAddAnalogs.IsChecked);
+                    CheckBoxAddDigitals.IsChecked.GetValueOrDefault(), CheckBoxAddAnalogs.IsChecked.GetValueOrDefault());
 
                 LoadCurrentDevices();
                 PopupAddMore.IsOpen = false;
@@ -180,6 +179,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 if (ex.Message.Contains("FK_OutputStreamMeasurement_Historian"))
                     message += Environment.NewLine + Environment.NewLine + "The device may be referencing a non-existent historian.";
 
+                // ReSharper disable once AssignNullToNotNullAttribute
                 MessageBox.Show(Application.Current.MainWindow, message, "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
                 CommonFunctions.LogException(null, "Output Wizard Add More", ex);
             }
@@ -200,8 +200,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             LoadNewDevices(string.Empty);
         }
-
-        #endregion
 
         #endregion
     }

@@ -20,13 +20,13 @@
 
     <StackPanel Orientation="Vertical">
 
-        <tsf:TsfPopup x:Name="PopupAddMore" Placement="Center" Height="515" Topmost="False">
+        <tsf:TsfPopup x:Name="PopupAddMore" Placement="Center" Height="625" Width="500" Topmost="False">
 
             <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
 
                 <StackPanel Orientation="Vertical" Margin="5">
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
 
                         <TextBox x:Name="TextBoxSearch"/>
                         <Button Content="Search" Height="24" Click="ButtonSearch_Click" Margin="5,0,5,0"/>
@@ -34,17 +34,21 @@
 
                     </StackPanel>
 
-                    <sdk:DataGrid x:Name="DataGridAddDevices" Height="400" Width="450" SelectionUnit="Cell">
+                    <sdk:DataGrid x:Name="DataGridAddDevices" Height="485" Width="480" SelectionUnit="Cell">
 
                         <sdk:DataGrid.Columns>
-
-                            <sdk:DataGridCheckBoxColumn Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}">
-                                <sdk:DataGridCheckBoxColumn.HeaderTemplate>
+                            <sdk:DataGridTemplateColumn Width="*" CellStyle="{StaticResource CenterAlignCellStyle}">
+                                <sdk:DataGridTemplateColumn.HeaderTemplate>
                                     <DataTemplate>
                                         <CheckBox Checked="CheckBoxAddMore_Checked" Unchecked="CheckBoxAddMore_Unchecked"/>
                                     </DataTemplate>
-                                </sdk:DataGridCheckBoxColumn.HeaderTemplate>
-                            </sdk:DataGridCheckBoxColumn>                            
+                                </sdk:DataGridTemplateColumn.HeaderTemplate>
+                                <sdk:DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{tsfBinding:Column Path=Enabled}" />
+                                    </DataTemplate>
+                                </sdk:DataGridTemplateColumn.CellTemplate>
+                            </sdk:DataGridTemplateColumn>
                             <sdk:DataGridTextColumn Header="Acronym" Width="2*" Binding="{tsfBinding:Column Path=Acronym}" IsReadOnly="True"/>
                             <sdk:DataGridTextColumn Header="Name" Width="3*" Binding="{tsfBinding:Column Path=Name}" IsReadOnly="True"/>
 
@@ -54,7 +58,7 @@
 
                     <StackPanel Orientation="Horizontal">
 
-                        <CheckBox x:Name="CheckBoxAddAnalogs" Content="Add Analogs" Margin="0,0,5,0"/>
+                        <CheckBox x:Name="CheckBoxAddAnalogs" Content="Add Analogs" Margin="3,0,5,0"/>
                         <CheckBox x:Name="CheckBoxAddDigitals" Content="Add Digitals" />
 
                     </StackPanel>
@@ -76,13 +80,19 @@
             
             <sdk:DataGrid.Columns>
 
-                <sdk:DataGridCheckBoxColumn Width="*" Binding="{tsfBinding:Column Path=Selected}" CellStyle="{StaticResource CenterAlignCellStyle}">
-                    <sdk:DataGridCheckBoxColumn.HeaderTemplate>
+                <sdk:DataGridTemplateColumn Width="*" CellStyle="{StaticResource CenterAlignCellStyle}">
+                    <sdk:DataGridTemplateColumn.HeaderTemplate>
                         <DataTemplate>
                             <CheckBox Checked="CheckBoxAll_Checked" Unchecked="CheckBoxAll_Unchecked"/>
                         </DataTemplate>
-                    </sdk:DataGridCheckBoxColumn.HeaderTemplate>
-                </sdk:DataGridCheckBoxColumn>                
+                    </sdk:DataGridTemplateColumn.HeaderTemplate>
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{tsfBinding:Column Path=Selected}" />
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+
                 <sdk:DataGridTextColumn Header="Acronym" Width="2*" Binding="{tsfBinding:Column Path=Acronym}" IsReadOnly="True"/>
                 <sdk:DataGridTextColumn Header="Name" Width="3*" Binding="{tsfBinding:Column Path=Name}" IsReadOnly="True"/>
 
