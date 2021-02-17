@@ -53,7 +53,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #region [ Members ]
 
         // Fields
-        private int m_id;
         private int m_deviceID;
         private string m_label;
         private string m_type;
@@ -65,10 +64,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         //private string m_deviceAcronym;
         //private string m_phasorType;
         //private string m_phaseType;
-        private DateTime m_createdOn;
-        private string m_createdBy;
-        private DateTime m_updatedOn;
-        private string m_updatedBy;
 
         #endregion
 
@@ -78,17 +73,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets the <see cref="Phasor"/> ID.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied.
-        public int ID
-        {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
-        }
+        public int ID { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Phasor"/> DeviceID.
@@ -96,10 +81,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Phasor device ID is a required field, please provide value.")]
         public int DeviceID
         {
-            get
-            {
-                return m_deviceID;
-            }
+            get => m_deviceID;
             set
             {
                 m_deviceID = value;
@@ -114,16 +96,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Phasor label must not exceed 200 characters.")]
         public string Label
         {
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
-                if ((object)value != null && value.Length > 200)
+                if (!(value is null) && value.Length > 200)
                     m_label = value.Substring(0, 200);
                 else
                     m_label = value;
+
                 OnPropertyChanged("Label");
             }
         }
@@ -135,10 +115,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(1, ErrorMessage = "Phasor type must be 1 character.")]
         public string Type
         {
-            get
-            {
-                return m_type;
-            }
+            get => m_type;
             set
             {
                 m_type = value;
@@ -153,10 +130,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(1, ErrorMessage = "Phasor phase must be 1 character.")]
         public string Phase
         {
-            get
-            {
-                return m_phase;
-            }
+            get => m_phase;
             set
             {
                 m_phase = value;
@@ -170,10 +144,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(0)]
         public int BaseKV
         {
-            get
-            {
-                return m_baseKV;
-            }
+            get => m_baseKV;
             set
             {
                 m_baseKV = value;
@@ -187,10 +158,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of Database design, no validation attributes are applied
         public int? DestinationPhasorID
         {
-            get
-            {
-                return m_destinationPhasorID;
-            }
+            get => m_destinationPhasorID;
             set
             {
                 m_destinationPhasorID = value;
@@ -204,10 +172,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(typeof(int), "0")]
         public int SourceIndex
         {
-            get
-            {
-                return m_sourceIndex;
-            }
+            get => m_sourceIndex;
             set
             {
                 m_sourceIndex = value;
@@ -263,65 +228,25 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets the Date or Time the current <see cref="Phasor"/> was created on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime CreatedOn
-        {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
-        }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="Phasor"/> was created by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string CreatedBy
-        {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
-        }
+        public string CreatedBy { get; set; }
 
         /// <summary>
         /// Gets or sets the Date or Time the current <see cref="Phasor"/> was updated on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime UpdatedOn
-        {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
-        }
+        public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="Phasor"/> was updated by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string UpdatedBy
-        {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
-        }
+        public string UpdatedBy { get; set; }
 
         #endregion
 
@@ -346,28 +271,24 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<int> phasorList = new List<int>();
-                DataTable phasorTable;
-                string query;
 
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                query = database.ParameterizedQueryString(string.Format("SELECT ID From PhasorDetail WHERE DeviceID = {{0}} {0}", sortClause), "deviceID");
-                phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, deviceID);
+                string query = database.ParameterizedQueryString($"SELECT ID From PhasorDetail WHERE DeviceID = {{0}} {sortClause}", "deviceID");
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, deviceID);
 
                 foreach (DataRow row in phasorTable.Rows)
-                {
                     phasorList.Add(row.ConvertField<int>("ID"));
-                }
 
                 return phasorList;
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -389,20 +310,18 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string commaSeparatedKeys;
 
                 Phasor[] phasorList = null;
-                DataTable phasorTable;
-                int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (!(keys is null) && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT ID, DeviceID, Label, Type, Phase, BaseKV, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE ID IN ({0})", commaSeparatedKeys);
+                    query = $"SELECT ID, DeviceID, Label, Type, Phase, BaseKV, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE ID IN ({commaSeparatedKeys})";
 
-                    phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     phasorList = new Phasor[phasorTable.Rows.Count];
 
                     foreach (DataRow row in phasorTable.Rows)
                     {
-                        id = row.ConvertField<int>("ID");
+                        int id = row.ConvertField<int>("ID");
 
                         phasorList[keys.IndexOf(id)] = new Phasor()
                         {
@@ -421,8 +340,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -458,8 +377,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -496,7 +415,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string SaveAndReorder(AdoDataConnection database, Phasor phasor, int oldSourceIndex, bool skipMeasurementUpdate = false)
         {
             bool createdConnection = false;
-            string query;
 
             try
             {
@@ -509,6 +427,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 //if (database.ExecuteScalar<int>("SELECT COUNT(*) FROM Phasor WHERE ID <> {0} AND DeviceID = {1} AND SourceIndex = {2}", phasor.ID, phasor.DeviceID, phasor.SourceIndex) > 0)
                 //    throw new InvalidOperationException("Phasor source index must be unique per device.");
 
+                string query;
+                
                 if (phasor.ID == 0)
                 {
                     query = database.ParameterizedQueryString("INSERT INTO Phasor (DeviceID, Label, Type, Phase, BaseKV, SourceIndex, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
@@ -545,18 +465,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     Measurement measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + phasor.DeviceID + " AND SignalTypeSuffix = '" + signal.Suffix + "' AND PhasorSourceIndex = " + oldSourceIndex);
 
-                    if ((object)measurement == null)
+                    if (measurement is null)
                     {
-                        measurement = new Measurement();
-
-                        measurement.DeviceID = device.ID;
-                        measurement.HistorianID = device.HistorianID;
-                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0], addedPhasor.BaseKV);
-                        measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
-                        measurement.SignalTypeID = signal.ID;
-                        measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
-                        measurement.PhasorSourceIndex = addedPhasor.SourceIndex;
-                        measurement.Enabled = true;
+                        measurement = new Measurement
+                        {
+                            DeviceID = device.ID,
+                            HistorianID = device.HistorianID,
+                            PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0], addedPhasor.BaseKV),
+                            SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex,
+                            SignalTypeID = signal.ID,
+                            Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name,
+                            PhasorSourceIndex = addedPhasor.SourceIndex,
+                            Enabled = true
+                        };
 
                         Measurement.Save(database, measurement);
                     }
@@ -578,8 +499,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                // ReSharper disable once ConstantConditionalAccessQualifier
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -604,7 +526,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Phasor WHERE ID = {0}", "phasorID"), DefaultTimeout, phasorID);
 
-                if (phasor != null)
+                if (!(phasor is null))
                 {
                     try
                     {
@@ -621,8 +543,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -660,8 +582,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 

@@ -941,12 +941,17 @@ namespace PhasorProtocolAdapters
                         if (scalingValue == 0)
                             scalingValue = type == PhasorType.Voltage ? VoltageScalingValue : CurrentScalingValue;
 
+                        // Note that LoadOrder from OutputStreamDevicePhasors (order variable) matches
+                        // OutputStreamMeasurements SignalReference index for phasors types. Since
+                        // phasor outputs can be filtered, it is possible that more measurements will
+                        // be defined for output stream than will actually be included in the stream.
                         cell.PhasorDefinitions.Add(new PhasorDefinition(
                             cell,
                             GeneratePhasorLabel(label, phase, type),
                             scalingValue,
                             type,
-                            null));
+                            null,
+                            order));
                     }
 
                     // Add frequency definition
@@ -1066,12 +1071,24 @@ namespace PhasorProtocolAdapters
                     // No need to define this measurement for sorting unless it has a destination in the outgoing frame
                     if (signal.CellIndex > -1 || isQualityFlagsMeasurement)
                     {
+                        // Check if this is a phasor measurement
+                        if (signal.Kind == SignalKind.Angle || signal.Kind == SignalKind.Magnitude)
+                        {
+                            // Phasors defined for output stream can be filtered, so check if this
+                            // phasor measurement is included in the configured phasor outputs
+                            IEnumerable<PhasorDefinition> phasors = BaseConfigurationFrame.Cells[signal.CellIndex].PhasorDefinitions.Cast<PhasorDefinition>();
+
+                            if (phasors.FirstOrDefault(definition => definition.OriginalSourceIndex == signal.Index) is null)
+                                continue;
+                        }
+
                         // Get historian field
                         string historian = measurementRow["Historian"].ToNonNullString();
                         string pointID = measurementRow["PointID"].ToString();
 
                         // Define measurement key
                         MeasurementKey measurementKey;
+
                         if (!string.IsNullOrEmpty(historian))
                         {
                             measurementKey = MeasurementKey.LookUpOrCreate(historian, uint.Parse(pointID));
@@ -1101,8 +1118,7 @@ namespace PhasorProtocolAdapters
                             measurementKey = MeasurementKey.LookUpOrCreate(Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()), activeMeasurementID.ToString());
                         }
 
-                        // Re-index signals at runtime in the
-                        // same way phasors are indexed at runtime
+                        // Re-index signal references for the output stream starting at one
                         if (signal.Index >= 1)
                         {
                             if (signal.Kind == lastSignal.Kind && signal.Acronym == lastSignal.Acronym)

@@ -148,6 +148,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             else
             {
                 filterText = filterText.ToLower();
+
                 m_newDevices = new ObservableCollection<Device>(Device.GetNewDevicesForOutputStream(null, m_outputStreamID).Where(device =>
                     device.Acronym.ToNonNullString().ToLower().Contains(filterText) ||
                     device.Name.ToNonNullString().ToLower().Contains(filterText) ||
@@ -176,8 +177,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             try
             {
-                OutputStreamDevice.AddDevices(null, m_outputStreamID, new ObservableCollection<Device>(m_newDevices.Where(d => d.Enabled)),
-                    CheckBoxAddDigitals.IsChecked.GetValueOrDefault(), CheckBoxAddAnalogs.IsChecked.GetValueOrDefault());
+                OutputStreamDevice.AddDevices(null, m_outputStreamID, new ObservableCollection<Device>(m_newDevices.Where(device => device.Enabled)),
+                    CheckBoxAddDigitals.IsChecked.GetValueOrDefault(), CheckBoxAddAnalogs.IsChecked.GetValueOrDefault(), TextBoxPhaseFilter.Text);
 
                 LoadCurrentDevices();
                 PopupAddMore.IsOpen = false;

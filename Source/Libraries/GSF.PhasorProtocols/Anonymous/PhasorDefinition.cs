@@ -47,9 +47,11 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <param name="scale">The integer scaling value of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
-        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, PhasorType type, PhasorDefinition voltageReference)
+        /// <param name="originalSourceIndex">The original source phasor index, if applicable.</param>
+        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, PhasorType type, PhasorDefinition voltageReference, int originalSourceIndex = -1)
             : base(parent, label, scale, 0.0D, type, voltageReference)
         {
+            OriginalSourceIndex = originalSourceIndex;
         }
 
         /// <summary>
@@ -71,14 +73,8 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public new virtual ConfigurationCell Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationCell;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
         }
 
         /// <summary>
@@ -87,14 +83,13 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <remarks>
         /// This length is not restricted for anonymous protocol definitions.
         /// </remarks>
-        public override int MaximumLabelLength
-        {
-            get
-            {
-                return int.MaxValue;
-            }
-        }
+        public override int MaximumLabelLength => int.MaxValue;
 
-        #endregion
+        /// <summary>
+        /// Gets the original source index of the phasor.
+        /// </summary>
+        public int OriginalSourceIndex { get; }
+
+    #endregion
     }
 }

@@ -63,12 +63,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_coordinateFormat;
         private int m_loadOrder;
         private bool m_enabled;
-        private bool m_virtual;
-        private DateTime m_createdOn;
-        private string m_createdBy;
-        private DateTime m_updatedOn;
-        private string m_updatedBy;
-        private bool m_selected;    //added this for use in output stream device wizard.
+        private bool m_selected;    // added this for use in output stream device wizard.
 
         #endregion
 
@@ -80,10 +75,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevice NodeID is a required field, please provide value.")]
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -97,10 +89,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevice AdapterID is a required field, please provide value.")]
         public int AdapterID
         {
-            get
-            {
-                return m_adapterID;
-            }
+            get => m_adapterID;
             set
             {
                 m_adapterID = value;
@@ -114,10 +103,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -131,10 +117,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevice IdCode is a required field, please provide value.")]
         public int IDCode
         {
-            get
-            {
-                return m_idCode;
-            }
+            get => m_idCode;
             set
             {
                 m_idCode = value;
@@ -150,10 +133,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [AcronymValidation]
         public string Acronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value;
@@ -167,10 +147,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(4, ErrorMessage = "OutputStreamDevice BpaAcronym cannot exceed 4 characters.")]
         public string BpaAcronym
         {
-            get
-            {
-                return m_bpaAcronym;
-            }
+            get => m_bpaAcronym;
             set
             {
                 m_bpaAcronym = value;
@@ -185,10 +162,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "OutputStreamDevice Name cannot exceed 200 characters.")]
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -202,10 +176,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(15, ErrorMessage = "OutputStreamDevice PhasorDataFormat cannot exceed 15 characters.")]
         public string PhasorDataFormat
         {
-            get
-            {
-                return m_phasorDataFormat;
-            }
+            get => m_phasorDataFormat;
             set
             {
                 m_phasorDataFormat = value;
@@ -219,10 +190,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(15, ErrorMessage = "OutputStreamDevice FrequencyDataFormat cannot exceed 15 characters.")]
         public string FrequencyDataFormat
         {
-            get
-            {
-                return m_frequencyDataFormat;
-            }
+            get => m_frequencyDataFormat;
             set
             {
                 m_frequencyDataFormat = value;
@@ -236,10 +204,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(15, ErrorMessage = "OutputStreamDevice AnalogDataFormat cannot exceed 15 characters.")]
         public string AnalogDataFormat
         {
-            get
-            {
-                return m_analogDataFormat;
-            }
+            get => m_analogDataFormat;
             set
             {
                 m_analogDataFormat = value;
@@ -253,10 +218,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(15, ErrorMessage = "OutputStreamDevice CoordinateFormat cannot exceed 15 characters.")]
         public string CoordinateFormat
         {
-            get
-            {
-                return m_coordinateFormat;
-            }
+            get => m_coordinateFormat;
             set
             {
                 m_coordinateFormat = value;
@@ -270,10 +232,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevice LoadOrder is a required field, please provide value.")]
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -286,10 +245,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
@@ -300,77 +256,31 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="OutputStreamDevice"/>'s Virtual.
         /// </summary>
-        public bool Virtual
-        {
-            get
-            {
-                return m_virtual;
-            }
-        }
+        public bool Virtual { get; private set; }
 
         /// <summary>
         /// Gets or sets the Date or Time the current <see cref="OutputStreamDevice"/> was created on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime CreatedOn
-        {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
-        }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="OutputStreamDevice"/> was created by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string CreatedBy
-        {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
-        }
+        public string CreatedBy { get; set; }
 
         /// <summary>
         /// Gets or sets the Date or Time when the current <see cref="OutputStreamDevice"/> was updated on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime UpdatedOn
-        {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
-        }
+        public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="OutputStreamDevice"/> was updated by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string UpdatedBy
-        {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
-        }
+        public string UpdatedBy { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="OutputStreamDevice"/>'s selected flag.
@@ -378,10 +288,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <remarks>Used only for output stream device wizard to make <see cref="OutputStreamDevice"/> selectable via checkbox.</remarks>
         public bool Selected
         {
-            get
-            {
-                return m_selected;
-            }
+            get => m_selected;
             set
             {
                 m_selected = value;
@@ -412,26 +319,23 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<int> outputStreamDeviceList = new List<int>();
-                DataTable outputStreamDeviceTable;
 
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From OutputStreamDeviceDetail WHERE AdapterID = {1} {0}", sortClause, outputStreamID));
+                DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From OutputStreamDeviceDetail WHERE AdapterID = {1} {0}", sortClause, outputStreamID));
 
                 foreach (DataRow row in outputStreamDeviceTable.Rows)
-                {
                     outputStreamDeviceList.Add(row.ConvertField<int>("ID"));
-                }
 
                 return outputStreamDeviceList;
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -439,7 +343,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Loads <see cref="OutputStreamDevice"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="keys">Keys of the measurement to be loaded from the datbase</param>
+        /// <param name="keys">Keys of the measurement to be loaded from the database</param>
         /// <returns>Collection of <see cref="OutputStreamDevice"/>.</returns>
         public static ObservableCollection<OutputStreamDevice> Load(AdoDataConnection database, IList<int> keys)
         {
@@ -449,34 +353,29 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
-                string commaSeparatedKeys;
-
                 OutputStreamDevice[] outputStreamDeviceList = null;
-                DataTable outputStreamDeviceTable;
-                int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (!(keys is null) && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
+                    string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
 
-                    query = string.Format("SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " +
-                        "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual " +
-                        "FROM OutputStreamDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                    string query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " + 
+                                   "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual " + 
+                                   $"FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
 
                     if (database.IsMySQL)
                     {
-                        query = string.Format("SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " +
-                            "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` " +
-                            "FROM OutputStreamDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                        query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " + 
+                                "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` " + 
+                                $"FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
                     }
 
-                    outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamDeviceList = new OutputStreamDevice[outputStreamDeviceTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceTable.Rows)
                     {
-                        id = row.ConvertField<int>("ID");
+                        int id = row.ConvertField<int>("ID");
 
                         outputStreamDeviceList[keys.IndexOf(id)] = new OutputStreamDevice()
                         {
@@ -493,7 +392,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             CoordinateFormat = row.Field<string>("CoordinateFormat"),
                             LoadOrder = row.ConvertField<int>("LoadOrder"),
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                            m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
+                            Virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
                         };
                     }
                 }
@@ -502,8 +401,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -517,11 +416,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, int outputStreamID, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> OutputStreamDeviceList = new Dictionary<int, string>();
+
                 if (isOptional)
                     OutputStreamDeviceList.Add(0, "Select OutputStreamDevice");
 
@@ -535,8 +436,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -549,11 +450,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string Save(AdoDataConnection database, OutputStreamDevice outputStreamDevice)
         {
             bool createdConnection = false;
-            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
+
+                string query;
 
                 if (outputStreamDevice.ID == 0)
                 {
@@ -584,7 +486,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         outputStreamDevice.LoadOrder, database.Bool(outputStreamDevice.Enabled), CommonFunctions.CurrentUser,
                         database.UtcNow, outputStreamDevice.ID);
 
-                    if (originalDevice != null && originalDevice.Acronym != outputStreamDevice.Acronym)
+                    if (!(originalDevice is null) && originalDevice.Acronym != outputStreamDevice.Acronym)
                     {
 
                         IList<int> keys = OutputStreamMeasurement.LoadKeys(database, originalDevice.AdapterID);
@@ -601,8 +503,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -639,8 +541,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -651,9 +553,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="outputStreamID">ID of the output stream to which devices needs to be added.</param>
         /// <param name="devices">Collection of devices to be added.</param>
         /// <param name="addDigitals">Boolean flag indicating if analogs should be added.</param>
-        /// <param name="addAnalogs">Boolean flag indicating if digirals should be added.</param>
+        /// <param name="addAnalogs">Boolean flag indicating if digitals should be added.</param>
+        /// <param name="phaseFilter">Defines the phase list filter, if any.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string AddDevices(AdoDataConnection database, int outputStreamID, ObservableCollection<Device> devices, bool addDigitals, bool addAnalogs)
+        public static string AddDevices(AdoDataConnection database, int outputStreamID, ObservableCollection<Device> devices, bool addDigitals, bool addAnalogs, string phaseFilter = null)
         {
             bool createdConnection = false;
 
@@ -676,24 +579,41 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     outputStreamDevice = GetOutputStreamDevice(database, "WHERE Acronym = '" + outputStreamDevice.Acronym + "' AND AdapterID = " + outputStreamID);
 
-                    if ((object)outputStreamDevice != null)
+                    if (!(outputStreamDevice is null))
                     {
-                        IList<int> keys = Phasor.LoadKeys(database, device.ID);
+                        IList<int> keys = Phasor.LoadKeys(database, device.ID, "SourceIndex");
                         ObservableCollection<Phasor> phasors = Phasor.Load(database, keys);
+
+                        if (string.IsNullOrWhiteSpace(phaseFilter))
+                            phaseFilter = "*";
+
+                        phaseFilter = phaseFilter.Trim();
+                        string[] phaseFilters = phaseFilter.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(filter => filter.Trim()).ToArray();
+
+                        bool isPhaseMatch(string phase) => 
+                            phaseFilter == "*" || phaseFilters.Any(filter => filter.Equals(phase, StringComparison.OrdinalIgnoreCase));
+
                         foreach (Phasor phasor in phasors)
                         {
-                            OutputStreamDevicePhasor outputStreamDevicePhasor = new OutputStreamDevicePhasor();
-                            outputStreamDevicePhasor.NodeID = device.NodeID;
-                            outputStreamDevicePhasor.OutputStreamDeviceID = outputStreamDevice.ID;
-                            outputStreamDevicePhasor.Label = phasor.Label;
-                            outputStreamDevicePhasor.Type = phasor.Type;
-                            outputStreamDevicePhasor.Phase = phasor.Phase;
-                            outputStreamDevicePhasor.LoadOrder = phasor.SourceIndex;
+                            if (!isPhaseMatch(phasor.Phase))
+                                continue;
+
+                            OutputStreamDevicePhasor outputStreamDevicePhasor = new OutputStreamDevicePhasor
+                            {
+                                NodeID = device.NodeID,
+                                OutputStreamDeviceID = outputStreamDevice.ID,
+                                Label = phasor.Label,
+                                Type = phasor.Type,
+                                Phase = phasor.Phase,
+                                LoadOrder = phasor.SourceIndex
+                            };
+
                             OutputStreamDevicePhasor.Save(database, outputStreamDevicePhasor);
                         }
 
                         ObservableCollection<Measurement> measurements = Measurement.Load(database, device.ID);
                         int analogIndex = 0;
+
                         foreach (Measurement measurement in measurements)
                         {
                             if (measurement.SignalAcronym != "STAT" && measurement.SignalAcronym != "QUAL")
@@ -702,26 +622,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                 if ((measurement.SignalAcronym != "ALOG" && measurement.SignalAcronym != "DIGI") || (measurement.SignalAcronym == "ALOG" && addAnalogs) || (measurement.SignalAcronym == "DIGI" && addDigitals))
                                 {
-                                    OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement();
-                                    outputStreamMeasurement.NodeID = device.NodeID;
-                                    outputStreamMeasurement.AdapterID = outputStreamID;
-                                    outputStreamMeasurement.HistorianID = measurement.HistorianID;
-                                    outputStreamMeasurement.PointID = measurement.PointID;
-                                    outputStreamMeasurement.SignalReference = measurement.SignalReference;
+                                    OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
+                                    {
+                                        NodeID = device.NodeID,
+                                        AdapterID = outputStreamID,
+                                        HistorianID = measurement.HistorianID,
+                                        PointID = measurement.PointID,
+                                        SignalReference = measurement.SignalReference
+                                    };
+
                                     OutputStreamMeasurement.Save(database, outputStreamMeasurement);
                                 }
 
                                 if (addAnalogs && measurement.SignalAcronym == "ALOG")
                                 {
-                                    OutputStreamDeviceAnalog outputStreamDeviceAnalog = new OutputStreamDeviceAnalog();
-                                    outputStreamDeviceAnalog.NodeID = device.NodeID;
-                                    outputStreamDeviceAnalog.OutputStreamDeviceID = outputStreamDevice.ID;
-                                    outputStreamDeviceAnalog.Label = string.IsNullOrEmpty(measurement.AlternateTag) ? device.Acronym.Length > 12 ? device.Acronym.Substring(0, 12) + ":A" + analogIndex : device.Acronym + ":A" + analogIndex : measurement.AlternateTag; // measurement.PointTag;                                    
+                                    OutputStreamDeviceAnalog outputStreamDeviceAnalog = new OutputStreamDeviceAnalog 
+                                    {
+                                        NodeID = device.NodeID,
+                                        OutputStreamDeviceID = outputStreamDevice.ID,
+                                        Label = string.IsNullOrEmpty(measurement.AlternateTag) ? device.Acronym.Length > 12 ? device.Acronym.Substring(0, 12) + ":A" + analogIndex : device.Acronym + ":A" + analogIndex : measurement.AlternateTag
+                                    };
 
                                     int charIndex = measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal);
-                                    int signalIndex;
 
-                                    if (charIndex >= 0 && charIndex + 3 < measurement.SignalReference.Length && int.TryParse(measurement.SignalReference.Substring(charIndex + 3), out signalIndex))
+                                    if (charIndex >= 0 && charIndex + 3 < measurement.SignalReference.Length && int.TryParse(measurement.SignalReference.Substring(charIndex + 3), out int signalIndex))
                                         outputStreamDeviceAnalog.LoadOrder = signalIndex;
                                     else
                                         outputStreamDeviceAnalog.LoadOrder = 999;
@@ -731,15 +655,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                 }
                                 else if (addDigitals && measurement.SignalAcronym == "DIGI")
                                 {
-                                    OutputStreamDeviceDigital outputStreamDeviceDigital = new OutputStreamDeviceDigital();
-                                    outputStreamDeviceDigital.NodeID = device.NodeID;
-                                    outputStreamDeviceDigital.OutputStreamDeviceID = outputStreamDevice.ID;
-                                    outputStreamDeviceDigital.Label = string.IsNullOrEmpty(measurement.AlternateTag) ? DefaultDigitalLabel : measurement.AlternateTag;     // measurement.PointTag;
+                                    OutputStreamDeviceDigital outputStreamDeviceDigital = new OutputStreamDeviceDigital
+                                    {
+                                        NodeID = device.NodeID, 
+                                        OutputStreamDeviceID = outputStreamDevice.ID, 
+                                        Label = string.IsNullOrEmpty(measurement.AlternateTag) ? DefaultDigitalLabel : measurement.AlternateTag
+                                    };
 
                                     int charIndex = measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal);
-                                    int signalIndex;
 
-                                    if (charIndex >= 0 && charIndex + 3 < measurement.SignalReference.Length && int.TryParse(measurement.SignalReference.Substring(charIndex + 3), out signalIndex))
+                                    if (charIndex >= 0 && charIndex + 3 < measurement.SignalReference.Length && int.TryParse(measurement.SignalReference.Substring(charIndex + 3), out int signalIndex))
                                         outputStreamDeviceDigital.LoadOrder = signalIndex;
                                     else
                                         outputStreamDeviceDigital.LoadOrder = 999;
@@ -755,8 +680,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -787,30 +712,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataRow row = deviceTable.Rows[0];
 
                 OutputStreamDevice device = new OutputStreamDevice
-                    {
-                        NodeID = database.Guid(row, "NodeID"),
-                        AdapterID = row.ConvertField<int>("AdapterID"),
-                        ID = row.ConvertField<int>("ID"),
-                        IDCode = row.ConvertField<int>("IDCode"),
-                        Acronym = row.Field<string>("Acronym"),
-                        BpaAcronym = row.Field<string>("BpaAcronym"),
-                        Name = row.Field<string>("Name"),
-                        PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
-                        FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
-                        AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
-                        CoordinateFormat = row.Field<string>("CoordinateFormat"),
-                        LoadOrder = row.ConvertField<int>("LoadOrder"),
-                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                        m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
-                    };
+                {
+                    NodeID = database.Guid(row, "NodeID"),
+                    AdapterID = row.ConvertField<int>("AdapterID"),
+                    ID = row.ConvertField<int>("ID"),
+                    IDCode = row.ConvertField<int>("IDCode"),
+                    Acronym = row.Field<string>("Acronym"),
+                    BpaAcronym = row.Field<string>("BpaAcronym"),
+                    Name = row.Field<string>("Name"),
+                    PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
+                    FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
+                    AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
+                    CoordinateFormat = row.Field<string>("CoordinateFormat"),
+                    LoadOrder = row.ConvertField<int>("LoadOrder"),
+                    Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                    Virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
+                };
 
                 return device;
 
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -834,30 +759,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 foreach (DataRow row in outputStreamDeviceTable.Rows)
                 {
                     outputStreamDeviceList.Add(new OutputStreamDevice
-                        {
-                            NodeID = database.Guid(row, "NodeID"),
-                            AdapterID = row.ConvertField<int>("AdapterID"),
-                            ID = row.ConvertField<int>("ID"),
-                            IDCode = row.ConvertField<int>("IDCode"),
-                            Acronym = row.Field<string>("Acronym"),
-                            BpaAcronym = row.Field<string>("BpaAcronym"),
-                            Name = row.Field<string>("Name"),
-                            PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
-                            FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
-                            AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
-                            CoordinateFormat = row.Field<string>("CoordinateFormat"),
-                            LoadOrder = row.ConvertField<int>("LoadOrder"),
-                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                            m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
-                        });
+                    {
+                        NodeID = database.Guid(row, "NodeID"),
+                        AdapterID = row.ConvertField<int>("AdapterID"),
+                        ID = row.ConvertField<int>("ID"),
+                        IDCode = row.ConvertField<int>("IDCode"),
+                        Acronym = row.Field<string>("Acronym"),
+                        BpaAcronym = row.Field<string>("BpaAcronym"),
+                        Name = row.Field<string>("Name"),
+                        PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
+                        FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
+                        AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
+                        CoordinateFormat = row.Field<string>("CoordinateFormat"),
+                        LoadOrder = row.ConvertField<int>("LoadOrder"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        Virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
+                    });
                 }
 
                 return outputStreamDeviceList;
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 

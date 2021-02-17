@@ -19,7 +19,7 @@
 //  08/15/2011 - Aniket Salver
 //       Generated original version of source code.
 //  09/16/2011 - Mehulbhai P Thakkar
-//       Fixed bug in Load() method.
+//       Fixed issue in Load() method.
 //   09/19/2011 - Mehulbhai P Thakkar
 //       Added OnPropertyChanged() on all properties to reflect changes on UI.
 //       Fixed Load() and GetLookupList() static methods.
@@ -59,12 +59,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_phase;
         private int m_scalingValue;
         private int m_loadOrder;
-        private string m_phasorType;
-        private string m_phaseType;
-        private DateTime m_createdOn;
-        private string m_createdBy;
-        private DateTime m_updatedOn;
-        private string m_updatedBy;
 
         #endregion
 
@@ -76,10 +70,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevicePhasor NodeID is a required field, please provide value.")]
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -93,10 +84,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevicePhasor OutputStreamDeviceID is a required field, please provide value.")]
         public int OutputStreamDeviceID
         {
-            get
-            {
-                return m_outputStreamDeviceID;
-            }
+            get => m_outputStreamDeviceID;
             set
             {
                 m_outputStreamDeviceID = value;
@@ -111,10 +99,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevicePhasor ID is a required field, please provide value.")]
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -129,10 +114,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "OutputStreamDevicePhasor Label cannot exceed 200 characters.")]
         public string Label
         {
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
                 m_label = value;
@@ -147,10 +129,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue("V")]
         public string Type
         {
-            get
-            {
-                return m_type;
-            }
+            get => m_type;
             set
             {
                 m_type = value;
@@ -165,10 +144,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue("+")]
         public string Phase
         {
-            get
-            {
-                return m_phase;
-            }
+            get => m_phase;
             set
             {
                 m_phase = value;
@@ -182,10 +158,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevicePhasor ScalingValue  is a required field, please provide value.")]
         public int ScalingValue
         {
-            get
-            {
-                return m_scalingValue;
-            }
+            get => m_scalingValue;
             set
             {
                 m_scalingValue = value;
@@ -199,10 +172,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDevicePhasor LoadOrder  is a required field, please provide value.")]
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -213,92 +183,41 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="OutputStreamDevicePhasor"/> PhasorType.
         /// </summary>        
-        public string PhasorType
-        {
-            get
-            {
-                return m_phasorType;
-            }
-        }
+        public string PhasorType { get; private set; }
 
         /// <summary>
         /// Gets or sets <see cref="OutputStreamDevicePhasor"/> PhaseType.
         /// </summary>        
-        public string PhaseType
-        {
-            get
-            {
-                return m_phaseType;
-            }
-        }
+        public string PhaseType { get; private set; }
 
         /// <summary>
         /// Gets or sets when the current <see cref="OutputStreamDevicePhasor"/> was created.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime CreatedOn
-        {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
-        }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="OutputStreamDevicePhasor"/> was created by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string CreatedBy
-        {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
-        }
+        public string CreatedBy { get; set; }
 
         /// <summary>
         /// Gets or sets when the current <see cref="OutputStreamDevicePhasor"/> was updated.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime UpdatedOn
-        {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
-        }
+        public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="OutputStreamDevicePhasor"/> was updated by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string UpdatedBy
-        {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
-        }
+        public string UpdatedBy { get; set; }
 
         #endregion
 
-        #region [Static]
+        #region [ Static ]
+
         // Static Methods      
 
         /// <summary>
@@ -318,26 +237,23 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<int> outputStreamDevicePhasorList = new List<int>();
-                DataTable OutputStreamDevicePhasorTable;
 
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause));
+                DataTable OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {outputStreamDeviceID} {sortClause}");
 
                 foreach (DataRow row in OutputStreamDevicePhasorTable.Rows)
-                {
                     outputStreamDevicePhasorList.Add((row.ConvertField<int>("ID")));
-                }
 
                 return outputStreamDevicePhasorList;
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -345,7 +261,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Loads <see cref="OutputStreamDevicePhasor"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="keys">Keys of the measuremnets to be loaded from the database</param>
+        /// <param name="keys">Keys of the measurements to be loaded from the database</param>
         /// <returns>Collection of <see cref="OutputStreamDevicePhasor"/>.</returns>
         public static ObservableCollection<OutputStreamDevicePhasor> Load(AdoDataConnection database, IList<int> keys)
         {
@@ -355,25 +271,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
-                string commaSeparatedKeys;
-
                 OutputStreamDevicePhasor[] outputStreamDevicePhasorList = null;
-                DataTable outputStreamDevicePhasorTable;
-                int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (!(keys is null) && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder " +
-                          "FROM OutputStreamDevicePhasor WHERE ID IN ({0})", commaSeparatedKeys));
+                    string commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
+                    string query = database.ParameterizedQueryString("SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder " + $"FROM OutputStreamDevicePhasor WHERE ID IN ({commaSeparatedKeys})");
 
-                    outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    DataTable outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, query);
                     outputStreamDevicePhasorList = new OutputStreamDevicePhasor[outputStreamDevicePhasorTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDevicePhasorTable.Rows)
                     {
-                        id = row.ConvertField<int>("ID");
+                        int id = row.ConvertField<int>("ID");
 
                         outputStreamDevicePhasorList[keys.IndexOf(id)] = new OutputStreamDevicePhasor()
                         {
@@ -385,10 +295,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             Phase = row.Field<string>("Phase"),
                             ScalingValue = row.ConvertField<int>("ScalingValue"),
                             LoadOrder = row.ConvertField<int>("LoadOrder"),
-                            m_phaseType = row.Field<string>("Phase") == "+" ? "Positive Sequence" : row.Field<string>("Phase") == "-" ? "Negative Sequence" :
+                            PhaseType = row.Field<string>("Phase") == "+" ? "Positive Sequence" : row.Field<string>("Phase") == "-" ? "Negative Sequence" :
                                                                     row.Field<string>("Phase") == "0" ? "Zero Sequence" : row.Field<string>("Phase") == "A" ? "Phase A" :
                                                                     row.Field<string>("Phase") == "B" ? "Phase B" : "Phase C",
-                            m_phasorType = row.Field<string>("Type") == "V" ? "Voltage" : "Current"
+                            PhasorType = row.Field<string>("Type") == "V" ? "Voltage" : "Current"
                         };
                     }
                 }
@@ -397,8 +307,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -412,6 +322,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, int outputStreamDeviceID, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -431,8 +342,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -445,11 +356,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string Save(AdoDataConnection database, OutputStreamDevicePhasor outputStreamDevicePhasor)
         {
             bool createdConnection = false;
-            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
+
+                string query;
 
                 if (outputStreamDevicePhasor.ID == 0)
                 {
@@ -479,8 +391,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -493,19 +405,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string Delete(AdoDataConnection database, int outputStreamDevicePhasorID)
         {
             bool createdConnection = false;
-
-            int adapterID;
-            int outputStreamDeviceID;
-            int deletedSignalReferenceIndex;
-            int presentDevicePhasorCount;
-
-            string angleSignalReference;
-            string angleSignalReferenceBase;
-            string magnitudeSignalReference;
-            string magnitudeSignalReferenceBase;
-
-            string previousAngleSignalReference;
-            string previousMagnitudeSignalReference;
             string nextAngleSignalReference = string.Empty;
             string nextMagnitudeSignalReference = string.Empty;
             string lastAffectedMeasurementsMessage = string.Empty;
@@ -517,25 +416,26 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                GetDeleteMeasurementDetails(database, outputStreamDevicePhasorID, out angleSignalReference, out magnitudeSignalReference, out adapterID, out outputStreamDeviceID);
+                GetDeleteMeasurementDetails(database, outputStreamDevicePhasorID, out string angleSignalReference, out string magnitudeSignalReference, out int adapterID, out int outputStreamDeviceID);
 
                 // Delete angle/magnitude of measurements if they exist
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStreamMeasurement WHERE SignalReference = {0} AND AdapterID = {1}", "signalReference", "adapterID"), DefaultTimeout, angleSignalReference, adapterID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStreamMeasurement WHERE SignalReference = {0} AND AdapterID = {1}", "signalReference", "adapterID"), DefaultTimeout, magnitudeSignalReference, adapterID);
-                presentDevicePhasorCount = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {0}", "outputStreamDeviceID"), DefaultTimeout, outputStreamDeviceID));
+                int presentDevicePhasorCount = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {0}", "outputStreamDeviceID"), DefaultTimeout, outputStreamDeviceID));
 
                 // Using signal reference angle/mag deleted build the next signal reference (increment by 1)
-                int.TryParse(Regex.Match(magnitudeSignalReference, @"\d+$").Value, out deletedSignalReferenceIndex);
-                angleSignalReferenceBase = Regex.Replace(angleSignalReference, @"\d+$", "");
-                magnitudeSignalReferenceBase = Regex.Replace(magnitudeSignalReference, @"\d+$", "");
+                int.TryParse(Regex.Match(magnitudeSignalReference, @"\d+$").Value, out int deletedSignalReferenceIndex);
+                string angleSignalReferenceBase = Regex.Replace(angleSignalReference, @"\d+$", "");
+                string magnitudeSignalReferenceBase = Regex.Replace(magnitudeSignalReference, @"\d+$", "");
 
                 for (int i = deletedSignalReferenceIndex; i < presentDevicePhasorCount; i++)
                 {
-                    // We will be modifying the measurements with signal reference index i+1 to have signal refrence index i.
-                    previousAngleSignalReference = string.Format("{0}{1}", angleSignalReferenceBase, i);
-                    nextAngleSignalReference = string.Format("{0}{1}", angleSignalReferenceBase, i + 1);
-                    previousMagnitudeSignalReference = string.Format("{0}{1}", magnitudeSignalReferenceBase, i);
-                    nextMagnitudeSignalReference = string.Format("{0}{1}", magnitudeSignalReferenceBase, i + 1);
+                    // We will be modifying the measurements with signal reference index i+1 to have signal reference index i.
+                    string previousAngleSignalReference = $"{angleSignalReferenceBase}{i}";
+                    nextAngleSignalReference = $"{angleSignalReferenceBase}{i + 1}";
+
+                    string previousMagnitudeSignalReference = $"{magnitudeSignalReferenceBase}{i}";
+                    nextMagnitudeSignalReference = $"{magnitudeSignalReferenceBase}{i + 1}";
 
                     // For angle...
                     // Obtain details of measurements after the deleted measurements, then modify the signal reference (decrement by 1) and put it back
@@ -556,10 +456,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
             catch (Exception ex)
             {
                 if (!string.IsNullOrEmpty(nextMagnitudeSignalReference))
-                    lastAffectedMeasurementsMessage = string.Format("{0}(Last affected measurements: {1} {2})", Environment.NewLine, nextMagnitudeSignalReference, nextAngleSignalReference);
+                    lastAffectedMeasurementsMessage = $"{Environment.NewLine}(Last affected measurements: {nextMagnitudeSignalReference} {nextAngleSignalReference})";
 
                 CommonFunctions.LogException(database, "OutputStreamDevicePhasor.Delete", ex);
-                MessageBoxResult dialogResult = MessageBox.Show(string.Format("Could not delete or modify measurements.{0}Do you still wish to delete this Phasor?{1}", Environment.NewLine, lastAffectedMeasurementsMessage), "", MessageBoxButton.YesNo);
+                MessageBoxResult dialogResult = MessageBox.Show($"Could not delete or modify measurements.{Environment.NewLine}Do you still wish to delete this Phasor?{lastAffectedMeasurementsMessage}", "", MessageBoxButton.YesNo);
 
                 if (dialogResult == MessageBoxResult.Yes)
                 {
@@ -569,13 +469,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 else
                 {
                     Exception exception = ex.InnerException ?? ex;
-                    return string.Format("Delete OutputStreamDevicePhasor was unsuccessful: {0}", exception.Message);
+                    return $"Delete OutputStreamDevicePhasor was unsuccessful: {exception.Message}";
                 }
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -591,7 +491,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataRow row = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, signalReference, adapterID).Rows[0];
 
                 OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
-                    {
+                {
                     NodeID = row.ConvertField<Guid>("NodeID"),
                     AdapterID = row.Field<int>("AdapterID"),
                     ID = row.Field<int>("ID"),
@@ -613,8 +513,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -631,25 +531,18 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                DataRow outputPhasorRecord;
-                DataRow outputDeviceRecord;
-
-                string labelName;
-                string deviceName;
-                string anglePointTag;
-                string magnitudePointTag;
-
-                outputPhasorRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputPhasorFormat, outputStreamDevicePhasorID)).Rows[0];
-                labelName = outputPhasorRecord.Field<string>("Label");
+                DataRow outputPhasorRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputPhasorFormat, outputStreamDevicePhasorID)).Rows[0];
+                string labelName = outputPhasorRecord.Field<string>("Label");
                 outputStreamDeviceID = outputPhasorRecord.ConvertField<int>("OutputStreamDeviceID");
 
-                outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
-                deviceName = outputDeviceRecord.Field<string>("Acronym");
+                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
+                string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                anglePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PA")).ToNonNullString();
+                string anglePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PA")).ToNonNullString();
                 angleSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, anglePointTag)).ToNonNullString();
-                magnitudePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PM")).ToNonNullString();
+
+                string magnitudePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PM")).ToNonNullString();
                 magnitudeSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, magnitudePointTag)).ToNonNullString();
             }
             catch (Exception ex)
@@ -659,8 +552,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 

@@ -143,7 +143,7 @@ namespace PhasorProtocolAdapters
         public Ticks CreatedTimestamp => m_measurement.CreatedTimestamp;
 
         /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="SignalReferenceMeasurement"/> values.
+        /// Gets function used to apply a down-sampling filter over a sequence of <see cref="SignalReferenceMeasurement"/> values.
         /// </summary>
         public MeasurementValueFilterFunction MeasurementValueFilter => m_measurement.MeasurementValueFilter;
 
