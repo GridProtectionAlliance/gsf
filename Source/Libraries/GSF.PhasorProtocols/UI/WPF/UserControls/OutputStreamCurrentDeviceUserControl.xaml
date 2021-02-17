@@ -20,7 +20,7 @@
 
     <StackPanel Orientation="Vertical">
 
-        <tsf:TsfPopup x:Name="PopupAddMore" Placement="Center" Height="625" Width="500" Topmost="False">
+        <tsf:TsfPopup x:Name="PopupAddMore" Closed="PopupAddMore_Closed" Placement="Center" Height="625" Width="500" Topmost="False">
 
             <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
 

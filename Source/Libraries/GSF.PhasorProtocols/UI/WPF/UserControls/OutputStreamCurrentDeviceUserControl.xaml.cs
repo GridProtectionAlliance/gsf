@@ -40,6 +40,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
     {
         #region [ Members ]
 
+        private const string PhaseFilterSetting = "OutputStreamLastPhaseFilter";
+
         private readonly int m_outputStreamID;
         private ObservableCollection<OutputStreamDevice> m_currentDevices;
         private ObservableCollection<Device> m_newDevices;
@@ -62,11 +64,19 @@ namespace GSF.PhasorProtocols.UI.UserControls
             
             Loaded += OutputStreamCurrentDeviceUserControl_Loaded;
             KeyUp += OutputStreamCurrentDeviceUserControl_KeyUp;
+
+            string phaseFilter = IsolatedStorageManager.ReadFromIsolatedStorage(PhaseFilterSetting).ToNonNullString("*");
+            TextBoxPhaseFilter.Text = string.IsNullOrWhiteSpace(phaseFilter) ? "*" : phaseFilter;
         }
 
         #endregion
 
         #region [ Methods ]
+
+        private void PopupAddMore_Closed(object sender, EventArgs e)
+        {
+            IsolatedStorageManager.WriteToIsolatedStorage(PhaseFilterSetting, TextBoxPhaseFilter.Text);
+        }
 
         private void OutputStreamCurrentDeviceUserControl_KeyUp(object sender, KeyEventArgs e)
         {
