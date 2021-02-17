@@ -336,21 +336,21 @@
                                     <sdk:DataGridTemplateColumn Header="Type" Width="2*">
                                         <sdk:DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=Type}" ToolTip="{Binding Path=ConfigType}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
+                                                <TextBox HorizontalAlignment="Center" Text="{tsfBinding:Column Path=Type}" ToolTip="{Binding Path=ConfigType}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
                                             </DataTemplate>
                                         </sdk:DataGridTemplateColumn.CellTemplate>
                                     </sdk:DataGridTemplateColumn>
                                     <sdk:DataGridTemplateColumn Header="Phase" Width="2*">
                                         <sdk:DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=Phase}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
+                                                <TextBox HorizontalAlignment="Center" Text="{tsfBinding:Column Path=Phase}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="2"/>
                                             </DataTemplate>
                                         </sdk:DataGridTemplateColumn.CellTemplate>
                                     </sdk:DataGridTemplateColumn>
                                     <sdk:DataGridTemplateColumn Header="Base kV" Width="3*">
                                         <sdk:DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=BaseKVInput}" Margin="0" Width="{StaticResource XXSmallItemSize}" MaxLength="4"/>
+                                                <TextBox HorizontalAlignment="Center" Text="{tsfBinding:Column Path=BaseKVInput}" Margin="0" Width="{StaticResource XXSmallItemSize}" MaxLength="4"/>
                                             </DataTemplate>
                                         </sdk:DataGridTemplateColumn.CellTemplate>
                                     </sdk:DataGridTemplateColumn>

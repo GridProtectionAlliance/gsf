@@ -186,14 +186,21 @@ namespace GSF.PhasorProtocols.UI.UserControls
             }
             else if (m_dataContext.StepThreeExpanded)
             {
-                if (!m_dataContext.ConnectToConcentrator || ValidatePMUNames())
+                if (m_dataContext.ItemsSource.Any(inputDevice => inputDevice.PhasorList.Any(phasor => !phasor.IsValid)))
                 {
-                    m_dataContext.SavePDC();
-                    m_dataContext.SaveConfiguration();
+                    m_dataContext.Popup("Fix all validation errors before device can be saved.", "Validation Error", MessageBoxImage.Error);
                 }
                 else
                 {
-                    m_dataContext.Popup($"One of the device acronyms is set to the PDC acronym \"{m_dataContext.PdcAcronym}\", device cannot be saved.", "Validation Error", MessageBoxImage.Error);
+                    if (!m_dataContext.ConnectToConcentrator || ValidatePMUNames())
+                    {
+                        m_dataContext.SavePDC();
+                        m_dataContext.SaveConfiguration();
+                    }
+                    else
+                    {
+                        m_dataContext.Popup($"One of the device acronyms is set to the PDC acronym \"{m_dataContext.PdcAcronym}\", device cannot be saved.", "Validation Error", MessageBoxImage.Error);
+                    }
                 }
             }
         }

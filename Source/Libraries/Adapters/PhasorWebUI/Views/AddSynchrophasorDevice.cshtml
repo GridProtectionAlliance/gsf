@@ -529,6 +529,16 @@
             setTimeout(function () { $("#loadingDataLabel").css("visibility", "hidden"); }, 500);
         }
 
+        @{ /* Make sure any updates to phase guessing is synchronized with "InputWizardDevices.cs" in the "GSF.PhasorProtocol.UI.WPF" assembly */ }
+        function phaseMatchExact(phaseLabel, phaseMatches) {
+            for (let i = 0; i < phaseMatches.length; i++) {
+                if (phaseLabel === phaseMatches[i])
+                    return true;
+            }
+
+            return false;
+        }
+
         function phaseEndsWith(phaseLabel, phaseMatches) {
             for (let i = 0; i < phaseMatches.length; i++) {
                 if (phaseLabel.endsWith(phaseMatches[i]))
@@ -538,12 +548,31 @@
             return false;
         }
 
-        function phaseMatchHighConfidence(phaseLabel, phaseMatches) {
+        function phaseContains(phaseLabel, phaseMatches) {
             for (let i = 0; i < phaseMatches.length; i++) {
-                const match = phaseMatches[i];
+                if (phaseLabel.indexOf(phaseMatches[i]) > -1)
+                    return true;
+            }
+
+            return false;
+        }
+
+        function phaseMatchHighConfidence(phaseLabel, containsMatches, endsWithMatches) {
+            const matches = containsMatches.concat(endsWithMatches);
+
+            for (let i = 0; i < matches.length; i++) {
+                const match = matches[i];
                 const variations = [ " " + match, "_" + match, "-" + match, "." + match ];
 
                 if (phaseEndsWith(phaseLabel, variations))
+                    return true;
+            }
+
+            for (let i = 0; i < containsMatches.length; i++) {
+                const match = containsMatches[i];
+                const variations = [ " " + match + " ", "_" + match + "_", "-" + match + "-", "-" + match + "_", "_" + match + "-", "." + match + "." ];
+
+                if (phaseContains(phaseLabel, variations))
                     return true;
             }
 
@@ -553,12 +582,10 @@
         function phaseMatchLowConfidence(phaseLabel, phaseMatches) {
             for (let i = 0; i < phaseMatches.length; i++) {
                 const match = phaseMatches[i];
-                const variations = [ " " + match, match + " ", "_" + match, match + "_", "_" + match + "_", "." + match, match + ".", "." + match + "." ];
+                const variations = [ " " + match, match + " ", "_" + match, match + "_", "_" + match + "_", "-" + match, match + "-", "-" + match + "-", "-" + match + "_", "_" + match + "-", "." + match, match + ".", "." + match + "." ];
 
-                for (let j = 0; j < variations.length; j++) {
-                    if (phaseLabel.indexOf(variations[j]) > -1)
-                        return true;
-                }
+                if (phaseContains(phaseLabel, variations))
+                    return true;
             }
 
             return false;
@@ -570,25 +597,25 @@
 
             // Handle high confidence phase matches when no phase is defined or when phase is "+" - since positive sequence is often default value, it's treated with suspicion
             if (isEmpty(phase) || phase === "+") {
-                if (phaseMatchHighConfidence(phasorLabel, [ "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" ]) || phaseEndsWith(phasorLabel, [ "+SV", "+SI", "+V", "+I" ]))
+                if (phaseMatchExact(phasorLabel, [ "V1PM", "I1PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V1", "I1" ], [ "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" ]) || phaseEndsWith(phasorLabel, [ "+SV", "+SI", "+V", "+I" ]))
                     return "+";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" ]) || phaseEndsWith(phasorLabel, [ "0SV", "0SI" ]))
+                if (phaseMatchExact(phasorLabel, [ "V0PM", "I0PM", "VZPM", "IZPM" ]) || phaseMatchHighConfidence(phasorLabel, ["V0", "I0"], [ "ZERO", "ZPV", "ZPI", "VSPM", "V0PM", "I0PM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" ]) || phaseEndsWith(phasorLabel, [ "0SV", "0SI" ]))
                     return "0";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "VA", "IA", "APV", "API", "VAPM", "IAPM", "AV", "AI" ]))
+                if (phaseMatchExact(phasorLabel, [ "VAPM", "IAPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "VA", "IA" ], [ "APV", "API", "VAPM", "IAPM", "AV", "AI" ]))
                     return "A";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "VB", "IB", "BPV", "BPI", "VBPM", "IBPM", "BV", "BI" ]))
+                if (phaseMatchExact(phasorLabel, [ "VBPM", "IBPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "VB", "IB" ], [ "BPV", "BPI", "VBPM", "IBPM", "BV", "BI" ]))
                     return "B";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "VC", "IC", "CPV", "CPI", "VCPM", "ICPM", "CV", "CI" ]))
+                if (phaseMatchExact(phasorLabel, [ "VCPM", "ICPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "VC", "IC" ], [ "CPV", "CPI", "VCPM", "ICPM", "CV", "CI" ]))
                     return "C";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" ]))
+                if (phaseMatchExact(phasorLabel, [ "VNPM", "INPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "VN", "IN" ], [ "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" ]))
                     return "N";
 
-                if (phaseMatchHighConfidence(phasorLabel, [ "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]) || phaseEndsWith(phasorLabel, [ "-V", "-I" ]))
+                if (phaseMatchExact(phasorLabel, [ "V2PM", "I2PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V2", "I2" ], [ "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]))
                     return "-";
             }
 
@@ -613,8 +640,33 @@
                 if (phaseMatchLowConfidence(phasorLabel, [ "VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" ]))
                     return "N?";
 
+                if (phaseMatchLowConfidence(phasorLabel, [ "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]))
+                    return "-?";
+
+                // Test for contains after checks with separators
+                if (phaseContains(phasorLabel, [ "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" ]))
+                    return "+?";
+
+                if (phaseContains(phasorLabel, [ "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" ]))
+                    return "0?";
+
+                if (phaseContains(phasorLabel, [ "VA", "IA", "APV", "API", "VAPM", "IAPM", "AV", "AI" ]))
+                    return "A?";
+
+                if (phaseContains(phasorLabel, [ "VB", "IB", "BPV", "BPI", "VBPM", "IBPM", "BV", "BI" ]))
+                    return "B?";
+
+                if (phaseContains(phasorLabel, [ "VC", "IC", "CPV", "CPI", "VCPM", "ICPM", "CV", "CI" ]))
+                    return "C?";
+
+                if (phaseContains(phasorLabel, [ "VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" ]))
+                    return "N?";
+
+                if (phaseContains(phasorLabel, [ "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]))
+                    return "-?";
+
                 // -V and -I may match too often, so check these last
-                if (phaseMatchLowConfidence(phasorLabel, [ "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI", "-V", "-I" ]))
+                if (phaseMatchLowConfidence(phasorLabel, [ "-V", "-I" ]) || phaseContains(phasorLabel, [ "-V", "-I" ]))
                     return "-?";
 
                 return "?";
@@ -4086,7 +4138,7 @@
                     <td width="55px" class="text-center">
                         <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
                         <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true), 'error-margin': !fieldIsValid(Phase, true) }">
-                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
+                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '75px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
                             <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
                         </div>
                     </td>
@@ -4155,7 +4207,7 @@
                     <td width="55px" class="text-center">
                         <span class="org-label" data-bind="visible: OriginalLabel != Label()">&nbsp;</span>
                         <div class="input-group" data-bind="css: { 'has-error': !fieldIsValid(Phase, true), 'has-feedback': !fieldIsValid(Phase, true), 'error-margin': !fieldIsValid(Phase, true)}">
-                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '70px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
+                            <input type="text" class="form-control" maxlength="1" style="width: 37px; margin-left: 3px" onclick="this.select()" data-bind="upperCase: Phase, textInput: Phase, style: { width: Phase.isValid() ? '37px' : '75px' }, selectOnError: Phase, enable: Enabled" placeholder="Ø" required>
                             <span class="glyphicon glyphicon-remove form-control-feedback" style="z-index: 5" data-bind="visible: !fieldIsValid(Phase, true)"></span>
                         </div>
                     </td>
