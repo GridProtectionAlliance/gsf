@@ -34,6 +34,13 @@
 
                     </StackPanel>
 
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,-1,0">
+
+                        <Label Content="Filter Output Phases:" ToolTip="Comma separated list of phases allowed in output, e.g., &quot;+, -, 0&quot; or &quot;A, B, C&quot;. Use &quot;*&quot; for any." />
+                        <TextBox x:Name="TextBoxPhaseFilter" Width="50" Text="*" ToolTip="Comma separated list of phases allowed in output, e.g., &quot;+, -, 0&quot; or &quot;A, B, C&quot;. Use &quot;*&quot; for any." />
+
+                    </StackPanel>
+
                     <sdk:DataGrid x:Name="DataGridAddDevices" Height="485" Width="480" SelectionUnit="Cell">
 
                         <sdk:DataGrid.Columns>
