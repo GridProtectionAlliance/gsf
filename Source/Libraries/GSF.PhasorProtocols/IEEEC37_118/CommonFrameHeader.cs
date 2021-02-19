@@ -70,12 +70,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="typeID">The IEEE C37.118 specific frame type of this frame.</param>
         /// <param name="idCode">The ID code of this frame.</param>
         /// <param name="timestamp">The timestamp of this frame.</param>
-        public CommonFrameHeader(ConfigurationFrame1 configurationFrame, FrameType typeID, ushort idCode, Ticks timestamp)
+        /// <param name="version">The target version for this IEEE C37.118 frame.</param>
+        public CommonFrameHeader(ConfigurationFrame1 configurationFrame, FrameType typeID, ushort idCode, Ticks timestamp, DraftRevision version)
         {
             m_frameType = typeID;
             m_idCode = idCode;
             m_timestamp = timestamp;
-            m_version = 1;
+            m_version = (byte)version;
             m_timebase = (UInt24)100000;
 
             if (configurationFrame is null)
