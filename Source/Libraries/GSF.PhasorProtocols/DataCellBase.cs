@@ -51,6 +51,10 @@ namespace GSF.PhasorProtocols
     public enum CommonStatusFlags : uint
     {
         /// <summary>
+        /// Data was modified by a post-processing device, e.g., a PDC (0 for no modifications, 1 when data modified).
+        /// </summary>
+        DataModified = (uint)Bits.Bit21,
+        /// <summary>
         /// Data was discarded from real-time stream due to late arrival (0 when not discarded, 1 when discarded).
         /// </summary>
         DataDiscarded = (uint)Bits.Bit20,
@@ -73,7 +77,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Reserved bits for future common flags, presently set to 0.
         /// </summary>
-        ReservedFlags = (uint)(Bits.Bit21 | Bits.Bit22 | Bits.Bit23 | Bits.Bit24 | Bits.Bit25 | Bits.Bit26 | Bits.Bit27 | Bits.Bit28 | Bits.Bit29 | Bits.Bit30 | Bits.Bit31),
+        ReservedFlags = (uint)(Bits.Bit22 | Bits.Bit23 | Bits.Bit24 | Bits.Bit25 | Bits.Bit26 | Bits.Bit27 | Bits.Bit28 | Bits.Bit29 | Bits.Bit30 | Bits.Bit31),
         /// <summary>
         /// No flags.
         /// </summary>
@@ -237,6 +241,9 @@ namespace GSF.PhasorProtocols
                 if (m_isDiscarded)
                     commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DataDiscarded;
 
+                if (DataModified)
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DataModified;
+
                 return commonFlags;
             }
             set
@@ -251,6 +258,7 @@ namespace GSF.PhasorProtocols
                 DataSortingType = (value & (uint)PhasorProtocols.CommonStatusFlags.DataSortingType) == 0 ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
                 DeviceError = (value & (uint)PhasorProtocols.CommonStatusFlags.DeviceError) > 0;
                 m_isDiscarded = (value & (uint)PhasorProtocols.CommonStatusFlags.DataDiscarded) > 0;
+                DataModified = (value & (uint)PhasorProtocols.CommonStatusFlags.DataModified) > 0;
             }
         }
 
@@ -332,6 +340,19 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if data is modified by a post-processing
+        /// device, such as a PDC.
+        /// </summary>
+        /// <remarks>
+        /// This value is used to abstractly assign the protocol independent set of <see cref="CommonStatusFlags"/>.
+        /// </remarks>
+        public virtual bool DataModified
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
         protected override int BodyLength => 2 + m_phasorValues.BinaryLength + m_frequencyValue.BinaryLength + m_analogValues.BinaryLength + m_digitalValues.BinaryLength;
@@ -379,6 +400,7 @@ namespace GSF.PhasorProtocols
                 baseAttributes.Add("Data Sorting Type", Enum.GetName(typeof(DataSortingType), DataSortingType));
                 baseAttributes.Add("Device Error", DeviceError.ToString());
                 baseAttributes.Add("Data Discarded", m_isDiscarded.ToString());
+                baseAttributes.Add("Data Modified", DataModified.ToString());
                 baseAttributes.Add("Frequency Value", m_frequencyValue?.Frequency.ToString());
                 baseAttributes.Add("dF/dt Value", m_frequencyValue?.DfDt.ToString());
                 baseAttributes.Add("Total Phasor Values", PhasorValues.Count.ToString());
