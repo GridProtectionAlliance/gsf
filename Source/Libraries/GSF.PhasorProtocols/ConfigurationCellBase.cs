@@ -30,6 +30,8 @@ using System.Text;
 using GSF.Parsing;
 using GSF.Units.EE;
 
+// ReSharper disable NonReadonlyMemberInGetHashCode
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -139,14 +141,13 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the binary image of the <see cref="StationName"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual byte[] StationNameImage => Encoding.ASCII.GetBytes(StationName.PadRight(MaximumStationNameLength));
+        public virtual byte[] StationNameImage => 
+            Encoding.ASCII.GetBytes(MaximumStationNameLength < int.MaxValue ? StationName.PadRight(MaximumStationNameLength): StationName);
 
         /// <summary>
         /// Gets the maximum length of the <see cref="StationName"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual int MaximumStationNameLength =>
-            // Typical station name length is 16 characters
-            16;
+        public virtual int MaximumStationNameLength => 16; // Typical station name length is 16 characters
 
         /// <summary>
         /// Gets or sets the ID label of this <see cref="ConfigurationCellBase"/>.
@@ -171,22 +172,13 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the binary image of the <see cref="IDLabel"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual byte[] IDLabelImage
-        {
-            get
-            {
-                if (IDLabelLength < int.MaxValue)
-                    return Encoding.ASCII.GetBytes(IDLabel.PadRight(IDLabelLength));
-                return Encoding.ASCII.GetBytes(IDLabel);
-            }
-        }
+        public virtual byte[] IDLabelImage => 
+            Encoding.ASCII.GetBytes(IDLabelLength < int.MaxValue ? IDLabel.PadRight(IDLabelLength) : IDLabel);
 
         /// <summary>
         /// Gets the length of the <see cref="IDLabel"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual int IDLabelLength =>
-            // We don't restrict this for most protocols...
-            int.MaxValue;
+        public virtual int IDLabelLength => int.MaxValue; // This is not restricted for most protocols
 
         /// <summary>
         /// Gets a reference to the <see cref="PhasorDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
@@ -196,20 +188,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="PhasorDefinitions"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public abstract DataFormat PhasorDataFormat
-        {
-            get;
-            set;
-        }
+        public abstract DataFormat PhasorDataFormat { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="CoordinateFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="PhasorDefinitions"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public abstract CoordinateFormat PhasorCoordinateFormat
-        {
-            get;
-            set;
-        }
+        public abstract CoordinateFormat PhasorCoordinateFormat { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="AngleFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="PhasorDefinitions"/> of this <see cref="ConfigurationCellBase"/>.
@@ -235,11 +219,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the <see cref="DataFormat"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public abstract DataFormat FrequencyDataFormat
-        {
-            get;
-            set;
-        }
+        public abstract DataFormat FrequencyDataFormat { get; set; }
 
         /// <summary>
         /// Gets or sets the nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCellBase"/>.
@@ -258,11 +238,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IAnalogDefinition"/> objects in the <see cref="AnalogDefinitions"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public abstract DataFormat AnalogDataFormat
-        {
-            get;
-            set;
-        }
+        public abstract DataFormat AnalogDataFormat { get; set; }
 
         /// <summary>
         /// Gets a reference to the <see cref="DigitalDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
