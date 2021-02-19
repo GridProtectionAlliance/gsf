@@ -142,12 +142,20 @@ namespace GSF.PhasorProtocols
         /// Gets the binary image of the <see cref="StationName"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual byte[] StationNameImage => 
-            Encoding.ASCII.GetBytes(MaximumStationNameLength < int.MaxValue ? StationName.PadRight(MaximumStationNameLength): StationName);
+            Encoding.ASCII.GetBytes(MaximumStationNameLength < int.MaxValue && AutoPadStationNameImage ? StationName.PadRight(MaximumStationNameLength): StationName);
 
         /// <summary>
         /// Gets the maximum length of the <see cref="StationName"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual int MaximumStationNameLength => 16; // Typical station name length is 16 characters
+
+        /// <summary>
+        /// Gets flag that indicates if <see cref="StationNameImage"/> should auto pad-right value to <see cref="MaximumStationNameLength"/>.
+        /// </summary>
+        /// <remarks>
+        /// Padding will only be applied when <see cref="MaximumStationNameLength"/> is less than <see cref="int.MaxValue"/>.
+        /// </remarks>
+        public virtual bool AutoPadStationNameImage => true;
 
         /// <summary>
         /// Gets or sets the ID label of this <see cref="ConfigurationCellBase"/>.
@@ -173,12 +181,20 @@ namespace GSF.PhasorProtocols
         /// Gets the binary image of the <see cref="IDLabel"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual byte[] IDLabelImage => 
-            Encoding.ASCII.GetBytes(IDLabelLength < int.MaxValue ? IDLabel.PadRight(IDLabelLength) : IDLabel);
+            Encoding.ASCII.GetBytes(IDLabelLength < int.MaxValue && AutoPadIDLabelImage ? IDLabel.PadRight(IDLabelLength) : IDLabel);
 
         /// <summary>
         /// Gets the length of the <see cref="IDLabel"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
         public virtual int IDLabelLength => int.MaxValue; // This is not restricted for most protocols
+
+        /// <summary>
+        /// Gets flag that indicates if <see cref="IDLabelImage"/> should auto pad-right value to <see cref="IDLabelLength"/>.
+        /// </summary>
+        /// <remarks>
+        /// Padding will only be applied when <see cref="IDLabelLength"/> is less than <see cref="int.MaxValue"/>.
+        /// </remarks>
+        public virtual bool AutoPadIDLabelImage => true;
 
         /// <summary>
         /// Gets a reference to the <see cref="PhasorDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
