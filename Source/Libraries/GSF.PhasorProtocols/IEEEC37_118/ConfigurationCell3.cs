@@ -24,6 +24,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
@@ -31,30 +34,29 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
     [Serializable]
-    public class ConfigurationCell3
+    public class ConfigurationCell3 : ConfigurationCellBase
     {
         #region [ Members ]
 
         // Fields
-        //private FormatFlags m_formatFlags;
+        private FormatFlags m_formatFlags;
 
         #endregion
 
         #region [ Constructors ]
-        /*
+
         /// <summary>
         /// Creates a new <see cref="ConfigurationCell3"/>.
         /// </summary>
         /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCell3"/>.</param>
         public ConfigurationCell3(IConfigurationFrame parent) : base(parent, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
-            
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
-                IeeeC37_118.PhasorDefinition.CreateNewDefinition,
-                IeeeC37_118.FrequencyDefinition.CreateNewDefinition,
-                IeeeC37_118.AnalogDefinition.CreateNewDefinition,
-                IeeeC37_118.DigitalDefinition.CreateNewDefinition);
+                PhasorDefinition3.CreateNewDefinition,
+                IEEEC37_118.FrequencyDefinition.CreateNewDefinition,
+                AnalogDefinition3.CreateNewDefinition,
+                DigitalDefinition3.CreateNewDefinition);
         }
 
         /// <summary>
@@ -87,33 +89,72 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a reference to the parent <see cref="ConfigurationFrame1"/> for this <see cref="ConfigurationCell"/>.
+        /// Gets a reference to the parent <see cref="ConfigurationFrame1"/> for this <see cref="ConfigurationCell3"/>.
         /// </summary>
         public new ConfigurationFrame1 Parent
         {
-            get
-            {
-                return base.Parent as ConfigurationFrame1;
-            }
-            set
-            {
-                base.Parent = value;
-            }
+            get => base.Parent as ConfigurationFrame1;
+            set => base.Parent = value;
         }
+
+        /// <summary>
+        /// Gets or sets G_PMU_ID value for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public Guid GlobalID { get; set; } = Guid.Empty;
+
+        /// <summary>
+        /// Gets or sets PMU_LAT value for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public float Latitude { get; set; } = float.PositiveInfinity;
+
+        /// <summary>
+        /// Gets or sets PMU_LON value for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public float Logitude { get; set; } = float.PositiveInfinity;
+
+        /// <summary>
+        /// Gets or sets PMU_ELEV value for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public float Elevation { get; set; } = float.PositiveInfinity;
+
+        /// <summary>
+        /// Gets or sets SVC_CLASS value, 'M' or 'P', for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public char ServiceClass { get; set; } = 'M';
+
+        /// <summary>
+        /// Gets or sets WINDOW value for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public int Window { get; set; }
+
+        /// <summary>
+        /// Gets or sets GRP_DLY value for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public int GroupDelay { get; set; }
+
+
+        public override DataFormat PhasorDataFormat { get; set; }
+        public override CoordinateFormat PhasorCoordinateFormat { get; set; }
+        public override DataFormat FrequencyDataFormat { get; set; }
+        public override DataFormat AnalogDataFormat { get; set; }
+
+        /// <summary>
+        /// Gets the maximum length of the <see cref="ConfigurationCellBase.StationName"/> of this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public override int MaximumStationNameLength => 255;
+
+        /// <summary>
+        /// Gets flag that indicates if <see cref="ConfigurationCellBase.StationNameImage"/> should auto pad-right value to <see cref="MaximumStationNameLength"/>.
+        /// </summary>
+        public override bool AutoPadStationNameImage => false;
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength
-        {
-            get
-            {
-                return base.HeaderLength + 10;
-            }
-        }
+        protected override int HeaderLength => base.HeaderLength + 10;
 
         /// <summary>
-        /// Gets the binary header image of the <see cref="ConfigurationCell"/> object.
+        /// Gets the binary header image of the <see cref="ConfigurationCell3"/> object.
         /// </summary>
         protected override byte[] HeaderImage
         {
@@ -125,8 +166,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 base.HeaderImage.CopyImage(buffer, ref index, base.HeaderLength);
                 BigEndian.CopyBytes(IDCode, buffer, index);
                 BigEndian.CopyBytes(StationName.Length, buffer, index);
-                BigEndian.CopyBytes(StationName, buffer, index);
-                BigEndian.CopyBytes(State.G_PMU_ID, buffer, index);
+                //BigEndian.CopyBytes(StationName, buffer, index);
+                //BigEndian.CopyBytes(G_PMU_ID, buffer, index);
                 BigEndian.CopyBytes((ushort)m_formatFlags, buffer, index + 2);
                 BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 4);
                 BigEndian.CopyBytes((ushort)AnalogDefinitions.Count, buffer, index + 6);
@@ -140,16 +181,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength
-        {
-            get
-            {
-                return base.FooterLength + PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + (Parent.DraftRevision > DraftRevision.Draft6 ? 2 : 0);
-            }
-        }
+        protected override int FooterLength => base.FooterLength + PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + (Parent.DraftRevision > DraftRevision.Draft6 ? 2 : 0);
 
         /// <summary>
-        /// Gets the binary footer image of the <see cref="ConfigurationCell"/> object.
+        /// Gets the binary footer image of the <see cref="ConfigurationCell3"/> object.
         /// </summary>
         protected override byte[] FooterImage
         {
@@ -198,7 +233,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationCell"/> object.
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationCell3"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
         {
@@ -241,15 +276,15 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             StationName = getLengthPrependedString(buffer, index, out len);
             index += len + 2;
             IDCode = BigEndian.ToUInt16(buffer, index);
-            State.G_PMU_ID = BigEndian.ToGuid(buffer, index + 2); 
+            //State.G_PMU_ID = BigEndian.ToGuid(buffer, index + 2);
             m_formatFlags = (FormatFlags)BigEndian.ToUInt16(buffer, index + 16 + 2); //left as 16+x for clarity while editing, FIXME
             // Parse out total phasors, analogs and digitals defined for this device
-            State.PhasorCount = BigEndian.ToUInt16(buffer, index + 16+4); 
-            State.AnalogCount = BigEndian.ToUInt16(buffer, index + 16+6);
-            State.DigitalCount = BigEndian.ToUInt16(buffer, index + 16+8);
-            
+            State.PhasorCount = BigEndian.ToUInt16(buffer, index + 16 + 4);
+            State.AnalogCount = BigEndian.ToUInt16(buffer, index + 16 + 6);
+            State.DigitalCount = BigEndian.ToUInt16(buffer, index + 16 + 8);
 
-            index += 10+16; //FIXME: merge
+
+            index += 10 + 16; //FIXME: merge
 
             return (index - startIndex);
         }
@@ -265,61 +300,61 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             //FIXME: magic goes here
             int index = startIndex;
-            int strLength;
+            int strLength = 0;
             int x;
             //CHNAM, length-prepended string
             for (x = 0; x < State.PhasorCount; x++)
-            { 
-                State.PhasorName[x] = getLengthPrependedString(buffer, index, out strLength); //Need to store this somewhere...
+            {
+                //State.PhasorName[x] = getLengthPrependedString(buffer, index, out strLength); //Need to store this somewhere...
                 index += 2 + strLength; // for simplicity
             }
             for (x = 0; x < State.AnalogCount; x++)
             {
-                State.AnalogName[x] = getLengthPrependedString(buffer, index, out strLength); 
-                index += 2 + strLength; 
+                //State.AnalogName[x] = getLengthPrependedString(buffer, index, out strLength);
+                index += 2 + strLength;
             }
             for (x = 0; x < State.DigitalCount; x++)
             {
-                State.DigitalName[x] = getLengthPrependedString(buffer, index, out strLength); 
-                index += 2 + strLength; 
+                //State.DigitalName[x] = getLengthPrependedString(buffer, index, out strLength);
+                index += 2 + strLength;
             }
 
             //PHSCALE, 12 bytes of data flags, x PHNMR
             for (x = 0; x < State.PhasorCount; x++)
             {
-                State.PhasorScale[x] = buffer.BlockCopy(index, index + 12);
+                //State.PhasorScale[x] = buffer.BlockCopy(index, index + 12);
                 index += 12;
             }
 
             //ANSCALE, 8 bytes x ANNMR
             for (x = 0; x < State.AnalogCount; x++)
             {
-                State.ANSCALE[x] = buffer.BlockCopy(index, index + 8);
+                //State.ANSCALE[x] = buffer.BlockCopy(index, index + 8);
                 index += 12;
 
             }
             //DIGUNIT, 4 x DGNMR
             for (x = 0; x < State.DigitalCount; x++)
             {
-                State.DigitalStatus[x] = buffer.BlockCopy(index, index + 4);
+                //State.DigitalStatus[x] = buffer.BlockCopy(index, index + 4);
                 index += 4;
             }
             //PMU_LAT, 4 bytes, IEEE float, -90.0 to +90.0
-            State.DeviceLatitude = BigEndian.ToSingle(buffer, index);
+            //State.DeviceLatitude = BigEndian.ToSingle(buffer, index);
             //PMU_LON, 4 bytes, IEEE float, -179.9... to +180
-            State.DeviceLongitude = BigEndian.ToSingle(buffer, index + 4);
+            //State.DeviceLongitude = BigEndian.ToSingle(buffer, index + 4);
             //PMU_ELEV, 4 bytes, IEEE float, infinity for unknown
-            State.DeviceElevation = BigEndian.ToSingle(buffer, index + 8);
+            //State.DeviceElevation = BigEndian.ToSingle(buffer, index + 8);
             //SVC_CLASS, 1 ASCII char
-            State.ServiceClass = BigEndian.ToChar(buffer, index + 9);
+            //State.ServiceClass = BigEndian.ToChar(buffer, index + 9);
             //WINDOW, 4 bytes, signed int
-            State.MeasurementWindow = BigEndian.ToInt32(buffer, index + 13);
+            //State.MeasurementWindow = BigEndian.ToInt32(buffer, index + 13);
             //GRP_DLY, 4 bytes, signed int
-            State.GroupDelay = BigEndian.ToInt32(buffer, index + 17);
+            //State.GroupDelay = BigEndian.ToInt32(buffer, index + 17);
             //FNOM, 2 bytes, unsigned int, Bit 0 is flag (50/60 hz)
-            State.FNOM = BigEndian.ToUInt16(buffer, index + 19);
+            //State.FNOM = BigEndian.ToUInt16(buffer, index + 19);
             //CFGCNT, 2 bytes
-            State.CFGCNT = BigEndian.ToUInt16(buffer, index + 21);
+            //State.CFGCNT = BigEndian.ToUInt16(buffer, index + 21);
 
             return startIndex; //FIXME
         }
@@ -370,13 +405,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Delegate handler to create a new IEEE C37.118 configuration cell
         internal static IConfigurationCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IConfigurationCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            ConfigurationCell configCell = new ConfigurationCell(parent as IConfigurationFrame);
+            ConfigurationCell3 configCell = new ConfigurationCell3(parent as IConfigurationFrame);
 
             parsedLength = configCell.ParseBinaryImage(buffer, startIndex, 0);
 
             return configCell;
         }
-        */
+
         #endregion
     }
 }

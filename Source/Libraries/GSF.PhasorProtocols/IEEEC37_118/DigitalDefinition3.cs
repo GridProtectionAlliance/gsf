@@ -1,14 +1,14 @@
 ﻿//******************************************************************************************************
-//  DigitalDefinition.cs - Gbtc
+//  DigitalDefinition3.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
-//      http://www.opensource.org/licenses/MIT
+//      http://opensource.org/licenses/MIT
 //
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -16,16 +16,11 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/24/2004 - J. Ritchie Carroll
+//  12/27/2020 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  08/07/2009 - Josh L. Patterson
-//       Edited Comments.
-//  09/15/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  12/17/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
+
 
 using System;
 using System.Collections.Generic;
@@ -36,10 +31,10 @@ using System.Text;
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
-    /// Represents the IEEE C37.118 implementation of a <see cref="IDigitalDefinition"/>.
+    /// Represents the IEEE C37.118 configuration frame 3 implementation of a <see cref="IDigitalDefinition"/>.
     /// </summary>
     [Serializable]
-    public class DigitalDefinition : DigitalDefinitionBase
+    public class DigitalDefinition3 : ChannelDefinitionBase3, IDigitalDefinition
     {
         #region [ Members ]
 
@@ -50,42 +45,42 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         private ushort m_normalStatus;
         private ushort m_validInputs;
         private string m_label;
-        private bool m_parentAquired;
-        private DraftRevision m_draftRevision;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="DigitalDefinition"/>.
+        /// Creates a new <see cref="DigitalDefinition3"/>.
         /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.</param>
-        public DigitalDefinition(IConfigurationCell parent)
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="DigitalDefinition3"/>.</param>
+        public DigitalDefinition3(IConfigurationCell parent)
             : base(parent)
         {
+            ScalingValue = 1;
+            Offset = 0.0D;
         }
 
         /// <summary>
-        /// Creates a new <see cref="DigitalDefinition"/> from specified parameters.
+        /// Creates a new <see cref="DigitalDefinition3"/> from specified parameters.
         /// </summary>
-        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.</param>
-        /// <param name="label">The label of this <see cref="DigitalDefinition"/>.</param>
-        /// <param name="normalStatus">The normal status for this <see cref="DigitalDefinition"/>.</param>
-        /// <param name="validInputs">The valid input for this <see cref="DigitalDefinition"/>.</param>
-        public DigitalDefinition(ConfigurationCell parent, string label, ushort normalStatus, ushort validInputs)
-            : base(parent, label)
+        /// <param name="parent">The <see cref="ConfigurationCell3"/> parent of this <see cref="DigitalDefinition3"/>.</param>
+        /// <param name="label">The label of this <see cref="DigitalDefinition3"/>.</param>
+        /// <param name="normalStatus">The normal status for this <see cref="DigitalDefinition3"/>.</param>
+        /// <param name="validInputs">The valid input for this <see cref="DigitalDefinition3"/>.</param>
+        public DigitalDefinition3(ConfigurationCell3 parent, string label, ushort normalStatus, ushort validInputs)
+            : base(parent, label, 1, 0.0D)
         {
             m_normalStatus = normalStatus;
             m_validInputs = validInputs;
         }
 
         /// <summary>
-        /// Creates a new <see cref="DigitalDefinition"/> from serialization parameters.
+        /// Creates a new <see cref="DigitalDefinition3"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected DigitalDefinition(SerializationInfo info, StreamingContext context)
+        protected DigitalDefinition3(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             // Deserialize digital definition
@@ -99,16 +94,16 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.
+        /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public new virtual ConfigurationCell Parent
+        public new virtual ConfigurationCell3 Parent
         {
-            get => base.Parent as ConfigurationCell;
+            get => base.Parent as ConfigurationCell3;
             set => base.Parent = value;
         }
 
         /// <summary>
-        /// Gets or sets normal status for this <see cref="DigitalDefinition"/>.
+        /// Gets or sets normal status for this <see cref="DigitalDefinition3"/>.
         /// </summary>
         public ushort NormalStatus
         {
@@ -117,7 +112,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Gets or sets valid input for this <see cref="DigitalDefinition"/>.
+        /// Gets or sets valid input for this <see cref="DigitalDefinition3"/>.
         /// </summary>
         public ushort ValidInputs
         {
@@ -126,18 +121,17 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Gets the maximum length of the <see cref="Label"/> of this <see cref="DigitalDefinition"/>.
+        /// Gets the maximum length of the <see cref="Label"/> of this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public override int MaximumLabelLength => LabelCount * 16;
+        public override int MaximumLabelLength => LabelCount * 255;
 
         /// <summary>
-        /// Gets the number of labels defined in this <see cref="DigitalDefinition"/>.
+        /// Gets the number of labels defined in this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public int LabelCount => 
-            DraftRevision == DraftRevision.Draft6 ? 1 : 16;
+        public int LabelCount => 16;
 
         /// <summary>
-        /// Gets or sets the combined set of label images of this <see cref="DigitalDefinition"/>.
+        /// Gets or sets the combined set of label images of this <see cref="DigitalDefinition3"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override string Label
@@ -151,13 +145,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     value = "undefined";
 
                 if (value.Trim().Length > MaximumLabelLength)
-                {
                     throw new OverflowException($"Label length cannot exceed {MaximumLabelLength}");
-                }
 
                 // We override this function since base class automatically "fixes-up" labels
-                // by removing duplicate white space characters - this can throw off the
-                // label offsets which would break the Get/Set Label methods (below)
+                // by removing duplicate white space characters
                 m_label = value.Trim();
 
                 // We pass value along to base class for posterity...
@@ -166,33 +157,70 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="DigitalDefinition"/>.
+        /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public DraftRevision DraftRevision
+        public DraftRevision DraftRevision => DraftRevision.Std2011;
+
+        /// <summary>
+        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Data format for digital values will always be <see cref="GSF.PhasorProtocols.DataFormat.FixedInteger"/>.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public sealed override DataFormat DataFormat => DataFormat.FixedInteger;
+
+        /// <summary>
+        /// Gets or sets the offset of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Offset for digital values will always be 0; assigning a value other than 0 will thrown an exception.
+        /// </remarks>
+        /// <exception cref="NotImplementedException">Digital values represent bit flags and thus do not support an offset.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public sealed override double Offset
         {
-            get
+            get => base.Offset;
+            set
             {
-                if (m_parentAquired)
-                    return m_draftRevision;
-
-                // We must assume version 1 until a parent reference is available. The parent class,
-                // being higher up in the chain, is not available during early points of
-                // deserialization of this class - however, this method gets called to determine
-                // proper number of maximum digital labels - hence the need for this function -
-                // since we had to do this anyway, we took the opportunity to cache this value
-                // locally for speed in future calls
-                if (Parent?.Parent is null)
-                    return DraftRevision.Std2005;
-
-                m_parentAquired = true;
-                m_draftRevision = Parent.Parent.DraftRevision;
-                
-                return m_draftRevision;
+                if (value == 0)
+                    base.Offset = value;
+                else
+                    throw new NotImplementedException("Digital values represent bit flags and thus do not support an offset");
             }
         }
 
         /// <summary>
-        /// Gets conversion factor image of this <see cref="DigitalDefinition"/>.
+        /// Gets or sets the integer scaling value of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Scaling value for digital values will always be 1; assigning a value other than 1 will thrown an exception.
+        /// </remarks>
+        /// <exception cref="NotImplementedException">Digital values represent bit flags and thus are not scaled.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public sealed override uint ScalingValue
+        {
+            get => base.ScalingValue;
+            set
+            {
+                if (value == 1)
+                    base.ScalingValue = value;
+                else
+                    throw new NotImplementedException("Digital values represent bit flags and thus are not scaled");
+            }
+        }
+
+        /// <summary>
+        /// Gets the scale/bit for the <see cref="ScalingValue"/> of this <see cref="DigitalDefinitionBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Scale/bit for digital values will always be 1.0.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public sealed override double ScalePerBit => 1.0D;
+
+        /// <summary>
+        /// Gets conversion factor image of this <see cref="DigitalDefinition3"/>.
         /// </summary>
         internal byte[] ConversionFactorImage
         {
@@ -208,7 +236,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="DigitalDefinition"/> object.
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="DigitalDefinition3"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
         {
@@ -246,7 +274,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the individual labels for specified bit in this <see cref="DigitalDefinition"/>.
+        /// Gets the individual labels for specified bit in this <see cref="DigitalDefinition3"/>.
         /// </summary>
         /// <param name="index">Index of desired bit label to access.</param>
         /// <remarks>
@@ -263,7 +291,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Sets the individual labels for specified bit in this <see cref="DigitalDefinition"/>.
+        /// Sets the individual labels for specified bit in this <see cref="DigitalDefinition3"/>.
         /// </summary>
         /// <param name="index">Index of desired bit label to access.</param>
         /// <param name="value">Value of the bit label to assign.</param>
@@ -276,8 +304,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             if (index < 0 || index >= LabelCount)
                 throw new IndexOutOfRangeException($"Invalid label index specified.  Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEEE C37.118 protocol");
 
-            if (DraftRevision < DraftRevision.Std2011 &&  value.Trim().Length > 16)
-                throw new OverflowException($"Individual label length cannot exceed 16 characters");
+            if (value.Trim().Length > 255)
+                throw new OverflowException($"Individual label length cannot exceed 255");
 
             string current = Label.PadRight(MaximumLabelLength);
             string left = "";
@@ -301,12 +329,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
-            if (DraftRevision == DraftRevision.Draft6)
-            {
-                // Handle single label the standard way (parsing out null value)
-                return base.ParseBodyImage(buffer, startIndex, length);
-            }
-
             int parseLength = MaximumLabelLength;
             byte[] labelBuffer = new byte[16];
             string[] labels = new string[16];
@@ -376,7 +398,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Delegate handler to create a new IEEE C37.118 digital definition
         internal static IDigitalDefinition CreateNewDefinition(IConfigurationCell parent, byte[] buffer, int startIndex, out int parsedLength)
         {
-            IDigitalDefinition digitalDefinition = new DigitalDefinition(parent);
+            IDigitalDefinition digitalDefinition = new DigitalDefinition3(parent);
 
             parsedLength = digitalDefinition.ParseBinaryImage(buffer, startIndex, 0);
 
