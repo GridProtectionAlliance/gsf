@@ -2376,9 +2376,11 @@ namespace GSF.PhasorProtocols
             switch (m_phasorProtocol)
             {
                 case PhasorProtocol.IEEEC37_118V2:
+                    m_frameParser = new IEEEC37_118.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength, DraftRevision.Std2011);
+                    break;
                 case PhasorProtocol.IEEEC37_118V1:
                 case PhasorProtocol.IEEEC37_118D6:
-                    m_frameParser = new IEEEC37_118.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength, m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
+                    m_frameParser = new IEEEC37_118.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength, m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Std2005);
                     break;
                 case PhasorProtocol.IEEE1344:
                     m_frameParser = new IEEE1344.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
