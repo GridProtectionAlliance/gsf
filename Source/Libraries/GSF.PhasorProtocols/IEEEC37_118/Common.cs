@@ -82,13 +82,21 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         Draft6 = 0,
         /// <summary>
-        /// Draft 7.0 (Version 1.0).
+        /// Draft 7.0 (i.e., IEEE Std C37.118-2005).
         /// </summary>
         Draft7 = 1,
         /// <summary>
-        /// Draft 8.0 (Version 8.0).
+        /// IEEE Std C37.118-2005.
         /// </summary>
-        Draft8 = 2
+        Std2005 = 1,
+        /// <summary>
+        /// IEEE Std C37.118-2011.
+        /// </summary>
+        Std2011 = 2,
+        /// <summary>
+        /// Defines the latest known IEEE C37.118 version number.
+        /// </summary>
+        LatestVersion = Std2011
     }
 
     /// <summary>
@@ -114,7 +122,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         Coordinates = (ushort)Bits.Bit00,
         /// <summary>
-        /// Unsed format bits mask.
+        /// Unused format bits mask.
         /// </summary>
         UnusedMask = unchecked(ushort.MaxValue & (ushort)~(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03)),
         /// <summary>
@@ -246,9 +254,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         ConfigurationChanged = (ushort)Bits.Bit10,
         /// <summary>
-        /// Reserved bits for security, presently set to 0.
+        /// Data modified indicator, set to 1 when data is modified by a post-processing
+        /// device such as a PDC, else 0 to indicate no modifications.
         /// </summary>
-        ReservedFlags = (ushort)(Bits.Bit09 | Bits.Bit08 | Bits.Bit07 | Bits.Bit06),
+        DataModified = (ushort)Bits.Bit09,
+        /// <summary>
+        /// Time quality mask.
+        /// </summary>
+        TimeQualityMask = (ushort)(Bits.Bit08 | Bits.Bit07 | Bits.Bit06),
         /// <summary>
         /// Unlocked time mask.
         /// </summary>
@@ -261,6 +274,46 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// No flags.
         /// </summary>
         NoFlags = (ushort)Bits.Nil
+    }
+
+    /// <summary>
+    /// Unlocked time enumeration.
+    /// </summary>
+    [Serializable]
+    public enum TimeQuality : ushort
+    {
+        /// <summary>
+        /// Estimated maximum time error &gt; 10ms or time error unknown.
+        /// </summary>
+        ErrorGreaterThan10ms = (ushort)(Bits.Bit08 | Bits.Bit07 | Bits.Bit06),
+        /// <summary>
+        /// Estimated maximum time error &lt; 10ms.
+        /// </summary>
+        ErrorLessThan10ms = (ushort)(Bits.Bit08 | Bits.Bit07),
+        /// <summary>
+        /// Estimated maximum time error &lt; 1ms.
+        /// </summary>
+        ErrorLessThan1ms = (ushort)(Bits.Bit08 | Bits.Bit06),
+        /// <summary>
+        /// Estimated maximum time error &lt; 100μs.
+        /// </summary>
+        ErrorLessThan100μs = (ushort)(Bits.Bit08),
+        /// <summary>
+        /// Estimated maximum time error &lt; 10μs.
+        /// </summary>
+        ErrorLessThan10μs = (ushort)(Bits.Bit07 | Bits.Bit06),
+        /// <summary>
+        /// Estimated maximum time error &lt; 1μs.
+        /// </summary>
+        ErrorLessThan1μs = (ushort)(Bits.Bit07),
+        /// <summary>
+        /// Estimated maximum time error &lt; 100ns.
+        /// </summary>
+        ErrorLessThan100ns = (ushort)(Bits.Bit06),
+        /// <summary>
+        /// Not used (indicates code from previous version of profile)
+        /// </summary>
+        Unavailable = (ushort)Bits.Nil
     }
 
     /// <summary>
@@ -359,11 +412,71 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         Manual = (byte)Bits.Nil
     }
 
+    /// <summary>
+    /// Phasor data modification flags enumeration.
+    /// </summary>
+    [Flags, Serializable]
+    public enum PhasorDataModifications : ushort
+    {
+        /// <summary>
+        /// No modifications.
+        /// </summary>
+        NoModifications = (ushort)Bits.Nil,
+        /// <summary>
+        /// Up-sampled with interpolation.
+        /// </summary>
+        UpSampledWithInterpolation = (ushort)Bits.Bit01,
+        /// <summary>
+        /// Up-sampled with extrapolation.
+        /// </summary>
+        UpSampledWithExtrapolation = (ushort)Bits.Bit02,
+        /// <summary>
+        /// Down-sampled by re-selection (selecting every Nth sample).
+        /// </summary>
+        DownSampledByReselection = (ushort)Bits.Bit03,
+        /// <summary>
+        /// Down sampled with FIR filter.
+        /// </summary>
+        DownSampledWithFIRFilter = (ushort)Bits.Bit04,
+        /// <summary>
+        /// Down-sampled with non-FIR filter.
+        /// </summary>
+        DownSampledWithNonFIRFilter = (ushort)Bits.Bit05,
+        /// <summary>
+        /// Filtered without changing sampling.
+        /// </summary>
+        FilteredNoChangeToSampling = (ushort)Bits.Bit06,
+        /// <summary>
+        /// Phasor magnitude adjusted for calibration.
+        /// </summary>
+        MagnitudeCalibrationAdjustment = (ushort)Bits.Bit07,
+        /// <summary>
+        /// Phasor phase adjusted for calibration.
+        /// </summary>
+        AngleCalibrationAdjustment = (ushort)Bits.Bit08,
+        /// <summary>
+        /// Phasor phase adjusted for rotation ( ±30º, ±120º, etc.).
+        /// </summary>
+        AngleRotationAdjustment = (ushort)Bits.Bit09,
+        /// <summary>
+        /// Pseudo-phasor value (combined from other phasors).
+        /// </summary>
+        PseudoPhasorValue = (ushort)Bits.Bit10,
+        /// <summary>
+        /// Modification applied, type not here defined.
+        /// </summary>
+        OtherModificationApplied = (ushort)Bits.Bit15,
+        /// <summary>
+        /// Reserved bits.
+        /// </summary>
+        Reserved = (ushort)(Bits.Bit00 | Bits.Bit11 | Bits.Bit12 | Bits.Bit13 | Bits.Bit14)
+    }
+
     #endregion
 
-    /// <summary>
-    /// Common IEEE C37.118 declarations and functions.
-    /// </summary>
+        /// <summary>
+        /// Common IEEE C37.118 declarations and functions.
+        /// </summary>
     public static class Common
     {
         /// <summary>
@@ -395,5 +508,25 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// Time quality flags mask.
         /// </summary>
         public const uint TimeQualityFlagsMask = (uint)(Bits.Bit31 | Bits.Bit30 | Bits.Bit29 | Bits.Bit28 | Bits.Bit27 | Bits.Bit26 | Bits.Bit25 | Bits.Bit24);
+
+        /// <summary>
+        /// Gets the version number for a given <see cref="DraftRevision"/>.
+        /// </summary>
+        /// <param name="revision">Target <see cref="DraftRevision"/>.</param>
+        /// <returns>Version number for the specified <paramref name="revision"/>.</returns>
+        public static string ToVersionString(this DraftRevision revision)
+        {
+            switch (revision)
+            {
+                case DraftRevision.Draft6:
+                    return "Draft 6";
+                case DraftRevision.Std2005:
+                    return "2005";
+                case DraftRevision.Std2011:
+                    return "2011";
+                default:
+                    return "Unknown";
+            }
+        }
     }
 }
