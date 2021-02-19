@@ -133,15 +133,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the number of labels defined in this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public int LabelCount
-        {
-            get
-            {
-                if (DraftRevision == DraftRevision.Draft6)
-                    return 1;
-                return 16;
-            }
-        }
+        public int LabelCount => 
+            DraftRevision == DraftRevision.Draft6 ? 1 : 16;
 
         /// <summary>
         /// Gets or sets the combined set of label images of this <see cref="DigitalDefinition"/>.
@@ -191,9 +184,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 // since we had to do this anyway, we took the opportunity to cache this value
                 // locally for speed in future calls
                 if (Parent?.Parent is null)
-                {
-                    return DraftRevision.Draft7;
-                }
+                    return DraftRevision.Std2005;
 
                 m_parentAquired = true;
                 m_draftRevision = Parent.Parent.DraftRevision;
@@ -286,8 +277,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             if (index < 0 || index >= LabelCount)
                 throw new IndexOutOfRangeException($"Invalid label index specified.  Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEEE C37.118 protocol");
 
-            if (value.Trim().Length > 16)
-                throw new OverflowException($"Individual label length cannot exceed {16}");
+            if (DraftRevision < DraftRevision.Std2011 &&  value.Trim().Length > 16)
+                throw new OverflowException($"Individual label length cannot exceed 16 characters");
+
             string current = Label.PadRight(MaximumLabelLength);
             string left = "";
             string right = "";
