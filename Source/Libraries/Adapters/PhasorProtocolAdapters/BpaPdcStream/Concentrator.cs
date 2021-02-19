@@ -69,7 +69,7 @@ namespace PhasorProtocolAdapters.BpaPdcStream
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendLine("           Output protocol: BPA PDCstream");
+                status.AppendLine("           Output Protocol: BPA PDCstream");
                 status.Append(base.Status);
 
                 return status.ToString();
@@ -85,11 +85,11 @@ namespace PhasorProtocolAdapters.BpaPdcStream
         /// </summary>
         public override void Initialize()
         {
-            string errorMessage = "{0} is missing from Settings - Example: iniFileName=TESTSTREAM.ini";
+            const string ErrorMessage = "{0} is missing from Settings - Example: iniFileName=TESTSTREAM.ini";
 
             // Load required parameters
             if (!Settings.TryGetValue("iniFileName", out string setting))
-                throw new ArgumentException(string.Format(errorMessage, "iniFileName"));
+                throw new ArgumentException(string.Format(ErrorMessage, "iniFileName"));
 
             IniFileName = FilePath.GetAbsolutePath(setting);
 
@@ -163,24 +163,18 @@ namespace PhasorProtocolAdapters.BpaPdcStream
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
-                {
                     newCell.PhasorDefinitions.Add(new PhasorDefinition(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
-                }
 
                 // Add frequency definition
                 newCell.FrequencyDefinition = new FrequencyDefinition(newCell, baseCell.FrequencyDefinition.Label);
 
                 // Add analog definitions
                 foreach (IAnalogDefinition analogDefinition in baseCell.AnalogDefinitions)
-                {
                     newCell.AnalogDefinitions.Add(new AnalogDefinition(newCell, analogDefinition.Label, analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
-                }
 
                 // Add digital definitions
                 foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
-                {
                     newCell.DigitalDefinitions.Add(new DigitalDefinition(newCell, digitalDefinition.Label));
-                }
 
                 // Add new PMU configuration (cell) to protocol specific configuration frame
                 configurationFrame.Cells.Add(newCell);
@@ -206,14 +200,27 @@ namespace PhasorProtocolAdapters.BpaPdcStream
         /// a collection of measurements at a given timestamp. The <c>CreateNewFrame</c> method allows consumers to create
         /// their own <see cref="IFrame"/> implementations, in our case this will be a BPA PDCstream data frame.
         /// </remarks>
-        protected override IFrame CreateNewFrame(Ticks timestamp)
+        protected override IFrame CreateNewFrame(Ticks timestamp) => 
+            CreateDataFrame(timestamp, m_configurationFrame);
+
+        #endregion
+
+        #region [ Static ]
+
+        /// <summary>
+        /// Creates a new BPA PDCstream specific <see cref="DataFrame"/> for the given <paramref name="timestamp"/>.
+        /// </summary>
+        /// <param name="timestamp">Timestamp for new <see cref="IFrame"/> in <see cref="Ticks"/>.</param>
+        /// <param name="configurationFrame">Associated <see cref="ConfigurationFrame"/> for the new <see cref="DataFrame"/>.</param>
+        /// <returns>New IEEE C37.118 <see cref="DataFrame"/> at given <paramref name="timestamp"/>.</returns>
+        public static DataFrame CreateDataFrame(Ticks timestamp, ConfigurationFrame configurationFrame)
         {
             // We create a new BPA PDCstream data frame based on current configuration frame
-            ushort sampleNumber = (ushort)((timestamp.DistanceBeyondSecond() + 1.0D) / TicksPerFrame);
+            ushort sampleNumber = (ushort)((timestamp.DistanceBeyondSecond() + 1.0D) / (double)configurationFrame.TicksPerFrame);
 
-            DataFrame dataFrame = new DataFrame(timestamp, m_configurationFrame, 1, sampleNumber);
+            DataFrame dataFrame = new DataFrame(timestamp, configurationFrame, 1, sampleNumber);
 
-            foreach (ConfigurationCell configurationCell in m_configurationFrame.Cells)
+            foreach (ConfigurationCell configurationCell in configurationFrame.Cells)
             {
                 // Create a new BPA PDCstream data cell (i.e., a PMU entry for this frame)
                 DataCell dataCell = new DataCell(dataFrame, configurationCell, true);

@@ -61,7 +61,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets IEEE C37.118 time base for this concentrator instance.
+        /// Gets or sets IEC 61850-90-5 time base for this concentrator instance.
         /// </summary>
         public uint TimeBase { get; set; }
 
@@ -79,15 +79,11 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendLine("           Output protocol: IEC 61850-90-5");
-                status.AppendFormat("      Configured time base: {0}", TimeBase);
-                status.AppendLine();
-                status.AppendFormat("        Validating ID code: {0}", ValidateIDCode);
-                status.AppendLine();
-                status.AppendFormat("                     MSVID: {0}", m_msvid);
-                status.AppendLine();
-                status.AppendFormat("                ASDU Count: {0}", m_asduCount);
-                status.AppendLine();
+                status.AppendLine(@"           Output Protocol: IEC 61850-90-5");
+                status.AppendLine($"      Configured Time Base: {TimeBase}");
+                status.AppendLine($"        Validating ID Code: {ValidateIDCode}");
+                status.AppendLine($"                     MSVID: {m_msvid}");
+                status.AppendLine($"                ASDU Count: {m_asduCount:N0}");
                 status.Append(base.Status);
 
                 return status.ToString();
@@ -109,7 +105,6 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
             ValidateIDCode = settings.TryGetValue("validateIDCode", out string setting) && setting.ParseBoolean();
 
             // Pre-fetch ID code to create default MSVID
-
             if (settings.TryGetValue("IDCode", out setting) && ushort.TryParse(setting, out ushort idCode))
                 m_msvid = settings.TryGetValue("msvid", out setting) ? setting : $"{idCode}_{Name}";
 
@@ -128,13 +123,17 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         }
 
         /// <summary>
-        /// Creates a new IEEE C37.118 specific <see cref="IConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
+        /// Creates a new IEC 61850-90-5 specific <see cref="IConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
         /// <param name="baseConfigurationFrame">Protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
-        /// <returns>A new IEEE C37.118 specific <see cref="IConfigurationFrame"/>.</returns>
+        /// <returns>A new IEC 61850-90-5 specific <see cref="IConfigurationFrame"/>.</returns>
+        /// <remarks>
+        /// This operation provides a common IEEE C37.118 style frame for IEC 61850-90-5 implementations
+        /// that may not otherwise support native IEC 61850 configuration queries.
+        /// </remarks>
         protected override IConfigurationFrame CreateNewConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame)
         {
-            // Create a new IEEE C37.118 configuration frame 2 using base configuration
+            // Create a new IEC 61850-90-5 configuration frame 2 using base configuration
             ConfigurationFrame configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, TimeBase, NominalFrequency);
 
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
@@ -155,19 +154,19 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         }
 
         /// <summary>
-        /// Creates a new IEEE C37.118 specific <see cref="DataFrame"/> for the given <paramref name="timestamp"/>.
+        /// Creates a new IEC 61850-90-5 specific <see cref="DataFrame"/> for the given <paramref name="timestamp"/>.
         /// </summary>
         /// <param name="timestamp">Timestamp for new <see cref="IFrame"/> in <see cref="Ticks"/>.</param>
-        /// <returns>New IEEE C37.118 <see cref="DataFrame"/> at given <paramref name="timestamp"/>.</returns>
+        /// <returns>New IEC 61850-90-5 <see cref="DataFrame"/> at given <paramref name="timestamp"/>.</returns>
         /// <remarks>
         /// Note that the <see cref="ConcentratorBase"/> class (which the <see cref="ActionAdapterBase"/> is derived from)
         /// is designed to sort <see cref="IMeasurement"/> implementations into an <see cref="IFrame"/> which represents
         /// a collection of measurements at a given timestamp. The <c>CreateNewFrame</c> method allows consumers to create
-        /// their own <see cref="IFrame"/> implementations, in our case this will be an IEEE C37.118 data frame.
+        /// their own <see cref="IFrame"/> implementations, in our case this will be an IEC 61850-90-5 data frame.
         /// </remarks>
         protected override IFrame CreateNewFrame(Ticks timestamp)
         {
-            // We create a new IEEE C37.118 data frame based on current configuration frame
+            // We create a new IEC 61850-90-5 data frame based on current configuration frame
             DataFrame dataFrame = CreateDataFrame(timestamp, m_configurationFrame, m_msvid, m_asduCount, m_asduImages, m_configurationRevision);
             bool configurationChanged = false;
 
@@ -213,20 +212,25 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
             {
                 // Interpret data received from a client as a command frame
                 CommandFrame commandFrame = new CommandFrame(commandBuffer, 0, length);
-                IServer commandChannel = (IServer)CommandChannel ?? DataChannel;
+                IServer publishChannel = PublishChannel;
 
                 // Validate incoming ID code if requested
-                if (!ValidateIDCode || commandFrame.IDCode == IDCode)
+                if (ValidateIDCode && commandFrame.IDCode != IDCode)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");
+                }
+                else
                 {
                     switch (commandFrame.Command)
                     {
                         case DeviceCommand.SendConfigurationFrame1:
                         case DeviceCommand.SendConfigurationFrame2:
-                            if (commandChannel != null)
+                            if (publishChannel != null)
                             {
-                                commandChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength);
+                                publishChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength);
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
                             }
+
                             break;
                         case DeviceCommand.EnableRealTimeData:
                             // Only responding to stream control command if auto-start data channel is false
@@ -239,6 +243,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             {
                                 OnStatusMessage(MessageLevel.Info, $"Request for \"EnableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
+
                             break;
                         case DeviceCommand.DisableRealTimeData:
                             // Only responding to stream control command if auto-start data channel is false
@@ -251,15 +256,12 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             {
                                 OnStatusMessage(MessageLevel.Info, $"Request for \"DisableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
+
                             break;
                         default:
                             OnStatusMessage(MessageLevel.Info, $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported.");
                             break;
                     }
-                }
-                else
-                {
-                    OnStatusMessage(MessageLevel.Warning, $"Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");                    
                 }
             }
             catch (Exception ex)
@@ -275,20 +277,20 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         // Static Methods       
 
         /// <summary>
-        /// Creates a new IEC 61850-90-5 (i.e., IEEE C37.118) <see cref="ConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
+        /// Creates a new IEC 61850-90-5 (IEEE C37.118 style) <see cref="ConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
         /// <param name="baseConfigurationFrame">Protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
         /// <param name="timeBase">Timebase to use for fraction second resolution.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> to use for the new <see cref="ConfigurationFrame"/></param>.
-        /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame"/>.</returns>
+        /// <returns>A new IEC 61850-90-5 <see cref="ConfigurationFrame"/>.</returns>
         public static ConfigurationFrame CreateConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
         {
-            // Create a new IEEE C37.118 configuration frame 2 using base configuration
+            // Create a new IEC 61850-90-5 configuration frame 2 using base configuration
             ConfigurationFrame configurationFrame = new ConfigurationFrame(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
             foreach (GSF.PhasorProtocols.Anonymous.ConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
-                // Create a new IEEE C37.118 configuration cell (i.e., a PMU configuration)
+                // Create a new IEC 61850-90-5 configuration cell (i.e., a PMU configuration)
                 ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency)
                 {
                     // Update other cell level attributes
@@ -302,18 +304,14 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
-                {
                     newCell.PhasorDefinitions.Add(new PhasorDefinition(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
-                }
 
                 // Add frequency definition
                 newCell.FrequencyDefinition = new FrequencyDefinition(newCell, baseCell.FrequencyDefinition.Label);
 
                 // Add analog definitions
                 foreach (IAnalogDefinition analogDefinition in baseCell.AnalogDefinitions)
-                {
                     newCell.AnalogDefinitions.Add(new AnalogDefinition(newCell, analogDefinition.Label, analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
-                }
 
                 // Add digital definitions
                 foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
