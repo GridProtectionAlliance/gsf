@@ -60,6 +60,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public event EventHandler<EventArgs<ConfigurationFrame2>> ReceivedConfigurationFrame2;
 
         /// <summary>
+        /// Occurs when an IEEE C37.118 <see cref="ConfigurationFrame2"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="ConfigurationFrame3"/> that was received.
+        /// </remarks>
+        public event EventHandler<EventArgs<ConfigurationFrame3>> ReceivedConfigurationFrame3;
+
+        /// <summary>
         /// Occurs when an IEEE C37.118 <see cref="DataFrame"/> has been received.
         /// </summary>
         /// <remarks>
@@ -88,6 +96,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         // Fields
         private ConfigurationFrame2 m_configurationFrame2;
+        private ConfigurationFrame3 m_configurationFrame3;
         private bool m_configurationChangeHandled;
         private long m_unexpectedCommandFrames;
 
@@ -101,7 +110,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
         /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="draftRevision">The <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.</param>
-        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, DraftRevision draftRevision = DraftRevision.Draft7)
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, DraftRevision draftRevision = DraftRevision.Std2005)
             : base(checkSumValidationFrameTypes, trustHeaderLength)
         {
             // Initialize protocol synchronization bytes for this frame parser
@@ -123,8 +132,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
         {
-            get => m_configurationFrame2;
-            set => m_configurationFrame2 = CastToDerivedConfigurationFrame(value, DraftRevision);
+            get => (IConfigurationFrame)m_configurationFrame3 ?? m_configurationFrame2;
+            set
+            {
+                IConfigurationFrame configuration = CastToDerivedConfigurationFrame(value, DraftRevision);
+                m_configurationFrame2 = configuration as ConfigurationFrame2;
+                m_configurationFrame3 = configuration as ConfigurationFrame3;
+            }
         }
 
         /// <summary>
@@ -135,16 +149,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the IEEE C37.118 resolution of fractional timestamps of the current <see cref="ConfigurationFrame"/>, if one has been parsed.
         /// </summary>
-        public uint Timebase
-        {
-            get
-            {
-                if (m_configurationFrame2 is null)
-                    return 0;
-
-                return m_configurationFrame2.Timebase;
-            }
-        }
+        public uint Timebase => (ConfigurationFrame as ConfigurationFrame1)?.Timebase ?? 0;
 
         /// <summary>
         /// Gets flag that determines if this protocol parsing implementation uses synchronization bytes.
@@ -193,10 +198,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 case DraftRevision.Draft6:
                     base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1Draft6), typeof(ConfigurationFrame2Draft6), typeof(HeaderFrame) });
                     break;
-                case DraftRevision.Draft7:
+                case DraftRevision.Std2005:
                     base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(HeaderFrame) });
                     break;
-                case DraftRevision.Draft8:
+                case DraftRevision.Std2011:
                     base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(ConfigurationFrame3), typeof(HeaderFrame) });
                     break;
             }
@@ -229,10 +234,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             if (length >= CommonFrameHeader.FixedLength)
             {
                 // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame2, buffer, offset);
+                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ConfigurationFrame as ConfigurationFrame1, buffer, offset);
 
                 // Look for probable misaligned bad frame header parse
-                if (parsedFrameHeader.FrameType == FundamentalFrameType.Undetermined || parsedFrameHeader.Version > 3)
+                if (parsedFrameHeader.FrameType == FundamentalFrameType.Undetermined || parsedFrameHeader.Version > (byte)DraftRevision.LatestVersion)
                     throw new InvalidOperationException("Probable frame misalignment detected, forcing scan ahead to next sync byte");
 
                 // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
@@ -247,7 +252,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame2, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
+                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
                             break;
                         case FrameType.ConfigurationFrame1:
                         case FrameType.ConfigurationFrame2:
@@ -255,7 +260,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                             parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
                             break;
                         case FrameType.ConfigurationFrame3:
-                            // parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell3.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell3.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
                             break;
                         case FrameType.HeaderFrame:
                             // Assign header frame parsing state
@@ -276,15 +281,19 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.</param>
         protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
-            // We override this method so we can cache configuration 2 frame when it's received
+            // We override this method so we can cache configuration frame (2 or 3) when it's received
             base.OnReceivedConfigurationFrame(frame);
 
-            // Cache new configuration frame for parsing subsequent data frames...
-
-            if (frame is ConfigurationFrame2 configurationFrame2)
-                m_configurationFrame2 = configurationFrame2;
-
-            // TODO: Add handler for config3 frame
+            switch (frame)
+            {
+                // Cache new configuration frame for parsing subsequent data frames...
+                case ConfigurationFrame3 configurationFrame3:
+                    m_configurationFrame3 = configurationFrame3;
+                    break;
+                case ConfigurationFrame2 configurationFrame2:
+                    m_configurationFrame2 = configurationFrame2;
+                    break;
+            }
         }
 
         /// <summary>
@@ -335,7 +344,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             base.OnReceivedChannelFrame(frame);
 
             // Raise IEEE C37.118 specific channel frame events, if any have been subscribed
-            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame2 is null && ReceivedConfigurationFrame1 is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null)
+            if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame3 is null && ReceivedConfigurationFrame2 is null && ReceivedConfigurationFrame1 is null && ReceivedHeaderFrame is null && ReceivedCommandFrame is null)
                 return;
 
             switch (frame)
@@ -343,6 +352,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 case DataFrame dataFrame:
                 {
                     ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+                    break;
+                }
+                // Configuration frame type 3 is more specific than type 1 (and more common), so we check it first
+                case ConfigurationFrame3 configFrame3:
+                {
+                    ReceivedConfigurationFrame3?.Invoke(this, new EventArgs<ConfigurationFrame3>(configFrame3));
                     break;
                 }
                 // Configuration frame type 2 is more specific than type 1 (and more common), so we check it first
@@ -392,26 +407,26 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         // Attempts to cast given frame into an IEEE C37.118 configuration frame - theoretically this will
         // allow the same configuration frame to be used for any protocol implementation
-        internal static ConfigurationFrame2 CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame, DraftRevision draftRevision)
+        internal static IConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame, DraftRevision draftRevision)
         {
-            // See if frame is already an IEEE C37.118 configuration frame, type 2 (if so, we don't need to do any work)
-
-            if (!(sourceFrame is ConfigurationFrame2 derivedFrame))
+            switch (sourceFrame)
             {
-                // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
-                ConfigurationCell derivedCell;
-                IFrequencyDefinition sourceFrequency;
+                // See if frame is already an IEEE C37.118 configuration frame 2 or 3
+                case ConfigurationFrame3 configurationFrame3:
+                    return configurationFrame3;
+                case ConfigurationFrame2 configurationFrame2:
+                    return configurationFrame2;
+            }
 
-                // Assuming configuration frame 2 and timebase = 100000
-                if (draftRevision == DraftRevision.Draft7)
-                    derivedFrame = new ConfigurationFrame2(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
-                else
-                    derivedFrame = new ConfigurationFrame2Draft6(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+            if (draftRevision == DraftRevision.Std2011)
+            {
+                // Handle configuration 3 frame as a special case:
+                ConfigurationFrame3 derivedFrame3 = new ConfigurationFrame3(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
 
                 foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
                 {
                     // Create new derived configuration cell
-                    derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                    ConfigurationCell3 derivedCell = new ConfigurationCell3(derivedFrame3, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                     string stationName = sourceCell.StationName;
                     string idLabel = sourceCell.IDLabel;
@@ -430,25 +445,86 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                     // Create equivalent derived phasor definitions
                     foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
+                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition3(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
 
                     // Create equivalent derived frequency definition
-                    sourceFrequency = sourceCell.FrequencyDefinition;
+                    IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
 
                     if (!(sourceFrequency is null))
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                     // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
                     foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
-                        derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
+                        derivedCell.AnalogDefinitions.Add(new AnalogDefinition3(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
 
                     // Create equivalent derived digital definitions
                     foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
+                        derivedCell.DigitalDefinitions.Add(new DigitalDefinition3(derivedCell, sourceDigital.Label, 0, 0));
 
                     // Add cell to frame
-                    derivedFrame.Cells.Add(derivedCell);
+                    derivedFrame3.Cells.Add(derivedCell);
                 }
+
+                return derivedFrame3;
+            }
+
+            // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
+            ConfigurationFrame1 derivedFrame;
+
+            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+            switch (draftRevision)
+            {
+                // Assuming configuration frame 2 and timebase = 100000
+                case DraftRevision.Draft6:
+                    derivedFrame = new ConfigurationFrame2Draft6(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+                    break;
+                case DraftRevision.Std2005:
+                    derivedFrame = new ConfigurationFrame2(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(draftRevision), draftRevision, null);
+            }
+
+            foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
+            {
+                // Create new derived configuration cell
+                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+
+                string stationName = sourceCell.StationName;
+                string idLabel = sourceCell.IDLabel;
+
+                if (!string.IsNullOrWhiteSpace(stationName))
+                    derivedCell.StationName = stationName.TruncateLeft(derivedCell.MaximumStationNameLength);
+
+                if (!string.IsNullOrWhiteSpace(idLabel))
+                    derivedCell.IDLabel = idLabel.TruncateLeft(derivedCell.IDLabelLength);
+
+                derivedCell.PhasorCoordinateFormat = sourceCell.PhasorCoordinateFormat;
+                derivedCell.PhasorAngleFormat = sourceCell.PhasorAngleFormat;
+                derivedCell.PhasorDataFormat = sourceCell.PhasorDataFormat;
+                derivedCell.FrequencyDataFormat = sourceCell.FrequencyDataFormat;
+                derivedCell.AnalogDataFormat = sourceCell.AnalogDataFormat;
+
+                // Create equivalent derived phasor definitions
+                foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
+                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
+
+                // Create equivalent derived frequency definition
+                IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
+
+                if (!(sourceFrequency is null))
+                    derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
+
+                // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
+                foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
+                    derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
+
+                // Create equivalent derived digital definitions
+                foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
+                    derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
+
+                // Add cell to frame
+                derivedFrame.Cells.Add(derivedCell);
             }
 
             return derivedFrame;
