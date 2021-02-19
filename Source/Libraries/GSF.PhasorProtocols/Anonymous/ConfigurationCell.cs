@@ -245,6 +245,14 @@ namespace GSF.PhasorProtocols.Anonymous
             set => m_source = value;
         }
 
+        /// <summary>
+        /// Gets the maximum length of the <see cref="ConfigurationCellBase.StationName"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        /// <remarks>
+        /// This length is not restricted for anonymous protocol definitions.
+        /// </remarks>
+        public override int MaximumStationNameLength => int.MaxValue;
+
         #endregion
 
         #region [ Methods ]
