@@ -29,6 +29,7 @@ using System;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
@@ -55,7 +56,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
         /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
-        public FrequencyDefinition(ConfigurationCell parent, string label)
+        public FrequencyDefinition(IConfigurationCell parent, string label)
             : base(parent, label, 1000, 100, 0.0D)
         {
         }
@@ -80,6 +81,15 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public new virtual ConfigurationCell Parent
         {
             get => base.Parent as ConfigurationCell;
+            set => base.Parent = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="FrequencyDefinition"/>, if applicable.
+        /// </summary>
+        public virtual ConfigurationCell3 Parent3
+        {
+            get => base.Parent as ConfigurationCell3;
             set => base.Parent = value;
         }
 
