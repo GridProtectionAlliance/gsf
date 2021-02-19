@@ -113,7 +113,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
-        public virtual DraftRevision DraftRevision => DraftRevision.Draft7;
+        public virtual DraftRevision DraftRevision => DraftRevision.Std2005;
 
         /// <summary>
         /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame1"/>.
@@ -143,7 +143,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public CommonFrameHeader CommonHeader
         {
             // Make sure frame header exists
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(this, TypeID, base.IDCode, base.Timestamp));
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(this, TypeID, base.IDCode, base.Timestamp, DraftRevision));
             set
             {
                 m_frameHeader = value;

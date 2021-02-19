@@ -85,6 +85,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public override FrameType TypeID => IEEEC37_118.FrameType.ConfigurationFrame2;
 
-    #endregion
+        #endregion
     }
 }

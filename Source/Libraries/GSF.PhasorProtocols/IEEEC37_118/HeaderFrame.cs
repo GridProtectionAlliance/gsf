@@ -99,7 +99,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             get => CommonHeader.Timestamp;
             set
             {
-                // Keep timestamp updates synchrnonized...
+                // Keep timestamp updates synchronized...
                 CommonHeader.Timestamp = value;
                 base.Timestamp = value;
             }
@@ -115,15 +115,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists - using base class timestamp to
-                // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader is null)
-                    m_frameHeader = new CommonFrameHeader(null, TypeID, base.IDCode, base.Timestamp);
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists - using base class timestamp to
+            // prevent recursion (m_frameHeader doesn't exist yet)
+            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(null, TypeID, base.IDCode, base.Timestamp, DraftRevision.Std2005));
             set
             {
                 m_frameHeader = value;

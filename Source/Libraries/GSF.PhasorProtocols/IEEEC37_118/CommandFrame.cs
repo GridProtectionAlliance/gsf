@@ -128,14 +128,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public CommonFrameHeader CommonHeader
         {
-            get
-            {
-                // Make sure frame header exists
-                if (m_frameHeader is null)
-                    m_frameHeader = new CommonFrameHeader(null, IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp);
-
-                return m_frameHeader;
-            }
+            // Make sure frame header exists
+            get =>m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(null, IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp, DraftRevision.Std2005));
             set
             {
                 m_frameHeader = value;
@@ -160,7 +154,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             get => CommonHeader.Timestamp;
             set
             {
-                // Keep timestamp updates synchrnonized...
+                // Keep timestamp updates synchronized...
                 CommonHeader.Timestamp = value;
                 base.Timestamp = value;
             }
