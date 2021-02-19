@@ -122,8 +122,17 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public new StatusFlags StatusFlags
         {
-            get => (StatusFlags)(base.StatusFlags & ~(ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask));
-            set => base.StatusFlags = (ushort)((base.StatusFlags & (ushort)(StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
+            get => (StatusFlags)(base.StatusFlags & ~(ushort)(StatusFlags.TimeQualityMask | StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask));
+            set => base.StatusFlags = (ushort)((base.StatusFlags & (ushort)(StatusFlags.TimeQualityMask | StatusFlags.UnlockedTimeMask | StatusFlags.TriggerReasonMask)) | (ushort)value);
+        }
+
+        /// <summary>
+        /// Gets or sets time quality of this <see cref="DataCell"/>.
+        /// </summary>
+        public TimeQuality TimeQuality
+        {
+            get => (TimeQuality)(base.StatusFlags & (ushort)StatusFlags.TimeQualityMask);
+            set => base.StatusFlags = (ushort)((base.StatusFlags & ~(ushort)StatusFlags.TimeQualityMask) | (ushort)value);
         }
 
         /// <summary>
@@ -243,6 +252,21 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if data was modified for this <see cref="DataCell"/>.
+        /// </summary>
+        public override bool DataModified
+        {
+            get => (StatusFlags & StatusFlags.DataModified) > 0;
+            set
+            {
+                if (value)
+                    StatusFlags |= StatusFlags.DataModified;
+                else
+                    StatusFlags &= ~StatusFlags.DataModified;
+            }
+        }
+
+        /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
@@ -251,6 +275,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
+                baseAttributes.Add("Time Quality", $"{(int)TimeQuality}: {TimeQuality}");
                 baseAttributes.Add("Unlocked Time", $"{(int)UnlockedTime}: {UnlockedTime}");
                 baseAttributes.Add("Device Trigger Detected", DeviceTriggerDetected.ToString());
                 baseAttributes.Add("Trigger Reason", $"{(int)TriggerReason}: {TriggerReason}");
@@ -269,7 +294,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Delegate handler to create a new IEEE C37.118 data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
+            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

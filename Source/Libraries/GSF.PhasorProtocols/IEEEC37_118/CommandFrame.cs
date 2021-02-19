@@ -31,6 +31,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
