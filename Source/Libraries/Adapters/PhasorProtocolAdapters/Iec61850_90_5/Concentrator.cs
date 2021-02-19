@@ -212,7 +212,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
             {
                 // Interpret data received from a client as a command frame
                 CommandFrame commandFrame = new CommandFrame(commandBuffer, 0, length);
-                IServer publishChannel = PublishChannel;
+                IServer commandChannel = (IServer)CommandChannel ?? DataChannel;
 
                 // Validate incoming ID code if requested
                 if (ValidateIDCode && commandFrame.IDCode != IDCode)
@@ -225,9 +225,9 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                     {
                         case DeviceCommand.SendConfigurationFrame1:
                         case DeviceCommand.SendConfigurationFrame2:
-                            if (publishChannel != null)
+                            if (commandChannel != null)
                             {
-                                publishChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength);
+                                commandChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength);
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
                             }
 
