@@ -92,6 +92,36 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set => base.Definition = value;
         }
 
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of this <see cref="FrequencyValue"/>.
+        /// </summary>
+        public override int UnscaledFrequency
+        {
+            get => double.IsNaN(Frequency) ? short.MinValue : base.UnscaledFrequency;
+            set
+            {
+                if (value <= short.MinValue)
+                    Frequency = double.NaN;
+                else
+                    base.UnscaledFrequency = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of the change in this <see cref="FrequencyValue"/> over time.
+        /// </summary>
+        public override int UnscaledDfDt
+        {
+            get => double.IsNaN(DfDt) ? short.MinValue : base.UnscaledDfDt;
+            set
+            {
+                if (value <= short.MinValue)
+                    DfDt = double.NaN;
+                else
+                    base.UnscaledDfDt = value;
+            }
+        }
+
         #endregion
 
         #region [ Static ]

@@ -105,6 +105,36 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set => base.Definition = value;
         }
 
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of the real value of this <see cref="PhasorValue"/>.
+        /// </summary>
+        public override int UnscaledReal
+        {
+            get => double.IsNaN(Real) ? short.MinValue : base.UnscaledReal;
+            set
+            {
+                if (value <= short.MinValue)
+                    Real = double.NaN;
+                else
+                    base.UnscaledReal = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the unscaled integer representation of the imaginary value of this <see cref="PhasorValue"/>.
+        /// </summary>
+        public override int UnscaledImaginary
+        {
+            get => double.IsNaN(Imaginary) ? short.MinValue : base.UnscaledImaginary;
+            set
+            {
+                if (value <= short.MinValue)
+                    Imaginary = double.NaN;
+                else
+                    base.UnscaledImaginary = value;
+            }
+        }
+
         #endregion
 
         #region [ Static ]
