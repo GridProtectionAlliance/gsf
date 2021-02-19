@@ -70,7 +70,7 @@
                 <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=IDCode}" Width="{StaticResource XXSmallItemSize}"/>
                 <TextBlock Grid.Row="1" Grid.Column="2" Text="Type" />
                 <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Source={StaticResource TypeLookupList}}" DisplayMemberPath="Value" 
-                      SelectedItem="{tsfBinding:Column Path=Type, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource TypeLookupList}}"/>
+                      SelectedItem="{tsfBinding:Column Path=TypeAsInt, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource TypeLookupList}}"/>
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Connection String" />
                 <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=ConnectionString}" />
@@ -255,8 +255,8 @@
                         IsEnabled="{Binding Path=DataContext.IsNewRecord, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource NotConverter}}"/>
                 </StackPanel>
 
-                <TextBlock Grid.Row="9" Grid.Column="0" Text="Config Frame Size" />
-                <TextBlock Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Left" Foreground="{Binding ConfigFrameSizeColor}" Text="{Binding ConfigFrameSizeText}"
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="{Binding FrameSizeLabel}" />
+                <TextBlock Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Left" Foreground="{Binding FrameSizeColor}" Text="{Binding FrameSizeText}"
                            DataContext="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
             </Grid>
         </ScrollViewer>

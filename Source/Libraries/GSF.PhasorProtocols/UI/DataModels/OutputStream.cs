@@ -43,10 +43,34 @@ using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
+// ReSharper disable ConstantConditionalAccessQualifier
 // ReSharper disable AccessToDisposedClosure
 // ReSharper disable ConstantConditionalAccessQualifier
 namespace GSF.PhasorProtocols.UI.DataModels
 {
+    /// <summary>
+    /// Supported Synchrophasor Output Protocols.
+    /// </summary>
+    public enum OutputProtocol
+    {
+        /// <summary>
+        /// IEEE C37.118-2011 Output.
+        /// </summary>
+        IEEE_C37_118_2011 = 3,
+        /// <summary>
+        /// IEEE C37.118-2005 Output.
+        /// </summary>
+        IEEE_C37_118_2005 = 0,
+        /// <summary>
+        /// BPA PDCstream Output.
+        /// </summary>
+        BPA_PDCSTREAM = 1,
+        /// <summary>
+        /// IEC 61850-90-5 Output.
+        /// </summary>
+        IEC_61850_90_5 = 2
+    }
+
     /// <summary>
     /// Represents a record of <see cref="OutputStream"/> as defined in the database.
     /// </summary>
@@ -58,7 +82,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private int m_ID;
         private string m_acronym;
         private string m_name;
-        private int m_type = 1;
+        private OutputProtocol m_type = OutputProtocol.IEEE_C37_118_2005;
         private string m_connectionString;
         private int m_idCode;
         private string m_commandChannel;
@@ -166,19 +190,29 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="OutputStream"/>'s Type.
+        /// Gets or sets <see cref="OutputStream"/>'s output protocol type.
         /// </summary>
         [Required(ErrorMessage = "Output stream type is a required, please provide a value.")]
-        public int Type
+        public OutputProtocol Type
         {
             get => m_type;
             set
             {
                 m_type = value;
-                TypeName = m_type == 1 ? "IEEE C37.118" : m_type == 2 ? "BPA" : "IEC 61850-90-5";
                 OnPropertyChanged("Type");
+                OnPropertyChanged("TypeAsInt");
                 OnPropertyChanged("TypeName");
             }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="OutputStream"/>'s output protocol type as an integer.
+        /// </summary>
+        [Required(ErrorMessage = "Output stream type is a required, please provide a value.")]
+        public int TypeAsInt
+        {
+            get => (int)Type;
+            set => Type = (OutputProtocol)value;
         }
 
         /// <summary>
@@ -343,7 +377,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="OutputStream"/>'s UseLocalClockAsRealTime flag.
         /// </summary>
-        [Required(ErrorMessage = "Output stream use local clock as realtime is a required field, please provide a value.")]
+        [Required(ErrorMessage = "Output stream use local clock as real-time is a required field, please provide a value.")]
         [DefaultValue(false)]
         public bool UseLocalClockAsRealTime
         {
@@ -558,7 +592,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets <see cref="OutputStream"/>'s TypeName.
         /// </summary>
-        public string TypeName { get; private set; }
+        public string OutputProtocolName => OutputProtocolNames[Type];
 
         /// <summary>
         /// Gets or sets <see cref="OutputStream"/>'s PerformTimestampReasonabilityCheck flag.
@@ -622,13 +656,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_mirroringSourceDevice;
             set
             {
-                if (m_mirroringSourceDevice != value)
+                if (m_mirroringSourceDevice == value)
+                    return;
+
+                if (MessageBox.Show("WARNING: This will replace all existing devices and measurements associated with this output stream. Do you want to continue?", "IEEE C37.118 Mirroring", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    if (MessageBox.Show("WARNING: This will replace all existing devices and measurements associated with this output stream. Do you want to continue?", "IEEE C37.118 Mirroring", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                    {
-                        m_mirroringSourceDevice = value;
-                        OnPropertyChanged("MirroringSourceDevice");
-                    }
+                    m_mirroringSourceDevice = value;
+                    OnPropertyChanged("MirroringSourceDevice");
                 }
 
             }
@@ -650,6 +684,22 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #endregion
 
         #region [ Static ]
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets an output stream type lookup list, maps <see cref="OutputStream"/> enum value to its display name.
+        /// </summary>
+        public static ReadOnlyDictionary<OutputProtocol, string> OutputProtocolNames { get; } = new ReadOnlyDictionary<OutputProtocol, string>
+        (
+            new Dictionary<OutputProtocol, string>
+            {
+                { OutputProtocol.IEEE_C37_118_2011, "IEEE C37.118-2011" },
+                { OutputProtocol.IEEE_C37_118_2005, "IEEE C37.118-2005" },
+                { OutputProtocol.BPA_PDCSTREAM, "BPA PDCstream" },
+                { OutputProtocol.IEC_61850_90_5, "IEC 61850-90-5" }
+            }
+        );
 
         // Static Methods
 
@@ -728,7 +778,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     outputStreamList = new ObservableCollection<OutputStream>(
                         from item in outputStreamTable.AsEnumerable()
                         let id = item.ConvertField<int>("ID")
-                        let type = item.ConvertField<int>("Type") + 1
+                        let type = (OutputProtocol)item.ConvertField<int>("Type")
                         orderby keys.IndexOf(id)
                         select new OutputStream
                         {
@@ -752,7 +802,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             LoadOrder = item.ConvertField<int>("LoadOrder"),
                             Enabled = Convert.ToBoolean(item.Field<object>("Enabled")),
                             NodeName = item.Field<string>("NodeName"),
-                            TypeName = type == 1 ? "IEEE C37.118" : type == 2 ? "BPA" : "IEC 61850-90-5",
                             IgnoreBadTimeStamps = Convert.ToBoolean(item.Field<object>("IgnoreBadTimeStamps")),
                             TimeResolution = item.ConvertField<int>("TimeResolution"),
                             AllowPreemptivePublishing = Convert.ToBoolean(item.Field<object>("AllowPreemptivePublishing")),
@@ -845,7 +894,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "performTimeReasonabilityCheck", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query,
-                        database.CurrentNodeID(), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), outputStream.Type - 1, connectionString.ToNotNull(),
+                        database.CurrentNodeID(), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), (int)outputStream.Type, connectionString.ToNotNull(),
                         outputStream.IDCode, outputStream.CommandChannel.ToNotNull(), outputStream.DataChannel.ToNotNull(), database.Bool(outputStream.AutoPublishConfigFrame), database.Bool(outputStream.AutoStartDataChannel),
                         outputStream.NominalFrequency, outputStream.FramesPerSecond, outputStream.LagTime, outputStream.LeadTime, database.Bool(outputStream.UseLocalClockAsRealTime), database.Bool(outputStream.AllowSortsByArrival),
                         outputStream.LoadOrder, database.Bool(outputStream.Enabled), database.Bool(outputStream.IgnoreBadTimeStamps), outputStream.TimeResolution, database.Bool(outputStream.AllowPreemptivePublishing),
@@ -869,7 +918,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "analogScalingValue", "digitalMaskValue", "performTimeReasonabilityCheck", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                        database.Guid(outputStream.NodeID), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), outputStream.Type - 1, connectionString.ToNotNull(),
+                        database.Guid(outputStream.NodeID), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), (int)outputStream.Type, connectionString.ToNotNull(),
                         outputStream.IDCode, outputStream.CommandChannel.ToNotNull(), outputStream.DataChannel.ToNotNull(), database.Bool(outputStream.AutoPublishConfigFrame), database.Bool(outputStream.AutoStartDataChannel),
                         outputStream.NominalFrequency, outputStream.FramesPerSecond, outputStream.LagTime, outputStream.LeadTime, database.Bool(outputStream.UseLocalClockAsRealTime),
                         database.Bool(outputStream.AllowSortsByArrival), outputStream.LoadOrder, database.Bool(outputStream.Enabled), database.Bool(outputStream.IgnoreBadTimeStamps), outputStream.TimeResolution,
@@ -1023,7 +1072,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     return null;
 
                 DataRow row = outputStreamTable.Rows[0];
-                int type = Convert.ToInt32(row.Field<object>("Type"));
+                OutputProtocol type = (OutputProtocol)Convert.ToInt32(row.Field<object>("Type"));
 
                 OutputStream outputStream = new OutputStream
                 {
@@ -1047,7 +1096,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     LoadOrder = Convert.ToInt32(row.Field<object>("LoadOrder")),
                     Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                     NodeName = row.Field<string>("NodeName"),
-                    TypeName = type == 1 ? "IEEE C37.118" : type == 2 ? "BPA" : "IEC 61850-90-5",
                     IgnoreBadTimeStamps = Convert.ToBoolean(row.Field<object>("IgnoreBadTimeStamps")),
                     TimeResolution = Convert.ToInt32(row.Field<object>("TimeResolution")),
                     AllowPreemptivePublishing = Convert.ToBoolean(row.Field<object>("AllowPreemptivePublishing")),
