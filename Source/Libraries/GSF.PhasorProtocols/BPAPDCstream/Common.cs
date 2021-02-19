@@ -228,7 +228,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
     public enum PMUStatusFlags : byte
     {
         /// <summary>
-        /// Synchonization is invalid.
+        /// Synchronization is invalid.
         /// </summary>
         SyncInvalid = (byte)Bits.Bit00,
         /// <summary>

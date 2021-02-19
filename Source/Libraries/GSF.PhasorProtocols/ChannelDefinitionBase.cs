@@ -155,9 +155,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// The base implementation assumes scale/bit of 10^-5.
         /// </remarks>
-        public virtual double ScalePerBit =>
-            // Typical scale/bit is 10^-5
-            0.00001D;
+        public virtual double ScalePerBit => 0.00001D; // Typical scale/bit is 10^-5
 
         /// <summary>
         /// Gets or sets the integer scaling value of this <see cref="ChannelDefinitionBase"/>.
@@ -178,11 +176,9 @@ namespace GSF.PhasorProtocols
         /// Gets the maximum value for the <see cref="ScalingValue"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
         /// <remarks>
-        /// The base implementation accomodates maximum scaling factor of 24-bits of space.
+        /// The base implementation accommodates maximum scaling factor of 24-bits of space.
         /// </remarks>
-        public virtual uint MaximumScalingValue =>
-            // Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
-            UInt24.MaxValue;
+        public virtual uint MaximumScalingValue => UInt24.MaxValue; // Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
 
         /// <summary>
         /// Gets or sets the label of this <see cref="ChannelDefinitionBase"/>.
@@ -212,9 +208,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        public virtual int MaximumLabelLength =>
-            // Typical label length is 16 characters
-            16;
+        public virtual int MaximumLabelLength => 16; // Typical label length is 16 characters
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
@@ -340,6 +334,7 @@ namespace GSF.PhasorProtocols
         /// <returns>A 32-bit signed integer hash code.</returns>
         public override int GetHashCode()
         {
+            // ReSharper disable once NonReadonlyMemberInGetHashCode
             return m_index.GetHashCode();
         }
 

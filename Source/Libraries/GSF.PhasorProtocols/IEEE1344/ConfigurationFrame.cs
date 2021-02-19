@@ -129,7 +129,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             get => CommonHeader.Timestamp;
             set
             {
-                // Keep timestamp updates synchrnonized...
+                // Keep timestamp updates synchronized...
                 CommonHeader.Timestamp = value;
                 base.Timestamp = value;
             }

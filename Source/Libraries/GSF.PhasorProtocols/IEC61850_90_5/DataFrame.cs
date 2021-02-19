@@ -169,7 +169,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             get => CommonHeader.Timestamp;
             set
             {
-                // Keep timestamp updates synchrnonized...
+                // Keep timestamp updates synchronized...
                 CommonHeader.Timestamp = value;
                 base.Timestamp = value;
             }
