@@ -640,7 +640,6 @@ namespace GSF.TimeSeries.Transport
             // Check that OS endian-order matches endian-order of compressed data
             if (!(BitConverter.IsLittleEndian && (flags & DataPacketFlags.LittleEndianCompression) > 0))
             {
-                // TODO: Set a flag, e.g., Endianness decompressAs, to pass into pattern decompressor so it
                 // can be modified to decompress a payload that is in a non-native Endian order
                 throw new NotImplementedException("Cannot currently decompress payload that is not in native endian-order.");
             }
