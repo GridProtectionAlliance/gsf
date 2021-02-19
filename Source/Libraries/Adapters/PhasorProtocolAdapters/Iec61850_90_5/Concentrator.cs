@@ -294,13 +294,14 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                 ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency)
                 {
                     // Update other cell level attributes
-                    StationName = baseCell.StationName,
-                    IDLabel = baseCell.IDLabel,
                     PhasorDataFormat = baseCell.PhasorDataFormat,
                     PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat,
                     FrequencyDataFormat = baseCell.FrequencyDataFormat,
                     AnalogDataFormat = baseCell.AnalogDataFormat
                 };
+
+                newCell.StationName = baseCell.StationName.TruncateRight(newCell.MaximumStationNameLength);
+                newCell.IDLabel = baseCell.IDLabel.TruncateRight(newCell.IDLabelLength);
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
