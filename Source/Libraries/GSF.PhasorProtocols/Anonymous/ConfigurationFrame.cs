@@ -79,6 +79,11 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public new ConfigurationCellCollection Cells => base.Cells as ConfigurationCellCollection;
 
+        /// <summary>
+        /// Gets or sets name of this configuration frame as assigned or useful in an end-use context.
+        /// </summary>
+        public virtual string Name { get; set; }
+
         #endregion
 
         #region [ Methods ]

@@ -890,7 +890,7 @@ namespace PhasorProtocolAdapters
             const int LabelLength = 16;
 
             // Define a protocol independent configuration frame
-            BaseConfigurationFrame = new ConfigurationFrame(IDCode, DateTime.UtcNow.Ticks, (ushort)FramesPerSecond);
+            BaseConfigurationFrame = new ConfigurationFrame(IDCode, DateTime.UtcNow.Ticks, (ushort)FramesPerSecond) { Name = Name };
             Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             // Define configuration cells (i.e., PMU's that will appear in outgoing data stream)

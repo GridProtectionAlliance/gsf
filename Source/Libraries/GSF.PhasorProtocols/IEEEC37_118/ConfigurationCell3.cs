@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
@@ -110,7 +111,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets PMU_LON value for this <see cref="ConfigurationCell3"/>.
         /// </summary>
-        public float Logitude { get; set; } = float.PositiveInfinity;
+        public float Longitude { get; set; } = float.PositiveInfinity;
 
         /// <summary>
         /// Gets or sets PMU_ELEV value for this <see cref="ConfigurationCell3"/>.

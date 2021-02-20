@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -154,12 +155,8 @@ namespace GSF.PhasorProtocols
         /// <param name="value">New nominal <see cref="LineFrequency"/> for <see cref="IFrequencyDefinition"/> elements.</param>
         public virtual void SetNominalFrequency(LineFrequency value)
         {
-
             foreach (IConfigurationCell cell in Cells)
-            {
                 cell.NominalFrequency = value;
-            }
-
         }
 
         /// <summary>

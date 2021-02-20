@@ -32,6 +32,7 @@ using System.Runtime.Serialization;
 using GSF.Parsing;
 using GSF.TimeSeries;
 
+// ReSharper disable NonReadonlyMemberInGetHashCode
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -58,7 +59,7 @@ namespace GSF.PhasorProtocols
         private ushort m_idCode;                            // Numeric identifier of this frame of data (e.g., ID code of the PDC)
         private readonly IChannelCellCollection<T> m_cells; // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
         private Ticks m_timestamp;                          // Time, represented as 100-nanosecond ticks, of this frame of data
-        private ShortTime m_lifespan;                       // Elapsed time since creation of this frame of data
+        private readonly ShortTime m_lifespan;              // Elapsed time since creation of this frame of data
         private SourceChannel m_source;                     // Defines source channel (e.g., data or command) for channel frame
         private bool m_trustHeaderLength;                   // Determines if parsed header lengths should be trusted (normally true)
         private bool m_validateCheckSum;                    // Allows bypass of check-sum validation if devices are behaving badly
@@ -113,10 +114,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
-        public abstract FundamentalFrameType FrameType
-        {
-            get;
-        }
+        public abstract FundamentalFrameType FrameType { get; }
 
         /// <summary>
         /// Gets or sets the data source identifier for this <see cref="ChannelFrameBase{T}"/>.
@@ -229,13 +227,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         public int SortedMeasurements
         {
-            get
-            {
-                if (m_sortedMeasurements == -1)
-                    return Measurements.Count;
-
-                return m_sortedMeasurements;
-            }
+            get => m_sortedMeasurements == -1 ? Measurements.Count : m_sortedMeasurements;
             set => m_sortedMeasurements = value;
         }
 
@@ -331,11 +323,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                if (Cells is null)
-                    baseAttributes.Add("Total Cells", "null");
-                else
-                    baseAttributes.Add("Total Cells", Cells.Count.ToString());
-
+                baseAttributes.Add("Total Cells", Cells is null ? "null" : Cells.Count.ToString());
                 baseAttributes.Add("Fundamental Frame Type", $"{(int)FrameType}: {FrameType}");
                 baseAttributes.Add("ID Code", IDCode.ToString());
                 baseAttributes.Add("Published", Published.ToString());
@@ -405,13 +393,12 @@ namespace GSF.PhasorProtocols
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
             IChannelFrameParsingState<T> state = State;
-            T cell;
             int index = startIndex;
 
             // Parse all frame cells
             for (int x = 0; x < state.CellCount; x++)
             {
-                cell = state.CreateNewCell(this, state, x, buffer, index, out int parsedLength);
+                T cell = state.CreateNewCell(this, state, x, buffer, index, out int parsedLength);
                 m_cells.Add(cell);
                 index += parsedLength;
             }
@@ -540,11 +527,8 @@ namespace GSF.PhasorProtocols
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A 32-bit signed integer hash code.</returns>
-        public override int GetHashCode()
-        {
-            // ReSharper disable once NonReadonlyMemberInGetHashCode
-            return m_timestamp.GetHashCode();
-        }
+        public override int GetHashCode() => 
+            m_timestamp.GetHashCode();
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.

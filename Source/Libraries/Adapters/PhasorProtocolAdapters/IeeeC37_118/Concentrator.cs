@@ -31,22 +31,30 @@
 
 using GSF;
 using GSF.Communication;
+using GSF.Diagnostics;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
 using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Model;
+using GSF.Units.EE;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
-using GSF.Diagnostics;
-using GSF.Units.EE;
+using GSF.Data;
+using GSF.Data.Model;
 using AnalogDefinition = GSF.PhasorProtocols.IEEEC37_118.AnalogDefinition;
 using ConfigurationCell = GSF.PhasorProtocols.IEEEC37_118.ConfigurationCell;
-using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
+using DigitalDefinition = GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition;
 using FrequencyDefinition = GSF.PhasorProtocols.IEEEC37_118.FrequencyDefinition;
 using PhasorDefinition = GSF.PhasorProtocols.IEEEC37_118.PhasorDefinition;
+using AnonDigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
+using AnonConfigurationCell = GSF.PhasorProtocols.Anonymous.ConfigurationCell;
+using AnonConfigurationFrame = GSF.PhasorProtocols.Anonymous.ConfigurationFrame;
+using Measurement = GSF.TimeSeries.Model.Measurement;
 
 // ReSharper disable PossibleInvalidCastExceptionInForeachLoop
 namespace PhasorProtocolAdapters.IeeeC37_118
@@ -58,8 +66,12 @@ namespace PhasorProtocolAdapters.IeeeC37_118
     {
         #region [ Members ]
 
+        // Constants
+        private const string ConfigFrame3CacheName = "{0}-CFG3";
+
         // Fields
-        private ConfigurationFrame2 m_configurationFrame;
+        private ConfigurationFrame2 m_configurationFrame2;
+        private ConfigurationFrame3 m_configurationFrame3;
         private bool m_configurationChanged;
         private Ticks m_notificationStartTime;
 
@@ -78,6 +90,32 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         public bool ValidateIDCode { get; set; }
 
         /// <summary>
+        /// Gets or sets default PMU_ELEV value to assign to PMUs in configuration 3 frames.
+        /// </summary>
+        public float Elevation { get; set; } = float.PositiveInfinity;
+
+        /// <summary>
+        /// Gets or sets default SVC_CLASS value, 'M' or 'P', to assign to PMUs in configuration 3 frames.
+        /// </summary>
+        public char ServiceClass { get; set; } = 'M';
+
+        /// <summary>
+        /// Gets or sets default WINDOW value to assign to PMUs in configuration 3 frames.
+        /// </summary>
+        public int Window { get; set; }
+
+        /// <summary>
+        /// Gets or sets default GRP_DLY value to assign to PMUs in configuration 3 frames.
+        /// </summary>
+        public int GroupDelay { get; set; }
+
+        /// <summary>
+        /// Gets or sets target output type for configuration frames. For example, setting property to
+        /// <see cref="DraftRevision.Std2011"/> will target <see cref="ConfigurationFrame3"/> outputs.
+        /// </summary>
+        public DraftRevision TargetConfigurationType { get; set; } = DraftRevision.Std2005;
+
+        /// <summary>
         /// Returns the detailed status of this <see cref="Concentrator"/>.
         /// </summary>
         public override string Status
@@ -86,11 +124,18 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendLine("           Output protocol: IEEE C37.118");
-                status.AppendFormat("      Configured time base: {0}", TimeBase);
-                status.AppendLine();
-                status.AppendFormat("        Validating ID code: {0}", ValidateIDCode);
-                status.AppendLine();
+                status.AppendLine($"           Output Protocol: IEEE C37.118-{TargetConfigurationType.ToVersionString()}");
+                status.AppendLine($"      Configured Time Base: {TimeBase}");
+                status.AppendLine($"        Validating ID Code: {ValidateIDCode}");
+
+                if (TargetConfigurationType >= DraftRevision.Std2011)
+                {
+                    status.AppendLine($"     Default PMU Elevation: {Elevation}");
+                    status.AppendLine($" Default PMU Service Class: {ServiceClass}");
+                    status.AppendLine($" Default PMU Window Length: {Window:N0}µs");
+                    status.AppendLine($"   Default PMU Group Delay: {GroupDelay:N0}µs");
+                }
+                
                 status.Append(base.Status);
 
                 return status.ToString();
@@ -109,9 +154,27 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             Dictionary<string, string> settings = Settings;
 
             // Load optional parameters
-            TimeBase = settings.TryGetValue("timebase", out string setting) ? uint.Parse(setting) : 16777215U;
+            TimeBase = settings.TryGetValue(nameof(TimeBase), out string setting) ? uint.Parse(setting) : 16777215U;
+            ValidateIDCode = settings.TryGetValue(nameof(ValidateIDCode), out setting) && setting.ParseBoolean();
 
-            ValidateIDCode = settings.TryGetValue("validateIDCode", out setting) && setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(TargetConfigurationType), out setting) && Enum.TryParse(setting, out DraftRevision revision))
+                TargetConfigurationType = revision;
+
+            // Parse default IEEE C37.118 Configuration 3 parameters
+            if ((settings.TryGetValue(nameof(Elevation), out setting) || settings.TryGetValue("PMU_ELEV", out setting)) && float.TryParse(setting, out float elevation))
+                Elevation = elevation;
+
+            if ((settings.TryGetValue(nameof(ServiceClass), out setting) || settings.TryGetValue("SVC_CLASS", out setting)) && char.TryParse(setting, out char serviceClass))
+                ServiceClass = serviceClass;
+
+            if (!ServiceClass.IsAnyOf(new[] { 'M', 'P' }))
+                ServiceClass = 'M';
+
+            if (settings.TryGetValue(nameof(Window), out setting) && int.TryParse(setting, out int window))
+                Window = window;
+
+            if ((settings.TryGetValue(nameof(GroupDelay), out setting) || settings.TryGetValue("GRP_DLY", out setting)) && int.TryParse(setting, out int groupDelay))
+                GroupDelay = groupDelay;
 
             // Start base class initialization
             base.Initialize();
@@ -120,18 +183,22 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <summary>
         /// Creates a new IEEE C37.118 specific <see cref="IConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
-        /// <param name="baseConfigurationFrame">Protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="ConfigurationFrame"/>.</param>
         /// <returns>A new IEEE C37.118 specific <see cref="IConfigurationFrame"/>.</returns>
         protected override IConfigurationFrame CreateNewConfigurationFrame(ConfigurationFrame baseConfigurationFrame)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
-            ConfigurationFrame2 configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, TimeBase, NominalFrequency);
+            ConfigurationFrame2 configurationFrame2 = CreateConfigurationFrame2(baseConfigurationFrame, TimeBase, NominalFrequency);
+
+            // Create a new IEEE C37.118 configuration frame 3 using base configuration
+            ConfigurationFrame3 configurationFrame3 = CreateConfigurationFrame3(baseConfigurationFrame, TimeBase, NominalFrequency, this);
 
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
-            bool configurationChanged = m_configurationFrame != null;
+            bool configurationChanged = !(m_configurationFrame2 is null);
 
-            // Cache new IEEE C7.118 for later use
-            Interlocked.Exchange(ref m_configurationFrame, configurationFrame);
+            // Cache new IEEE C7.118 configuration frames for later use
+            Interlocked.Exchange(ref m_configurationFrame2, configurationFrame2);
+            Interlocked.Exchange(ref m_configurationFrame3, configurationFrame3);
 
             if (configurationChanged)
             {
@@ -140,7 +207,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 m_notificationStartTime = DateTime.UtcNow.Ticks;
             }
 
-            return configurationFrame;
+            return configurationFrame2;
         }
 
         /// <summary>
@@ -157,7 +224,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         protected override IFrame CreateNewFrame(Ticks timestamp)
         {
             // We create a new IEEE C37.118 data frame based on current configuration frame
-            DataFrame dataFrame = CreateDataFrame(timestamp, m_configurationFrame);
+            DataFrame dataFrame = CreateDataFrame(timestamp, m_configurationFrame2);
             bool configurationChanged = false;
 
             if (m_configurationChanged)
@@ -180,6 +247,37 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         }
 
         /// <summary>
+        /// Execute the publish operation for a configuration frame.
+        /// </summary>
+        /// <param name="timestamp">Timestamp to use for published configuration frame.</param>
+        /// <returns>Total length of published bytes.</returns>
+        /// <remarks>
+        /// Overriding to publish desired target configuration frame, that is, type 2 or 3.
+        /// </remarks>
+        protected override int PublishConfigFrame(Ticks timestamp)
+        {
+            return TargetConfigurationType == DraftRevision.Std2011 ? 
+                PublishConfigFrame3(frame => PublishChannel.MulticastAsync(frame, 0, frame.Length), timestamp) : 
+                base.PublishConfigFrame(timestamp);
+        }
+
+        private int PublishConfigFrame3(Action<byte[]> publishFrame, long timestamp = 0)
+        {
+            int length = 0;
+
+            if (timestamp > 0)
+                m_configurationFrame3.Timestamp = timestamp;
+
+            foreach (byte[] frame in m_configurationFrame3.BinaryImageFrames)
+            {
+                publishFrame(frame);
+                length += frame.Length;
+            }
+
+            return length;
+        }
+
+        /// <summary>
         /// Handles incoming commands from devices connected over the command channel.
         /// </summary>
         /// <param name="clientID">Guid of client that sent the command.</param>
@@ -195,47 +293,55 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 IServer commandChannel = (IServer)CommandChannel ?? DataChannel;
 
                 // Validate incoming ID code if requested
-                if (!ValidateIDCode || commandFrame.IDCode == IDCode)
+                if (ValidateIDCode && commandFrame.IDCode != IDCode)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");
+                }
+                else
                 {
                     switch (commandFrame.Command)
                     {
                         case DeviceCommand.SendConfigurationFrame1:
-                            if (commandChannel != null)
+                            if (!(commandChannel is null))
                             {
-                                ConfigurationFrame1 configFrame1 = CastToConfigurationFrame1(m_configurationFrame);
+                                ConfigurationFrame1 configFrame1 = CastToConfigurationFrame1(m_configurationFrame2);
                                 commandChannel.SendToAsync(clientID, configFrame1.BinaryImage, 0, configFrame1.BinaryLength);
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - type 1 config frame was returned.");
                             }
+
                             break;
                         case DeviceCommand.SendConfigurationFrame2:
-                            if (commandChannel != null)
+                            if (!(commandChannel is null))
                             {
-                                commandChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength);
+                                commandChannel.SendToAsync(clientID, m_configurationFrame2.BinaryImage, 0, m_configurationFrame2.BinaryLength);
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - type 2 config frame was returned.");
                             }
+
                             break;
                         case DeviceCommand.SendConfigurationFrame3:
-                            if (commandChannel != null)
+                            if (!(commandChannel is null))
                             {
-                                ConfigurationFrame3 configFrame3 = CastToConfigurationFrame3(m_configurationFrame);
-                                commandChannel.SendToAsync(clientID, configFrame3.BinaryImage, 0, configFrame3.BinaryLength);
+                                PublishConfigFrame3(frame => commandChannel.SendToAsync(clientID, frame, 0, frame.Length));
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - type 3 config frame was returned.");
                             }
+
                             break;
                         case DeviceCommand.SendHeaderFrame:
-                            if (commandChannel != null)
+                            if (!(commandChannel is null))
                             {
                                 StringBuilder status = new StringBuilder();
-                                status.Append("IEEE C37.118 Concentrator:\r\n\r\n");
-                                status.AppendFormat(" Auto-publish config frame: {0}\r\n", AutoPublishConfigurationFrame);
-                                status.AppendFormat("   Auto-start data channel: {0}\r\n", AutoStartDataChannel);
-                                status.AppendFormat("       Data stream ID code: {0}\r\n", IDCode);
-                                status.AppendFormat("       Derived system time: {0:yyyy-MM-dd HH:mm:ss.fff} UTC\r\n", RealTime);
+                                status.AppendLine($"IEEE C37.118 Concentrator:{Environment.NewLine}");
+                                status.AppendLine($" Revision for config frame: {TargetConfigurationType}");
+                                status.AppendLine($" Auto-publish config frame: {AutoPublishConfigurationFrame}");
+                                status.AppendLine($"   Auto-start data channel: {AutoStartDataChannel}");
+                                status.AppendLine($"       Data stream ID code: {IDCode:N0}");
+                                status.AppendLine($"       Derived system time: {RealTime:yyyy-MM-dd HH:mm:ss.fff} UTC");
 
                                 HeaderFrame headerFrame = new HeaderFrame(status.ToString());
                                 commandChannel.SendToAsync(clientID, headerFrame.BinaryImage, 0, headerFrame.BinaryLength);
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"SendHeaderFrame\" from \"{connectionID}\" - frame was returned.");
                             }
+
                             break;
                         case DeviceCommand.EnableRealTimeData:
                             // Only responding to stream control command if auto-start data channel is false
@@ -248,6 +354,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                             {
                                 OnStatusMessage(MessageLevel.Info, $"Request for \"EnableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
+
                             break;
                         case DeviceCommand.DisableRealTimeData:
                             // Only responding to stream control command if auto-start data channel is false
@@ -260,15 +367,12 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                             {
                                 OnStatusMessage(MessageLevel.Info, $"Request for \"DisableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
+
                             break;
                         default:
                             OnStatusMessage(MessageLevel.Info, $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported.");
                             break;
                     }
-                }
-                else
-                {
-                    OnStatusMessage(MessageLevel.Warning, $"Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");                    
                 }
             }
             catch (Exception ex)
@@ -277,66 +381,312 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             }
         }
 
+        /// <summary>
+        /// Serialize configuration frames, types 2 and 3, to cache folder for later use (if needed).
+        /// </summary>
+        /// <param name="_"></param>
+        /// <param name="name">Name to use when caching the configuration.</param>
+        protected override void CacheConfigurationFrame(IConfigurationFrame _, string name)
+        {
+            // Cache configuration frame for reference
+            OnStatusMessage(MessageLevel.Info, "Caching configuration frame...");
+
+            try
+            {
+                void exceptionHandler(Exception ex) => OnProcessException(MessageLevel.Info, ex);
+
+                // Cache both configuration 2 and 3 frames
+                AnonConfigurationFrame.Cache(m_configurationFrame2, exceptionHandler, name);
+                AnonConfigurationFrame.Cache(m_configurationFrame3, exceptionHandler, string.Format(ConfigFrame3CacheName, name));
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+            }
+        }
+
         #endregion
 
         #region [ Static ]
+
+        // Static Fields
+        private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(Concentrator), MessageClass.Component);
 
         // Static Methods       
 
         /// <summary>
         /// Creates a new IEEE C37.118 <see cref="ConfigurationFrame2"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
-        /// <param name="baseConfigurationFrame">Protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="AnonConfigurationFrame"/>.</param>
         /// <param name="timeBase">Timebase to use for fraction second resolution.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> to use for the new <see cref="ConfigurationFrame2"/></param>.
         /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame2"/>.</returns>
-        public static ConfigurationFrame2 CreateConfigurationFrame(ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
+        public static ConfigurationFrame2 CreateConfigurationFrame2(ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
             ConfigurationFrame2 configurationFrame = new ConfigurationFrame2(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
-            foreach (GSF.PhasorProtocols.Anonymous.ConfigurationCell baseCell in baseConfigurationFrame.Cells)
+            foreach (AnonConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 configuration cell (i.e., a PMU configuration)
                 ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency)
                 {
                     // Update other cell level attributes
-                    StationName = baseCell.StationName,
-                    IDLabel = baseCell.IDLabel,
                     PhasorDataFormat = baseCell.PhasorDataFormat,
                     PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat,
                     FrequencyDataFormat = baseCell.FrequencyDataFormat,
                     AnalogDataFormat = baseCell.AnalogDataFormat
                 };
 
+                newCell.StationName = baseCell.StationName.TruncateRight(newCell.MaximumStationNameLength);
+                newCell.IDLabel = baseCell.IDLabel.TruncateRight(newCell.IDLabelLength);
+
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
-                {
                     newCell.PhasorDefinitions.Add(new PhasorDefinition(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
-                }
 
                 // Add frequency definition
                 newCell.FrequencyDefinition = new FrequencyDefinition(newCell, baseCell.FrequencyDefinition.Label);
 
                 // Add analog definitions
                 foreach (IAnalogDefinition analogDefinition in baseCell.AnalogDefinitions)
-                {
                     newCell.AnalogDefinitions.Add(new AnalogDefinition(newCell, analogDefinition.Label, analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
-                }
 
                 // Add digital definitions
                 foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
                 {
                     // Attempt to derive user defined mask value if available
-                    DigitalDefinition anonymousDigitalDefinition = digitalDefinition as DigitalDefinition;
+                    AnonDigitalDefinition anonDigitalDefinition = digitalDefinition as AnonDigitalDefinition;
 
-                    uint maskValue = anonymousDigitalDefinition?.MaskValue ?? 0U;
+                    uint maskValue = anonDigitalDefinition?.MaskValue ?? 0U;
 
-                    newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
+                    newCell.DigitalDefinitions.Add(new DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
 
                 // Add new PMU configuration (cell) to protocol specific configuration frame
                 configurationFrame.Cells.Add(newCell);
+            }
+
+            return configurationFrame;
+        }
+
+        /// <summary>
+        /// Creates a new IEEE C37.118 <see cref="ConfigurationFrame3"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
+        /// </summary>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="AnonConfigurationFrame"/>.</param>
+        /// <param name="timeBase">Timebase to use for fraction second resolution.</param>
+        /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> to use for the new <see cref="ConfigurationFrame3"/></param>.
+        /// <param name="parent">Gets reference to parent <see cref="Concentrator"/> instance, if available.</param>
+        /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame3"/>.</returns>
+        /// <remarks>
+        /// When <paramref name="parent"/> reference is not available, ancillary configuration frame 3 data will be attempted to be loaded from last cached
+        /// instance of the configuration matching the defined <see cref="ConfigurationFrame.Name"/> of the <paramref name="baseConfigurationFrame"/>.
+        /// </remarks>
+        public static ConfigurationFrame3 CreateConfigurationFrame3(ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency, Concentrator parent = null)
+        {
+            // Create a new IEEE C37.118 configuration frame 3 using base configuration
+            ConfigurationFrame3 configurationFrame = new ConfigurationFrame3(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
+
+            foreach (AnonConfigurationCell baseCell in baseConfigurationFrame.Cells)
+            {
+                // Create a new IEEE C37.118 configuration cell3 (i.e., a PMU configuration)
+                ConfigurationCell3 newCell = new ConfigurationCell3(configurationFrame, baseCell.IDCode, nominalFrequency)
+                {
+                    // Update other cell level attributes
+                    PhasorDataFormat = baseCell.PhasorDataFormat,
+                    PhasorCoordinateFormat = baseCell.PhasorCoordinateFormat,
+                    FrequencyDataFormat = baseCell.FrequencyDataFormat,
+                    AnalogDataFormat = baseCell.AnalogDataFormat
+                };
+
+                newCell.StationName = baseCell.StationName.TruncateRight(newCell.MaximumStationNameLength);
+                newCell.IDLabel = baseCell.IDLabel.TruncateRight(newCell.IDLabelLength);
+
+                // Add phasor definitions
+                foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
+                    newCell.PhasorDefinitions.Add(new PhasorDefinition3(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
+
+                // Add frequency definition
+                newCell.FrequencyDefinition = new FrequencyDefinition(newCell, baseCell.FrequencyDefinition.Label);
+
+                // Add analog definitions
+                foreach (IAnalogDefinition analogDefinition in baseCell.AnalogDefinitions)
+                    newCell.AnalogDefinitions.Add(new AnalogDefinition3(newCell, analogDefinition.Label, analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
+
+                // Add digital definitions
+                foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
+                {
+                    // Attempt to derive user defined mask value if available
+                    AnonDigitalDefinition anonDigitalDefinition = digitalDefinition as AnonDigitalDefinition;
+
+                    uint maskValue = anonDigitalDefinition?.MaskValue ?? 0U;
+
+                    newCell.DigitalDefinitions.Add(new DigitalDefinition3(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
+                }
+
+                // Add new PMU configuration (cell) to protocol specific configuration frame
+                configurationFrame.Cells.Add(newCell);
+            }
+
+            bool loadFromCache = parent is null;
+
+            // When parent reference is null, loading from cached configuration is still an option. This will allow this
+            // CreateConfigurationFrame3 function to still be usable in a use cases outside of a concentrator context.
+            if (!loadFromCache)
+            {
+                try
+                {
+                    // Populate extra fields for config frame 3, like the G_PMU_ID guid value. Note that all of this information can be
+                    // derived from data in the database configuration, however it is not currently cached in the runtime configuration
+                    // as defined through the ConfigurationEntity table. As a result it is necessary to open a database connection to
+                    // acquire the needed data. Although this data is considered ancillary, it may be important in some configurations,
+                    // so failures to connect to database will fall-back on info the previously cached IEEE C37.118-2011 config frame.
+                    using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                    {
+                        // Since output streams are completely virtualized, there is no guarantee that what is in an output stream will
+                        // ever map back to a source device. They often do map back, but even the database makes no assumptions on device
+                        // mappings, everything in an output stream is mapped by measurement and device information is considered temporal
+                        // and dynamic. However, needed information needed for output devices, i.e, ConfigurationCell3 instances, from the
+                        // database will be defined in the original source device. The only concrete mapping from source device to output
+                        // devices are the measurements - so this will be the path to mapping back to the source. Since all output streams
+                        // will always have a single frequency measurement, this should be as good as any for finding our way back to the
+                        // original associated source device, this assuming there was one. If no source device exists, we will fall back
+                        // on default values.
+
+                        TableOperations<Device> deviceTable = new TableOperations<Device>(database);
+                        TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(database);
+
+                        // Search signal reference map for frequencies
+                        foreach (KeyValuePair<MeasurementKey, SignalReference[]> kvp in parent.SignalReferences)
+                        {
+                            MeasurementKey key = kvp.Key;
+                            SignalReference[] signals = kvp.Value;
+
+                            foreach (SignalReference signal in signals)
+                            {
+                                if (signal.Kind == SignalKind.Frequency)
+                                {
+                                    // Validate that signal reference has a matching device target, i.e., cell, in the configuration frame
+                                    if (!(configurationFrame.Cells.FirstOrDefault(searchCell => 
+                                        searchCell.StationName.Equals(signal.Acronym, StringComparison.OrdinalIgnoreCase)) is ConfigurationCell3 cell))
+                                        continue;
+
+                                    bool foundSource = false;
+
+                                    // Lookup associated frequency measurement
+                                    Measurement measurement = measurementTable.QueryRecordWhere("PointID = {0}", key.ID);
+
+                                    if (!(measurement?.DeviceID is null))
+                                    {
+                                        // Lookup frequency's parent device
+                                        Device device = deviceTable.QueryRecordWhere("ID = {0}", measurement.DeviceID);
+
+                                        if (!(device is null))
+                                        {
+                                            // Assign common time-series configuration values
+                                            cell.GlobalID = device.UniqueID;
+                                            cell.Latitude = (float?)device.Latitude ?? float.PositiveInfinity;
+                                            cell.Longitude = (float?)device.Longitude ?? float.PositiveInfinity;
+
+                                            // Assign new configuration frame 3 specific values
+                                            Dictionary<string, string> settings = device.ConnectionString?.ParseKeyValuePairs() ?? new Dictionary<string, string>();
+
+                                            cell.Elevation = (settings.TryGetValue(nameof(Elevation), out string setting) || settings.TryGetValue("PMU_ELEV", out setting)) && float.TryParse(setting, out float elevation) ?
+                                                elevation : parent.Elevation;
+
+                                            cell.ServiceClass = (settings.TryGetValue(nameof(ServiceClass), out setting) || settings.TryGetValue("SVC_CLASS", out setting)) && char.TryParse(setting, out char serviceClass) ?
+                                                serviceClass : parent.ServiceClass;
+
+                                            cell.Window = settings.TryGetValue(nameof(Window), out setting) && int.TryParse(setting, out int window) ?
+                                                window : parent.Window;
+
+                                            cell.GroupDelay = (settings.TryGetValue(nameof(GroupDelay), out setting) || settings.TryGetValue("GRP_DLY", out setting)) && int.TryParse(setting, out int groupDelay) ?
+                                                groupDelay : parent.GroupDelay;
+
+                                            foundSource = true;
+                                        }
+                                    }
+
+                                    if (!foundSource)
+                                    {
+                                        // Assign default values
+                                        cell.GlobalID = Guid.Empty;
+                                        cell.Latitude = float.PositiveInfinity;
+                                        cell.Longitude = float.PositiveInfinity;
+                                        cell.Elevation = parent.Elevation;
+                                        cell.ServiceClass = parent.ServiceClass;
+                                        cell.Window = parent.Window;
+                                        cell.GroupDelay = parent.GroupDelay;
+                                    }
+
+                                    foreach (PhasorDefinition3 phasor in cell.PhasorDefinitions)
+                                    {
+                                        // TODO: Now apply phasor flags and type info
+                                        // Check measurement adder / multiplier for bit flags
+                                        // If frame rate for device does not match / upsampled / downsampled
+                                        // Assign phase (add to anon phasor def - already available in metadata)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    loadFromCache = true;
+
+                    s_log.Publish(MessageLevel.Warning, MessageFlags.UsageIssue, "CFG3 Ancillary Data Load from Database",
+                        "Failed while attempting load ancillary IEEE C37.118-2011 configuration frame 3 info from database",
+                        "System will attempt to load info from any previously cached config frame", ex);
+                }
+            }
+
+            if (loadFromCache)
+            {
+                try
+                {
+                    // If database load did not succeed, fall back on trying to load from a previously cached config 3 frame
+                    if (!(AnonConfigurationFrame.GetCachedConfiguration(string.Format(ConfigFrame3CacheName, baseConfigurationFrame.Name), true) is ConfigurationFrame3 cachedConfigFrame))
+                        throw new NullReferenceException("Failed to load cached configuration frame.");
+
+                    foreach (ConfigurationCell3 cell in configurationFrame.Cells)
+                    {
+                        // Try to match cached cell to target cell by ID code first
+                        if (!(cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.IDCode == cell.IDCode) is ConfigurationCell3 cachedCell))
+                        {
+                            // If ID code match failed, try match by station name 
+                            cachedCell = cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.StationName.Equals(cell.StationName)) as ConfigurationCell3;
+
+                            if (cachedCell is null)
+                                continue;
+                        }
+
+                        // The following values have long been available in GSF time-series configuration
+                        cell.GlobalID = cachedCell.GlobalID;
+                        cell.Latitude = cachedCell.Latitude;
+                        cell.Longitude = cachedCell.Longitude;
+
+                        // The following values are new to GSF time-series configuration, so we fall back on configured defaults if needed
+                        cell.Elevation = !double.IsInfinity(cachedCell.Elevation) || parent is null ? cachedCell.Elevation : parent.Elevation;
+                        cell.ServiceClass = cachedCell.ServiceClass.IsAnyOf(new[] { 'M', 'P' }) || parent is null ? cachedCell.ServiceClass : parent.ServiceClass;
+                        cell.Window = cachedCell.Window == 0 || parent is null ? cachedCell.Window : parent.Window;
+                        cell.GroupDelay = cachedCell.GroupDelay == 0 || parent is null ? cachedCell.GroupDelay : parent.GroupDelay;
+
+                        foreach (PhasorDefinition3 phasor in cell.PhasorDefinitions)
+                        {
+                            // Try to match by label
+                            // TODO: Now apply phasor flags and type info
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    s_log.Publish(MessageLevel.Error, MessageFlags.UsageIssue, "CFG3 Ancillary Data Load from Cached Config",
+                        "Failed while attempting load ancillary IEEE C37.118-2011 configuration frame 3 from last cached instance",
+                        "System cannot load ancillary data for configuration frame 3 instance", ex);
+                }
             }
 
             return configurationFrame;
@@ -378,7 +728,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             ConfigurationFrame1 derivedFrame;
 
             // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
-            if (sourceFrame.DraftRevision == DraftRevision.Draft7)
+            if (sourceFrame.DraftRevision == DraftRevision.Std2005)
                 derivedFrame = new ConfigurationFrame1(sourceFrame.Timebase, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
             else
                 derivedFrame = new ConfigurationFrame1Draft6(sourceFrame.Timebase, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
@@ -417,65 +767,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                 // Create equivalent derived digital definitions
                 foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                    derivedCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
-
-                // Add cell to frame
-                derivedFrame.Cells.Add(derivedCell);
-            }
-
-            return derivedFrame;
-        }
-
-        /// <summary>
-        /// Converts given IEEE C37.118 type 2 <paramref name="sourceFrame"/> into a type 3 configuration frame.
-        /// </summary>
-        /// <param name="sourceFrame">Source configuration frame.</param>
-        /// <returns>New <see cref="ConfigurationFrame3"/> frame based on source configuration.</returns>
-        /// <remarks>
-        /// This function allow an explicit downcast of a typical IEEE C37.118 configuration type 2 frame to a type 3 frame.
-        /// </remarks>
-        public static ConfigurationFrame3 CastToConfigurationFrame3(ConfigurationFrame2 sourceFrame)
-        {
-            ConfigurationFrame3 derivedFrame;
-
-            // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
-            derivedFrame = new ConfigurationFrame3(sourceFrame.Timebase, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
-
-            foreach (ConfigurationCell sourceCell in sourceFrame.Cells)
-            {
-                // Create new derived configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
-
-                string stationName = sourceCell.StationName;
-                string idLabel = sourceCell.IDLabel;
-
-                if (!string.IsNullOrWhiteSpace(stationName))
-                    derivedCell.StationName = stationName.TruncateLeft(derivedCell.MaximumStationNameLength);
-
-                if (!string.IsNullOrWhiteSpace(idLabel))
-                    derivedCell.IDLabel = idLabel.TruncateLeft(derivedCell.IDLabelLength);
-
-                derivedCell.PhasorCoordinateFormat = sourceCell.PhasorCoordinateFormat;
-                derivedCell.PhasorAngleFormat = sourceCell.PhasorAngleFormat;
-                derivedCell.PhasorDataFormat = sourceCell.PhasorDataFormat;
-                derivedCell.FrequencyDataFormat = sourceCell.FrequencyDataFormat;
-                derivedCell.AnalogDataFormat = sourceCell.AnalogDataFormat;
-
-                // Create equivalent derived phasor definitions
-                foreach (PhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
-
-                // Create equivalent derived frequency definition
-                FrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition as FrequencyDefinition;
-                derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency?.Label);
-
-                // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
-                foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
-                    derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
-
-                // Create equivalent derived digital definitions
-                foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                    derivedCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
+                    derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
 
                 // Add cell to frame
                 derivedFrame.Cells.Add(derivedCell);
