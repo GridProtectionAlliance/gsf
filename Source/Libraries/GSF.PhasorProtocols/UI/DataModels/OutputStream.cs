@@ -19,7 +19,7 @@
 //  07/26/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
 //  09/08/2011 - Mehulbhai Thakkar
-//       Modified code to use sql queries directly instead from script file resource.
+//       Modified code to use SQL queries directly instead from script file resource.
 //       Added comments to all properties and static methods.
 //  09/14/2012 - Aniket Salver 
 //       Added paging and sorting technique. 
@@ -39,9 +39,11 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
+using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
+using C37Concentrator = PhasorProtocolAdapters.IeeeC37_118.Concentrator;
 
 // ReSharper disable ConstantConditionalAccessQualifier
 // ReSharper disable AccessToDisposedClosure
@@ -198,7 +200,21 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_type;
             set
             {
+                const string ConfigTypeKey = nameof(C37Concentrator.TargetConfigurationType);
+
                 m_type = value;
+
+                Dictionary<string, string> settings = ConnectionString?.ParseKeyValuePairs() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+                if (m_type == OutputProtocol.IEEE_C37_118_2011)
+                    settings[ConfigTypeKey] = DraftRevision.Std2011.ToString();
+                else if (m_type == OutputProtocol.IEEE_C37_118_2005)
+                    settings[ConfigTypeKey] = DraftRevision.Std2005.ToString();
+                else
+                    settings.Remove(ConfigTypeKey);
+
+                ConnectionString = settings.JoinKeyValuePairs();
+
                 OnPropertyChanged("Type");
                 OnPropertyChanged("TypeAsInt");
                 OnPropertyChanged("TypeName");
