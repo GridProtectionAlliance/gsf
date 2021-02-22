@@ -90,11 +90,11 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </summary>
         AngleTrigger = (ushort)(Bits.Bit13 | Bits.Bit11),
         /// <summary>
-        /// 100 Overcurrent trigger.
+        /// 100 Over-current trigger.
         /// </summary>
         OverCurrentTrigger = (ushort)Bits.Bit13,
         /// <summary>
-        /// 011 Undervoltage trigger.
+        /// 011 Under-voltage trigger.
         /// </summary>
         UnderVoltageTrigger = (ushort)(Bits.Bit12 | Bits.Bit11),
         /// <summary>

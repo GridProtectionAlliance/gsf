@@ -153,9 +153,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <remarks>
         /// The base implementation assumes scale/bit of 10^-5.
         /// </remarks>
-        public virtual double ScalePerBit =>
-            // Typical scale/bit is 10^-5
-            0.00001D;
+        public virtual double ScalePerBit => 0.00001D; // Typical scale/bit is 10^-5
 
         /// <summary>
         /// Gets or sets the integer scaling value of this <see cref="ChannelDefinitionBase3"/>.
