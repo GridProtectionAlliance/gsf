@@ -472,11 +472,71 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         Reserved = (ushort)(Bits.Bit00 | Bits.Bit11 | Bits.Bit12 | Bits.Bit13 | Bits.Bit14)
     }
 
+    /// <summary>
+    /// Phasor type enumeration.
+    /// </summary>
+    [Serializable]
+    public enum PhasorTypeIndication : byte
+    {
+        /// <summary>
+        /// Phasor type, 0 for voltage, 1 for current.
+        /// </summary>
+        Type = (byte)Bits.Bit03,
+        /// <summary>
+        /// Phasor component mask.
+        /// </summary>
+        ComponentMask = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02),
+        /// <summary>
+        /// Reserved bits.
+        /// </summary>
+        Reserved = (byte)(Bits.Bit04 | Bits.Bit05 | Bits.Bit06 | Bits.Bit07)
+    }
+
+    /// <summary>
+    /// Phasor component enumeration.
+    /// </summary>
+    [Serializable]
+    public enum PhasorComponent : byte
+    {
+        /// <summary>
+        /// Zero sequence phasor.
+        /// </summary>
+        ZeroSequence = (byte)Bits.Nil,
+        /// <summary>
+        /// Positive sequence phasor.
+        /// </summary>
+        PositiveSequence = (byte)Bits.Bit00,
+        /// <summary>
+        /// Negative sequence phasor.
+        /// </summary>
+        NegativeSequence = (byte)Bits.Bit01,
+        /// <summary>
+        /// Reserved sequence phasor.
+        /// </summary>
+        ReservedSequence = (byte)(Bits.Bit00 | Bits.Bit01),
+        /// <summary>
+        /// Phase-A phasor.
+        /// </summary>
+        PhaseA = (byte)Bits.Bit02,
+        /// <summary>
+        /// Phase-B phasor.
+        /// </summary>
+        PhaseB = (byte)(Bits.Bit00 | Bits.Bit02),
+        /// <summary>
+        /// Phase-C phasor.
+        /// </summary>
+        PhaseC = (byte)(Bits.Bit01 | Bits.Bit02),
+        /// <summary>
+        /// Reserved phase phasor.
+        /// </summary>
+        ReservedPhase = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02)
+    }
+
     #endregion
 
-        /// <summary>
-        /// Common IEEE C37.118 declarations and functions.
-        /// </summary>
+    /// <summary>
+    /// Common IEEE C37.118 declarations and functions.
+    /// </summary>
     public static class Common
     {
         /// <summary>

@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
@@ -37,11 +38,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Members ]
 
         // Constants        
-        internal const int ConversionFactorLength = 4;
+        internal const int ConversionFactorLength = 12;
+        private const byte PhasorTypeIndicator = (byte)PhasorTypeIndication.Type;
 
         // Fields
-        private PhasorType m_type;
         private IPhasorDefinition m_voltageReference;
+        private byte m_phasorTypeIndication;
 
         #endregion
 
@@ -68,7 +70,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public PhasorDefinition3(ConfigurationCell3 parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition3 voltageReference)
             : base(parent, label, scale, offset)
         {
-            m_type = type;
+            PhasorType = type;
             m_voltageReference = type == PhasorType.Voltage ? this : voltageReference;
         }
 
@@ -81,8 +83,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             : base(info, context)
         {
             // Deserialize phasor definition
-            m_type = (PhasorType)info.GetValue("type", typeof(PhasorType));
+            m_phasorTypeIndication = (byte)info.GetValue("phasorTypeIndication", typeof(byte));
             m_voltageReference = (IPhasorDefinition)info.GetValue("voltageReference", typeof(IPhasorDefinition));
+            PhasorDataModifications = (PhasorDataModifications)info.GetValue("phasorDataModifications", typeof(PhasorDataModifications));
+            UserFlags = (byte)info.GetValue("userFlags", typeof(byte));
+            MagnitudeMultiplier = (float)info.GetValue("magnitudeMultiplier", typeof(float));
+            AngleAdder = (float)info.GetValue("angleAdder", typeof(float));
         }
 
         #endregion
@@ -99,27 +105,33 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets the <see cref="DataFormat"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
         public override DataFormat DataFormat => Parent.PhasorDataFormat;
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets or sets the <see cref="CoordinateFormat"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
         public virtual CoordinateFormat CoordinateFormat => Parent.PhasorCoordinateFormat;
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.PhasorProtocols.AngleFormat"/> of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets or sets the <see cref="AngleFormat"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
         public virtual AngleFormat AngleFormat => Parent.PhasorAngleFormat;
 
         /// <summary>
-        /// Gets or sets the <see cref="PhasorType"/> of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets or sets the <see cref="PhasorType"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
         public virtual PhasorType PhasorType
-        {
-            get => m_type;
-            set => m_type = value;
+        { 
+            get => (m_phasorTypeIndication & (byte)PhasorTypeIndication.Type) == 0 ? PhasorType.Voltage : PhasorType.Current; 
+            set
+            {
+                if (value == PhasorType.Voltage)
+                    m_phasorTypeIndication = (byte)(m_phasorTypeIndication & ~PhasorTypeIndicator);
+                else
+                    m_phasorTypeIndication |= PhasorTypeIndicator;
+            }
         }
 
         /// <summary>
@@ -131,17 +143,40 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public virtual IPhasorDefinition VoltageReference
         {
             get => m_voltageReference;
-            set
-            {
-                if (m_type == PhasorType.Voltage)
-                    m_voltageReference = this;
-                else
-                    m_voltageReference = value;
-            }
+            set => m_voltageReference = PhasorType == PhasorType.Voltage ? this : value;
         }
 
         /// <summary>
-        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorDefinitionBase"/> object.
+        /// Gets or sets <see cref="IEEEC37_118.PhasorDataModifications"/> of this <see cref="PhasorDefinition3"/>.
+        /// </summary>
+        public virtual PhasorDataModifications PhasorDataModifications { get; set; }
+
+        /// <summary>
+        /// Gets or sets <see cref="IEEEC37_118.PhasorComponent"/> of this <see cref="PhasorDefinition3"/>.
+        /// </summary>
+        public virtual PhasorComponent PhasorComponent
+        {
+            get => (PhasorComponent)(m_phasorTypeIndication & (byte)PhasorTypeIndication.ComponentMask);
+            set => m_phasorTypeIndication = (byte)((m_phasorTypeIndication & ~(byte)PhasorTypeIndication.ComponentMask) | (byte)value);
+        }
+
+        /// <summary>
+        /// Gets or sets user defined flags of this <see cref="PhasorDefinition3"/>.
+        /// </summary>
+        public byte UserFlags { get; set; }
+
+        /// <summary>
+        /// Gets or sets any multiplier to be applied to the phasor magnitudes.
+        /// </summary>
+        public float MagnitudeMultiplier { get; set; } = 1.0F;
+
+        /// <summary>
+        /// Gets or sets and adder to be applied to the phasor angle, in radians.
+        /// </summary>
+        public float AngleAdder { get; set; }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorDefinition3"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
         {
@@ -150,6 +185,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Phasor Type", $"{(int)PhasorType}: {PhasorType}");
+                baseAttributes.Add("Phasor Data Modifications", $"{(int)PhasorDataModifications}: {PhasorDataModifications}");
+                baseAttributes.Add("Phasor Component", $"{(int)PhasorComponent}: {PhasorComponent}");
+                baseAttributes.Add("User Flags", $"0x{UserFlags:X}");
+                baseAttributes.Add("Magnitude Multiplier", $"{MagnitudeMultiplier}");
+                baseAttributes.Add("Angle Adder", $"{AngleAdder}");
 
                 return baseAttributes;
             }
@@ -163,11 +203,17 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             get
             {
                 byte[] buffer = new byte[ConversionFactorLength];
-                UInt24 scalingFactor = ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue;
 
-                buffer[0] = (byte)PhasorType;
+                // First word
+                BigEndian.CopyBytes((ushort)PhasorDataModifications, buffer, 0);
+                buffer[2] = m_phasorTypeIndication;
+                buffer[3] = UserFlags;
 
-                BigEndian.CopyBytes(scalingFactor, buffer, 1);
+                // Second word
+                BigEndian.CopyBytes(MagnitudeMultiplier, buffer, 4);
+
+                // Third word
+                BigEndian.CopyBytes(AngleAdder, buffer, 8);
 
                 return buffer;
             }
@@ -178,9 +224,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the string representation of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets the string representation of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        /// <returns>String representation of this <see cref="PhasorDefinitionBase"/>.</returns>
+        /// <returns>String representation of this <see cref="PhasorDefinition3"/>.</returns>
         public override string ToString()
         {
             return (PhasorType == PhasorType.Current ? "I: " : "V: ") + Label;
@@ -196,8 +242,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             base.GetObjectData(info, context);
 
             // Serialize phasor definition
-            info.AddValue("type", m_type, typeof(PhasorType));
+            info.AddValue("phasorTypeIndication", m_phasorTypeIndication);
             info.AddValue("voltageReference", m_voltageReference, typeof(IPhasorDefinition));
+            info.AddValue("phasorDataModifications", PhasorDataModifications, typeof(PhasorDataModifications));
+            info.AddValue("userFlags", UserFlags);
+            info.AddValue("magnitudeMultiplier", MagnitudeMultiplier);
+            info.AddValue("angleAdder", AngleAdder);
         }
 
         /// <summary>
@@ -207,11 +257,16 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
         internal int ParseConversionFactor(byte[] buffer, int startIndex)
         {
-            // Get phasor type from first byte
-            PhasorType = buffer[startIndex] == 0 ? PhasorType.Voltage : PhasorType.Current;
+            // First word
+            PhasorDataModifications = (PhasorDataModifications)BigEndian.ToUInt16(buffer, startIndex);
+            m_phasorTypeIndication = buffer[startIndex + 2];
+            UserFlags = buffer[startIndex + 3];
 
-            // Last three bytes represent scaling factor
-            ScalingValue = BigEndian.ToUInt24(buffer, startIndex + 1);
+            // Second word
+            MagnitudeMultiplier = BigEndian.ToSingle(buffer, startIndex + 4);
+
+            // Third word:
+            AngleAdder = BigEndian.ToSingle(buffer, startIndex + 8);
 
             return ConversionFactorLength;
         }
