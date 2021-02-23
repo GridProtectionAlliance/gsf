@@ -25,21 +25,19 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 configuration frame 3 implementation of an <see cref="IAnalogDefinition"/>.
     /// </summary>
     [Serializable]
-    public class AnalogDefinition3 : ChannelDefinitionBase3, IAnalogDefinition
+    public sealed class AnalogDefinition3 : ChannelDefinitionBase3, IAnalogDefinition
     {
         #region [ Members ]
 
         // Constants        
-        internal const int ConversionFactorLength = 4;
-
-        // Fields
-        private AnalogType m_type;
+        internal const int ConversionFactorLength = 8;
 
         #endregion
 
@@ -65,7 +63,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public AnalogDefinition3(ConfigurationCell3 parent, string label, uint scale, double offset, AnalogType type)
             : base(parent, label, scale, offset)
         {
-            m_type = type;
+            AnalogType = type;
         }
 
         /// <summary>
@@ -73,11 +71,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected AnalogDefinition3(SerializationInfo info, StreamingContext context)
+        private AnalogDefinition3(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             // Deserialize analog definition
-            m_type = (AnalogType)info.GetValue("type", typeof(AnalogType));
+            AnalogType = (AnalogType)info.GetValue("type", typeof(AnalogType));
+            Multiplier = info.GetSingle("multiplier");
+            Adder = info.GetSingle("adder");
         }
 
         #endregion
@@ -87,25 +87,31 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="AnalogDefinition3"/>.
         /// </summary>
-        public new virtual ConfigurationCell3 Parent
+        public new ConfigurationCell3 Parent
         {
             get => base.Parent as ConfigurationCell3;
             set => base.Parent = value;
         }
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> for the <see cref="AnalogDefinitionBase"/>.
+        /// Gets the <see cref="DataFormat"/> for the <see cref="AnalogDefinitionBase"/>.
         /// </summary>
         public override DataFormat DataFormat => Parent.AnalogDataFormat;
 
         /// <summary>
         /// Gets or sets <see cref="AnalogType"/> of this <see cref="AnalogDefinitionBase"/>.
         /// </summary>
-        public virtual AnalogType AnalogType
-        {
-            get => m_type;
-            set => m_type = value;
-        }
+        public AnalogType AnalogType { get; set; } = AnalogType.SinglePointOnWave;
+
+        /// <summary>
+        /// Gets or sets any multiplier, i.e., scale, to be applied to the analog value.
+        /// </summary>
+        public float Multiplier { get; set; } = 1.0F;
+
+        /// <summary>
+        /// Gets or sets and adder, i.e., offset, to be applied to the analog value.
+        /// </summary>
+        public float Adder { get; set; }
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="AnalogDefinitionBase"/> object.
@@ -117,6 +123,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Analog Type", $"{(int)AnalogType}: {AnalogType}");
+                baseAttributes.Add("Multiplier (Scale)", $"{Multiplier}");
+                baseAttributes.Add("Adder (Offset)", $"{Adder}");
 
                 return baseAttributes;
             }
@@ -130,13 +138,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             get
             {
                 byte[] buffer = new byte[ConversionFactorLength];
-                UInt24 scalingFactor = ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue;
 
-                // Store analog type in first byte
-                buffer[0] = (byte)AnalogType;
+                // First word
+                BigEndian.CopyBytes(Multiplier, buffer, 0);
 
-                // Store scaling in last three bytes
-                BigEndian.CopyBytes(scalingFactor, buffer, 1);
+                // Second word
+                BigEndian.CopyBytes(Adder, buffer, 4);
 
                 return buffer;
             }
@@ -156,7 +163,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             base.GetObjectData(info, context);
 
             // Serialize analog definition
-            info.AddValue("type", m_type, typeof(AnalogType));
+            info.AddValue("type", AnalogType, typeof(AnalogType));
+            info.AddValue("multiplier", Multiplier);
+            info.AddValue("adder", Adder);
         }
 
         /// <summary>
@@ -166,11 +175,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
         internal int ParseConversionFactor(byte[] buffer, int startIndex)
         {
-            // Get analog type from first byte
-            AnalogType = (AnalogType)buffer[startIndex];
+            // First word
+            Multiplier = BigEndian.ToSingle(buffer, startIndex);
 
-            // Last three bytes represent scaling factor
-            ScalingValue = BigEndian.ToUInt24(buffer, startIndex + 1);
+            // Second word:
+            Adder = BigEndian.ToSingle(buffer, startIndex + 4);
 
             return ConversionFactorLength;
         }
