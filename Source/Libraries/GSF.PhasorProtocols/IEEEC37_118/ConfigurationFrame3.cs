@@ -35,7 +35,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/>, type 3, that can be sent or received.
     /// </summary>
     [Serializable]
-    public class ConfigurationFrame3 : ConfigurationFrame1
+    public sealed class ConfigurationFrame3 : ConfigurationFrame1
     {
         #region [ Members ]
 
@@ -80,7 +80,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationFrame3(SerializationInfo info, StreamingContext context)
+        private ConfigurationFrame3(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
