@@ -27,6 +27,7 @@
 
 using System;
 using System.Text;
+using GSF.Diagnostics;
 using GSF.Parsing;
 
 namespace GSF.PhasorProtocols.IEEEC37_118
@@ -97,6 +98,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Fields
         private ConfigurationFrame2 m_configurationFrame2;
         private ConfigurationFrame3 m_configurationFrame3;
+        private FrameImageCollector m_configFrame3Images;
         private bool m_configurationChangeHandled;
         private long m_unexpectedCommandFrames;
 
@@ -127,7 +129,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
         /// </summary>
         /// <remarks>
-        /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame.  Consumer can manually assign a
+        /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame. Consumer can manually assign a
         /// <see cref="IConfigurationFrame"/> to start parsing data if one has not been encountered in the stream.
         /// </remarks>
         public override IConfigurationFrame ConfigurationFrame
@@ -165,7 +167,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 StringBuilder status = new StringBuilder();
 
-                status.Append("IEEE C37.118-2005 revision: ");
+                status.Append("IEEE C37.118 revision: ");
                 status.Append(DraftRevision);
                 status.AppendLine();
                 status.Append("         Current time base: ");
@@ -231,48 +233,81 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         protected override ICommonHeader<FrameType> ParseCommonHeader(byte[] buffer, int offset, int length)
         {
             // See if there is enough data in the buffer to parse the common frame header.
-            if (length >= CommonFrameHeader.FixedLength)
+            if (length < CommonFrameHeader.FixedLength)
+                return null;
+
+            // Parse common frame header
+            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ConfigurationFrame as ConfigurationFrame1, buffer, offset);
+
+            // Look for probable misaligned bad frame header parse
+            if (parsedFrameHeader.FrameType == FundamentalFrameType.Undetermined || parsedFrameHeader.Version > (byte)DraftRevision.LatestVersion)
+                throw new InvalidOperationException("Probable frame misalignment detected, forcing scan ahead to next sync byte");
+
+            // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
+            // we eliminate the need to validate length on all subsequent data elements that comprise the frame
+            if (length < parsedFrameHeader.FrameLength)
+                return null;
+
+            // Expose the frame buffer image in case client needs this data for any reason
+            OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
+
+            // Handle special parsing states
+            switch (parsedFrameHeader.TypeID)
             {
-                // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ConfigurationFrame as ConfigurationFrame1, buffer, offset);
+                case FrameType.DataFrame:
+                    // Assign data frame parsing state
+                    parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
+                    break;
+                case FrameType.ConfigurationFrame1:
+                case FrameType.ConfigurationFrame2:
+                    // Assign configuration frame parsing state
+                    parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
+                    break;
+                case FrameType.ConfigurationFrame3:
+                    // Safe to parse next two bytes for continuation index here since we know all bytes of frame are available (per optimization above)
+                    parsedFrameHeader.ContinuationIndex = BigEndian.ToUInt16(buffer, CommonFrameHeader.FixedLength);
+                    parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell3.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
 
-                // Look for probable misaligned bad frame header parse
-                if (parsedFrameHeader.FrameType == FundamentalFrameType.Undetermined || parsedFrameHeader.Version > (byte)DraftRevision.LatestVersion)
-                    throw new InvalidOperationException("Probable frame misalignment detected, forcing scan ahead to next sync byte");
-
-                // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
-                // we eliminate the need to validate length on all subsequent data elements that comprise the frame
-                if (length >= parsedFrameHeader.FrameLength)
-                {
-                    // Expose the frame buffer image in case client needs this data for any reason
-                    OnReceivedFrameBufferImage(parsedFrameHeader.FrameType, buffer, offset, parsedFrameHeader.FrameLength);
-
-                    // Handle special parsing states
-                    switch (parsedFrameHeader.TypeID)
+                    // Any non-zero continuation index represents a frame in a series of frame fragments
+                    if (parsedFrameHeader.ContinuationIndex > 0)
                     {
-                        case FrameType.DataFrame:
-                            // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
-                            break;
-                        case FrameType.ConfigurationFrame1:
-                        case FrameType.ConfigurationFrame2:
-                            // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
-                            break;
-                        case FrameType.ConfigurationFrame3:
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell3.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
-                            break;
-                        case FrameType.HeaderFrame:
-                            // Assign header frame parsing state
-                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength, TrustHeaderLength, ValidateHeaderFrameCheckSum);
-                            break;
+                        if (parsedFrameHeader.IsFirstFrame)
+                            m_configFrame3Images = new FrameImageCollector(ValidateConfigurationFrameCheckSum);
+
+                        try
+                        {
+                            if (m_configFrame3Images is null)
+                                throw new NullReferenceException("No frame image collector defined to cumulate fragmented frames of configuration frame 3.");
+
+                            m_configFrame3Images.AppendFrameImage(buffer, offset, parsedFrameHeader.FrameLength);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.SwallowException(ex);
+
+                            // Stop accumulation on CRC check failure or other exceptions
+                            m_configFrame3Images = null;
+                            throw;
+                        }
+
+                        // Store a reference to frame image collection in common header state so configuration frame
+                        // can be parsed from entire combined binary image collection when last frame is received
+                        parsedFrameHeader.FrameImages = m_configFrame3Images;
+
+                        // Clear local reference to frame image collection if this is the last frame
+                        if (parsedFrameHeader.IsLastFrame)
+                            m_configFrame3Images = null;
                     }
 
-                    return parsedFrameHeader;
-                }
+                    break;
+                case FrameType.HeaderFrame:
+                    // Assign header frame parsing state
+                    parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength, TrustHeaderLength, ValidateHeaderFrameCheckSum);
+                    break;
             }
 
-            return null;
+            return parsedFrameHeader;
+
         }
 
         /// <summary>
@@ -281,19 +316,24 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.</param>
         protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
-            // We override this method so we can cache configuration frame (2 or 3) when it's received
-            base.OnReceivedConfigurationFrame(frame);
-
+            // Cache new configuration frame for parsing subsequent data frames...
             switch (frame)
             {
-                // Cache new configuration frame for parsing subsequent data frames...
                 case ConfigurationFrame3 configurationFrame3:
+                    CommonFrameHeader header = configurationFrame3.CommonHeader;
+
+                    // Configuration frame 3 can span multiple frame images, so do not raise this event until all frames have been assembled...
+                    if (header.ContinuationIndex > 0 && !header.IsLastFrame)
+                        return;
+
                     m_configurationFrame3 = configurationFrame3;
                     break;
                 case ConfigurationFrame2 configurationFrame2:
                     m_configurationFrame2 = configurationFrame2;
                     break;
             }
+
+            base.OnReceivedConfigurationFrame(frame);
         }
 
         /// <summary>

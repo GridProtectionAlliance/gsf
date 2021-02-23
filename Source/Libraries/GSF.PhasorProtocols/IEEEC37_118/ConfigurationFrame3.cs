@@ -40,7 +40,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Members ]
 
         // Constants
-        private new const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6 + 2;
+        private new const int FixedHeaderLength = ConfigurationFrame1.FixedHeaderLength + 2;
 
         #endregion
 
@@ -84,23 +84,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         #endregion
 
-        #region [ Methods ]
-
-        /*
-        protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
-        {
-            // Skip past header that was already parsed...
-            startIndex += CommonFrameHeader.FixedLength;
-            // State.CONT_IDX = BigEndian.ToInt16(buffer, startIndex); FIXME: For now, this is completely ignored
-            m_timebase = BigEndian.ToUInt32(buffer, startIndex + 2) & ~Common.TimeQualityFlagsMask;
-            State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 6);
-
-            return FixedHeaderLength;
-        }
-        */
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
@@ -112,6 +95,16 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// Gets the <see cref="FrameType"/> of this <see cref="ConfigurationFrame3"/>.
         /// </summary>
         public override FrameType TypeID => IEEEC37_118.FrameType.ConfigurationFrame3;
+
+        /// <summary>
+        /// Gets continuation index for fragmented frames of this <see cref="ConfigurationFrame3"/>.
+        /// </summary>
+        public ushort ContinuationIndex => CommonHeader.ContinuationIndex;
+
+        /// <summary>
+        /// Gets the length of the <see cref="HeaderImage"/>.
+        /// </summary>
+        protected override int HeaderLength => FixedHeaderLength;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationFrame3"/> object.
@@ -246,17 +239,72 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Methods ]
 
         /// <summary>
-        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// Parses the binary image.
         /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
-        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        /// <param name="buffer">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// This method is overridden to parse from cumulated frame images.
+        /// </remarks>
+        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            base.GetObjectData(info, context);
+            CommonFrameHeader frameHeader = CommonHeader;
 
-            // TODO: Serialize configuration frame
-            //info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
-            info.AddValue("TODO: add others", m_timebase);
+            // Handle normal parsing if configuration frame is not fragmented
+            if (frameHeader is null || frameHeader.ContinuationIndex == 0)
+                return base.ParseBinaryImage(buffer, startIndex, length);
+
+            // If all configuration frame images have been received, we can safely start parsing
+            if (frameHeader.IsLastFrame)
+            {
+                using (FrameImageCollector frameImages = frameHeader.FrameImages)
+                {
+                    if (frameImages is null)
+                        return State.ParsedBinaryLength;
+
+                    // Each individual frame will already have had a CRC check, so we implement standard parse to
+                    // bypass ChannelBase CRC frame validation on cumulative frame image
+                    buffer = frameImages.BinaryImage;
+                    length = frameImages.BinaryLength;
+                    startIndex = 0;
+
+                    // Parse out header, body and footer images
+                    startIndex += ParseHeaderImage(buffer, startIndex, length);
+                    startIndex += ParseBodyImage(buffer, startIndex, length - startIndex);
+                    startIndex += ParseFooterImage(buffer, startIndex, length - startIndex);
+
+                    if (TrustHeaderLength)
+                        return State.ParsedBinaryLength;
+                    
+                    // Include 2 bytes for CRC that was already validated
+                    return startIndex + 2;
+                }
+            }
+
+            // There are more configuration frame 3 images coming, keep parser moving
+            // by returning total frame length that was already parsed (or cumulated).
+            return State.ParsedBinaryLength;
+        }
+
+        /// <summary>
+        /// Parses the binary header image.
+        /// </summary>
+        /// <param name="buffer">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
+        {
+            // Skip past header that was already parsed...
+            startIndex += CommonFrameHeader.FixedLength + 2;
+
+            m_timebase = BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
+            CommonHeader.Timebase = m_timebase;
+            State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 4);
+
+            return FixedHeaderLength;
         }
 
         #endregion

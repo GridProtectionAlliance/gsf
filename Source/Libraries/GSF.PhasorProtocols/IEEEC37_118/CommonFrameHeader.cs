@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using GSF.IO.Checksums;
 using GSF.Parsing;
 
 namespace GSF.PhasorProtocols.IEEEC37_118
@@ -269,6 +270,28 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
+        /// Gets or sets reference to <see cref="FrameImageCollector"/> used to cumulate fragmented frames of a <see cref="ConfigurationFrame3"/>.
+        /// </summary>
+        public FrameImageCollector FrameImages { get; set; }
+
+        /// <summary>
+        /// Gets or sets continuation index for fragmented frames of a <see cref="ConfigurationFrame3"/>.
+        /// </summary>
+        public ushort ContinuationIndex { get; set; }
+
+        /// <summary>
+        /// Gets flag that determines if the <see cref="ContinuationIndex"/> represents the first frame in a series of frames that follow.
+        /// </summary>
+        /// <returns><c>true</c> if <see cref="ContinuationIndex"/> represents the first frame in a series; otherwise, <c>false</c>.</returns>
+        public bool IsFirstFrame => ContinuationIndex == 1;
+
+        /// <summary>
+        /// Gets flag that determines if the <see cref="ContinuationIndex"/> represents the last frame in a series of frames.
+        /// </summary>
+        /// <returns><c>true</c> if <see cref="ContinuationIndex"/> represents the last frame in a series; otherwise, <c>false</c>.</returns>
+        public bool IsLastFrame => ContinuationIndex == ushort.MaxValue;
+
+        /// <summary>
         /// Gets or sets the IEEE C37.118 <see cref="TimeQualityFlags"/>.
         /// </summary>
         public TimeQualityFlags TimeQualityFlags
@@ -375,12 +398,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             uint timeQualityFlags = (uint)TimeQualityFlags;
 
             attributes.Add("Time Quality Flags", timeQualityFlags.ToString());
-
-            if (timeQualityFlags > 0)
-                attributes.Add("Leap Second State", TimeQualityFlags.ToString());
-            else
-                attributes.Add("Leap Second State", "No leap second is currently pending");
-
+            attributes.Add("Leap Second State", timeQualityFlags > 0 ? TimeQualityFlags.ToString() : "No leap second is currently pending");
             attributes.Add("Time Quality Indicator Code", $"{(uint)TimeQualityIndicatorCode}: {TimeQualityIndicatorCode}");
             attributes.Add("Time Base", Timebase.ToString());
         }
@@ -401,5 +419,24 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Validates the CRC-CCITT for the specified IEEE C37.118 buffer.
+        /// </summary>
+        /// <returns>A <see cref="bool"/> indicating whether the checksum is valid.</returns>
+        /// <param name="buffer">A <see cref="byte"/> array buffer.</param>
+        /// <param name="length">An <see cref="int"/> value as the number of bytes to read for the checksum.</param>
+        /// <param name="startIndex">An <see cref="int"/> value as the start index into being reading the value at.</param>
+        public static bool ChecksumIsValid(byte[] buffer, int startIndex, int length)
+        {
+            int sumLength = length - 2;
+            return BigEndian.ToUInt16(buffer, startIndex + sumLength) == buffer.CrcCCITTChecksum(startIndex, sumLength);
+        }
+
+        #endregion   
     }
 }
