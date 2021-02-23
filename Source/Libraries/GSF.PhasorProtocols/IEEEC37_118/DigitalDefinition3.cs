@@ -28,6 +28,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Text;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
@@ -41,10 +42,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Constants        
         internal const int ConversionFactorLength = 4;
 
-        // Fields
-        private ushort m_normalStatus;
-        private ushort m_validInputs;
-        private string m_label;
+        private const int BitLabelCount = sizeof(ushort) * 8;
 
         #endregion
 
@@ -71,8 +69,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public DigitalDefinition3(ConfigurationCell3 parent, string label, ushort normalStatus, ushort validInputs)
             : base(parent, label, 1, 0.0D)
         {
-            m_normalStatus = normalStatus;
-            m_validInputs = validInputs;
+            NormalStatus = normalStatus;
+            ValidInputs = validInputs;
         }
 
         /// <summary>
@@ -84,9 +82,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             : base(info, context)
         {
             // Deserialize digital definition
-            m_normalStatus = info.GetUInt16("normalStatus");
-            m_validInputs = info.GetUInt16("validInputs");
-            m_label = info.GetString("digitalLabels");
+            NormalStatus = info.GetUInt16("normalStatus");
+            ValidInputs = info.GetUInt16("validInputs");
+            Label = info.GetString("digitalLabels");
         }
 
         #endregion
@@ -105,20 +103,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets normal status for this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public ushort NormalStatus
-        {
-            get => m_normalStatus;
-            set => m_normalStatus = value;
-        }
+        public ushort NormalStatus { get; set; }
 
         /// <summary>
         /// Gets or sets valid input for this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public ushort ValidInputs
-        {
-            get => m_validInputs;
-            set => m_validInputs = value;
-        }
+        public ushort ValidInputs { get; set; }
 
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="DigitalDefinition3"/>.
@@ -128,7 +118,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the number of labels defined in this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public int LabelCount => 16;
+        public int LabelCount => BitLabelCount;
+
+        /// <summary>
+        /// Gets array of 16-digital labels.
+        /// </summary>
+        public string[] Labels { get; } = new string[BitLabelCount];
 
         /// <summary>
         /// Gets or sets the combined set of label images of this <see cref="DigitalDefinition3"/>.
@@ -138,7 +133,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             // We hide this from the editor just because this is a large combined string of all digital labels,
             // and it will make more sense for consumers to use the "Labels" property
-            get => m_label;
+            get => string.Join("|", Labels);
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -147,12 +142,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 if (value.Trim().Length > MaximumLabelLength)
                     throw new OverflowException($"Label length cannot exceed {MaximumLabelLength}");
 
-                // We override this function since base class automatically "fixes-up" labels
-                // by removing duplicate white space characters
-                m_label = value.Trim();
-
                 // We pass value along to base class for posterity...
-                base.Label = value;
+                string[] labels = value.Split('|');
+
+                if (labels.Length == BitLabelCount)
+                {
+                    for (int i = 0; i < BitLabelCount; i++)
+                        Labels[i] = labels[i];
+                }
             }
         }
 
@@ -228,8 +225,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 byte[] buffer = new byte[ConversionFactorLength];
 
-                BigEndian.CopyBytes(m_normalStatus, buffer, 0);
-                BigEndian.CopyBytes(m_validInputs, buffer, 2);
+                BigEndian.CopyBytes(NormalStatus, buffer, 0);
+                BigEndian.CopyBytes(ValidInputs, buffer, 2);
 
                 return buffer;
             }
@@ -255,15 +252,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 baseAttributes.Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes));
                 baseAttributes.Add("Valid Inputs (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(validInputsBytes)}");
 
-                if (DraftRevision > DraftRevision.Draft6)
-                {
-                    baseAttributes.Add("Bit Label Count", LabelCount.ToString());
+                baseAttributes.Add("Bit Label Count", LabelCount.ToString());
 
-                    for (int x = 0; x < LabelCount; x++)
-                    {
-                        baseAttributes.Add($"     Bit {x} Label", GetLabel(x));
-                    }
-                }
+                for (int x = 0; x < BitLabelCount; x++)
+                    baseAttributes.Add($"     Bit {x} Label", Labels[x]);
 
                 return baseAttributes;
             }
@@ -272,53 +264,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Gets the individual labels for specified bit in this <see cref="DigitalDefinition3"/>.
-        /// </summary>
-        /// <param name="index">Index of desired bit label to access.</param>
-        /// <remarks>
-        /// <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label.</para>
-        /// <para>Note that the draft 6 implementation of the protocol supports one label for all 16-bits, however draft 7 (i.e., version 1) supports a label for each of the 16 bits.</para>
-        /// </remarks>
-        /// <returns>A <see cref="string"/> value of the label corresponding to the parameter.</returns>
-        public string GetLabel(int index)
-        {
-            if (index < 0 || index >= LabelCount)
-                throw new IndexOutOfRangeException($"Invalid label index specified.  Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEEE C37.118 protocol");
-
-            return Label.PadRight(MaximumLabelLength).Substring(index * 16, 16).GetValidLabel();
-        }
-
-        /// <summary>
-        /// Sets the individual labels for specified bit in this <see cref="DigitalDefinition3"/>.
-        /// </summary>
-        /// <param name="index">Index of desired bit label to access.</param>
-        /// <param name="value">Value of the bit label to assign.</param>
-        /// <remarks>
-        /// <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label.</para>
-        /// <para>Note that the draft 6 implementation of the protocol supports one label for all 16-bits, however draft 7 (i.e., version 1) supports a label for each of the 16 bits.</para>
-        /// </remarks>
-        public void SetLabel(int index, string value)
-        {
-            if (index < 0 || index >= LabelCount)
-                throw new IndexOutOfRangeException($"Invalid label index specified.  Note that there are {LabelCount} labels per digital available in {DraftRevision} of the IEEE C37.118 protocol");
-
-            if (value.Trim().Length > 255)
-                throw new OverflowException($"Individual label length cannot exceed 255");
-
-            string current = Label.PadRight(MaximumLabelLength);
-            string left = "";
-            string right = "";
-
-            if (index > 0)
-                left = current.Substring(0, index * 16);
-
-            if (index < 15)
-                right = current.Substring((index + 1) * 16);
-
-            Label = left + value.GetValidLabel().PadRight(16) + right;
-        }
 
         /// <summary>
         /// Parses the binary body image.
@@ -368,8 +313,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
         internal int ParseConversionFactor(byte[] buffer, int startIndex)
         {
-            m_normalStatus = BigEndian.ToUInt16(buffer, startIndex);
-            m_validInputs = BigEndian.ToUInt16(buffer, startIndex + 2);
+            NormalStatus = BigEndian.ToUInt16(buffer, startIndex);
+            ValidInputs = BigEndian.ToUInt16(buffer, startIndex + 2);
 
             return ConversionFactorLength;
         }
@@ -384,9 +329,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             base.GetObjectData(info, context);
 
             // Serialize digital definition
-            info.AddValue("normalStatus", m_normalStatus);
-            info.AddValue("validInputs", m_validInputs);
-            info.AddValue("digitalLabels", m_label);
+            info.AddValue("normalStatus", NormalStatus);
+            info.AddValue("validInputs", ValidInputs);
+            info.AddValue("digitalLabels", Label);
         }
 
         #endregion

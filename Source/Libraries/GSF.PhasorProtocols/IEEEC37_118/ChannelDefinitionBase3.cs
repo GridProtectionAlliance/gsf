@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
 // ReSharper disable NonReadonlyMemberInGetHashCode
 // ReSharper disable VirtualMemberCallInConstructor
@@ -41,11 +40,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Members ]
 
         // Fields
-        private IConfigurationCell m_parent;
-        private int m_index;
         private string m_label;
+        private byte[] m_labelImage;
         private uint m_scale;
-        private double m_offset;
 
         #endregion
 
@@ -57,7 +54,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="ChannelDefinitionBase3"/>.</param>
         protected ChannelDefinitionBase3(IConfigurationCell parent)
         {
-            m_parent = parent;
+            Parent = parent;
         }
 
         /// <summary>
@@ -67,12 +64,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="label">The label of this <see cref="ChannelDefinitionBase3"/>.</param>
         /// <param name="scale">The integer scaling value of this <see cref="ChannelDefinitionBase3"/>.</param>
         /// <param name="offset">The offset of this <see cref="ChannelDefinitionBase3"/>.</param>
-        protected ChannelDefinitionBase3(IConfigurationCell parent, string label, uint scale, double offset)
+        /// <param name="index">This index of this <see cref="ChannelDefinitionBase3"/>, if applicable.</param>
+        protected ChannelDefinitionBase3(IConfigurationCell parent, string label, uint scale, double offset, int index = 0)
         {
-            m_parent = parent;
+            Parent = parent;
             Label = label;
             m_scale = scale;
-            m_offset = offset;
+            Offset = offset;
+            Index = index;
         }
 
         /// <summary>
@@ -83,11 +82,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         protected ChannelDefinitionBase3(SerializationInfo info, StreamingContext context)
         {
             // Deserialize channel definition
-            m_parent = (IConfigurationCell)info.GetValue("parent", typeof(IConfigurationCell));
-            m_index = info.GetInt32("index");
+            Parent = (IConfigurationCell)info.GetValue("parent", typeof(IConfigurationCell));
+            Index = info.GetInt32("index");
             Label = info.GetString("label");
             m_scale = info.GetUInt32("scale");
-            m_offset = info.GetDouble("offset");
+            Offset = info.GetDouble("offset");
         }
 
         #endregion
@@ -97,19 +96,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="IConfigurationCell"/> parent of this <see cref="ChannelDefinitionBase3"/>.
         /// </summary>
-        public virtual IConfigurationCell Parent
-        {
-            get => m_parent;
-            set => m_parent = value;
-        }
+        public virtual IConfigurationCell Parent { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="ChannelDefinitionBase3"/>.
+        /// Gets the <see cref="DataFormat"/> of this <see cref="ChannelDefinitionBase3"/>.
         /// </summary>
-        public abstract DataFormat DataFormat
-        {
-            get;
-        }
+        public abstract DataFormat DataFormat { get; }
 
         /// <summary>
         /// Gets or sets the index of this <see cref="ChannelDefinitionBase3"/>.
@@ -117,20 +109,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <remarks>
         /// Index is automatically maintained by <see cref="ChannelDefinitionCollectionBase{T}"/>.
         /// </remarks>
-        public virtual int Index
-        {
-            get => m_index;
-            set => m_index = value;
-        }
+        public virtual int Index { get; set; }
 
         /// <summary>
         /// Gets or sets the offset of this <see cref="ChannelDefinitionBase3"/>.
         /// </summary>
-        public virtual double Offset
-        {
-            get => m_offset;
-            set => m_offset = value;
-        }
+        public virtual double Offset { get; set; }
 
         /// <summary>
         /// Gets or sets the conversion factor of this <see cref="ChannelDefinitionBase3"/>.
@@ -176,9 +160,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <remarks>
         /// The base implementation accommodates maximum scaling factor of 24-bits of space.
         /// </remarks>
-        public virtual uint MaximumScalingValue =>
-            // Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
-            UInt24.MaxValue;
+        public virtual uint MaximumScalingValue => UInt24.MaxValue; // Typical scaling/conversion factors should fit within 3 bytes (i.e., 24 bits) of space
 
         /// <summary>
         /// Gets or sets the label of this <see cref="ChannelDefinitionBase3"/>.
@@ -197,25 +179,24 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     throw new OverflowException($"Label length cannot exceed {MaximumLabelLength} characters.");
 
                 m_label = value;
+                m_labelImage = ConfigurationCell3.EncodeLengthPrefixedString(value);
             }
         }
 
         /// <summary>
         /// Gets the binary image of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase3"/>.
         /// </summary>
-        public virtual byte[] LabelImage => Encoding.ASCII.GetBytes(Label.PadRight(MaximumLabelLength));
+        public virtual byte[] LabelImage => m_labelImage;
 
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase3"/>.
         /// </summary>
-        public virtual int MaximumLabelLength =>
-            // Typical label length is 16 characters
-            16;
+        public virtual int MaximumLabelLength => byte.MaxValue; // Typical label length is 16 characters
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength => MaximumLabelLength;
+        protected override int BodyLength => LabelImage.Length;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="ChannelDefinitionBase3"/> object.
@@ -231,7 +212,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Label", Label.ToNonNullString("Undefined"));
+                baseAttributes.Add("Label", Label);
                 baseAttributes.Add("Index", Index.ToString());
                 baseAttributes.Add("Offset", Offset.ToString());
                 baseAttributes.Add("Data Format", $"{(int)DataFormat}: {DataFormat}");
@@ -264,10 +245,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             // Length is validated at a frame level well in advance so that low level parsing routines do not have
             // to re-validate that enough length is available to parse needed information as an optimization...
+            int index = startIndex;
 
-            Label = Encoding.ASCII.GetString(buffer, startIndex, MaximumLabelLength);
-
-            return MaximumLabelLength;
+            Label = ConfigurationCell3.DecodeLengthPrefixedString(buffer, ref index);
+                
+            return index - startIndex;
         }
 
         /// <summary>
@@ -279,10 +261,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// otherwise, False.
         /// </returns>
         /// <exception cref="ArgumentException">value is not an <see cref="IChannelDefinition"/>.</exception>
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as IChannelDefinition);
-        }
+        public override bool Equals(object obj) => 
+            Equals(obj as IChannelDefinition);
 
         /// <summary>
         /// Returns a value indicating whether this instance is equal to specified <see cref="IChannelDefinition"/> value.
@@ -291,10 +271,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>
         /// True if <paramref name="other"/> has the same value as this instance; otherwise, False.
         /// </returns>
-        public bool Equals(IChannelDefinition other)
-        {
-            return CompareTo(other) == 0;
-        }
+        public bool Equals(IChannelDefinition other) => 
+            CompareTo(other) == 0;
 
         /// <summary>
         /// Compares this instance to a specified object and returns an indication of their relative values.
@@ -324,29 +302,22 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        public int CompareTo(IChannelDefinition other)
-        {
-            // We sort channel Definitions by index
-            return m_index.CompareTo(other.Index);
-        }
+        public int CompareTo(IChannelDefinition other) => 
+            Index.CompareTo(other.Index); // We sort channel definitions by index
 
         /// <summary>
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A 32-bit signed integer hash code.</returns>
-        public override int GetHashCode()
-        {
-            return m_index.GetHashCode();
-        }
+        public override int GetHashCode() => 
+            Index.GetHashCode();
 
         /// <summary>
         /// Gets the string representation of this <see cref="ChannelDefinitionBase3"/>.
         /// </summary>
         /// <returns>String representation of this <see cref="ChannelDefinitionBase3"/>.</returns>
-        public override string ToString()
-        {
-            return Label;
-        }
+        public override string ToString() => 
+            Label;
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
@@ -356,11 +327,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // Serialize channel definition
-            info.AddValue("parent", m_parent, typeof(IConfigurationCell));
-            info.AddValue("index", m_index);
-            info.AddValue("label", m_label);
+            info.AddValue("parent", Parent, typeof(IConfigurationCell));
+            info.AddValue("index", Index);
+            info.AddValue("label", Label);
             info.AddValue("scale", m_scale);
-            info.AddValue("offset", m_offset);
+            info.AddValue("offset", Offset);
         }
 
         #endregion

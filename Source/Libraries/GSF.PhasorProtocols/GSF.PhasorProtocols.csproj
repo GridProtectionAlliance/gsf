@@ -145,6 +145,7 @@
     <Compile Include="IEEEC37_118\AnalogDefinition3.cs" />
     <Compile Include="IEEEC37_118\ChannelDefinitionBase3.cs" />
     <Compile Include="IEEEC37_118\DigitalDefinition3.cs" />
+    <Compile Include="IEEEC37_118\FrameImageCollector.cs" />
     <Compile Include="IEEEC37_118\PhasorDefinition3.cs" />
     <Compile Include="IFrameParser.cs" />
     <Compile Include="IFrequencyDefinition.cs" />

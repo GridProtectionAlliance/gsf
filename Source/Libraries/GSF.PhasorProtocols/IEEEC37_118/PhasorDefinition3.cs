@@ -26,14 +26,14 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
-// ReSharper disable VirtualMemberCallInConstructor
+// ReSharper disable SuggestBaseTypeForParameter
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 configuration frame 3 implementation of a <see cref="IPhasorDefinition"/>.
     /// </summary>
     [Serializable]
-    public class PhasorDefinition3 : ChannelDefinitionBase3, IPhasorDefinition
+    public sealed class PhasorDefinition3 : ChannelDefinitionBase3, IPhasorDefinition
     {
         #region [ Members ]
 
@@ -79,7 +79,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected PhasorDefinition3(SerializationInfo info, StreamingContext context)
+        private PhasorDefinition3(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             // Deserialize phasor definition
@@ -98,7 +98,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        public new virtual ConfigurationCell3 Parent
+        public new ConfigurationCell3 Parent
         {
             get => base.Parent as ConfigurationCell3;
             set => base.Parent = value;
@@ -112,19 +112,19 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="CoordinateFormat"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        public virtual CoordinateFormat CoordinateFormat => Parent.PhasorCoordinateFormat;
+        public CoordinateFormat CoordinateFormat => Parent.PhasorCoordinateFormat;
 
         /// <summary>
         /// Gets or sets the <see cref="AngleFormat"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        public virtual AngleFormat AngleFormat => Parent.PhasorAngleFormat;
+        public AngleFormat AngleFormat => Parent.PhasorAngleFormat;
 
         /// <summary>
         /// Gets or sets the <see cref="PhasorType"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        public virtual PhasorType PhasorType
+        public PhasorType PhasorType
         { 
-            get => (m_phasorTypeIndication & (byte)PhasorTypeIndication.Type) == 0 ? PhasorType.Voltage : PhasorType.Current; 
+            get => (m_phasorTypeIndication & PhasorTypeIndicator) == 0 ? PhasorType.Voltage : PhasorType.Current; 
             set
             {
                 if (value == PhasorType.Voltage)
@@ -140,7 +140,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <remarks>
         /// This only applies to current phasors.
         /// </remarks>
-        public virtual IPhasorDefinition VoltageReference
+        public IPhasorDefinition VoltageReference
         {
             get => m_voltageReference;
             set => m_voltageReference = PhasorType == PhasorType.Voltage ? this : value;
@@ -149,12 +149,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets <see cref="IEEEC37_118.PhasorDataModifications"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        public virtual PhasorDataModifications PhasorDataModifications { get; set; }
+        public PhasorDataModifications PhasorDataModifications { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="IEEEC37_118.PhasorComponent"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        public virtual PhasorComponent PhasorComponent
+        public PhasorComponent PhasorComponent
         {
             get => (PhasorComponent)(m_phasorTypeIndication & (byte)PhasorTypeIndication.ComponentMask);
             set => m_phasorTypeIndication = (byte)((m_phasorTypeIndication & ~(byte)PhasorTypeIndication.ComponentMask) | (byte)value);
@@ -227,10 +227,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// Gets the string representation of this <see cref="PhasorDefinition3"/>.
         /// </summary>
         /// <returns>String representation of this <see cref="PhasorDefinition3"/>.</returns>
-        public override string ToString()
-        {
-            return (PhasorType == PhasorType.Current ? "I: " : "V: ") + Label;
-        }
+        public override string ToString() => 
+            (PhasorType == PhasorType.Current ? "I: " : "V: ") + Label;
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.

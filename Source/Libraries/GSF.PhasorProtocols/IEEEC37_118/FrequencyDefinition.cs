@@ -103,7 +103,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         protected override byte[] BodyImage => BigEndian.GetBytes((ushort)(Parent.NominalFrequency == LineFrequency.Hz50 ? Bits.Bit00 : Bits.Nil));
 
-    #endregion
+        #endregion
 
         #region [ Methods ]
 

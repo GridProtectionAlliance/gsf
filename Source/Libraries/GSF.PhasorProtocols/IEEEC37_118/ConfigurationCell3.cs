@@ -25,7 +25,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Text;
 using GSF.Units.EE;
 
 // ReSharper disable VirtualMemberCallInConstructor
@@ -99,6 +101,79 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
+        /// Gets or sets format flags of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        /// <remarks>
+        /// These are bit flags, use properties to change basic values.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public FormatFlags FormatFlags
+        {
+            get => m_formatFlags;
+            set => m_formatFlags = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="ConfigurationCellBase.PhasorDefinitions"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        public override DataFormat PhasorDataFormat
+        {
+            get => (m_formatFlags & FormatFlags.Phasors) > 0 ? DataFormat.FloatingPoint : DataFormat.FixedInteger;
+            set
+            {
+                if (value == DataFormat.FloatingPoint)
+                    m_formatFlags |= FormatFlags.Phasors;
+                else
+                    m_formatFlags &= ~FormatFlags.Phasors;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="CoordinateFormat"/> for the <see cref="IPhasorDefinition"/> objects in the <see cref="ConfigurationCellBase.PhasorDefinitions"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        public override CoordinateFormat PhasorCoordinateFormat
+        {
+            get => (m_formatFlags & FormatFlags.Coordinates) > 0 ? CoordinateFormat.Polar : CoordinateFormat.Rectangular;
+            set
+            {
+                if (value == CoordinateFormat.Polar)
+                    m_formatFlags |= FormatFlags.Coordinates;
+                else
+                    m_formatFlags &= ~FormatFlags.Coordinates;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="DataFormat"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        public override DataFormat FrequencyDataFormat
+        {
+            get => (m_formatFlags & FormatFlags.Frequency) > 0 ? DataFormat.FloatingPoint : DataFormat.FixedInteger;
+            set
+            {
+                if (value == DataFormat.FloatingPoint)
+                    m_formatFlags |= FormatFlags.Frequency;
+                else
+                    m_formatFlags &= ~FormatFlags.Frequency;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="DataFormat"/> for the <see cref="IAnalogDefinition"/> objects in the <see cref="ConfigurationCellBase.AnalogDefinitions"/> of this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        public override DataFormat AnalogDataFormat
+        {
+            get => (m_formatFlags & FormatFlags.Analog) > 0 ? DataFormat.FloatingPoint : DataFormat.FixedInteger;
+            set
+            {
+                if (value == DataFormat.FloatingPoint)
+                    m_formatFlags |= FormatFlags.Analog;
+                else
+                    m_formatFlags &= ~FormatFlags.Analog;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets G_PMU_ID value for this <see cref="ConfigurationCell3"/>.
         /// </summary>
         public Guid GlobalID { get; set; } = Guid.Empty;
@@ -133,12 +208,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public int GroupDelay { get; set; }
 
-
-        public override DataFormat PhasorDataFormat { get; set; }
-        public override CoordinateFormat PhasorCoordinateFormat { get; set; }
-        public override DataFormat FrequencyDataFormat { get; set; }
-        public override DataFormat AnalogDataFormat { get; set; }
-
         /// <summary>
         /// Gets the maximum length of the <see cref="ConfigurationCellBase.StationName"/> of this <see cref="ConfigurationCell3"/>.
         /// </summary>
@@ -164,16 +233,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 byte[] buffer = new byte[HeaderLength];
                 int index = 0;
 
-                base.HeaderImage.CopyImage(buffer, ref index, base.HeaderLength);
-                BigEndian.CopyBytes(IDCode, buffer, index);
-                BigEndian.CopyBytes(StationName.Length, buffer, index);
-                //BigEndian.CopyBytes(StationName, buffer, index);
-                //BigEndian.CopyBytes(G_PMU_ID, buffer, index);
-                BigEndian.CopyBytes((ushort)m_formatFlags, buffer, index + 2);
-                BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 4);
-                BigEndian.CopyBytes((ushort)AnalogDefinitions.Count, buffer, index + 6);
-                BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 8);
-
+                index += EncodeLengthPrefixedString(StationName, buffer, index);
+                index += BigEndian.CopyBytes(IDCode, buffer, index);
+                index += GlobalID.ToRfcBytes(buffer, index);
+                index += BigEndian.CopyBytes((ushort)m_formatFlags, buffer, index);
+                index += BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index);
+                index += BigEndian.CopyBytes((ushort)AnalogDefinitions.Count, buffer, index);
+                BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index);
 
                 return buffer;
             }
@@ -182,7 +248,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the length of the <see cref="FooterImage"/>.
         /// </summary>
-        protected override int FooterLength => base.FooterLength + PhasorDefinitions.Count * PhasorDefinition.ConversionFactorLength + AnalogDefinitions.Count * AnalogDefinition.ConversionFactorLength + DigitalDefinitions.Count * DigitalDefinition.ConversionFactorLength + (Parent.DraftRevision > DraftRevision.Draft6 ? 2 : 0);
+        protected override int FooterLength =>
+            PhasorDefinitions.Count * PhasorDefinition3.ConversionFactorLength + 
+            AnalogDefinitions.Count * AnalogDefinition3.ConversionFactorLength + 
+            DigitalDefinitions.Count * DigitalDefinition3.ConversionFactorLength +
+            21 + base.FooterLength + 2;
 
         /// <summary>
         /// Gets the binary footer image of the <see cref="ConfigurationCell3"/> object.
@@ -192,42 +262,39 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             get
             {
                 byte[] buffer = new byte[FooterLength];
-                PhasorDefinition phasorDefinition;
-                AnalogDefinition analogDefinition;
-                DigitalDefinition digitalDefinition;
-                int x, index = 0;
+                int index = 0;
 
                 // Include conversion factors in configuration cell footer
-                for (x = 0; x < PhasorDefinitions.Count; x++)
+                foreach (IPhasorDefinition definition in PhasorDefinitions)
                 {
-                    phasorDefinition = PhasorDefinitions[x] as PhasorDefinition;
-
-                    if (phasorDefinition != null)
-                        phasorDefinition.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition.ConversionFactorLength);
+                    if (definition is PhasorDefinition3 phasorDefinition)
+                        phasorDefinition.ConversionFactorImage.CopyImage(buffer, ref index, PhasorDefinition3.ConversionFactorLength);
                 }
 
-                for (x = 0; x < AnalogDefinitions.Count; x++)
+                foreach (IAnalogDefinition definition in AnalogDefinitions)
                 {
-                    analogDefinition = AnalogDefinitions[x] as AnalogDefinition;
-
-                    if (analogDefinition != null)
-                        analogDefinition.ConversionFactorImage.CopyImage(buffer, ref index, AnalogDefinition.ConversionFactorLength);
+                    if (definition is AnalogDefinition3 analogDefinition)
+                        analogDefinition.ConversionFactorImage.CopyImage(buffer, ref index, AnalogDefinition3.ConversionFactorLength);
                 }
 
-                for (x = 0; x < DigitalDefinitions.Count; x++)
+                foreach (IDigitalDefinition definition in DigitalDefinitions)
                 {
-                    digitalDefinition = DigitalDefinitions[x] as DigitalDefinition;
-
-                    if (digitalDefinition != null)
-                        digitalDefinition.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition.ConversionFactorLength);
+                    if (definition is DigitalDefinition3 digitalDefinition)
+                        digitalDefinition.ConversionFactorImage.CopyImage(buffer, ref index, DigitalDefinition3.ConversionFactorLength);
                 }
+
+                // Add PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
+                index += BigEndian.CopyBytes(Latitude, buffer, index);
+                index += BigEndian.CopyBytes(Longitude, buffer, index);
+                index += BigEndian.CopyBytes(Elevation, buffer, index);
+                buffer[index++] = (byte)ServiceClass;
+                index += BigEndian.CopyBytes(Window, buffer, index);
+                index += BigEndian.CopyBytes(GroupDelay, buffer, index);
 
                 // Include nominal frequency
                 base.FooterImage.CopyImage(buffer, ref index, base.FooterLength);
 
-                // Include configuration count (new for version 7.0)
-                if (Parent.DraftRevision > DraftRevision.Draft6)
-                    BigEndian.CopyBytes(RevisionCount, buffer, index);
+                BigEndian.CopyBytes(RevisionCount, buffer, index);
 
                 return buffer;
             }
@@ -252,12 +319,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         #region [ Methods ]
 
-        string getLengthPrependedString(byte[] buffer, int index, out int length)
-        {
-            length = BigEndian.ToInt16(buffer, index);
-            return ByteEncoding.ASCII.GetString(buffer, index + 2, length);
-        }
-
         /// <summary>
         /// Parses the binary header image.
         /// </summary>
@@ -271,94 +332,30 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             int index = startIndex;
 
             // Parse out station name
-            //index += base.ParseHeaderImage(buffer, startIndex, length); //This is wrong. Should call ConfigCellBase
-            String StationName;
-            int len;
-            StationName = getLengthPrependedString(buffer, index, out len);
-            index += len + 2;
+            StationName = DecodeLengthPrefixedString(buffer, ref index);
+
             IDCode = BigEndian.ToUInt16(buffer, index);
-            //State.G_PMU_ID = BigEndian.ToGuid(buffer, index + 2);
-            m_formatFlags = (FormatFlags)BigEndian.ToUInt16(buffer, index + 16 + 2); //left as 16+x for clarity while editing, FIXME
+            index += 2;
+
+            GlobalID = buffer.ToRfcGuid(index);
+            index += 16;
+
+            m_formatFlags = (FormatFlags)BigEndian.ToUInt16(buffer, index);
+            index += 2;
+
             // Parse out total phasors, analogs and digitals defined for this device
-            State.PhasorCount = BigEndian.ToUInt16(buffer, index + 16 + 4);
-            State.AnalogCount = BigEndian.ToUInt16(buffer, index + 16 + 6);
-            State.DigitalCount = BigEndian.ToUInt16(buffer, index + 16 + 8);
+            state.PhasorCount = BigEndian.ToUInt16(buffer, index);
+            index += 2;
+            
+            state.AnalogCount = BigEndian.ToUInt16(buffer, index);
+            index += 2;
 
+            state.DigitalCount = BigEndian.ToUInt16(buffer, index);
+            index += 2;
 
-            index += 10 + 16; //FIXME: merge
-
-            return (index - startIndex);
+            return index - startIndex;
         }
 
-        /// <summary>
-        /// Parses the binary body image.
-        /// </summary>
-        /// <param name="buffer">Binary image to parse.</param>
-        /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
-        /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
-        {
-            //FIXME: magic goes here
-            int index = startIndex;
-            int strLength = 0;
-            int x;
-            //CHNAM, length-prepended string
-            for (x = 0; x < State.PhasorCount; x++)
-            {
-                //State.PhasorName[x] = getLengthPrependedString(buffer, index, out strLength); //Need to store this somewhere...
-                index += 2 + strLength; // for simplicity
-            }
-            for (x = 0; x < State.AnalogCount; x++)
-            {
-                //State.AnalogName[x] = getLengthPrependedString(buffer, index, out strLength);
-                index += 2 + strLength;
-            }
-            for (x = 0; x < State.DigitalCount; x++)
-            {
-                //State.DigitalName[x] = getLengthPrependedString(buffer, index, out strLength);
-                index += 2 + strLength;
-            }
-
-            //PHSCALE, 12 bytes of data flags, x PHNMR
-            for (x = 0; x < State.PhasorCount; x++)
-            {
-                //State.PhasorScale[x] = buffer.BlockCopy(index, index + 12);
-                index += 12;
-            }
-
-            //ANSCALE, 8 bytes x ANNMR
-            for (x = 0; x < State.AnalogCount; x++)
-            {
-                //State.ANSCALE[x] = buffer.BlockCopy(index, index + 8);
-                index += 12;
-
-            }
-            //DIGUNIT, 4 x DGNMR
-            for (x = 0; x < State.DigitalCount; x++)
-            {
-                //State.DigitalStatus[x] = buffer.BlockCopy(index, index + 4);
-                index += 4;
-            }
-            //PMU_LAT, 4 bytes, IEEE float, -90.0 to +90.0
-            //State.DeviceLatitude = BigEndian.ToSingle(buffer, index);
-            //PMU_LON, 4 bytes, IEEE float, -179.9... to +180
-            //State.DeviceLongitude = BigEndian.ToSingle(buffer, index + 4);
-            //PMU_ELEV, 4 bytes, IEEE float, infinity for unknown
-            //State.DeviceElevation = BigEndian.ToSingle(buffer, index + 8);
-            //SVC_CLASS, 1 ASCII char
-            //State.ServiceClass = BigEndian.ToChar(buffer, index + 9);
-            //WINDOW, 4 bytes, signed int
-            //State.MeasurementWindow = BigEndian.ToInt32(buffer, index + 13);
-            //GRP_DLY, 4 bytes, signed int
-            //State.GroupDelay = BigEndian.ToInt32(buffer, index + 17);
-            //FNOM, 2 bytes, unsigned int, Bit 0 is flag (50/60 hz)
-            //State.FNOM = BigEndian.ToUInt16(buffer, index + 19);
-            //CFGCNT, 2 bytes
-            //State.CFGCNT = BigEndian.ToUInt16(buffer, index + 21);
-
-            return startIndex; //FIXME
-        }
         /// <summary>
         /// Parses the binary footer image.
         /// </summary>
@@ -368,20 +365,52 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
-
             int index = startIndex;
+            
+            // Parse conversion factors from configuration cell footer
+            foreach (IPhasorDefinition definition in PhasorDefinitions)
+            {
+                if (definition is PhasorDefinition phasorDefinition)
+                    index += phasorDefinition.ParseConversionFactor(buffer, index);
+            }
+
+            foreach (IAnalogDefinition definition in AnalogDefinitions)
+            {
+                if (definition is AnalogDefinition analogDefinition)
+                    index += analogDefinition.ParseConversionFactor(buffer, index);
+            }
+
+            foreach (IDigitalDefinition definition in DigitalDefinitions)
+            {
+                if (definition is DigitalDefinition digitalDefinition)
+                    index += digitalDefinition.ParseConversionFactor(buffer, index);
+            }
+
+            // Parse PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
+            Latitude = BigEndian.ToSingle(buffer, index);
+            index += 4;
+
+            Longitude = BigEndian.ToSingle(buffer, index);
+            index += 4;
+
+            Elevation = BigEndian.ToSingle(buffer, index);
+            index += 4;
+
+            ServiceClass = (char)buffer[index++];
+
+            Window = BigEndian.ToInt32(buffer, index);
+            index += 4;
+
+            GroupDelay = BigEndian.ToInt32(buffer, index);
+            index += 4;
 
             // Parse nominal frequency
             index += base.ParseFooterImage(buffer, index, length);
 
-            // Parse out configuration count (new for version 7.0)
-            if (Parent.DraftRevision > DraftRevision.Draft6)
-            {
-                RevisionCount = BigEndian.ToUInt16(buffer, index);
-                index += 2;
-            }
+            RevisionCount = BigEndian.ToUInt16(buffer, index);
+            index += 2;
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>
@@ -411,6 +440,69 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             parsedLength = configCell.ParseBinaryImage(buffer, startIndex, 0);
 
             return configCell;
+        }
+
+        /// <summary>
+        /// Encodes a length-prefixed string. Length size is one byte per IEEE C37.118-2011 specification.
+        /// </summary>
+        /// <param name="value">String value to encode using UTF-8 encoding..</param>
+        /// <param name="buffer">Target buffer.</param>
+        /// <param name="offset">Target buffer offset.</param>
+        /// <returns>Total number of encoded bytes copied into <paramref name="buffer"/>.</returns>
+        public static int EncodeLengthPrefixedString(string value, byte[] buffer, int offset)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+
+            if (bytes.Length > byte.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(value), $"Cannot encode a length prefixed string for IEEE C37.118-2011 that is longer than {byte.MaxValue} bytes. UTF-8 encoded string length is {bytes.Length:N0} bytes.");
+
+            int totalLength = bytes.Length + 1;
+            buffer.ValidateParameters(offset, totalLength);
+
+            buffer[offset] = (byte)bytes.Length;
+            Buffer.BlockCopy(bytes, 0, buffer, offset + 1, bytes.Length);
+
+            return totalLength;
+        }
+
+        /// <summary>
+        /// Encodes a length-prefixed string. Length size is one byte per IEEE C37.118-2011 specification.
+        /// </summary>
+        /// <param name="value">String value to encode using UTF-8 encoding..</param>
+        /// <returns>Encoded string.</returns>
+        public static byte[] EncodeLengthPrefixedString(string value)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+
+            if (bytes.Length > byte.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(value), $"Cannot encode a length prefixed string for IEEE C37.118-2011 that is longer than {byte.MaxValue} bytes. UTF-8 encoded string length is {bytes.Length:N0} bytes.");
+            
+            byte[] buffer = new byte[bytes.Length + 1];
+            
+            buffer[0] = (byte)bytes.Length;
+            Buffer.BlockCopy(bytes, 0, buffer, 1, bytes.Length);
+
+            return buffer;
+        }
+
+        /// <summary>
+        /// Decodes a length-prefixed string. Length size is one byte per IEEE C37.118-2011 specification.
+        /// </summary>
+        /// <param name="buffer">Source buffer.</param>
+        /// <param name="offset">Source buffer offset. Value is auto-incremented.</param>
+        /// <returns>Decoded string from bytes encoded in <paramref name="buffer"/>.</returns>
+        public static string DecodeLengthPrefixedString(byte[] buffer, ref int offset)
+        {
+            if (buffer.Length - 1 < offset)
+                throw new ArgumentOutOfRangeException(nameof(offset), $"offset of {offset} and length of 1 will exceed buffer size of {buffer.Length:N0}");
+
+            int length = buffer[offset++];
+            buffer.ValidateParameters(offset, length);
+
+            string result = Encoding.UTF8.GetString(buffer, offset, length);
+            offset += length;
+
+            return result;
         }
 
         #endregion

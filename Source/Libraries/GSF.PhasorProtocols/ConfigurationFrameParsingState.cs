@@ -27,6 +27,7 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols
 {
     /// <summary>
