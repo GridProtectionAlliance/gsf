@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using GSF.Units.EE;
@@ -37,7 +38,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
     [Serializable]
-    public class ConfigurationCell3 : ConfigurationCellBase
+    public sealed class ConfigurationCell3 : ConfigurationCellBase
     {
         #region [ Members ]
 
@@ -80,11 +81,19 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationCell3(SerializationInfo info, StreamingContext context)
+        private ConfigurationCell3(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             // Deserialize configuration cell
             m_formatFlags = (FormatFlags)info.GetValue("formatFlags", typeof(FormatFlags));
+
+            // Decode PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
+            Latitude = (float)info.GetValue("latitude", typeof(float));
+            Longitude = info.GetSingle("longitude");
+            Elevation = info.GetSingle("elevation");
+            ServiceClass = info.GetChar("serviceClass");
+            Window = info.GetInt32("window");
+            GroupDelay = info.GetInt32("groupDelay");
         }
 
         #endregion
@@ -424,6 +433,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             // Serialize configuration cell
             info.AddValue("formatFlags", m_formatFlags, typeof(FormatFlags));
+
+            // Encode PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
+            info.AddValue("latitude", Latitude);
+            info.AddValue("longitude", Longitude);
+            info.AddValue("elevation", Elevation);
+            info.AddValue("serviceClass", ServiceClass);
+            info.AddValue("window", Window);
+            info.AddValue("groupDelay", GroupDelay);
         }
 
         #endregion
@@ -442,6 +459,24 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             return configCell;
         }
 
+        // Encode a string into a UTF-8 byte array, validating length.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte[] EncodeUTF8String(string value)
+        {
+            if (value == null)
+                value = "";
+
+            if (value.Length > byte.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(value), $"Cannot encode a length prefixed string for IEEE C37.118-2011 that is longer than {byte.MaxValue} bytes. Source string length before encoding is already {value.Length:N0} characters.");
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+
+            if (bytes.Length > byte.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(value), $"Cannot encode a length prefixed string for IEEE C37.118-2011 that is longer than {byte.MaxValue} bytes. UTF-8 encoded string length is {bytes.Length:N0} bytes.");
+
+            return bytes;
+        }
+
         /// <summary>
         /// Encodes a length-prefixed string. Length size is one byte per IEEE C37.118-2011 specification.
         /// </summary>
@@ -451,11 +486,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>Total number of encoded bytes copied into <paramref name="buffer"/>.</returns>
         public static int EncodeLengthPrefixedString(string value, byte[] buffer, int offset)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(value);
-
-            if (bytes.Length > byte.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(value), $"Cannot encode a length prefixed string for IEEE C37.118-2011 that is longer than {byte.MaxValue} bytes. UTF-8 encoded string length is {bytes.Length:N0} bytes.");
-
+            byte[] bytes = EncodeUTF8String(value);
+            
             int totalLength = bytes.Length + 1;
             buffer.ValidateParameters(offset, totalLength);
 
@@ -472,11 +504,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>Encoded string.</returns>
         public static byte[] EncodeLengthPrefixedString(string value)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(value);
-
-            if (bytes.Length > byte.MaxValue)
-                throw new ArgumentOutOfRangeException(nameof(value), $"Cannot encode a length prefixed string for IEEE C37.118-2011 that is longer than {byte.MaxValue} bytes. UTF-8 encoded string length is {bytes.Length:N0} bytes.");
-            
+            byte[] bytes = EncodeUTF8String(value);
             byte[] buffer = new byte[bytes.Length + 1];
             
             buffer[0] = (byte)bytes.Length;
