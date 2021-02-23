@@ -42,6 +42,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Constants
         private new const int FixedHeaderLength = ConfigurationFrame1.FixedHeaderLength + 2;
 
+        // Each frame header length is 14 bytes of common header plus two bytes for CONT_IDX
+        internal const ushort FrameHeaderLength = CommonFrameHeader.FixedLength + 2;
+
         #endregion
 
         #region [ Constructors ]
@@ -158,9 +161,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 }
                 else
                 {
-                    // Each frame header length is 14 bytes of common header plus two bytes for CONT_IDX
-                    const ushort FrameHeaderLength = CommonFrameHeader.FixedLength + 2;
-
                     // Maximum frame data payload length is max frame length minus frame header length
                     const ushort MaxFrameDataLength = MaxFrameLength - FrameHeaderLength;
 
@@ -298,7 +298,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
         {
             // Skip past header that was already parsed...
-            startIndex += CommonFrameHeader.FixedLength + 2;
+            startIndex += FrameHeaderLength; // Includes CONT_IDX
 
             m_timebase = BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
             CommonHeader.Timebase = m_timebase;

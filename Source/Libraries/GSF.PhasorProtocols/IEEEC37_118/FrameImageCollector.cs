@@ -105,21 +105,19 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="offset">An <see cref="int"/> value indicating the offset to read from.</param>
         public void AppendFrameImage(byte[] buffer, int offset, int length)
         {
-            const int FixedHeaderLength = CommonFrameHeader.FixedLength + 2;
-
             // Validate CRC of frame image being appended
             if (ValidateFrameCheckSum && !CommonFrameHeader.ChecksumIsValid(buffer, offset, length))
-                throw new InvalidOperationException("Invalid binary image detected - check sum of individual IEEE C37.118 partial frame transmission did not match");
+                throw new InvalidOperationException("Invalid binary image detected - check sum of individual IEEE C37.118 fragmented configuration frame 3 partial frame transmission did not match");
 
             // Include initial header in new stream
             if (m_frameQueue.Length == 0)
-                m_frameQueue.Write(buffer, offset, FixedHeaderLength);
+                m_frameQueue.Write(buffer, offset, ConfigurationFrame3.FrameHeaderLength);
 
             // Skip past header, including CONT_IDX
-            offset += FixedHeaderLength;
+            offset += ConfigurationFrame3.FrameHeaderLength;
 
             // Include frame image
-            m_frameQueue.Write(buffer, offset, length - FixedHeaderLength);
+            m_frameQueue.Write(buffer, offset, length - ConfigurationFrame3.FrameHeaderLength);
 
             // Track total frame images
             Count++;
