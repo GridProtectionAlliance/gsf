@@ -319,6 +319,11 @@ namespace PhasorProtocolAdapters
         public uint DigitalMaskValue { get; set; }
 
         /// <summary>
+        /// Gets the maximum label length for string fields in configuration frames.
+        /// </summary>
+        public virtual int MaximumLabelLength { get; } = 16;
+
+        /// <summary>
         /// Gets the minimum latency in milliseconds over the last test interval.
         /// </summary>
         public int MinimumLatency => (int)Ticks.ToMilliseconds(m_minimumLatency);
@@ -495,58 +500,36 @@ namespace PhasorProtocolAdapters
                 StringBuilder status = new StringBuilder();
 
                 if (!(ConfigurationFrame is null))
-                {
-                    status.AppendFormat("  Configuration frame size: {0} bytes", ConfigurationFrame.BinaryLength);
-                    status.AppendLine();
-                }
+                    status.AppendLine($"  Configuration frame size: {ConfigurationFrame.BinaryLength:N0} bytes");
 
                 if (!(BaseConfigurationFrame?.Cells is null))
-                {
-                    status.AppendFormat("  Total configured devices: {0}", BaseConfigurationFrame.Cells.Count);
-                    status.AppendLine();
-                }
+                    status.AppendLine($"  Total configured devices: {BaseConfigurationFrame.Cells.Count:N0}");
 
                 Dictionary<MeasurementKey, SignalReference[]> signalReferences = SignalReferences;
 
                 if (!(signalReferences is null))
-                {
-                    status.AppendFormat(" Total device measurements: {0}", signalReferences.Count);
-                    status.AppendLine();
-                }
+                    status.AppendLine($" Total device measurements: {signalReferences.Count:N0}");
 
-                status.AppendFormat(" Auto-publish config frame: {0}", AutoPublishConfigurationFrame);
-                status.AppendLine();
-                status.AppendFormat("   Auto-start data channel: {0}", AutoStartDataChannel);
-                status.AppendLine();
-                status.AppendFormat("       Data stream ID code: {0}", IDCode);
-                status.AppendLine();
-                status.AppendFormat("         Nominal frequency: {0}Hz", (int)NominalFrequency);
-                status.AppendLine();
-                status.AppendFormat("               Data format: {0}", DataFormat);
-                status.AppendLine();
-                status.AppendFormat("         Coordinate format: {0}", CoordinateFormat);
-                status.AppendLine();
-                status.AppendFormat("    Minimum output latency: {0}ms over {1} tests", MinimumLatency, m_latencyMeasurements);
-                status.AppendLine();
-                status.AppendFormat("    Maximum output latency: {0}ms over {1} tests", MaximumLatency, m_latencyMeasurements);
-                status.AppendLine();
-                status.AppendFormat("    Average output latency: {0}ms over {1} tests", AverageLatency, m_latencyMeasurements);
-                status.AppendLine();
+                status.AppendLine($" Auto-publish config frame: {AutoPublishConfigurationFrame}");
+                status.AppendLine($"   Auto-start data channel: {AutoStartDataChannel}");
+                status.AppendLine($"       Data stream ID code: {IDCode:N0}");
+                status.AppendLine($"         Nominal frequency: {(int)NominalFrequency}Hz");
+                status.AppendLine($"               Data format: {DataFormat}");
+                status.AppendLine($"         Coordinate format: {CoordinateFormat}");
+                status.AppendLine($"      Maximum label length: {MaximumLabelLength:N0} bytes");
+                status.AppendLine($"    Minimum output latency: {MinimumLatency:N0}ms over {m_latencyMeasurements:N0} tests");
+                status.AppendLine($"    Maximum output latency: {MaximumLatency:N0}ms over {m_latencyMeasurements:N0} tests");
+                status.AppendLine($"    Average output latency: {AverageLatency:N0}ms over {m_latencyMeasurements:N0} tests");
 
                 if (DataFormat == DataFormat.FixedInteger)
                 {
-                    status.AppendFormat("     Current scaling value: {0:00000000} ({1:0.00000})", CurrentScalingValue, CurrentScalingValue * 0.00001D);
-                    status.AppendLine();
-                    status.AppendFormat("     Voltage scaling value: {0:00000000} ({1:0.00000})", VoltageScalingValue, VoltageScalingValue * 0.00001D);
-                    status.AppendLine();
-                    status.AppendFormat("      Analog scaling value: {0:00000000} ({1:0.00000})", AnalogScalingValue, AnalogScalingValue * 0.00001D);
-                    status.AppendLine();
+                    status.AppendLine($"     Current scaling value: {CurrentScalingValue:00000000} ({CurrentScalingValue * 0.00001D:0.00000})");
+                    status.AppendLine($"     Voltage scaling value: {VoltageScalingValue:00000000} ({VoltageScalingValue * 0.00001D:0.00000})");
+                    status.AppendLine($"      Analog scaling value: {AnalogScalingValue:00000000} ({AnalogScalingValue * 0.00001D:0.00000})");
                 }
 
-                status.AppendFormat("       Digital normal mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.LowWord())));
-                status.AppendLine();
-                status.AppendFormat(" Digital valid inputs mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.HighWord())));
-                status.AppendLine();
+                status.AppendLine($"       Digital normal mask: {ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.LowWord()))} (big-endian)");
+                status.AppendLine($" Digital valid inputs mask: {ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.HighWord()))} (big-endian)");
 
                 if (!(m_dataChannel is null))
                 {
@@ -572,10 +555,11 @@ namespace PhasorProtocolAdapters
                 if (!(clientIDs is null) && clientIDs.Length > 0)
                 {
                     status.AppendLine();
-                    status.AppendFormat("Command channel has {0} connected clients:\r\n\r\n", clientIDs.Length);
+                    status.AppendLine($"Command channel has {clientIDs.Length:N0} connected clients:");
+                    status.AppendLine();
 
                     for (int i = 0; i < clientIDs.Length; i++)
-                        status.AppendFormat("    {0}) {1}\r\n", i + 1, GetConnectionID(m_commandChannel, clientIDs[i]));
+                        status.AppendLine($"    {i + 1:N0}) {GetConnectionID(m_commandChannel, clientIDs[i])}");
 
                     status.AppendLine();
                 }
@@ -607,16 +591,8 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
         /// </summary>
-        public long AverageMeasurementsPerSecond
-        {
-            get
-            {
-                if (m_measurementsPerSecondCount == 0L)
-                    return 0L;
-
-                return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
-            }
-        }
+        public long AverageMeasurementsPerSecond => 
+            m_measurementsPerSecondCount == 0L ? 0L : m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
 
         /// <summary>
         /// Gets the minimum latency calculated over the full lifetime of the output stream.
@@ -631,16 +607,8 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the average latency calculated over the full lifetime of the output stream.
         /// </summary>
-        public int LifetimeAverageLatency
-        {
-            get
-            {
-                if (m_lifetimeLatencyMeasurements == 0)
-                    return -1;
-
-                return (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
-            }
-        }
+        public int LifetimeAverageLatency => 
+            m_lifetimeLatencyMeasurements == 0 ? -1 : (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
 
         #endregion
 
@@ -887,8 +855,6 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Reloads the phasor data concentrator configuration.", "Administrator", "Editor")]
         public void UpdateConfiguration()
         {
-            const int LabelLength = 16;
-
             // Define a protocol independent configuration frame
             BaseConfigurationFrame = new ConfigurationFrame(IDCode, DateTime.UtcNow.Ticks, (ushort)FramesPerSecond) { Name = Name };
             Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -931,13 +897,13 @@ namespace PhasorProtocolAdapters
                     cell.IDLabel = deviceRow["Name"].ToString().Trim();
 
                     // Station name is serialized to configuration frame
-                    cell.StationName = acronym.Trim();
+                    cell.StationName = acronym.Trim().TruncateRight(MaximumLabelLength);
 
                     // Define all the phasors configured for this device
                     foreach (DataRow phasorRow in DataSource.Tables["OutputStreamDevicePhasors"].Select($"OutputStreamDeviceID={deviceID}", "LoadOrder"))
                     {
                         order = int.Parse(phasorRow["LoadOrder"].ToNonNullString("0"));
-                        label = phasorRow["Label"].ToNonNullString("Phasor " + order).Trim().TruncateRight(LabelLength);
+                        label = phasorRow["Label"].ToNonNullString("Phasor " + order).Trim().TruncateRight(MaximumLabelLength);
                         PhasorType type = phasorRow["Type"].ToNonNullString("V").Trim().ToUpper().StartsWith("V") ? PhasorType.Voltage : PhasorType.Current;
                         char phase = phasorRow["Phase"].ToNonNullString("+").Trim().ToUpper()[0];
                         scale = phasorRow["ScalingValue"].ToNonNullString("0");
@@ -962,12 +928,13 @@ namespace PhasorProtocolAdapters
                             GeneratePhasorLabel(label, phase, type),
                             scalingValue,
                             type,
-                            null,
-                            order));
+                            order,
+                            phase,
+                            null));
                     }
 
                     // Add frequency definition
-                    label = $"{cell.IDLabel.TruncateRight(LabelLength - 5)} Freq".Trim();
+                    label = $"{cell.IDLabel.TruncateRight(MaximumLabelLength - 5)} Freq".Trim();
                     cell.FrequencyDefinition = new FrequencyDefinition(cell, label);
 
                     // Optionally define all the analogs configured for this device
@@ -976,7 +943,7 @@ namespace PhasorProtocolAdapters
                         foreach (DataRow analogRow in DataSource.Tables["OutputStreamDeviceAnalogs"].Select($"OutputStreamDeviceID={deviceID}", "LoadOrder"))
                         {
                             order = int.Parse(analogRow["LoadOrder"].ToNonNullString("0"));
-                            label = analogRow["Label"].ToNonNullString("Analog " + order).Trim().TruncateRight(LabelLength);
+                            label = analogRow["Label"].ToNonNullString("Analog " + order).Trim().TruncateRight(MaximumLabelLength);
                             AnalogType analogType = (AnalogType)int.Parse(analogRow["Type"].ToNonNullString("0"));
                             scale = analogRow["ScalingValue"].ToNonNullString("0");
 
@@ -1004,7 +971,7 @@ namespace PhasorProtocolAdapters
                             scale = digitalRow["MaskValue"].ToNonNullString("0");
 
                             // IEEE C37.118 digital labels are defined with all 16-labels (one for each bit) in one large formatted string
-                            label = digitalRow["Label"].ToNonNullString("Digital " + order).Trim().TruncateRight(LabelLength * 16);
+                            label = digitalRow["Label"].ToNonNullString("Digital " + order).Trim().TruncateRight(MaximumLabelLength * 16);
 
                             if (m_replaceWithSpaceChar != char.MinValue)
                                 label = label.Replace(m_replaceWithSpaceChar, ' ');

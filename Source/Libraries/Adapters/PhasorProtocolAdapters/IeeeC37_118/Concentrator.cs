@@ -33,7 +33,6 @@ using GSF;
 using GSF.Communication;
 using GSF.Diagnostics;
 using GSF.PhasorProtocols;
-using GSF.PhasorProtocols.Anonymous;
 using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -46,16 +45,14 @@ using System.Text;
 using System.Threading;
 using GSF.Data;
 using GSF.Data.Model;
-using AnalogDefinition = GSF.PhasorProtocols.IEEEC37_118.AnalogDefinition;
-using ConfigurationCell = GSF.PhasorProtocols.IEEEC37_118.ConfigurationCell;
-using DigitalDefinition = GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition;
-using FrequencyDefinition = GSF.PhasorProtocols.IEEEC37_118.FrequencyDefinition;
-using PhasorDefinition = GSF.PhasorProtocols.IEEEC37_118.PhasorDefinition;
-using AnonDigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
-using AnonConfigurationCell = GSF.PhasorProtocols.Anonymous.ConfigurationCell;
-using AnonConfigurationFrame = GSF.PhasorProtocols.Anonymous.ConfigurationFrame;
+using AnonymousPhasorDefinition = GSF.PhasorProtocols.Anonymous.PhasorDefinition;
+using AnonymousDigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
+using AnonymousConfigurationCell = GSF.PhasorProtocols.Anonymous.ConfigurationCell;
+using AnonymousConfigurationFrame = GSF.PhasorProtocols.Anonymous.ConfigurationFrame;
 using Measurement = GSF.TimeSeries.Model.Measurement;
+using Phasor = GSF.TimeSeries.Model.Phasor;
 
+// ReSharper disable CompareOfFloatsByEqualityOperator
 // ReSharper disable PossibleInvalidCastExceptionInForeachLoop
 namespace PhasorProtocolAdapters.IeeeC37_118
 {
@@ -114,6 +111,11 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <see cref="DraftRevision.Std2011"/> will target <see cref="ConfigurationFrame3"/> outputs.
         /// </summary>
         public DraftRevision TargetConfigurationType { get; set; } = DraftRevision.Std2005;
+
+        /// <summary>
+        /// Gets the maximum label length for string fields in configuration frames.
+        /// </summary>
+        public override int MaximumLabelLength => TargetConfigurationType >= DraftRevision.Std2011 ? byte.MaxValue : base.MaximumLabelLength;
 
         /// <summary>
         /// Returns the detailed status of this <see cref="Concentrator"/>.
@@ -183,9 +185,9 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <summary>
         /// Creates a new IEEE C37.118 specific <see cref="IConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
-        /// <param name="baseConfigurationFrame">Protocol independent <see cref="ConfigurationFrame"/>.</param>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="AnonymousConfigurationFrame"/>.</param>
         /// <returns>A new IEEE C37.118 specific <see cref="IConfigurationFrame"/>.</returns>
-        protected override IConfigurationFrame CreateNewConfigurationFrame(ConfigurationFrame baseConfigurationFrame)
+        protected override IConfigurationFrame CreateNewConfigurationFrame(AnonymousConfigurationFrame baseConfigurationFrame)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
             ConfigurationFrame2 configurationFrame2 = CreateConfigurationFrame2(baseConfigurationFrame, TimeBase, NominalFrequency);
@@ -241,6 +243,12 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 // Mark cells with configuration changed flag if configuration was reloaded
                 if (configurationChanged)
                     dataCell.ConfigurationChangeDetected = true;
+
+                // If the associated parent configuration for this data cell (PMU/device)
+                // has identified data modifications through configuration, mark the data
+                // modification bit of the data cell (Bit 9)
+                if (dataCell.Parent3?.DataModified ?? false)
+                    dataCell.DataModified = true;
             }
 
             return dataFrame;
@@ -396,8 +404,8 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 void exceptionHandler(Exception ex) => OnProcessException(MessageLevel.Info, ex);
 
                 // Cache both configuration 2 and 3 frames
-                AnonConfigurationFrame.Cache(m_configurationFrame2, exceptionHandler, name);
-                AnonConfigurationFrame.Cache(m_configurationFrame3, exceptionHandler, string.Format(ConfigFrame3CacheName, name));
+                AnonymousConfigurationFrame.Cache(m_configurationFrame2, exceptionHandler, name);
+                AnonymousConfigurationFrame.Cache(m_configurationFrame3, exceptionHandler, string.Format(ConfigFrame3CacheName, name));
             }
             catch (Exception ex)
             {
@@ -418,16 +426,16 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <summary>
         /// Creates a new IEEE C37.118 <see cref="ConfigurationFrame2"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
-        /// <param name="baseConfigurationFrame">Protocol independent <see cref="AnonConfigurationFrame"/>.</param>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="AnonymousConfigurationFrame"/>.</param>
         /// <param name="timeBase">Timebase to use for fraction second resolution.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> to use for the new <see cref="ConfigurationFrame2"/></param>.
         /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame2"/>.</returns>
-        public static ConfigurationFrame2 CreateConfigurationFrame2(ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
+        public static ConfigurationFrame2 CreateConfigurationFrame2(AnonymousConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
             ConfigurationFrame2 configurationFrame = new ConfigurationFrame2(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
-            foreach (AnonConfigurationCell baseCell in baseConfigurationFrame.Cells)
+            foreach (AnonymousConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 configuration cell (i.e., a PMU configuration)
                 ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency)
@@ -454,12 +462,18 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                     newCell.AnalogDefinitions.Add(new AnalogDefinition(newCell, analogDefinition.Label, analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
 
                 // Add digital definitions
-                foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
+                foreach (AnonymousDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
                 {
-                    // Attempt to derive user defined mask value if available
-                    AnonDigitalDefinition anonDigitalDefinition = digitalDefinition as AnonDigitalDefinition;
+                    uint maskValue = digitalDefinition.MaskValue;
 
-                    uint maskValue = anonDigitalDefinition?.MaskValue ?? 0U;
+                    // Check for a config frame 3 style digital label
+                    if (digitalDefinition.Label.Contains("|"))
+                    {
+                        string[] labels = digitalDefinition.Label.Split('|');
+
+                        if (labels.Length == 16)
+                            digitalDefinition.Label = string.Join("", labels.Select(label => label.GetValidLabel().TruncateRight(16).PadRight(16)));
+                    }
 
                     newCell.DigitalDefinitions.Add(new DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
@@ -474,21 +488,21 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <summary>
         /// Creates a new IEEE C37.118 <see cref="ConfigurationFrame3"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
-        /// <param name="baseConfigurationFrame">Protocol independent <see cref="AnonConfigurationFrame"/>.</param>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="AnonymousConfigurationFrame"/>.</param>
         /// <param name="timeBase">Timebase to use for fraction second resolution.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> to use for the new <see cref="ConfigurationFrame3"/></param>.
         /// <param name="parent">Gets reference to parent <see cref="Concentrator"/> instance, if available.</param>
         /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame3"/>.</returns>
         /// <remarks>
         /// When <paramref name="parent"/> reference is not available, ancillary configuration frame 3 data will be attempted to be loaded from last cached
-        /// instance of the configuration matching the defined <see cref="ConfigurationFrame.Name"/> of the <paramref name="baseConfigurationFrame"/>.
+        /// instance of the configuration matching the defined <see cref="AnonymousConfigurationFrame.Name"/> of the <paramref name="baseConfigurationFrame"/>.
         /// </remarks>
-        public static ConfigurationFrame3 CreateConfigurationFrame3(ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency, Concentrator parent = null)
+        public static ConfigurationFrame3 CreateConfigurationFrame3(AnonymousConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency, Concentrator parent = null)
         {
             // Create a new IEEE C37.118 configuration frame 3 using base configuration
             ConfigurationFrame3 configurationFrame = new ConfigurationFrame3(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
-            foreach (AnonConfigurationCell baseCell in baseConfigurationFrame.Cells)
+            foreach (AnonymousConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 configuration cell3 (i.e., a PMU configuration)
                 ConfigurationCell3 newCell = new ConfigurationCell3(configurationFrame, baseCell.IDCode, nominalFrequency)
@@ -504,8 +518,8 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 newCell.IDLabel = baseCell.IDLabel.TruncateRight(newCell.IDLabelLength);
 
                 // Add phasor definitions
-                foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
-                    newCell.PhasorDefinitions.Add(new PhasorDefinition3(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
+                foreach (AnonymousPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
+                    newCell.PhasorDefinitions.Add(new PhasorDefinition3(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null, phasorDefinition.Phase));
 
                 // Add frequency definition
                 newCell.FrequencyDefinition = new FrequencyDefinition(newCell, baseCell.FrequencyDefinition.Label);
@@ -515,12 +529,22 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                     newCell.AnalogDefinitions.Add(new AnalogDefinition3(newCell, analogDefinition.Label, analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
 
                 // Add digital definitions
-                foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
+                foreach (AnonymousDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
                 {
                     // Attempt to derive user defined mask value if available
-                    AnonDigitalDefinition anonDigitalDefinition = digitalDefinition as AnonDigitalDefinition;
+                    uint maskValue = digitalDefinition.MaskValue;
 
-                    uint maskValue = anonDigitalDefinition?.MaskValue ?? 0U;
+                    // Check for a config frame 2 style digital label
+                    if (!digitalDefinition.Label.Contains("|"))
+                    {
+                        string[] labels = new string[16];
+                        string label = digitalDefinition.Label.PadRight(16 * 16);
+
+                        for (int i = 0; i < 16; i++)
+                            labels[i] = label.Substring(i * 16, 16).GetValidLabel().Trim();
+
+                        digitalDefinition.Label = string.Join("|", labels);
+                    }
 
                     newCell.DigitalDefinitions.Add(new DigitalDefinition3(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
@@ -531,7 +555,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
             bool loadFromCache = parent is null;
 
-            // When parent reference is null, loading from cached configuration is still an option. This will allow this
+            // When parent reference is null, loading from cached configuration is still an option. This will allow the
             // CreateConfigurationFrame3 function to still be usable in a use cases outside of a concentrator context.
             if (!loadFromCache)
             {
@@ -549,13 +573,13 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                         // mappings, everything in an output stream is mapped by measurement and device information is considered temporal
                         // and dynamic. However, needed information needed for output devices, i.e, ConfigurationCell3 instances, from the
                         // database will be defined in the original source device. The only concrete mapping from source device to output
-                        // devices are the measurements - so this will be the path to mapping back to the source. Since all output streams
-                        // will always have a single frequency measurement, this should be as good as any for finding our way back to the
-                        // original associated source device, this assuming there was one. If no source device exists, we will fall back
-                        // on default values.
-
+                        // devices are the measurements - so this will be the path to mapping back to the source. Since each device in an
+                        // output stream will always have a single frequency measurement, this should be as good as any for finding our
+                        // way back to the original associated source device, this assuming there was one. If no source device exists, we
+                        // will fall back on default values.
                         TableOperations<Device> deviceTable = new TableOperations<Device>(database);
                         TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(database);
+                        TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(database);
 
                         // Search signal reference map for frequencies
                         foreach (KeyValuePair<MeasurementKey, SignalReference[]> kvp in parent.SignalReferences)
@@ -576,11 +600,13 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                                     // Lookup associated frequency measurement
                                     Measurement measurement = measurementTable.QueryRecordWhere("PointID = {0}", key.ID);
+                                    int? deviceID = measurement?.DeviceID;
+                                    int framesPerSecond = parent.FramesPerSecond;
 
-                                    if (!(measurement?.DeviceID is null))
+                                    if (!(deviceID is null))
                                     {
                                         // Lookup frequency's parent device
-                                        Device device = deviceTable.QueryRecordWhere("ID = {0}", measurement.DeviceID);
+                                        Device device = deviceTable.QueryRecordWhere("ID = {0}", deviceID);
 
                                         if (!(device is null))
                                         {
@@ -604,6 +630,9 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                             cell.GroupDelay = (settings.TryGetValue(nameof(GroupDelay), out setting) || settings.TryGetValue("GRP_DLY", out setting)) && int.TryParse(setting, out int groupDelay) ?
                                                 groupDelay : parent.GroupDelay;
 
+                                            if (device.FramesPerSecond.HasValue)
+                                                framesPerSecond = device.FramesPerSecond.Value;
+
                                             foundSource = true;
                                         }
                                     }
@@ -620,18 +649,98 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                         cell.GroupDelay = parent.GroupDelay;
                                     }
 
+                                    bool findMeasurementKey(SignalReference signalReference, out MeasurementKey measurementKey)
+                                    {
+                                        foreach (KeyValuePair<MeasurementKey, SignalReference[]> pair in parent.SignalReferences)
+                                        {
+                                            if (pair.Value.Any(sourceSignal => sourceSignal == signalReference))
+                                            {
+                                                measurementKey = pair.Key;
+                                                return true;
+                                            }
+                                        }
+
+                                        measurementKey = MeasurementKey.Undefined;
+                                        return false;
+                                    }
+
                                     foreach (PhasorDefinition3 phasor in cell.PhasorDefinitions)
                                     {
-                                        // TODO: Now apply phasor flags and type info
-                                        // Check measurement adder / multiplier for bit flags
-                                        // If frame rate for device does not match / upsampled / downsampled
-                                        // Assign phase (add to anon phasor def - already available in metadata)
+                                        measurement = null;
+
+                                        // Find the associated measurement key for the phasor angle
+                                        SignalReference angleSignal = new SignalReference
+                                        {
+                                            Acronym = cell.StationName,
+                                            Kind = SignalKind.Angle,
+                                            Index = phasor.Index + 1
+                                        };
+
+                                        if (findMeasurementKey(angleSignal, out MeasurementKey angleKey))
+                                        {
+                                            measurement = measurementTable.QueryRecordWhere("PointID = {0}", angleKey.ID);
+
+                                            if (measurement?.Multiplier != 1.0F)
+                                                phasor.PhasorDataModifications |= PhasorDataModifications.AngleCalibrationAdjustment;
+
+                                            if (measurement?.Adder != 0.0F)
+                                                phasor.PhasorDataModifications |= PhasorDataModifications.AngleRotationAdjustment;
+                                        }
+
+                                        // Find the associated measurement key for the phasor magnitude
+                                        SignalReference magnitudeSignal = new SignalReference
+                                        {
+                                            Acronym = cell.StationName,
+                                            Kind = SignalKind.Magnitude,
+                                            Index = phasor.Index + 1
+                                        };
+
+                                        if (findMeasurementKey(magnitudeSignal, out MeasurementKey magnitudeKey))
+                                        {
+                                            measurement = measurementTable.QueryRecordWhere("PointID = {0}", magnitudeKey.ID);
+
+                                            if (measurement?.Multiplier != 1.0F || measurement.Adder != 0.0F)
+                                                phasor.PhasorDataModifications |= PhasorDataModifications.MagnitudeCalibrationAdjustment;
+                                        }
+
+                                        // Assign transmission voltage level to user flags, when defined
+                                        if (phasor.PhasorType == PhasorType.Voltage && !(deviceID is null) && !(measurement?.PhasorSourceIndex is null))
+                                        {
+                                            Phasor phasorRecord = phasorTable.QueryRecordWhere("DeviceID = {0} AND SourceIndex = {1} AND Type = 'V'", deviceID, measurement.PhasorSourceIndex);
+
+                                            if (!(phasorRecord is null) && phasorRecord.BaseKV.TryGetVoltageLevel(out VoltageLevel level))
+                                                phasor.UserFlags = (byte)level;
+                                        }
+
+                                        if (parent.FramesPerSecond < framesPerSecond)
+                                        {
+                                            switch (parent.DownsamplingMethod)
+                                            {
+                                                case DownsamplingMethod.LastReceived:
+                                                case DownsamplingMethod.Closest:
+                                                    phasor.PhasorDataModifications |= PhasorDataModifications.DownSampledByReselection;
+                                                    break;
+                                                case DownsamplingMethod.Filtered:
+                                                    // Filtered down-sampling here simply uses a moving average which is a special case
+                                                    // of the Finite Impulse Response filter
+                                                    phasor.PhasorDataModifications |= PhasorDataModifications.DownSampledWithFIRFilter;
+                                                    break;
+                                                case DownsamplingMethod.BestQuality:
+                                                    phasor.PhasorDataModifications |= PhasorDataModifications.DownSampledWithNonFIRFilter;
+                                                    break;
+                                                default:
+                                                    phasor.PhasorDataModifications |= PhasorDataModifications.OtherModificationApplied;
+                                                    break;
+                                            }
+                                        }
+
+                                        if (!cell.DataModified && phasor.PhasorDataModifications != PhasorDataModifications.NoModifications)
+                                            cell.DataModified = true;
                                     }
                                 }
                             }
                         }
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -647,8 +756,8 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             {
                 try
                 {
-                    // If database load did not succeed, fall back on trying to load from a previously cached config 3 frame
-                    if (!(AnonConfigurationFrame.GetCachedConfiguration(string.Format(ConfigFrame3CacheName, baseConfigurationFrame.Name), true) is ConfigurationFrame3 cachedConfigFrame))
+                    // If database load did not succeed, fall back on trying to load ancillary data from a previously cached config 3 frame
+                    if (!(AnonymousConfigurationFrame.GetCachedConfiguration(string.Format(ConfigFrame3CacheName, baseConfigurationFrame.Name), true) is ConfigurationFrame3 cachedConfigFrame))
                         throw new NullReferenceException("Failed to load cached configuration frame.");
 
                     foreach (ConfigurationCell3 cell in configurationFrame.Cells)
@@ -657,7 +766,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                         if (!(cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.IDCode == cell.IDCode) is ConfigurationCell3 cachedCell))
                         {
                             // If ID code match failed, try match by station name 
-                            cachedCell = cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.StationName.Equals(cell.StationName)) as ConfigurationCell3;
+                            cachedCell = cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.StationName.Equals(cell.StationName, StringComparison.OrdinalIgnoreCase)) as ConfigurationCell3;
 
                             if (cachedCell is null)
                                 continue;
@@ -673,11 +782,16 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                         cell.ServiceClass = cachedCell.ServiceClass.IsAnyOf(new[] { 'M', 'P' }) || parent is null ? cachedCell.ServiceClass : parent.ServiceClass;
                         cell.Window = cachedCell.Window == 0 || parent is null ? cachedCell.Window : parent.Window;
                         cell.GroupDelay = cachedCell.GroupDelay == 0 || parent is null ? cachedCell.GroupDelay : parent.GroupDelay;
+                        cell.DataModified = cachedCell.DataModified;
 
                         foreach (PhasorDefinition3 phasor in cell.PhasorDefinitions)
                         {
-                            // Try to match by label
-                            // TODO: Now apply phasor flags and type info
+                            // Try to match by phasor label
+                            if (cachedCell.PhasorDefinitions.FirstOrDefault(searchDefinition => searchDefinition.Label.Equals(phasor.Label, StringComparison.OrdinalIgnoreCase)) is PhasorDefinition3 cachedPhasor)
+                            {
+                                phasor.PhasorDataModifications = cachedPhasor.PhasorDataModifications;
+                                phasor.UserFlags = cachedPhasor.UserFlags;
+                            }
                         }
                     }
                 }
