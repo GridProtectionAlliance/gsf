@@ -159,6 +159,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Units\Angle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Charge.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Current.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\VoltageLevel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\EE\LineFrequency.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\EE\NamespaceDoc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\EE\Phasor.cs" />
