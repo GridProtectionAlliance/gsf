@@ -82,6 +82,14 @@ namespace GSF.PhasorProtocols.Anonymous
             set => base.Parent = value;
         }
 
+        /// <summary>
+        /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="AnalogDefinition"/>.
+        /// </summary>
+        /// <remarks>
+        /// This length is not restricted for anonymous protocol definitions.
+        /// </remarks>
+        public override int MaximumLabelLength => int.MaxValue;
+
         #endregion
     }	
 }
