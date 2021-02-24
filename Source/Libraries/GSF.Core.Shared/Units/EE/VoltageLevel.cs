@@ -119,5 +119,29 @@ namespace GSF.Units.EE
         /// <param name="level">Target <see cref="VoltageLevel"/> enum value.</param>
         /// <returns>Voltage level for the specified <paramref name="level"/>.</returns>
         public static int Value(this VoltageLevel level) => m_voltageLevelMap[level];
+
+        /// <summary>
+        /// Attempts to get the <see cref="VoltageLevel"/> enum value for the source kV <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">kV value to attempt to find.</param>
+        /// <param name="level">Mapped <see cref="VoltageLevel"/> enum value, if found.</param>
+        /// <returns>
+        /// <c>true</c> if matching <see cref="VoltageLevel"/> enum value is found for specified kV
+        /// <paramref name="value"/>; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool TryGetVoltageLevel(this int value, out VoltageLevel level)
+        {
+            foreach (KeyValuePair<VoltageLevel, int> kvp in m_voltageLevelMap)
+            {
+                if (kvp.Value == value)
+                {
+                    level = kvp.Key;
+                    return true;
+                }
+            }
+
+            level = default;
+            return false;
+        }
     }
 }
