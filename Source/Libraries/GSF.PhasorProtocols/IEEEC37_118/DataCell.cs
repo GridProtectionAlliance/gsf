@@ -118,6 +118,15 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="DataCell"/>, if applicable.
+        /// </summary>
+        public ConfigurationCell3 Parent3
+        {
+            get => base.ConfigurationCell as ConfigurationCell3;
+            set => base.ConfigurationCell = value;
+        }
+
+        /// <summary>
         /// Gets or sets status flags for this <see cref="DataCell"/>.
         /// </summary>
         public new StatusFlags StatusFlags

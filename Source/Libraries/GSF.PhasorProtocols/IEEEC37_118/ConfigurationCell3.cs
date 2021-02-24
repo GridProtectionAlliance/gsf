@@ -88,12 +88,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             m_formatFlags = (FormatFlags)info.GetValue("formatFlags", typeof(FormatFlags));
 
             // Decode PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
-            Latitude = (float)info.GetValue("latitude", typeof(float));
+            Latitude = info.GetSingle("latitude");
             Longitude = info.GetSingle("longitude");
             Elevation = info.GetSingle("elevation");
             ServiceClass = info.GetChar("serviceClass");
             Window = info.GetInt32("window");
             GroupDelay = info.GetInt32("groupDelay");
+            DataModified = info.GetBoolean("dataModified");
         }
 
         #endregion
@@ -218,9 +219,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public int GroupDelay { get; set; }
 
         /// <summary>
+        /// Gets or sets flag indicating if data in cell is modified through configuration for this <see cref="ConfigurationCell3"/>.
+        /// </summary>
+        public bool DataModified { get; set; }
+
+        /// <summary>
         /// Gets the maximum length of the <see cref="ConfigurationCellBase.StationName"/> of this <see cref="ConfigurationCell3"/>.
         /// </summary>
-        public override int MaximumStationNameLength => 255;
+        public override int MaximumStationNameLength => byte.MaxValue;
 
         /// <summary>
         /// Gets flag that indicates if <see cref="ConfigurationCellBase.StationNameImage"/> should auto pad-right value to <see cref="MaximumStationNameLength"/>.
@@ -318,7 +324,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Format Flags", (int)m_formatFlags + ": " + m_formatFlags);
+                baseAttributes.Add("Format Flags", $"{(int)m_formatFlags}: {m_formatFlags}");
+                baseAttributes.Add("Latitude", $"{Latitude}");
+                baseAttributes.Add("Longitude", $"{Longitude}");
+                baseAttributes.Add("Elevation", $"{Elevation}");
+                baseAttributes.Add("Service Class", $"{ServiceClass}");
+                baseAttributes.Add("Window", $"{Window}");
+                baseAttributes.Add("Group Delay", $"{GroupDelay}");
+                baseAttributes.Add("Data Modified", $"{DataModified}");
 
                 return baseAttributes;
             }
@@ -441,6 +454,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             info.AddValue("serviceClass", ServiceClass);
             info.AddValue("window", Window);
             info.AddValue("groupDelay", GroupDelay);
+            info.AddValue("dataModified", DataModified);
         }
 
         #endregion

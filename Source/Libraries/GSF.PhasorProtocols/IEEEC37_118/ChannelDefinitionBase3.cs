@@ -191,7 +191,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase3"/>.
         /// </summary>
-        public virtual int MaximumLabelLength => byte.MaxValue; // Typical label length is 16 characters
+        public virtual int MaximumLabelLength => byte.MaxValue; // Config frame 3 max label length is 255 bytes
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.

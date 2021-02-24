@@ -26,9 +26,11 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.Anonymous
 {
     /// <summary>
@@ -48,10 +50,12 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
         /// <param name="originalSourceIndex">The original source phasor index, if applicable.</param>
-        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, PhasorType type, PhasorDefinition voltageReference, int originalSourceIndex = -1)
+        /// <param name="phase">The phase of this <see cref="PhasorDefinition"/>.</param>
+        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, PhasorType type, PhasorDefinition voltageReference = null, int originalSourceIndex = -1, char phase = '+')
             : base(parent, label, scale, 0.0D, type, voltageReference)
         {
             OriginalSourceIndex = originalSourceIndex;
+            Phase = phase;
         }
 
         /// <summary>
@@ -62,6 +66,8 @@ namespace GSF.PhasorProtocols.Anonymous
         protected PhasorDefinition(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
+            OriginalSourceIndex = info.GetInt32("originalSourceIndex");
+            Phase = info.GetChar("phase");
         }
 
         #endregion
@@ -90,6 +96,44 @@ namespace GSF.PhasorProtocols.Anonymous
         /// </summary>
         public int OriginalSourceIndex { get; }
 
+        /// <summary>
+        /// Gets or sets the phase, e.g., A, B, C, +, - or 0, of this <see cref="PhasorDefinition"/>.
+        /// </summary>
+        public virtual char Phase { get; set; }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorDefinition"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Original Source Index", $"{OriginalSourceIndex}");
+                baseAttributes.Add("Phase", $"{Phase}");
+                
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            info.AddValue("originalSourceIndex", OriginalSourceIndex);
+            info.AddValue("phase", Phase);
+        }
+        
         #endregion
     }
 }

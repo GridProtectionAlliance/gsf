@@ -36,7 +36,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     /// Represents the IEEE C37.118 implementation of a <see cref="IFrequencyDefinition"/>.
     /// </summary>
     [Serializable]
-    public class FrequencyDefinition : FrequencyDefinitionBase
+    public sealed class FrequencyDefinition : FrequencyDefinitionBase
     {
         #region [ Constructors ]
 
@@ -66,7 +66,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected FrequencyDefinition(SerializationInfo info, StreamingContext context)
+        private FrequencyDefinition(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -78,7 +78,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.
         /// </summary>
-        public new virtual ConfigurationCell Parent
+        public new ConfigurationCell Parent
         {
             get => base.Parent as ConfigurationCell;
             set => base.Parent = value;
@@ -87,7 +87,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="FrequencyDefinition"/>, if applicable.
         /// </summary>
-        public virtual ConfigurationCell3 Parent3
+        public ConfigurationCell3 Parent3
         {
             get => base.Parent as ConfigurationCell3;
             set => base.Parent = value;

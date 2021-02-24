@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -203,17 +204,26 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the binary image of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        public virtual byte[] LabelImage => Encoding.ASCII.GetBytes(Label.PadRight(MaximumLabelLength));
+        public virtual byte[] LabelImage => 
+            Encoding.ASCII.GetBytes(MaximumLabelLength < int.MaxValue && AutoPadLabelImage ? Label.PadRight(MaximumLabelLength): Label);
 
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        public virtual int MaximumLabelLength => 16; // Typical label length is 16 characters
+        public virtual int MaximumLabelLength => 16; // Typical label length is 16 bytes
+
+        /// <summary>
+        /// Gets flag that indicates if <see cref="LabelImage"/> should auto pad-right value to <see cref="MaximumLabelLength"/>.
+        /// </summary>
+        /// <remarks>
+        /// Padding will only be applied when <see cref="MaximumLabelLength"/> is less than <see cref="int.MaxValue"/>.
+        /// </remarks>
+        public virtual bool AutoPadLabelImage => true;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength => MaximumLabelLength;
+        protected override int BodyLength => AutoPadLabelImage ? MaximumLabelLength : LabelImage.Length;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="ChannelDefinitionBase"/> object.

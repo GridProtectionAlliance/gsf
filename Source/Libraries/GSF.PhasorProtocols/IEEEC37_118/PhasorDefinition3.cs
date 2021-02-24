@@ -67,11 +67,38 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="offset">The offset of this <see cref="PhasorDefinition3"/>.</param>
         /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition3"/>.</param>
         /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
-        public PhasorDefinition3(ConfigurationCell3 parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition3 voltageReference)
+        /// <param name="phase">The phase of this <see cref="PhasorDefinition3"/>.</param>
+        public PhasorDefinition3(ConfigurationCell3 parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition3 voltageReference, char phase)
             : base(parent, label, scale, offset)
         {
             PhasorType = type;
             m_voltageReference = type == PhasorType.Voltage ? this : voltageReference;
+
+            switch (phase)
+            {
+                case 'A':
+                    PhasorComponent = PhasorComponent.PhaseA;
+                    break;
+                case 'B':
+                    PhasorComponent = PhasorComponent.PhaseB;
+                    break;
+                case 'C':
+                    PhasorComponent = PhasorComponent.PhaseC;
+                    break;
+                case '+':
+                    PhasorComponent = PhasorComponent.PositiveSequence;
+                    break;
+                case '-':
+                    PhasorComponent = PhasorComponent.NegativeSequence;
+                    break;
+                case '0':
+                    PhasorComponent = PhasorComponent.ZeroSequence;
+                    break;
+                default:
+                    // If phase is not a value IEEE C37.118-2011 supports, default to positive sequence 
+                    PhasorComponent = PhasorComponent.PositiveSequence;
+                    break;
+            }
         }
 
         /// <summary>
@@ -83,12 +110,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             : base(info, context)
         {
             // Deserialize phasor definition
-            m_phasorTypeIndication = (byte)info.GetValue("phasorTypeIndication", typeof(byte));
+            m_phasorTypeIndication = info.GetByte("phasorTypeIndication");
             m_voltageReference = (IPhasorDefinition)info.GetValue("voltageReference", typeof(IPhasorDefinition));
             PhasorDataModifications = (PhasorDataModifications)info.GetValue("phasorDataModifications", typeof(PhasorDataModifications));
-            UserFlags = (byte)info.GetValue("userFlags", typeof(byte));
-            MagnitudeMultiplier = (float)info.GetValue("magnitudeMultiplier", typeof(float));
-            AngleAdder = (float)info.GetValue("angleAdder", typeof(float));
+            UserFlags = info.GetByte("userFlags");
+            MagnitudeMultiplier = info.GetSingle("magnitudeMultiplier");
+            AngleAdder = info.GetSingle("angleAdder");
         }
 
         #endregion
@@ -149,7 +176,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets <see cref="IEEEC37_118.PhasorDataModifications"/> of this <see cref="PhasorDefinition3"/>.
         /// </summary>
-        public PhasorDataModifications PhasorDataModifications { get; set; }
+        public PhasorDataModifications PhasorDataModifications { get; set; } = PhasorDataModifications.NoModifications;
 
         /// <summary>
         /// Gets or sets <see cref="IEEEC37_118.PhasorComponent"/> of this <see cref="PhasorDefinition3"/>.
@@ -187,7 +214,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 baseAttributes.Add("Phasor Type", $"{(int)PhasorType}: {PhasorType}");
                 baseAttributes.Add("Phasor Data Modifications", $"{(int)PhasorDataModifications}: {PhasorDataModifications}");
                 baseAttributes.Add("Phasor Component", $"{(int)PhasorComponent}: {PhasorComponent}");
-                baseAttributes.Add("User Flags", $"0x{UserFlags:X}");
+
+                string voltageLevel = Enum.TryParse($"{UserFlags}", out VoltageLevel level) ? $"{level.Value()}kV" : "kV level undefined";
+                baseAttributes.Add("User Flags", $"0x{UserFlags:X}: {voltageLevel}");
+                
                 baseAttributes.Add("Magnitude Multiplier", $"{MagnitudeMultiplier}");
                 baseAttributes.Add("Angle Adder", $"{AngleAdder}");
 
