@@ -485,7 +485,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                     // Create equivalent derived phasor definitions
                     foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition3(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
+                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition3(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null, sourcePhasor is Anonymous.PhasorDefinition anonymousPhasor ? anonymousPhasor.Phase : '+'));
 
                     // Create equivalent derived frequency definition
                     IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;

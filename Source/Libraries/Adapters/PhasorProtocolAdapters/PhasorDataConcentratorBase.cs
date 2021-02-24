@@ -62,6 +62,8 @@ using GSF.Units;
 using GSF.Units.EE;
 using Timer = System.Timers.Timer;
 
+#pragma warning disable IDE1006 // Naming Styles
+
 // ReSharper disable NonReadonlyMemberInGetHashCode
 // ReSharper disable AccessToModifiedClosure
 namespace PhasorProtocolAdapters
