@@ -928,9 +928,9 @@ namespace PhasorProtocolAdapters
                             GeneratePhasorLabel(label, phase, type),
                             scalingValue,
                             type,
+                            null,
                             order,
-                            phase,
-                            null));
+                            phase));
                     }
 
                     // Add frequency definition
