@@ -26,6 +26,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+// ReSharper disable NonReadonlyMemberInGetHashCode
 namespace GSF.Units.EE
 {
     /// <summary>
@@ -108,19 +109,15 @@ namespace GSF.Units.EE
         /// Returns a <see cref="string"/> that represents the current <see cref="SignalReference"/>.
         /// </summary>
         /// <returns>A <see cref="string"/> that represents the current <see cref="SignalReference"/>.</returns>
-        public override string ToString()
-        {
-            return ToString(Acronym, Kind, Index);
-        }
+        public override string ToString() => 
+            ToString(Acronym, Kind, Index);
 
         /// <summary>
         /// Returns the hash code for this <see cref="SignalReference"/>.
         /// </summary>
         /// <returns>A 32-bit signed integer hash code.</returns>
-        public override int GetHashCode()
-        {
-            return ToString(Acronym, Kind, Index).GetHashCode();
-        }
+        public override int GetHashCode() => 
+            ToString(Acronym, Kind, Index).GetHashCode();
 
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
@@ -128,23 +125,16 @@ namespace GSF.Units.EE
         /// <param name="obj">An object to compare with this object.</param>
         /// <returns><c>true</c> if the current object is equal to the other parameter; otherwise, <c>false</c>.</returns>
         /// <exception cref="ArgumentException">Object is not a <see cref="SignalReference"/>.</exception>
-        public override bool Equals(object obj)
-        {
-            if (obj is SignalReference)
-                return Equals((SignalReference)obj);
-
-            return false;
-        }
+        public override bool Equals(object obj) => 
+            obj is SignalReference signalReference && Equals(signalReference);
 
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
         /// <param name="other">An object to compare with this object.</param>
         /// <returns><c>true</c> if the current object is equal to the other parameter; otherwise, <c>false</c>.</returns>
-        public bool Equals(SignalReference other)
-        {
-            return string.Compare(Acronym, other.Acronym, StringComparison.OrdinalIgnoreCase) == 0 && Kind == other.Kind && Index == other.Index;
-        }
+        public bool Equals(SignalReference other) => 
+            string.Compare(Acronym, other.Acronym, StringComparison.OrdinalIgnoreCase) == 0 && Kind == other.Kind && Index == other.Index;
 
         /// <summary>
         /// Compares the current object with another object of the same type.
@@ -158,11 +148,7 @@ namespace GSF.Units.EE
             if (acronymCompare == 0)
             {
                 int signalTypeCompare = Kind < other.Kind ? -1 : (Kind > other.Kind ? 1 : 0);
-
-                if (signalTypeCompare == 0)
-                    return Index.CompareTo(other.Index);
-
-                return signalTypeCompare;
+                return signalTypeCompare == 0 ? Index.CompareTo(other.Index) : signalTypeCompare;
             }
 
             return acronymCompare;
@@ -174,13 +160,10 @@ namespace GSF.Units.EE
         /// <param name="obj">An object to compare with this <see cref="SignalReference"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <exception cref="ArgumentException">Object is not a <see cref="SignalReference"/>.</exception>
-        public int CompareTo(object obj)
-        {
-            if (obj is SignalReference)
-                return CompareTo((SignalReference)obj);
-
-            throw new ArgumentException("Object is not a SignalReference");
-        }
+        public int CompareTo(object obj) =>
+            obj is SignalReference signalReference ?
+                CompareTo(signalReference) : 
+                throw new ArgumentException("object is not a SignalReference");
 
         #endregion
 
@@ -192,10 +175,8 @@ namespace GSF.Units.EE
         /// <param name="signal1">A <see cref="SignalReference"/> left hand operand.</param>
         /// <param name="signal2">A <see cref="SignalReference"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator ==(SignalReference signal1, SignalReference signal2)
-        {
-            return signal1.Equals(signal2);
-        }
+        public static bool operator ==(SignalReference signal1, SignalReference signal2) => 
+            signal1.Equals(signal2);
 
         /// <summary>
         /// Compares two <see cref="SignalReference"/> values for inequality.
@@ -203,10 +184,8 @@ namespace GSF.Units.EE
         /// <param name="signal1">A <see cref="SignalReference"/> left hand operand.</param>
         /// <param name="signal2">A <see cref="SignalReference"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator !=(SignalReference signal1, SignalReference signal2)
-        {
-            return !signal1.Equals(signal2);
-        }
+        public static bool operator !=(SignalReference signal1, SignalReference signal2) => 
+            !signal1.Equals(signal2);
 
         /// <summary>
         /// Returns true if left <see cref="SignalReference"/> value is greater than right <see cref="SignalReference"/> value.
@@ -214,10 +193,8 @@ namespace GSF.Units.EE
         /// <param name="signal1">A <see cref="SignalReference"/> left hand operand.</param>
         /// <param name="signal2">A <see cref="SignalReference"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator >(SignalReference signal1, SignalReference signal2)
-        {
-            return signal1.CompareTo(signal2) > 0;
-        }
+        public static bool operator >(SignalReference signal1, SignalReference signal2) => 
+            signal1.CompareTo(signal2) > 0;
 
         /// <summary>
         /// Returns true if left <see cref="SignalReference"/> value is greater than or equal to right <see cref="SignalReference"/> value.
@@ -225,10 +202,8 @@ namespace GSF.Units.EE
         /// <param name="signal1">A <see cref="SignalReference"/> left hand operand.</param>
         /// <param name="signal2">A <see cref="SignalReference"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator >=(SignalReference signal1, SignalReference signal2)
-        {
-            return signal1.CompareTo(signal2) >= 0;
-        }
+        public static bool operator >=(SignalReference signal1, SignalReference signal2) => 
+            signal1.CompareTo(signal2) >= 0;
 
         /// <summary>
         /// Returns true if left <see cref="SignalReference"/> value is less than right <see cref="SignalReference"/> value.
@@ -236,10 +211,8 @@ namespace GSF.Units.EE
         /// <param name="signal1">A <see cref="SignalReference"/> left hand operand.</param>
         /// <param name="signal2">A <see cref="SignalReference"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator <(SignalReference signal1, SignalReference signal2)
-        {
-            return signal1.CompareTo(signal2) < 0;
-        }
+        public static bool operator <(SignalReference signal1, SignalReference signal2) => 
+            signal1.CompareTo(signal2) < 0;
 
         /// <summary>
         /// Returns true if left <see cref="SignalReference"/> value is less than or equal to right <see cref="SignalReference"/> value.
@@ -247,10 +220,8 @@ namespace GSF.Units.EE
         /// <param name="signal1">A <see cref="SignalReference"/> left hand operand.</param>
         /// <param name="signal2">A <see cref="SignalReference"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator <=(SignalReference signal1, SignalReference signal2)
-        {
-            return signal1.CompareTo(signal2) <= 0;
-        }
+        public static bool operator <=(SignalReference signal1, SignalReference signal2) => 
+            signal1.CompareTo(signal2) <= 0;
 
         #endregion
 
@@ -264,10 +235,8 @@ namespace GSF.Units.EE
         /// <param name="acronym">Acronym portion of the desired <see cref="string"/> representation.</param>
         /// <param name="type"><see cref="SignalKind"/> portion of the desired <see cref="string"/> representation.</param>
         /// <returns>A <see cref="string"/> that represents the specified <paramref name="acronym"/> and <see cref="SignalKind"/>.</returns>
-        public static string ToString(string acronym, SignalKind type)
-        {
-            return ToString(acronym, type, 0);
-        }
+        public static string ToString(string acronym, SignalKind type) => 
+            ToString(acronym, type, 0);
 
         /// <summary>
         /// Returns a <see cref="string"/> that represents the specified <paramref name="acronym"/>, <see cref="SignalKind"/> and <paramref name="index"/>.
@@ -276,13 +245,8 @@ namespace GSF.Units.EE
         /// <param name="type"><see cref="SignalKind"/> portion of the desired <see cref="string"/> representation.</param>
         /// <param name="index">Index of <see cref="SignalKind"/> portion of the desired <see cref="string"/> representation.</param>
         /// <returns>A <see cref="string"/> that represents the specified <paramref name="acronym"/>, <see cref="SignalKind"/> and <paramref name="index"/>.</returns>
-        public static string ToString(string acronym, SignalKind type, int index)
-        {
-            if (index > 0)
-                return string.Format("{0}-{1}{2}", acronym, type.GetAcronym(), index);
-
-            return string.Format("{0}-{1}", acronym, type.GetAcronym());
-        }
+        public static string ToString(string acronym, SignalKind type, int index) =>
+            $"{acronym}-{type.GetAcronym()}{(index > 0 ? $"{index}" : "")}";
 
         #endregion
     }
