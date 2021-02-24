@@ -21,12 +21,11 @@
 //
 //******************************************************************************************************
 
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.Serialization;
-using System.Text;
 
 // ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.IEEEC37_118
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     /// Represents the IEEE C37.118 configuration frame 3 implementation of a <see cref="IDigitalDefinition"/>.
     /// </summary>
     [Serializable]
-    public class DigitalDefinition3 : ChannelDefinitionBase3, IDigitalDefinition
+    public sealed class DigitalDefinition3 : ChannelDefinitionBase3, IDigitalDefinition
     {
         #region [ Members ]
 
@@ -43,6 +42,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         internal const int ConversionFactorLength = 4;
 
         private const int BitLabelCount = sizeof(ushort) * 8;
+
+        // Fields
+        private byte[] m_labelImage;
 
         #endregion
 
@@ -78,7 +80,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected DigitalDefinition3(SerializationInfo info, StreamingContext context)
+        private DigitalDefinition3(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             // Deserialize digital definition
@@ -94,7 +96,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public new virtual ConfigurationCell3 Parent
+        public new ConfigurationCell3 Parent
         {
             get => base.Parent as ConfigurationCell3;
             set => base.Parent = value;
@@ -113,7 +115,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the maximum length of the <see cref="Label"/> of this <see cref="DigitalDefinition3"/>.
         /// </summary>
-        public override int MaximumLabelLength => LabelCount * 255;
+        public override int MaximumLabelLength => LabelCount * byte.MaxValue;
 
         /// <summary>
         /// Gets the number of labels defined in this <see cref="DigitalDefinition3"/>.
@@ -142,14 +144,39 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 if (value.Trim().Length > MaximumLabelLength)
                     throw new OverflowException($"Label length cannot exceed {MaximumLabelLength}");
 
-                // We pass value along to base class for posterity...
                 string[] labels = value.Split('|');
 
-                if (labels.Length == BitLabelCount)
+                for (int i = 0; i < BitLabelCount; i++)
+                    Labels[i] = i < labels.Length ? labels[i] : "";
+
+                using (MemoryStream stream = new MemoryStream())
                 {
                     for (int i = 0; i < BitLabelCount; i++)
-                        Labels[i] = labels[i];
+                    {
+                        byte[] buffer = ConfigurationCell3.EncodeLengthPrefixedString(Labels[i]);
+                        stream.Write(buffer, 0, buffer.Length);
+                    }
+
+                    m_labelImage = stream.ToArray();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the binary image of the <see cref="Label"/> of this <see cref="DigitalDefinition3"/>.
+        /// </summary>
+        public override byte[] LabelImage => m_labelImage;
+
+        /// <summary>
+        /// Gets the length of the <see cref="DigitalDefinition3"/>.
+        /// </summary>
+        protected override int BodyLength
+        {
+            get
+            {
+                // Force a refresh of label image before getting BodyImage
+                Label = Label;
+                return LabelImage.Length; 
             }
         }
 
@@ -165,7 +192,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// Data format for digital values will always be <see cref="GSF.PhasorProtocols.DataFormat.FixedInteger"/>.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override DataFormat DataFormat => DataFormat.FixedInteger;
+        public override DataFormat DataFormat => DataFormat.FixedInteger;
 
         /// <summary>
         /// Gets or sets the offset of this <see cref="DigitalDefinitionBase"/>.
@@ -175,7 +202,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         /// <exception cref="NotImplementedException">Digital values represent bit flags and thus do not support an offset.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override double Offset
+        public override double Offset
         {
             get => base.Offset;
             set
@@ -195,7 +222,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         /// <exception cref="NotImplementedException">Digital values represent bit flags and thus are not scaled.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override uint ScalingValue
+        public override uint ScalingValue
         {
             get => base.ScalingValue;
             set
@@ -214,7 +241,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// Scale/bit for digital values will always be 1.0.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public sealed override double ScalePerBit => 1.0D;
+        public override double ScalePerBit => 1.0D;
 
         /// <summary>
         /// Gets conversion factor image of this <see cref="DigitalDefinition3"/>.
@@ -254,7 +281,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                 baseAttributes.Add("Bit Label Count", LabelCount.ToString());
 
-                for (int x = 0; x < BitLabelCount; x++)
+                for (int x = 0; x < LabelCount; x++)
                     baseAttributes.Add($"     Bit {x} Label", Labels[x]);
 
                 return baseAttributes;
@@ -274,36 +301,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
-            int parseLength = MaximumLabelLength;
-            byte[] labelBuffer = new byte[16];
-            string[] labels = new string[16];
+            int index = startIndex;
 
-            for (int i = 0; i < 16; i++)
-            {
-                // Get next label buffer
-                Buffer.BlockCopy(buffer, startIndex + i * 16, labelBuffer, 0, 16);
+            for (int i = 0; i < BitLabelCount; i++)
+                Labels[i] = ConfigurationCell3.DecodeLengthPrefixedString(buffer, ref index);
 
-                bool foundNull = false;
-
-                // Replace null characters with spaces; since characters after null
-                // are usually invalid garbage, blank these out with spaces as well
-                for (int j = 0; j < 16; j++)
-                {
-                    if (foundNull || labelBuffer[j] == 0)
-                    {
-                        foundNull = true;
-                        labelBuffer[j] = 32;
-                    }
-                }
-
-                // Interpret bytes as an ASCII string
-                labels[i] = Encoding.ASCII.GetString(labelBuffer, 0, 16);
-            }
-
-            // Concatenate all labels together into one large string
-            Label = string.Concat(labels);
-
-            return parseLength;
+            return index - startIndex;
         }
 
         /// <summary>
