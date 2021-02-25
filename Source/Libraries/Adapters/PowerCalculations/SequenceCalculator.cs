@@ -140,6 +140,14 @@ namespace PowerCalculations
         public bool IncludeZeroSequence { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets flag that determines if calculations should use data even when the bad quality flag is set. When value is false and any input has bad quality, calculation will be skipped.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if calculations should use data even when the bad quality flag is set. When value is false and any input has bad quality, calculation will be skipped.")]
+        [DefaultValue(false)]
+        public bool UseBadQualityData { get; set; }
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing => true;
@@ -155,18 +163,13 @@ namespace PowerCalculations
 
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat("         Phase A magnitude: {0}", m_magnitudes[0]);
-                status.AppendLine();
-                status.AppendFormat("         Phase B magnitude: {0}", m_magnitudes[1]);
-                status.AppendLine();
-                status.AppendFormat("         Phase C magnitude: {0}", m_magnitudes[2]);
-                status.AppendLine();
-                status.AppendFormat("             Phase A angle: {0}", m_angles[0]);
-                status.AppendLine();
-                status.AppendFormat("             Phase B angle: {0}", m_angles[1]);
-                status.AppendLine();
-                status.AppendFormat("             Phase C angle: {0}", m_angles[2]);
-                status.AppendLine();
+                status.AppendLine($"         Phase A magnitude: {m_magnitudes[0]}");
+                status.AppendLine($"         Phase B magnitude: {m_magnitudes[1]}");
+                status.AppendLine($"         Phase C magnitude: {m_magnitudes[2]}");
+                status.AppendLine($"             Phase A angle: {m_angles[0]}");
+                status.AppendLine($"             Phase B angle: {m_angles[1]}");
+                status.AppendLine($"             Phase C angle: {m_angles[2]}");
+                status.AppendLine($" Use data with bad quality: {UseBadQualityData}");
 
                 if (TrackRecentValues)
                 {
@@ -285,6 +288,9 @@ namespace PowerCalculations
             if (settings.TryGetValue(nameof(IncludeZeroSequence), out setting))
                 IncludeZeroSequence = setting.ParseBoolean();
 
+            if (settings.TryGetValue(nameof(UseBadQualityData), out setting))
+                UseBadQualityData = setting.ParseBoolean();
+
             // Load needed phase angle measurement keys from defined InputMeasurementKeys
             m_angles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHA).ToArray();
 
@@ -402,34 +408,35 @@ namespace PowerCalculations
                 ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
                 double mA = 0.0D, aA = 0.0D, mB = 0.0D, aB = 0.0D, mC = 0.0D, aC = 0.0D;
                 bool allValuesReceived = false;
+                bool useBadQualityData = UseBadQualityData;
 
                 // Get all needed measurement values from this frame
-                if (measurements.TryGetValue(m_magnitudes[0], out IMeasurement measurement) && measurement.ValueQualityIsGood())
+                if (measurements.TryGetValue(m_magnitudes[0], out IMeasurement measurement) && (useBadQualityData || measurement.ValueQualityIsGood()))
                 {
                     // Get A-phase magnitude value
                     mA = measurement.AdjustedValue;
 
-                    if (measurements.TryGetValue(m_angles[0], out measurement) && measurement.ValueQualityIsGood())
+                    if (measurements.TryGetValue(m_angles[0], out measurement) && (useBadQualityData || measurement.ValueQualityIsGood()))
                     {
                         // Get A-phase angle value
                         aA = measurement.AdjustedValue;
 
-                        if (measurements.TryGetValue(m_magnitudes[1], out measurement) && measurement.ValueQualityIsGood())
+                        if (measurements.TryGetValue(m_magnitudes[1], out measurement) && (useBadQualityData || measurement.ValueQualityIsGood()))
                         {
                             // Get B-phase magnitude value
                             mB = measurement.AdjustedValue;
 
-                            if (measurements.TryGetValue(m_angles[1], out measurement) && measurement.ValueQualityIsGood())
+                            if (measurements.TryGetValue(m_angles[1], out measurement) && (useBadQualityData || measurement.ValueQualityIsGood()))
                             {
                                 // Get B-phase angle value
                                 aB = measurement.AdjustedValue;
 
-                                if (measurements.TryGetValue(m_magnitudes[2], out measurement) && measurement.ValueQualityIsGood())
+                                if (measurements.TryGetValue(m_magnitudes[2], out measurement) && (useBadQualityData || measurement.ValueQualityIsGood()))
                                 {
                                     // Get C-phase magnitude value
                                     mC = measurement.AdjustedValue;
 
-                                    if (measurements.TryGetValue(m_angles[2], out measurement) && measurement.ValueQualityIsGood())
+                                    if (measurements.TryGetValue(m_angles[2], out measurement) && (useBadQualityData || measurement.ValueQualityIsGood()))
                                     {
                                         // Get C-phase angle value
                                         aC = measurement.AdjustedValue;
