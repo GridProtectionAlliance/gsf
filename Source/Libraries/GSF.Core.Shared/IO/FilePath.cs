@@ -261,6 +261,164 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Returns the subdirectories that match the specified search pattern in the specified directory, and optionally searches subdirectories.
+        /// </summary>
+        /// <param name="directory">The directory to search.</param>
+        /// <param name="searchPattern">The search string to match against the names of subdirectories in the <paramref name="directory"/>. This parameter can contain a combination of valid literal and wildcard characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include all subdirectories or only the current directory.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during directory enumeration.</param>
+        /// <returns>An array of the <see cref="DirectoryInfo"/> objects representing the subdirectories that match the specified search criteria.</returns>
+        public static DirectoryInfo[] GetDirectories(DirectoryInfo directory, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            return EnumerateDirectories(directory, searchPattern, searchOption, exceptionHandler).ToArray();
+        }
+
+        /// <summary>
+        /// Returns an enumerable collection of subdirectories that match a search pattern in a specified path, and optionally searches subdirectories.
+        /// </summary>
+        /// <param name="directory">The directory to search.</param>
+        /// <param name="searchPattern">The search string to match against the names of subdirectories in the <paramref name="directory"/>. This parameter can contain a combination of valid literal and wildcard characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory or should include all subdirectories.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during directory enumeration.</param>
+        /// <returns>An enumerable collection of the <see cref="DirectoryInfo"/> objects representing the subdirectories that match the specified search criteria.</returns>
+        public static IEnumerable<DirectoryInfo> EnumerateDirectories(DirectoryInfo directory, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            IEnumerable<DirectoryInfo> enumerable;
+            IEnumerator<DirectoryInfo> enumerator;
+
+            try
+            {
+                IEnumerable<DirectoryInfo> topDirectory = directory.EnumerateDirectories(searchPattern, SearchOption.TopDirectoryOnly);
+                IEnumerable<DirectoryInfo> recursive = Enumerable.Empty<DirectoryInfo>();
+
+                if (searchOption == SearchOption.AllDirectories)
+                {
+                    recursive = directory.EnumerateDirectories("*", SearchOption.TopDirectoryOnly)
+                        .SelectMany(subdirectory => EnumerateDirectories(subdirectory, searchPattern, searchOption, exceptionHandler));
+                }
+
+                enumerable = topDirectory.Concat(recursive);
+                enumerator = enumerable.GetEnumerator();
+            }
+            catch (Exception ex)
+            {
+                string path = directory.FullName;
+                exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating directories in \"{path}\": {ex.Message}", ex));
+                yield break;
+            }
+
+            // yield return cannot be used in a try block with a catch clause,
+            // so in order to handle errors in enumerator.MoveNext() and enumerator.Current,
+            // the enumerator must be accessed directly rather than using foreach
+            using (enumerable as IDisposable)
+            using (enumerator)
+            {
+                while (true)
+                {
+                    DirectoryInfo current;
+
+                    try
+                    {
+                        if (!enumerator.MoveNext())
+                            break;
+
+                        current = enumerator.Current;
+                    }
+                    catch (Exception ex)
+                    {
+                        string path = directory.FullName;
+                        exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating directories in \"{path}\": {ex.Message}", ex));
+
+                        // To avoid an infinite exception loop,
+                        // break out at the first sign of trouble
+                        break;
+                    }
+
+                    yield return current;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the files that match the specified search pattern in the specified directory, using a value to determine whether to search subdirectories.
+        /// </summary>
+        /// <param name="directory">The directory to search.</param>
+        /// <param name="searchPattern">The search string to match against the names of files in the <paramref name="directory"/>. This parameter can contain a combination of valid literal path and wildcard (* and ?) characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include all subdirectories or only the current directory.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
+        /// <returns>An array of the <see cref="FileInfo"/> objects representing the files in the specified directory that match the specified search pattern, or an empty array if no files are found.</returns>
+        public static FileInfo[] GetFiles(DirectoryInfo directory, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            return EnumerateFiles(directory, searchPattern, searchOption, exceptionHandler).ToArray();
+        }
+
+        /// <summary>
+        /// Returns an enumerable collection of files that match a search pattern in a specified path, and optionally searches subdirectories.
+        /// </summary>
+        /// <param name="directory">The directory to search.</param>
+        /// <param name="searchPattern">The search string to match against the names of files in the <paramref name="directory"/>. This parameter can contain a combination of valid literal path and wildcard (* and ?) characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory or should include all subdirectories.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
+        /// <returns>An enumerable collection of the <see cref="FileInfo"/> objects representing the files in the specified directory that match the specified search pattern, or an empty array if no files are found.</returns>
+        public static IEnumerable<FileInfo> EnumerateFiles(DirectoryInfo directory, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            IEnumerable<FileInfo> enumerable;
+            IEnumerator<FileInfo> enumerator;
+
+            try
+            {
+                IEnumerable<FileInfo> topDirectory = directory.EnumerateFiles(searchPattern, SearchOption.TopDirectoryOnly);
+                IEnumerable<FileInfo> recursive = Enumerable.Empty<FileInfo>();
+
+                if (searchOption == SearchOption.AllDirectories)
+                {
+                    recursive = directory.EnumerateDirectories("*", SearchOption.TopDirectoryOnly)
+                        .SelectMany(subdirectory => EnumerateFiles(subdirectory, searchPattern, searchOption, exceptionHandler));
+                }
+
+                enumerable = topDirectory.Concat(recursive);
+                enumerator = enumerable.GetEnumerator();
+            }
+            catch (Exception ex)
+            {
+                string path = directory.FullName;
+                exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating files in \"{path}\": {ex.Message}", ex));
+                yield break;
+            }
+
+            // yield return cannot be used in a try block with a catch clause,
+            // so in order to handle errors in enumerator.MoveNext() and enumerator.Current,
+            // the enumerator must be accessed directly rather than using foreach
+            using (enumerable as IDisposable)
+            using (enumerator)
+            {
+                while (true)
+                {
+                    FileInfo current;
+
+                    try
+                    {
+                        if (!enumerator.MoveNext())
+                            break;
+
+                        current = enumerator.Current;
+                    }
+                    catch (Exception ex)
+                    {
+                        string path = directory.FullName;
+                        exceptionHandler?.Invoke(new InvalidOperationException($"Failed while enumerating files in \"{path}\": {ex.Message}", ex));
+
+                        // To avoid an infinite exception loop,
+                        // break out at the first sign of trouble
+                        break;
+                    }
+
+                    yield return current;
+                }
+            }
+        }
+
+        /// <summary>
         /// Ensures the supplied path name is valid.
         /// </summary>
         /// <param name="filePath">The file path to be validated.</param>
