@@ -148,6 +148,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\StateMachine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\SharedTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\SynchronizedOperationBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\TaskSynchronizedOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerDedicated.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerThreadpool.cs" />
