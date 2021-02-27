@@ -27,6 +27,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace GSF.Threading
@@ -437,5 +438,155 @@ namespace GSF.Threading
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Defines extensions for the <see cref="LogicalThread"/> class.
+    /// </summary>
+    public static class LogicalThreadExtensions
+    {
+        /// <summary>
+        /// Creates an awaitable that ensures the continuation is running on the logical thread.
+        /// </summary>
+        /// <param name="thread">The thread to join.</param>
+        /// <returns>A context that, when awaited, runs on the logical thread.</returns>
+        public static LogicalThreadAwaitable Join(this LogicalThread thread) =>
+            new LogicalThreadAwaitable(thread);
+
+        /// <summary>
+        /// Creates an awaitable that ensures the continuation is running on the logical thread.
+        /// </summary>
+        /// <param name="thread">The thread to join.</param>
+        /// <param name="priority">The priority of the continuation when completing asynchronously.</param>
+        /// <returns>A context that, when awaited, runs on the logical thread.</returns>
+        public static LogicalThreadAwaitable Join(this LogicalThread thread, int priority) =>
+            new LogicalThreadAwaitable(thread, priority);
+
+        /// <summary>
+        /// Creates an awaitable that asynchronously yields
+        /// to a new action on the logical thread when awaited.
+        /// </summary>
+        /// <param name="thread">The thread to yield to.</param>
+        /// <returns>A context that, when awaited, will transition to a new action on the logical thread.</returns>
+        public static LogicalThreadAwaitable Yield(this LogicalThread thread) =>
+            new LogicalThreadAwaitable(thread, forceYield: true);
+
+        /// <summary>
+        /// Creates an awaitable that asynchronously yields
+        /// to a new action on the logical thread when awaited.
+        /// </summary>
+        /// <param name="thread">The thread to yield to.</param>
+        /// <param name="priority">The priority of the continuation.</param>
+        /// <returns>A context that, when awaited, will transition to a new action on the logical thread.</returns>
+        public static LogicalThreadAwaitable Yield(this LogicalThread thread, int priority) =>
+            new LogicalThreadAwaitable(thread, priority, true);
+
+        /// <summary>
+        /// Provides an awaitable context for switching into a target environment.
+        /// </summary>
+        /// <remarks>
+        /// This type is intended for compiler use only.
+        /// </remarks>
+        public struct LogicalThreadAwaitable
+        {
+            #region [ Members ]
+
+            // Nested Types
+
+            /// <summary>
+            /// Provides an awaiter that switches into a target environment.
+            /// </summary>
+            /// <remarks>
+            /// This type is intended for compiler use only.
+            /// </remarks>
+            public struct LogicalThreadAwaiter : INotifyCompletion
+            {
+                private LogicalThreadAwaitable Awaitable { get; }
+
+                /// <summary>
+                /// Creates a new instance of the <see cref="LogicalThreadAwaiter"/> class.
+                /// </summary>
+                /// <param name="awaitable">The awaitable that spawned this awaiter.</param>
+                public LogicalThreadAwaiter(LogicalThreadAwaitable awaitable) =>
+                    Awaitable = awaitable;
+
+                /// <summary>
+                /// Gets whether a yield is not required.
+                /// </summary>
+                /// <remarks>
+                /// This property is intended for compiler user rather than use directly in code.
+                /// </remarks>
+                public bool IsCompleted =>
+                    !Awaitable.ForceYield &&
+                    Awaitable.Thread == LogicalThread.CurrentThread;
+
+                /// <summary>
+                /// Posts the <paramref name="continuation"/> back to the current context.
+                /// </summary>
+                /// <param name="continuation">The action to invoke asynchronously.</param>
+                /// <exception cref="System.ArgumentNullException">The <paramref name="continuation"/> argument is null.</exception>
+                public void OnCompleted(Action continuation)
+                {
+                    if (continuation is null)
+                        throw new ArgumentNullException(nameof(continuation));
+
+                    LogicalThread thread = Awaitable.Thread
+                        ?? new LogicalThread();
+
+                    int priority = Awaitable.Priority;
+
+                    if (priority > 0)
+                        thread.Push(priority, continuation);
+                    else
+                        thread.Push(continuation);
+                }
+
+                /// <summary>
+                /// Ends the await operation.
+                /// </summary>
+                public void GetResult()
+                {
+                }
+            }
+
+            #endregion
+
+            #region [ Constructors ]
+
+            /// <summary>
+            /// Creates a new instance of the <see cref="LogicalThreadAwaitable"/> class.
+            /// </summary>
+            /// <param name="thread">The thread on which to push continuations.</param>
+            /// <param name="priority">The priority of continuations pushed to the thread.</param>
+            /// <param name="forceYield">Force continuations to complete asynchronously.</param>
+            public LogicalThreadAwaitable(LogicalThread thread, int priority = 0, bool forceYield = false)
+            {
+                Thread = thread;
+                Priority = priority;
+                ForceYield = forceYield;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            private LogicalThread Thread { get; }
+            private int Priority { get; }
+            private bool ForceYield { get; }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Gets an awaiter for this <see cref="LogicalThreadAwaitable"/>.
+            /// </summary>
+            /// <returns>An awaiter for this awaitable.</returns>
+            /// <remarks>This method is intended for compiler user rather than use directly in code.</remarks>
+            public LogicalThreadAwaiter GetAwaiter() =>
+                new LogicalThreadAwaiter(this);
+
+            #endregion
+        }
     }
 }
