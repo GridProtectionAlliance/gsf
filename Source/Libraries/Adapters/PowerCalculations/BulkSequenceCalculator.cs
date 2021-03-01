@@ -391,11 +391,9 @@ namespace PowerCalculations
                 {
                     case SignalType.VPHA:
                     case SignalType.VPHM:
-                        signalIndex = adapterDetail.SourcePhaseCount + CurrentOutputIndex + 1 - CurrentOutputIndex % 2;
-                        break;
                     case SignalType.IPHA:
                     case SignalType.IPHM:
-                        signalIndex = adapterDetail.SourcePhaseCount + PerAdapterOutputNames.Count / 2 + (CurrentOutputIndex + 1 - CurrentOutputIndex % 2);
+                        signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * (PerAdapterOutputNames.Count / 2) + (CurrentOutputIndex / 2) + 1;
                         break;
                     default:
                         signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex + 1;
@@ -907,6 +905,11 @@ namespace PowerCalculations
                             if (sourcePhaseCount == 0)
                                 sourcePhaseCount = 3;
 
+                            string phasorLabel = labels[aPhaseAngleIndex].LongestCommonSubsequence(labels[bPhaseAngleIndex]);
+
+                            if (string.IsNullOrWhiteSpace(phasorLabel) || phasorLabel.Length < 3)
+                                phasorLabel = labels[aPhaseAngleIndex];
+
                             m_adapterDetails.Add(new AdapterDetail
                             {
                                 // Set target adapter phasor type, i.e., voltage or current, for custom SignalTypes
@@ -919,7 +922,7 @@ namespace PowerCalculations
                                 DeviceAcronym = deviceAcronym,
                                 DeviceName = deviceName,
                                 DeviceID = deviceID,
-                                PhasorLabel = labels[aPhaseAngleIndex],
+                                PhasorLabel = phasorLabel,
                                 SourcePhaseCount = sourcePhaseCount,
                                 BaseKV = phaseDetails[aPhaseAngleIndex].Item4.BaseKV
                             });
