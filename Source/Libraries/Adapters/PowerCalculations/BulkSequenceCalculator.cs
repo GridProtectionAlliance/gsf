@@ -138,6 +138,14 @@ namespace PowerCalculations
         public bool IncludeZeroSequence { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets flag that determines if calculations should use data even when the bad quality flag is set. When value is false and any input has bad quality, calculation will be skipped.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Flag that determines if calculations should use data even when the bad quality flag is set. When value is false and any input has bad quality, calculation will be skipped.")]
+        [DefaultValue(false)]
+        public bool UseBadQualityData { get; set; }
+
+        /// <summary>
         /// Gets number of input measurements required by each adapter.
         /// </summary>
         public override int PerAdapterInputCount => 6;
@@ -631,6 +639,7 @@ namespace PowerCalculations
 
                         int phasorSourceIndex = measurement.PhasorSourceIndex.GetValueOrDefault();
 
+                        // Expecting exactly two measurements per phasor source index, i.e., an angle and a magnitude, track for verification
                         if (phasorSourceIndex > 0)
                             phasorSourceIndexCounts[phasorSourceIndex] = phasorSourceIndexCounts.GetOrAdd(phasorSourceIndex, 0) + 1;
 
@@ -668,9 +677,9 @@ namespace PowerCalculations
                         }
                     }
 
-                    if (phasorSourceIndexCounts.Values.Any(count => count > 2))
+                    if (phasorSourceIndexCounts.Values.Any(count => count != 2))
                     {
-                        OnStatusMessage(MessageLevel.Warning, $"Encountered too many measurement phasor source indexes associated with device ID {deviceID:N0} for {nameof(BulkSequenceCalculator)}. Two measurements, one angle and one magnitude, are expected per phasor source index, input excluded.");
+                        OnStatusMessage(MessageLevel.Warning, $"Measurement phasor source index count mismatch encountered for one or more phasors associated with device ID {deviceID:N0} for {nameof(BulkSequenceCalculator)}. Two measurements, one angle and one magnitude, are expected per phasor source index, input excluded.");
                         incompleteCount++;
                         continue;
                     }
