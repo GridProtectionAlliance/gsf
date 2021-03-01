@@ -416,11 +416,6 @@ namespace GSF.IO
         public const bool DefaultTrackChanges = false;
 
         /// <summary>
-        /// Default value for the <see cref="CachePath"/> property.
-        /// </summary>
-        public static readonly string DefaultCachePath = Path.Combine(FilePath.GetCommonApplicationDataFolder(), "FileProcessors");
-
-        /// <summary>
         /// Default value for the <see cref="InternalBufferSize"/> property.
         /// </summary>
         public const int DefaultInternalBufferSize = 8192;
@@ -447,7 +442,6 @@ namespace GSF.IO
         private string m_filter;
         private string m_folderExclusion;
         private bool m_trackChanges;
-        private string m_cachePath;
         private int m_internalBufferSize;
         private FileEnumerationStrategy m_enumerationStrategy;
         private bool m_orderedEnumeration;
@@ -483,7 +477,6 @@ namespace GSF.IO
             m_filter = DefaultFilter;
             m_folderExclusion = DefaultFolderExclusion;
             m_trackChanges = DefaultTrackChanges;
-            m_cachePath = DefaultCachePath;
             m_internalBufferSize = DefaultInternalBufferSize;
             m_enumerationStrategy = DefaultEnumerationStrategy;
 
@@ -549,33 +542,6 @@ namespace GSF.IO
             set
             {
                 m_trackChanges = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the path to the cache where the list of processed files will be persisted.
-        /// </summary>
-        public string CachePath
-        {
-            get
-            {
-                return m_cachePath;
-            }
-            set
-            {
-                lock (m_trackedDirectoriesLock)
-                {
-                    if (m_trackedDirectories.Count > 0)
-                        throw new InvalidOperationException("File processor is already tracking directories - modification of the cache path would be unsafe.");
-
-                    if (m_cachePath != value)
-                    {
-                        if (!(m_cachePath is null))
-                            m_cachePath = FilePath.GetAbsolutePath(value);
-                        else
-                            m_cachePath = DefaultCachePath;
-                    }
-                }
             }
         }
 
