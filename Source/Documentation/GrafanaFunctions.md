@@ -49,6 +49,15 @@ Series functions can operate over the set of defined series, producing a single 
 
 * Example: `SliceSum(0.0333, FILTER ActiveMeasurements WHERE SignalType='IPHM')`
 
+## Special Commands
+
+The following optional special command operations can be specifed as part of any filter expression:
+
+| Command | Description |
+| ------- | ----------- |
+| `; dropemptyseries` | Ensures any empty series are hidden from display |
+| `; includepeaks` | Ensures decimated data includes both min/max interval peaks, note this can reduce query performance |
+
 ## Available Functions
 
 * [Average](#average)
