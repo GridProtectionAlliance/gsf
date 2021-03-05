@@ -84,15 +84,21 @@ namespace CreateOutputStream
 
                 // Make provided files name are relative to run path if not other path was provided
                 string sourceFileName = FilePath.GetAbsolutePath(args["OrderedArg1"]);
-                string configFile = FilePath.GetAbsolutePath($"..\\{sourceApp}.exe.config");
                 
-#if DEBUG
-                configFile = "C:\\Program Files\\openPDC\\openPDC.exe.config";
-#endif
+            #if DEBUG
+                string configFile = "C:\\Program Files\\openPDC\\openPDC.exe.config";
+            #else
+                string configFile = FilePath.GetAbsolutePath($"{sourceApp}.exe.config");
+            #endif
 
-                // Fail if source config file does not exist
                 if (!File.Exists(configFile))
-                    throw new FileNotFoundException($"Config file for {sourceApp} application \"{configFile}\" was not found.");
+                {
+                    configFile = FilePath.GetAbsolutePath($"..\\{sourceApp}.exe.config");
+
+                    // Fail if source config file cannot be found
+                    if (!File.Exists(configFile))
+                        throw new FileNotFoundException($"Config file for {sourceApp} application \"{configFile}\" was not found. Checked this folder and parent folder.");
+                }
 
                 // Load needed database settings from target config file
                 XDocument serviceConfig = XDocument.Load(configFile);
