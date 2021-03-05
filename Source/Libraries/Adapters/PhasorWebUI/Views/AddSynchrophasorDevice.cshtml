@@ -2456,7 +2456,7 @@
                 attempt = 1;
 
             if (attempt > 4) {
-                showErrorMessage("Failed to find power output measurement after waiting 4 seconds - skipping 3-phase power calculations.");
+                showErrorMessage("Failed to find power output measurement after waiting 12 seconds - skipping 3-phase power calculations.");
                 return $.Deferred().resolve(null).promise();
             }
 
@@ -2473,17 +2473,17 @@
                     switch (type) {
                         case "MW":
                             if (powerCalculation.ActivePowerOutputSignalID == null || powerCalculation.ActivePowerOutputSignalID === 0)
-                                return delayedPromise(1000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
+                                return delayedPromise(3000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
 
                             return $.Deferred().resolve(powerCalculation.ActivePowerOutputSignalID).promise();
                         case "MVAR":
                             if (powerCalculation.ReactivePowerOutputSignalID == null || powerCalculation.ReactivePowerOutputSignalID === 0)
-                                return delayedPromise(1000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
+                                return delayedPromise(3000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
 
                             return $.Deferred().resolve(powerCalculation.ReactivePowerOutputSignalID).promise();
                         case "MVA":
                             if (powerCalculation.ApparentPowerOutputSignalID == null || powerCalculation.ApparentPowerOutputSignalID === 0)
-                                return delayedPromise(1000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
+                                return delayedPromise(3000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
 
                             return $.Deferred().resolve(powerCalculation.ApparentPowerOutputSignalID).promise();
                     }
@@ -2521,7 +2521,7 @@
                 let phaseBSignalID = null;
                 let phaseCSignalID = null;
 
-                // These queries will keep looping while power calculations are initializing until power output measurements exist or timeout after 4 seconds:
+                // These queries will keep looping while power calculations are initializing until power output measurements exist or timeout after 12 seconds:
                 queryPromises.push(queryPowerOutput(type, line.A, 1).then(function (signalID) {
                     phaseASignalID = signalID;
                 }));
