@@ -106,6 +106,64 @@ namespace GSF.Web.Hosting
         /// <param name="pageName">Page name to render.</param>
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <returns>Rendered page result for given page.</returns>
+        /// <remarks>
+        /// For Ajax post-based requests to pages handled by this controller, the Ajax request will need to specify
+        /// verification token in the header and set flag that indicates an Ajax request. See example code below:
+        /// <code>
+        /// @{ 
+        ///    // Setup AJAX based anti-forgery implementation
+        ///    string verificationHeader = AuthenticationOptions.DefaultRequestVerificationToken;
+        ///    string useAjaxVerfication = AuthenticationOptions.DefaultAjaxRequestVerificationToken;
+        ///    ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
+        ///
+        ///    if (options != null) {
+        ///        if (!string.IsNullOrWhiteSpace(options.RequestVerificationToken)) {
+        ///            verificationHeader = options.RequestVerificationToken;
+        ///        }
+        ///
+        ///        if (!string.IsNullOrWhiteSpace(options.AjaxRequestVerificationToken)) {
+        ///            useAjaxVerfication = options.AjaxRequestVerificationToken;
+        ///        }
+        ///    }
+        ///
+        ///    string verificationValue = Html.RequestVerificationHeaderToken();
+        ///
+        ///    string constants = string.Format(@"
+        ///        const verificationHeader = ""{0}"";
+        ///        const verificationValue = ""{1}"";
+        ///        const useAjaxVerfication = ""{2}"";
+        ///    ",
+        ///        /* 0 */ verificationHeader.JavaScriptEncode(),
+        ///        /* 1 */ verificationValue.JavaScriptEncode(),
+        ///        /* 2 */ useAjaxVerfication.JavaScriptEncode()
+        ///    );
+        ///}
+        ///@section Scripts {
+        ///    <script>
+        ///        "use strict";
+        ///
+        ///        @Raw(new Minifier().MinifyJavaScript(constants));
+        ///
+        ///        function doAjaxThing() {
+        ///            $.ajax({
+        ///                cache: false,
+        ///                url: "AjaxThing.ashx",
+        ///                type: "post",
+        ///                data: { value: "some data to post" },
+        ///                dataType: "application/json",
+        ///                success: function (result) {
+        ///                   console.log("Success: " + result);
+        ///                },
+        ///                beforeSend: function (xhr) {
+        ///                    xhr.setRequestHeader(verificationHeader, verificationValue);
+        ///                    xhr.setRequestHeader(useAjaxVerfication, "true");
+        ///                }
+        ///            });
+        ///        }
+        ///    </script>
+        ///}
+        /// </code>
+        /// </remarks>
         [HttpPost]
         [ActionName("GetPage")]
         [ValidateRequestVerificationToken(FormValidation = true)]
