@@ -148,7 +148,7 @@ namespace GSF.Web.Hosting
         ///            $.ajax({
         ///                cache: false,
         ///                url: "AjaxThing.ashx",
-        ///                type: "post",
+        ///                method: "post",
         ///                data: { value: "some data to post" },
         ///                dataType: "application/json",
         ///                success: function (result) {

@@ -268,7 +268,7 @@ Ntlm.authenticate = function (url, handleResponse, verificationHeader, verificat
     
     $.ajax({
         url: url,
-        type: "post",
+        method: "post",
         cache: false,
         crossDomain: false,
         xhrFields: {
@@ -279,7 +279,7 @@ Ntlm.authenticate = function (url, handleResponse, verificationHeader, verificat
                 case 401:
                     $.ajax({
                         url: url,
-                        type: "post",
+                        method: "post",
                         cache: false,
                         crossDomain: false,
                         xhrFields: {

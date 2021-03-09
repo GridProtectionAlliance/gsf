@@ -55,7 +55,7 @@ function authenticateBasic(username, password) {
     $.ajax({
         cache: false,
         url: securePage,
-        type: "post",
+        method: "post",
         complete: function (xhr) {
             switch (xhr.status) {
                 case 200:
@@ -98,7 +98,7 @@ function passthroughBasic() {
     $.ajax({
         cache: false,
         url: securePage,
-        type: "post",
+        method: "post",
         complete: function (xhr) {
             switch (xhr.status) {
                 case 200:
@@ -122,7 +122,7 @@ function passthroughNTLM() {
     $.ajax({
         cache: false,
         url: securePage + "?scheme=NTLM",
-        type: "post",
+        method: "post",
         complete: function (xhr) {
             if (xhr.status === 200) {
                 loginComplete(true);
