@@ -38,10 +38,17 @@ namespace GSF.Web.Security
 
         // Constants
 
+        private const string AjaxTokenSuffix = "-Ajax";
+
         /// <summary>
         /// Default value for <see cref="RequestVerificationToken"/>.
         /// </summary>
         public const string DefaultRequestVerificationToken = "X-GSF-Verify";
+
+        /// <summary>
+        /// Default value for <see cref="AjaxRequestVerificationToken"/>.
+        /// </summary>
+        public const string DefaultAjaxRequestVerificationToken = DefaultRequestVerificationToken + AjaxTokenSuffix;
 
         /// <summary>
         /// Default value for <see cref="AuthFailureRedirectResourceExpression"/>.
@@ -105,10 +112,7 @@ namespace GSF.Web.Security
         /// </summary>
         public string AuthFailureRedirectResourceExpression
         {
-            get
-            {
-                return m_authFailureRedirectResourceExpression;
-            }
+            get => m_authFailureRedirectResourceExpression;
             set
             {
                 m_authFailureRedirectResourceExpression = value;
@@ -122,10 +126,7 @@ namespace GSF.Web.Security
         /// </summary>
         public string AnonymousResourceExpression
         {
-            get
-            {
-                return m_anonymousResourceExpression;
-            }
+            get => m_anonymousResourceExpression;
             set
             {
                 m_anonymousResourceExpression = value;
@@ -147,6 +148,11 @@ namespace GSF.Web.Security
         /// Gets or sets the token used for anti-forgery verification in HTTP request headers.
         /// </summary>
         public string RequestVerificationToken { get; set; } = DefaultRequestVerificationToken;
+
+        /// <summary>
+        /// Gets or sets token to specify when using AJAX for request verification tokens.
+        /// </summary>
+        public string AjaxRequestVerificationToken => RequestVerificationToken + AjaxTokenSuffix;
 
         /// <summary>
         /// Gets or sets the login page used as a redirect location when authentication fails.
@@ -189,10 +195,7 @@ namespace GSF.Web.Security
         /// </remarks>
         public string Realm
         {
-            get
-            {
-                return m_realm;
-            }
+            get => m_realm;
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -231,7 +234,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
         public bool IsAuthFailureRedirectResource(string urlPath)
         {
-            if ((object)m_authFailureRedirectResourceExpression == null)
+            if (m_authFailureRedirectResourceExpression is null)
                 AuthFailureRedirectResourceExpression = DefaultAuthFailureRedirectResourceExpression;
 
             return m_authFailureRedirectResourceCache.GetOrAdd(urlPath, m_authFailureRedirectResources.IsMatch);
@@ -244,13 +247,12 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
         public bool IsAnonymousResource(string urlPath)
         {
-            if ((object)m_anonymousResourceExpression == null)
+            if (m_anonymousResourceExpression is null)
                 AnonymousResourceExpression = DefaultAnonymousResourceExpression;
                 
             return m_anonymousResourceCache.GetOrAdd(urlPath, path =>
             {
                 string resource = path;
-                bool state;
 
                 // If path is an embedded resource, convert it to a properly formatted type name identifier
                 if (resource.StartsWith("/@"))
@@ -258,7 +260,7 @@ namespace GSF.Web.Security
                 else if (resource.StartsWith("@"))
                     resource = resource.Substring(1).Replace('/', '.');
 
-                if (s_resourceRequiresAuthentication.TryGetValue(resource, out state))
+                if (s_resourceRequiresAuthentication.TryGetValue(resource, out bool state))
                     return !state;
 
                 // Always match against unmodified original path
@@ -348,6 +350,11 @@ namespace GSF.Web.Security
         public string RequestVerificationToken => m_authenticationOptions.RequestVerificationToken;
 
         /// <summary>
+        /// Gets token to specify when using AJAX for request verification tokens.
+        /// </summary>
+        public string AjaxRequestVerificationToken => m_authenticationOptions.AjaxRequestVerificationToken;
+
+        /// <summary>
         /// Gets the login page used as a redirect location when authentication fails.
         /// </summary>
         public string LoginPage => m_authenticationOptions.LoginPage;
@@ -387,14 +394,16 @@ namespace GSF.Web.Security
         /// </summary>
         /// <param name="urlPath">Path to check as an anonymous resource.</param>
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
-        public bool IsAuthFailureRedirectResource(string urlPath) => m_authenticationOptions.IsAuthFailureRedirectResource(urlPath);
+        public bool IsAuthFailureRedirectResource(string urlPath) =>
+            m_authenticationOptions.IsAuthFailureRedirectResource(urlPath);
 
         /// <summary>
         /// Determines whether the given resource is an anonymous resource.
         /// </summary>
         /// <param name="urlPath">Path to check as an anonymous resource.</param>
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
-        public bool IsAnonymousResource(string urlPath) => m_authenticationOptions.IsAnonymousResource(urlPath);
+        public bool IsAnonymousResource(string urlPath) =>
+            m_authenticationOptions.IsAnonymousResource(urlPath);
 
         #endregion
     }

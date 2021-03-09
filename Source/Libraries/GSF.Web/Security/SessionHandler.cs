@@ -206,10 +206,9 @@ namespace GSF.Web.Security
             // Get existing session data from the request, if any
             CookieHeaderValue cookie = request.Headers.GetCookies(SessionToken).FirstOrDefault();
             string sessionCookieValue = cookie?[SessionToken].Value;
-            Guid sessionID;
 
             // If session ID format is invalid, create a new one
-            if (!Guid.TryParse(sessionCookieValue, out sessionID))
+            if (!Guid.TryParse(sessionCookieValue, out Guid sessionID))
                 sessionID = Guid.NewGuid();
 
             sessionCookieValue = sessionID.ToString();
@@ -276,6 +275,7 @@ namespace GSF.Web.Security
             // Determine where the credential cache is located
             ConfigurationFile configFile = ConfigurationFile.Current;
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+
             string configurationCachePath = systemSettings["ConfigurationCachePath"].Value;
             string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
 
@@ -316,7 +316,7 @@ namespace GSF.Web.Security
             // Get the authentication token provided by the client in the request message
             string authenticationToken = GetAuthenticationTokenFromCookie(request, AuthenticationToken);
 
-            if ((object)authenticationToken == null)
+            if (authenticationToken == null)
                 return;
 
             string selector = authenticationToken.Split(':')[0];
@@ -324,6 +324,7 @@ namespace GSF.Web.Security
             // Determine where the credential cache is located
             ConfigurationFile configFile = ConfigurationFile.Current;
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+
             string configurationCachePath = systemSettings["ConfigurationCachePath"].Value;
             string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
 
@@ -362,6 +363,7 @@ namespace GSF.Web.Security
         static SessionHandler()
         {
             CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
+            
             settings.Add("SessionTimeout", DefaultSessionTimeout, "The timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.");
             settings.Add("SessionMonitorInterval", DefaultSessionMonitorInterval, "The interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.");
 
@@ -395,9 +397,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if session was found and cleared; otherwise, <c>false</c>.</returns>
         public static bool ClearSessionCache(Guid sessionID)
         {
-            Session session;
-
-            if (!s_sessionCache.TryRemove(sessionID, out session))
+            if (!s_sessionCache.TryRemove(sessionID, out Session session))
                 return false;
 
             OnSessionExpired(sessionID, session.State);
@@ -431,6 +431,7 @@ namespace GSF.Web.Security
                 // Determine where the credential cache is located
                 ConfigurationFile configFile = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+
                 string configurationCachePath = systemSettings["ConfigurationCachePath"].Value;
                 string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
 
@@ -438,16 +439,13 @@ namespace GSF.Web.Security
                 // credentials that were mapped to this authentication token
                 lock (s_credentialCacheLock)
                 {
-                    using (FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath))
+                    using FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath);
+                    
+                    if (credentialCache.TryGetValue(selector, out Credential credential) && validator == credential.Validator && DateTime.UtcNow < credential.Expiration)
                     {
-                        Credential credential;
-
-                        if (credentialCache.TryGetValue(selector, out credential) && validator == credential.Validator && DateTime.UtcNow < credential.Expiration)
-                        {
-                            username = credential.Username;
-                            password = credential.Password;
-                            return true;
-                        }
+                        username = credential.Username;
+                        password = credential.Password;
+                        return true;
                     }
                 }
             }
@@ -470,11 +468,9 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if session ID was successfully accessed; otherwise, <c>false</c>.</returns>
         public static bool TryGetSessionID(HttpRequestMessage request, string sessionToken, out Guid sessionID)
         {
-            object result;
-
-            if (request.Properties.TryGetValue(sessionToken ?? DefaultSessionToken, out result) && result is Guid)
+            if (request.Properties.TryGetValue(sessionToken ?? DefaultSessionToken, out object result) && result is Guid guid)
             {
-                sessionID = (Guid)result;
+                sessionID = guid;
                 return true;
             }
 
@@ -491,10 +487,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if session state was successfully accessed; otherwise, <c>false</c>.</returns>
         public static bool TryGetSessionState(HttpRequestMessage request, string sessionToken, out DynamicViewBag sessionState)
         {
-            Guid sessionID;
-            Session session;
-
-            if (TryGetSessionID(request, sessionToken, out sessionID) && s_sessionCache.TryGetValue(sessionID, out session))
+            if (TryGetSessionID(request, sessionToken, out Guid sessionID) && s_sessionCache.TryGetValue(sessionID, out Session session))
             {
                 sessionState = session.State;
                 return true;
@@ -537,9 +530,8 @@ namespace GSF.Web.Security
         {
             CookieHeaderValue cookie = request.Headers.GetCookies(sessionToken).FirstOrDefault();
             string value = cookie?[sessionToken ?? DefaultSessionToken].Value;
-            Guid sessionID;
 
-            if (Guid.TryParse(value, out sessionID))
+            if (Guid.TryParse(value, out Guid sessionID))
                 UpdateSession(sessionID);
 
             return sessionID;
@@ -554,9 +546,8 @@ namespace GSF.Web.Security
         public static Guid GetSessionIDFromCookie(IOwinRequest request, string sessionToken)
         {
             string value = request?.Cookies?[sessionToken ?? DefaultSessionToken];
-            Guid sessionID;
 
-            if (Guid.TryParse(value, out sessionID))
+            if (Guid.TryParse(value, out Guid sessionID))
                 UpdateSession(sessionID);
 
             return sessionID;
@@ -571,9 +562,8 @@ namespace GSF.Web.Security
         public static Guid GetSessionIDFromCookie(IRequest request, string sessionToken)
         {
             string value = request?.Cookies?[sessionToken ?? DefaultSessionToken].Value;
-            Guid sessionID;
 
-            if (Guid.TryParse(value, out sessionID))
+            if (Guid.TryParse(value, out Guid sessionID))
                 UpdateSession(sessionID);
 
             return sessionID;
@@ -582,7 +572,7 @@ namespace GSF.Web.Security
         private static void UpdateSession(Guid sessionID)
         {
             // Get cached session for this request, creating it if necessary
-            Session session = s_sessionCache.GetOrAdd(sessionID, id => new Session());
+            Session session = s_sessionCache.GetOrAdd(sessionID, _ => new Session());
 
             // Update the last access time for the session state - as long as user is making requests, session will persist
             session.LastAccess = DateTime.UtcNow;
@@ -640,13 +630,9 @@ namespace GSF.Web.Security
         /// <returns>The authentication options.</returns>
         public static ReadonlyAuthenticationOptions GetAuthenticationOptions(this HttpRequestMessage request)
         {
-            object value;
-
-            if (request.Properties.TryGetValue("MS_OwinContext", out value))
+            if (request.Properties.TryGetValue("MS_OwinContext", out object value))
             {
-                IOwinContext context = value as IOwinContext;
-
-                if ((object)context != null && context.Environment.TryGetValue("AuthenticationOptions", out value))
+                if (value is IOwinContext context && context.Environment.TryGetValue("AuthenticationOptions", out value))
                     return value as ReadonlyAuthenticationOptions;
             }
 
@@ -661,10 +647,7 @@ namespace GSF.Web.Security
         /// <returns>Anti-forgery token to be added as an HTTP header value.</returns>
         public static string GenerateRequestVerficationHeaderToken(this HttpRequestMessage request)
         {
-            string cookieToken, formToken;
-
-            AntiForgery.GetTokens(request, null, out cookieToken, out formToken);
-
+            AntiForgery.GetTokens(request, null, out string cookieToken, out string formToken);
             return $"{cookieToken}:{formToken}";
         }
 
@@ -697,6 +680,31 @@ namespace GSF.Web.Security
         /// <param name="formValidation">Flag that determines if form validation should be used.</param>
         public static void ValidateRequestVerificationToken(this HttpRequestMessage request, ReadonlyAuthenticationOptions options, bool formValidation = false)
         {
+            bool tryGetTokens(string name, out Tuple<string, string> values)
+            {
+                if (request.Headers.TryGetValues(name, out IEnumerable<string> tokenHeaders))
+                {
+                    string[] tokens = tokenHeaders.First().Split(':');
+
+                    switch (tokens.Length)
+                    {
+                        case 1:
+                            values = new Tuple<string, string>(name, tokens[0].Trim());
+                            return true;
+                        case 2:
+                            values = new Tuple<string, string>(tokens[0].Trim(), tokens[1].Trim());
+                            return true;
+                    }
+                }
+
+                values = default;
+                return false;
+            }
+
+            // Check for anti-forgery operation with AJAX requests, in these cases, do not perform form validation
+            if (tryGetTokens(options.AjaxRequestVerificationToken, out Tuple<string, string> tokenValues) && tokenValues.Item2.ParseBoolean())
+                formValidation = false;
+
             if (formValidation)
             {
                 // Form validation
@@ -708,17 +716,10 @@ namespace GSF.Web.Security
                 string cookieToken = "";
                 string formToken = "";
 
-                IEnumerable<string> tokenHeaders;
-
-                if (request.Headers.TryGetValues(options.RequestVerificationToken, out tokenHeaders))
+                if (tryGetTokens(options.RequestVerificationToken, out tokenValues))
                 {
-                    string[] tokens = tokenHeaders.First().Split(':');
-
-                    if (tokens.Length == 2)
-                    {
-                        cookieToken = tokens[0].Trim();
-                        formToken = tokens[1].Trim();
-                    }
+                    cookieToken = tokenValues.Item1;
+                    formToken = tokenValues.Item2;
                 }
 
                 AntiForgery.Validate(request, cookieToken, formToken);
