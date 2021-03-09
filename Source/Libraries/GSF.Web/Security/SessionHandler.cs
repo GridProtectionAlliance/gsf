@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -230,6 +231,9 @@ namespace GSF.Web.Security
 
             if (request.RequestUri.LocalPath == authTestPage)
             {
+                if (request.Method != HttpMethod.Post)
+                    throw new SecurityException("Authorization test only operates with validated HTTP post operation");
+
                 SecurityPrincipal securityPrincipal = request.GetRequestContext().Principal as SecurityPrincipal;
                 SecurityIdentity securityIdentity = securityPrincipal?.Identity;
                 ISecurityProvider securityProvider = securityIdentity?.Provider;

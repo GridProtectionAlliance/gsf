@@ -252,7 +252,7 @@ Ntlm.isChallenge = function(xhr) {
     return header && header.indexOf("NTLM") !== -1;
 };
 
-Ntlm.authenticate = function(url, handleResponse, verificationHeader, verificationValue) {
+Ntlm.authenticate = function (url, handleResponse, verificationHeader, verificationValue, useAjaxVerfication) {
     if (!Ntlm.domain || !Ntlm.username || !Ntlm.lmHashedPassword || !Ntlm.ntHashedPassword) {
         Ntlm.error("No NTLM credentials specified. Use Ntlm.setCredentials(...) before making calls.");
         return;
@@ -268,6 +268,7 @@ Ntlm.authenticate = function(url, handleResponse, verificationHeader, verificati
     
     $.ajax({
         url: url,
+        type: "post",
         cache: false,
         crossDomain: false,
         xhrFields: {
@@ -278,6 +279,7 @@ Ntlm.authenticate = function(url, handleResponse, verificationHeader, verificati
                 case 401:
                     $.ajax({
                         url: url,
+                        type: "post",
                         cache: false,
                         crossDomain: false,
                         xhrFields: {
@@ -293,8 +295,10 @@ Ntlm.authenticate = function(url, handleResponse, verificationHeader, verificati
 
                             xhr2.setRequestHeader("Authorization", "NTLM " + msg3.toBase64());
 
-                            if (verificationHeader && verificationValue)
+                            if (verificationHeader && verificationValue) {
                                 xhr2.setRequestHeader(verificationHeader, verificationValue);
+                                xhr2.setRequestHeader(useAjaxVerfication, "true");
+                            }
                         }
                     });
                     break;
@@ -307,8 +311,10 @@ Ntlm.authenticate = function(url, handleResponse, verificationHeader, verificati
             const msg1 = Ntlm.createMessage1(hostname);
             xhr.setRequestHeader("Authorization", "NTLM " + msg1.toBase64());
 
-            if (verificationHeader && verificationValue)
+            if (verificationHeader && verificationValue) {
                 xhr.setRequestHeader(verificationHeader, verificationValue);
+                xhr.setRequestHeader(useAjaxVerfication, "true");
+            }
         }
     });
 };

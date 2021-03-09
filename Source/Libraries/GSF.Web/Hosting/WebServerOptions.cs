@@ -113,7 +113,7 @@ namespace GSF.Web.Hosting
         {
             get
             {
-                if ((object)m_authTestPage == null)
+                if (m_authTestPage is null)
                     AuthTestPage = AuthenticationOptions.DefaultAuthTestPage;
 
                 return m_authTestPage;

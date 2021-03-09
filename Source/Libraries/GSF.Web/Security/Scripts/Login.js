@@ -29,6 +29,7 @@
 //   boolean unsecureConnection: flag that indicates if connection is secure
 //   string verificationHeader: HTTP header name used to transmit anti-forgery value
 //   string verificationValue: server generated anti-forgery verification token value
+//   string useAjaxVerfication: HTTP header named use to indicate an AJAX post
 //   string redirectPageLabel: user label for redirect location, e.g., main or target
 
 function loadSettings() {
@@ -54,6 +55,7 @@ function authenticateBasic(username, password) {
     $.ajax({
         cache: false,
         url: securePage,
+        type: "post",
         complete: function (xhr) {
             switch (xhr.status) {
                 case 200:
@@ -70,6 +72,7 @@ function authenticateBasic(username, password) {
 
             xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
             xhr.setRequestHeader(verificationHeader, verificationValue);
+            xhr.setRequestHeader(useAjaxVerfication, "true");
         }
     });
 }
@@ -85,7 +88,8 @@ function authenticateNTLM(username, password) {
             loginComplete(true);
         else
             loginFailed(response);
-    }, verificationHeader, verificationValue);
+    },
+    verificationHeader, verificationValue, useAjaxVerfication);
 }
 
 // Authorize user with pass-through basic authentication without credentials
@@ -94,6 +98,7 @@ function passthroughBasic() {
     $.ajax({
         cache: false,
         url: securePage,
+        type: "post",
         complete: function (xhr) {
             switch (xhr.status) {
                 case 200:
@@ -106,6 +111,7 @@ function passthroughBasic() {
         },
         beforeSend: function (xhr) {
             xhr.setRequestHeader(verificationHeader, verificationValue);
+            xhr.setRequestHeader(useAjaxVerfication, "true");
         }
     });
 }
@@ -116,6 +122,7 @@ function passthroughNTLM() {
     $.ajax({
         cache: false,
         url: securePage + "?scheme=NTLM",
+        type: "post",
         complete: function (xhr) {
             if (xhr.status === 200) {
                 loginComplete(true);
@@ -131,6 +138,7 @@ function passthroughNTLM() {
         },
         beforeSend: function (xhr) {
             xhr.setRequestHeader(verificationHeader, verificationValue);
+            xhr.setRequestHeader(useAjaxVerfication, "true");
         }
     });
 }

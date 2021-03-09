@@ -38,43 +38,41 @@
     string clearCredentials = AuthenticationOptions.DefaultClearCredentialsParameter;
     string verificationHeader = AuthenticationOptions.DefaultRequestVerificationToken;
     string verificationValue = Html.RequestVerificationHeaderToken();
+    string useAjaxVerfication = AuthenticationOptions.DefaultAjaxRequestVerificationToken;
     string loginHeader = "";
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
 
-    if (request.QueryParameters().TryGetValue("redir", out redirectPage))
-    {
+    if (request.QueryParameters().TryGetValue("redir", out redirectPage)) {
         string base64Path = WebUtility.UrlDecode(redirectPage);
         byte[] pathBytes = Convert.FromBase64String(base64Path);
         redirectPage = Encoding.UTF8.GetString(pathBytes);
     }
-    else
-    {
+    else {
         redirectPage = "/";
     }
 
     string redirectPageLabel = redirectPage == "/" ? "main" : "target";
     ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
 
-    if ((object)options != null)
-    {
-        if (!string.IsNullOrWhiteSpace(options.AuthTestPage))
-        {
+    if ((object)options != null) {
+        if (!string.IsNullOrWhiteSpace(options.AuthTestPage)) {
             authTestPage = options.AuthTestPage;
         }
 
-        if (!string.IsNullOrWhiteSpace(options.LoginPage))
-        {
+        if (!string.IsNullOrWhiteSpace(options.LoginPage)) {
             loginPage = options.LoginPage;
         }
 
-        if (!string.IsNullOrWhiteSpace(options.ClearCredentialsParameter))
-        {
+        if (!string.IsNullOrWhiteSpace(options.ClearCredentialsParameter)) {
             clearCredentials = options.ClearCredentialsParameter;
         }
 
-        if (!string.IsNullOrWhiteSpace(options.RequestVerificationToken))
-        {
+        if (!string.IsNullOrWhiteSpace(options.RequestVerificationToken)) {
             verificationHeader = options.RequestVerificationToken;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.AjaxRequestVerificationToken)) {
+            useAjaxVerfication = options.AjaxRequestVerificationToken;
         }
 
         // Login header is used set custom logo and application title for page
@@ -89,7 +87,8 @@
         const unsecureConnection = {4};
         const verificationHeader = ""{5}"";
         const verificationValue = ""{6}"";
-        const redirectPageLabel = ""{7}"";
+        const useAjaxVerfication = ""{7}"";
+        const redirectPageLabel = ""{8}"";
     ",
         /* 0 */ redirectPage.JavaScriptEncode(),
         /* 1 */ authTestPage.JavaScriptEncode(),
@@ -98,7 +97,8 @@
         /* 4 */ unsecureConnection.ToString().ToLowerInvariant(),
         /* 5 */ verificationHeader.JavaScriptEncode(),
         /* 6 */ verificationValue.JavaScriptEncode(),
-        /* 7 */ redirectPageLabel.JavaScriptEncode()
+        /* 7 */ useAjaxVerfication.JavaScriptEncode(),
+        /* 8 */ redirectPageLabel.JavaScriptEncode()
     );
 }
 <!DOCTYPE html>
@@ -269,7 +269,7 @@
     <script src="@Resources.Root/Security/Scripts/core.js"></script>
     <script src="@Resources.Root/Security/Scripts/sha256.js"></script>
     <script src="@Resources.Root/Security/Scripts/enc-base64.js"></script>
-    <script src="@Resources.Root/Security/Scripts/ntlm.js"></script>
-    <script src="@Resources.Root/Security/Scripts/Login.js"></script>
+    <script src="@Resources.Root/Security/Scripts/ntlm.js?ver=1"></script>
+    <script src="@Resources.Root/Security/Scripts/Login.js?ver=1"></script>
 </body>
 </html>

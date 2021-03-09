@@ -31,6 +31,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -420,6 +421,9 @@ namespace GSF.Web.Hosting
 
         private HttpResponseMessage CreateAuthTestResponse(HttpRequestMessage request, HttpResponseMessage response)
         {
+            if (request.Method != HttpMethod.Post)
+                throw new SecurityException("Authorization test only operates with validated HTTP post operation");
+
             response.Content = new StringContent($@"
                 <html>
                 <head>
