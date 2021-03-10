@@ -1661,7 +1661,7 @@ namespace GSF.ServiceProcess
 
             try
             {
-                formattedMessage = string.Format(message, args);
+                formattedMessage = args?.Length == 0 ? message : string.Format(message, args);
             }
             catch (FormatException ex)
             {
