@@ -217,7 +217,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 OnPropertyChanged("Type");
                 OnPropertyChanged("TypeAsInt");
-                OnPropertyChanged("TypeName");
             }
         }
 
