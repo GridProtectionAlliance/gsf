@@ -97,6 +97,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         private ConfigurationFrame3 m_configurationFrame3;
         private bool m_configurationChanged;
         private Ticks m_notificationStartTime;
+        private ushort m_revisionCount;
 
         #endregion
 
@@ -223,6 +224,18 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
             bool configurationChanged = !(m_configurationFrame2 is null);
+
+            // Apply tracked revision counts
+            if (configurationChanged)
+            {
+                unchecked { m_revisionCount++; }
+
+                foreach (IConfigurationCell cell in configurationFrame2.Cells)
+                    cell.RevisionCount = m_revisionCount;
+
+                foreach (IConfigurationCell cell in configurationFrame3.Cells)
+                    cell.RevisionCount = m_revisionCount;
+            }
 
             // Cache new IEEE C7.118 configuration frames for later use
             Interlocked.Exchange(ref m_configurationFrame2, configurationFrame2);
