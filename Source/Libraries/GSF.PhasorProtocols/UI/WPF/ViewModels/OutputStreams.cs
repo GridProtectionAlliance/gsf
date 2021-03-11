@@ -138,14 +138,14 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="OutputStream"/> types.
         /// </summary>
-        public Dictionary<int, string> TypeLookupList
+        public Dictionary<OutputProtocol, string> TypeLookupList
         {
             get
             {
                 // Dynamically load output type lookup list from static OutputProtocolNames map
                 return OutputStream.OutputProtocolNames.ToDictionary
                 (
-                    item => (int)item.Key, // Get OutputProtocol key value as an integer 
+                    item => item.Key,
                     item => item.Value
                 );
             }
@@ -635,13 +635,26 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if (propertyName == "CurrentItem")
             {
+                ExecuteConfigFrameSizeCalculation();
+                CurrentItem.UpdateConfigFrameSize = ExecuteConfigFrameSizeCalculation;
+            }
+        }
+
+        private void ExecuteConfigFrameSizeCalculation()
+        {
+            try
+            {
                 bool dataFrameTarget = !(CurrentItem is null) && (CurrentItem.Type == OutputProtocol.IEEE_C37_118_2011 || CurrentItem.Type == OutputProtocol.BPA_PDCSTREAM);
-                
+
                 RuntimeID = CurrentItem is null ? string.Empty : CommonFunctions.GetRuntimeID("OutputStream", CurrentItem.ID);
                 FrameSizeLabel = (dataFrameTarget ? "Data" : "Config") + " Frame Size";
                 FrameSizeColor = new SolidColorBrush(Colors.Black);
                 FrameSizeText = "Calculating...";
                 m_configFrameSizeCalculation.RunOnceAsync();
+            }
+            catch (Exception ex)
+            {
+                CommonFunctions.LogException(null, "ExecuteConfigFrameSizeCalculation " + DataModelName, ex);
             }
         }
 

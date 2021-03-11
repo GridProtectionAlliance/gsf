@@ -34,9 +34,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Data;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.PhasorProtocols.IEEEC37_118;
@@ -71,6 +73,56 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// IEC 61850-90-5 Output.
         /// </summary>
         IEC_61850_90_5 = 2
+    }
+
+    /// <summary>
+    /// Defines a value converter for the <see cref="OutputProtocol"/> enumeration.
+    /// </summary>
+    public class OutputProtocolValueConverter : IValueConverter
+    {
+        /// <summary>Converts a value.</summary>
+        /// <param name="value">The value produced by the binding source.</param>
+        /// <param name="targetType">The type of the binding target property.</param>
+        /// <param name="parameter">The converter parameter to use.</param>
+        /// <param name="culture">The culture to use in the converter.</param>
+        /// <returns>A converted value. If the method returns <see langword="null" />, the valid null value is used.</returns>
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is null)
+                return null;
+
+            if (parameter is null)
+                return null;
+
+            if (!(parameter is CollectionViewSource viewSource))
+                return null;
+
+            if (!(viewSource.Source is Dictionary<OutputProtocol, string> typeList))
+                return null;
+
+            string name = value.ToString();
+
+            if (Enum.TryParse(name, out OutputProtocol type) && typeList.TryGetValue(type, out string typeName))
+                return new KeyValuePair<OutputProtocol, string>(type, typeName);
+
+            return null;
+        }
+
+        /// <summary>Converts a value.</summary>
+        /// <param name="value">The value that is produced by the binding target.</param>
+        /// <param name="targetType">The type to convert to.</param>
+        /// <param name="parameter">The converter parameter to use.</param>
+        /// <param name="culture">The culture to use in the converter.</param>
+        /// <returns>A converted value. If the method returns <see langword="null" />, the valid null value is used.</returns>
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is KeyValuePair<OutputProtocol, string> pair ? (object)pair.Key : null;
+        }
+
+        /// <summary>
+        /// Gets default instance of the <see cref="OutputProtocolValueConverter"/>.
+        /// </summary>
+        public static readonly OutputProtocolValueConverter Default = new OutputProtocolValueConverter();
     }
 
     /// <summary>
@@ -133,6 +185,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets function to call when config frame size calculation should be updated.
+        /// </summary>
+        public Action UpdateConfigFrameSize { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="OutputStream"/>'s NodeID.
@@ -206,28 +263,24 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 Dictionary<string, string> settings = ConnectionString?.ParseKeyValuePairs() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-                if (m_type == OutputProtocol.IEEE_C37_118_2011)
-                    settings[ConfigTypeKey] = DraftRevision.Std2011.ToString();
-                else if (m_type == OutputProtocol.IEEE_C37_118_2005)
-                    settings[ConfigTypeKey] = DraftRevision.Std2005.ToString();
-                else
-                    settings.Remove(ConfigTypeKey);
+                switch (m_type)
+                {
+                    case OutputProtocol.IEEE_C37_118_2011:
+                        settings[ConfigTypeKey] = DraftRevision.Std2011.ToString();
+                        break;
+                    case OutputProtocol.IEEE_C37_118_2005:
+                        settings[ConfigTypeKey] = DraftRevision.Std2005.ToString();
+                        break;
+                    default:
+                        settings.Remove(ConfigTypeKey);
+                        break;
+                }
 
                 ConnectionString = settings.JoinKeyValuePairs();
 
                 OnPropertyChanged("Type");
-                OnPropertyChanged("TypeAsInt");
+                UpdateConfigFrameSize?.Invoke();
             }
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="OutputStream"/>'s output protocol type as an integer.
-        /// </summary>
-        [Required(ErrorMessage = "Output stream type is a required, please provide a value.")]
-        public int TypeAsInt
-        {
-            get => (int)Type;
-            set => Type = (OutputProtocol)value;
         }
 
         /// <summary>

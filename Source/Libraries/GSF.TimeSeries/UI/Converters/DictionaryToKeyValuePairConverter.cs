@@ -50,68 +50,74 @@ namespace GSF.TimeSeries.UI.Converters
         /// <returns>KeyValuePair{T1,T2} value.</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (parameter != null)
+            if (parameter is null)
+                return null;
+
+            if (!(parameter is CollectionViewSource viewSource))
+                return null;
+
+            switch (viewSource.Source)
             {
-                CollectionViewSource viewSource = parameter as CollectionViewSource;
-
-                if (viewSource.Source is Dictionary<int, string>)
+                case Dictionary<int, string> intToStringMap:
                 {
-                    Dictionary<int, string> collection = (Dictionary<int, string>)viewSource.Source;
-
                     value = value ?? 0; // If we get null from database for optional field then assign default value so first item from the collection can be returned.
 
-                    int key;
-                    if (int.TryParse(value.ToString(), out key))
+                    if (int.TryParse(value.ToString(), out int key))
                     {
-                        if (key == 0 && collection.Count > 0)
-                            return collection.First();
+                        if (key == 0 && intToStringMap.Count > 0)
+                            return intToStringMap.First();
 
-                        foreach (KeyValuePair<int, string> item in collection)
+                        foreach (KeyValuePair<int, string> item in intToStringMap)
+                        {
                             if (item.Key == key)
                                 return item;
+                        }
                     }
-                }
-                else if (viewSource.Source is Dictionary<string, string>)
-                {
-                    Dictionary<string, string> collection = (Dictionary<string, string>)viewSource.Source;
 
+                    break;
+                }
+                case Dictionary<string, string> stringToStringMap:
+                {
                     value = value ?? string.Empty; // If we get null from database for optional field then assign default value so first item from the collection can be returned.
 
                     string key = value.ToString();
 
-                    if (string.IsNullOrEmpty(key) && collection.Count > 0)
-                        return collection.First();
+                    if (string.IsNullOrEmpty(key) && stringToStringMap.Count > 0)
+                        return stringToStringMap.First();
 
-                    foreach (KeyValuePair<string, string> item in collection)
+                    foreach (KeyValuePair<string, string> item in stringToStringMap)
+                    {
                         if (item.Key == key)
                             return item;
-                }
-                else if (viewSource.Source is Dictionary<Guid, string>)
-                {
-                    Dictionary<Guid, string> collection = (Dictionary<Guid, string>)viewSource.Source;
+                    }
 
+                    break;
+                }
+                case Dictionary<Guid, string> guidToStringMap:
+                {
                     value = value ?? Guid.Empty; // If we get null from database for optional field then assign default value so first item from the collection can be returned.
 
                     Guid key = Guid.Parse(value.ToString());
 
-                    if (key == Guid.Empty && collection.Count > 0)
-                        return collection.First();
+                    if (key == Guid.Empty && guidToStringMap.Count > 0)
+                        return guidToStringMap.First();
 
-                    foreach (KeyValuePair<Guid, string> item in collection)
+                    foreach (KeyValuePair<Guid, string> item in guidToStringMap)
+                    {
                         if (item.Key == key)
                             return item;
-                }
-                else if (viewSource.Source is Dictionary<Type, string>)
-                {
-                    Dictionary<Type, string> collection = (Dictionary<Type, string>)viewSource.Source;
-
-                    if ((object)value != null)
-                    {
-                        KeyValuePair<Type, string> item = collection.ToList().SingleOrDefault(pair => pair.Key.FullName == value.ToString());
-
-                        if (!item.Equals(default(KeyValuePair<Type, string>)))
-                            return item;
                     }
+
+                    break;
+                }
+                case Dictionary<Type, string> typeToStringMap when value != null:
+                {
+                    KeyValuePair<Type, string> item = typeToStringMap.ToList().SingleOrDefault(pair => pair.Key.FullName == value.ToString());
+
+                    if (!item.Equals(default(KeyValuePair<Type, string>)))
+                        return item;
+
+                    break;
                 }
             }
 
@@ -128,18 +134,22 @@ namespace GSF.TimeSeries.UI.Converters
         /// <returns>Integer, to bind to UI object.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if ((object)value != null)
+            if (value is null)
+                return null;
+
+            switch (value)
             {
-                if (value is KeyValuePair<int, string>)
-                    return ((KeyValuePair<int, string>)value).Key == 0 ? (object)DBNull.Value : ((KeyValuePair<int, string>)value).Key;
-                else if (value is KeyValuePair<string, string>)
-                    return string.IsNullOrEmpty(((KeyValuePair<string, string>)value).Key) ? (object)DBNull.Value : ((KeyValuePair<string, string>)value).Key;
-                else if (value is KeyValuePair<Guid, string>)
-                    return ((KeyValuePair<Guid, string>)value).Key == Guid.Empty ? (object)DBNull.Value : ((KeyValuePair<Guid, string>)value).Key;
-                else if (value is KeyValuePair<Type, string>)
-                    return ((KeyValuePair<Type, string>)value).Key.FullName;
+                case KeyValuePair<int, string> intStringPair:
+                    return intStringPair.Key == 0 ? (object)DBNull.Value : intStringPair.Key;
+                case KeyValuePair<string, string> stringStringPair:
+                    return string.IsNullOrEmpty(stringStringPair.Key) ? (object)DBNull.Value : stringStringPair.Key;
+                case KeyValuePair<Guid, string> guidStringPair:
+                    return guidStringPair.Key == Guid.Empty ? (object)DBNull.Value : guidStringPair.Key;
+                case KeyValuePair<Type, string> typeStringPair:
+                    return typeStringPair.Key.FullName;
+                default:
+                    return null;
             }
-            return null;
         }
 
         #endregion
