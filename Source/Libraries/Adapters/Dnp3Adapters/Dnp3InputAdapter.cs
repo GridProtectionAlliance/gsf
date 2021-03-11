@@ -72,7 +72,7 @@ namespace DNP3Adapters
                 // contends with adapter initialization and disposal so contention will not be normal
                 lock (s_adapters)
                 {
-                    if (s_statusProxy == null || s_statusProxy.m_disposed)
+                    if (s_statusProxy is null || s_statusProxy.m_disposed)
                         return;
 
                     if ((entry.filter.Flags & LogFilters.ERROR) > 0)
@@ -311,7 +311,7 @@ namespace DNP3Adapters
                 s_adapters.Add(this);
 
                 // If no adapter has been designated as the status proxy, might as well be this one
-                if (s_statusProxy == null)
+                if (s_statusProxy is null)
                     s_statusProxy = this;
             }
         }
