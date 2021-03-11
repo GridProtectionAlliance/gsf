@@ -2120,7 +2120,7 @@ namespace GSF.PhasorProtocols
                     status.Append(" - Multicast");
 
                 status.AppendLine();
-                status.AppendFormat("         Source Connection: {0}", ConnectionInfo);
+                status.AppendFormat("         Source Connection: {0}", ConnectionInfo.TruncateRight(51));
                 status.AppendLine();
                 status.AppendFormat("               Buffer size: {0}", m_bufferSize);
                 status.AppendLine();
