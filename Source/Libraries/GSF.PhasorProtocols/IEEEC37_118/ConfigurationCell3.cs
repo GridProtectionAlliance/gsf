@@ -85,13 +85,20 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         private ConfigurationCell3(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
+            float getSingle(string name)
+            {
+                return !(info.GetValue(name, typeof(string)) is string element) || element == "INF" ?
+                    float.PositiveInfinity :
+                    float.Parse(element);
+            }
+
             // Deserialize configuration cell
             m_formatFlags = (FormatFlags)info.GetValue("formatFlags", typeof(FormatFlags));
 
             // Decode PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
-            Latitude = info.GetSingle("latitude");
-            Longitude = info.GetSingle("longitude");
-            Elevation = info.GetSingle("elevation");
+            Latitude = getSingle("latitude");
+            Longitude = getSingle("longitude");
+            Elevation = getSingle("elevation");
             ServiceClass = info.GetChar("serviceClass");
             Window = info.GetInt32("window");
             GroupDelay = info.GetInt32("groupDelay");
