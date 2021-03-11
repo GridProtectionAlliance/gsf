@@ -184,7 +184,7 @@ namespace GSF.TimeSeries.Adapters
             status.AppendLine($"  Output Names per Adapter: {instance.PerAdapterOutputNames.Count:N0}");
 
             foreach (string outputName in instance.PerAdapterOutputNames)
-                status.AppendLine($"    \"{outputName}\"");
+                status.AppendLine($"                  \"{outputName.TruncateRight(40)}\"");
 
             status.AppendLine($"Re-parse Connection String: {instance.AutoReparseConnectionString}");
             status.AppendLine($"      Original Data Member: {instance.OriginalDataMember}");

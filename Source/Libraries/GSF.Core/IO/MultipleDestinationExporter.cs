@@ -552,7 +552,7 @@ namespace GSF.IO
                 status.Append(m_enabled);
                 status.AppendLine();
                 status.Append("       Temporary file path: ");
-                status.Append(Path.GetTempPath());
+                status.Append(FilePath.TrimFileName(Path.GetTempPath(), 51));
                 status.AppendLine();
                 status.AppendLine("       Export destinations: ");
                 status.AppendLine();
