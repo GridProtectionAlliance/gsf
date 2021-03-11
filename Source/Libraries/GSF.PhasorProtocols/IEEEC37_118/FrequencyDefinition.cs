@@ -78,6 +78,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.
         /// </summary>
+        /// <remarks>
+        /// Return value can be <c>null</c> if parent configuration cell is a <see cref="ConfigurationCell3"/>.
+        /// </remarks>
         public new ConfigurationCell Parent
         {
             get => base.Parent as ConfigurationCell;
@@ -87,6 +90,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell3"/> parent of this <see cref="FrequencyDefinition"/>, if applicable.
         /// </summary>
+        /// <remarks>
+        /// Return value can be <c>null</c> if parent configuration cell is a <see cref="ConfigurationCell"/>.
+        /// </remarks>
         public ConfigurationCell3 Parent3
         {
             get => base.Parent as ConfigurationCell3;
@@ -111,7 +117,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the binary body image of the <see cref="FrequencyDefinition"/> object.
         /// </summary>
-        protected override byte[] BodyImage => BigEndian.GetBytes((ushort)(Parent.NominalFrequency == LineFrequency.Hz50 ? Bits.Bit00 : Bits.Nil));
+        protected override byte[] BodyImage => BigEndian.GetBytes((ushort)(base.Parent.NominalFrequency == LineFrequency.Hz50 ? Bits.Bit00 : Bits.Nil));
 
     #endregion
 
@@ -130,7 +136,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </remarks>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
-            Parent.NominalFrequency = (BigEndian.ToUInt16(buffer, startIndex) & (ushort)Bits.Bit00) > 0 ? LineFrequency.Hz50 : LineFrequency.Hz60;
+            base.Parent.NominalFrequency = (BigEndian.ToUInt16(buffer, startIndex) & (ushort)Bits.Bit00) > 0 ? LineFrequency.Hz50 : LineFrequency.Hz60;
             return 2;
         }
 
