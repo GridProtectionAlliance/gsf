@@ -244,7 +244,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override int HeaderLength => base.HeaderLength + 10;
+        protected override int HeaderLength => GetEncodedStringLength(StationName) + 26;
 
         /// <summary>
         /// Gets the binary header image of the <see cref="ConfigurationCell3"/> object.
@@ -400,19 +400,19 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Parse conversion factors from configuration cell footer
             foreach (IPhasorDefinition definition in PhasorDefinitions)
             {
-                if (definition is PhasorDefinition phasorDefinition)
+                if (definition is PhasorDefinition3 phasorDefinition)
                     index += phasorDefinition.ParseConversionFactor(buffer, index);
             }
 
             foreach (IAnalogDefinition definition in AnalogDefinitions)
             {
-                if (definition is AnalogDefinition analogDefinition)
+                if (definition is AnalogDefinition3 analogDefinition)
                     index += analogDefinition.ParseConversionFactor(buffer, index);
             }
 
             foreach (IDigitalDefinition definition in DigitalDefinitions)
             {
-                if (definition is DigitalDefinition digitalDefinition)
+                if (definition is DigitalDefinition3 digitalDefinition)
                     index += digitalDefinition.ParseConversionFactor(buffer, index);
             }
 
@@ -480,6 +480,15 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             parsedLength = configCell.ParseBinaryImage(buffer, startIndex, 0);
 
             return configCell;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int GetEncodedStringLength(string value)
+        {
+            if (value == null)
+                return 1;
+
+            return Encoding.UTF8.GetByteCount(value) + 1;
         }
 
         // Encode a string into a UTF-8 byte array, validating length.
