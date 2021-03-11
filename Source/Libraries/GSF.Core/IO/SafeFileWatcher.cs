@@ -148,11 +148,11 @@ namespace GSF.IO
         {
             WeakReference<SafeFileWatcher> reference = new WeakReference<SafeFileWatcher>(this);
 
-            m_fileSystemWatcher.Changed += (sender, e) => OnChanged(reference, e);
-            m_fileSystemWatcher.Created += (sender, e) => OnCreated(reference, e);
-            m_fileSystemWatcher.Deleted += (sender, e) => OnDeleted(reference, e);
-            m_fileSystemWatcher.Renamed += (sender, e) => OnRenamed(reference, e);
-            m_fileSystemWatcher.Error += (sender, e) => OnError(reference, e);
+            m_fileSystemWatcher.Changed += (_, e) => OnChanged(reference, e);
+            m_fileSystemWatcher.Created += (_, e) => OnCreated(reference, e);
+            m_fileSystemWatcher.Deleted += (_, e) => OnDeleted(reference, e);
+            m_fileSystemWatcher.Renamed += (_, e) => OnRenamed(reference, e);
+            m_fileSystemWatcher.Error += (_, e) => OnError(reference, e);
         }
 
         /// <summary>
@@ -182,14 +182,8 @@ namespace GSF.IO
         /// </exception>
         public string Path
         {
-            get
-            {
-                return m_fileSystemWatcher.Path;
-            }
-            set
-            {
-                m_fileSystemWatcher.Path = value;
-            }
+            get => m_fileSystemWatcher.Path;
+            set => m_fileSystemWatcher.Path = value;
         }
 
         /// <summary>
@@ -200,14 +194,8 @@ namespace GSF.IO
         /// </returns>
         public string Filter
         {
-            get
-            {
-                return m_fileSystemWatcher.Filter;
-            }
-            set
-            {
-                m_fileSystemWatcher.Filter = value;
-            }
+            get => m_fileSystemWatcher.Filter;
+            set => m_fileSystemWatcher.Filter = value;
         }
 
         /// <summary>
@@ -219,14 +207,8 @@ namespace GSF.IO
         /// <exception cref="InvalidEnumArgumentException">The value that is being set is not valid.</exception>
         public NotifyFilters NotifyFilter
         {
-            get
-            {
-                return m_fileSystemWatcher.NotifyFilter;
-            }
-            set
-            {
-                m_fileSystemWatcher.NotifyFilter = value;
-            }
+            get => m_fileSystemWatcher.NotifyFilter;
+            set => m_fileSystemWatcher.NotifyFilter = value;
         }
 
         /// <summary>
@@ -240,14 +222,8 @@ namespace GSF.IO
         /// <exception cref="ArgumentException"><see cref="SafeFileWatcher.Path"/> has not been set or is invalid.</exception>
         public bool EnableRaisingEvents
         {
-            get
-            {
-                return m_fileSystemWatcher.EnableRaisingEvents;
-            }
-            set
-            {
-                m_fileSystemWatcher.EnableRaisingEvents = value;
-            }
+            get => m_fileSystemWatcher.EnableRaisingEvents;
+            set => m_fileSystemWatcher.EnableRaisingEvents = value;
         }
 
         /// <summary>
@@ -258,14 +234,8 @@ namespace GSF.IO
         /// </returns>
         public bool IncludeSubdirectories
         {
-            get
-            {
-                return m_fileSystemWatcher.IncludeSubdirectories;
-            }
-            set
-            {
-                m_fileSystemWatcher.IncludeSubdirectories = value;
-            }
+            get => m_fileSystemWatcher.IncludeSubdirectories;
+            set => m_fileSystemWatcher.IncludeSubdirectories = value;
         }
 
         /// <summary>
@@ -276,14 +246,8 @@ namespace GSF.IO
         /// </returns>
         public int InternalBufferSize
         {
-            get
-            {
-                return m_fileSystemWatcher.InternalBufferSize;
-            }
-            set
-            {
-                m_fileSystemWatcher.InternalBufferSize = value;
-            }
+            get => m_fileSystemWatcher.InternalBufferSize;
+            set => m_fileSystemWatcher.InternalBufferSize = value;
         }
 
         /// <summary>
@@ -294,14 +258,8 @@ namespace GSF.IO
         /// </returns>
         public ISynchronizeInvoke SynchronizingObject
         {
-            get
-            {
-                return m_fileSystemWatcher.SynchronizingObject;
-            }
-            set
-            {
-                m_fileSystemWatcher.SynchronizingObject = value;
-            }
+            get => m_fileSystemWatcher.SynchronizingObject;
+            set => m_fileSystemWatcher.SynchronizingObject = value;
         }
 
         /// <summary>
@@ -312,14 +270,8 @@ namespace GSF.IO
         /// </returns>
         public ISite Site
         {
-            get
-            {
-                return m_fileSystemWatcher.Site;
-            }
-            set
-            {
-                m_fileSystemWatcher.Site = value;
-            }
+            get => m_fileSystemWatcher.Site;
+            set => m_fileSystemWatcher.Site = value;
         }
 
         #endregion
@@ -361,10 +313,8 @@ namespace GSF.IO
         /// </summary>
         /// <returns>A <see cref="WaitForChangedResult"/> that contains specific information on the change that occurred.</returns>
         /// <param name="changeType">The <see cref="WatcherChangeTypes"/> to watch for.</param>
-        public WaitForChangedResult WaitForChanged(WatcherChangeTypes changeType)
-        {
-            return m_fileSystemWatcher.WaitForChanged(changeType);
-        }
+        public WaitForChangedResult WaitForChanged(WatcherChangeTypes changeType) => 
+            m_fileSystemWatcher.WaitForChanged(changeType);
 
         /// <summary>
         /// A synchronous method that returns a structure that contains specific information on the change that occurred, given the type of change you want to monitor and the time (in milliseconds) to wait before timing out.
@@ -372,56 +322,35 @@ namespace GSF.IO
         /// <returns>A <see cref="WaitForChangedResult"/> that contains specific information on the change that occurred.</returns>
         /// <param name="changeType">The <see cref="WatcherChangeTypes"/> to watch for.</param>
         /// <param name="timeout">The time (in milliseconds) to wait before timing out.</param>
-        public WaitForChangedResult WaitForChanged(WatcherChangeTypes changeType, int timeout)
-        {
-            return m_fileSystemWatcher.WaitForChanged(changeType, timeout);
-        }
+        public WaitForChangedResult WaitForChanged(WatcherChangeTypes changeType, int timeout) => 
+            m_fileSystemWatcher.WaitForChanged(changeType, timeout);
 
         /// <summary>
         /// Begins the initialization of a <see cref="SafeFileWatcher"/> used on a form or used by another component. The initialization occurs at run time.
         /// </summary>
-        public void BeginInit()
-        {
+        public void BeginInit() => 
             m_fileSystemWatcher.BeginInit();
-        }
 
         /// <summary>
         /// Ends the initialization of a <see cref="SafeFileWatcher"/> used on a form or used by another component. The initialization occurs at run time.
         /// </summary>
-        public void EndInit()
-        {
+        public void EndInit() => 
             m_fileSystemWatcher.EndInit();
-        }
 
-        private void OnChanged(FileSystemEventArgs e)
-        {
-            if ((object)Changed != null)
-                Changed(this, e);
-        }
+        private void OnChanged(FileSystemEventArgs e) => 
+            Changed?.Invoke(this, e);
 
-        private void OnCreated(FileSystemEventArgs e)
-        {
-            if ((object)Created != null)
-                Created(this, e);
-        }
+        private void OnCreated(FileSystemEventArgs e) => 
+            Created?.Invoke(this, e);
 
-        private void OnDeleted(FileSystemEventArgs e)
-        {
-            if ((object)Deleted != null)
-                Deleted(this, e);
-        }
+        private void OnDeleted(FileSystemEventArgs e) => 
+            Deleted?.Invoke(this, e);
 
-        private void OnRenamed(RenamedEventArgs e)
-        {
-            if ((object)Renamed != null)
-                Renamed(this, e);
-        }
+        private void OnRenamed(RenamedEventArgs e) => 
+            Renamed?.Invoke(this, e);
 
-        private void OnError(ErrorEventArgs e)
-        {
-            if ((object)Error != null)
-                Error(this, e);
-        }
+        private void OnError(ErrorEventArgs e) => 
+            Error?.Invoke(this, e);
 
         #endregion
 
@@ -430,41 +359,31 @@ namespace GSF.IO
         // Static Methods
         private static void OnChanged(WeakReference<SafeFileWatcher> reference, FileSystemEventArgs e)
         {
-            SafeFileWatcher instance;
-
-            if (reference.TryGetTarget(out instance))
+            if (reference.TryGetTarget(out SafeFileWatcher instance))
                 instance.OnChanged(e);
         }
 
         private static void OnCreated(WeakReference<SafeFileWatcher> reference, FileSystemEventArgs e)
         {
-            SafeFileWatcher instance;
-
-            if (reference.TryGetTarget(out instance))
+            if (reference.TryGetTarget(out SafeFileWatcher instance))
                 instance.OnCreated(e);
         }
 
         private static void OnDeleted(WeakReference<SafeFileWatcher> reference, FileSystemEventArgs e)
         {
-            SafeFileWatcher instance;
-
-            if (reference.TryGetTarget(out instance))
+            if (reference.TryGetTarget(out SafeFileWatcher instance))
                 instance.OnDeleted(e);
         }
 
         private static void OnRenamed(WeakReference<SafeFileWatcher> reference, RenamedEventArgs e)
         {
-            SafeFileWatcher instance;
-
-            if (reference.TryGetTarget(out instance))
+            if (reference.TryGetTarget(out SafeFileWatcher instance))
                 instance.OnRenamed(e);
         }
 
         private static void OnError(WeakReference<SafeFileWatcher> reference, ErrorEventArgs e)
         {
-            SafeFileWatcher instance;
-
-            if (reference.TryGetTarget(out instance))
+            if (reference.TryGetTarget(out SafeFileWatcher instance))
                 instance.OnError(e);
         }
 
