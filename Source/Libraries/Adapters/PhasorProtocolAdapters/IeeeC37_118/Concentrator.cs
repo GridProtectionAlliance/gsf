@@ -479,7 +479,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
-                    newCell.PhasorDefinitions.Add(new PhasorDefinition(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
+                    newCell.PhasorDefinitions.Add(new PhasorDefinition(newCell, phasorDefinition.Label.TruncateRight(maximumLabelLength), phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
 
                 // Add frequency definition
                 newCell.FrequencyDefinition = new FrequencyDefinition(newCell, $"{newCell.IDLabel.TruncateRight(maximumLabelLength - 5)} Freq".Trim());
@@ -631,7 +631,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                     bool foundSource = false;
 
                                     // Lookup associated frequency measurement
-                                    Measurement measurement = measurementTable.QueryRecordWhere("PointID = {0}", key.ID);
+                                    Measurement measurement = measurementTable.QueryRecordWhere("PointID = {0}", (long)key.ID);
                                     int? deviceID = measurement?.DeviceID;
                                     int framesPerSecond = parent.FramesPerSecond;
 
@@ -710,7 +710,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                                         if (findMeasurementKey(angleSignal, out MeasurementKey angleKey))
                                         {
-                                            measurement = measurementTable.QueryRecordWhere("PointID = {0}", angleKey.ID);
+                                            measurement = measurementTable.QueryRecordWhere("PointID = {0}", (long)angleKey.ID);
 
                                             if (measurement?.Multiplier != 1.0F)
                                                 phasor.PhasorDataModifications |= PhasorDataModifications.AngleCalibrationAdjustment;
@@ -729,7 +729,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                                         if (findMeasurementKey(magnitudeSignal, out MeasurementKey magnitudeKey))
                                         {
-                                            measurement = measurementTable.QueryRecordWhere("PointID = {0}", magnitudeKey.ID);
+                                            measurement = measurementTable.QueryRecordWhere("PointID = {0}", (long)magnitudeKey.ID);
 
                                             if (measurement?.Multiplier != 1.0F || measurement.Adder != 0.0F)
                                                 phasor.PhasorDataModifications |= PhasorDataModifications.MagnitudeCalibrationAdjustment;
