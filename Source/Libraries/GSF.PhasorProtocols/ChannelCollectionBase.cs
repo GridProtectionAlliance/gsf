@@ -200,11 +200,9 @@ namespace GSF.PhasorProtocols
 
             int index = startIndex;
 
-            // Copy in each element's binary inage
+            // Copy in each element's binary image
             for (int x = 0; x < Count; x++)
-            {
                 this[x].CopyImage(buffer, ref index);
-            }
 
             return index - startIndex;
         }

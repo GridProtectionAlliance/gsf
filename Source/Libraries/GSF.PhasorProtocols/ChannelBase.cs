@@ -48,7 +48,7 @@ namespace GSF.PhasorProtocols
         // Fields        
         private Dictionary<string, string> m_attributes;    // Attributes dictionary
 
-    #endregion
+        #endregion
 
         #region [ Properties ]
 
@@ -63,7 +63,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// The attributes dictionary is relevant to all channel properties.  This dictionary will only be instantiated with a call to
         /// the <c>Attributes</c> property which will begin the enumeration of relevant system properties.  This is typically used for
-        /// display purposes. For example, this information is displayed in a tree view on the the <b>PMU Connection Tester</b> to display
+        /// display purposes. For example, this information is displayed in a tree view on the <b>PMU Connection Tester</b> to display
         /// attributes of data elements that may be protocol specific.
         /// </remarks>
         public virtual Dictionary<string, string> Attributes
@@ -106,24 +106,39 @@ namespace GSF.PhasorProtocols
                 // Copy in header, body and footer images
                 int headerLength = HeaderLength;
 
-                if (headerLength > 0 && !(HeaderImage is null))
+                if (headerLength > 0)
                 {
-                    Buffer.BlockCopy(HeaderImage, 0, buffer, index, headerLength);
-                    index += headerLength;
+                    byte[] headerImage = HeaderImage;
+
+                    if (!(headerImage is null))
+                    {
+                        Buffer.BlockCopy(headerImage, 0, buffer, index, headerLength);
+                        index += headerLength;
+                    }
                 }
 
                 int bodyLength = BodyLength;
 
-                if (bodyLength > 0 && !(BodyImage is null))
+                if (bodyLength > 0)
                 {
-                    Buffer.BlockCopy(BodyImage, 0, buffer, index, bodyLength);
-                    index += bodyLength;
+                    byte[] bodyImage = BodyImage;
+
+                    if (!(bodyImage is null))
+                    {
+                        Buffer.BlockCopy(bodyImage, 0, buffer, index, bodyLength);
+                        index += bodyLength;
+                    }
                 }
 
                 int footerLength = FooterLength;
 
-                if (footerLength > 0 && !(FooterImage is null))
-                    Buffer.BlockCopy(FooterImage, 0, buffer, index, footerLength);
+                if (footerLength > 0)
+                {
+                    byte[] footerImage = FooterImage;
+
+                    if (!(footerImage is null))
+                        Buffer.BlockCopy(footerImage, 0, buffer, index, footerLength);
+                }
 
                 return buffer;
             }
