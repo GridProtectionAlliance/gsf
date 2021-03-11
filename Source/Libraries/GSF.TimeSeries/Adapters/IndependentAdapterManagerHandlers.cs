@@ -171,49 +171,33 @@ namespace GSF.TimeSeries.Adapters
 
             StringBuilder status = new StringBuilder();
 
-            status.AppendFormat("        Point Tag Template: {0}", instance.PointTagTemplate);
-            status.AppendLine();
-            status.AppendFormat("    Alternate Tag Template: {0}", instance.AlternateTagTemplate);
-            status.AppendLine();
-            status.AppendFormat(" Signal Reference Template: {0}", instance.SignalReferenceTemplate);
-            status.AppendLine();
-            status.AppendFormat("      Description Template: {0}", instance.DescriptionTemplate);
-            status.AppendLine();
-            status.AppendFormat("   Device Acronym Template: {0}", instance.ParentDeviceAcronymTemplate);
-            status.AppendLine();
-            status.AppendFormat("        Output Signal Type: {0}", instance.SignalType);
-            status.AppendLine();
-            status.AppendFormat("  Target Historian Acronym: {0}", instance.TargetHistorianAcronym);
-            status.AppendLine();
-            status.AppendFormat("  Source Measurement Table: {0}", instance.SourceMeasurementTable);
-            status.AppendLine();
-            status.AppendFormat("        Inputs per Adapter: {0:N0}", instance.PerAdapterInputCount);
-            status.AppendLine();
-            status.AppendFormat(" Input Index Used for Name: {0:N0}", instance.InputMeasurementIndexUsedForName);
-            status.AppendLine();
-            status.AppendFormat("  Output Names per Adapter: {0}", string.Join(", ", instance.PerAdapterOutputNames?.AsEnumerable() ?? new[] { "" }));
-            status.AppendLine();
-            status.AppendFormat("Re-parse Connection String: {0}", instance.AutoReparseConnectionString);
-            status.AppendLine();
-            status.AppendFormat("      Original Data Member: {0}", instance.OriginalDataMember);
-            status.AppendLine();
-            status.AppendFormat("     Config Reload Timeout: {0:N0} ms", instance.ConfigurationReloadWaitTimeout);
-            status.AppendLine();
-            status.AppendFormat("    Config Reload Attempts: {0:N0}", instance.ConfigurationReloadWaitAttempts);
-            status.AppendLine();
-            status.AppendFormat("Database Connection String: {0}", string.IsNullOrWhiteSpace(instance.DatabaseConnectionString) ? "Using <systemSettings>" : instance.DatabaseConnectionString);
-            status.AppendLine();
+            status.AppendLine($"        Point Tag Template: {instance.PointTagTemplate}");
+            status.AppendLine($"    Alternate Tag Template: {instance.AlternateTagTemplate}");
+            status.AppendLine($" Signal Reference Template: {instance.SignalReferenceTemplate}");
+            status.AppendLine($"      Description Template: {instance.DescriptionTemplate}");
+            status.AppendLine($"   Device Acronym Template: {instance.ParentDeviceAcronymTemplate}");
+            status.AppendLine($"        Output Signal Type: {instance.SignalType}");
+            status.AppendLine($"  Target Historian Acronym: {instance.TargetHistorianAcronym}");
+            status.AppendLine($"  Source Measurement Table: {instance.SourceMeasurementTable}");
+            status.AppendLine($"        Inputs per Adapter: {instance.PerAdapterInputCount:N0}");
+            status.AppendLine($" Input Index Used for Name: {instance.InputMeasurementIndexUsedForName:N0}");
+            status.AppendLine($"  Output Names per Adapter: {instance.PerAdapterOutputNames.Count:N0}");
+
+            foreach (string outputName in instance.PerAdapterOutputNames)
+                status.AppendLine($"    \"{outputName}\"");
+
+            status.AppendLine($"Re-parse Connection String: {instance.AutoReparseConnectionString}");
+            status.AppendLine($"      Original Data Member: {instance.OriginalDataMember}");
+            status.AppendLine($"     Config Reload Timeout: {instance.ConfigurationReloadWaitTimeout:N0} ms");
+            status.AppendLine($"    Config Reload Attempts: {instance.ConfigurationReloadWaitAttempts:N0}");
+            status.AppendLine($"Database Connection String: {(string.IsNullOrWhiteSpace(instance.DatabaseConnectionString) ? "Using <systemSettings>" : instance.DatabaseConnectionString.TruncateRight(40))}");
             
             if (!string.IsNullOrWhiteSpace(instance.DatabaseConnectionString))
-            {
-                status.AppendFormat("  Custom Database Provider: {0}", instance.DatabaseProviderString ?? "");
-                status.AppendLine();
-            }
+                status.AppendLine($"  Custom Database Provider: {instance.DatabaseProviderString ?? ""}");
 
             if (instance.OutputMeasurements != null && instance.OutputMeasurements.Length > instance.OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
             {
-                status.AppendFormat("       Output measurements: {0:N0} defined measurements", instance.OutputMeasurements.Length);
-                status.AppendLine();
+                status.AppendLine($"       Output measurements: {instance.OutputMeasurements.Length:N0} defined measurements");
                 status.AppendLine();
 
                 for (int i = 0; i < Math.Min(instance.OutputMeasurements.Length, MaxMeasurementsToShow); i++)
@@ -231,8 +215,7 @@ namespace GSF.TimeSeries.Adapters
 
             if (instance.InputMeasurementKeys != null && instance.InputMeasurementKeys.Length > instance.InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
             {
-                status.AppendFormat("        Input measurements: {0:N0} defined measurements", instance.InputMeasurementKeys.Length);
-                status.AppendLine();
+                status.AppendLine($"        Input measurements: {instance.InputMeasurementKeys.Length:N0} defined measurements");
                 status.AppendLine();
 
                 for (int i = 0; i < Math.Min(instance.InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)

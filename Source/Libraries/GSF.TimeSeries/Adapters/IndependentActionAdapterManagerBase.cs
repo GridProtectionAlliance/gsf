@@ -357,10 +357,8 @@ namespace GSF.TimeSeries.Adapters
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat("         Frames Per Second: {0:N0}", FramesPerSecond);
-                status.AppendLine();
-                status.AppendFormat("      Lag Time / Lead Time: {0:N3} / {1:N3}", LagTime, LeadTime);
-                status.AppendLine();
+                status.AppendLine($"         Frames Per Second: {FramesPerSecond:N0}");
+                status.AppendLine($"      Lag Time / Lead Time: {LagTime:N3} / {LeadTime:N3}");
                 status.Append(this.HandleStatus());
                 status.Append(base.Status);
 
