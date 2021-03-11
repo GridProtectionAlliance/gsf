@@ -94,6 +94,16 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
+        /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="FrequencyDefinition"/>.
+        /// </summary>
+        public override int MaximumLabelLength => int.MaxValue;
+
+        /// <summary>
+        /// Gets flag that indicates if <see cref="ChannelDefinitionBase.LabelImage"/> should auto pad-right value to <see cref="MaximumLabelLength"/>.
+        /// </summary>
+        public override bool AutoPadLabelImage => false;
+
+        /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
         protected override int BodyLength => 2;
@@ -103,7 +113,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         protected override byte[] BodyImage => BigEndian.GetBytes((ushort)(Parent.NominalFrequency == LineFrequency.Hz50 ? Bits.Bit00 : Bits.Nil));
 
-        #endregion
+    #endregion
 
         #region [ Methods ]
 

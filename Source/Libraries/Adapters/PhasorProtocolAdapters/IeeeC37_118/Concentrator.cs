@@ -43,6 +43,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using ExpressionEvaluator;
+using GSF.ComponentModel;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using AnonymousPhasorDefinition = GSF.PhasorProtocols.Anonymous.PhasorDefinition;
@@ -62,6 +65,29 @@ namespace PhasorProtocolAdapters.IeeeC37_118
     public class Concentrator : PhasorDataConcentratorBase
     {
         #region [ Members ]
+
+        // Nested Types
+        private class GlobalSettings
+        {
+            // ReSharper disable once MemberCanBePrivate.Local
+            public static string CompanyAcronym { get; }
+
+            static GlobalSettings()
+            {
+                try
+                {
+                    CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+                    CompanyAcronym = systemSettings["CompanyAcronym"]?.Value;
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, "Failed to initialize default company acronym");
+                }
+
+                if (string.IsNullOrWhiteSpace(CompanyAcronym))
+                    CompanyAcronym = "GPA";
+            }
+        }
 
         // Constants
         private const string ConfigFrame3CacheName = "{0}-CFG3";
@@ -449,17 +475,18 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                 newCell.StationName = baseCell.StationName.TruncateRight(newCell.MaximumStationNameLength);
                 newCell.IDLabel = baseCell.IDLabel.TruncateRight(newCell.IDLabelLength);
+                int maximumLabelLength = newCell.MaximumStationNameLength;
 
                 // Add phasor definitions
                 foreach (IPhasorDefinition phasorDefinition in baseCell.PhasorDefinitions)
                     newCell.PhasorDefinitions.Add(new PhasorDefinition(newCell, phasorDefinition.Label, phasorDefinition.ScalingValue, phasorDefinition.Offset, phasorDefinition.PhasorType, null));
 
                 // Add frequency definition
-                newCell.FrequencyDefinition = new FrequencyDefinition(newCell, baseCell.FrequencyDefinition.Label);
+                newCell.FrequencyDefinition = new FrequencyDefinition(newCell, $"{newCell.IDLabel.TruncateRight(maximumLabelLength - 5)} Freq".Trim());
 
                 // Add analog definitions
                 foreach (IAnalogDefinition analogDefinition in baseCell.AnalogDefinitions)
-                    newCell.AnalogDefinitions.Add(new AnalogDefinition(newCell, analogDefinition.Label, analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
+                    newCell.AnalogDefinitions.Add(new AnalogDefinition(newCell, analogDefinition.Label.TruncateRight(maximumLabelLength), analogDefinition.ScalingValue, analogDefinition.Offset, analogDefinition.AnalogType));
 
                 // Add digital definitions
                 foreach (AnonymousDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
@@ -561,6 +588,11 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             {
                 try
                 {
+                    TypeRegistry registry = ValueExpressionParser.DefaultTypeRegistry;
+
+                    if (!registry.ContainsKey("Global"))
+                        registry.RegisterSymbol("Global", new GlobalSettings()); // Needed by modeled Device records
+
                     // Populate extra fields for config frame 3, like the G_PMU_ID guid value. Note that all of this information can be
                     // derived from data in the database configuration, however it is not currently cached in the runtime configuration
                     // as defined through the ConfigurationEntity table. As a result it is necessary to open a database connection to
