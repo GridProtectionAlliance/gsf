@@ -2110,56 +2110,32 @@ namespace GSF.PhasorProtocols
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat("      Device Connection ID: {0}", DeviceID);
-                status.AppendLine();
-                status.AppendFormat("           Phasor protocol: {0}", m_phasorProtocol.GetFormattedProtocolName());
-                status.AppendLine();
-                status.AppendFormat("           Connection type: {0}", ConnectionType);
-
-                if (ConnectionIsMulticast)
-                    status.Append(" - Multicast");
-
-                status.AppendLine();
-                status.AppendFormat("         Source Connection: {0}", ConnectionInfo.TruncateRight(51));
-                status.AppendLine();
-                status.AppendFormat("               Buffer size: {0}", m_bufferSize);
-                status.AppendLine();
-                status.AppendFormat("     Total frames received: {0}", TotalFramesReceived);
-                status.AppendLine();
-                status.AppendFormat("      Total missing frames: {0}", TotalMissingFrames);
-                status.AppendLine();
-                status.AppendFormat("      Total CRC exceptions: {0}", TotalCrcExceptions);
-                status.AppendLine();
-                status.AppendFormat("     Calculated frame rate: {0}", CalculatedFrameRate);
-                status.AppendLine();
-                status.AppendFormat("      Calculated data rate: {0:0.0} bytes/sec, {1:0.0000} Mbps", ByteRate, MegaBitRate);
-                status.AppendLine();
-                status.AppendFormat("Allowed parsing exceptions: {0}", AllowedParsingExceptions);
-                status.AppendLine();
-                status.AppendFormat("  Parsing exception window: {0:0.00} seconds", ParsingExceptionWindow.ToSeconds());
-                status.AppendLine();
-                status.AppendFormat("Using simulated timestamps: {0}", InjectSimulatedTimestamp ? "Yes" : "No");
-                status.AppendLine();
+                status.AppendLine($"      Device Connection ID: {DeviceID}");
+                status.AppendLine($"           Phasor protocol: {m_phasorProtocol.GetFormattedProtocolName()}");
+                status.AppendLine($"           Connection type: {ConnectionType}{(ConnectionIsMulticast ? " - Multicast" : "")}");
+                status.AppendLine($"         Source Connection: {ConnectionInfo.TruncateRight(51)}");
+                status.AppendLine($"               Buffer size: {m_bufferSize:N0}");
+                status.AppendLine($"     Total frames received: {TotalFramesReceived:N0}");
+                status.AppendLine($"      Total missing frames: {TotalMissingFrames:N0}");
+                status.AppendLine($"      Total CRC exceptions: {TotalCrcExceptions:N0}");
+                status.AppendLine($"     Calculated frame rate: {CalculatedFrameRate:0.00} frames/sec");
+                status.AppendLine($"      Calculated data rate: {ByteRate:0.0} bytes/sec, {MegaBitRate:0.0000} Mbps");
+                status.AppendLine($"Allowed parsing exceptions: {AllowedParsingExceptions:N0}");
+                status.AppendLine($"  Parsing exception window: {ParsingExceptionWindow.ToSeconds():0.00} seconds");
+                status.AppendLine($"Using simulated timestamps: {(InjectSimulatedTimestamp ? "Yes" : "No")}");
 
                 if (m_transportProtocol == TransportProtocol.File)
                 {
-                    status.AppendFormat("  Defined input frame rate: {0} frames/sec", m_definedFrameRate);
-                    status.AppendLine();
-                    status.AppendFormat("     Precision input timer: {0}", UseHighResolutionInputTimer ? "Enabled" : "Offline");
-                    status.AppendLine();
+                    status.AppendLine($"  Defined input frame rate: {m_definedFrameRate:N0} frames/sec");
+                    status.AppendLine($"     Precision input timer: {(UseHighResolutionInputTimer ? "Enabled" : "Offline")}");
 
                     if (!(m_inputTimer is null))
-                    {
-                        status.AppendFormat("  Timer resynchronizations: {0}", m_inputTimer.Resynchronizations);
-                        status.AppendLine();
-                    }
+                        status.AppendLine($"  Timer resynchronizations: {m_inputTimer.Resynchronizations:N0}");
 
                     if (ReplayStartTime > DateTime.MinValue || ReplayStopTime < DateTime.MaxValue)
                     {
-                        status.AppendFormat("         Replay start time: {0:yyyy-MM-dd HH:mm:ss.fff}", ReplayStartTime);
-                        status.AppendLine();
-                        status.AppendFormat("          Replay stop time: {0:yyyy-MM-dd HH:mm:ss.fff}", ReplayStopTime);
-                        status.AppendLine();
+                        status.AppendLine($"         Replay start time: {ReplayStartTime:yyyy-MM-dd HH:mm:ss.fff}");
+                        status.AppendLine($"          Replay stop time: {ReplayStopTime:yyyy-MM-dd HH:mm:ss.fff}");
                     }
                 }
 
