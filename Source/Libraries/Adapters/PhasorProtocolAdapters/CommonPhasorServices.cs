@@ -356,7 +356,7 @@ namespace PhasorProtocolAdapters
             OnStatusMessage(MessageLevel.Info, "Connected to remote device, requesting configuration frame...");
 
             // Send manual request for configuration frame
-            SendCommand(DeviceCommand.SendConfigurationFrame2);
+            SendCommand(DeviceCommand.SendConfigurationFrame3);
         }
 
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)

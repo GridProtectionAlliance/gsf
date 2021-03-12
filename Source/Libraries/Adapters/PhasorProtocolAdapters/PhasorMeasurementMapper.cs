@@ -1506,7 +1506,7 @@ namespace PhasorProtocolAdapters
                     m_configurationFrame = null;
                     m_receivedConfigFrame = false;
                     OnStatusMessage(MessageLevel.Info, $"Cached configuration file \"{ConfigurationCacheFileName}\" was deleted.");
-                    SendCommand(DeviceCommand.SendConfigurationFrame2);
+                    SendCommand(DeviceCommand.SendConfigurationFrame3);
                 }
                 catch (Exception ex)
                 {
@@ -2234,6 +2234,7 @@ namespace PhasorProtocolAdapters
                 {
                     case DeviceCommand.SendConfigurationFrame1:
                     case DeviceCommand.SendConfigurationFrame2:
+                    case DeviceCommand.SendConfigurationFrame3:
                         // Reset received configuration frame counter
                         m_receivedConfigurationFrames = 0;
 
@@ -2495,7 +2496,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
         {
-            // Keep a reference to latest configuration frame that was received for fowarding
+            // Keep a reference to latest configuration frame that was received for forwarding
             m_configurationFrame = e.Argument;
 
             lock (m_configurationOperationLock)
@@ -2613,7 +2614,7 @@ namespace PhasorProtocolAdapters
         {
             OnStatusMessage(MessageLevel.Info, "NOTICE: Configuration has changed, requesting new configuration frame...");
             m_receivedConfigFrame = false;
-            SendCommand(DeviceCommand.SendConfigurationFrame2);
+            SendCommand(DeviceCommand.SendConfigurationFrame3);
         }
 
         private void m_frameParser_ServerIndexUpdated(object sender, EventArgs e) => 
