@@ -3126,7 +3126,7 @@ namespace GSF.PhasorProtocols
                         break;
                     default:
                         // Otherwise we just request the configuration frame
-                        SendDeviceCommand(DeviceCommand.SendConfigurationFrame2);
+                        SendDeviceCommand(DeviceCommand.SendConfigurationFrame3);
                         break;
                 }
             }
