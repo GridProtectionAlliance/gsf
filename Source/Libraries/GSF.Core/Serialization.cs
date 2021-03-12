@@ -585,7 +585,7 @@ namespace GSF
             SerializationInfoEnumerator enumerator = info.GetEnumerator();
             {
                 while (enumerator.MoveNext())
-                    yield return (SerializationEntry)enumerator.Current;
+                    yield return enumerator.Current;
             }
         }
     }
