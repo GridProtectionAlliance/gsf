@@ -40,6 +40,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
@@ -289,12 +290,9 @@ namespace GSF
             /// <returns>The type of the object the formatter creates a new instance of.</returns>
             public override Type BindToType(string assemblyName, string typeName)
             {
-                Type newType;
-                string newTypeName;
-
                 // Perform namespace transformations that occurred when migrating to the Grid Solutions Framework
                 // from various older versions of code with different namespaces
-                newTypeName = typeName
+                string newTypeName = typeName
                     .Replace("TVA.", "GSF.")
                     .Replace("TimeSeriesFramework.", "GSF.TimeSeries.")
                     .Replace("ConnectionTester.", "GSF.PhasorProtocols.")   // PMU Connection Tester namespace
@@ -326,7 +324,7 @@ namespace GSF
                     {
                         try
                         {
-                            newType = assembly.GetType(newTypeName);
+                            Type newType = assembly.GetType(newTypeName);
 
                             if ((object)newType != null)
                                 return newType;
@@ -369,8 +367,7 @@ namespace GSF
             }
             finally
             {
-                if ((object)stream != null)
-                    stream.Dispose();
+                stream?.Dispose();
             }
         }
 
@@ -385,44 +382,46 @@ namespace GSF
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         public static void Serialize<T>(T serializableObject, SerializationFormat serializationFormat, Stream serializedOutput)
         {
-            if ((object)serializedOutput == null)
+            if (serializedOutput == null)
                 throw new ArgumentNullException(nameof(serializedOutput));
 
-            if ((object)serializableObject == null)
+            if (serializableObject == null)
                 throw new ArgumentNullException(nameof(serializableObject));
 
-            // Serialize object to the provided stream.
-            if (serializationFormat == SerializationFormat.Xml)
+            switch (serializationFormat)
             {
-                if (typeof(T).GetCustomAttributes(typeof(XmlSerializerFormatAttribute), false).Length > 0)
+                // Serialize object to the provided stream.
+                case SerializationFormat.Xml when typeof(T).GetCustomAttributes(typeof(XmlSerializerFormatAttribute), false).Length > 0:
                 {
                     // Serialize to XML format using XmlSerializer.
                     XmlSerializer serializer = new XmlSerializer(typeof(T));
                     serializer.Serialize(serializedOutput, serializableObject);
+                    break;
                 }
-                else
+                case SerializationFormat.Xml:
                 {
                     // Serialize to XML format using DataContractSerializer.
                     DataContractSerializer serializer = new DataContractSerializer(typeof(T));
                     serializer.WriteObject(serializedOutput, serializableObject);
+                    break;
                 }
-            }
-            else if (serializationFormat == SerializationFormat.Json)
-            {
-                // Serialize to JSON format.
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
-                serializer.WriteObject(serializedOutput, serializableObject);
-            }
-            else if (serializationFormat == SerializationFormat.Binary)
-            {
-                // Serialize to binary format.
-                BinaryFormatter serializer = new BinaryFormatter();
-                serializer.Serialize(serializedOutput, serializableObject);
-            }
-            else
-            {
-                // Serialization format is not supported.
-                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
+                case SerializationFormat.Json:
+                {
+                    // Serialize to JSON format.
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
+                    serializer.WriteObject(serializedOutput, serializableObject);
+                    break;
+                }
+                case SerializationFormat.Binary:
+                {
+                    // Serialize to binary format.
+                    BinaryFormatter serializer = new BinaryFormatter();
+                    serializer.Serialize(serializedOutput, serializableObject);
+                    break;
+                }
+                default:
+                    // Serialization format is not supported.
+                    throw new NotSupportedException($"{serializationFormat} serialization is not supported");
             }
 
             // Seek to the beginning of the serialized output stream.
@@ -440,13 +439,12 @@ namespace GSF
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         public static T Deserialize<T>(byte[] serializedObject, SerializationFormat serializationFormat)
         {
-            if ((object)serializedObject == null)
+            if (serializedObject == null)
                 throw new ArgumentNullException(nameof(serializedObject));
 
-            using (MemoryStream stream = new MemoryStream(serializedObject))
-            {
-                return Deserialize<T>(stream, serializationFormat);
-            }
+            using MemoryStream stream = new MemoryStream(serializedObject);
+            
+            return Deserialize<T>(stream, serializationFormat);
         }
 
         /// <summary>
@@ -460,43 +458,46 @@ namespace GSF
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         public static T Deserialize<T>(Stream serializedObject, SerializationFormat serializationFormat)
         {
-            if ((object)serializedObject == null)
+            if (serializedObject == null)
                 throw new ArgumentNullException(nameof(serializedObject));
 
             // Deserialize the serialized object.
             T deserializedObject;
-            if (serializationFormat == SerializationFormat.Xml)
+            
+            switch (serializationFormat)
             {
-                if (typeof(T).GetCustomAttributes(typeof(XmlSerializerFormatAttribute), false).Length > 0)
+                case SerializationFormat.Xml when typeof(T).GetCustomAttributes(typeof(XmlSerializerFormatAttribute), false).Length > 0:
                 {
                     // Deserialize from XML format using XmlSerializer.
                     XmlSerializer serializer = new XmlSerializer(typeof(T));
                     deserializedObject = (T)serializer.Deserialize(serializedObject);
+                    break;
                 }
-                else
+                case SerializationFormat.Xml:
                 {
                     // Deserialize from XML format using DataContractSerializer.
                     DataContractSerializer serializer = new DataContractSerializer(typeof(T));
                     deserializedObject = (T)serializer.ReadObject(serializedObject);
+                    break;
                 }
-            }
-            else if (serializationFormat == SerializationFormat.Json)
-            {
-                // Deserialize from JSON format.
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
-                deserializedObject = (T)serializer.ReadObject(serializedObject);
-            }
-            else if (serializationFormat == SerializationFormat.Binary)
-            {
-                // Deserialize from binary format.
-                BinaryFormatter serializer = new BinaryFormatter();
-                serializer.Binder = LegacyBinder;
-                deserializedObject = (T)serializer.Deserialize(serializedObject);
-            }
-            else
-            {
-                // Serialization format is not supported.
-                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
+                case SerializationFormat.Json:
+                {
+                    // Deserialize from JSON format.
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
+                    deserializedObject = (T)serializer.ReadObject(serializedObject);
+                    break;
+                }
+                case SerializationFormat.Binary:
+                {
+                    // Deserialize from binary format.
+                    BinaryFormatter serializer = new BinaryFormatter();
+                    serializer.Binder = LegacyBinder;
+                    deserializedObject = (T)serializer.Deserialize(serializedObject);
+                    break;
+                }
+                default:
+                    // Serialization format is not supported.
+                    throw new NotSupportedException($"{serializationFormat} serialization is not supported");
             }
 
             return deserializedObject;
@@ -571,6 +572,20 @@ namespace GSF
             catch (SerializationException)
             {
                 return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Gets values of a <see cref="SerializationInfo"/> instance compatible with Linq operations.
+        /// </summary>
+        /// <param name="info">Target <see cref="SerializationInfo"/> instance.</param>
+        /// <returns>Enumeration of <see cref="SerializationEntry"/> objects from <paramref name="info"/> instance.</returns>
+        public static IEnumerable<SerializationEntry> GetValues(this SerializationInfo info)
+        {
+            SerializationInfoEnumerator enumerator = info.GetEnumerator();
+            {
+                while (enumerator.MoveNext())
+                    yield return (SerializationEntry)enumerator.Current;
             }
         }
     }
