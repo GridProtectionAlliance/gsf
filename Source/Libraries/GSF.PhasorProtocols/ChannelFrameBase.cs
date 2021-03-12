@@ -196,6 +196,10 @@ namespace GSF.PhasorProtocols
             set
             {
                 base.State = value;
+
+                if (value is null)
+                    return;
+
                 TrustHeaderLength = value.TrustHeaderLength;
                 ValidateCheckSum = value.ValidateCheckSum;
             }
@@ -291,6 +295,18 @@ namespace GSF.PhasorProtocols
         {
             get => m_validateCheckSum;
             set => m_validateCheckSum = value;
+        }
+
+        /// <summary>
+        /// Gets calculated checksum for this <see cref="ChannelFrameBase{T}"/>.
+        /// </summary>
+        public ushort Checksum
+        {
+            get
+            {
+                byte[] buffer = BinaryImage;
+                return BigEndian.ToUInt16(buffer, buffer.Length - 2);
+            }
         }
 
         /// <summary>

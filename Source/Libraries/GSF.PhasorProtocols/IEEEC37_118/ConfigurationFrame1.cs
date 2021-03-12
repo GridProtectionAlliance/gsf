@@ -275,6 +275,18 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Methods ]
 
         /// <summary>
+        /// Creates a copy of this <see cref="ConfigurationFrame1"/>.
+        /// </summary>
+        /// <param name="header">Source header to use for clone.</param>
+        /// <returns>A copy of the current <see cref="ConfigurationFrame1"/>.</returns>
+        public ConfigurationFrame1 Clone(CommonFrameHeader header = null)
+        {
+            ConfigurationFrame1 frame = (ConfigurationFrame1)MemberwiseClone();
+            frame.CommonHeader = header ?? new CommonFrameHeader(this, TypeID, base.IDCode, base.Timestamp, DraftRevision);
+            return frame;
+        }
+
+        /// <summary>
         /// Parses the binary header image.
         /// </summary>
         /// <param name="buffer">Binary image to parse.</param>
