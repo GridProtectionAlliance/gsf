@@ -145,6 +145,16 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         public override int MaximumLabelLength => TargetConfigurationType >= DraftRevision.Std2011 ? byte.MaxValue : base.MaximumLabelLength;
 
         /// <summary>
+        /// Gets the CFG-2 frame instance.
+        /// </summary>
+        public ConfigurationFrame2 ConfigurationFrame2 => m_configurationFrame2;
+
+        /// <summary>
+        /// Gets the CFG-3 frame instance.
+        /// </summary>
+        public ConfigurationFrame3 ConfigurationFrame3 => m_configurationFrame3;
+
+        /// <summary>
         /// Returns the detailed status of this <see cref="Concentrator"/>.
         /// </summary>
         public override string Status
