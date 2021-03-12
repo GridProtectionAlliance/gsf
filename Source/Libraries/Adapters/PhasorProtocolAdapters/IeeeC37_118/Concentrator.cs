@@ -842,8 +842,8 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                         // The following values are new to GSF time-series configuration, so we fall back on configured defaults if needed
                         cell.Elevation = !double.IsInfinity(cachedCell.Elevation) || parent is null ? cachedCell.Elevation : parent.Elevation;
                         cell.ServiceClass = cachedCell.ServiceClass.IsAnyOf(new[] { 'M', 'P' }) || parent is null ? cachedCell.ServiceClass : parent.ServiceClass;
-                        cell.Window = cachedCell.Window == 0 || parent is null ? cachedCell.Window : parent.Window;
-                        cell.GroupDelay = cachedCell.GroupDelay == 0 || parent is null ? cachedCell.GroupDelay : parent.GroupDelay;
+                        cell.Window = cachedCell.Window != 0 || parent is null ? cachedCell.Window : parent.Window;
+                        cell.GroupDelay = cachedCell.GroupDelay != 0 || parent is null ? cachedCell.GroupDelay : parent.GroupDelay;
                         cell.DataModified = cachedCell.DataModified;
 
                         foreach (PhasorDefinition3 phasor in cell.PhasorDefinitions)
