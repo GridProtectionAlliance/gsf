@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -486,6 +487,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
 
             int frameSize = -1;
+            int configSize = 0;
+            int configFrames = 0;
 
             switch (CurrentItem.Type)
             {
@@ -498,6 +501,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         concentrator.DataSource = dataSource;
                         concentrator.UpdateConfiguration();
                         frameSize = C37Concentrator.CreateDataFrame(DateTime.UtcNow.Ticks, concentrator.ConfigurationFrame as IEEEC37_118.ConfigurationFrame1).BinaryLength;
+                        configSize = concentrator.ConfigurationFrame.BinaryLength;
+                        configFrames = concentrator.ConfigurationFrame3?.BinaryImageFrames.Count() ?? 0;
                     }
                     break;
                 case OutputProtocol.IEEE_C37_118_2005:
@@ -549,7 +554,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 FrameSizeColor = new SolidColorBrush(Colors.Black);
                 FrameSizeText = $"{frameSize:N0} bytes ({frameSize / (double)MaxFrameSize:0.##%} of maximum)";
-                
+                FrameSizeLabel = (dataFrameTarget ? "Data" : "Config") + " Frame Size";
+
                 if (frameSize > MaxFrameSize)
                 {
                     string frameTypeSizeTarget = $"{(dataFrameTarget ? "data" : "config")} frame";
@@ -558,7 +564,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 }
                 else if (dataFrameTarget)
                 {
-                    FrameSizeText += $" - {CurrentItem.OutputProtocolName} config frame has no practical limit.";
+
+                    if (CurrentItem.Type == OutputProtocol.IEEE_C37_118_2011)
+                        FrameSizeText += $" - Config Frame Size: {configSize:N0} bytes, spanning {configFrames:N0} frames";
+                    else
+                        FrameSizeText += $" - {CurrentItem.OutputProtocolName} config frame has no practical limit";
                 }
             });
         }
@@ -650,6 +660,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 FrameSizeLabel = (dataFrameTarget ? "Data" : "Config") + " Frame Size";
                 FrameSizeColor = new SolidColorBrush(Colors.Black);
                 FrameSizeText = "Calculating...";
+
                 m_configFrameSizeCalculation.RunOnceAsync();
             }
             catch (Exception ex)
