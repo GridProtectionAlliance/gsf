@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 
 // ReSharper disable VirtualMemberCallInConstructor
@@ -41,7 +42,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Constants        
         internal const int ConversionFactorLength = 4;
 
-        private const int BitLabelCount = sizeof(ushort) * 8;
+        private const int BitLabelCount = 16;
 
         // Fields
         private byte[] m_labelImage;
@@ -135,7 +136,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             // We hide this from the editor just because this is a large combined string of all digital labels,
             // and it will make more sense for consumers to use the "Labels" property
-            get => string.Join("|", Labels);
+            get => string.Join("|", Labels.Select(label => label.RemoveCharacter('|').GetValidLabel()));
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -147,7 +148,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 string[] labels = value.Split('|');
 
                 for (int i = 0; i < BitLabelCount; i++)
-                    Labels[i] = i < labels.Length ? labels[i] : "";
+                    Labels[i] = i < labels.Length ? labels[i].Trim() : "";
 
                 using (MemoryStream stream = new MemoryStream())
                 {
