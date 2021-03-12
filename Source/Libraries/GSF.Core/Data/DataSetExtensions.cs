@@ -119,7 +119,7 @@ namespace GSF.Data
     public static class DataSetExtensions
     {
         // Constant array of supported data types
-        private readonly static Type[] s_supportedDataTypes = 
+        private static readonly Type[] s_supportedDataTypes =
         {
             // This must match DataType enum order
             typeof(bool),
@@ -153,10 +153,10 @@ namespace GSF.Data
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static void SerializeToStream(this DataSet source, Stream destination, bool assumeStringForUnknownTypes = true, bool useNullableDataTypes = true)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source));
 
-            if ((object)destination == null)
+            if (destination is null)
                 throw new ArgumentNullException(nameof(destination));
 
             if (!destination.CanWrite)
@@ -173,7 +173,6 @@ namespace GSF.Data
             {
                 List<int> columnIndices = new List<int>();
                 List<DataType> columnDataTypes = new List<DataType>();
-                DataType dataType;
 
                 // Serialize column metadata
                 using (BlockAllocatedMemoryStream columnMetaDataStream = new BlockAllocatedMemoryStream())
@@ -183,7 +182,7 @@ namespace GSF.Data
                     foreach (DataColumn column in table.Columns)
                     {
                         // Get column data type, unknown types will be represented as object
-                        dataType = GetDataType(column.DataType, assumeStringForUnknownTypes);
+                        DataType dataType = GetDataType(column.DataType, assumeStringForUnknownTypes);
 
                         // Only objects of a known type can be properly serialized
                         if (dataType != DataType.Object)
@@ -217,12 +216,10 @@ namespace GSF.Data
                 // Serialize rows
                 foreach (DataRow row in table.Rows)
                 {
-                    object value;
-
                     // Serialize column data
                     for (int i = 0; i < columnIndices.Count; i++)
                     {
-                        value = row[columnIndices[i]];
+                        object value = row[columnIndices[i]];
 
                         if (useNullableDataTypes)
                         {
@@ -288,7 +285,7 @@ namespace GSF.Data
                             case DataType.Blob:
                                 byte[] blob = value.NotDBNull<byte[]>();
 
-                                if ((object)blob == null || blob.Length == 0)
+                                if (blob is null || blob.Length == 0)
                                 {
                                     output.Write(0);
                                 }
@@ -312,22 +309,18 @@ namespace GSF.Data
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static DataSet DeserializeToDataSet(this Stream source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source));
 
             if (!source.CanRead)
                 throw new InvalidOperationException("Cannot read from a write-only stream");
 
             DataSet dataset = new DataSet();
-            DataRow row;
-            object value;
-
             BinaryReader input = new BinaryReader(source);
-            int tableCount;
 
             // Deserialize dataset name and table count
             dataset.DataSetName = input.ReadString();
-            tableCount = input.ReadInt32();
+            int tableCount = input.ReadInt32();
 
             // Deserialize tables
             for (int i = 0; i < tableCount; i++)
@@ -335,15 +328,12 @@ namespace GSF.Data
                 List<int> columnIndices = new List<int>();
                 List<DataType> columnDataTypes = new List<DataType>();
                 List<bool> columnNullable = new List<bool>();
-                DataType dataType;
-                byte dtByte;
-                int columnCount, rowCount;
 
                 DataTable table = dataset.Tables.Add();
 
                 // Deserialize table name and column count
                 table.TableName = input.ReadString();
-                columnCount = input.ReadInt32();
+                int columnCount = input.ReadInt32();
 
                 // Deserialize column metadata
                 for (int j = 0; j < columnCount; j++)
@@ -353,8 +343,8 @@ namespace GSF.Data
                     // Deserialize column name and type
                     column.ColumnName = input.ReadString();
 
-                    dtByte = input.ReadByte();
-                    dataType = (DataType)(dtByte & 0x7F);
+                    byte dtByte = input.ReadByte();
+                    DataType dataType = (DataType)(dtByte & 0x7F);
                     column.DataType = dataType.DeriveColumnType();
                     columnNullable.Add((dtByte & 0x80) != 0);
 
@@ -364,17 +354,17 @@ namespace GSF.Data
                 }
 
                 // Deserialize row count
-                rowCount = input.ReadInt32();
+                int rowCount = input.ReadInt32();
 
                 // Deserialize rows
                 for (int j = 0; j < rowCount; j++)
                 {
-                    row = table.NewRow();
+                    DataRow row = table.NewRow();
 
                     // Deserialize column data
                     for (int k = 0; k < columnIndices.Count; k++)
                     {
-                        value = null;
+                        object value = null;
 
                         if (columnNullable[k] && input.ReadByte() != 0)
                         {
@@ -481,24 +471,16 @@ namespace GSF.Data
         /// </summary>
         /// <param name="dataType"><see cref="DataType"/> to derive object <see cref="Type"/> from.</param>
         /// <returns>Object <see cref="Type"/> derived from given <see cref="DataType"/>.</returns>
-        public static Type DeriveColumnType(this DataType dataType)
-        {
-            return s_supportedDataTypes[(int)dataType];
-        }
+        public static Type DeriveColumnType(this DataType dataType) => 
+            s_supportedDataTypes[(int)dataType];
 
-        private static string NotDBNullString(this object value)
-        {
-            return value == DBNull.Value ? "" : value.ToString();
-        }
+        private static string NotDBNullString(this object value) => 
+            value == DBNull.Value ? "" : value.ToString();
 
-        private static T NotDBNull<T>(this object value, T defaultValue)
-        {
-            return value == DBNull.Value ? defaultValue : (T)value;
-        }
+        private static T NotDBNull<T>(this object value, T defaultValue) => 
+            value == DBNull.Value ? defaultValue : (T)value;
 
-        private static T NotDBNull<T>(this object value)
-        {
-            return value.NotDBNull(default(T));
-        }
+        private static T NotDBNull<T>(this object value) => 
+            value.NotDBNull(default(T));
     }
 }

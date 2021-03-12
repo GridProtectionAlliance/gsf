@@ -47,16 +47,12 @@ namespace GSF.Data
         /// <param name="y">The second object of type <see cref="T:System.Data.DataSet"/> to compare.</param>
         public bool Equals(DataSet x, DataSet y)
         {
-            DataTable yTable;
-            object xField;
-            object yField;
-
             // If the two data sets are the same object, they are equal
-            if ((object)x == (object)y)
+            if (ReferenceEquals(x, y))
                 return true;
 
             // Test for null
-            if ((object)x == null || (object)y == null)
+            if (x is null || y is null)
                 return false;
 
             // Check that the number of tables match
@@ -69,7 +65,7 @@ namespace GSF.Data
                 if (!y.Tables.Contains(xTable.TableName))
                     return false;
 
-                yTable = y.Tables[xTable.TableName];
+                DataTable yTable = y.Tables[xTable.TableName];
 
                 // Check that both tables have the same number of rows
                 if (xTable.Rows.Count != yTable.Rows.Count)
@@ -87,8 +83,8 @@ namespace GSF.Data
                         if (!yTable.Columns.Contains(column.ColumnName))
                             return false;
 
-                        xField = xTable.Rows[i][column.ColumnName];
-                        yField = yTable.Rows[i][column.ColumnName];
+                        object xField = xTable.Rows[i][column.ColumnName];
+                        object yField = yTable.Rows[i][column.ColumnName];
 
                         if (xField == DBNull.Value || yField == DBNull.Value)
                         {
@@ -120,9 +116,8 @@ namespace GSF.Data
         public int GetHashCode(DataSet obj)
         {
             int hashCode = 0;
-            object field;
 
-            if ((object)obj == null)
+            if (obj is null)
                 throw new ArgumentNullException(nameof(obj));
 
             // This method is required by IEqualityComparer<T> - although the following 
@@ -133,10 +128,12 @@ namespace GSF.Data
                 {
                     foreach (DataColumn column in table.Columns)
                     {
-                        field = row[column];
+                        object field = row[column];
 
-                        if ((object)field != null)
-                            hashCode ^= field.GetHashCode();
+                        if (field is null)
+                            continue;
+                        
+                        hashCode ^= field.GetHashCode();
                     }
                 }
             }
