@@ -223,7 +223,14 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             ConfigurationFrame3 configurationFrame3 = CreateConfigurationFrame3(baseConfigurationFrame, TimeBase, NominalFrequency, this);
 
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
-            bool configurationChanged = !(m_configurationFrame2 is null);
+            bool configurationChanged = false;
+
+            if (!(m_configurationFrame2 is null))
+            {
+                // Get a clone of the current config frame and set its header match the cached config frame for a clean compare
+                ConfigurationFrame1 cacheMatch = configurationFrame2.Clone(m_configurationFrame2.CommonHeader);
+                configurationChanged = cacheMatch.Checksum != m_configurationFrame2.Checksum;
+            }
 
             // Apply tracked revision counts
             if (configurationChanged)
