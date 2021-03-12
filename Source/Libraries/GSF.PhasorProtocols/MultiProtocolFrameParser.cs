@@ -2858,6 +2858,11 @@ namespace GSF.PhasorProtocols
                 {
                     ICommandFrame commandFrame;
 
+                    // Only IEEE C37.118-2011 supports requests for config frame 3, for any other protocol,
+                    // downgrade frame request to config frame 2
+                    if (command == DeviceCommand.SendConfigurationFrame3 && m_phasorProtocol != PhasorProtocol.IEEEC37_118V2)
+                        command = DeviceCommand.SendConfigurationFrame2;
+
                     // Only the IEEE, SEL Fast Message and Macrodyne protocols support commands
                     switch (m_phasorProtocol)
                     {
