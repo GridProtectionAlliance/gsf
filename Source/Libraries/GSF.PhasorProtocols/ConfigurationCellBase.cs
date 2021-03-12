@@ -66,15 +66,16 @@ namespace GSF.PhasorProtocols
         /// <param name="maximumPhasors">Sets the maximum number of phasors for the <see cref="PhasorDefinitions"/> collection.</param>
         /// <param name="maximumAnalogs">Sets the maximum number of phasors for the <see cref="AnalogDefinitions"/> collection.</param>
         /// <param name="maximumDigitals">Sets the maximum number of phasors for the <see cref="DigitalDefinitions"/> collection.</param>
-        protected ConfigurationCellBase(IConfigurationFrame parent, ushort idCode, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
+        /// <param name="fixedElementSize">Flag that indicates if collections elements have a fixed size.</param>
+        protected ConfigurationCellBase(IConfigurationFrame parent, ushort idCode, int maximumPhasors, int maximumAnalogs, int maximumDigitals, bool fixedElementSize = true)
             : base(parent, idCode)
         {
             m_nominalFrequency = LineFrequency.Hz60; // Defaulting to 60Hz
 
             // We convert maximum counts to last valid indices (count - 1):
-            m_phasorDefinitions = new PhasorDefinitionCollection(maximumPhasors - 1);
-            m_analogDefinitions = new AnalogDefinitionCollection(maximumAnalogs - 1);
-            m_digitalDefinitions = new DigitalDefinitionCollection(maximumDigitals - 1);
+            m_phasorDefinitions = new PhasorDefinitionCollection(maximumPhasors - 1, fixedElementSize);
+            m_analogDefinitions = new AnalogDefinitionCollection(maximumAnalogs - 1, fixedElementSize);
+            m_digitalDefinitions = new DigitalDefinitionCollection(maximumDigitals - 1, fixedElementSize);
         }
 
         /// <summary>

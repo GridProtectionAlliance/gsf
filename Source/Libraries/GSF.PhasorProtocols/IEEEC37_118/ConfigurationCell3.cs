@@ -54,7 +54,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// Creates a new <see cref="ConfigurationCell3"/>.
         /// </summary>
         /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCell3"/>.</param>
-        public ConfigurationCell3(IConfigurationFrame parent) : base(parent, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+        public ConfigurationCell3(IConfigurationFrame parent) : base(parent, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues, false)
         {
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
@@ -265,6 +265,42 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index);
 
                 return buffer;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the <see cref="ConfigurationCellBase.BodyImage"/>.
+        /// </summary>
+        protected override int BodyLength
+        {
+            get
+            {
+                int length = 0;
+
+                // Configuration Frame 3 cells have variable length labels
+                foreach (IPhasorDefinition definition in PhasorDefinitions)
+                {
+                    if (definition is PhasorDefinition3 phasorDefinition)
+                        length += phasorDefinition.LabelImage.Length;
+                }
+
+                foreach (IAnalogDefinition definition in AnalogDefinitions)
+                {
+                    if (definition is AnalogDefinition3 analogDefinition)
+                        length += analogDefinition.LabelImage.Length;
+                }
+
+                foreach (IDigitalDefinition definition in DigitalDefinitions)
+                {
+                    if (definition is DigitalDefinition3 digitalDefinition)
+                    {
+                        // Force a refresh of label image before getting image length
+                        digitalDefinition.Label = digitalDefinition.Label;
+                        length += digitalDefinition.LabelImage.Length;
+                    }
+                }
+
+                return length;
             }
         }
 

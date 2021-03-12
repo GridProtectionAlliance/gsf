@@ -66,7 +66,7 @@ namespace GSF.PhasorProtocols
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
         protected ChannelValueCollectionBase(int lastValidIndex)
-            : base(lastValidIndex)
+            : base(lastValidIndex, true)
         {
         }
 
@@ -94,11 +94,9 @@ namespace GSF.PhasorProtocols
         {
             get
             {
+                // Cells will be constant length, so we can quickly calculate lengths
                 if (m_fixedCount == 0 || m_floatCount == 0)
-                {
-                    // Cells will be constant length, so we can quickly calculate lengths
                     return base.BinaryLength;
-                }
 
                 // Cells will be different lengths, so we must manually sum lengths
                 return this.Sum(frame => frame.BinaryLength);
@@ -109,13 +107,7 @@ namespace GSF.PhasorProtocols
         /// Gets a boolean value indicating if all of the composite values have been assigned a value.
         /// </summary>
         /// <returns><c>true</c>, if all composite values have been assigned a value; otherwise, <c>false</c>.</returns>
-        public virtual bool AllValuesAssigned
-        {
-            get
-            {
-                return this.All(item => !item.IsEmpty);
-            }
-        }
+        public virtual bool AllValuesAssigned => this.All(item => !item.IsEmpty);
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="ChannelValueCollectionBase{TDefinition,TValue}"/> object.
@@ -163,7 +155,7 @@ namespace GSF.PhasorProtocols
         /// <param name="item">The object to insert.</param>
         protected override void InsertItem(int index, TValue item)
         {
-            if (item.DataFormat == DataFormat.FixedInteger)
+            if (item?.DataFormat == DataFormat.FixedInteger)
                 m_fixedCount++;
             else
                 m_floatCount++;
@@ -186,7 +178,7 @@ namespace GSF.PhasorProtocols
             else
                 m_floatCount--;
 
-            if (item.DataFormat == DataFormat.FixedInteger)
+            if (item?.DataFormat == DataFormat.FixedInteger)
                 m_fixedCount++;
             else
                 m_floatCount++;

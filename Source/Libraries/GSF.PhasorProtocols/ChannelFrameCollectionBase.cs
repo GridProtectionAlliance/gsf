@@ -28,7 +28,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Linq;
 using System.Runtime.Serialization;
 
 namespace GSF.PhasorProtocols
@@ -53,7 +52,7 @@ namespace GSF.PhasorProtocols
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
         protected ChannelFrameCollectionBase(int lastValidIndex)
-            : base(lastValidIndex)
+            : base(lastValidIndex, false)
         {
         }
 
@@ -65,26 +64,6 @@ namespace GSF.PhasorProtocols
         protected ChannelFrameCollectionBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets the length of the <see cref="ChannelCollectionBase{T}"/>.
-        /// </summary>
-        /// <remarks>
-        /// The length of the <see cref="ChannelFrameCollectionBase{T}"/> binary image is the combined length of all the items in the collection.
-        /// </remarks>
-        public override int BinaryLength
-        {
-            get
-            {
-                // It is expected that frames can be different lengths, so we manually sum lengths - this represents
-                // a change in behavior from the base class...
-                return this.Sum(frame => frame.BinaryLength);
-            }
         }
 
         #endregion

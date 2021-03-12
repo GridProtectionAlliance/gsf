@@ -33,6 +33,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.Macrodyne
 {
     /// <summary>
@@ -162,29 +163,19 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets a reference to the <see cref="PhasorDefinitionCollection"/> of this <see cref="ConfigurationCell"/>.
         /// </summary>
-        public override PhasorDefinitionCollection PhasorDefinitions
-        {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.PhasorDefinitions;
-
-                return m_configurationFileCell.PhasorDefinitions;
-            }
-        }
+        public override PhasorDefinitionCollection PhasorDefinitions => 
+            m_configurationFileCell is null ? 
+                base.PhasorDefinitions : 
+                m_configurationFileCell.PhasorDefinitions;
 
         /// <summary>
         /// Gets or sets the station name of this <see cref="ConfigurationCell"/>.
         /// </summary>
         public override string StationName
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.StationName;
-
-                return m_configurationFileCell.StationName;
-            }
+            get => m_configurationFileCell is null ? 
+                base.StationName : 
+                m_configurationFileCell.StationName;
             set
             {
                 if (m_configurationFileCell is null)
@@ -199,13 +190,9 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public string SectionEntry
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return m_sectionEntry;
-
-                return m_configurationFileCell.SectionEntry;
-            }
+            get => m_configurationFileCell is null ? 
+                m_sectionEntry : 
+                m_configurationFileCell.SectionEntry;
             set
             {
                 m_sectionEntry = value.Trim();
@@ -245,13 +232,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override ushort IDCode
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.IDCode;
-
-                return m_configurationFileCell.IDCode;
-            }
+            get => m_configurationFileCell?.IDCode ?? base.IDCode;
             set
             {
                 if (m_configurationFileCell is null)
@@ -266,13 +247,9 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override IFrequencyDefinition FrequencyDefinition
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.FrequencyDefinition;
-
-                return m_configurationFileCell.FrequencyDefinition;
-            }
+            get => m_configurationFileCell is null ? 
+                base.FrequencyDefinition : 
+                m_configurationFileCell.FrequencyDefinition;
             set
             {
                 if (m_configurationFileCell is null)
@@ -287,13 +264,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public override LineFrequency NominalFrequency
         {
-            get
-            {
-                if (m_configurationFileCell is null)
-                    return base.NominalFrequency;
-
-                return m_configurationFileCell.NominalFrequency;
-            }
+            get => m_configurationFileCell?.NominalFrequency ?? base.NominalFrequency;
             set
             {
                 if (m_configurationFileCell is null)
@@ -429,7 +400,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         internal static IConfigurationCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IConfigurationCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
             parsedLength = 0;
-            return new ConfigurationCell(parent as ConfigurationFrame, null);
+            return new ConfigurationCell(parent as ConfigurationFrame);
         }
 
         #endregion

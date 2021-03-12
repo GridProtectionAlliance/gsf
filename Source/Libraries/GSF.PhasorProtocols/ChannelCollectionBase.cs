@@ -28,10 +28,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Runtime.Serialization;
 using GSF.Collections;
 using GSF.Parsing;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -45,7 +47,7 @@ namespace GSF.PhasorProtocols
     /// </remarks>
     /// <typeparam name="T">Specific <see cref="IChannel"/> type that the <see cref="ChannelCollectionBase{T}"/> contains.</typeparam>
     [Serializable]
-    public abstract class ChannelCollectionBase<T> : ListCollection<T>, IChannelCollection<T>, INotifyCollectionChanged where T : IChannel
+    public abstract class ChannelCollectionBase<T> : ListCollection<T>, IChannelCollection<T> where T : IChannel
     {
         #region [ Members ]
 
@@ -78,15 +80,17 @@ namespace GSF.PhasorProtocols
         /// Creates a new <see cref="ChannelCollectionBase{T}"/> using specified <paramref name="lastValidIndex"/>.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
+        /// <param name="fixedElementSize">Flag that indicates if collections elements have a fixed size.</param>
         /// <remarks>
         /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
         /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
         /// maximum length you can specify <see cref="short.MaxValue"/> (i.e., 32,767) as the last valid index
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
-        protected ChannelCollectionBase(int lastValidIndex)
+        protected ChannelCollectionBase(int lastValidIndex, bool fixedElementSize)
         {
             m_lastValidIndex = lastValidIndex;
+            FixedElementSize = fixedElementSize;
         }
 
         /// <summary>
@@ -98,11 +102,10 @@ namespace GSF.PhasorProtocols
         {
             // Deserialize collection
             m_lastValidIndex = info.GetInt32("maximumCount") - 1;
+            FixedElementSize = info.GetOrDefault("fixedElementSize", true);
 
             for (int x = 0; x < info.GetInt32("count"); x++)
-            {
                 Add((T)info.GetValue($"item{x}", typeof(T)));
-            }
         }
 
         #endregion
@@ -139,14 +142,20 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                int count = Count;
-
-                if (count > 0)
-                    return this[0].BinaryLength * count;
-
-                return 0;
+                if (FixedElementSize)
+                {
+                    int count = Count;
+                    return count > 0 ? this[0].BinaryLength * count : 0;
+                }
+                
+                return this.Sum(item => item.BinaryLength);
             }
         }
+
+        /// <summary>
+        /// Gets flag that indicates if collection elements have a fixed size.
+        /// </summary>
+        public virtual bool FixedElementSize { get; }
 
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="IChannel"/> object.
@@ -165,6 +174,7 @@ namespace GSF.PhasorProtocols
                 m_attributes.Add("Binary Length", BinaryLength.ToString());
                 m_attributes.Add("Maximum Count", MaximumCount.ToString());
                 m_attributes.Add("Current Count", Count.ToString());
+                m_attributes.Add("Fixed Element Size", FixedElementSize.ToString());
 
                 return m_attributes;
             }
@@ -208,10 +218,8 @@ namespace GSF.PhasorProtocols
         }
 
         // Collections are not designed to parse binary images
-        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
-        {
+        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length) => 
             throw new NotImplementedException();
-        }
 
         /// <summary>
         /// Adds the elements of the specified collection to the end of the <see cref="ChannelCollectionBase{T}"/>.
@@ -227,18 +235,14 @@ namespace GSF.PhasorProtocols
                 throw new ArgumentNullException(nameof(collection), "collection is null");
 
             foreach (T item in collection)
-            {
                 Add(item);
-            }
         }
 
         /// <summary>
         /// Manually sends a <see cref="NotifyCollectionChangedAction.Reset"/> to the collection changed event.
         /// </summary>
-        public virtual void RefreshBinding()
-        {
+        public virtual void RefreshBinding() => 
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
 
         /// <summary>
         /// Inserts an element into the <see cref="ChannelCollectionBase{T}"/> at the specified index.
@@ -311,10 +315,8 @@ namespace GSF.PhasorProtocols
         /// Raises the <see cref="NotifyCollectionChangedEventHandler"/> event.
         /// </summary>
         /// <param name="e">Changed event arguments.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) =>
             CollectionChanged?.Invoke(this, e);
-        }
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
@@ -325,12 +327,11 @@ namespace GSF.PhasorProtocols
         {
             // Serialize collection
             info.AddValue("maximumCount", m_lastValidIndex + 1);
+            info.AddValue("fixedElementSize", FixedElementSize);
             info.AddValue("count", Count);
 
             for (int x = 0; x < Count; x++)
-            {
                 info.AddValue($"item{x}", this[x], typeof(T));
-            }
         }
 
         #endregion

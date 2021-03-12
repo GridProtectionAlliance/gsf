@@ -34,14 +34,18 @@ using System.Runtime.Serialization;
 namespace GSF.PhasorProtocols
 {
     /// <summary>
-    /// Represents a protocol independent interface representation of a collection of any
-    /// <see cref="IChannel"/> objects.<br/>
-    /// This is the base interface implemented by all collections classes in the phasor
-    /// protocols library; it is the root of the collection interface hierarchy.
+    /// Represents a protocol independent interface representation of a collection of any <see cref="IChannel"/> objects.<br/>
+    /// This is the base interface implemented by all collections classes in the phasor protocols library; it is the root of
+    /// the collection interface hierarchy.
     /// </summary>
     /// <typeparam name="T">Specific <see cref="IChannel"/> type that the <see cref="IChannelCollection{T}"/> contains.</typeparam>
     public interface IChannelCollection<T> : IChannel, IList<T>, INotifyCollectionChanged, ISerializable where T : IChannel
     {
         // Note that the channel collection interface inherits IChannel hence providing cumulative imaging properties
+        
+        /// <summary>
+        /// Gets flag that indicates if collection elements have a fixed size.
+        /// </summary>
+        bool FixedElementSize { get; }
     }
 }

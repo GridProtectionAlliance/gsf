@@ -45,14 +45,15 @@ namespace GSF.PhasorProtocols
         /// Creates a new <see cref="ChannelDefinitionCollectionBase{T}"/> using specified <paramref name="lastValidIndex"/>.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
+        /// <param name="fixedElementSize">Flag that indicates if collections elements have a fixed size.</param>
         /// <remarks>
         /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
         /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
         /// maximum length you can specify <see cref="short.MaxValue"/> (i.e., 32,767) as the last valid index
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
-        protected ChannelDefinitionCollectionBase(int lastValidIndex)
-            : base(lastValidIndex)
+        protected ChannelDefinitionCollectionBase(int lastValidIndex, bool fixedElementSize = true)
+            : base(lastValidIndex, fixedElementSize)
         {
         }
 
@@ -106,9 +107,7 @@ namespace GSF.PhasorProtocols
             // specified index forward. Given how the phasor protocols are being used, removing
             // an item would be very rare as most collection counts are known in advance...
             for (int i = index; i < Count; i++)
-            {
-                this[i].Index = i;
-            }
+                 this[i].Index = i;
         }
 
         #endregion

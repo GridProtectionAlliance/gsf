@@ -44,14 +44,15 @@ namespace GSF.PhasorProtocols
         /// Creates a new <see cref="DigitalDefinitionCollection"/> using specified <paramref name="lastValidIndex"/>.
         /// </summary>
         /// <param name="lastValidIndex">Last valid index for the collection (i.e., maximum count - 1).</param>
+        /// <param name="fixedElementSize">Flag that indicates if collections elements have a fixed size.</param>
         /// <remarks>
         /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
         /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
         /// maximum length you can specify <see cref="short.MaxValue"/> (i.e., 32,767) as the last valid index
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
-        public DigitalDefinitionCollection(int lastValidIndex)
-            : base(lastValidIndex)
+        public DigitalDefinitionCollection(int lastValidIndex, bool fixedElementSize)
+            : base(lastValidIndex, fixedElementSize)
         {
         }
 
