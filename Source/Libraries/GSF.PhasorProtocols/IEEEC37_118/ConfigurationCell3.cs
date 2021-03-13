@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -369,9 +370,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("Format Flags", $"{(int)m_formatFlags}: {m_formatFlags}");
-                baseAttributes.Add("Latitude", $"{Latitude}");
-                baseAttributes.Add("Longitude", $"{Longitude}");
-                baseAttributes.Add("Elevation", $"{Elevation}");
+                baseAttributes.Add("Global ID", $"{GlobalID}: {ByteEncoding.Hexadecimal.GetString(GlobalID.ToRfcBytes(), ' ')}");
+                baseAttributes.Add("Latitude", float.IsInfinity(Latitude) ? "INF" : Latitude.ToString(CultureInfo.InvariantCulture));
+                baseAttributes.Add("Longitude", float.IsInfinity(Longitude) ? "INF" : Longitude.ToString(CultureInfo.InvariantCulture));
+                baseAttributes.Add("Elevation", float.IsInfinity(Elevation) ? "INF" : Elevation.ToString(CultureInfo.InvariantCulture));
                 baseAttributes.Add("Service Class", $"{ServiceClass}");
                 baseAttributes.Add("Window", $"{Window}");
                 baseAttributes.Add("Group Delay", $"{GroupDelay}");
