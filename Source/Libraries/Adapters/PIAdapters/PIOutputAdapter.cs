@@ -47,6 +47,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
+// ReSharper disable InconsistentlySynchronizedField
 namespace PIAdapters
 {
     /// <summary>
@@ -87,7 +88,6 @@ namespace PIAdapters
         public PIOutputAdapter()
         {
             m_mappedPIPoints = new ConcurrentDictionary<MeasurementKey, PIPoint>();
-
             m_archiveQueues = new ProcessQueue<AFValue>[Environment.ProcessorCount];
 
             for (int i = 0; i < m_archiveQueues.Length; i++)
@@ -121,131 +121,79 @@ namespace PIAdapters
         /// Gets or sets the name of the PI server for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the name of the PI server for the adapter's PI connection.")]
-        public string ServerName
-        {
-            get;
-            set;
-        }
+        public string ServerName { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the PI user ID for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection."), DefaultValue("")]
-        public string UserName
-        {
-            get;
-            set;
-        }
+        public string UserName { get; set; }
 
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection."), DefaultValue("")]
-        public string Password
-        {
-            get;
-            set;
-        }
+        public string Password { get; set; }
 
         /// <summary>
         /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
         /// </summary>
         [ConnectionStringParameter, Description("Defines the timeout interval (in milliseconds) for the adapter's connection"), DefaultValue(PIConnection.DefaultConnectTimeout)]
-        public int ConnectTimeout
-        {
-            get;
-            set;
-        }
+        public int ConnectTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
         /// </summary>
         [ConnectionStringParameter, Description("Determines if this adapter should automatically manage metadata for PI points (recommended)."), DefaultValue(true)]
-        public bool RunMetadataSync
-        {
-            get;
-            set;
-        }
+        public bool RunMetadataSync { get; set; }
 
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
         /// </summary>
         [ConnectionStringParameter, Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended). Value will only be considered when RunMetadataSync is True."), DefaultValue(true)]
-        public bool AutoCreateTags
-        {
-            get;
-            set;
-        }
+        public bool AutoCreateTags { get; set; }
 
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
         /// </summary>
         [ConnectionStringParameter, Description("Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the master for maintaining PI tag metadata (like the tag name); otherwise, when False, PI will be the master. Value will only be considered when RunMetadataSync is True."), DefaultValue(true)]
-        public bool AutoUpdateTags
-        {
-            get;
-            set;
-        }
+        public bool AutoUpdateTags { get; set; }
 
         /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True."), DefaultValue(0)]
-        public int TagNamePrefixRemoveCount
-        {
-            get;
-            set;
-        }
+        public int TagNamePrefixRemoveCount { get; set; }
 
         /// <summary>
         /// Gets or sets the point source string used when automatically creating new PI points during the metadata update
         /// </summary>
         [ConnectionStringParameter, Description("Defines the point source string used when automatically creating new PI points during the metadata update. Value will only be considered when RunMetadataSync is True."), DefaultValue("GSF")]
-        public string PIPointSource
-        {
-            get;
-            set;
-        }
+        public string PIPointSource { get; set; }
 
         /// <summary>
         /// Gets or sets the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic. Value will only be considered when RunMetadataSync is True."), DefaultValue("classic")]
-        public string PIPointClass
-        {
-            get;
-            set;
-        }
+        public string PIPointClass { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if defined point compression will be used during archiving.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the flag that determines if defined point compression will be used during archiving."), DefaultValue(true)]
-        public bool UseCompression
-        {
-            get;
-            set;
-        }
+        public bool UseCompression { get; set; }
 
         /// <summary>
         /// Gets or sets the filename to be used for tag map cache.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the filename to be used for tag map cache file name. Leave blank for cache name to be same as adapter name with a \".cache\" extension."), DefaultValue("")]
-        public string TagMapCacheFileName
-        {
-            get;
-            set;
-        }
+        public string TagMapCacheFileName { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived."), DefaultValue(0.0D)]
-        public double MaximumPointResolution
-        {
-            get;
-            set;
-        }
+        public double MaximumPointResolution { get; set; }
 
         /// <summary>
         /// Returns the detailed status of the data output source.
@@ -258,32 +206,22 @@ namespace PIAdapters
 
                 status.Append(base.Status);
                 status.AppendLine();
-                status.AppendFormat("        OSI-PI server name: {0}", ServerName);
-                status.AppendLine();
-                status.AppendFormat("       Connected to server: {0}", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
-                status.AppendLine();
-                status.AppendFormat("         Using compression: {0}", UseCompression);
-                status.AppendLine();
-                status.AppendFormat("  Maximum point resolution: {0:N3} seconds{1}", MaximumPointResolution, MaximumPointResolution <= 0.0D ? " - all data will be archived" : "");
-                status.AppendLine();
-                status.AppendFormat("    Meta-data sync enabled: {0}", RunMetadataSync);
-                status.AppendLine();
+                status.AppendLine($"        OSI-PI server name: {ServerName}");
+                status.AppendLine($"       Connected to server: {(m_connection?.Connected ?? false ? "Yes" : "No")}");
+                status.AppendLine($"         Using compression: {UseCompression}");
+                status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
+                status.AppendLine($"    Meta-data sync enabled: {RunMetadataSync}");
 
                 if (RunMetadataSync)
                 {
-                    status.AppendFormat("          Auto-create tags: {0}", AutoCreateTags);
-                    status.AppendLine();
-                    status.AppendFormat("          Auto-update tags: {0}", AutoUpdateTags);
-                    status.AppendLine();
-                    status.AppendFormat("    Tag prefixes to remove: {0}", TagNamePrefixRemoveCount);
-                    status.AppendLine();
-                    status.AppendFormat("       OSI-PI point source: {0}", PIPointSource);
-                    status.AppendLine();
-                    status.AppendFormat("        OSI-PI point class: {0}", PIPointClass);
-                    status.AppendLine();
+                    status.AppendLine($"          Auto-create tags: {AutoCreateTags}");
+                    status.AppendLine($"          Auto-update tags: {AutoUpdateTags}");
+                    status.AppendLine($"    Tag prefixes to remove: {TagNamePrefixRemoveCount}");
+                    status.AppendLine($"       OSI-PI point source: {PIPointSource}");
+                    status.AppendLine($"        OSI-PI point class: {PIPointClass}");
                 }
 
-                if ((object)m_mapRequestQueue != null)
+                if (!(m_mapRequestQueue is null))
                 {
                     status.AppendLine();
                     status.AppendLine(">> Mapping Request Queue Status");
@@ -292,30 +230,23 @@ namespace PIAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("   Tag-map cache file name: {0}", FilePath.TrimFileName(TagMapCacheFileName.ToNonNullString("[undefined]"), 51));
-                status.AppendLine();
-                status.AppendFormat(" Active tag-map cache size: {0:N0} mappings", m_mappedPIPoints.Count);
-                status.AppendLine();
-                status.AppendFormat("      Pending tag-mappings: {0:N0} mappings, {1:0.00%} complete", m_pendingMappings.Count, 1.0D - m_pendingMappings.Count / (double)m_mappedPIPoints.Count);
-                status.AppendLine();
+                status.AppendLine($"   Tag-map cache file name: {FilePath.TrimFileName(TagMapCacheFileName.ToNonNullString("[undefined]"), 51)}");
+                status.AppendLine($" Active tag-map cache size: {m_mappedPIPoints.Count:N0} mappings");
+                status.AppendLine($"      Pending tag-mappings: {m_pendingMappings.Count:N0} mappings, {1.0D - m_pendingMappings.Count / (double)m_mappedPIPoints.Count:0.00%} complete");
 
                 if (RunMetadataSync)
-                {
-                    status.AppendFormat("    Meta-data sync process: {0}, {1:0.00%} complete", m_refreshingMetadata ? "Active" : "Idle", m_metadataRefreshProgress);
-                    status.AppendLine();
-                }
+                    status.AppendLine($"    Meta-data sync process: {(m_refreshingMetadata ? "Active" : "Idle")}, {m_metadataRefreshProgress:0.00%} complete");
 
-                if ((object)m_archiveQueues != null && m_archiveQueues.Length > 0)
+                if (!(m_archiveQueues is null) && m_archiveQueues.Length > 0)
                 {
                     status.AppendLine();
-                    status.AppendFormat(">> Archive Queue Status (1 of {0}){1}", m_archiveQueues.Length, Environment.NewLine);
+                    status.AppendLine($">> Archive Queue Status (1 of {m_archiveQueues.Length:N0})");
                     status.AppendLine();
                     status.Append(m_archiveQueues[0].Status);
                     status.AppendLine();
                 }
 
-                status.AppendFormat("    Points archived/second: {0:#,##0.00}", Interlocked.Read(ref m_processedMeasurements) / (Interlocked.Read(ref m_totalProcessingTime) / (double)Ticks.PerSecond));
-                status.AppendLine();
+                status.AppendLine($"    Points archived/second: {Interlocked.Read(ref m_processedMeasurements) / (Interlocked.Read(ref m_totalProcessingTime) / (double)Ticks.PerSecond):#,##0.00}");
 
                 return status.ToString();
             }
@@ -331,37 +262,35 @@ namespace PIAdapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                m_mapRequestQueue?.Dispose();
+
+                if (!(m_archiveQueues is null))
                 {
-                    if (disposing)
-                    {
-                        if ((object)m_mapRequestQueue != null)
-                            m_mapRequestQueue.Dispose();
-
-                        if ((object)m_archiveQueues != null)
-                        {
-                            foreach (ProcessQueue<AFValue> archiveQueue in m_archiveQueues)
-                                archiveQueue.Dispose();
-                        }
-
-                        if ((object)m_connection != null)
-                        {
-                            m_connection.Disconnected -= m_connection_Disconnected;
-                            m_connection.Dispose();
-                            m_connection = null;
-                        }
-
-                        if ((object)m_mappedPIPoints != null)
-                            m_mappedPIPoints.Clear();
-                    }
+                    foreach (ProcessQueue<AFValue> archiveQueue in m_archiveQueues)
+                        archiveQueue.Dispose();
                 }
-                finally
+
+                if (!(m_connection is null))
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_connection.Disconnected -= Connection_Disconnected;
+                    m_connection.Dispose();
+                    m_connection = null;
                 }
+
+                m_mappedPIPoints?.Clear();
+            }
+            finally
+            {
+                m_disposed = true;       // Prevent duplicate dispose.
+                base.Dispose(disposing); // Call base class Dispose().
             }
         }
 
@@ -370,10 +299,8 @@ namespace PIAdapters
         /// </summary>
         /// <param name="maxLength">Maximum number of characters in the status string</param>
         /// <returns>Status</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            return $"Archived {m_processedMeasurements:N0} measurements to PI.".CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) => 
+            $"Archived {m_processedMeasurements:N0} measurements to PI.".CenterText(maxLength);
 
         /// <summary>
         /// Initializes this <see cref="PIOutputAdapter"/>.
@@ -383,11 +310,8 @@ namespace PIAdapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
-            int intVal;
-            double doubleVal;
 
-            if (!settings.TryGetValue(nameof(ServerName), out setting))
+            if (!settings.TryGetValue(nameof(ServerName), out string setting))
                 throw new InvalidOperationException($"The \"{nameof(ServerName)}\" setting is required for PI connections.");
 
             ServerName = setting;
@@ -398,11 +322,10 @@ namespace PIAdapters
             UserName = settings.TryGetValue(nameof(UserName), out setting) ? setting : null;
             Password = settings.TryGetValue(nameof(Password), out setting) ? setting : null;
 
-            if (!settings.TryGetValue(nameof(ConnectTimeout), out setting) || !int.TryParse(setting, out intVal))
+            if (!settings.TryGetValue(nameof(ConnectTimeout), out setting) || !int.TryParse(setting, out int intVal))
                 intVal = PIConnection.DefaultConnectTimeout;
 
             ConnectTimeout = intVal;
-
             UseCompression = !settings.TryGetValue(nameof(UseCompression), out setting) || setting.ParseBoolean();
 
             if (!settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) || !int.TryParse(setting, out intVal))
@@ -427,7 +350,7 @@ namespace PIAdapters
 
             TagMapCacheFileName = FilePath.GetAbsolutePath(setting);
 
-            if (settings.TryGetValue(nameof(MaximumPointResolution), out setting) && double.TryParse(setting, out doubleVal) && doubleVal > 0.0D)
+            if (settings.TryGetValue(nameof(MaximumPointResolution), out setting) && double.TryParse(setting, out double doubleVal) && doubleVal > 0.0D)
                 MaximumPointResolution = doubleVal;
 
             if (MaximumPointResolution > 0.0D)
@@ -451,7 +374,7 @@ namespace PIAdapters
                 ConnectTimeout = this.ConnectTimeout
             };
 
-            m_connection.Disconnected += m_connection_Disconnected;
+            m_connection.Disconnected += Connection_Disconnected;
             m_connection.Open();
 
             m_mappedPIPoints.Clear();
@@ -489,9 +412,9 @@ namespace PIAdapters
                 m_pendingMappings.Clear();
             }
 
-            if ((object)m_connection != null)
+            if (!(m_connection is null))
             {
-                m_connection.Disconnected -= m_connection_Disconnected;
+                m_connection.Disconnected -= Connection_Disconnected;
                 m_connection.Dispose();
                 m_connection = null;
             }
@@ -503,22 +426,20 @@ namespace PIAdapters
         /// <param name="measurements">Measurements to queue</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            if ((object)measurements == null || measurements.Length <= 0 || (object)m_connection == null)
+            if (measurements is null || measurements.Length <= 0 || m_connection is null)
                 return;
 
             foreach (IMeasurement measurement in measurements)
             {
-                PIPoint point;
-
                 // If adapter gets disabled while executing this thread - go ahead and exit
                 if (!Enabled)
                     return;
 
                 // Lookup connection point mapping for this measurement, if it wasn't found - go ahead and exit
-                if (!m_mappedPIPoints.TryGetValue(measurement.Key, out point))
+                if (!m_mappedPIPoints.TryGetValue(measurement.Key, out PIPoint point))
                     continue;
 
-                if ((object)point == null)
+                if (point is null)
                 {
                     // If connection point is not defined, kick off process to create a new mapping
                     try
@@ -554,7 +475,7 @@ namespace PIAdapters
                     try
                     {
                         // Verify maximum per point archive resolution
-                        if ((object)m_lastArchiveTimes != null && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(measurement.Key.SignalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
+                        if (!(m_lastArchiveTimes is null) && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(measurement.Key.SignalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
                             continue;
 
                         // Queue up insert operations for parallel processing
@@ -565,7 +486,7 @@ namespace PIAdapters
                             });
 
 
-                        if ((object)m_lastArchiveTimes != null)
+                        if (!(m_lastArchiveTimes is null))
                             m_lastArchiveTimes[measurement.Key.SignalID] = measurement.Timestamp;
                     }
                     catch (Exception ex)
@@ -588,7 +509,6 @@ namespace PIAdapters
 
         private void EstablishPIPointMappings(MeasurementKey[] keys)
         {
-            PIPoint point;
             bool mappingEstablished = false;
 
             foreach (MeasurementKey key in keys)
@@ -597,18 +517,20 @@ namespace PIAdapters
                 if (!Enabled)
                     return;
 
+                PIPoint point;
+
                 try
                 {
                     mappingEstablished = false;
 
                     if (m_mappedPIPoints.TryGetValue(key, out point))
                     {
-                        if ((object)point == null)
+                        if (point is null)
                         {
                             // Create new connection point
                             point = CreateMappedPIPoint(key);
 
-                            if ((object)point != null)
+                            if (!(point is null))
                             {
                                 m_mappedPIPoints[key] = point;
                                 mappingEstablished = true;
@@ -628,9 +550,7 @@ namespace PIAdapters
                 finally
                 {
                     lock (m_pendingMappings)
-                    {
                         m_pendingMappings.Remove(key);
-                    }
 
                     if (!mappingEstablished)
                         m_mappedPIPoints.TryRemove(key, out point);
@@ -661,7 +581,7 @@ namespace PIAdapters
                 {
                     // Attempt lookup by EXDESC signal ID                           
                     point = GetPIPointBySignalID(m_connection.Server, signalID);
-                    foundPoint = (object)point != null;
+                    foundPoint = !(point is null);
                 }
 
                 if (!foundPoint)
@@ -681,7 +601,7 @@ namespace PIAdapters
                         // Attempt lookup by tag name
                         point = GetPIPoint(m_connection.Server, tagName);
 
-                        if ((object)point == null)
+                        if (point is null)
                         {
                             if (!m_refreshingMetadata)
                                 OnStatusMessage(MessageLevel.Warning, $"No PI points found for tag '{tagName}'. Data will not be archived for '{key}'.");
@@ -695,9 +615,6 @@ namespace PIAdapters
             }
 
             // If no point could be mapped, return null connection mapping so key can be removed from tag-map
-            if ((object)point == null)
-                return null;
-
             return point;
         }
 
@@ -706,7 +623,7 @@ namespace PIAdapters
         /// </summary>
         protected override void ExecuteMetadataRefresh()
         {
-            if (!Initialized || (object)m_connection == null)
+            if (!Initialized || m_connection is null)
                 return;
 
             if (!m_connection.Connected)
@@ -715,8 +632,6 @@ namespace PIAdapters
             MeasurementKey[] inputMeasurements = InputMeasurementKeys;
             int previousMeasurementReportingInterval = MeasurementReportingInterval;
             DateTime latestUpdateTime = DateTime.MinValue;
-            DateTime updateTime;
-            bool refreshMetadata;
 
             m_refreshingMetadata = RunMetadataSync;
 
@@ -742,7 +657,7 @@ namespace PIAdapters
             {
                 OnStatusMessage(MessageLevel.Info, "Beginning metadata refresh...");
 
-                if ((object)inputMeasurements != null && inputMeasurements.Length > 0)
+                if (!(inputMeasurements is null) && inputMeasurements.Length > 0)
                 {
                     PIServer server = m_connection.Server;
                     int processed = 0, total = inputMeasurements.Length;
@@ -757,12 +672,9 @@ namespace PIAdapters
 
                         Guid signalID = key.SignalID;
                         DataRow[] rows = measurements.Select($"SignalID='{signalID}'");
-                        DataRow measurementRow;
-                        PIPoint point;
                         string tagName;
                         bool createdNewTag = false;
-
-                        refreshMetadata = false;
+                        bool refreshMetadata = false;
 
                         if (rows.Length <= 0)
                         {
@@ -771,7 +683,7 @@ namespace PIAdapters
                         }
 
                         // Get matching measurement row
-                        measurementRow = rows[0];
+                        DataRow measurementRow = rows[0];
 
                         // Get tag-name as defined in meta-data, adjusting as needed
                         tagName = GetPITagName(measurementRow["PointTag"].ToNonNullString().Trim());
@@ -788,9 +700,9 @@ namespace PIAdapters
                         }
 
                         // Lookup PI point trying signal ID and tag name
-                        point = GetPIPoint(server, signalID, tagName);
+                        PIPoint point = GetPIPoint(server, signalID, tagName);
 
-                        if (AutoCreateTags && (object)point == null)
+                        if (AutoCreateTags && point is null)
                         {
                             try
                             {
@@ -812,7 +724,7 @@ namespace PIAdapters
                             }
                         }
 
-                        if ((object)point != null)
+                        if (!(point is null))
                         {
                             // Update tag-map for faster future loads
                             m_tagMap[signalID] = tagName;
@@ -824,8 +736,7 @@ namespace PIAdapters
                                     point.Name = tagName;
 
                                 // Make sure renamed point gets fully remapped
-                                PIPoint removedPIPoint;
-                                m_mappedPIPoints.TryRemove(key, out removedPIPoint);
+                                m_mappedPIPoints.TryRemove(key, out PIPoint _);
 
                                 lock (m_mapRequestQueue.SyncRoot)
                                     m_mapRequestQueue.Remove(key);
@@ -852,6 +763,8 @@ namespace PIAdapters
                         }
 
                         // Determine last update time for this meta-data record
+                        DateTime updateTime;
+
                         try
                         {
                             // See if ActiveMeasurements contains updated on column
@@ -862,7 +775,7 @@ namespace PIAdapters
                             else
                             {
                                 // Attempt to lookup last update time for record
-                                if ((object)database == null)
+                                if (database is null)
                                     database = new AdoDataConnection("systemSettings");
 
                                 updateTime = Convert.ToDateTime(database.Connection.ExecuteScalar($"SELECT UpdatedOn FROM Measurement WHERE SignalID = '{signalID}'"));
@@ -877,13 +790,13 @@ namespace PIAdapters
                         if (updateTime > latestUpdateTime)
                             latestUpdateTime = updateTime;
 
-                        if ((refreshMetadata || updateTime > m_lastMetadataRefresh) && (object)point != null)
+                        if ((refreshMetadata || updateTime > m_lastMetadataRefresh) && !(point is null))
                         {
                             try
                             {
                                 List<string> updatedAttributes = new List<string>();
 
-                                Action<string, object> updateAttribute = (attribute, newValue) =>
+                                void updateAttribute(string attribute, object newValue)
                                 {
                                     string oldValue = point.GetAttribute(attribute).ToString();
 
@@ -892,7 +805,7 @@ namespace PIAdapters
                                         point.SetAttribute(attribute, newValue);
                                         updatedAttributes.Add(attribute);
                                     }
-                                };
+                                }
 
                                 if (AutoUpdateTags || createdNewTag)
                                 {
@@ -945,8 +858,7 @@ namespace PIAdapters
                             m_mappedPIPoints.TryAdd(key, null);
                     }
 
-                    if ((object)database != null)
-                        database.Dispose();
+                    database?.Dispose();
 
                     if (m_tagMap.Count > 0 && Enabled)
                     {
@@ -1003,7 +915,7 @@ namespace PIAdapters
 
             List<MeasurementKey> newTags = new List<MeasurementKey>();
 
-            if ((object)inputMeasurements != null && inputMeasurements.Length > 0)
+            if (!(inputMeasurements is null) && inputMeasurements.Length > 0)
             {
                 foreach (MeasurementKey key in inputMeasurements)
                 {
@@ -1018,7 +930,6 @@ namespace PIAdapters
             if (newTags.Count > 0)
             {
                 // Determine which tags no longer exist
-                PIPoint removedPIPoint;
                 HashSet<MeasurementKey> tagsToRemove = new HashSet<MeasurementKey>(m_mappedPIPoints.Keys);
 
                 // If there are existing tags that are not part of new updates, these need to be removed
@@ -1027,7 +938,7 @@ namespace PIAdapters
                 if (tagsToRemove.Count > 0)
                 {
                     foreach (MeasurementKey key in tagsToRemove)
-                        m_mappedPIPoints.TryRemove(key, out removedPIPoint);
+                        m_mappedPIPoints.TryRemove(key, out PIPoint _);
 
                     OnStatusMessage(MessageLevel.Info, $"Detected {tagsToRemove.Count:N0} tags that have been removed from OSI-PI output - primary tag-map has been updated...");
                 }
@@ -1037,64 +948,60 @@ namespace PIAdapters
             }
             else
             {
-                if (m_mappedPIPoints.Count > 0)
-                    OnStatusMessage(MessageLevel.Warning, $"No PI tags were mapped to measurements - existing tag-map with {m_mappedPIPoints.Count:N0} tags remains in use.");
-                else
-                    OnStatusMessage(MessageLevel.Warning, "No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
+                OnStatusMessage(MessageLevel.Warning, "No PI tags were mapped to measurements - " +
+                (
+                    m_mappedPIPoints.Count > 0 ? 
+                        $"existing tag-map with {m_mappedPIPoints.Count:N0} tags remains in use." : 
+                        "no tag-map exists so no points will be archived.")
+                );
             }
         }
 
+        // Map measurement Guids to any existing point tags for faster PI point name resolution
         private void LoadCachedTagMap()
         {
-            // Map measurement Guids to any existing point tags for faster PI point name resolution
-            if (File.Exists(TagMapCacheFileName))
+            if (!File.Exists(TagMapCacheFileName))
+                return;
+
+            try
             {
                 // Attempt to load tag-map from existing cache file
-                try
+                using (FileStream tagMapCache = File.Open(TagMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    using (FileStream tagMapCache = File.Open(TagMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        m_tagMap.Merge(true, Serialization.Deserialize<Dictionary<Guid, string>>(tagMapCache, GSF.SerializationFormat.Binary));
+                    m_tagMap.Merge(true, Serialization.Deserialize<Dictionary<Guid, string>>(tagMapCache, GSF.SerializationFormat.Binary));
 
-                        OnStatusMessage(MessageLevel.Info, $"Loaded {m_tagMap.Count:N0} mappings from tag-map cache.");
+                    OnStatusMessage(MessageLevel.Info, $"Loaded {m_tagMap.Count:N0} mappings from tag-map cache.");
 
-                        // Use last write time of file as the last meta-data refresh time - rough value is OK
-                        if (m_lastMetadataRefresh == DateTime.MinValue)
-                            m_lastMetadataRefresh = File.GetLastWriteTimeUtc(TagMapCacheFileName);
-                    }
+                    // Use last write time of file as the last meta-data refresh time - rough value is OK
+                    if (m_lastMetadataRefresh == DateTime.MinValue)
+                        m_lastMetadataRefresh = File.GetLastWriteTimeUtc(TagMapCacheFileName);
                 }
-                catch (Exception ex)
-                {
-                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to load mappings from cached tag-map to file '{TagMapCacheFileName}': {ex.Message}", ex));
-                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to load mappings from cached tag-map to file '{TagMapCacheFileName}': {ex.Message}", ex));
             }
         }
 
-        private PIPoint GetPIPoint(PIServer server, string tagName)
+        private static PIPoint GetPIPoint(PIServer server, string tagName)
         {
-            PIPoint point;
-            PIPoint.TryFindPIPoint(server, tagName, out point);
+            PIPoint.TryFindPIPoint(server, tagName, out PIPoint point);
             return point;
         }
 
         private PIPoint GetPIPoint(PIServer server, Guid signalID, string tagName)
         {
-            string cachedTagName;
-
-            PIPoint point = GetPIPointBySignalID(server, signalID, out cachedTagName);
+            PIPoint point = GetPIPointBySignalID(server, signalID, out string cachedTagName);
 
             // If point was not found in cache and cached tag name does not match current tag name, attempt to lookup using current tag name
-            if ((object)point == null && string.Compare(cachedTagName, tagName, StringComparison.OrdinalIgnoreCase) != 0)
+            if (point is null && string.Compare(cachedTagName, tagName, StringComparison.OrdinalIgnoreCase) != 0)
                 point = GetPIPoint(server, tagName);
 
             return point;
         }
 
-        private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID)
-        {
-            string cachedTagName;
-            return GetPIPointBySignalID(server, signalID, out cachedTagName);
-        }
+        private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID) => 
+            GetPIPointBySignalID(server, signalID, out string _);
 
         private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID, out string cachedTagName)
         {
@@ -1104,14 +1011,14 @@ namespace PIAdapters
             if (m_tagMap.TryGetValue(signalID, out cachedTagName))
                 point = GetPIPoint(server, cachedTagName);
 
-            if ((object)point == null)
+            if (point is null)
             {
                 // Point was not previously cached, lookup tag using signal ID stored in extended description field
                 IEnumerable<PIPoint> points = PIPoint.FindPIPoints(server, $"EXDESC:='{signalID}'", false);
 
                 point = points.FirstOrDefault();
 
-                if ((object)point != null)
+                if (!(point is null))
                     cachedTagName = point.Name;
             }
 
@@ -1136,11 +1043,9 @@ namespace PIAdapters
             return tagName;
         }
 
-        private void m_connection_Disconnected(object sender, EventArgs e)
-        {
-            // Since we may get a plethora of these requests, we use a synchronized operation to restart once
+        // Since we may get a plethora of these requests, we use a synchronized operation to restart once
+        private void Connection_Disconnected(object sender, EventArgs e) => 
             m_restartConnection.RunOnceAsync();
-        }
 
         #endregion
 
