@@ -95,6 +95,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             // Deserialize configuration cell
             m_formatFlags = (FormatFlags)info.GetValue("formatFlags", typeof(FormatFlags));
+            GlobalID = info.GetOrDefault("globalID", Guid.Empty);
 
             // Decode PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
             Latitude = getSingle("latitude");
@@ -492,6 +493,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             // Serialize configuration cell
             info.AddValue("formatFlags", m_formatFlags, typeof(FormatFlags));
+            info.AddValue("globalID", GlobalID.ToString());
 
             // Encode PMU_LAT, PMU_LON, PMU_ELEV, SVC_CLASS, WINDOW, GRP_DLY values
             info.AddValue("latitude", Latitude);
