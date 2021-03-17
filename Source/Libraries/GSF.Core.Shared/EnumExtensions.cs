@@ -45,16 +45,18 @@ namespace GSF
         /// if no description is available.
         /// </summary>
         /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
-        /// <returns>Description of the <see cref="Enum"/> if specified, otherwise the <see cref="string"/> representation of this <paramref name="enumeration"/>.</returns>
-        public static string GetDescription(this Enum enumeration)
+        /// <param name="defaultToName">When <c>true</c>, return enum name when no description attribute exists; otherwise, return <c>null</c>.</param>
+        /// <returns>
+        /// Description of the <see cref="Enum"/> if specified, otherwise the <see cref="string"/> representation of this <paramref name="enumeration"/> or
+        /// <c>null</c> if <paramref name="defaultToName"/> is <c>false</c>.</returns>
+        public static string GetDescription(this Enum enumeration, bool defaultToName = true)
         {
             string name = enumeration.ToString();
             string description = enumeration.GetType().GetField(name).GetDescription();
 
-            if (!string.IsNullOrWhiteSpace(description))
-                return description;
-
-            return name;
+            return string.IsNullOrWhiteSpace(description) ?
+                defaultToName ? name : null :
+                description;
         }
 
         /// <summary>
@@ -78,10 +80,8 @@ namespace GSF
         /// <see cref="T:System.Int32"/>, <see cref="T:System.Int64"/>, <see cref="T:System.Byte"/>, <see cref="T:System.UInt16"/>,
         /// <see cref="T:System.UInt32"/>, or <see cref="T:System.UInt64"/>, or <see cref="T:System.String"/>.
         /// </exception>
-        public static T GetEnumValueOrDefault<T>(this object value, object defaultValue = null)
-        {
-            return (T)value.GetEnumValueOrDefault(typeof(T), defaultValue);
-        }
+        public static T GetEnumValueOrDefault<T>(this object value, object defaultValue = null) => 
+            (T)value.GetEnumValueOrDefault(typeof(T), defaultValue);
 
         /// <summary>
         /// Gets the enumeration constant for value, if defined in the enumeration, or a default value.
@@ -165,22 +165,21 @@ namespace GSF
         {
             StringBuilder image = new StringBuilder();
             char[] chars = enumeration.ToString().ToCharArray();
-            char letter;
 
             for (int i = 0; i < chars.Length; i++)
             {
-                letter = chars[i];
+                char letter = chars[i];
 
                 // Create word spaces at every capital letter
-                if (Char.IsUpper(letter) && image.Length > 0)
+                if (char.IsUpper(letter) && image.Length > 0)
                 {
                     // Check for all caps sequence (e.g., ID)
-                    if (Char.IsUpper(chars[i - 1]))
+                    if (char.IsUpper(chars[i - 1]))
                     {
                         // Look ahead for proper breaking point
                         if (i + 1 < chars.Length)
                         {
-                            if (Char.IsLower(chars[i + 1]))
+                            if (char.IsLower(chars[i + 1]))
                             {
                                 image.Append(' ');
                                 image.Append(letter);
@@ -213,15 +212,12 @@ namespace GSF
         // Internal extension to lookup description from DescriptionAttribute
         private static string GetDescription(this FieldInfo value)
         {
-            if ((object)value != null)
-            {
-                DescriptionAttribute descriptionAttribute;
+            if (value is null)
+                return string.Empty;
 
-                if (value.TryGetAttribute(out descriptionAttribute))
-                    return descriptionAttribute.Description;
-            }
-
-            return string.Empty;
+            return value.TryGetAttribute(out DescriptionAttribute descriptionAttribute) ? 
+                descriptionAttribute.Description : 
+                string.Empty;
         }
     }
 }
