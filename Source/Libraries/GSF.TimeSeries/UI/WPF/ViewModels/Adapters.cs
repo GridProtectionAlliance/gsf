@@ -38,6 +38,7 @@ using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.UI.Commands;
 using GSF.TimeSeries.UI.DataModels;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
@@ -50,33 +51,15 @@ namespace GSF.TimeSeries.UI.ViewModels
         // Nested Types
         public class AdapterTypeDescription
         {
-            public string Header
-            {
-                get;
-                set;
-            }
+            public string Header { get; set; }
 
-            public string Description
-            {
-                get;
-                set;
-            }
+            public string Description { get; set; }
 
-            public Visibility HeaderVisibility
-            {
-                get
-                {
-                    return ((object)Header != null) ? Visibility.Visible : Visibility.Collapsed;
-                }
-            }
+            public Visibility HeaderVisibility => 
+                Header is null ? Visibility.Collapsed : Visibility.Visible;
 
-            public override string ToString()
-            {
-                if ((object)Header != null)
-                    return string.Format("{0}: {1}", Header, Description);
-
-                return Description;
-            }
+            public override string ToString() => 
+                Header is null ? Description : $"{Header}: {Description}";
         }
 
         // Fields
@@ -122,10 +105,7 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         public string RuntimeID
         {
-            get
-            {
-                return m_runtimeID;
-            }
+            get => m_runtimeID;
             set
             {
                 m_runtimeID = value;
@@ -136,13 +116,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Gets flag that determines if <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/> is a new record.
         /// </summary>
-        public override bool IsNewRecord
-        {
-            get
-            {
-                return CurrentItem.ID == 0;
-            }
-        }
+        public override bool IsNewRecord => CurrentItem.ID == 0;
 
         /// <summary>
         /// Gets or sets the collection containing the adapter types found
@@ -150,10 +124,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public List<Tuple<Type, AdapterTypeDescription>> AdapterTypeList
         {
-            get
-            {
-                return m_adapterTypeList;
-            }
+            get => m_adapterTypeList;
             set
             {
                 m_adapterTypeList = value;
@@ -188,18 +159,10 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets additional information about the type selected from the dropdown.
+        /// Gets additional information about the type selected from the drop-down.
         /// </summary>
-        public string TypeInfo
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(CurrentItem.TypeName))
-                    return "Adapter Type";
-
-                return string.Format("Adapter Type: {0} from {1}", CurrentItem.TypeName, Path.GetFileName(CurrentItem.AssemblyName));
-            }
-        }
+        public string TypeInfo => string.IsNullOrEmpty(CurrentItem.TypeName) ? "Adapter Type" : 
+            $"Adapter Type: {CurrentItem.TypeName} from {Path.GetFileName(CurrentItem.AssemblyName)}";
 
         /// <summary>
         /// Gets or sets the list of <see cref="Adapter.ConnectionString"/> parameters found by
@@ -208,10 +171,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public List<AdapterConnectionStringParameter> ParameterList
         {
-            get
-            {
-                return m_parameterList;
-            }
+            get => m_parameterList;
             set
             {
                 try
@@ -248,10 +208,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public string SearchDirectory
         {
-            get
-            {
-                return m_searchDirectory;
-            }
+            get => m_searchDirectory;
             set
             {
                 if (m_searchDirectory?.Equals(value, StringComparison.OrdinalIgnoreCase) ?? false)
@@ -284,18 +241,15 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public AdapterConnectionStringParameter SelectedParameter
         {
-            get
-            {
-                return m_selectedParameter;
-            }
+            get => m_selectedParameter;
             set
             {
-                if (m_selectedParameter != null)
+                if (!(m_selectedParameter is null))
                     m_selectedParameter.PropertyChanged -= ConnectionStringParameter_PropertyChanged;
 
                 m_selectedParameter = value;
 
-                if (m_selectedParameter != null)
+                if (!(m_selectedParameter is null))
                     m_selectedParameter.PropertyChanged += ConnectionStringParameter_PropertyChanged;
 
                 OnPropertyChanged("SelectedParameter");
@@ -305,29 +259,15 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Gets the command whose action is evoked when the user clicks the initialize button.
         /// </summary>
-        public ICommand InitializeCommand
-        {
-            get
-            {
-                return m_initializeCommand ?? (m_initializeCommand = new RelayCommand(InitializeAdapter, () => CanSave));
-            }
-        }
+        public ICommand InitializeCommand => m_initializeCommand ?? (m_initializeCommand = new RelayCommand(InitializeAdapter, () => CanSave));
 
         /// <summary>
         /// Determines whether the custom configuration button is visible.
         /// </summary>
-        public Visibility CustomConfigurationButtonVisibility
-        {
-            get
-            {
-                CustomConfigurationEditorAttribute customConfigurationEditorAttribute;
-
-                if (AdapterTypeSelectedIndex >= 0 && AdapterTypeList[AdapterTypeSelectedIndex].Item1.TryGetAttribute(out customConfigurationEditorAttribute))
-                    return Visibility.Visible;
-
-                return Visibility.Collapsed;
-            }
-        }
+        public Visibility CustomConfigurationButtonVisibility => AdapterTypeSelectedIndex >= 0 && 
+            AdapterTypeList[AdapterTypeSelectedIndex].Item1.TryGetAttribute(out CustomConfigurationEditorAttribute _) ? 
+                Visibility.Visible : 
+                Visibility.Collapsed;
 
         #endregion
 
@@ -337,19 +277,15 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// Gets the primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.
         /// </summary>
         /// <returns>The primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
-        public override int GetCurrentItemKey()
-        {
-            return CurrentItem.ID;
-        }
+        public override int GetCurrentItemKey() => 
+            CurrentItem.ID;
 
         /// <summary>
         /// Gets the string based named identifier of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.
         /// </summary>
         /// <returns>The string based named identifier of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
-        public override string GetCurrentItemName()
-        {
-            return CurrentItem.AdapterName;
-        }
+        public override string GetCurrentItemName() => 
+            CurrentItem.AdapterName;
 
         /// <summary>
         /// Creates a new instance of <see cref="Historian"/> and assigns it to CurrentItem.
@@ -367,38 +303,36 @@ namespace GSF.TimeSeries.UI.ViewModels
         public override void Load()
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            List<int> pageKeys;
 
             try
             {
-                if ((object)ItemsKeys == null)
+                if (ItemsKeys is null)
                 {
                     ItemsKeys = Adapter.LoadIDs(null, m_adapterType, SortMember, SortDirection);
 
-                    if ((object)SortSelector != null)
+                    if (!(SortSelector is null))
                     {
-                        if (SortDirection == "ASC")
-                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
-                        else
-                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                        ItemsKeys = SortDirection == "ASC" ? 
+                            ItemsKeys.OrderBy(SortSelector).ToList() : 
+                            ItemsKeys.OrderByDescending(SortSelector).ToList();
                     }
                 }
 
-                pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
+                List<int> pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
                 ItemsSource = Adapter.Load(null, m_adapterType, pageKeys);
                 CurrentItem.Type = m_adapterType;
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
+                if (ex.InnerException is null)
                 {
-                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
-                    CommonFunctions.LogException(null, "Load " + DataModelName, ex.InnerException);
+                    Popup(ex.Message, $"Load {DataModelName} Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, $"Load {DataModelName}", ex);
                 }
                 else
                 {
-                    Popup(ex.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
-                    CommonFunctions.LogException(null, "Load " + DataModelName, ex);
+                    Popup($"{ex.Message}{Environment.NewLine}Inner Exception: {ex.InnerException.Message}", $"Load {DataModelName} Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, $"Load {DataModelName}", ex.InnerException);
                 }
             }
             finally
@@ -412,34 +346,34 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public override void Delete()
         {
-            if (CanDelete && Confirm("Are you sure you want to delete \'" + GetCurrentItemName() + "\'?", "Delete " + DataModelName))
+            if (!CanDelete || !Confirm($"Are you sure you want to delete '{GetCurrentItemName()}'?", $"Delete {DataModelName}"))
+                return;
+
+            try
             {
-                try
+                if (OnBeforeDeleteCanceled())
+                    throw new OperationCanceledException("Delete was canceled.");
+
+                int currentItemKey = GetCurrentItemKey();
+                string result = Adapter.Delete(null, m_adapterType, GetCurrentItemKey());
+                ItemsKeys.Remove(currentItemKey);
+
+                OnDeleted();
+
+                Load();
+                DisplayStatusMessage(result);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException is null)
                 {
-                    if (OnBeforeDeleteCanceled())
-                        throw new OperationCanceledException("Delete was canceled.");
-
-                    int currentItemKey = GetCurrentItemKey();
-                    string result = Adapter.Delete(null, m_adapterType, GetCurrentItemKey());
-                    ItemsKeys.Remove(currentItemKey);
-
-                    OnDeleted();
-
-                    Load();
-                    DisplayStatusMessage(result);
+                    Popup(ex.Message, $"Delete {DataModelName} Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, $"Delete {DataModelName}", ex);
                 }
-                catch (Exception ex)
+                else
                 {
-                    if (ex.InnerException != null)
-                    {
-                        Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
-                        CommonFunctions.LogException(null, "Delete " + DataModelName, ex.InnerException);
-                    }
-                    else
-                    {
-                        Popup(ex.Message, "Delete " + DataModelName + " Exception:", MessageBoxImage.Error);
-                        CommonFunctions.LogException(null, "Delete " + DataModelName, ex);
-                    }
+                    Popup($"{ex.Message}{Environment.NewLine}Inner Exception: {ex.InnerException.Message}", $"Delete {DataModelName} Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, $"Delete {DataModelName}", ex.InnerException);
                 }
             }
         }
@@ -447,10 +381,8 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Unloads the <see cref="Adapters"/> class.
         /// </summary>
-        public void Unload()
-        {
+        public void Unload() => 
             AppDomain.CurrentDomain.AssemblyResolve -= AppDomain_AssemblyResolve;
-        }
 
         /// <summary>
         /// Handles PropertyChanged event on CurrentItem.
@@ -459,52 +391,46 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <param name="e">Event arguments.</param>
         protected override void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            string pattern;
-
             base.m_currentItem_PropertyChanged(sender, e);
 
-            // Occurs when CurrentItem.TypeName changes.
-            if (e.PropertyName == "TypeName")
+            switch (e.PropertyName)
             {
-                Type selectedType;
-
-                // If there exists a type in the adapter type list that
-                // matches the type name, also update the assembly name.
-                selectedType = m_adapterTypeList
-                    .Select(tuple => tuple.Item1)
-                    .SingleOrDefault(type => type.FullName == CurrentItem.TypeName);
-
-                if ((object)selectedType != null)
+                // Occurs when CurrentItem.TypeName changes.
+                case "TypeName":
                 {
-                    pattern = Regex.Escape(FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar));
-                    CurrentItem.AssemblyName = Regex.Replace(selectedType.Assembly.Location, $"^{pattern}", "", RegexOptions.IgnoreCase);
+                    // If there exists a type in the adapter type list that
+                    // matches the type name, also update the assembly name.
+                    Type selectedType = m_adapterTypeList
+                                        .Select(tuple => tuple.Item1)
+                                        .SingleOrDefault(type => type.FullName == CurrentItem.TypeName);
+
+                    if (!(selectedType is null))
+                    {
+                        string pattern = Regex.Escape(FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar));
+                        CurrentItem.AssemblyName = Regex.Replace(selectedType.Assembly.Location, $"^{pattern}", "", RegexOptions.IgnoreCase);
+                    }
+
+                    // Also update the parameter list. Since the type has changed,
+                    // the current list of parameters generated by searching the
+                    // selected type is no longer valid.
+                    ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
+
+                    OnAdapterTypeSelectedIndexChanged();
+                    OnPropertyChanged("TypeInfo");
+                    break;
                 }
-
-                // Also update the parameter list. Since the type has changed,
-                // the current list of parameters generated by searching the
-                // selected type is no longer valid.
-                ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
-
-                OnAdapterTypeSelectedIndexChanged();
-                OnPropertyChanged("TypeInfo");
-            }
-
-            // Occurs when CurrentItem.AssemblyName changes.
-            if (e.PropertyName == "AssemblyName")
-            {
-                // When the assembly name changes, we may be able to
-                // find connection string parameters in the class defined
-                // by the assembly name and type name.
-                ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
-            }
-
-            // Occurs when CurrentItem.ConnectionString changes.
-            if (e.PropertyName == "ConnectionString")
-            {
+                // Occurs when CurrentItem.AssemblyName changes.
+                case "AssemblyName":
+                // Occurs when CurrentItem.ConnectionString changes.
                 // When the connection string changes, we need to keep all related
                 // elements synchronized. Since we can't easily determine exactly
                 // what has changed, simply update everything.
-                ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
+                case "ConnectionString":
+                    // When the assembly name changes, we may be able to
+                    // find connection string parameters in the class defined
+                    // by the assembly name and type name.
+                    ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
+                    break;
             }
         }
 
@@ -515,52 +441,59 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <param name="e">Event arguments.</param>
         protected virtual void ConnectionStringParameter_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            AdapterConnectionStringParameter parameter = sender as AdapterConnectionStringParameter;
-            Dictionary<string, string> settings;
+            if (m_suppressConnectionStringUpdates || !(sender is AdapterConnectionStringParameter parameter) || parameter.Value is null || e.PropertyName != "Value")
+                return;
 
-            if (!m_suppressConnectionStringUpdates && (object)parameter != null && (object)parameter.Value != null && e.PropertyName == "Value")
+            try
             {
-                try
-                {
-                    m_suppressParameterValueUpdates = true;
+                m_suppressParameterValueUpdates = true;
 
-                    // The easiest way to update is to break the connection string into key
-                    // value pairs, update the value of the pair corresponding to the parameter
-                    // that fired the event, and then rejoin the key value pairs.
-                    settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
-                    settings[parameter.Name] = parameter.Value.ToString();
+                // The easiest way to update is to break the connection string into key
+                // value pairs, update the value of the pair corresponding to the parameter
+                // that fired the event, and then rejoin the key value pairs.
+                Dictionary<string, string> settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+                settings[parameter.Name] = parameter.Value.ToString();
 
-                    // Build the new connection string and validate that it can still be parsed
-                    string connectionString = settings.JoinKeyValuePairs();
-                    connectionString.ParseKeyValuePairs();
+                // Build the new connection string and validate that it can still be parsed
+                string connectionString = settings.JoinKeyValuePairs();
+                connectionString.ParseKeyValuePairs();
 
-                    CurrentItem.ConnectionString = connectionString;
-                }
-                finally
-                {
-                    m_suppressParameterValueUpdates = false;
-                }
+                CurrentItem.ConnectionString = connectionString;
+            }
+            finally
+            {
+                m_suppressParameterValueUpdates = false;
             }
         }
 
         private void Adapters_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "CurrentItem")
+            if (e.PropertyName != "CurrentItem")
+                return;
+
+            if (CurrentItem is null)
             {
-                if (CurrentItem == null)
+                RuntimeID = string.Empty;
+            }
+            else
+            {
+                switch (m_adapterType)
                 {
-                    RuntimeID = string.Empty;
-                }
-                else
-                {
-                    if (m_adapterType == AdapterType.Action)
+                    case AdapterType.Action:
                         RuntimeID = CommonFunctions.GetRuntimeID("CustomActionAdapter", CurrentItem.ID);
-                    else if (m_adapterType == AdapterType.Filter)
+                        break;
+                    case AdapterType.Filter:
                         RuntimeID = CommonFunctions.GetRuntimeID("CustomFilterAdapter", CurrentItem.ID);
-                    else if (m_adapterType == AdapterType.Input)
+                        break;
+                    case AdapterType.Input:
                         RuntimeID = CommonFunctions.GetRuntimeID("CustomInputAdapter", CurrentItem.ID);
-                    else
+                        break;
+                    case AdapterType.Output:
                         RuntimeID = CommonFunctions.GetRuntimeID("CustomOutputAdapter", CurrentItem.ID);
+                        break;
+                    default:
+                        RuntimeID = string.Empty;
+                        break;
                 }
 
                 // Modify search path to the path of the assembly of the selected item
@@ -569,21 +502,22 @@ namespace GSF.TimeSeries.UI.ViewModels
                 // If the current item changes, but the connection string does not, the
                 // parameter list and parameters won't be updated. We take care of that here.
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
-                OnAdapterTypeSelectedIndexChanged();
-                OnPropertyChanged("TypeInfo");
             }
+
+            OnAdapterTypeSelectedIndexChanged();
+            OnPropertyChanged("TypeInfo");
         }
 
         private void InitializeAdapter()
         {
             try
             {
-                if (Confirm("Do you want to Initialize " + GetCurrentItemName() + "?", "Confirm Initialize"))
-                    Popup(CommonFunctions.SendCommandToService("Initialize " + RuntimeID), "Initialize", MessageBoxImage.Information);
+                if (Confirm($"Do you want to Initialize {GetCurrentItemName()}?", "Confirm Initialize"))
+                    Popup(CommonFunctions.SendCommandToService($"Initialize {RuntimeID}"), "Initialize", MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                Popup("ERROR: " + ex.Message, "Failed To Initialize", MessageBoxImage.Error);
+                Popup($"ERROR: {ex.Message}", "Failed To Initialize", MessageBoxImage.Error);
             }
         }
 
@@ -620,15 +554,13 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <returns>The collection of types found as well as their descriptions.</returns>
         private List<Tuple<Type, AdapterTypeDescription>> GetAdapterTypeList(string searchDirectory, Type adapterType)
         {
-            DescriptionAttribute descriptionAttribute;
-
             return adapterType.LoadImplementations(searchDirectory, true)
-                .Distinct()
-                .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
-                .Select(type => Tuple.Create(type, GetDescription(type)))
-                .OrderByDescending(pair => pair.Item1.TryGetAttribute(out descriptionAttribute))
-                .ThenBy(pair => pair.Item2.ToString())
-                .ToList();
+                        .Distinct()
+                        .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
+                        .Select(type => Tuple.Create(type, GetDescription(type)))
+                        .OrderByDescending(pair => pair.Item1.TryGetAttribute(out DescriptionAttribute _))
+                        .ThenBy(pair => pair.Item2.ToString())
+                        .ToList();
         }
 
         /// <summary>
@@ -641,15 +573,10 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// Either the editor browsable state as defined by an <see cref="EditorBrowsableAttribute"/>
         /// or else <see cref="EditorBrowsableState.Always"/>.
         /// </returns>
-        private EditorBrowsableState GetEditorBrowsableState(Type type)
-        {
-            EditorBrowsableAttribute editorBrowsableAttribute;
-
-            if (type.TryGetAttribute(out editorBrowsableAttribute))
-                return editorBrowsableAttribute.State;
-
-            return EditorBrowsableState.Always;
-        }
+        private EditorBrowsableState GetEditorBrowsableState(Type type) => 
+            type.TryGetAttribute(out EditorBrowsableAttribute editorBrowsableAttribute) ? 
+                editorBrowsableAttribute.State : 
+                EditorBrowsableState.Always;
 
         /// <summary>
         /// Gets a description of the given type. This method will search for a
@@ -661,16 +588,13 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// Either the description as defined by a <see cref="DescriptionAttribute"/>
         /// or else the <see cref="Type.FullName"/> of the parameter.
         /// </returns>
-        private AdapterTypeDescription GetDescription(Type type)
+        private static AdapterTypeDescription GetDescription(Type type)
         {
             AdapterTypeDescription adapterTypeDescription = new AdapterTypeDescription();
-            DescriptionAttribute descriptionAttribute;
-            string[] splitDescription;
 
-            if (type.TryGetAttribute(out descriptionAttribute))
-                splitDescription = descriptionAttribute.Description.ToNonNullNorEmptyString(type.FullName).Split(':');
-            else
-                splitDescription = new string[] { type.FullName };
+            string[] splitDescription = type.TryGetAttribute(out DescriptionAttribute descriptionAttribute) ? 
+                descriptionAttribute.Description.ToNonNullNorEmptyString(type.FullName).Split(':') : 
+                new[] { type.FullName };
 
             if (splitDescription.Length > 1)
             {
@@ -699,10 +623,8 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </returns>
         private List<AdapterConnectionStringParameter> GetParameterList(string assemblyName, string typeName)
         {
-            if (assemblyName != null && typeName != null)
+            if (!(assemblyName is null) && !(typeName is null))
             {
-                Attribute connectionStringParameterAttribute;
-
                 // For convenience, start by searching the type
                 // list for a type matching the parameters.
                 Type adapterType = m_adapterTypeList
@@ -711,20 +633,20 @@ namespace GSF.TimeSeries.UI.ViewModels
                     .SingleOrDefault(type => type.FullName == typeName);
 
                 // Attempt to find that assembly and retrieve the type.
-                if (adapterType == null && File.Exists(assemblyName))
+                if (adapterType is null && File.Exists(assemblyName))
                     adapterType = Assembly.LoadFrom(assemblyName).GetType(typeName);
 
-                if (adapterType != null)
+                if (!(adapterType is null))
                 {
                     // Get the list of properties with ConnectionStringParameterAttribute annotations.
                     IEnumerable<PropertyInfo> infoList = adapterType.GetProperties()
-                        .Where(info => info.TryGetAttribute(typeof(ConnectionStringParameterAttribute).FullName, out connectionStringParameterAttribute));
+                        .Where(info => info.TryGetAttribute(typeof(ConnectionStringParameterAttribute).FullName, out Attribute _));
 
                     // Get the list of connection string keys which do not match
                     // the names of the properties in the previously obtained list.
                     IEnumerable<string> keyList = CurrentItem.ConnectionString
                         .ToNonNullString().ParseKeyValuePairs().Keys
-                        .Where(key => !infoList.Any(info => info.Name.Equals(key, StringComparison.CurrentCultureIgnoreCase)));
+                        .Where(key => !infoList.Any(info => info.Name.Equals(key, StringComparison.OrdinalIgnoreCase)));
 
                     // Convert both lists into ConnectionStringParameter lists, combine
                     // the two lists, and then order them lexically while giving precedence
@@ -757,28 +679,26 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <returns>The parameter defined by the given property info.</returns>
         private AdapterConnectionStringParameter GetParameter(PropertyInfo info)
         {
-            DefaultValueAttribute defaultValueAttribute;
-            DescriptionAttribute descriptionAttribute;
             AdapterConnectionStringParameter parameter = null;
 
             bool isRequired = false;
             object defaultValue = null;
             string description = null;
 
-            if (m_parameterList != null)
-                parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(info.Name, StringComparison.CurrentCultureIgnoreCase));
+            if (!(m_parameterList is null))
+                parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(info.Name, StringComparison.OrdinalIgnoreCase));
 
             // These are different cases, but we need to extract the description
             // and default value in both. In cases where we already know this
             // information, we can skip this step.
-            if (parameter == null || parameter.Info == null)
+            if (parameter?.Info is null)
             {
-                isRequired = !info.TryGetAttribute(out defaultValueAttribute);
+                isRequired = !info.TryGetAttribute(out DefaultValueAttribute defaultValueAttribute);
                 defaultValue = isRequired ? null : defaultValueAttribute.Value;
-                description = info.TryGetAttribute(out descriptionAttribute) ? descriptionAttribute.Description : string.Empty;
+                description = info.TryGetAttribute(out DescriptionAttribute descriptionAttribute) ? descriptionAttribute.Description : string.Empty;
             }
 
-            if (parameter == null)
+            if (parameter is null)
             {
                 // Create a brand new parameter to be returned.
                 parameter = new AdapterConnectionStringParameter
@@ -791,7 +711,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                     IsRequired = isRequired
                 };
             }
-            else if (parameter.Info == null)
+            else if (parameter.Info is null)
             {
                 // Update the existing parameter with newly obtained information.
                 parameter.Info = info;
@@ -812,20 +732,15 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             AdapterConnectionStringParameter parameter = null;
 
-            if (m_parameterList != null)
-                parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+            if (!(m_parameterList is null))
+                parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
-            if ((object)parameter == null)
+            return parameter ?? new AdapterConnectionStringParameter()
             {
-                parameter = new AdapterConnectionStringParameter()
-                {
-                    Name = name,
-                    DefaultValue = string.Empty,
-                    IsRequired = false
-                };
-            }
-
-            return parameter;
+                Name = name,
+                DefaultValue = string.Empty,
+                IsRequired = false
+            };
         }
 
         /// <summary>
@@ -839,13 +754,11 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </param>
         private void UpdateConnectionStringParameters(List<AdapterConnectionStringParameter> parameters, Dictionary<string, string> settings)
         {
-            string value;
+            if (m_suppressParameterValueUpdates || parameters is null)
+                return;
 
-            if (!m_suppressParameterValueUpdates && (object)parameters != null)
-            {
-                foreach (AdapterConnectionStringParameter parameter in parameters)
-                    parameter.Value = settings.TryGetValue(parameter.Name, out value) ? value : null;
-            }
+            foreach (AdapterConnectionStringParameter parameter in parameters)
+                parameter.Value = settings.TryGetValue(parameter.Name, out string value) ? value : null;
         }
 
         private void OnAdapterTypeSelectedIndexChanged()
@@ -860,7 +773,6 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 AssemblyName assemblyName = new AssemblyName(args.Name);
                 string assemblyFile = Path.Combine(m_searchDirectory, $"{assemblyName.Name}.dll");
-                Assembly assembly;
 
                 if (!File.Exists(assemblyFile))
                     assemblyFile = Path.Combine(m_searchDirectory, $"{assemblyName.Name}.exe");
@@ -868,12 +780,10 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if (!File.Exists(assemblyFile))
                     return null;
 
-                assembly = Assembly.LoadFrom(assemblyFile);
+                Assembly assembly = Assembly.LoadFrom(assemblyFile);
 
-                if (!assembly.GetName().ToString().Equals(assemblyName.ToString()))
-                    return null;
-
-                return assembly;
+                // JRC: Changed to allow more UI assembly load flexibility, like different versions
+                return !assembly.GetName().Name.Equals(assemblyName.Name) ? null : assembly;
             }
             catch
             {

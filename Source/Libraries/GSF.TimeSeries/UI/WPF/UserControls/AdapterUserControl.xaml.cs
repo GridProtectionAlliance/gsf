@@ -27,11 +27,18 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using GSF.Reflection;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.UI.DataModels;
+using Button = System.Windows.Controls.Button;
+using CheckBox = System.Windows.Controls.CheckBox;
+using DataGrid = System.Windows.Controls.DataGrid;
 using FolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MessageBox = System.Windows.MessageBox;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -59,7 +66,7 @@ namespace GSF.TimeSeries.UI.UserControls
             InitializeComponent();
             m_dataContext = new ViewModels.Adapters(7, adapterType);
             m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
-            this.DataContext = m_dataContext;
+            DataContext = m_dataContext;
         }
 
         #endregion
@@ -67,56 +74,52 @@ namespace GSF.TimeSeries.UI.UserControls
         #region [ Methods ]
 
         /// <summary>
-        /// Handles PreviewKeyDown event on the datagrid.
+        /// Handles PreviewKeyDown event on the data-grid.
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Arguments for the event.</param>
         private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Delete)
+            if (e.Key != Key.Delete)
+                return;
+
+            DataGrid dataGrid = sender as DataGrid;
+
+            if (dataGrid?.SelectedItems.Count > 0)
             {
-                DataGrid dataGrid = sender as DataGrid;
-                if (dataGrid.SelectedItems.Count > 0)
-                {
-                    if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
-                        e.Handled = true;
-                }
+                if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
+                    e.Handled = true;
             }
         }
 
         private void DataGridEnabledCheckBox_Click(object sender, RoutedEventArgs e)
         {
             // Get a reference to the enabled checkbox that was clicked
-            CheckBox enabledCheckBox = sender as CheckBox;
+            if (!(sender is CheckBox enabledCheckBox))
+                return;
 
-            if ((object)enabledCheckBox != null)
+            // Get the runtime ID of the currently selected adapter
+            string runtimeID = m_dataContext.RuntimeID;
+
+            if (string.IsNullOrWhiteSpace(runtimeID))
+                return;
+
+            try
             {
-                // Get the runtime ID of the currently selected adapter
-                string runtimeID = m_dataContext.RuntimeID;
+                // Auto-save changes to the adapter
+                m_dataContext.ProcessPropertyChange();
 
-                if (!string.IsNullOrWhiteSpace(runtimeID))
+                if (m_dataContext.CanSave)
                 {
-                    try
-                    {
-                        // Auto-save changes to the adapter
-                        m_dataContext.ProcessPropertyChange();
-
-                        if (m_dataContext.CanSave)
-                        {
-                            if (enabledCheckBox.IsChecked.GetValueOrDefault())
-                                CommonFunctions.SendCommandToService("Initialize " + runtimeID);
-                            else
-                                CommonFunctions.SendCommandToService("ReloadConfig");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        if ((object)ex.InnerException != null)
-                            CommonFunctions.LogException(null, "Adapter Autosave", ex.InnerException);
-                        else
-                            CommonFunctions.LogException(null, "Adapter Autosave", ex);
-                    }
+                    if (enabledCheckBox.IsChecked.GetValueOrDefault())
+                        CommonFunctions.SendCommandToService("Initialize " + runtimeID);
+                    else
+                        CommonFunctions.SendCommandToService("ReloadConfig");
                 }
+            }
+            catch (Exception ex)
+            {
+                CommonFunctions.LogException(null, "Adapter Autosave", ex.InnerException ?? ex);
             }
         }
 
@@ -127,11 +130,9 @@ namespace GSF.TimeSeries.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
-            FolderBrowserDialog browser = new FolderBrowserDialog();
+            FolderBrowserDialog browser = new FolderBrowserDialog { SelectedPath = SearchDirectoryTextBox.Text };
 
-            browser.SelectedPath = SearchDirectoryTextBox.Text;
-
-            if (browser.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (browser.ShowDialog() == DialogResult.OK)
                 SearchDirectoryTextBox.Text = browser.SelectedPath;
         }
 
@@ -142,14 +143,12 @@ namespace GSF.TimeSeries.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         private void Default_Click(object sender, RoutedEventArgs e)
         {
-            ViewModels.Adapters dataContext = this.DataContext as ViewModels.Adapters;
+            if (!(DataContext is ViewModels.Adapters dataContext) || dataContext.SelectedParameter is null)
+                return;
 
-            if (dataContext != null && dataContext.SelectedParameter != null)
-            {
-                Dictionary<string, string> settings = dataContext.CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
-                settings.Remove(dataContext.SelectedParameter.Name);
-                dataContext.CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
-            }
+            Dictionary<string, string> settings = dataContext.CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+            settings.Remove(dataContext.SelectedParameter.Name);
+            dataContext.CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
         }
 
         private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
@@ -174,13 +173,14 @@ namespace GSF.TimeSeries.UI.UserControls
 
         private void SortDataGrid()
         {
-            if ((object)m_sortColumn != null)
-            {
-                m_sortColumn.SortDirection = m_sortDirection;
-                DataGridList.Items.SortDescriptions.Clear();
-                DataGridList.Items.SortDescriptions.Add(new SortDescription(m_sortMemberPath, m_sortDirection));
-                DataGridList.Items.Refresh();
-            }
+            if (m_sortColumn is null)
+                return;
+
+            m_sortColumn.SortDirection = m_sortDirection;
+            
+            DataGridList.Items.SortDescriptions.Clear();
+            DataGridList.Items.SortDescriptions.Add(new SortDescription(m_sortMemberPath, m_sortDirection));
+            DataGridList.Items.Refresh();
         }
 
         private void GridDetailView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -191,82 +191,76 @@ namespace GSF.TimeSeries.UI.UserControls
 
         private void ButtonOpenCustomConfiguration_Click(object sender, RoutedEventArgs e)
         {
-            CustomConfigurationEditorAttribute customConfigurationEditorAttribute;
-            UIElement customConfigurationElement;
-            int adapterTypeIndex;
-
             try
             {
-                adapterTypeIndex = m_dataContext.AdapterTypeSelectedIndex;
+                int adapterTypeIndex = m_dataContext.AdapterTypeSelectedIndex;
 
-                if (adapterTypeIndex >= 0)
-                {
-                    CustomConfigurationPanel.Children.Clear();
+                if (adapterTypeIndex < 0)
+                    return;
 
-                    if (m_dataContext.AdapterTypeList[adapterTypeIndex].Item1.TryGetAttribute(out customConfigurationEditorAttribute))
-                    {
-                        if ((object)customConfigurationEditorAttribute.ConnectionString != null)
-                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, customConfigurationEditorAttribute.ConnectionString) as UIElement;
-                        else
-                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem) as UIElement;
+                CustomConfigurationPanel.Children.Clear();
 
-                        if ((object)customConfigurationElement != null)
-                        {
-                            CustomConfigurationPanel.Children.Insert(0, customConfigurationElement);
-                            CustomConfigurationPopup.IsOpen = true;
-                        }
-                    }
-                }
+                if (!m_dataContext.AdapterTypeList[adapterTypeIndex].Item1.TryGetAttribute(out CustomConfigurationEditorAttribute customConfigurationEditorAttribute))
+                    return;
+
+                UIElement customConfigurationElement;
+
+                if (customConfigurationEditorAttribute.ConnectionString is null)
+                    customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem) as UIElement;
+                else
+                    customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, customConfigurationEditorAttribute.ConnectionString) as UIElement;
+
+                if (customConfigurationElement is null)
+                    return;
+
+                CustomConfigurationPanel.Children.Insert(0, customConfigurationElement);
+                CustomConfigurationPopup.IsOpen = true;
             }
             catch (Exception ex)
             {
-                string message = string.Format("Unable to open custom configuration control due to exception: {0}", ex.Message);
+                string message = $"Unable to open custom configuration control due to exception: {ex.Message}";
                 m_dataContext.Popup(message, "Custom Configuration Error", MessageBoxImage.Error);
             }
         }
 
         private void ButtonOpenParameterConfiguration_Click(object sender, RoutedEventArgs e)
         {
-            CustomConfigurationEditorAttribute customConfigurationEditorAttribute;
-            UIElement customConfigurationElement;
-            int adapterTypeIndex;
-
             try
             {
-                adapterTypeIndex = m_dataContext.AdapterTypeSelectedIndex;
+                int adapterTypeIndex = m_dataContext.AdapterTypeSelectedIndex;
 
-                if (adapterTypeIndex >= 0)
-                {
-                    CustomConfigurationPanel.Children.Clear();
-                    customConfigurationEditorAttribute = m_dataContext.SelectedParameter.Info.GetCustomAttribute<CustomConfigurationEditorAttribute>();
+                if (adapterTypeIndex < 0)
+                    return;
 
-                    if ((object)customConfigurationEditorAttribute != null)
-                    {
-                        if ((object)customConfigurationEditorAttribute.ConnectionString != null)
-                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name, customConfigurationEditorAttribute.ConnectionString) as UIElement;
-                        else
-                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name) as UIElement;
+                CustomConfigurationPanel.Children.Clear();
+                CustomConfigurationEditorAttribute customConfigurationEditorAttribute = m_dataContext.SelectedParameter.Info.GetCustomAttribute<CustomConfigurationEditorAttribute>();
 
-                        if ((object)customConfigurationElement != null)
-                        {
-                            CustomConfigurationPanel.Children.Add(customConfigurationElement);
-                            CustomConfigurationPopup.IsOpen = true;
-                        }
-                    }
-                }
+                if (customConfigurationEditorAttribute is null)
+                    return;
+
+                UIElement customConfigurationElement;
+
+                if (customConfigurationEditorAttribute.ConnectionString is null)
+                    customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name) as UIElement;
+                else
+                    customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name, customConfigurationEditorAttribute.ConnectionString) as UIElement;
+
+                if (customConfigurationElement is null)
+                    return;
+
+                CustomConfigurationPanel.Children.Add(customConfigurationElement);
+                CustomConfigurationPopup.IsOpen = true;
             }
             catch (Exception ex)
             {
-                string message = string.Format("Unable to open custom configuration control due to exception: {0}", ex.Message);
+                string message = $"Unable to open custom configuration control due to exception: {ex.Message}";
                 m_dataContext.Popup(message, "Custom Configuration Error", MessageBoxImage.Error);
             }
         }
 
         private void CustomConfigurationPopup_ButtonClick(object sender, RoutedEventArgs e)
         {
-            Button originalSource = e.OriginalSource as Button;
-
-            if ((object)originalSource != null && (originalSource.IsDefault || originalSource.IsCancel))
+            if (e.OriginalSource is Button originalSource && (originalSource.IsDefault || originalSource.IsCancel))
                 CustomConfigurationPopup.IsOpen = false;
         }
 

@@ -160,10 +160,6 @@
                         <Button Content="{x:Static p:Resources.AdapterUserControl_DefaultButton}" Margin="0" Padding="2" Width="Auto" HorizontalAlignment="Center" ToolTip="Click to restore the default value." Click="Default_Click" />
                     </StackPanel>
                     <StackPanel Grid.Row="1" Grid.Column="3" DataContext="{Binding ElementName=ParameterListBox, Path=SelectedItem}">
-                        <StackPanel.Resources>
-                            <CollectionViewSource Source="{Binding Path=EnumValues}" x:Key="EnumValues" />
-                        </StackPanel.Resources>
-
                         <TextBox Name="ParameterValueTextBox" Width="{StaticResource XLargeItemSize}" Height="{StaticResource XSmallItemSize}" Text="{tsfBinding:Column Path=Value}" TextWrapping="Wrap"
                                  Visibility="{Binding Path=IsOther, Converter={StaticResource ObjectToVisibilityConverter}}" VerticalScrollBarVisibility="Auto"/>
 
@@ -186,7 +182,7 @@
 
                             <StackPanel Margin="5" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
                                         Visibility="{Binding Path=IsEnum, Converter={StaticResource ObjectToVisibilityConverter}}">
-                                <ComboBox ItemsSource="{Binding Source={StaticResource EnumValues}}" SelectedItem="{Binding Path=Value}" />
+                                <ComboBox IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=EnumValues}" SelectedItem="{Binding Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
                             <StackPanel Margin="5" Width="{Binding ElementName=ParameterValueTextBox, Path=Width}" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"

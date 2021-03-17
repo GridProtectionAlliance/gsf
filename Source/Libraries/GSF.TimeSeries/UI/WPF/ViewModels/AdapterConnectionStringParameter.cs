@@ -25,9 +25,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using GSF.TimeSeries.Adapters;
 
@@ -38,7 +40,7 @@ namespace GSF.TimeSeries.UI.ViewModels
     /// This can also represent key-value pairs which aren't necessarily
     /// in the connection string, but rather are defined by properties
     /// in an adapter class. This view-model is used by the
-    /// <see cref="GSF.TimeSeries.UI.UserControls.AdapterUserControl"/>.
+    /// <see cref="UserControls.AdapterUserControl"/>.
     /// </summary>
     public class AdapterConnectionStringParameter : ViewModelBase
     {
@@ -58,15 +60,12 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         /// <summary>
         /// Gets or sets the <see cref="PropertyInfo"/> of the
-        /// <see cref="GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute"/>
+        /// <see cref="ConnectionStringParameterAttribute"/>
         /// associated with this <see cref="AdapterConnectionStringParameter"/>.
         /// </summary>
         public PropertyInfo Info
         {
-            get
-            {
-                return m_info;
-            }
+            get => m_info;
             set
             {
                 m_info = value;
@@ -81,10 +80,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -95,16 +91,13 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Gets or sets the description of the <see cref="AdapterConnectionStringParameter"/>
         /// obtained through the <see cref="Info"/> using reflection. A property annotated with
-        /// <see cref="GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute"/>
-        /// must also define a <see cref="System.ComponentModel.DescriptionAttribute"/> for this
+        /// <see cref="ConnectionStringParameterAttribute"/>
+        /// must also define a <see cref="DescriptionAttribute"/> for this
         /// to become populated.
         /// </summary>
         public string Description
         {
-            get
-            {
-                return m_description;
-            }
+            get => m_description;
             set
             {
                 m_description = value;
@@ -118,10 +111,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public object Value
         {
-            get
-            {
-                return m_value ?? m_defaultValue;
-            }
+            get => m_value ?? m_defaultValue;
             set
             {
                 m_value = value;
@@ -134,16 +124,13 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Gets or sets the default value of the <see cref="AdapterConnectionStringParameter"/>
         /// obtained through the <see cref="Info"/> using reflection. A property annotated with
-        /// <see cref="GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute"/> must
-        /// also define a <see cref="System.ComponentModel.DefaultValueAttribute"/> for this to
+        /// <see cref="ConnectionStringParameterAttribute"/> must
+        /// also define a <see cref="DefaultValueAttribute"/> for this to
         /// be populated.
         /// </summary>
         public object DefaultValue
         {
-            get
-            {
-                return m_defaultValue;
-            }
+            get => m_defaultValue;
             set
             {
                 m_defaultValue = value;
@@ -153,14 +140,11 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         /// <summary>
         /// Gets or sets a value that indicates whether this parameter is defined by a property
-        /// that is annotated with the <see cref="System.ComponentModel.DefaultValueAttribute"/>.
+        /// that is annotated with the <see cref="DefaultValueAttribute"/>.
         /// </summary>
         public bool IsRequired
         {
-            get
-            {
-                return m_isRequired;
-            }
+            get => m_isRequired;
             set
             {
                 m_isRequired = value;
@@ -169,66 +153,48 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets the color of the item in the <see cref="System.Windows.Controls.ListBox"/>
+        /// Gets a list of enum types if this <see cref="AdapterConnectionStringParameter"/>'s type is an enum.
+        /// If it is not an enum, this returns an empty array.
+        /// </summary>
+        public string[] EnumValues
+        {
+            get => IsEnum ?
+                Enum.GetNames(m_info.PropertyType) :
+                Array.Empty<string>();
+            set { }
+        }
+
+        /// <summary>
+        /// Gets or sets the color of the item in the <see cref="ListBox"/>
         /// that the <see cref="AdapterConnectionStringParameter"/> is modeling.
         /// </summary>
         public Brush Color
         {
             get
             {
-                bool red = m_isRequired && (m_value == null);
+                bool red = m_isRequired && m_value is null;
                 return red ? Brushes.Red : Brushes.Black;
             }
         }
 
         /// <summary>
-        /// Gets or sets the boldness of the item in the <see cref="System.Windows.Controls.ListBox"/> that the
+        /// Gets or sets the boldness of the item in the <see cref="ListBox"/> that the
         /// <see cref="AdapterConnectionStringParameter"/> is modeling.
         /// </summary>
-        public FontWeight Boldness
-        {
-            get
-            {
-                return (m_value == null) ? FontWeights.Normal : FontWeights.Bold;
-            }
-        }
+        public FontWeight Boldness => m_value is null ? FontWeights.Normal : FontWeights.Bold;
 
         /// <summary>
-        /// Gets a list of enum types if this <see cref="AdapterConnectionStringParameter"/>'s type is an enum.
-        /// If it is not an enum, this returns null.
-        /// </summary>
-        public List<string> EnumValues
-        {
-            get
-            {
-                if (!IsEnum)
-                    return null;
-
-                return Enum.GetValues(m_info.PropertyType)
-                    .Cast<object>()
-                    .Select(obj => obj.ToString())
-                    .ToList();
-            }
-        }
-
-        /// <summary>
-        /// Gets a value that indicates whether the <see cref="System.Windows.Controls.RadioButton"/>
+        /// Gets a value that indicates whether the <see cref="RadioButton"/>
         /// labeled "False" is checked. Since the actual value of this <see cref="AdapterConnectionStringParameter"/>
         /// is represented by <see cref="Value"/>, and that value is what goes into the connection string
         /// this simply returns true if the value in the Value property is the word "false".
         /// </summary>
-        public bool IsFalseChecked
-        {
-            get
-            {
-                return Value.ToNonNullString().Equals(false.ToString(), StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
+        public bool IsFalseChecked => Value.ToNonNullString().Equals(false.ToString(), StringComparison.CurrentCultureIgnoreCase);
 
         /// <summary>
         /// Gets a value that indicates whether the value of this parameter can be configured via a
-        /// custom control. This determines whether the hyperlink that links to the custom configuration
-        /// popup is visible.
+        /// custom control. This determines whether the hyper-link that links to the custom configuration
+        /// pop-up is visible.
         /// </summary>
         public bool IsCustom
         {
@@ -236,7 +202,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 try
                 {
-                    return (m_info != null) && (m_info.GetCustomAttribute<CustomConfigurationEditorAttribute>() != null);
+                    return !(m_info?.GetCustomAttribute<CustomConfigurationEditorAttribute>() is null);
                 }
                 catch
                 {
@@ -248,42 +214,24 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Gets a value that indicates whether the type of this <see cref="AdapterConnectionStringParameter"/>
         /// is defined to be a <see cref="bool"/> in the adapter type. This determines whether the
-        /// <see cref="System.Windows.Controls.RadioButton"/>s labeled "True" and "False" are visible.
+        /// <see cref="RadioButton"/>s labeled "True" and "False" are visible.
         /// </summary>
-        public bool IsBoolean
-        {
-            get
-            {
-                return !IsCustom && (m_info != null) && (m_info.PropertyType == typeof(bool));
-            }
-        }
+        public bool IsBoolean => !(IsCustom || m_info is null || m_info.PropertyType != typeof(bool));
 
         /// <summary>
         /// Gets a value that indicates whether the type of this <see cref="AdapterConnectionStringParameter"/>
         /// is defined to be an enum in the adapter type. This determines whether the
-        /// <see cref="System.Windows.Controls.ComboBox"/> bound to the enum values is visible.
+        /// <see cref="ComboBox"/> bound to the enum values is visible.
         /// </summary>
-        public bool IsEnum
-        {
-            get
-            {
-                return !IsCustom && (m_info != null) && m_info.PropertyType.IsEnum;
-            }
-        }
+        public bool IsEnum => !(IsCustom || m_info is null || !m_info.PropertyType.IsEnum);
 
         /// <summary>
         /// Gets a value that indicates whether the type of this <see cref="AdapterConnectionStringParameter"/>
         /// is something other than a <see cref="bool"/> or an enum. This determines whether the
-        /// <see cref="System.Windows.Controls.TextBox"/> bound to the <see cref="Value"/> of the parameters is
+        /// <see cref="TextBox"/> bound to the <see cref="Value"/> of the parameters is
         /// visible. The value is true for most parameters, including those which are not defined by an adapter type.
         /// </summary>
-        public bool IsOther
-        {
-            get
-            {
-                return !IsCustom && !IsBoolean && !IsEnum;
-            }
-        }
+        public bool IsOther => !(IsCustom || IsBoolean || IsEnum);
 
         #endregion
     }
