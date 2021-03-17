@@ -61,8 +61,9 @@ namespace PIAdapters
     public enum TagRemovalOperation
     {
         /// <summary>
-        /// Do not remove any existing PI tags, This is the default operation.
+        /// Do not remove any existing PI tags. This is the default operation.
         /// </summary>
+        [Description("Do not remove any existing PI tags. This is the default operation.")]
         DoNotRemove,
         /// <summary>
         /// Remove any PI tags where the PI point source matches the setting defined in the PI output adapter and
@@ -75,10 +76,11 @@ namespace PIAdapters
         /// existing measurement signal ID is not found in any extended descriptors will be removed. Note that
         /// removal of any point tags in PI metadata will cause history for removed tags to be inaccessible.
         /// </remarks>
+        [Description("Remove any PI tags where the PI point source matches the setting defined in the PI output adapter and the PI tag no longer exists in the local metadata. The is the recommended option when it is desirable that any locally defined tags that get removed also get removed from PI.\r\nThis is the least aggressive tag removal synchronization operation. Only PI tags that have a matching point source name will be considered for removal. After point source match, then any PI tags where existing measurement signal ID is not found in any extended descriptors will be removed. Note that removal of any point tags in PI metadata will cause history for removed tags to be inaccessible.")]
         LocalOnly,
         /// <summary>
         /// Remove any PI tags where existing measurement signal ID is not found in any extended descriptors.
-        /// CAUTION: Metadata in PI will be updated to exactly match local metadata.
+        /// Use with caution as metadata in PI will be updated to exactly match local metadata.
         /// </summary>
         /// <remarks>
         /// WARNING: Do not use this option if target PI instance is used for storage of any data other than this
@@ -87,6 +89,7 @@ namespace PIAdapters
         /// exactly match local metadata. Note that removal of any point tags in PI metadata will cause history
         /// for removed tags to be inaccessible.
         /// </remarks>
+        [Description("Remove any PI tags where existing measurement signal ID is not found in any extended descriptors. Use with caution as metadata in PI will be updated to exactly match local metadata.\r\nWARNING: Do not use this option if target PI instance is used for storage of any data other than this local PI adapter. This is the most aggressive tag removal synchronization operation. Any PI tags that do not exist in local metadata will be removed from PI. This option ensures that PI metadata will exactly match local metadata. Note that removal of any point tags in PI metadata will cause history for removed tags to be inaccessible.")]
         FullClone
     }
 
