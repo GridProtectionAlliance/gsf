@@ -22,6 +22,8 @@
 //       Optimized PI-SDK code performance with connection pooling
 //  12/17/2014 - J. Ritchie Carroll
 //       Updated code to use AF-SDK - using single PIConnection for now
+//  03/16/2021 - J. Ritchie Carroll
+//       Updated to add automated tag-removal operations during metadata synchronization.
 //
 //******************************************************************************************************
 
@@ -33,6 +35,7 @@ using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using OSIsoft.AF;
 using OSIsoft.AF.Asset;
 using OSIsoft.AF.Data;
 using OSIsoft.AF.PI;
@@ -50,6 +53,45 @@ using System.Threading;
 // ReSharper disable InconsistentlySynchronizedField
 namespace PIAdapters
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Enumeration that defines the available operations for PI tag removal during metadata synchronization.
+    /// </summary>
+    public enum TagRemovalOperation
+    {
+        /// <summary>
+        /// Do not remove any existing PI tags, This is the default operation.
+        /// </summary>
+        DoNotRemove,
+        /// <summary>
+        /// Remove any PI tags where the PI point source matches the setting defined in the PI output adapter and
+        /// the PI tag no longer exists in the local metadata. The is the recommended option when it is desirable
+        /// that any locally defined tags that get removed also get removed from PI.
+        /// </summary>
+        /// <remarks>
+        /// This is the least aggressive tag removal synchronization operation. Only PI tags that have a matching
+        /// point source name will be considered for removal. After point source match, then any PI tags where
+        /// existing measurement signal ID is not found in any extended descriptors will be removed. Note that
+        /// removal of any point tags in PI metadata will cause history for removed tags to be inaccessible.
+        /// </remarks>
+        LocalOnly,
+        /// <summary>
+        /// Remove any PI tags where existing measurement signal ID is not found in any extended descriptors.
+        /// CAUTION: Metadata in PI will be updated to exactly match local metadata.
+        /// </summary>
+        /// <remarks>
+        /// WARNING: Do not use this option if target PI instance is used for storage of any data other than this
+        /// local PI adapter. This is the most aggressive tag removal synchronization operation. Any PI tags that
+        /// do not exist in local metadata will be removed from PI. This option ensures that PI metadata will
+        /// exactly match local metadata. Note that removal of any point tags in PI metadata will cause history
+        /// for removed tags to be inaccessible.
+        /// </remarks>
+        FullClone
+    }
+
+    #endregion
+
     /// <summary>
     /// Exports measurements to PI if the point tag or alternate tag corresponds to a PI point's tag name.
     /// </summary>
@@ -68,6 +110,7 @@ namespace PIAdapters
         private readonly ShortSynchronizedOperation m_restartConnection;    // Restart connection operation
         private readonly ConcurrentDictionary<Guid, string> m_tagMap;       // Tag name to measurement Guid lookup
         private readonly HashSet<MeasurementKey> m_pendingMappings;         // List of pending measurement mappings
+        private readonly LongSynchronizedOperation m_handleTagRemoval;      // Tag removal operation, if any
         private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
         private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
         private DateTime m_lastMetadataRefresh;                             // Tracks time of last meta-data refresh
@@ -97,10 +140,8 @@ namespace PIAdapters
             m_restartConnection = new ShortSynchronizedOperation(Start);
             m_tagMap = new ConcurrentDictionary<Guid, string>();
             m_pendingMappings = new HashSet<MeasurementKey>();
+            m_handleTagRemoval = new LongSynchronizedOperation(HandleTagRemoval, ex => OnProcessException(MessageLevel.Error, ex)) { IsBackground = true };
             m_lastMetadataRefresh = DateTime.MinValue;
-            RunMetadataSync = true;
-            AutoCreateTags = true;
-            AutoUpdateTags = true;
         }
 
         #endregion
@@ -120,79 +161,112 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the name of the PI server for the adapter's PI connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the name of the PI server for the adapter's PI connection.")]
+        [ConnectionStringParameter]
+        [Description("Defines the name of the PI server for the adapter's PI connection.")]
         public string ServerName { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the PI user ID for the adapter's PI connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection."), DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Defines the name of the PI user ID for the adapter's PI connection.")]
+        [DefaultValue("")]
         public string UserName { get; set; }
 
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection."), DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Defines the password used for the adapter's PI connection.")]
+        [DefaultValue("")]
         public string Password { get; set; }
 
         /// <summary>
         /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the timeout interval (in milliseconds) for the adapter's connection"), DefaultValue(PIConnection.DefaultConnectTimeout)]
-        public int ConnectTimeout { get; set; }
+        [ConnectionStringParameter]
+        [Description("Defines the timeout interval (in milliseconds) for the adapter's connection")]
+        [DefaultValue(PIConnection.DefaultConnectTimeout)]
+        public int ConnectTimeout { get; set; } = PIConnection.DefaultConnectTimeout;
 
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
         /// </summary>
-        [ConnectionStringParameter, Description("Determines if this adapter should automatically manage metadata for PI points (recommended)."), DefaultValue(true)]
-        public bool RunMetadataSync { get; set; }
+        [ConnectionStringParameter]
+        [Description("Determines if this adapter should automatically manage metadata for PI points (recommended).")]
+        [DefaultValue(true)]
+        public bool RunMetadataSync { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
+        /// Gets or sets whether or not this adapter should automatically create new tags when managing metadata for PI points.
         /// </summary>
-        [ConnectionStringParameter, Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended). Value will only be considered when RunMetadataSync is True."), DefaultValue(true)]
-        public bool AutoCreateTags { get; set; }
+        [ConnectionStringParameter]
+        [Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended). Value will only be considered when RunMetadataSync is True.")]
+        [DefaultValue(true)]
+        public bool AutoCreateTags { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
+        /// Gets or sets whether or not this adapter should automatically update existing tags when managing metadata for PI points.
         /// </summary>
-        [ConnectionStringParameter, Description("Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the master for maintaining PI tag metadata (like the tag name); otherwise, when False, PI will be the master. Value will only be considered when RunMetadataSync is True."), DefaultValue(true)]
-        public bool AutoUpdateTags { get; set; }
+        [ConnectionStringParameter]
+        [Description("Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the controller for maintaining PI tag metadata (like the tag name) for local metadata; otherwise, when False, PI tools will be required to maintain points, including local tag name updates. Value will only be considered when RunMetadataSync is True.")]
+        [DefaultValue(true)]
+        public bool AutoUpdateTags { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether or not this adapter should automatically remove PI tags that no longer exist locally in metadata.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Determines if this adapter should automatically remove PI tags that no longer exist locally in metadata (use with caution). This will make openPDC the controller - even for deletes - when maintaining PI tag metadata; otherwise, when value is set to DoNotRemove, PI tags will persist even when they no longer exist in local metadata. Value will only be considered when RunMetadataSync is True.")]
+        [DefaultValue(typeof(TagRemovalOperation), "DoNotRemove")]
+        public TagRemovalOperation AutoRemoveTags { get; set; } = TagRemovalOperation.DoNotRemove;
 
         /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True."), DefaultValue(0)]
+        [ConnectionStringParameter]
+        [Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True.")]
+        [DefaultValue(0)]
         public int TagNamePrefixRemoveCount { get; set; }
 
         /// <summary>
         /// Gets or sets the point source string used when automatically creating new PI points during the metadata update
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the point source string used when automatically creating new PI points during the metadata update. Value will only be considered when RunMetadataSync is True."), DefaultValue("GSF")]
-        public string PIPointSource { get; set; }
+        [ConnectionStringParameter]
+        [Description("Defines the point source string used when automatically creating new PI points during the metadata update. Value will only be considered when RunMetadataSync is True.")]
+        [DefaultValue(nameof(GSF))]
+        public string PIPointSource { get; set; } = nameof(GSF);
 
         /// <summary>
         /// Gets or sets the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic. Value will only be considered when RunMetadataSync is True."), DefaultValue("classic")]
-        public string PIPointClass { get; set; }
+        [ConnectionStringParameter]
+        [Description("Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic. Value will only be considered when RunMetadataSync is True.")]
+        [DefaultValue("classic")]
+        public string PIPointClass { get; set; } = "classic";
 
         /// <summary>
         /// Gets or sets flag that determines if defined point compression will be used during archiving.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the flag that determines if defined point compression will be used during archiving."), DefaultValue(true)]
-        public bool UseCompression { get; set; }
+        [ConnectionStringParameter]
+        [Description("Defines the flag that determines if defined point compression will be used during archiving.")]
+        [DefaultValue(true)]
+        public bool UseCompression { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the filename to be used for tag map cache.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the filename to be used for tag map cache file name. Leave blank for cache name to be same as adapter name with a \".cache\" extension."), DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Defines the filename to be used for tag map cache file name. Leave blank for cache name to be same as adapter name with a \".cache\" extension.")]
+        [DefaultValue("")]
         public string TagMapCacheFileName { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived."), DefaultValue(0.0D)]
+        [ConnectionStringParameter]
+        [Description("Defines the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived.")]
+        [DefaultValue(0.0D)]
         public double MaximumPointResolution { get; set; }
 
         /// <summary>
@@ -216,6 +290,7 @@ namespace PIAdapters
                 {
                     status.AppendLine($"          Auto-create tags: {AutoCreateTags}");
                     status.AppendLine($"          Auto-update tags: {AutoUpdateTags}");
+                    status.AppendLine($"          Auto-remove tags: {AutoRemoveTags}");
                     status.AppendLine($"    Tag prefixes to remove: {TagNamePrefixRemoveCount}");
                     status.AppendLine($"       OSI-PI point source: {PIPointSource}");
                     status.AppendLine($"        OSI-PI point class: {PIPointClass}");
@@ -295,6 +370,29 @@ namespace PIAdapters
         }
 
         /// <summary>
+        /// Gets full archive queue status.
+        /// </summary>
+        [AdapterCommand("Gets full archive queue status.", "Administrator", "Editor")]
+        public void GetArchiveQueueStatus()
+        {
+            if (m_archiveQueues is null)
+                return;
+
+            StringBuilder status = new StringBuilder();
+
+            for (int i = 0; i < m_archiveQueues.Length; i++)
+            {
+                status.AppendLine();
+                status.AppendLine($">> Archive Queue Status (1 of {i:N0})");
+                status.AppendLine();
+                status.Append(m_archiveQueues[i].Status);
+                status.AppendLine();
+            }
+
+            OnStatusMessage(MessageLevel.Info, status.ToString());
+        }
+
+        /// <summary>
         /// Returns a brief status of this <see cref="PIOutputAdapter"/>
         /// </summary>
         /// <param name="maxLength">Maximum number of characters in the status string</param>
@@ -322,16 +420,14 @@ namespace PIAdapters
             UserName = settings.TryGetValue(nameof(UserName), out setting) ? setting : null;
             Password = settings.TryGetValue(nameof(Password), out setting) ? setting : null;
 
-            if (!settings.TryGetValue(nameof(ConnectTimeout), out setting) || !int.TryParse(setting, out int intVal))
-                intVal = PIConnection.DefaultConnectTimeout;
+            if (settings.TryGetValue(nameof(ConnectTimeout), out setting) && int.TryParse(setting, out int intVal))
+                ConnectTimeout = intVal;
+            
+            if (settings.TryGetValue(nameof(UseCompression), out setting))
+                UseCompression  = setting.ParseBoolean();
 
-            ConnectTimeout = intVal;
-            UseCompression = !settings.TryGetValue(nameof(UseCompression), out setting) || setting.ParseBoolean();
-
-            if (!settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) || !int.TryParse(setting, out intVal))
-                intVal = 0;
-
-            TagNamePrefixRemoveCount = intVal;
+            if (settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) && int.TryParse(setting, out intVal))
+                TagNamePrefixRemoveCount = intVal;
 
             if (settings.TryGetValue(nameof(RunMetadataSync), out setting))
                 RunMetadataSync = setting.ParseBoolean();
@@ -342,8 +438,14 @@ namespace PIAdapters
             if (settings.TryGetValue(nameof(AutoUpdateTags), out setting))
                 AutoUpdateTags = setting.ParseBoolean();
 
-            PIPointSource = settings.TryGetValue(nameof(PIPointSource), out setting) ? setting : "GSF";
-            PIPointClass = settings.TryGetValue(nameof(PIPointClass), out setting) ? setting : "classic";
+            if (settings.TryGetValue(nameof(AutoRemoveTags), out setting) && Enum.TryParse(setting, out TagRemovalOperation removalOperation))
+                AutoRemoveTags = removalOperation;
+
+            if (settings.TryGetValue(nameof(PIPointSource), out setting))
+                PIPointSource = setting;
+
+            if (settings.TryGetValue(nameof(PIPointClass), out setting))
+                PIPointClass = setting;
 
             if (!settings.TryGetValue(nameof(TagMapCacheFileName), out setting) || string.IsNullOrWhiteSpace(setting))
                 setting = Name + "_TagMap.cache";
@@ -408,9 +510,7 @@ namespace PIAdapters
             m_mappedPIPoints.Clear();
 
             lock (m_pendingMappings)
-            {
                 m_pendingMappings.Clear();
-            }
 
             if (!(m_connection is null))
             {
@@ -458,11 +558,9 @@ namespace PIAdapters
 
                         if (mappingRequested)
                         {
+                            // No mapping is defined for this point, queue up mapping
                             lock (m_mapRequestQueue.SyncRoot)
-                            {
-                                // No mapping is defined for this point, queue up mapping
                                 m_mapRequestQueue.Add(measurement.Key);
-                            }
                         }
                     }
                     catch (Exception ex)
@@ -479,13 +577,15 @@ namespace PIAdapters
                             continue;
 
                         // Queue up insert operations for parallel processing
-                        m_archiveQueues[point.ID % m_archiveQueues.Length].Add(
+                        m_archiveQueues[point.ID % m_archiveQueues.Length].Add
+                        (
                             new AFValue((float)measurement.AdjustedValue, new AFTime(new DateTime(measurement.Timestamp, DateTimeKind.Utc)))
                             {
                                 PIPoint = point
-                            });
+                            }
+                        );
 
-
+                        // Track last point archive time, for downsampling when enabled
                         if (!(m_lastArchiveTimes is null))
                             m_lastArchiveTimes[measurement.Key.SignalID] = measurement.Timestamp;
                     }
@@ -672,6 +772,7 @@ namespace PIAdapters
 
                         Guid signalID = key.SignalID;
                         DataRow[] rows = measurements.Select($"SignalID='{signalID}'");
+
                         string tagName;
                         bool createdNewTag = false;
                         bool refreshMetadata = false;
@@ -892,11 +993,15 @@ namespace PIAdapters
                 m_refreshingMetadata = false;
             }
 
+            bool handlingTagRemoval = AutoRemoveTags != TagRemovalOperation.DoNotRemove;
+
             if (Enabled)
             {
                 m_lastMetadataRefresh = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
 
-                OnStatusMessage(MessageLevel.Info, "Completed metadata refresh successfully.");
+                OnStatusMessage(MessageLevel.Info, handlingTagRemoval ? 
+                    "Completed metadata add/update sync operations successfully, starting delete sync operations..." :
+                    "Completed metadata sync operations successfully.");
 
                 // Re-establish connection point dictionary since meta-data and tags may exist in PI server now that didn't before.
                 // This will also start showing warning messages in CreateMappedPIPoint function for unmappable points
@@ -906,6 +1011,94 @@ namespace PIAdapters
 
             // Restore original measurement reporting interval
             MeasurementReportingInterval = previousMeasurementReportingInterval;
+
+            if (handlingTagRemoval)
+                m_handleTagRemoval.RunOnceAsync();
+        }
+
+        private void HandleTagRemoval()
+        {
+            if (!Enabled)
+                return;
+
+            // Create hash set of all local measurement Guids for quick lookup
+            HashSet<Guid> activeMeasurements = new HashSet<Guid>
+            (
+                DataSource.Tables["ActiveMeasurements"].AsEnumerable()
+                    .Select(row => Guid.TryParse(row["SignalID"].ToString(), out Guid signalID) ? signalID : Guid.Empty)
+                    .Where(guid => guid != Guid.Empty)
+            );
+
+            PIServer server = m_connection.Server;
+            string sourceFilter = AutoRemoveTags == TagRemovalOperation.LocalOnly ? PIPointSource : null;
+            IEnumerable<PIPoint> points = PIPoint.FindPIPoints(server, "*", sourceFilter, new[] { PICommonPointAttributes.Tag, PICommonPointAttributes.ExtendedDescriptor });
+            List<string> pointsToDelete = new List<string>();
+            double total = server.GetPointCount();
+            long processed = 0L;
+            long descriptorIssues = 0L;
+            Ticks startTime = DateTime.UtcNow.Ticks;
+
+            foreach (PIPoint point in points)
+            {
+                // If adapter gets disabled while executing this thread - go ahead and exit
+                if (!Enabled)
+                    return;
+
+                // Get point's Guid-based signal ID from extended descriptor
+                string exdesc = point.GetAttribute(PICommonPointAttributes.ExtendedDescriptor) as string;
+                bool deletePointID;
+
+                if (string.IsNullOrWhiteSpace(exdesc))
+                {
+                    // Tags without extended descriptor considered extraneous during full clone
+                    deletePointID = AutoRemoveTags == TagRemovalOperation.FullClone;
+                    descriptorIssues++;
+                }
+                else
+                {
+                    if (Guid.TryParse(exdesc.Trim(), out Guid signalID))
+                    {
+                        // Point ID to be deleted if it's not in local active measurement set
+                        deletePointID = !activeMeasurements.Contains(signalID);
+                    }
+                    else
+                    {
+                        // Tags with non-Guid extended descriptor considered extraneous during full clone
+                        deletePointID = AutoRemoveTags == TagRemovalOperation.FullClone;
+                        descriptorIssues++;
+                    }
+                }
+
+                if (deletePointID)
+                    pointsToDelete.Add(point.Name);
+
+                if (++processed % 200 == 0)
+                    OnStatusMessage(MessageLevel.Info, $"Delete sync operation has scanned {processed:N0} PI tags, {processed / total:0.00%} complete...");
+            }
+
+            OnStatusMessage(MessageLevel.Info, $"Delete sync operation scan completed in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2)}. There were {descriptorIssues:N0} tags with signal ID extended descriptor issues.");
+
+            if (pointsToDelete.Count > 0)
+            {
+                OnStatusMessage(MessageLevel.Info, $"Delete sync operation found {pointsToDelete.Count:N0} PI tags to be removed, attempting deletion...");
+                
+                AFErrors<string> result = server.DeletePIPoints(pointsToDelete);
+
+                if (result?.HasErrors ?? false)
+                {
+                    int errors = result.Errors.Count;
+                    OnStatusMessage(MessageLevel.Info, $"Delete sync operations completed, {pointsToDelete.Count:N0} PI tag deletions attempted with {errors:N0} errors.");
+                    OnProcessException(MessageLevel.Warning, new AggregateException(result.Errors.Values), $"{nameof(PIOutputAdapter)} delete sync operation errors");
+                }
+                else
+                {
+                    OnStatusMessage(MessageLevel.Info, $"Delete sync operations completed, {pointsToDelete.Count:N0} PI tags were deleted.");
+                }
+            }
+            else
+            {
+                OnStatusMessage(MessageLevel.Info, "Delete sync operations completed, no PI tags were deleted.");
+            }
         }
 
         // Resets the PI tag to MeasurementKey mapping for loading data into PI by finding PI points that match either the GSFSchema point tag or alternate tag
