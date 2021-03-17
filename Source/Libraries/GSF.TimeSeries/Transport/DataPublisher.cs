@@ -75,16 +75,19 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// No security.
         /// </summary>
+        [Description("Internal data transfer mode, data not encrypted.")]
         None,
 
         /// <summary>
         /// Transport Layer Security.
         /// </summary>
+        [Description("Transport layer security data transfer mode, data encrypted using client certificates with public key infrastructure.")]
         TLS,
 
         /// <summary>
         /// Pre-shared key.
         /// </summary>
+        [Description("DEPRECATED, use TLS instead.\r\nExternal data transfer mode, data encrypted using a pre-shared key.")]
         Gateway
     }
 
