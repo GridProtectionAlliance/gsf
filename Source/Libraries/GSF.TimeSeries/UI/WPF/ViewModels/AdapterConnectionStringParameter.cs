@@ -24,15 +24,14 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using GSF.TimeSeries.Adapters;
 
+// ReSharper disable ValueParameterNotUsed
 namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
@@ -118,6 +117,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 OnPropertyChanged("Value");
                 OnPropertyChanged("Color");
                 OnPropertyChanged("Boldness");
+                OnPropertyChanged("EnumDescription");
             }
         }
 
@@ -161,6 +161,31 @@ namespace GSF.TimeSeries.UI.ViewModels
             get => IsEnum ?
                 Enum.GetNames(m_info.PropertyType) :
                 Array.Empty<string>();
+            set { }
+        }
+
+        /// <summary>
+        /// Gets enum description, if defined.
+        /// </summary>
+        public string EnumDescription
+        {
+            get
+            {
+                try
+                {
+                    return IsEnum ? 
+                        ((Enum)Enum.Parse(m_info.PropertyType, Value.ToString(), true)).GetDescription(false) :
+                        null;
+                }
+                catch (Exception ex)
+                {
+                #if DEBUG
+                    return ex.Message;
+                #else
+                    return null;
+                #endif
+                }
+            }
             set { }
         }
 

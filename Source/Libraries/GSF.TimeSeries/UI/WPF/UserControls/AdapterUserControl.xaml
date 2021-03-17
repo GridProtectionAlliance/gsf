@@ -180,9 +180,21 @@
                                 <RadioButton Content="False" GroupName="BooleanParameter" IsChecked="{Binding Mode=OneWay, Path=IsFalseChecked}" />
                             </StackPanel>
 
-                            <StackPanel Margin="5" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
+                            <StackPanel Margin="5" Width="{Binding ElementName=ParameterValueTextBox, Path=Width}"
                                         Visibility="{Binding Path=IsEnum, Converter={StaticResource ObjectToVisibilityConverter}}">
-                                <ComboBox IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=EnumValues}" SelectedItem="{Binding Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <Grid Height="{Binding ElementName=ParameterListBox, Path=Height}">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <ComboBox Grid.Row="0" IsSynchronizedWithCurrentItem="True" HorizontalAlignment="Stretch" Width="Auto" ItemsSource="{Binding Path=EnumValues}"
+                                              SelectedItem="{Binding Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 2" />
+
+                                    <TextBox Grid.Row="1" Name="EnumDescriptionTextBox" VerticalAlignment="Stretch" Height="Auto" Width="Auto" HorizontalAlignment="Stretch"
+                                             Text="{tsfBinding:Column Path=EnumDescription}" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" Margin="0"
+                                             BorderThickness="0" Padding="0" Background="Transparent" />
+                                </Grid>
                             </StackPanel>
 
                             <StackPanel Margin="5" Width="{Binding ElementName=ParameterValueTextBox, Path=Width}" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
