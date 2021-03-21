@@ -1661,6 +1661,7 @@ namespace GSF.ServiceProcess
 
             try
             {
+                // ReSharper disable once AssignNullToNotNullAttribute
                 formattedMessage = args?.Length == 0 ? message : string.Format(message, args);
             }
             catch (FormatException ex)
@@ -1984,8 +1985,15 @@ namespace GSF.ServiceProcess
         /// <param name="args">Arguments to be sent to <see cref="ServiceStarting"/> event.</param>
         protected virtual void OnServiceStarting(string[] args)
         {
-            // Notify service event consumers of pending service start
-            ServiceStarting?.Invoke(this, new EventArgs<string[]>(args));
+            try
+            {
+                // Notify service event consumers of pending service start
+                ServiceStarting?.Invoke(this, new EventArgs<string[]>(args));
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServiceStarting)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -1993,11 +2001,18 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnServiceStarted()
         {
-            // Notify all remote clients that might possibly be connected at of service start (not likely)
-            SendServiceStateChangedResponse(ServiceState.Started);
+            try
+            {
+                // Notify all remote clients that might possibly be connected at of service start (not likely)
+                SendServiceStateChangedResponse(ServiceState.Started);
 
-            // Notify service event consumers that service has started
-            ServiceStarted?.Invoke(this, EventArgs.Empty);
+                // Notify service event consumers that service has started
+                ServiceStarted?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServiceStarted)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2005,11 +2020,18 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnServiceStopping()
         {
-            // Notify service event consumers of pending service stop
-            ServiceStopping?.Invoke(this, EventArgs.Empty);
+            try
+            {
+                // Notify service event consumers of pending service stop
+                ServiceStopping?.Invoke(this, EventArgs.Empty);
 
-            // Notify all remote clients of service stop
-            SendServiceStateChangedResponse(ServiceState.Stopped);
+                // Notify all remote clients of service stop
+                SendServiceStateChangedResponse(ServiceState.Stopped);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServiceStopping)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2017,8 +2039,15 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnServiceStopped()
         {
-            // Notify service event consumers that service has stopped
-            ServiceStopped?.Invoke(this, EventArgs.Empty);
+            try
+            {
+                // Notify service event consumers that service has stopped
+                ServiceStopped?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServiceStopped)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2026,11 +2055,18 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnServicePausing()
         {
-            // Notify service event consumers of pending service stop
-            ServicePausing?.Invoke(this, EventArgs.Empty);
+            try
+            {
+                // Notify service event consumers of pending service stop
+                ServicePausing?.Invoke(this, EventArgs.Empty);
 
-            // Notify all remote clients of service pause
-            SendServiceStateChangedResponse(ServiceState.Paused);
+                // Notify all remote clients of service pause
+                SendServiceStateChangedResponse(ServiceState.Paused);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServicePausing)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2038,8 +2074,15 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnServicePaused()
         {
-            // Notify service event consumers that service has been paused
-            ServicePaused?.Invoke(this, EventArgs.Empty);
+            try
+            {
+                // Notify service event consumers that service has been paused
+                ServicePaused?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServicePaused)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2047,8 +2090,15 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnServiceResuming()
         {
-            // Notify service event consumers of pending service resume
-            ServiceResuming?.Invoke(this, EventArgs.Empty);
+            try
+            {
+                // Notify service event consumers of pending service resume
+                ServiceResuming?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServiceResuming)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2056,11 +2106,18 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnServiceResumed()
         {
-            // Notify all remote clients of service resume
-            SendServiceStateChangedResponse(ServiceState.Resumed);
+            try
+            {
+                // Notify all remote clients of service resume
+                SendServiceStateChangedResponse(ServiceState.Resumed);
 
-            // Notify service event consumers that service has been resumed
-            ServiceResumed?.Invoke(this, EventArgs.Empty);
+                // Notify service event consumers that service has been resumed
+                ServiceResumed?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ServiceResumed)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2068,11 +2125,18 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnSystemShutdown()
         {
-            // Notify service event consumers of pending service shutdown
-            SendServiceStateChangedResponse(ServiceState.Shutdown);
+            try
+            {
+                // Notify service event consumers of pending service shutdown
+                SendServiceStateChangedResponse(ServiceState.Shutdown);
 
-            // Notify service event consumers that service has shutdown
-            SystemShutdown?.Invoke(this, EventArgs.Empty);
+                // Notify service event consumers that service has shutdown
+                SystemShutdown?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(SystemShutdown)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2082,7 +2146,14 @@ namespace GSF.ServiceProcess
         /// <param name="requestSender">The <see cref="ClientInfo"/> object of the <paramref name="request"/> sender.</param>
         protected virtual void OnReceivedClientRequest(ClientRequest request, ClientInfo requestSender)
         {
-            ReceivedClientRequest?.Invoke(this, new EventArgs<Guid, ClientRequest>(requestSender.ClientID, request));
+            try
+            {
+                ReceivedClientRequest?.Invoke(this, new EventArgs<Guid, ClientRequest>(requestSender.ClientID, request));
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ReceivedClientRequest)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2093,9 +2164,17 @@ namespace GSF.ServiceProcess
         /// <returns><c>true</c> if send was successful; otherwise, <c>false</c>, i.e., send was cancelled.</returns>
         protected virtual bool OnSendingClientResponse(Guid client, ServiceResponse response)
         {
-            EventArgs<Guid, ServiceResponse, bool> args = new EventArgs<Guid, ServiceResponse, bool>(client, response, false);
-            SendingClientResponse?.Invoke(this, args);
-            return !args.Argument3;
+            try
+            {
+                EventArgs<Guid, ServiceResponse, bool> args = new EventArgs<Guid, ServiceResponse, bool>(client, response, false);
+                SendingClientResponse?.Invoke(this, args);
+                return !args.Argument3;
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(SendingClientResponse)}\" event: {ex.Message}"));
+                return false;
+            }
         }
 
         /// <summary>
@@ -2105,11 +2184,18 @@ namespace GSF.ServiceProcess
         /// <param name="processState">New <see cref="ServiceProcessState"/> of the <see cref="ServiceProcess"/>.</param>
         protected virtual void OnProcessStateChanged(string processName, ServiceProcessState processState)
         {
-            // Notify all service event consumer of change in process state
-            ProcessStateChanged?.Invoke(this, new EventArgs<string, ServiceProcessState>(processName, processState));
+            try
+            {
+                // Notify all service event consumer of change in process state
+                ProcessStateChanged?.Invoke(this, new EventArgs<string, ServiceProcessState>(processName, processState));
 
-            // Notify all remote clients of change in process state
-            SendProcessStateChangedResponse(processName, processState);
+                // Notify all remote clients of change in process state
+                SendProcessStateChangedResponse(processName, processState);
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(ProcessStateChanged)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
@@ -2123,16 +2209,30 @@ namespace GSF.ServiceProcess
         /// </remarks>
         protected virtual void OnUpdatedStatus(Guid clientID, string status, UpdateType type)
         {
-            UpdatedStatus?.Invoke(this, new EventArgs<Guid, string, UpdateType>(clientID, status, type));
+            try
+            {
+                UpdatedStatus?.Invoke(this, new EventArgs<Guid, string, UpdateType>(clientID, status, type));
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(UpdatedStatus)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
         /// Raises <see cref="LoggedException"/> event with logged exception.
         /// </summary>
-        /// <param name="ex">Logged <see cref="Exception"/>.</param>
-        protected virtual void OnLoggedException(Exception ex)
+        /// <param name="exception">Logged <see cref="Exception"/>.</param>
+        protected virtual void OnLoggedException(Exception exception)
         {
-            LoggedException?.Invoke(this, new EventArgs<Exception>(ex));
+            try
+            {
+                LoggedException?.Invoke(this, new EventArgs<Exception>(exception));
+            }
+            catch (Exception ex)
+            {
+                OnLoggedException(new InvalidOperationException($"Exception during \"{nameof(LoggedException)}\" event: {ex.Message}"));
+            }
         }
 
         /// <summary>
