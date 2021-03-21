@@ -1407,29 +1407,37 @@ namespace GSF.TimeSeries
         /// <param name="args">Service startup arguments, if any.</param>
         protected override void OnStart(string[] args)
         {
-            GenerateLocalCertificate();
+            try
+            {
+                GenerateLocalCertificate();
 
-            SetupTempPath();
+                SetupTempPath();
 
-            InitializeServiceHelper();
+                InitializeServiceHelper();
 
-            // Register service level event handlers
-            m_serviceHelper.ServiceStarting += ServiceStartingHandler;
-            m_serviceHelper.ServiceStarted += ServiceStartedHandler;
-            m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
-            m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
-            m_serviceHelper.LoggedException += LoggedExceptionHandler;
+                // Register service level event handlers
+                m_serviceHelper.ServiceStarting += ServiceStartingHandler;
+                m_serviceHelper.ServiceStarted += ServiceStartedHandler;
+                m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
+                m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
+                m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
-            if (!(m_serviceHelper.StatusLog is null))
-                m_serviceHelper.StatusLog.LogException += StatusLogExceptionHandler;
+                if (!(m_serviceHelper.StatusLog is null))
+                    m_serviceHelper.StatusLog.LogException += StatusLogExceptionHandler;
 
-            if (!(m_serviceHelper.ErrorLogger?.ErrorLog is null))
-                m_serviceHelper.ErrorLogger.ErrorLog.LogException += ErrorLogExceptionHandler;
+                if (!(m_serviceHelper.ErrorLogger?.ErrorLog is null))
+                    m_serviceHelper.ErrorLogger.ErrorLog.LogException += ErrorLogExceptionHandler;
 
-            if (!(m_serviceHelper.ConnectionErrorLogger?.ErrorLog is null))
-                m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException += ConnectionErrorLogExceptionHandler;
+                if (!(m_serviceHelper.ConnectionErrorLogger?.ErrorLog is null))
+                    m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException += ConnectionErrorLogExceptionHandler;
 
-            m_serviceHelper.OnStart(args);
+                m_serviceHelper.OnStart(args);
+
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+            }
         }
 
         /// <summary>
@@ -1437,7 +1445,14 @@ namespace GSF.TimeSeries
         /// </summary>
         protected override void OnStop()
         {
-            m_serviceHelper.OnStop();
+            try
+            {
+                m_serviceHelper.OnStop();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+            }
 
             // As a final operation, shell remote console to clean up temporary razor files
             try
@@ -1477,7 +1492,14 @@ namespace GSF.TimeSeries
         /// </summary>
         protected override void OnPause()
         {
-            m_serviceHelper.OnPause();
+            try
+            {
+                m_serviceHelper.OnPause();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+            }
         }
 
         /// <summary>
@@ -1485,7 +1507,14 @@ namespace GSF.TimeSeries
         /// </summary>
         protected override void OnContinue()
         {
-            m_serviceHelper.OnResume();
+            try
+            {
+                m_serviceHelper.OnResume();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+            }
         }
 
         /// <summary>
@@ -1493,7 +1522,14 @@ namespace GSF.TimeSeries
         /// </summary>
         protected override void OnShutdown()
         {
-            m_serviceHelper.OnShutdown();
+            try
+            {
+                m_serviceHelper.OnShutdown();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+            }
         }
 
         #endregion
@@ -3678,13 +3714,21 @@ namespace GSF.TimeSeries
         /// <param name="ex"><see cref="Exception"/> to log.</param>
         protected virtual void LogException(Exception ex)
         {
-            // Connection exceptions are logged separately since these types of exceptions
-            // can be so frequent when a device is offline it makes looking for specific,
-            // non-connection related, exceptions more difficult.
-            if (ex is ConnectionException connectionException)
-                m_serviceHelper.LogConnectionException(connectionException);
+            if (m_serviceHelper is null)
+            {
+                Logger.CreatePublisher(typeof(ServiceHostBase), MessageClass.Framework).
+                    Publish(MessageLevel.Critical, "Service Initialization", "LogException", exception: ex);
+            }
             else
-                m_serviceHelper.LogException(ex);
+            {
+                // Connection exceptions are logged separately since these types of exceptions
+                // can be so frequent when a device is offline it makes looking for specific,
+                // non-connection related, exceptions more difficult.
+                if (ex is ConnectionException connectionException)
+                    m_serviceHelper.LogConnectionException(connectionException);
+                else
+                    m_serviceHelper.LogException(ex);
+            }
         }
 
         // Processes exceptions coming from the configuration loaders.
