@@ -76,15 +76,16 @@ namespace DynamicCalculator
         /// </summary>
         public const string DefaultImports = "AssemblyName=mscorlib, TypeName=System.Math; AssemblyName=mscorlib, TypeName=System.DateTime";
 
+        private const string TimeVarName = "TIME";
+        private const string UtcTimeVarName = "UTCTIME";
+        private const string LocalTimeVarName = "LOCALTIME";
+
         // Fields
         private string m_expressionText;
         private string m_variableList;
         private string m_imports;
         private bool m_supportsTemporalProcessing;
         private bool m_skipNanOutput;
-        private bool m_useLatestValues;
-        private double m_sentinelValue;
-        private TimestampSource m_timestampSource;
 
         private readonly ImmediateMeasurements m_latestMeasurements;
         private Ticks m_latestTimestamp;
@@ -127,32 +128,23 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override IMeasurement[] OutputMeasurements
         {
-            get
-            {
-                return base.OutputMeasurements;
-            }
-            set
-            {
-                base.OutputMeasurements = value;
-            }
+            get => base.OutputMeasurements;
+            set => base.OutputMeasurements = value;
         }
 
         /// <summary>
         /// Gets or sets the textual representation of the expression.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the arithmetic expression used to perform calculations.")]
+        [ConnectionStringParameter]
+        [Description("Define the arithmetic expression used to perform calculations.")]
         public string ExpressionText
         {
-            get
-            {
-                return m_expressionText;
-            }
+            get => m_expressionText;
             set
             {
                 m_expressionText = value;
@@ -163,46 +155,41 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the list of variables used in the expression.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the unique list of variables used in the expression. Any defined aliased variables must be unique per defined dynamic calculator or e-mail notifier instance. Note that \"TIME\" is reserved, this returns the current timestamp for the calculation in ticks.")]
+        [ConnectionStringParameter]
+        [Description("Define the unique list of variables used in the expression. Any defined aliased variables must be unique per defined dynamic calculator or e-mail notifier instance. Note that \"TIME\" is reserved, this returns the current timestamp for the calculation in ticks.")]
         public string VariableList
         {
-            get
-            {
-                return m_variableList;
-            }
+            get => m_variableList;
             set
             {
-                string keyList;
+                if (m_variableList == value)
+                    return;
 
-                if (m_variableList != value)
-                {
-                    // Store the variable list for get operations
-                    m_variableList = value;
+                // Store the variable list for get operations
+                m_variableList = value;
 
-                    // Empty the collection of variable names
-                    m_variableNames.Clear();
-                    m_keyMapping.Clear();
-                    m_nonAliasedTokens.Clear();
+                // Empty the collection of variable names
+                m_variableNames.Clear();
+                m_keyMapping.Clear();
+                m_nonAliasedTokens.Clear();
 
-                    // If the value is null, do not attempt to process it
-                    if ((object)value == null)
-                        return;
+                // If the value is null, do not attempt to process it
+                if (value is null)
+                    return;
 
-                    // Build the collection of variable names with the new value
-                    foreach (string token in value.Split(';'))
-                        AddVariable(token);
+                // Build the collection of variable names with the new value
+                foreach (string token in value.Split(';'))
+                    AddVariable(token);
 
-                    // Perform alias replacement on tokens that were not explicitly aliased
-                    PerformAliasReplacement();
+                // Perform alias replacement on tokens that were not explicitly aliased
+                PerformAliasReplacement();
 
-                    // Build the key list which will define the input measurements for this adapter
-                    keyList = m_keyMapping.Keys.Select(key => key.ToString())
-                        .Aggregate((runningKeyList, nextKey) => runningKeyList + ";" + nextKey);
+                // Build the key list which will define the input measurements for this adapter
+                string keyList = m_keyMapping.Keys.Select(key => key.ToString())
+                            .Aggregate((runningKeyList, nextKey) => runningKeyList + ";" + nextKey);
 
-                    // Set the input measurements for this adapter
-                    InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, keyList);
-                }
+                // Set the input measurements for this adapter
+                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, keyList);
             }
         }
 
@@ -210,15 +197,12 @@ namespace DynamicCalculator
         /// Gets or sets the list of types which define
         /// methods to be imported into the expression parser.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the list of types which define methods to be imported into the expression parser."),
-        DefaultValue(DefaultImports)]
+        [ConnectionStringParameter]
+        [Description("Define the list of types which define methods to be imported into the expression parser.")]
+        [DefaultValue(DefaultImports)]
         public string Imports
         {
-            get
-            {
-                return m_imports;
-            }
+            get => m_imports;
             set
             {
                 foreach (string typeDef in value.Split(';'))
@@ -247,47 +231,27 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the flag indicating if this adapter supports temporal processing."),
-        DefaultValue(false)]
+        [ConnectionStringParameter]
+        [Description("Define the flag indicating if this adapter supports temporal processing.")]
+        [DefaultValue(false)]
         public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
         /// Gets or sets the flag indicating whether to use the latest
         /// received values to fill in values missing from the current frame.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the flag indicating if this adapter should use latest values for missing measurements."),
-        DefaultValue(true)]
-        public bool UseLatestValues
-        {
-            get
-            {
-                return m_useLatestValues;
-            }
-            set
-            {
-                m_useLatestValues = value;
-            }
-        }
+        [ConnectionStringParameter]
+        [Description("Define the flag indicating if this adapter should use latest values for missing measurements.")]
+        [DefaultValue(true)]
+        public bool UseLatestValues { get; set; }
 
         /// <summary>
         /// Gets or sets the value used when no other value can be determined for a variable.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Defines the value used when no other value can be determined for a variable."),
-        DefaultValue(double.NaN)]
-        public double SentinelValue
-        {
-            get
-            {
-                return m_sentinelValue;
-            }
-            set
-            {
-                m_sentinelValue = value;
-            }
-        }
+        [ConnectionStringParameter]
+        [Description("Defines the value used when no other value can be determined for a variable.")]
+        [DefaultValue(double.NaN)]
+        public double SentinelValue { get; set; }
 
         /// <summary>
         /// Gets or sets the interval at which the adapter should calculate values.
@@ -295,38 +259,22 @@ namespace DynamicCalculator
         /// <remarks>
         /// Set to zero to disable the timer and calculate values upon receipt of input data.
         /// </remarks>
-        [ConnectionStringParameter,
-        Description("Define the interval, in seconds, at which the adapter should calculate values. Zero value executes calculations at received data rate."),
-        DefaultValue(0)]
+        [ConnectionStringParameter]
+        [Description("Define the interval, in seconds, at which the adapter should calculate values. Zero value executes calculations at received data rate.")]
+        [DefaultValue(0)]
         public double CalculationInterval
         {
-            get
-            {
-                return m_timerOperation.Delay / 1000.0D;
-            }
-            set
-            {
-                m_timerOperation.Delay = (int)(value * 1000.0D);
-            }
+            get => m_timerOperation.Delay / 1000.0D;
+            set => m_timerOperation.Delay = (int)(value * 1000.0D);
         }
 
         /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the source of the timestamps of the calculated values."),
-        DefaultValue(TimestampSource.Frame)]
-        public TimestampSource TimestampSource
-        {
-            get
-            {
-                return m_timestampSource;
-            }
-            set
-            {
-                m_timestampSource = value;
-            }
-        }
+        [ConnectionStringParameter]
+        [Description("Define the source of the timestamps of the calculated values.")]
+        [DefaultValue(TimestampSource.Frame)]
+        public TimestampSource TimestampSource { get; set; }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the dynamic calculator expects.
@@ -334,10 +282,7 @@ namespace DynamicCalculator
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override MeasurementKey[] InputMeasurementKeys
         {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
+            get => base.InputMeasurementKeys;
             set
             {
                 base.InputMeasurementKeys = value;
@@ -366,24 +311,15 @@ namespace DynamicCalculator
 
                 status.Append(base.Status);
                 status.AppendLine();
-                status.AppendFormat("           Expression Text: {0}", ExpressionText);
-                status.AppendLine();
-                status.AppendFormat("             Variable List: {0}", VariableList);
-                status.AppendLine();
-                status.AppendFormat("         Use Latest Values: {0}", UseLatestValues);
-                status.AppendLine();
-                status.AppendFormat("      Calculation Interval: {0}", CalculationInterval == 0.0D ? "At received data rate" : $"{CalculationInterval:N3} seconds");
-                status.AppendLine();
-                status.AppendFormat("          Timestamp Source: {0}", TimestampSource);
-                status.AppendLine();
-                status.AppendFormat("            Sentinel Value: {0}", SentinelValue);
-                status.AppendLine();
+                status.AppendLine($"           Expression Text: {ExpressionText}");
+                status.AppendLine($"             Variable List: {VariableList}");
+                status.AppendLine($"         Use Latest Values: {UseLatestValues}");
+                status.AppendLine($"      Calculation Interval: {(CalculationInterval == 0.0D ? "At received data rate" : $"{CalculationInterval:N3} seconds")}");
+                status.AppendLine($"          Timestamp Source: {TimestampSource}");
+                status.AppendLine($"            Sentinel Value: {SentinelValue}");
 
                 if (ExpectsOutputMeasurement)
-                {
-                    status.AppendFormat("     Last Calculated Value: {0}", m_latestValue);
-                    status.AppendLine();
-                }
+                    status.AppendLine($"     Last Calculated Value: {m_latestValue}");
 
                 List<string> imports = new List<string>();
 
@@ -398,11 +334,11 @@ namespace DynamicCalculator
                     }
                 }
 
-                if (imports.Count == 0)
-                    imports.Add("None Defined");
-
-                status.AppendFormat("       Imported .NET Types: {0}", string.Join(", ", imports));
                 status.AppendLine();
+                status.AppendLine($"Imported .NET Types ({imports.Count:N0} total):");
+
+                foreach (string import in imports)
+                    status.AppendLine($"        {import.TruncateRight(70)}");
 
                 return status.ToString();
             }
@@ -412,7 +348,7 @@ namespace DynamicCalculator
         {
             get
             {
-                switch (m_timestampSource)
+                switch (TimestampSource)
                 {
                     case TimestampSource.RealTime:
                         return base.RealTime;
@@ -437,9 +373,7 @@ namespace DynamicCalculator
         {
             const string ErrorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
 
-            Dictionary<string, string> settings;
-
-            settings = Settings;
+            Dictionary<string, string> settings = Settings;
             base.Initialize();
 
             if (ExpectsOutputMeasurement && OutputMeasurements?.Length != 1)
@@ -457,44 +391,18 @@ namespace DynamicCalculator
             ExpressionText = settings["expressionText"];
 
             // Load optional parameters
-            if (settings.TryGetValue("imports", out string setting))
-                Imports = setting;
-            else
-                Imports = DefaultImports;
-
-            if (settings.TryGetValue("supportsTemporalProcessing", out setting))
-                m_supportsTemporalProcessing = setting.ParseBoolean();
-            else
-                m_supportsTemporalProcessing = false;
+            Imports = settings.TryGetValue("imports", out string setting) ? setting : DefaultImports;
+            m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out setting) && setting.ParseBoolean();
 
             // When skipNanOutput is true, then any output measurement which 
             // would have a value of NaN is skipped.
             // This prevents the NaN outputs that could otherwise occur when some inputs to the calculation
             // are at widely differing periods.
-            if (settings.TryGetValue("skipNanOutput", out setting))
-                m_skipNanOutput = setting.ParseBoolean();
-            else
-                m_skipNanOutput = false; //default to previous behavior
-
-            if (settings.TryGetValue("timestampSource", out setting))
-                m_timestampSource = (TimestampSource)Enum.Parse(typeof(TimestampSource), setting);
-            else
-                m_timestampSource = TimestampSource.Frame;
-
-            if (settings.TryGetValue("calculationInterval", out setting))
-                CalculationInterval = double.Parse(setting);
-            else
-                CalculationInterval = 0;
-
-            if (settings.TryGetValue("useLatestValues", out setting))
-                m_useLatestValues = setting.ParseBoolean();
-            else
-                m_useLatestValues = true;
-
-            if (settings.TryGetValue("sentinelValue", out setting))
-                m_sentinelValue = double.Parse(setting);
-            else
-                m_sentinelValue = double.NaN;
+            m_skipNanOutput = settings.TryGetValue("skipNanOutput", out setting) && setting.ParseBoolean();
+            TimestampSource = settings.TryGetValue("timestampSource", out setting) && Enum.TryParse(setting, out TimestampSource timestampSource) ? timestampSource : TimestampSource.Frame;
+            CalculationInterval = settings.TryGetValue("calculationInterval", out setting) ? double.Parse(setting) : 0;
+            UseLatestValues = !settings.TryGetValue("useLatestValues", out setting) || setting.ParseBoolean();
+            SentinelValue = settings.TryGetValue("sentinelValue", out setting) ? double.Parse(setting) : double.NaN;
 
             m_latestMeasurements.LagTime = LagTime;
             m_latestMeasurements.LeadTime = LeadTime;
@@ -508,7 +416,7 @@ namespace DynamicCalculator
         {
             base.Start();
 
-            if (m_useLatestValues && m_timerOperation.Delay > 0)
+            if (UseLatestValues && m_timerOperation.Delay > 0)
                 m_timerOperation.RunOnceAsync();
         }
 
@@ -522,7 +430,7 @@ namespace DynamicCalculator
         {
             m_latestTimestamp = frame.Timestamp;
 
-            if (m_useLatestValues)
+            if (UseLatestValues)
                 ProcessMeasurements(frame.Measurements.Values);
             else
                 Calculate(frame.Measurements);
@@ -579,16 +487,16 @@ namespace DynamicCalculator
                 if (measurements.TryGetValue(key, out IMeasurement measurement))
                     m_expressionContext.Variables[name] = measurement.AdjustedValue;
                 else
-                    m_expressionContext.Variables[name] = m_sentinelValue;
+                    m_expressionContext.Variables[name] = SentinelValue;
             }
 
             // Handle special constants
-            m_expressionContext.Variables["TIME"] = RealTime.Value;
-            m_expressionContext.Variables["UTCTIME"] = DateTime.UtcNow;
-            m_expressionContext.Variables["LOCALTIME"] = DateTime.Now;
+            m_expressionContext.Variables[TimeVarName] = RealTime.Value;
+            m_expressionContext.Variables[UtcTimeVarName] = DateTime.UtcNow;
+            m_expressionContext.Variables[LocalTimeVarName] = DateTime.Now;
 
             // Compile the expression if it has not been compiled already
-            if ((object)m_expression == null)
+            if (m_expression is null)
                 m_expression = m_expressionContext.CompileDynamic(m_aliasedExpressionText);
 
             // Evaluate the expression and generate the measurement
@@ -611,14 +519,12 @@ namespace DynamicCalculator
         private void AddAliasedVariable(string token)
         {
             string[] splitToken = token.Split('=');
-            MeasurementKey key;
-            string alias;
 
             if (splitToken.Length > 2)
                 throw new FormatException($"Too many equals signs: {token}");
 
-            key = GetKey(splitToken[1].Trim());
-            alias = splitToken[0].Trim();
+            MeasurementKey key = GetKey(splitToken[1].Trim());
+            string alias = splitToken[0].Trim();
 
             AddMapping(key, alias);
         }
@@ -645,14 +551,14 @@ namespace DynamicCalculator
             if (m_variableNames.Contains(alias))
                 throw new ArgumentException($"Variable name is not unique: {alias}");
 
-            if (alias.Equals("TIME", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("Variable name \"TIME\" is reserved.");
+            if (alias.Equals(TimeVarName, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException($"Variable name \"{TimeVarName}\" is reserved.");
 
-            if (alias.Equals("UTCTIME", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("Variable name \"UTCTIME\" is reserved.");
+            if (alias.Equals(UtcTimeVarName, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException($"Variable name \"{UtcTimeVarName}\" is reserved.");
             
-            if (alias.Equals("LOCALTIME", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("Variable name \"LOCALTIME\" is reserved.");
+            if (alias.Equals(LocalTimeVarName, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException($"Variable name \"{LocalTimeVarName}\" is reserved.");
 
             m_variableNames.Add(alias);
             m_keyMapping.Add(key, alias);
@@ -673,24 +579,13 @@ namespace DynamicCalculator
             m_aliasedExpressionText = aliasedExpressionTextBuilder.ToString();
         }
 
-        // Gets a measurement key based on a token which
-        // may be either a signal ID or measurement key.
-        private MeasurementKey GetKey(string token)
-        {
-            return Guid.TryParse(token, out Guid signalID)
-                ? MeasurementKey.LookUpBySignalID(signalID)
-                : MeasurementKey.Parse(token);
-        }
-
         // Generates a measurement with the given value and sends it into the system
         private void GenerateCalculatedMeasurement(long timestamp, IConvertible value)
         {
-            IMeasurement calculatedMeasurement;
-
-            if ((object)value == null)
+            if (value is null)
                 throw new InvalidOperationException("Calculation must not return a type that does not convert to double.");
 
-            calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], Convert.ToDouble(value), timestamp);
+            IMeasurement calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], Convert.ToDouble(value), timestamp);
             OnNewMeasurement(calculatedMeasurement);
             m_latestValue = calculatedMeasurement.AdjustedValue;
         }
@@ -702,6 +597,27 @@ namespace DynamicCalculator
             // skip processing of an output with a value of NaN unless configured to process NaN outputs
             if (!m_skipNanOutput || !double.IsNaN(measurement.Value))
                 OnNewMeasurements(new[] { measurement });
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        // Static Constructor
+
+        // Static Properties
+
+        // Static Methods
+
+        // Gets a measurement key based on a token which
+        // may be either a signal ID or measurement key.
+        private static MeasurementKey GetKey(string token)
+        {
+            return Guid.TryParse(token, out Guid signalID)
+                ? MeasurementKey.LookUpBySignalID(signalID)
+                : MeasurementKey.Parse(token);
         }
 
         #endregion
