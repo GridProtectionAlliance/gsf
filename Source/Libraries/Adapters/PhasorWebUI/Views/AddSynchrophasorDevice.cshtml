@@ -539,18 +539,34 @@
             return false;
         }
 
-        function phaseEndsWith(phaseLabel, phaseMatches) {
+        function phaseEndsWith(phaseLabel, phaseMatches, ignoreCase) {
+            if (ignoreCase)
+                phaseLabel = phaseLabel.toUpperCase();
+
             for (let i = 0; i < phaseMatches.length; i++) {
-                if (phaseLabel.endsWith(phaseMatches[i]))
+                let phaseMatch = phaseMatches[i];
+
+                if (ignoreCase)
+                    phaseMatch = phaseMatch.toUpperCase();
+
+                if (phaseLabel.endsWith(phaseMatch))
                     return true;
             }
 
             return false;
         }
 
-        function phaseContains(phaseLabel, phaseMatches) {
+        function phaseContains(phaseLabel, phaseMatches, ignoreCase) {
+            if (ignoreCase)
+                phaseLabel = phaseLabel.toUpperCase();
+
             for (let i = 0; i < phaseMatches.length; i++) {
-                if (phaseLabel.indexOf(phaseMatches[i]) > -1)
+                let phaseMatch = phaseMatches[i];
+
+                if (ignoreCase)
+                    phaseMatch = phaseMatch.toUpperCase();
+
+                if (phaseLabel.indexOf(phaseMatch) > -1)
                     return true;
             }
 
@@ -558,13 +574,16 @@
         }
 
         function phaseMatchHighConfidence(phaseLabel, containsMatches, endsWithMatches) {
+            if (phaseEndsWith(phaseLabel, containsMatches, true))
+                return true;
+
             const matches = containsMatches.concat(endsWithMatches);
 
             for (let i = 0; i < matches.length; i++) {
                 const match = matches[i];
                 const variations = [ " " + match, "_" + match, "-" + match, "." + match ];
 
-                if (phaseEndsWith(phaseLabel, variations))
+                if (phaseEndsWith(phaseLabel, variations, false))
                     return true;
             }
 
@@ -572,7 +591,7 @@
                 const match = containsMatches[i];
                 const variations = [ " " + match + " ", "_" + match + "_", "-" + match + "-", "-" + match + "_", "_" + match + "-", "." + match + "." ];
 
-                if (phaseContains(phaseLabel, variations))
+                if (phaseContains(phaseLabel, variations, false))
                     return true;
             }
 
@@ -584,7 +603,7 @@
                 const match = phaseMatches[i];
                 const variations = [ " " + match, match + " ", "_" + match, match + "_", "_" + match + "_", "-" + match, match + "-", "-" + match + "-", "-" + match + "_", "_" + match + "-", "." + match, match + ".", "." + match + "." ];
 
-                if (phaseContains(phaseLabel, variations))
+                if (phaseContains(phaseLabel, variations, true))
                     return true;
             }
 
@@ -597,10 +616,10 @@
 
             // Handle high confidence phase matches when no phase is defined or when phase is "+" - since positive sequence is often default value, it's treated with suspicion
             if (isEmpty(phase) || phase === "+") {
-                if (phaseMatchExact(phasorLabel, [ "V1PM", "I1PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V1", "I1" ], [ "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" ]) || phaseEndsWith(phasorLabel, [ "+SV", "+SI", "+V", "+I" ]))
+                if (phaseMatchExact(phasorLabel, [ "V1PM", "I1PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V1", "I1" ], [ "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" ]) || phaseEndsWith(phasorLabel, [ "+SV", "+SI", "+V", "+I" ], true))
                     return "+";
 
-                if (phaseMatchExact(phasorLabel, [ "V0PM", "I0PM", "VZPM", "IZPM" ]) || phaseMatchHighConfidence(phasorLabel, ["V0", "I0"], [ "ZERO", "ZPV", "ZPI", "VSPM", "V0PM", "I0PM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" ]) || phaseEndsWith(phasorLabel, [ "0SV", "0SI" ]))
+                if (phaseMatchExact(phasorLabel, [ "V0PM", "I0PM", "VZPM", "IZPM" ]) || phaseMatchHighConfidence(phasorLabel, ["V0", "I0"], [ "ZERO", "ZPV", "ZPI", "VSPM", "V0PM", "I0PM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" ]) || phaseEndsWith(phasorLabel, [ "0SV", "0SI" ], true))
                     return "0";
 
                 if (phaseMatchExact(phasorLabel, [ "VAPM", "IAPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "VA", "IA" ], [ "APV", "API", "VAPM", "IAPM", "AV", "AI" ]))
@@ -644,29 +663,29 @@
                     return "-?";
 
                 // Test for contains after checks with separators
-                if (phaseContains(phasorLabel, [ "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" ]))
+                if (phaseContains(phasorLabel, ["V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I"], true))
                     return "+?";
 
-                if (phaseContains(phasorLabel, [ "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" ]))
+                if (phaseContains(phasorLabel, ["V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI"], true))
                     return "0?";
 
-                if (phaseContains(phasorLabel, [ "VA", "IA", "APV", "API", "VAPM", "IAPM", "AV", "AI" ]))
+                if (phaseContains(phasorLabel, ["VA", "IA", "APV", "API", "VAPM", "IAPM", "AV", "AI"], true))
                     return "A?";
 
-                if (phaseContains(phasorLabel, [ "VB", "IB", "BPV", "BPI", "VBPM", "IBPM", "BV", "BI" ]))
+                if (phaseContains(phasorLabel, ["VB", "IB", "BPV", "BPI", "VBPM", "IBPM", "BV", "BI"], true))
                     return "B?";
 
-                if (phaseContains(phasorLabel, [ "VC", "IC", "CPV", "CPI", "VCPM", "ICPM", "CV", "CI" ]))
+                if (phaseContains(phasorLabel, [ "VC", "IC", "CPV", "CPI", "VCPM", "ICPM", "CV", "CI" ], true))
                     return "C?";
 
-                if (phaseContains(phasorLabel, [ "VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" ]))
+                if (phaseContains(phasorLabel, ["VN", "IN", "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI"], true))
                     return "N?";
 
-                if (phaseContains(phasorLabel, [ "V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]))
+                if (phaseContains(phasorLabel, ["V2", "I2", "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI"], true))
                     return "-?";
 
                 // -V and -I may match too often, so check these last
-                if (phaseMatchLowConfidence(phasorLabel, [ "-V", "-I" ]) || phaseContains(phasorLabel, [ "-V", "-I" ]))
+                if (phaseMatchLowConfidence(phasorLabel, ["-V", "-I"]) || phaseContains(phasorLabel, ["-V", "-I"], true))
                     return "-?";
 
                 return "?";
