@@ -26,11 +26,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Ciloci.Flee;
 using GSF;
+using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -76,16 +78,18 @@ namespace DynamicCalculator
         /// </summary>
         public const string DefaultImports = "AssemblyName=mscorlib, TypeName=System.Math; AssemblyName=mscorlib, TypeName=System.DateTime";
 
-        private const string TimeVarName = "TIME";
-        private const string UtcTimeVarName = "UTCTIME";
-        private const string LocalTimeVarName = "LOCALTIME";
+        private const string TimeVariable = "TIME";
+        private const string UtcTimeVariable = "UTCTIME";
+        private const string LocalTimeVariable = "LOCALTIME";
+        private const string SystemNameVariable = "SYSTENAME";
+
+        private static readonly string[] ReservedVariableNames = { TimeVariable, UtcTimeVariable, LocalTimeVariable, SystemNameVariable };
 
         // Fields
         private string m_expressionText;
         private string m_variableList;
         private string m_imports;
         private bool m_supportsTemporalProcessing;
-        private bool m_skipNanOutput;
 
         private readonly ImmediateMeasurements m_latestMeasurements;
         private Ticks m_latestTimestamp;
@@ -110,8 +114,10 @@ namespace DynamicCalculator
         /// </summary>
         public DynamicCalculator()
         {
-            m_latestMeasurements = new ImmediateMeasurements();
-            m_latestMeasurements.RealTimeFunction = () => RealTime;
+            m_latestMeasurements = new ImmediateMeasurements
+            {
+                RealTimeFunction = () => RealTime
+            };
 
             m_variableNames = new HashSet<string>();
             m_keyMapping = new Dictionary<MeasurementKey, string>();
@@ -246,6 +252,14 @@ namespace DynamicCalculator
         public bool UseLatestValues { get; set; }
 
         /// <summary>
+        /// Gets or sets the flag indicating whether to skip processing of an output with a value of NaN.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the flag indicating whether to skip processing of an output with a value of NaN.")]
+        [DefaultValue(false)]
+        public bool SkipNaNOutput { get; set; }
+
+        /// <summary>
         /// Gets or sets the value used when no other value can be determined for a variable.
         /// </summary>
         [ConnectionStringParameter]
@@ -316,6 +330,7 @@ namespace DynamicCalculator
                 status.AppendLine($"         Use Latest Values: {UseLatestValues}");
                 status.AppendLine($"      Calculation Interval: {(CalculationInterval == 0.0D ? "At received data rate" : $"{CalculationInterval:N3} seconds")}");
                 status.AppendLine($"          Timestamp Source: {TimestampSource}");
+                status.AppendLine($"           Skip NaN Values: {SkipNaNOutput}");
                 status.AppendLine($"            Sentinel Value: {SentinelValue}");
 
                 if (ExpectsOutputMeasurement)
@@ -356,6 +371,9 @@ namespace DynamicCalculator
                     case TimestampSource.LocalClock:
                         return DateTime.UtcNow;
 
+                    case TimestampSource.Frame:
+                        return m_latestTimestamp;
+
                     default:
                         return m_latestTimestamp;
                 }
@@ -380,29 +398,25 @@ namespace DynamicCalculator
                 throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements?.Length ?? 0}");
 
             // Load required parameters
-            if (!settings.TryGetValue("variableList", out _))
-                throw new ArgumentException(string.Format(ErrorMessage, "variableList"));
+            if (!settings.TryGetValue(nameof(VariableList), out string setting))
+                throw new ArgumentException(string.Format(ErrorMessage, nameof(VariableList)));
 
-            VariableList = settings["variableList"];
+            VariableList = setting;
 
-            if (!settings.TryGetValue("expressionText", out _))
-                throw new ArgumentException(string.Format(ErrorMessage, "expressionText"));
+            if (!settings.TryGetValue(nameof(ExpressionText), out setting))
+                throw new ArgumentException(string.Format(ErrorMessage, nameof(ExpressionText)));
 
-            ExpressionText = settings["expressionText"];
+            ExpressionText = setting;
 
             // Load optional parameters
-            Imports = settings.TryGetValue("imports", out string setting) ? setting : DefaultImports;
-            m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out setting) && setting.ParseBoolean();
+            Imports = settings.TryGetValue(nameof(Imports), out setting) ? setting : DefaultImports;
+            m_supportsTemporalProcessing = settings.TryGetValue(nameof(SupportsTemporalProcessing), out setting) && setting.ParseBoolean();
 
-            // When skipNanOutput is true, then any output measurement which 
-            // would have a value of NaN is skipped.
-            // This prevents the NaN outputs that could otherwise occur when some inputs to the calculation
-            // are at widely differing periods.
-            m_skipNanOutput = settings.TryGetValue("skipNanOutput", out setting) && setting.ParseBoolean();
-            TimestampSource = settings.TryGetValue("timestampSource", out setting) && Enum.TryParse(setting, out TimestampSource timestampSource) ? timestampSource : TimestampSource.Frame;
-            CalculationInterval = settings.TryGetValue("calculationInterval", out setting) ? double.Parse(setting) : 0;
-            UseLatestValues = !settings.TryGetValue("useLatestValues", out setting) || setting.ParseBoolean();
-            SentinelValue = settings.TryGetValue("sentinelValue", out setting) ? double.Parse(setting) : double.NaN;
+            SkipNaNOutput = settings.TryGetValue(nameof(SkipNaNOutput), out setting) && setting.ParseBoolean();
+            TimestampSource = settings.TryGetValue(nameof(TimestampSource), out setting) && Enum.TryParse(setting, out TimestampSource timestampSource) ? timestampSource : TimestampSource.Frame;
+            CalculationInterval = settings.TryGetValue(nameof(CalculationInterval), out setting) ? double.Parse(setting) : 0;
+            UseLatestValues = !settings.TryGetValue(nameof(UseLatestValues), out setting) || setting.ParseBoolean();
+            SentinelValue = settings.TryGetValue(nameof(SentinelValue), out setting) ? double.Parse(setting) : double.NaN;
 
             m_latestMeasurements.LagTime = LagTime;
             m_latestMeasurements.LeadTime = LeadTime;
@@ -491,9 +505,10 @@ namespace DynamicCalculator
             }
 
             // Handle special constants
-            m_expressionContext.Variables[TimeVarName] = RealTime.Value;
-            m_expressionContext.Variables[UtcTimeVarName] = DateTime.UtcNow;
-            m_expressionContext.Variables[LocalTimeVarName] = DateTime.Now;
+            m_expressionContext.Variables[TimeVariable] = RealTime.Value;
+            m_expressionContext.Variables[UtcTimeVariable] = DateTime.UtcNow;
+            m_expressionContext.Variables[LocalTimeVariable] = DateTime.Now;
+            m_expressionContext.Variables[SystemNameVariable] = SystemName;
 
             // Compile the expression if it has not been compiled already
             if (m_expression is null)
@@ -551,14 +566,11 @@ namespace DynamicCalculator
             if (m_variableNames.Contains(alias))
                 throw new ArgumentException($"Variable name is not unique: {alias}");
 
-            if (alias.Equals(TimeVarName, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException($"Variable name \"{TimeVarName}\" is reserved.");
-
-            if (alias.Equals(UtcTimeVarName, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException($"Variable name \"{UtcTimeVarName}\" is reserved.");
-            
-            if (alias.Equals(LocalTimeVarName, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException($"Variable name \"{LocalTimeVarName}\" is reserved.");
+            foreach (string reservedName in ReservedVariableNames)
+            {
+                if (alias.Equals(reservedName, StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException($"Variable name \"{reservedName}\" is reserved.");
+            }
 
             m_variableNames.Add(alias);
             m_keyMapping.Add(key, alias);
@@ -579,6 +591,33 @@ namespace DynamicCalculator
             m_aliasedExpressionText = aliasedExpressionTextBuilder.ToString();
         }
 
+        // Gets a measurement key based on a token which
+        // may be either a signal ID, measurement key or point yah.
+        private MeasurementKey GetKey(string token)
+        {
+            if (Guid.TryParse(token, out Guid signalID))
+                return MeasurementKey.LookUpBySignalID(signalID);
+
+            if (MeasurementKey.TryParse(token, out MeasurementKey key))
+                return key;
+
+            const string measurementTable = "ActiveMeasurements";
+
+            if (!(DataSource is null) && DataSource.Tables.Contains(measurementTable))
+            {
+                DataRow[] rows = DataSource.Tables[measurementTable].Select($"PointTag = '{token}'");
+
+                if (rows.Length > 0)
+                    key = MeasurementKey.LookUpOrCreate(rows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), rows[0]["ID"].ToString());
+            }
+
+            // If all else fails, attempt to parse the item as a measurement key
+            if (key == default || key == MeasurementKey.Undefined)
+                throw new InvalidOperationException($"Could not parse token \"{token}\" as a Guid, measurement key, or point tag");
+
+            return key;
+        }
+
         // Generates a measurement with the given value and sends it into the system
         private void GenerateCalculatedMeasurement(long timestamp, IConvertible value)
         {
@@ -594,8 +633,8 @@ namespace DynamicCalculator
         // when only a single measurement is to be provided.
         private void OnNewMeasurement(IMeasurement measurement)
         {
-            // skip processing of an output with a value of NaN unless configured to process NaN outputs
-            if (!m_skipNanOutput || !double.IsNaN(measurement.Value))
+            // Skip processing of an output with a value of NaN unless configured to process NaN outputs
+            if (!SkipNaNOutput || !double.IsNaN(measurement.Value))
                 OnNewMeasurements(new[] { measurement });
         }
 
@@ -603,22 +642,26 @@ namespace DynamicCalculator
 
         #region [ Static ]
 
-        // Static Fields
-
         // Static Constructor
+        static DynamicCalculator()
+        {
+            try
+            {
+                CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+                systemSettings.Add("SystemName", "", "Name of system that will be prefixed to system level tags, when defined. Value should follow tag naming conventions, e.g., no spaces and all upper case.");
+                SystemName = systemSettings["SystemName"].Value;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+
+            if (string.IsNullOrWhiteSpace(SystemName))
+                SystemName = string.Empty;
+        }
 
         // Static Properties
-
-        // Static Methods
-
-        // Gets a measurement key based on a token which
-        // may be either a signal ID or measurement key.
-        private static MeasurementKey GetKey(string token)
-        {
-            return Guid.TryParse(token, out Guid signalID)
-                ? MeasurementKey.LookUpBySignalID(signalID)
-                : MeasurementKey.Parse(token);
-        }
+        internal static string SystemName { get; }
 
         #endregion
     }
