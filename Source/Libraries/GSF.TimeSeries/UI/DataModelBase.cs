@@ -238,11 +238,14 @@ namespace GSF.TimeSeries.UI
         /// <param name="propertyName">Property name that has changed.</param>
         protected virtual void OnPropertyChanged(string propertyName)
         {
+            if (string.Compare(propertyName, "IsValid", true) != 0)
+                ValidateProperty(propertyName);
+
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 
-            if (string.Compare(propertyName, "IsValid", true) != 0)
-                ValidateProperty(propertyName);
+            if (m_lastIsValidState != IsValid)
+                OnPropertyChanged("IsValid");
         }
 
         /// <summary>
@@ -271,9 +274,6 @@ namespace GSF.TimeSeries.UI
             }
 
             m_propertyErrors[propertyName] = error;
-
-            if (m_lastIsValidState != IsValid)
-                OnPropertyChanged("IsValid");
         }
 
         /// <summary>
