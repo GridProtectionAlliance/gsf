@@ -368,7 +368,15 @@
                 </Grid.ColumnDefinitions>
 
                 <Button x:Name="ButtonPrevious" Content="Previous" Click="ButtonPrevious_Click" HorizontalAlignment="Left"/>
-                <Button x:Name="ButtonNext" Content="Next" Grid.Column="1" Click="ButtonNext_Click" HorizontalAlignment="Right"/>
+
+                <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="ButtonAccept" Width="Auto" Content="Accept Phase Guesses" Grid.Column="0" Click="ButtonAccept_Click" HorizontalAlignment="Right" Visibility="Hidden"/>
+                    <Button x:Name="ButtonNext" Content="Next" Grid.Column="1" Click="ButtonNext_Click" HorizontalAlignment="Right"/>
+                </Grid>
             </Grid>
         </StackPanel>
     </StackPanel>

@@ -36,7 +36,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
     /// <summary>
     /// Interaction logic for InputWizardUserControl.xaml
     /// </summary>
-    public partial class InputWizardUserControl : UserControl
+    public partial class InputWizardUserControl
     {
         #region [ Members ]
 
@@ -97,6 +97,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_dataContext.NewDeviceConfiguration = false;
             }
         }
+
+        #endregion
+
+        #region [ Properties ]
+
+        private bool HasPhaseErrors => m_dataContext.ItemsSource.Any(inputDevice => inputDevice.PhasorList.Any(phasor => !string.IsNullOrEmpty(phasor["Phase"])));
 
         #endregion
 
@@ -174,6 +180,21 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_dataContext.StepTwoExpanded = true;
         }
 
+        private void ButtonAccept_Click(object sender, RoutedEventArgs e)
+        {
+            // Accept all phase guesses
+            foreach (InputWizardDevice device in m_dataContext.ItemsSource)
+            {
+                foreach (InputWizardDevicePhasor phasor in device.PhasorList)
+                {
+                    if (phasor.Phase.EndsWith("?"))
+                        phasor.Phase = phasor.Phase[0].ToString();
+                }
+            }
+
+            ButtonAccept.Visibility = Visibility.Hidden;
+        }
+
         private void ButtonNext_Click(object sender, RoutedEventArgs e)
         {
             if (m_dataContext.StepOneExpanded)
@@ -188,6 +209,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             {
                 if (m_dataContext.ItemsSource.Any(inputDevice => inputDevice.PhasorList.Any(phasor => !phasor.IsValid)))
                 {
+                    ButtonAccept.Visibility = HasPhaseErrors ? Visibility.Visible : Visibility.Hidden;
                     m_dataContext.Popup("Fix all validation errors before device can be saved.", "Validation Error", MessageBoxImage.Error);
                 }
                 else
@@ -224,8 +246,10 @@ namespace GSF.PhasorProtocols.UI.UserControls
             {
                 m_dataContext.StepTwoExpanded = false;
                 m_dataContext.StepThreeExpanded = false;
+
                 ButtonNext.Content = "Next";
                 ButtonPrevious.IsEnabled = false;
+                ButtonAccept.Visibility = Visibility.Hidden;
             }
         }
 
@@ -233,8 +257,10 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             m_dataContext.StepOneExpanded = false;
             m_dataContext.StepThreeExpanded = false;
+            
             ButtonNext.Content = "Next";
             ButtonPrevious.IsEnabled = true;
+            ButtonAccept.Visibility = Visibility.Hidden;
         }
 
         private void ExpanderStep3_Expanded(object sender, RoutedEventArgs e)
@@ -257,6 +283,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 ButtonNext.Content = "Finish";
                 ButtonPrevious.IsEnabled = true;
             }
+
+            ButtonAccept.Visibility = HasPhaseErrors ? Visibility.Visible : Visibility.Hidden;
         }
 
         private void RowDetailsDataGrid_Initialized(object sender, EventArgs e)

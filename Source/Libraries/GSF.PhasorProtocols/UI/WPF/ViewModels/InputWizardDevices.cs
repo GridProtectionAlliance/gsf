@@ -781,7 +781,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                IEnumerable<string> errorMessages = m_errorMessages .Select(kvp => $"{kvp.Key}: {kvp.Value}");
+                IEnumerable<string> errorMessages = m_errorMessages.Select(kvp => $"{kvp.Key}: {kvp.Value}");
                 return string.Join(Environment.NewLine, errorMessages);
             }
         }
