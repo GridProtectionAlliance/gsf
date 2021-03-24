@@ -26,6 +26,7 @@ using GSF.ComponentModel;
 using GSF.Data.Model;
 using GSF.IO;
 using GSF.PhasorProtocols;
+using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.Units.EE;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
@@ -42,7 +43,12 @@ using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
 using System.Text;
 using System.Threading.Tasks;
+using AnalogDefinition = PhasorWebUI.Adapters.AnalogDefinition;
+using ConfigurationCell = PhasorWebUI.Adapters.ConfigurationCell;
+using DigitalDefinition = PhasorWebUI.Adapters.DigitalDefinition;
+using FrequencyDefinition = PhasorWebUI.Adapters.FrequencyDefinition;
 using Phasor = PhasorWebUI.Model.Phasor;
+using PhasorDefinition = PhasorWebUI.Adapters.PhasorDefinition;
 using PowerCalculation = PhasorWebUI.Model.PowerCalculation;
 using SignalType = PhasorWebUI.Model.SignalType;
 
@@ -243,6 +249,9 @@ namespace PhasorWebUI
             if ((device.ProtocolID ?? 0) == 0)
                 device.ProtocolID = IeeeC37_118ProtocolID;
 
+            if (device.UniqueID == Guid.Empty)
+                device.UniqueID = Guid.NewGuid();
+
             DataContext.Table<Device>().AddNewRecord(device);
         }
 
@@ -252,6 +261,9 @@ namespace PhasorWebUI
         {
             if ((device.ProtocolID ?? 0) == 0)
                 device.ProtocolID = IeeeC37_118ProtocolID;
+
+            if (device.UniqueID == Guid.Empty)
+                device.UniqueID = Guid.NewGuid();
 
             DataContext.Table<Device>().UpdateRecord(device);
 
@@ -675,6 +687,9 @@ namespace PhasorWebUI
                     IDLabel = sourceCell.IDLabel
                 };
 
+                if (sourceCell is ConfigurationCell3 configCell3)
+                    derivedCell.UniqueID = configCell3.GlobalID;
+
                 // Create equivalent derived frequency definition
                 IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
 
@@ -685,7 +700,46 @@ namespace PhasorWebUI
 
                 // Create equivalent derived phasor definitions
                 foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition { ID = --phasorID, Label = sourcePhasor.Label, PhasorType = sourcePhasor.PhasorType.ToString(), SourceIndex = ++sourceIndex });
+                {
+                    string configPhase = string.Empty;
+                    int? nominalVoltage = null;
+
+                    if (sourcePhasor is PhasorDefinition3 phasor3)
+                    {
+                        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+                        switch (phasor3.PhasorComponent)
+                        {
+                            case PhasorComponent.ZeroSequence:
+                                configPhase = "0";
+                                break;
+                            case PhasorComponent.PositiveSequence:
+                                configPhase = "+";
+                                break;
+                            case PhasorComponent.NegativeSequence:
+                                configPhase = "-";
+                                break;
+                            case PhasorComponent.PhaseA:
+                                configPhase = "A";
+                                break;
+                            case PhasorComponent.PhaseB:
+                                configPhase = "B";
+                                break;
+                            case PhasorComponent.PhaseC:
+                                configPhase = "C";
+                                break;
+                            case PhasorComponent.ReservedPhase:
+                                break;
+                            default:
+                                configPhase = string.Empty;
+                                break;
+                        }
+
+                        if (Enum.TryParse(phasor3.UserFlags.ToString(), out VoltageLevel level))
+                            nominalVoltage = level.Value();
+                    }
+
+                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition { ID = --phasorID, Label = sourcePhasor.Label, PhasorType = sourcePhasor.PhasorType.ToString(), Phase = configPhase, NominalVoltage = nominalVoltage, SourceIndex = ++sourceIndex });
+                }
 
                 // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
                 foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)

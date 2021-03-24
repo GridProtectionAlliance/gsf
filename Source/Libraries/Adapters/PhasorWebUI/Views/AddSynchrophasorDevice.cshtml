@@ -698,7 +698,7 @@
             if (!isEmpty(nominalVoltage) && nominalVoltage !== 0)
                 return nominalVoltage;
 
-            const commonVoltageLevels = ["69", "115", "138", "161", "230", "345", "500", "765"];
+            const commonVoltageLevels = [ "44", "69", "115", "138", "161", "169", "230", "345", "500", "765", "1100" ];
 
             // Check phasor label before device
             for (let i = 0; i < commonVoltageLevels.length; i++) {
@@ -1291,6 +1291,7 @@
                         return {
                             ID: cell.ID,
                             ParentID: cell.ParentID,
+                            UniqueID: cell.UniqueID,
                             IDCode: cell.IDCode,
                             StationName: self.configFrame().Cells.length === 1 ? self.deviceName() : cell.IDLabel(),
                             IDLabel: cell.IDLabel(),
@@ -3200,6 +3201,8 @@
 
                                 // Check if this is a new device or an edit to an existing one
                                 if (device.ID === 0) {
+                                    device.UniqueID = cell.UniqueID;
+
                                     // Add new device record
                                     return phasorHub.addNewDevice(device).then(function () {
                                         // Get newly added device with auto-incremented ID

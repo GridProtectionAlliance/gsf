@@ -1,6 +1,7 @@
 ﻿// ReSharper disable CheckNamespace
 #pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 using GSF.ComponentModel;
 
@@ -45,6 +46,8 @@ namespace PhasorWebUI.Adapters
         public int ID { get; set; }
 
         public int? ParentID { get; set; }
+
+        public Guid UniqueID { get; set; }
 
         public ushort IDCode { get; set; }
 
