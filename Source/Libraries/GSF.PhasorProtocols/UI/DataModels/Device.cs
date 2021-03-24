@@ -97,12 +97,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         // Fields
         private Guid m_nodeID;
-        private int m_id;
         private int? m_parentID;
         private Guid m_uniqueID;
         private string m_acronym;
         private string m_name;
-        private string m_originalSource;
         private bool m_isConcentrator;
         private int? m_companyID;
         private int? m_historianID;
@@ -129,20 +127,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private bool m_autoStartDataParsingSequence;
         private bool m_skipDisableRealTimeData;
         private int m_measurementReportingInterval;
-        private string m_companyName;
         private string m_companyAcronym;
-        private string m_historianAcronym;
-        private string m_vendorDeviceName;
-        private string m_vendorAcronym;
-        private string m_protocolName;
-        private string m_protocolCategory;
-        private string m_interconnectionName;
-        private string m_nodeName;
-        private string m_parentAcronym;
-        private DateTime m_createdOn;
-        private string m_createdBy;
-        private DateTime m_updatedOn;
-        private string m_updatedBy;
         private string m_alternateCommandChannel;
 
         #endregion
@@ -167,11 +152,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets <see cref="Device"/> ID.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
-        public int ID
-        {
-            get => m_id;
-            set => m_id = value;
-        }
+        public int ID { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> ParentID.
@@ -228,10 +209,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_name;
             set
             {
-                if ((object)value != null && value.Length > 200)
+                if (!(value is null) && value.Length > 200)
                     m_name = value.Substring(0, 200);
                 else
                     m_name = value;
+
                 OnPropertyChanged("Name");
             }
         }
@@ -239,7 +221,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets <see cref="Device"/> Original Source.
         /// </summary>        
-        public string OriginalSource => m_originalSource;
+        public string OriginalSource { get; private set; }
 
         /// <summary>
         ///  Gets or sets <see cref="Device"/> IsConcenttrator.
@@ -622,7 +604,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets <see cref="Device"/> CompanyName.
         /// </summary>
-        public string CompanyName => m_companyName;
+        public string CompanyName { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> CompanyAcronym.
@@ -632,82 +614,66 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets <see cref="Device"/> HistorianAcronym.
         /// </summary>
-        public string HistorianAcronym => m_historianAcronym;
+        public string HistorianAcronym { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> VendorDeviceName.
         /// </summary>
-        public string VendorDeviceName => m_vendorDeviceName;
+        public string VendorDeviceName { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> VendorAcronym.
         /// </summary>
-        public string VendorAcronym => m_vendorAcronym;
+        public string VendorAcronym { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> ProtocolName.
         /// </summary>
-        public string ProtocolName => m_protocolName;
+        public string ProtocolName { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> ProtocolCategory.
         /// </summary>
-        public string ProtocolCategory => m_protocolCategory;
+        public string ProtocolCategory { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> InterconnectionName.
         /// </summary>
-        public string InterconnectionName => m_interconnectionName;
+        public string InterconnectionName { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> NodeName.
         /// </summary>
-        public string NodeName => m_nodeName;
+        public string NodeName { get; private set; }
 
         /// <summary>
         /// Gets <see cref="Device"/> ParentAcronym.
         /// </summary>
-        public string ParentAcronym => m_parentAcronym;
+        public string ParentAcronym { get; private set; }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> CreatedOn.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime CreatedOn
-        {
-            get => m_createdOn;
-            set => m_createdOn = value;
-        }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> CreatedBy.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
-        public string CreatedBy
-        {
-            get => m_createdBy;
-            set => m_createdBy = value;
-        }
+        public string CreatedBy { get; set; }
 
         /// <summary>
         ///  Gets or sets <see cref="Device"/> UpdatedOn.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime UpdatedOn
-        {
-            get => m_updatedOn;
-            set => m_updatedOn = value;
-        }
+        public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         ///  Gets or sets <see cref="Device"/> UpdatedBy.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
-        public string UpdatedBy
-        {
-            get => m_updatedBy;
-            set => m_updatedBy = value;
-        }
+        public string UpdatedBy { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> alternate command channel.
@@ -843,16 +809,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 foreach (DataRow row in deviceTable.Rows)
-                {
                     deviceList.Add(row.ConvertField<int>("ID"));
-                }
 
                 return deviceList;
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -870,23 +834,18 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
-                string commaSeparatedKeys;
-
                 Device[] deviceList = null;
-                DataTable deviceTable;
-                int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (!(keys is null) && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-                    query = $"SELECT * FROM DeviceDetail WHERE ID IN ({commaSeparatedKeys})";
-                    deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
+                    string query = $"SELECT * FROM DeviceDetail WHERE ID IN ({commaSeparatedKeys})";
+                    DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     deviceList = new Device[deviceTable.Rows.Count];
 
                     foreach (DataRow row in deviceTable.Rows)
                     {
-                        id = row.ConvertField<int>("ID");
+                        int id = row.ConvertField<int>("ID");
 
                         deviceList[keys.IndexOf(id)] = new Device()
                         {
@@ -924,17 +883,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
                             MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
                             ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
-                            m_companyName = row.Field<string>("CompanyName"),
+                            CompanyName = row.Field<string>("CompanyName"),
                             m_companyAcronym = row.Field<string>("CompanyAcronym"),
-                            m_historianAcronym = row.Field<string>("HistorianAcronym"),
-                            m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
-                            m_vendorAcronym = row.Field<string>("VendorAcronym"),
-                            m_protocolName = row.Field<string>("ProtocolName"),
-                            m_protocolCategory = row.Field<string>("Category"),
-                            m_interconnectionName = row.Field<string>("InterconnectionName"),
-                            m_nodeName = row.Field<string>("NodeName"),
-                            m_parentAcronym = row.Field<string>("ParentAcronym"),
-                            m_originalSource = row.Field<string>("OriginalSource")
+                            HistorianAcronym = row.Field<string>("HistorianAcronym"),
+                            VendorDeviceName = row.Field<string>("VendorDeviceName"),
+                            VendorAcronym = row.Field<string>("VendorAcronym"),
+                            ProtocolName = row.Field<string>("ProtocolName"),
+                            ProtocolCategory = row.Field<string>("Category"),
+                            InterconnectionName = row.Field<string>("InterconnectionName"),
+                            NodeName = row.Field<string>("NodeName"),
+                            ParentAcronym = row.Field<string>("ParentAcronym"),
+                            OriginalSource = row.Field<string>("OriginalSource")
                         };
                     }
                 }
@@ -943,8 +902,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -971,31 +930,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (isOptional)
                     deviceList.Add(0, "Select Device");
 
-                if (deviceType == DeviceType.Concentrator)
+                switch (deviceType)
                 {
-                    query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Device WHERE IsConcentrator = {0} AND NodeID = {1} AND Enabled= {2} ORDER BY LoadOrder",
-                        "isConcentrator", "nodeID", "Enabled");
-
-                    deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true), database.CurrentNodeID(), database.Bool(true));
-                }
-                else if (deviceType == DeviceType.DirectConnected)
-                {
-                    query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Device WHERE IsConcentrator = {0} AND NodeID = {1} AND Enabled= {2} ORDER BY LoadOrder",
-                        "isConcentrator", "nodeID", "Enabled");
-
-                    deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(false), database.CurrentNodeID(), database.Bool(true));
-                }
-                else
-                {
-                    if (showAll)
+                    case DeviceType.Concentrator:
+                        query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Device WHERE IsConcentrator = {0} AND NodeID = {1} AND Enabled= {2} ORDER BY LoadOrder", "isConcentrator", "nodeID", "Enabled");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true), database.CurrentNodeID(), database.Bool(true));
+                        break;
+                    case DeviceType.DirectConnected:
+                        query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Device WHERE IsConcentrator = {0} AND NodeID = {1} AND Enabled= {2} ORDER BY LoadOrder", "isConcentrator", "nodeID", "Enabled");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(false), database.CurrentNodeID(), database.Bool(true));
+                        break;
+                    default:
                     {
-                        query = "SELECT ID, Acronym FROM Device ORDER BY LoadOrder";
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query);
-                    }
-                    else
-                    {
-                        query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Device WHERE NodeID = {0} ORDER BY LoadOrder", "nodeID");
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                        if (showAll)
+                        {
+                            query = "SELECT ID, Acronym FROM Device ORDER BY LoadOrder";
+                            deviceTable = database.Connection.RetrieveData(database.AdapterType, query);
+                        }
+                        else
+                        {
+                            query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Device WHERE NodeID = {0} ORDER BY LoadOrder", "nodeID");
+                            deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                        }
+
+                        break;
                     }
                 }
 
@@ -1006,8 +964,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -1027,22 +985,20 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> deviceList = new Dictionary<int, string>();
-                DataTable deviceTable;
-                string query;
 
                 if (isOptional)
                     deviceList.Add(0, "All Device");
 
-                query = database.ParameterizedQueryString("SELECT ID, Acronym, IsConcentrator FROM DeviceDetail WHERE NodeID = {0} AND ProtocolType = {1} ORDER BY LoadOrder",
-                    "nodeID", "protocolType");
+                string query = database.ParameterizedQueryString("SELECT ID, Acronym, IsConcentrator FROM DeviceDetail WHERE NodeID = {0} AND ProtocolType = {1} ORDER BY LoadOrder",
+                                                                 "nodeID", "protocolType");
 
-                deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), protocolType);
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), protocolType);
 
                 foreach (DataRow row in deviceTable.Rows)
                 {
                     if (row.ConvertField<bool>("IsConcentrator"))
                     {
-                        ObservableCollection<Device> devices = GetDevices(database, " WHERE ParentID = " + row.ConvertField<int>("ID"));
+                        ObservableCollection<Device> devices = GetDevices(database, $" WHERE ParentID = {row.ConvertField<int>("ID")}");
 
                         foreach (Device device in devices)
                             deviceList[device.ID] = device.Acronym;
@@ -1057,8 +1013,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -1068,10 +1024,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="device">Information about <see cref="Device"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Device device)
-        {
-            return SaveWithAnalogsDigitals(database, device, true, 0, 0);
-        }
+        public static string Save(AdoDataConnection database, Device device) => 
+            SaveWithAnalogsDigitals(database, device, true, 0, 0);
 
         /// <summary>
         /// Saves <see cref="Device"/> information to database along with analogs and digital measurements if requested..
@@ -1095,9 +1049,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 createdConnection = CreateConnection(ref database);
 
-                object nodeID;
-
-                nodeID = device.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(device.NodeID);
+                object nodeID = device.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(device.NodeID);
 
                 if (device.ID == 0)
                 {
@@ -1124,7 +1076,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
                 else
                 {
-                    oldDevice = GetDevice(database, " WHERE ID = " + device.ID);
+                    oldDevice = GetDevice(database, $" WHERE ID = {device.ID}");
 
                     query = database.ParameterizedQueryString("UPDATE Device SET NodeID = {0}, ParentID = {1}, UniqueID = {2}, Acronym = {3}, Name = {4}, " +
                         "IsConcentrator = {5}, CompanyID = {6}, HistorianID = {7}, AccessID = {8}, VendorDeviceID = {9}, ProtocolID = {10}, Longitude = {11}, " +
@@ -1149,13 +1101,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
 
-                Device savedDevice = GetDevice(database, "WHERE Acronym = '" + device.Acronym.Replace(" ", "_").ToUpper() + "'");
+                Device savedDevice = GetDevice(database, $"WHERE Acronym = '{device.Acronym.Replace(" ", "_").ToUpper()}'");
 
-                if ((object)savedDevice == null)
+                if (savedDevice is null)
                     return "Device information saved successfully but failed to create measurements";
 
                 // Determine if device is using a phasor protocol
-                bool deviceIsUsingPhasorProtocol = (string.Compare(savedDevice.ProtocolCategory, "Phasor", StringComparison.OrdinalIgnoreCase) == 0);
+                bool deviceIsUsingPhasorProtocol = string.Compare(savedDevice.ProtocolCategory, "Phasor", StringComparison.OrdinalIgnoreCase) == 0;
 
                 // Add default measurements for non-concentrator devices when device protocol category is Phasor 
                 if (!savedDevice.IsConcentrator && deviceIsUsingPhasorProtocol)
@@ -1169,22 +1121,24 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         {
                             for (int i = 1; i <= analogCount; i++)
                             {
-                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" + savedDevice.Acronym + "-AV" + i + "'");
+                                measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalReference = '{savedDevice.Acronym}-AV{i}'");
 
-                                if ((object)measurement == null)
+                                if (measurement is null)
                                 {
-                                    measurement = new Measurement();
+                                    measurement = new Measurement
+                                    {
+                                        DeviceID = savedDevice.ID,
+                                        HistorianID = savedDevice.HistorianID,
+                                        PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "ALOG", null, i),
+                                        SignalReference = $"{savedDevice.Acronym}-AV{i}",
+                                        Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Analog Value {i}",
+                                        SignalTypeID = signal.ID,
+                                        PhasorSourceIndex = null,
+                                        Enabled = true
+                                    };
 
-                                    measurement.DeviceID = savedDevice.ID;
-                                    measurement.HistorianID = savedDevice.HistorianID;
-                                    measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "ALOG", null, i);
-                                    measurement.SignalReference = savedDevice.Acronym + "-AV" + i;
-                                    measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " Analog Value " + i;
-                                    measurement.SignalTypeID = signal.ID;
-                                    measurement.PhasorSourceIndex = (int?)null;
-                                    measurement.Enabled = true;
 
-                                    if ((object)analogLabels != null && (object)analogLabels[i - 1] != null)
+                                    if (!(analogLabels?[i - 1] is null))
                                         measurement.AlternateTag = analogLabels[i - 1];
 
                                     Measurement.Save(database, measurement);
@@ -1201,22 +1155,24 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         {
                             for (int i = 1; i <= digitalCount; i++)
                             {
-                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" + savedDevice.Acronym + "-DV" + i + "'");
+                                measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalReference = '{savedDevice.Acronym}-DV{i}'");
 
-                                if ((object)measurement == null)
+                                if (measurement is null)
                                 {
-                                    measurement = new Measurement();
+                                    measurement = new Measurement
+                                    {
+                                        DeviceID = savedDevice.ID,
+                                        HistorianID = savedDevice.HistorianID,
+                                        PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i),
+                                        SignalReference = $"{savedDevice.Acronym}-DV{i}",
+                                        SignalTypeID = signal.ID,
+                                        Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Digital Value {i}",
+                                        PhasorSourceIndex = null,
+                                        Enabled = true
+                                    };
 
-                                    measurement.DeviceID = savedDevice.ID;
-                                    measurement.HistorianID = savedDevice.HistorianID;
-                                    measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i);
-                                    measurement.SignalReference = savedDevice.Acronym + "-DV" + i;
-                                    measurement.SignalTypeID = signal.ID;
-                                    measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " Digital Value " + i;
-                                    measurement.PhasorSourceIndex = (int?)null;
-                                    measurement.Enabled = true;
 
-                                    if ((object)digitalLabels != null && (object)digitalLabels[i - 1] != null)
+                                    if (!(digitalLabels?[i - 1] is null))
                                         measurement.AlternateTag = digitalLabels[i - 1];
 
                                     Measurement.Save(database, measurement);
@@ -1231,20 +1187,22 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         }
                         else if (signal.Suffix == "FQ" || signal.Suffix == "DF" || signal.Suffix == "SF")
                         {
-                            measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalTypeSuffix = '" + signal.Suffix + "'");
+                            measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalTypeSuffix = '{signal.Suffix}'");
 
-                            if ((object)measurement == null)
+                            if (measurement is null)
                             {
-                                measurement = new Measurement();
+                                measurement = new Measurement
+                                {
+                                    DeviceID = savedDevice.ID,
+                                    HistorianID = savedDevice.HistorianID,
+                                    PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, signal.Acronym),
+                                    SignalReference = $"{savedDevice.Acronym}-{signal.Suffix}",
+                                    SignalTypeID = signal.ID,
+                                    Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} {signal.Name}",
+                                    PhasorSourceIndex = null,
+                                    Enabled = true
+                                };
 
-                                measurement.DeviceID = savedDevice.ID;
-                                measurement.HistorianID = savedDevice.HistorianID;
-                                measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, signal.Acronym);
-                                measurement.SignalReference = savedDevice.Acronym + "-" + signal.Suffix;
-                                measurement.SignalTypeID = signal.ID;
-                                measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " " + signal.Name;
-                                measurement.PhasorSourceIndex = (int?)null;
-                                measurement.Enabled = true;
 
                                 Measurement.Save(database, measurement);
                             }
@@ -1268,22 +1226,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         IList<int> keys = Phasor.LoadKeys(database, device.ID);
 
                         foreach (Phasor phasor in Phasor.Load(database, keys))
-                        {
                             Phasor.SaveWithoutMeasurementUpdate(database, phasor);
-                        }
                     }
 
                     // Update existing device measurements to reflect possible device changes
-                    if ((object)oldDevice != null)
+                    if (!(oldDevice is null))
                     {
-                        bool companyUpdated = (deviceIsUsingPhasorProtocol && savedDevice.CompanyID != oldDevice.CompanyID);
-                        bool deviceRenamed = (deviceIsUsingPhasorProtocol && (string.CompareOrdinal(savedDevice.Acronym, oldDevice.Acronym) != 0 || string.CompareOrdinal(savedDevice.Name, oldDevice.Name) != 0));
-                        bool historianUpdated = (savedDevice.HistorianID != oldDevice.HistorianID);
+                        bool companyUpdated = deviceIsUsingPhasorProtocol && savedDevice.CompanyID != oldDevice.CompanyID;
+                        bool deviceRenamed = deviceIsUsingPhasorProtocol && (string.CompareOrdinal(savedDevice.Acronym, oldDevice.Acronym) != 0 || string.CompareOrdinal(savedDevice.Name, oldDevice.Name) != 0);
+                        bool historianUpdated = savedDevice.HistorianID != oldDevice.HistorianID;
 
                         if (companyUpdated || deviceRenamed || historianUpdated)
                         {
                             string companyAcronym = "";
-                            int underScoreIndex;
 
                             if (companyUpdated)
                             {
@@ -1291,12 +1246,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     companyAcronym = savedDevice.CompanyAcronym;
                             }
 
-                            foreach (Measurement measurement in Measurement.GetMeasurements(database, "WHERE DeviceID = " + oldDevice.ID))
+                            foreach (Measurement measurement in Measurement.GetMeasurements(database, $"WHERE DeviceID = {oldDevice.ID}"))
                             {
                                 if (companyUpdated)
                                 {
                                     // WARNING: This assumes company name is followed by an underscore - this may not be a valid assumption for custom point tag naming conventions
-                                    underScoreIndex = measurement.PointTag.ToNonNullString().IndexOf('_');
+                                    int underScoreIndex = measurement.PointTag.ToNonNullString().IndexOf('_');
 
                                     if (underScoreIndex > -1)
                                         measurement.PointTag = companyAcronym + measurement.PointTag.Substring(underScoreIndex);
@@ -1319,7 +1274,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         // If changing the historian for a concentrator style device - must assume desire to change historian for all children devices
                         if (historianUpdated && device.IsConcentrator)
                         {
-                            foreach (Device childDevice in GetDevices(database, "WHERE ParentID = " + device.ID))
+                            foreach (Device childDevice in GetDevices(database, $"WHERE ParentID = {device.ID}"))
                             {
                                 // Recursively call this function for each child device with updated historian which will also fix measurement's historian
                                 childDevice.HistorianID = savedDevice.HistorianID;
@@ -1337,15 +1292,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
                 catch (Exception ex)
                 {
-                    return "Device information saved successfully. Failed to send Initialize command to back-end service." + Environment.NewLine + ex.Message;
+                    return $"Device information saved successfully. Failed to send Initialize command to back-end service.{Environment.NewLine}{ex.Message}";
                 }
 
                 return "Device information saved successfully";
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -1365,8 +1320,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
+
                 // Does not delete the Parent Device
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Device SET ParentID = null WHERE ParentID = {0}", "OldParentID", "NewParentID"), DefaultTimeout, device.ID);
+                
                 // Deletes the Parent Device 
                 //database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ParentID = {0}", "ParentID"), DefaultTimeout, device.ID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ID = {0}", "deviceID"), DefaultTimeout, device.ID);
@@ -1376,8 +1333,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -1394,13 +1351,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail " + whereClause);
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DeviceDetail {whereClause}");
 
                 if (deviceTable.Rows.Count == 0)
                     return null;
 
                 //DataRow row = deviceTable.Rows[0];
-                DataRow[] rowset = deviceTable.Select("NodeID = '" + CommonFunctions.CurrentNodeID() + "'");
+                DataRow[] rowset = deviceTable.Select($"NodeID = '{CommonFunctions.CurrentNodeID()}'");
 
                 if (rowset.Length > 0)
                 {
@@ -1442,17 +1399,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
                         MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
                         ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
-                        m_companyName = row.Field<string>("CompanyName"),
+                        CompanyName = row.Field<string>("CompanyName"),
                         m_companyAcronym = row.Field<string>("CompanyAcronym"),
-                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
-                        m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
-                        m_vendorAcronym = row.Field<string>("VendorAcronym"),
-                        m_protocolName = row.Field<string>("ProtocolName"),
-                        m_protocolCategory = row.Field<string>("Category"),
-                        m_interconnectionName = row.Field<string>("InterconnectionName"),
-                        m_nodeName = row.Field<string>("NodeName"),
-                        m_parentAcronym = row.Field<string>("ParentAcronym"),
-                        m_originalSource = row.Field<string>("OriginalSource")
+                        HistorianAcronym = row.Field<string>("HistorianAcronym"),
+                        VendorDeviceName = row.Field<string>("VendorDeviceName"),
+                        VendorAcronym = row.Field<string>("VendorAcronym"),
+                        ProtocolName = row.Field<string>("ProtocolName"),
+                        ProtocolCategory = row.Field<string>("Category"),
+                        InterconnectionName = row.Field<string>("InterconnectionName"),
+                        NodeName = row.Field<string>("NodeName"),
+                        ParentAcronym = row.Field<string>("ParentAcronym"),
+                        OriginalSource = row.Field<string>("OriginalSource")
                     };
 
                     return device;
@@ -1461,8 +1418,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -1479,7 +1436,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail " + whereClause);
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DeviceDetail {whereClause}");
                 ObservableCollection<Device> deviceList = new ObservableCollection<Device>();
 
                 if (deviceTable.Rows.Count == 0)
@@ -1523,17 +1480,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
                         MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
                         ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
-                        m_companyName = row.Field<string>("CompanyName"),
+                        CompanyName = row.Field<string>("CompanyName"),
                         m_companyAcronym = row.Field<string>("CompanyAcronym"),
-                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
-                        m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
-                        m_vendorAcronym = row.Field<string>("VendorAcronym"),
-                        m_protocolName = row.Field<string>("ProtocolName"),
-                        m_protocolCategory = row.Field<string>("Category"),
-                        m_interconnectionName = row.Field<string>("InterconnectionName"),
-                        m_nodeName = row.Field<string>("NodeName"),
-                        m_parentAcronym = row.Field<string>("ParentAcronym"),
-                        m_originalSource = row.Field<string>("OriginalSource")
+                        HistorianAcronym = row.Field<string>("HistorianAcronym"),
+                        VendorDeviceName = row.Field<string>("VendorDeviceName"),
+                        VendorAcronym = row.Field<string>("VendorAcronym"),
+                        ProtocolName = row.Field<string>("ProtocolName"),
+                        ProtocolCategory = row.Field<string>("Category"),
+                        InterconnectionName = row.Field<string>("InterconnectionName"),
+                        NodeName = row.Field<string>("NodeName"),
+                        ParentAcronym = row.Field<string>("ParentAcronym"),
+                        OriginalSource = row.Field<string>("OriginalSource")
                     });
                 }
 
@@ -1541,8 +1498,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -1553,25 +1510,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="historianID">ID of the historian to refresh metadata if device is null.</param>
         public static void NotifyService(Device device, int? historianID = null)
         {
-            if ((object)device != null)
-            {
-                if (device.Enabled)
-                {
-                    if (device.ParentID == null)
-                        CommonFunctions.SendCommandToService("Initialize " + CommonFunctions.GetRuntimeID("Device", device.ID));
-                    else
-                        CommonFunctions.SendCommandToService("Initialize " + CommonFunctions.GetRuntimeID("Device", (int)device.ParentID));
-                }
-                else
-                {
-                    // We do this to make sure all statistical measurements are in the system.
-                    CommonFunctions.SendCommandToService("ReloadConfig");
-                }
-            }
-            else
-            {
+            if (device is null || !device.Enabled)
                 CommonFunctions.SendCommandToService("ReloadConfig");
-            }
+            else
+                CommonFunctions.SendCommandToService($"Initialize {CommonFunctions.GetRuntimeID("Device", device.ParentID ?? device.ID)}");
         }
 
         private static string ParseConnectionString(string connectionString)
@@ -1591,26 +1533,25 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
-            if (settings.ContainsKey("commandchannel"))
-                return settings["commandchannel"].Replace("{", "").Replace("}", "");
-
-            return string.Empty;
+            return settings.ContainsKey("commandchannel") ? 
+                settings["commandchannel"].Replace("{", "").Replace("}", "") : 
+                string.Empty;
         }
 
         private static string BuildConnectionString(Device device)
         {
-            if (device.ConnectionString == null)
+            if (device.ConnectionString is null)
                 return string.Empty;
 
             string connectionString = device.ConnectionString;
 
-            if (!string.IsNullOrEmpty(device.AlternateCommandChannel))
-            {
-                if (!connectionString.EndsWith(";"))
-                    connectionString += ";";
+            if (string.IsNullOrEmpty(device.AlternateCommandChannel))
+                return connectionString;
 
-                connectionString += "commandchannel={" + device.AlternateCommandChannel + "}";
-            }
+            if (!connectionString.EndsWith(";"))
+                connectionString += ";";
+
+            connectionString += $"commandchannel={{{device.AlternateCommandChannel}}}";
 
             return connectionString;
         }
@@ -1636,8 +1577,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Note that OleDB does not support parameterized sub-query.
                 if (database.DatabaseType == DatabaseType.Access)
                 {
-                    query = database.ParameterizedQueryString("SELECT * FROM DeviceDetail WHERE NodeID = {0} AND IsConcentrator = {1} AND Acronym NOT IN "
-                        + "(SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = " + outputStreamID + ") ORDER BY Acronym", "nodeID", "isConcentrator");
+                    query = database.ParameterizedQueryString($"SELECT * FROM DeviceDetail WHERE NodeID = {{0}} AND IsConcentrator = {{1}} AND Acronym NOT IN (SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {outputStreamID}) ORDER BY Acronym", "nodeID", "isConcentrator");
 
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), database.Bool(false));
                 }
@@ -1687,17 +1627,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
                         MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
                         ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
-                        m_companyName = row.Field<string>("CompanyName"),
+                        CompanyName = row.Field<string>("CompanyName"),
                         m_companyAcronym = row.Field<string>("CompanyAcronym"),
-                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
-                        m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
-                        m_vendorAcronym = row.Field<string>("VendorAcronym"),
-                        m_protocolName = row.Field<string>("ProtocolName"),
-                        m_protocolCategory = row.Field<string>("Category"),
-                        m_interconnectionName = row.Field<string>("InterconnectionName"),
-                        m_nodeName = row.Field<string>("NodeName"),
-                        m_parentAcronym = row.Field<string>("ParentAcronym"),
-                        m_originalSource = row.Field<string>("OriginalSource")
+                        HistorianAcronym = row.Field<string>("HistorianAcronym"),
+                        VendorDeviceName = row.Field<string>("VendorDeviceName"),
+                        VendorAcronym = row.Field<string>("VendorAcronym"),
+                        ProtocolName = row.Field<string>("ProtocolName"),
+                        ProtocolCategory = row.Field<string>("Category"),
+                        InterconnectionName = row.Field<string>("InterconnectionName"),
+                        NodeName = row.Field<string>("NodeName"),
+                        ParentAcronym = row.Field<string>("ParentAcronym"),
+                        OriginalSource = row.Field<string>("OriginalSource")
                     });
                 }
 
@@ -1705,8 +1645,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -1729,11 +1669,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (isOptional)
                     deviceList.Add("", "Select Mirroring Source");
 
-                DataTable deviceTable;
-                string query;
-
-                query = database.ParameterizedQueryString("SELECT DISTINCT OriginalSource FROM Device WHERE NodeID = {0} AND OriginalSource IS NOT NULL ORDER BY OriginalSource", "nodeID");
-                deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                string query = database.ParameterizedQueryString("SELECT DISTINCT OriginalSource FROM Device WHERE NodeID = {0} AND OriginalSource IS NOT NULL ORDER BY OriginalSource", "nodeID");
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in deviceTable.Rows)
                     deviceList[row.ConvertField<string>("OriginalSource")] = row.Field<string>("OriginalSource");
@@ -1742,8 +1679,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
