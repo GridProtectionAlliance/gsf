@@ -611,7 +611,7 @@
         }
 
         function guessPhase(phase, phasorLabel) {
-            if (!isEmpty(phase) && phase !== "+")
+            if (!isEmpty(phase) && phase !== "+" && !phase.endsWith("?"))
                 return phase;
 
             // Handle high confidence phase matches when no phase is defined or when phase is "+" - since positive sequence is often default value, it's treated with suspicion
