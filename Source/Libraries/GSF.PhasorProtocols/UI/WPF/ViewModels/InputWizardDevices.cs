@@ -889,8 +889,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     if (cell is ConfigurationCell3 configCell3)
                     {
                         uniqueID = configCell3.GlobalID;
-                        longitude = (decimal)configCell3.Longitude;
-                        latitude = (decimal)configCell3.Latitude;
+                        longitude = configCell3.LongitudeM;
+                        latitude = configCell3.LatitudeM;
                     }
 
                     if (deviceID > 0)
