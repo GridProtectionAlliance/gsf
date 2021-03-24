@@ -1097,10 +1097,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 object nodeID;
 
-                if (device.NodeID == Guid.Empty)
-                    nodeID = database.CurrentNodeID();
-                else
-                    nodeID = database.Guid(device.NodeID);
+                nodeID = device.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(device.NodeID);
 
                 if (device.ID == 0)
                 {
@@ -1116,7 +1113,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "measurementReportingInterval", "connectOndemand", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, nodeID,
-                        device.ParentID.ToNotNull(), database.Guid(Guid.NewGuid()), device.Acronym.Replace(" ", "_").ToUpper(), device.Name.ToNotNull(), database.Bool(device.IsConcentrator), device.CompanyID.ToNotNull(),
+                        device.ParentID.ToNotNull(), database.Guid(device.UniqueID == Guid.Empty ? Guid.NewGuid() : device.UniqueID), 
+                        device.Acronym.Replace(" ", "_").ToUpper(), device.Name.ToNotNull(), database.Bool(device.IsConcentrator), device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
                         BuildConnectionString(device), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
