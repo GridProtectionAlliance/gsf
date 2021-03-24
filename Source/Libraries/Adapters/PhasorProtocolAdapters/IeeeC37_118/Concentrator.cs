@@ -674,8 +674,8 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                         {
                                             // Assign common time-series configuration values
                                             cell.GlobalID = device.UniqueID;
-                                            cell.Latitude = (float?)device.Latitude ?? float.PositiveInfinity;
-                                            cell.Longitude = (float?)device.Longitude ?? float.PositiveInfinity;
+                                            cell.Latitude = ConfigurationCell3.GetCoordinateFromDecimal(device.Latitude);
+                                            cell.Longitude = ConfigurationCell3.GetCoordinateFromDecimal(device.Longitude);
 
                                             // Assign new configuration frame 3 specific values
                                             Dictionary<string, string> settings = device.ConnectionString?.ParseKeyValuePairs() ?? new Dictionary<string, string>();
