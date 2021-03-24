@@ -581,6 +581,9 @@ namespace PhasorWebUI
                     {
                         ID = childDevice.ID,
                         ParentID = device.ID,
+                        UniqueID = device.UniqueID,
+                        Longitude = device.Longitude,
+                        Latitude = device.Latitude,
                         IDCode = (ushort)childDevice.AccessID,
                         StationName = childDevice.Name,
                         IDLabel = childDevice.Acronym
@@ -608,6 +611,9 @@ namespace PhasorWebUI
                     ConfigurationCell derivedCell = new ConfigurationCell
                     {
                         ID = device.ID,
+                        UniqueID = device.UniqueID,
+                        Longitude = device.Longitude,
+                        Latitude = device.Latitude,
                         ParentID = null,
                         IDCode = derivedFrame.IDCode,
                         StationName = device.Name,
@@ -632,6 +638,9 @@ namespace PhasorWebUI
                 ConfigurationCell derivedCell = new ConfigurationCell
                 {
                     ID = device.ID,
+                    UniqueID = device.UniqueID,
+                    Longitude = device.Longitude,
+                    Latitude = device.Latitude,
                     ParentID = null,
                     IDCode = (ushort)device.AccessID,
                     StationName = device.Name,
@@ -688,7 +697,11 @@ namespace PhasorWebUI
                 };
 
                 if (sourceCell is ConfigurationCell3 configCell3)
+                {
                     derivedCell.UniqueID = configCell3.GlobalID;
+                    derivedCell.Longitude = (decimal)configCell3.Longitude;
+                    derivedCell.Latitude = (decimal)configCell3.Latitude;
+                }
 
                 // Create equivalent derived frequency definition
                 IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;

@@ -1223,6 +1223,13 @@
                 for (let i = 0; i < deviceCount; i++) {
                     const cell = self.configFrame().Cells[i];
 
+                    // TODO: Update screen to accomodate lat/long at the device level
+                    if (!isEmpty(cell.Latitude))
+                        self.latitude(cell.Latitude);
+
+                    if (!isEmpty(cell.Longitude))
+                        self.longitude(cell.Longitude);
+
                     let cellAcronym = cell.IDLabel;
 
                     if (isEmpty(cellAcronym))
@@ -1292,6 +1299,8 @@
                             ID: cell.ID,
                             ParentID: cell.ParentID,
                             UniqueID: cell.UniqueID,
+                            Longitude: cell.Longitude,
+                            Latitude: cell.Latitude,
                             IDCode: cell.IDCode,
                             StationName: self.configFrame().Cells.length === 1 ? self.deviceName() : cell.IDLabel(),
                             IDLabel: cell.IDLabel(),
@@ -3201,7 +3210,8 @@
 
                                 // Check if this is a new device or an edit to an existing one
                                 if (device.ID === 0) {
-                                    device.UniqueID = cell.UniqueID;
+                                    if (!isEmpty(cell.UniqueID))
+                                        device.UniqueID = cell.UniqueID;
 
                                     // Add new device record
                                     return phasorHub.addNewDevice(device).then(function () {

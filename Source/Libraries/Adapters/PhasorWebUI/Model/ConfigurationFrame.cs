@@ -47,7 +47,11 @@ namespace PhasorWebUI.Adapters
 
         public int? ParentID { get; set; }
 
-        public Guid UniqueID { get; set; }
+        public Guid? UniqueID { get; set; }
+
+        public decimal? Longitude { get; set; }
+
+        public decimal? Latitude { get; set; }
 
         public ushort IDCode { get; set; }
 
