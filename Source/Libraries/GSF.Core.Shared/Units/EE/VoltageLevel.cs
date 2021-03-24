@@ -42,7 +42,7 @@ namespace GSF.Units.EE
         /// 44 kV.
         /// </summary>
         [Description("44")]
-        kV44,
+        kV44 = 1,
         /// <summary>
         /// 69 kV.
         /// </summary>
