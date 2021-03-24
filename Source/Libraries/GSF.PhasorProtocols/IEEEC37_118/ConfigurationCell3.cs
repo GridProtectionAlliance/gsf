@@ -44,6 +44,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Represents <see cref="decimal"/> infinity value for longitude and latitude coordinate values.
+        /// </summary>
+        public const decimal CoordinateDecimalInfinity = 999M;
+
         // Fields
         private FormatFlags m_formatFlags;
 
@@ -204,9 +211,19 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public float Latitude { get; set; } = float.PositiveInfinity;
 
         /// <summary>
+        /// Gets <see cref="Latitude"/> as a <see cref="decimal"/>, infinity represented by <see cref="CoordinateDecimalInfinity"/>.
+        /// </summary>
+        public decimal LatitudeM => GetDecimalCoordinate(Latitude);
+
+        /// <summary>
         /// Gets or sets PMU_LON value for this <see cref="ConfigurationCell3"/>.
         /// </summary>
         public float Longitude { get; set; } = float.PositiveInfinity;
+
+        /// <summary>
+        /// Gets <see cref="Longitude"/> as a <see cref="decimal"/>, infinity represented by <see cref="CoordinateDecimalInfinity"/>.
+        /// </summary>
+        public decimal LongitudeM => GetDecimalCoordinate(Longitude);
 
         /// <summary>
         /// Gets or sets PMU_ELEV value for this <see cref="ConfigurationCell3"/>.
@@ -482,6 +499,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             return index - startIndex;
         }
 
+        // GSF time-series databases define lat/long fields as decimal(9,6) which
+        // results in a max value of 999.999999, so we just use 999 as the max to
+        // represent decimal infinity in the databases. Value 999 is far clear of
+        // latitudes spanning -90 to 90 and longitudes spanning -180 to 180.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private decimal GetDecimalCoordinate(float coordinate) => 
+            float.IsInfinity(coordinate) || float.IsNaN(coordinate) ? CoordinateDecimalInfinity : (decimal)coordinate;
+
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
         /// </summary>
@@ -604,6 +629,15 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             return result;
         }
+
+        /// <summary>
+        /// Gets longitude or latitude coordinate stored as a <see cref="decimal"/> as a <see cref="float"/>
+        /// accounting for possible <see cref="CoordinateDecimalInfinity"/> value.
+        /// </summary>
+        /// <param name="coordinate">Source value.</param>
+        /// <returns><paramref name="coordinate"/> as <see cref="float"/>.</returns>
+        public static float GetCoordinateFromDecimal(decimal? coordinate) => 
+            coordinate is null || coordinate >= CoordinateDecimalInfinity ? float.PositiveInfinity : (float)coordinate;
 
         #endregion
     }
