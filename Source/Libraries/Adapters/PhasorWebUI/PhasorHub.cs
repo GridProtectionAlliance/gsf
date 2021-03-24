@@ -699,8 +699,8 @@ namespace PhasorWebUI
                 if (sourceCell is ConfigurationCell3 configCell3)
                 {
                     derivedCell.UniqueID = configCell3.GlobalID;
-                    derivedCell.Longitude = (decimal)configCell3.Longitude;
-                    derivedCell.Latitude = (decimal)configCell3.Latitude;
+                    derivedCell.Longitude = configCell3.LongitudeM;
+                    derivedCell.Latitude = configCell3.LatitudeM;
                 }
 
                 // Create equivalent derived frequency definition
