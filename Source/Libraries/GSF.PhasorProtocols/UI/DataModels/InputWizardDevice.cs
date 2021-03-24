@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -67,6 +68,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets existing device ID, if any.
         /// </summary>
         public int ID { get; set; }
+
+        /// <summary>
+        /// Gets or sets and provided unique ID for the device.
+        /// </summary>
+        public Guid? UniqueID { get; set; }
 
         /// <summary>
         /// Gets or sets acronym of the <see cref="InputWizardDevice"/>.
