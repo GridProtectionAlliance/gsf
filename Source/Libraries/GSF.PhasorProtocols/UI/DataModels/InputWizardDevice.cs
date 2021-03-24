@@ -529,6 +529,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets any multiplier to be applied to the phasor magnitudes.
+        /// </summary>
+        public float MagnitudeMultiplier { get; set; } = 1.0F;
+
+        /// <summary>
+        /// Gets or sets and adder to be applied to the phasor angle, in radians.
+        /// </summary>
+        public float AngleAdder { get; set; }
+
         #endregion
     }
 }

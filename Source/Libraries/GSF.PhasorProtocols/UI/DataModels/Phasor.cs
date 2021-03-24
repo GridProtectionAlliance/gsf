@@ -180,6 +180,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets any multiplier to be applied to the phasor magnitudes.
+        /// </summary>
+        public float MagnitudeMultiplier { get; set; } = 1.0F;
+
+        /// <summary>
+        /// Gets or sets and adder to be applied to the phasor angle, in radians.
+        /// </summary>
+        public float AngleAdder { get; set; }
+
         ///// <summary>
         ///// Gets the Destination <see cref="Phasor"/> Label for the current Phasor.
         ///// </summary>
@@ -474,6 +484,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0], addedPhasor.BaseKV),
                             SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex,
                             SignalTypeID = signal.ID,
+                            Adder = string.Equals(signal.Suffix, "PA") ? phasor.AngleAdder : 0.0F,
+                            Multiplier = string.Equals(signal.Suffix, "PM") ? phasor.MagnitudeMultiplier : 1.0F,
                             Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name,
                             PhasorSourceIndex = addedPhasor.SourceIndex,
                             Enabled = true

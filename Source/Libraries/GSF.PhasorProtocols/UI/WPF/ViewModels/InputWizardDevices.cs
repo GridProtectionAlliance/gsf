@@ -1138,6 +1138,12 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         return guessBaseKV(phasorExists(phasor) ? existingPhasors?[phasor.Index].BaseKV.ToString() : configBaseKV, phasor.Label, string.IsNullOrWhiteSpace(existingDevice?.Name) ? existingDevice?.Acronym ?? "" : existingDevice?.Name);
                     }
 
+                    float getMagnitudeMultiplier(IPhasorDefinition phasor) => 
+                        phasor is PhasorDefinition3 phasor3 ? phasor3.MagnitudeMultiplier : 1.0F;
+
+                    float getAngleAdder(IPhasorDefinition phasor) =>
+                        phasor is PhasorDefinition3 phasor3 ? phasor3.AngleAdder : 0.0F;
+
                     string deviceIndex = m_configurationFrame.Cells.Count > 1 ? $" {i + 1:N0}" : "";
 
                     wizardDeviceList.Add(new InputWizardDevice
@@ -1170,7 +1176,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                                                                             ConfigType = $"Phasor {phasor.Index + 1:N0} type from config: {phasor.PhasorType}",
                                                                                             Phase = getPhasorPhase(phasor),
                                                                                             BaseKVInput = getPhasorBaseKV(phasor),
-                                                                                            Include = true
+                                                                                            Include = true,
+                                                                                            MagnitudeMultiplier = getMagnitudeMultiplier(phasor),
+                                                                                            AngleAdder = getAngleAdder(phasor)
                                                                                         }).ToList())
                     });
                 }
@@ -1696,6 +1704,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             oldPhasor.Type = inputPhasor.Type;
                             oldPhasor.Phase = inputPhasor.Phase;
                             oldPhasor.BaseKV = inputPhasor.BaseKV;
+                            oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
+                            oldPhasor.AngleAdder = inputPhasor.AngleAdder;
                             Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
 
                             // Remove phasor from the sets of unsaved phasors
@@ -1722,6 +1732,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 oldPhasor.Type = inputPhasor.Type;
                                 oldPhasor.Phase = inputPhasor.Phase;
                                 oldPhasor.BaseKV = inputPhasor.BaseKV;
+                                oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
+                                oldPhasor.AngleAdder = inputPhasor.AngleAdder;
                                 Phasor.Save(database, oldPhasor);
 
                                 // Remove phasor from the sets of unsaved phasors
@@ -1744,6 +1756,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             oldPhasor.Type = inputPhasor.Type;
                             oldPhasor.Phase = inputPhasor.Phase;
                             oldPhasor.BaseKV = inputPhasor.BaseKV;
+                            oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
+                            oldPhasor.AngleAdder = inputPhasor.AngleAdder;
                             Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
 
                             // Remove phasor from the sets of unsaved phasors
@@ -1770,7 +1784,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 Label = inputPhasor.Label,
                                 Type = inputPhasor.Type,
                                 Phase = inputPhasor.Phase,
-                                BaseKV = inputPhasor.BaseKV
+                                BaseKV = inputPhasor.BaseKV,
+                                MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier,
+                                AngleAdder = inputPhasor.AngleAdder
                             };
 
                             Phasor.Save(database, oldPhasor);
