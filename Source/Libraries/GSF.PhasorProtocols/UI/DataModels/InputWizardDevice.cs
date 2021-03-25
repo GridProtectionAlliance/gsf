@@ -57,8 +57,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private bool m_existing;
         private string m_statusColor;
         private ObservableCollection<InputWizardDevicePhasor> m_phasorList;
-        private List<string> m_digitalLabels;
-        private List<string> m_analogLabels;
 
         #endregion
 
@@ -91,7 +89,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     m_acronym = m_acronym.Substring(0, 200);
 
                 OnPropertyChanged(nameof(Acronym));
-                Existing = (Device.GetDevice(null, "WHERE Acronym = '" + m_acronym.ToUpper() + "'") != null);
+                Existing = !(Device.GetDevice(null, "WHERE Acronym = '" + m_acronym.ToUpper() + "'") is null);
             }
         }
 
@@ -104,11 +102,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_name;
             set
             {
-                if ((object)value != null && value.Length > 200)
-                    m_name = value.Substring(0, 200);
-                else
-                    m_name = value;
-
+                m_name = value is null || value.Length <= 200 ? value : value.Substring(0, 200);
                 OnPropertyChanged(nameof(Name));
             }
         }
@@ -279,10 +273,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_existing = value;
                 OnPropertyChanged(nameof(Existing));
-                if (m_existing)
-                    StatusColor = "green";
-                else
-                    StatusColor = "transparent";
+                StatusColor = m_existing ? "green" : "transparent";
             }
         }
 
@@ -315,20 +306,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="InputWizardDevice"/> DigitalLabels.
         /// </summary>
-        public List<string> DigitalLabels
-        {
-            get => m_digitalLabels;
-            set => m_digitalLabels = value;
-        }
+        public List<string> DigitalLabels { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="InputWizardDevice"/> AnalogLabels.
         /// </summary>
-        public List<string> AnalogLabels
-        {
-            get => m_analogLabels;
-            set => m_analogLabels = value;
-        }
+        public List<string> AnalogLabels { get; set; }
+
+        /// <summary>
+        /// Gets or sets <see cref="InputWizardDevice"/> analog scalars, i.e., adders and multipliers.
+        /// </summary>
+        public Tuple<float, float>[] AnalogScalars { get; set; }
 
         #endregion
 
@@ -339,10 +327,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <returns>Collection of <see cref="InputWizardDevice"/>.</returns>
-        public static ObservableCollection<InputWizardDevice> Load(AdoDataConnection database)
-        {
-            return new ObservableCollection<InputWizardDevice>();
-        }
+        public static ObservableCollection<InputWizardDevice> Load(AdoDataConnection database) => 
+            new ObservableCollection<InputWizardDevice>();
 
         /// <summary>
         /// Saves <see cref="InputWizardDevice"/> information in to database.
@@ -350,10 +336,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="inputWizardDevice">Information about <see cref="InputWizardDevice"/>.</param>
         /// <returns>string, indicating success for UI display.</returns>
-        public static string Save(AdoDataConnection database, InputWizardDevice inputWizardDevice)
-        {
-            return "";
-        }
+        public static string Save(AdoDataConnection database, InputWizardDevice inputWizardDevice) => 
+            string.Empty;
 
         /// <summary>
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="InputWizardDevice"/> information.
@@ -361,10 +345,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
-        {
-            return new Dictionary<int, string>();
-        }
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false) => 
+            new Dictionary<int, string>();
 
         /// <summary>
         /// Deletes specified record from database.
@@ -372,13 +354,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="deviceID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, int deviceID)
-        {
-            return "";
-        }
+        public static string Delete(AdoDataConnection database, int deviceID) => 
+            string.Empty;
 
         #endregion
-
     }
 
     /// <summary>
@@ -412,11 +391,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_label;
             set
             {
-                if ((object)value != null && value.Length > 200)
-                    m_label = value.Substring(0, 200);
-                else
-                    m_label = value;
-
+                m_label = value is null || value.Length <= 200 ? value : value.Substring(0, 200);
                 OnPropertyChanged("Label");
             }
         }
@@ -492,13 +467,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_baseKVInput;
             set
             {
-                if (int.TryParse(value, out int baseKV))
-                    BaseKV = baseKV;
-                else
-                    BaseKV = 0;
-
+                BaseKV = int.TryParse(value, out int baseKV) ? baseKV : 0;
                 m_baseKVInput = value;
-
                 OnPropertyChanged("BaseKVInput");
             }
         }
