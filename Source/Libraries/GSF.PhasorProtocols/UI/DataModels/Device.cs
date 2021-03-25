@@ -1116,52 +1116,107 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     {
                         Measurement measurement;
 
-                        if (signal.Suffix == "AV" && analogCount > 0)
+                        switch (signal.Suffix)
                         {
-                            for (int i = 1; i <= analogCount; i++)
+                            case "AV" when analogCount > 0:
                             {
-                                measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalReference = '{savedDevice.Acronym}-AV{i}'");
-
-                                if (measurement is null)
+                                for (int i = 1; i <= analogCount; i++)
                                 {
-                                    measurement = new Measurement
+                                    measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalReference = '{savedDevice.Acronym}-AV{i}'");
+                                    string label = analogLabels?[i - 1] is null ? "" : analogLabels[i - 1].Trim();
+                                    string tagLabel = string.IsNullOrEmpty(label) ? "" : Regex.Replace(label.ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
+
+                                    if (measurement is null)
                                     {
-                                        DeviceID = savedDevice.ID,
-                                        HistorianID = savedDevice.HistorianID,
-                                        PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "ALOG", null, i),
-                                        SignalReference = $"{savedDevice.Acronym}-AV{i}",
-                                        Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Analog Value {i}",
-                                        SignalTypeID = signal.ID,
-                                        PhasorSourceIndex = null,
-                                        Enabled = true
-                                    };
+                                        measurement = new Measurement
+                                        {
+                                            DeviceID = savedDevice.ID,
+                                            HistorianID = savedDevice.HistorianID,
+                                            PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, string.IsNullOrEmpty(tagLabel) ? savedDevice.Acronym : $"{savedDevice.Acronym}_{tagLabel}", savedDevice.VendorAcronym, "ALOG", null, i).TruncateRight(200),
+                                            AlternateTag = label,
+                                            SignalReference = $"{savedDevice.Acronym}-AV{i}",
+                                            Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Analog Value {i}: {label}",
+                                            SignalTypeID = signal.ID,
+                                            PhasorSourceIndex = null,
+                                            Enabled = true
+                                        };
 
+                                        if (!(analogScalars?[i -1] is null))
+                                        {
+                                            Tuple<float, float> scalarSet = analogScalars?[i - 1];
+                                            measurement.Adder = scalarSet.Item1;
+                                            measurement.Multiplier = scalarSet.Item2;
+                                        }
 
-                                    if (!(analogLabels?[i - 1] is null))
-                                        measurement.AlternateTag = analogLabels[i - 1];
-
-                                    if (!(analogScalars?[i -1] is null))
-                                    {
-                                        Tuple<float, float> scalarSet = analogScalars?[i - 1];
-                                        measurement.Adder = scalarSet.Item1;
-                                        measurement.Multiplier = scalarSet.Item2;
+                                        Measurement.Save(database, measurement);
                                     }
+                                    else if (measurement.SignalTypeID != signal.ID)
+                                    {
+                                        measurement.HistorianID = savedDevice.HistorianID;
+                                        measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, string.IsNullOrEmpty(tagLabel) ? savedDevice.Acronym : $"{savedDevice.Acronym}_{tagLabel}", savedDevice.VendorAcronym, "ALOG", null, i).TruncateRight(200);
+                                        measurement.AlternateTag = label;
+                                        measurement.Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Analog Value {i}: {label}";
+                                        measurement.SignalTypeID = signal.ID;
 
-                                    Measurement.Save(database, measurement);
+                                        if (!(analogScalars?[i - 1] is null))
+                                        {
+                                            Tuple<float, float> scalarSet = analogScalars?[i - 1];
+                                            measurement.Adder = scalarSet.Item1;
+                                            measurement.Multiplier = scalarSet.Item2;
+                                        }
+
+                                        Measurement.Save(database, measurement);
+                                    }
                                 }
-                                else if (measurement.SignalTypeID != signal.ID)
-                                {
-                                    // Correct signal type if it has been changed
-                                    measurement.SignalTypeID = signal.ID;
-                                    Measurement.Save(database, measurement);
-                                }
+
+                                break;
                             }
-                        }
-                        else if (signal.Suffix == "DV" && digitalCount > 0)
-                        {
-                            for (int i = 1; i <= digitalCount; i++)
+                            case "DV" when digitalCount > 0:
                             {
-                                measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalReference = '{savedDevice.Acronym}-DV{i}'");
+                                for (int i = 1; i <= digitalCount; i++)
+                                {
+                                    measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalReference = '{savedDevice.Acronym}-DV{i}'");
+
+                                    if (measurement is null)
+                                    {
+                                        measurement = new Measurement
+                                        {
+                                            DeviceID = savedDevice.ID,
+                                            HistorianID = savedDevice.HistorianID,
+                                            PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i),
+                                            SignalReference = $"{savedDevice.Acronym}-DV{i}",
+                                            SignalTypeID = signal.ID,
+                                            Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Digital Value {i}",
+                                            PhasorSourceIndex = null,
+                                            Enabled = true
+                                        };
+
+                                        if (!(digitalLabels?[i - 1] is null))
+                                            measurement.AlternateTag = digitalLabels[i - 1];
+
+                                        Measurement.Save(database, measurement);
+                                    }
+                                    else if (measurement.SignalTypeID != signal.ID)
+                                    {
+                                        measurement.HistorianID = savedDevice.HistorianID;
+                                        measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i);
+                                        measurement.SignalTypeID = signal.ID;
+                                        measurement.Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Digital Value {i}";
+
+                                        if (!(digitalLabels?[i - 1] is null))
+                                            measurement.AlternateTag = digitalLabels[i - 1];
+
+                                        Measurement.Save(database, measurement);
+                                    }
+                                }
+
+                                break;
+                            }
+                            case "FQ":
+                            case "DF":
+                            case "SF":
+                            {
+                                measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalTypeSuffix = '{signal.Suffix}'");
 
                                 if (measurement is null)
                                 {
@@ -1169,57 +1224,27 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     {
                                         DeviceID = savedDevice.ID,
                                         HistorianID = savedDevice.HistorianID,
-                                        PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i),
-                                        SignalReference = $"{savedDevice.Acronym}-DV{i}",
+                                        PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, signal.Acronym),
+                                        SignalReference = $"{savedDevice.Acronym}-{signal.Suffix}",
                                         SignalTypeID = signal.ID,
-                                        Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Digital Value {i}",
+                                        Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} {signal.Name}",
                                         PhasorSourceIndex = null,
                                         Enabled = true
                                     };
 
 
-                                    if (!(digitalLabels?[i - 1] is null))
-                                        measurement.AlternateTag = digitalLabels[i - 1];
-
                                     Measurement.Save(database, measurement);
                                 }
-                                else if (measurement.SignalTypeID != signal.ID)
-                                {
-                                    // Correct signal type if it has been changed
-                                    measurement.SignalTypeID = signal.ID;
-                                    Measurement.Save(database, measurement);
-                                }
+
+                                // Based on query filter of SignalTypeSuffix, the following will never be true
+                                //else if (measurement.SignalTypeID != signal.ID)
+                                //{
+                                //    // Correct signal type if it has been changed
+                                //    measurement.SignalTypeID = signal.ID;
+                                //    Measurement.Save(database, measurement);
+                                //}
+                                break;
                             }
-                        }
-                        else if (signal.Suffix == "FQ" || signal.Suffix == "DF" || signal.Suffix == "SF")
-                        {
-                            measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalTypeSuffix = '{signal.Suffix}'");
-
-                            if (measurement is null)
-                            {
-                                measurement = new Measurement
-                                {
-                                    DeviceID = savedDevice.ID,
-                                    HistorianID = savedDevice.HistorianID,
-                                    PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, signal.Acronym),
-                                    SignalReference = $"{savedDevice.Acronym}-{signal.Suffix}",
-                                    SignalTypeID = signal.ID,
-                                    Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} {signal.Name}",
-                                    PhasorSourceIndex = null,
-                                    Enabled = true
-                                };
-
-
-                                Measurement.Save(database, measurement);
-                            }
-
-                            // Based on query filter of SignalTypeSuffix, the following will never be true
-                            //else if (measurement.SignalTypeID != signal.ID)
-                            //{
-                            //    // Correct signal type if it has been changed
-                            //    measurement.SignalTypeID = signal.ID;
-                            //    Measurement.Save(database, measurement);
-                            //}
                         }
                     }
                 }
