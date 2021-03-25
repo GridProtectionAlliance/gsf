@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -1144,6 +1145,12 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     float getAngleAdder(IPhasorDefinition phasor) =>
                         phasor is PhasorDefinition3 phasor3 ? phasor3.AngleAdder : 0.0F;
 
+                    Tuple<float, float> getAnalogScalarSet(IAnalogDefinition analog) =>
+                        analog is AnalogDefinition3 analog3 ? new Tuple<float, float>(analog3.Adder, analog3.Multiplier) : null;
+
+                    Tuple<float, float>[] getAnalogScalars(AnalogDefinitionCollection analogs) =>
+                        analogs.Select(getAnalogScalarSet).ToArray();
+
                     string deviceIndex = m_configurationFrame.Cells.Count > 1 ? $" {i + 1:N0}" : "";
 
                     wizardDeviceList.Add(new InputWizardDevice
@@ -1165,21 +1172,25 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         AddDigitals = cell.DigitalDefinitions.Count > 0,
                         AddAnalogs = cell.AnalogDefinitions.Count > 0,
                         Existing = !(existingDevice is null),
-                        DigitalLabels = GetAnalogOrDigitalLables(cell.DigitalDefinitions),
-                        AnalogLabels = GetAnalogOrDigitalLables(cell.AnalogDefinitions),
-                        PhasorList = new ObservableCollection<InputWizardDevicePhasor>((from phasor in cell.PhasorDefinitions
-                                                                                        select new InputWizardDevicePhasor
-                                                                                        {
-                                                                                            Label = getPhasorLabel(phasor),
-                                                                                            Type = getPhasorType(phasor),
-                                                                                            ConfigLabel = $"Phasor {phasor.Index + 1:N0} label from config: {phasor.Label}",
-                                                                                            ConfigType = $"Phasor {phasor.Index + 1:N0} type from config: {phasor.PhasorType}",
-                                                                                            Phase = getPhasorPhase(phasor),
-                                                                                            BaseKVInput = getPhasorBaseKV(phasor),
-                                                                                            Include = true,
-                                                                                            MagnitudeMultiplier = getMagnitudeMultiplier(phasor),
-                                                                                            AngleAdder = getAngleAdder(phasor)
-                                                                                        }).ToList())
+                        DigitalLabels = GetAnalogOrDigitalLabels(cell.DigitalDefinitions),
+                        AnalogLabels = GetAnalogOrDigitalLabels(cell.AnalogDefinitions),
+                        AnalogScalars = getAnalogScalars(cell.AnalogDefinitions),
+                        PhasorList = new ObservableCollection<InputWizardDevicePhasor>(
+                        (
+                            from phasor in cell.PhasorDefinitions
+                            select new InputWizardDevicePhasor
+                            {
+                                Label = getPhasorLabel(phasor),
+                                Type = getPhasorType(phasor),
+                                ConfigLabel = $"Phasor {phasor.Index + 1:N0} label from config: {phasor.Label}",
+                                ConfigType = $"Phasor {phasor.Index + 1:N0} type from config: {phasor.PhasorType}",
+                                Phase = getPhasorPhase(phasor),
+                                BaseKVInput = getPhasorBaseKV(phasor),
+                                Include = true,
+                                MagnitudeMultiplier = getMagnitudeMultiplier(phasor),
+                                AngleAdder = getAngleAdder(phasor)
+                            }
+                        ).ToList())
                     });
                 }
 
@@ -1208,22 +1219,21 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }));
         }
 
-        private List<string> GetAnalogOrDigitalLables(object analogOrDigitalCollection)
+        private static List<string> GetAnalogOrDigitalLabels(IList analogOrDigitalCollection)
         {
             List<string> returnCollection = new List<string>();
 
-            if (analogOrDigitalCollection is DigitalDefinitionCollection digitalCollection)
+            switch (analogOrDigitalCollection)
             {
-                foreach (IDigitalDefinition digital in digitalCollection)
+                case DigitalDefinitionCollection digitalCollection:
                 {
-                    returnCollection.Add(digital.Label.TruncateRight(256));
+                    returnCollection.AddRange(digitalCollection.Select(digital => digital is DigitalDefinition3 digital3 ? digital3.Label : digital.Label.TruncateRight(256)));
+                    break;
                 }
-            }
-            else if (analogOrDigitalCollection is AnalogDefinitionCollection analogCollection)
-            {
-                foreach (IAnalogDefinition analog in analogCollection)
+                case AnalogDefinitionCollection analogCollection:
                 {
-                    returnCollection.Add(analog.Label.TruncateRight(16));
+                    returnCollection.AddRange(analogCollection.Select(analog => analog is AnalogDefinition3 analog3 ? analog3.Label : analog.Label.TruncateRight(16)));
+                    break;
                 }
             }
 
