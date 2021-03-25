@@ -54,6 +54,7 @@ using GSF.TimeSeries.UI;
 using PhasorProtocolAdapters;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
+// ReSharper disable ConstantConditionalAccessQualifier
 namespace GSF.PhasorProtocols.UI.DataModels
 {
     #region [ Enumerations ]
@@ -209,11 +210,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_name;
             set
             {
-                if (!(value is null) && value.Length > 200)
-                    m_name = value.Substring(0, 200);
-                else
-                    m_name = value;
-
+                m_name = value is null || value.Length <= 200 ? value : value.Substring(0, 200);
                 OnPropertyChanged("Name");
             }
         }
@@ -234,6 +231,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_isConcentrator = value;
                 OnPropertyChanged("IsConcentrator");
+
                 if (m_isConcentrator)
                     ParentID = null;
             }
