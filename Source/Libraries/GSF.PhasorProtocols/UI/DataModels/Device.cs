@@ -1035,11 +1035,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="analogCount">Number of analog measurements to add.</param>
         /// <param name="digitalLabels">Collection of digital labels associated with a device in configuration frame.</param>
         /// <param name="analogLabels">Collection of analog labels associated with a device in configuration frame.</param>
+        /// <param name="analogScalars">Collection of analog scalars associated with a device in configuration frame.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string SaveWithAnalogsDigitals(AdoDataConnection database, Device device, bool notifyService, int digitalCount, int analogCount, List<string> digitalLabels = null, List<string> analogLabels = null)
+        public static string SaveWithAnalogsDigitals(AdoDataConnection database, Device device, bool notifyService, int digitalCount, int analogCount, List<string> digitalLabels = null, List<string> analogLabels = null, Tuple<float, float>[] analogScalars = null)
         {
             bool createdConnection = false;
-            string query;
 
             try
             {
@@ -1048,6 +1048,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 object nodeID = device.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(device.NodeID);
+                string query;
 
                 if (device.ID == 0)
                 {
@@ -1138,6 +1139,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                     if (!(analogLabels?[i - 1] is null))
                                         measurement.AlternateTag = analogLabels[i - 1];
+
+                                    if (!(analogScalars?[i -1] is null))
+                                    {
+                                        Tuple<float, float> scalarSet = analogScalars?[i - 1];
+                                        measurement.Adder = scalarSet.Item1;
+                                        measurement.Multiplier = scalarSet.Item2;
+                                    }
 
                                     Measurement.Save(database, measurement);
                                 }
