@@ -281,11 +281,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                             m_configFrame3Images.AppendFrameImage(buffer, offset, parsedFrameHeader.FrameLength);
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            Logger.SwallowException(ex);
-
-                            // Stop accumulation on CRC check failure or other exceptions
                             m_configFrame3Images = null;
                             throw;
                         }
