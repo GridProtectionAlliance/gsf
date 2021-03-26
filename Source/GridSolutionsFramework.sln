@@ -488,6 +488,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Postgres", "Postgres", "{AB
 	ProjectSection(SolutionItems) = preProject
 		Dependencies\Postgres\Npgsql.dll = Dependencies\Postgres\Npgsql.dll
 		Dependencies\Postgres\Npgsql.xml = Dependencies\Postgres\Npgsql.xml
+		Dependencies\Postgres\System.Buffers.dll = Dependencies\Postgres\System.Buffers.dll
+		Dependencies\Postgres\System.Buffers.xml = Dependencies\Postgres\System.Buffers.xml
+		Dependencies\Postgres\System.Memory.dll = Dependencies\Postgres\System.Memory.dll
+		Dependencies\Postgres\System.Memory.xml = Dependencies\Postgres\System.Memory.xml
+		Dependencies\Postgres\System.Runtime.CompilerServices.Unsafe.dll = Dependencies\Postgres\System.Runtime.CompilerServices.Unsafe.dll
+		Dependencies\Postgres\System.Runtime.CompilerServices.Unsafe.xml = Dependencies\Postgres\System.Runtime.CompilerServices.Unsafe.xml
+		Dependencies\Postgres\System.Threading.Tasks.Extensions.dll = Dependencies\Postgres\System.Threading.Tasks.Extensions.dll
+		Dependencies\Postgres\System.Threading.Tasks.Extensions.xml = Dependencies\Postgres\System.Threading.Tasks.Extensions.xml
+		Dependencies\Postgres\System.ValueTuple.dll = Dependencies\Postgres\System.ValueTuple.dll
+		Dependencies\Postgres\System.ValueTuple.xml = Dependencies\Postgres\System.ValueTuple.xml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UTK", "UTK", "{A7E4DCAA-FB9F-4050-B661-308495C391E6}"

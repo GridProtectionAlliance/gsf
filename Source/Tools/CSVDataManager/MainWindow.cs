@@ -57,7 +57,7 @@ namespace CSVDataManager
         {
             { "SQL Server", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter" },
             { "SQLite", "" },
-            { "PostgreSQL", "AssemblyName={Npgsql, Version=0.0.0.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7}; ConnectionType=Npgsql.NpgsqlConnection; AdapterType=Npgsql.NpgsqlDataAdapter" },
+            { "PostgreSQL", "AssemblyName={Npgsql, Version=4.0.11.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7}; ConnectionType=Npgsql.NpgsqlConnection; AdapterType=Npgsql.NpgsqlDataAdapter" },
             { "MySQL", "AssemblyName={MySql.Data, Version=?.?.?.?, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter" },
             { "Oracle", "AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter" }
         };
