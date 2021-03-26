@@ -264,22 +264,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     if (frameImages is null)
                         return State.ParsedBinaryLength;
 
-                    // Each individual frame will already have had a CRC check, so we implement standard parse to
-                    // bypass ChannelBase CRC frame validation on cumulative frame image
                     buffer = frameImages.BinaryImage;
                     length = frameImages.BinaryLength;
                     startIndex = 0;
 
-                    // Parse out header, body and footer images
-                    startIndex += ParseHeaderImage(buffer, startIndex, length);
-                    startIndex += ParseBodyImage(buffer, startIndex, length - startIndex);
-                    startIndex += ParseFooterImage(buffer, startIndex, length - startIndex);
-
-                    if (TrustHeaderLength)
-                        return State.ParsedBinaryLength;
-                    
-                    // Include 2 bytes for CRC that was already validated
-                    return startIndex + 2;
+                    // Base class will check CRC for entire image
+                    return base.ParseBinaryImage(buffer, startIndex, length);
                 }
             }
 
