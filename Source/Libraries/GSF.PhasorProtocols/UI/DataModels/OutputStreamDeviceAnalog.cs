@@ -58,11 +58,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private int m_type;
         private int m_scalingValue;
         private int m_loadOrder;
-        private string m_typeName;
-        private DateTime m_createdOn;
-        private string m_createdBy;
-        private DateTime m_updatedOn;
-        private string m_updatedBy;
 
         #endregion
 
@@ -74,10 +69,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceAnalog NodeID is a required field, please provide value.")]
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -91,10 +83,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceAnalog OutputStreamDeviceID is a required field, please provide value.")]
         public int OutputStreamDeviceID
         {
-            get
-            {
-                return m_outputStreamDeviceID;
-            }
+            get => m_outputStreamDeviceID;
             set
             {
                 m_outputStreamDeviceID = value;
@@ -108,10 +97,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -122,20 +108,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="OutputStreamDeviceAnalog"/>'s Label.
         /// </summary>
-        [Required(ErrorMessage = "OutputStreamDeviceAnalog Lable is a required field, please provide value.")]
-        [StringLength(16, ErrorMessage = "OutputStreamDeviceAnalog Label cannot exceed 16 characters.")]
+        [Required(ErrorMessage = "OutputStreamDeviceAnalog Label is a required field, please provide value.")]
+        [StringLength(200, ErrorMessage = "OutputStreamDeviceAnalog Label cannot exceed 200 characters.")]
         public string Label
         {
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
-                if (value.Length > 16)
-                    m_label = value.Substring(0, 16);
-                else
-                    m_label = value;
+                m_label = value is null || value.Length <= 200 ? value : value.Substring(0, 200);
                 OnPropertyChanged("Label");
             }
         }
@@ -146,10 +126,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceAnalog Type is a required field, please provide value.")]
         public int Type
         {
-            get
-            {
-                return m_type;
-            }
+            get => m_type;
             set
             {
                 m_type = value;
@@ -163,10 +140,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceAnalog ScalingValue is a required field, please provide value.")]
         public int ScalingValue
         {
-            get
-            {
-                return m_scalingValue;
-            }
+            get => m_scalingValue;
             set
             {
                 m_scalingValue = value;
@@ -180,10 +154,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceAnalog LoadOrder is a required field, please provide value.")]
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -194,77 +165,31 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets the current <see cref="OutputStreamDeviceAnalog"/>'s TypeName.
         /// </summary>
-        public string TypeName
-        {
-            get
-            {
-                return m_typeName;
-            }
-        }
+        public string TypeName { get; private set; }
 
         /// <summary>
         /// Gets or sets the Date or Time the current <see cref="OutputStreamDeviceAnalog"/> was created on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime CreatedOn
-        {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
-        }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="OutputStreamDeviceAnalog"/> was created by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string CreatedBy
-        {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
-        }
+        public string CreatedBy { get; set; }
 
         /// <summary>
         /// Gets or sets the Date or Time when the current <see cref="OutputStreamDeviceAnalog"/> was updated on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public DateTime UpdatedOn
-        {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
-        }
+        public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         /// Gets or sets who the current <see cref="OutputStreamDeviceAnalog"/> was updated by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string UpdatedBy
-        {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
-        }
+        public string UpdatedBy { get; set; }
 
         #endregion
 
@@ -289,26 +214,23 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<int> outputStreamDeviceAnalogList = new List<int>();
-                DataTable outputStreamDeviceAnalogTable;
 
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM OutputStreamDeviceAnalog WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause));
+                DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamDeviceAnalog WHERE OutputStreamDeviceID = {outputStreamDeviceID} {sortClause}");
 
                 foreach (DataRow row in outputStreamDeviceAnalogTable.Rows)
-                {
                     outputStreamDeviceAnalogList.Add((row.ConvertField<int>("ID")));
-                }
 
                 return outputStreamDeviceAnalogList;
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -316,7 +238,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Loads <see cref="OutputStreamDeviceAnalog"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="keys">Keys of the measuremnets to be loaded from the database</param>
+        /// <param name="keys">Keys of the measurements to be loaded from the database</param>
         /// <returns>Collection of <see cref="OutputStreamDeviceAnalog"/>.</returns>
         public static ObservableCollection<OutputStreamDeviceAnalog> Load(AdoDataConnection database, IList<int> keys)
         {
@@ -326,24 +248,18 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
-                string commaSeparatedKeys;
-
                 OutputStreamDeviceAnalog[] outputStreamDeviceAnalogList = null;
-                DataTable outputStreamDeviceAnalogTable;
-                int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (!(keys is null) && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder " +
-                                        "FROM OutputStreamDeviceAnalog WHERE ID IN ({0})", commaSeparatedKeys));
-                    outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
+                    string query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder FROM OutputStreamDeviceAnalog WHERE ID IN ({commaSeparatedKeys})");
+                    DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamDeviceAnalogList = new OutputStreamDeviceAnalog[outputStreamDeviceAnalogTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceAnalogTable.Rows)
                     {
-                        id = row.ConvertField<int>("ID");
+                        int id = row.ConvertField<int>("ID");
 
                         outputStreamDeviceAnalogList[keys.IndexOf(id)] = new OutputStreamDeviceAnalog()
                         {
@@ -354,7 +270,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             Type = row.ConvertField<int>("Type"),
                             ScalingValue = row.ConvertField<int>("ScalingValue"),
                             LoadOrder = row.ConvertField<int>("LoadOrder"),
-                            m_typeName = row.ConvertField<int>("Type") == 0 ? "Single point-on-wave" : row.ConvertField<int>("Type") == 1 ? "RMS of analog input" : "Peak of analog input"
+                            TypeName = row.ConvertField<int>("Type") == 0 ? "Single point-on-wave" : row.ConvertField<int>("Type") == 1 ? "RMS of analog input" : "Peak of analog input"
                         };
                     }
                 }
@@ -363,8 +279,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -378,11 +294,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, int outputStreamDeviceID, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> OutputStreamDeviceAnalogList = new Dictionary<int, string>();
+                
                 if (isOptional)
                     OutputStreamDeviceAnalogList.Add(0, "Select OutputStreamDeviceAnalog");
 
@@ -396,8 +314,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -410,11 +328,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string Save(AdoDataConnection database, OutputStreamDeviceAnalog outputStreamDeviceAnalog)
         {
             bool createdConnection = false;
-            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
+
+                string query;
 
                 if (outputStreamDeviceAnalog.ID == 0)
                 {
@@ -449,8 +368,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -463,15 +382,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string Delete(AdoDataConnection database, int outputStreamDeviceAnalogID)
         {
             bool createdConnection = false;
-
-            int adapterID;
-            int outputStreamDeviceID;
-            int deletedSignalReferenceIndex;
-            int presentDeviceAnalogCount;
-
-            string analogSignalReference;
-            string signalReferenceBase;
-            string previousAnalogSignalReference;
             string nextAnalogSignalReference = string.Empty;
             string lastAffectedMeasurementMessage = string.Empty;
 
@@ -482,19 +392,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                GetDeleteMeasurementDetails(database, outputStreamDeviceAnalogID, out analogSignalReference, out adapterID, out outputStreamDeviceID);
+                GetDeleteMeasurementDetails(database, outputStreamDeviceAnalogID, out string analogSignalReference, out int adapterID, out int outputStreamDeviceID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStreamMeasurement WHERE SignalReference = {0} AND AdapterID = {1}", "signalReference", "adapterID"), DefaultTimeout, analogSignalReference, adapterID);
-                presentDeviceAnalogCount = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM OutputStreamDeviceAnalog WHERE OutputStreamDeviceID = {0}", "outputStreamDeviceID"), DefaultTimeout, outputStreamDeviceID));
+                int presentDeviceAnalogCount = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM OutputStreamDeviceAnalog WHERE OutputStreamDeviceID = {0}", "outputStreamDeviceID"), DefaultTimeout, outputStreamDeviceID));
 
                 // Using signal reference of measurement deleted build the next signal reference (increment by 1)
-                int.TryParse(Regex.Match(analogSignalReference, @"\d+$").Value, out deletedSignalReferenceIndex);
-                signalReferenceBase = Regex.Replace(analogSignalReference, @"\d+$", "");
+                int.TryParse(Regex.Match(analogSignalReference, @"\d+$").Value, out int deletedSignalReferenceIndex);
+                string signalReferenceBase = Regex.Replace(analogSignalReference, @"\d+$", "");
 
                 for (int i = deletedSignalReferenceIndex; i <= presentDeviceAnalogCount; i++)
                 {
                     // We will be modifying the measurement with signal reference index i+1 to have signal reference index i.
-                    previousAnalogSignalReference = string.Format("{0}{1}", signalReferenceBase, i);
-                    nextAnalogSignalReference = string.Format("{0}{1}", signalReferenceBase, i + 1);
+                    string previousAnalogSignalReference = $"{signalReferenceBase}{i}";
+                    nextAnalogSignalReference = $"{signalReferenceBase}{i + 1}";
 
                     // Obtain details of measurements of the deleted measurements, then modify the signal reference (decrement by 1) and put it back
                     OutputStreamMeasurement outputStreamMeasurement = GetOutputMeasurementDetails(database, nextAnalogSignalReference, adapterID);
@@ -509,10 +419,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
             catch (Exception ex)
             {
                 if (!string.IsNullOrEmpty(nextAnalogSignalReference))
-                    lastAffectedMeasurementMessage = string.Format("{0}(Last affected measurement: {1})", Environment.NewLine, nextAnalogSignalReference);
+                    lastAffectedMeasurementMessage = $"{Environment.NewLine}(Last affected measurement: {nextAnalogSignalReference})";
 
                 CommonFunctions.LogException(database, "OutputStreamDeviceAnalog.Delete", ex);
-                MessageBoxResult dialogResult = MessageBox.Show(string.Format("Could not delete or modify measurements.{0}Do you still wish to delete this Analog?{1}", Environment.NewLine, lastAffectedMeasurementMessage), "", MessageBoxButton.YesNo);
+                MessageBoxResult dialogResult = MessageBox.Show($"Could not delete or modify measurements.{Environment.NewLine}Do you still wish to delete this Analog?{lastAffectedMeasurementMessage}", "", MessageBoxButton.YesNo);
 
                 if ((dialogResult == MessageBoxResult.Yes))
                 {
@@ -522,13 +432,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 else
                 {
                     Exception exception = ex.InnerException ?? ex;
-                    return string.Format("Delete OutputStreamDeviceAnalog was unsuccessful: {0}", exception.Message);
+                    return $"Delete OutputStreamDeviceAnalog was unsuccessful: {exception.Message}";
                 }
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -544,7 +454,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataRow row = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, signalReference, adapterID).Rows[0];
 
                 OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
-                    {
+                {
                     NodeID = row.ConvertField<Guid>("NodeID"),
                     AdapterID = row.Field<int>("AdapterID"),
                     ID = row.Field<int>("ID"),
@@ -566,8 +476,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
@@ -582,24 +492,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
             try
             {
-                DataRow outputAnalogRecord;
-                DataRow outputDeviceRecord;
-
-                string labelName;
-                string deviceName;
-                string analogPointTag;
-
                 createdConnection = CreateConnection(ref database);
 
-                outputAnalogRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputAnalogFormat, outputStreamDeviceAnalogID)).Rows[0];
-                labelName = outputAnalogRecord.Field<string>("Label");
+                DataRow outputAnalogRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputAnalogFormat, outputStreamDeviceAnalogID)).Rows[0];
+                string labelName = outputAnalogRecord.Field<string>("Label");
                 outputStreamDeviceID = outputAnalogRecord.ConvertField<int>("OutputStreamDeviceID");
 
-                outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
-                deviceName = outputDeviceRecord.Field<string>("Acronym");
+                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
+                string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                analogPointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName)).ToNonNullString();
+                string analogPointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName)).ToNonNullString();
                 analogSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, analogPointTag)).ToNonNullString();
             }
             catch (Exception ex)
@@ -609,8 +512,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
-                    database.Dispose();
+                if (createdConnection)
+                    database?.Dispose();
             }
         }
 
