@@ -44,6 +44,7 @@ using GSF.Diagnostics;
 using GSF.Identity;
 using GSF.Security.Cryptography;
 
+// ReSharper disable RedundantArgumentDefaultValue
 namespace GSF.Threading
 {
     /// <summary>
@@ -78,7 +79,7 @@ namespace GSF.Threading
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static Mutex GetNamedMutex(bool perUser = true)
         {
-            Assembly entryAssembly = Assembly.GetEntryAssembly();
+            Assembly entryAssembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
             GuidAttribute attribute = (GuidAttribute)entryAssembly.GetCustomAttributes(typeof(GuidAttribute), true).FirstOrDefault();
             string name = attribute?.Value ?? entryAssembly.GetName().Name;
 
@@ -117,60 +118,58 @@ namespace GSF.Threading
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static Mutex GetNamedMutex(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException(nameof(name), "Argument cannot be empty, null or white space.");
-
-            Mutex namedMutex;
-            bool mutexWasCreated;
-
-            // Create a mutex name that is specific to an object (e.g., a path and file name).
-            // Note that we use GetPasswordHash to create a short common name for the name parameter
-            // that was passed into the function - this allows the parameter to be very long, e.g.,
-            // a file path, and still meet minimum mutex name requirements.
-
-            // Prefix mutex name with "Global\" such that mutex will apply to all active
-            // application sessions in case terminal services is running.
-            string mutexName = "Global\\" + Cipher.GetPasswordHash(name.ToLower(), MutexHash).Replace('\\', '-');
-
-#if MONO
-            // Mono Mutex implementations do not include ability to change access rules
-            namedMutex = new Mutex(false, mutexName, out mutexWasCreated);
-#else
-            bool doesNotExist = false;
-
-            // Attempt to open the named mutex
-            try
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
-            }
-            catch (WaitHandleCannotBeOpenedException ex)
-            {
-                Logger.SwallowException(ex, "Common Exception", "Exception expected when mutex does not already exist.");
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentNullException(nameof(name), "Argument cannot be empty, null or white space.");
 
-                namedMutex = null;
-                doesNotExist = true;
-            }
+                Mutex namedMutex;
 
-            // If mutex does not exist we attempt to create it
-            if (doesNotExist)
-            {
+                // Create a mutex name that is specific to an object (e.g., a path and file name).
+                // Note that we use GetPasswordHash to create a short common name for the name parameter
+                // that was passed into the function - this allows the parameter to be very long, e.g.,
+                // a file path, and still meet minimum mutex name requirements.
+
+                // Prefix mutex name with "Global\" such that mutex will apply to all active
+                // application sessions in case terminal services is running.
+                string mutexName = $"Global\\{Cipher.GetPasswordHash(name.ToLower(), MutexHash).Replace('\\', '-')}";
+
+            #if MONO
+                // Mono Mutex implementations do not include ability to change access rules
+                namedMutex = new Mutex(false, mutexName, out bool _);
+            #else
+                bool doesNotExist = false;
+
+                // Attempt to open the named mutex
                 try
                 {
-                    MutexSecurity security = new MutexSecurity();
-                    security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow));
-                    namedMutex = new Mutex(false, mutexName, out mutexWasCreated, security);
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    Logger.SwallowException(ex, "Common Exception", "Accommodated race condition on mutex creation.");
-
-                    // Named mutex exists now but current user doesn't have full control, attempt to open with minimum needed rights
                     namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
                 }
-            }
-#endif
+                catch (WaitHandleCannotBeOpenedException)
+                {
+                    namedMutex = null;
+                    doesNotExist = true;
+                }
 
-            return namedMutex;
+                // If mutex does not exist we attempt to create it
+                if (doesNotExist)
+                {
+                    try
+                    {
+                        MutexSecurity security = new MutexSecurity();
+                        security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow));
+                        namedMutex = new Mutex(false, mutexName, out bool _, security);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Named mutex exists now but current user doesn't have full control, attempt to open with minimum needed rights
+                        namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
+                    }
+                }
+            #endif
+
+                return namedMutex;
+            }
         }
 
         /// <summary>
@@ -199,7 +198,7 @@ namespace GSF.Threading
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static Semaphore GetNamedSemaphore(bool perUser = true, int maximumCount = 10, int initialCount = -1)
         {
-            Assembly entryAssembly = Assembly.GetEntryAssembly();
+            Assembly entryAssembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
             GuidAttribute attribute = (GuidAttribute)entryAssembly.GetCustomAttributes(typeof(GuidAttribute), true).FirstOrDefault();
             string name = attribute?.Value ?? entryAssembly.GetName().Name;
 
@@ -240,66 +239,64 @@ namespace GSF.Threading
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static Semaphore GetNamedSemaphore(string name, int maximumCount = 10, int initialCount = -1)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException(nameof(name), "Argument cannot be empty, null or white space.");
-
-            Semaphore namedSemaphore;
-            bool semaphoreWasCreated;
-
-            if (initialCount < 0)
-                initialCount = maximumCount;
-
-            // Create a semaphore name that is specific to an object (e.g., a path and file name).
-            // Note that we use GetPasswordHash to create a short common name for the name parameter
-            // that was passed into the function - this allows the parameter to be very long, e.g.,
-            // a file path, and still meet minimum semaphore name requirements.
-
-            // Prefix semaphore name with "Global\" such that semaphore will apply to all active
-            // application sessions in case terminal services is running. Note that this is necessary
-            // even though .NET documentation does not state it - IL disassembly shows direct calls
-            // to WinAPI OpenSemaphore and CreateSemaphore which clearly document this:
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/ms684326(v=vs.85).aspx
-            string semaphoreName = "Global\\" + Cipher.GetPasswordHash(name.ToLower(), SemaphoreHash).Replace('\\', '-');
-
-#if MONO
-            // Mono Semaphore implementations do not include ability to change access rules
-            namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated);
-#else
-            bool doesNotExist = false;
-
-            // Attempt to open the named semaphore with minimum needed rights
-            try
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
-            }
-            catch (WaitHandleCannotBeOpenedException ex)
-            {
-                Logger.SwallowException(ex, "Common Exception", "Exception expected when semaphore does not already exist.");
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentNullException(nameof(name), "Argument cannot be empty, null or white space.");
 
-                namedSemaphore = null;
-                doesNotExist = true;
-            }
+                Semaphore namedSemaphore;
 
-            // If semaphore does not exist we attempt to create it
-            if (doesNotExist)
-            {
+                if (initialCount < 0)
+                    initialCount = maximumCount;
+
+                // Create a semaphore name that is specific to an object (e.g., a path and file name).
+                // Note that we use GetPasswordHash to create a short common name for the name parameter
+                // that was passed into the function - this allows the parameter to be very long, e.g.,
+                // a file path, and still meet minimum semaphore name requirements.
+
+                // Prefix semaphore name with "Global\" such that semaphore will apply to all active
+                // application sessions in case terminal services is running. Note that this is necessary
+                // even though .NET documentation does not state it - IL disassembly shows direct calls
+                // to WinAPI OpenSemaphore and CreateSemaphore which clearly document this:
+                // http://msdn.microsoft.com/en-us/library/windows/desktop/ms684326(v=vs.85).aspx
+                string semaphoreName = $"Global\\{Cipher.GetPasswordHash(name.ToLower(), SemaphoreHash).Replace('\\', '-')}";
+
+            #if MONO
+                // Mono Semaphore implementations do not include ability to change access rules
+                namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out bool _);
+            #else
+                bool doesNotExist = false;
+
+                // Attempt to open the named semaphore with minimum needed rights
                 try
                 {
-                    SemaphoreSecurity security = new SemaphoreSecurity();
-                    security.AddAccessRule(new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow));
-                    namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, security);
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    Logger.SwallowException(ex, "Common Exception", "Accommodated race condition on semaphore creation.");
-
-                    // Named semaphore exists now but current user doesn't have full control, attempt to open with minimum needed rights
                     namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
                 }
-            }
-#endif
+                catch (WaitHandleCannotBeOpenedException)
+                {
+                    namedSemaphore = null;
+                    doesNotExist = true;
+                }
 
-            return namedSemaphore;
+                // If semaphore does not exist we attempt to create it
+                if (doesNotExist)
+                {
+                    try
+                    {
+                        SemaphoreSecurity security = new SemaphoreSecurity();
+                        security.AddAccessRule(new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow));
+                        namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out bool _, security);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Named semaphore exists now but current user doesn't have full control, attempt to open with minimum needed rights
+                        namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
+                    }
+                }
+            #endif
+
+                return namedSemaphore;
+            }
         }
     }
 }
