@@ -1150,7 +1150,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                         Measurement.Save(database, measurement);
                                     }
-                                    else if (measurement.SignalTypeID != signal.ID)
+                                    else // if (measurement.SignalTypeID != signal.ID)
                                     {
                                         measurement.HistorianID = savedDevice.HistorianID;
                                         measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, string.IsNullOrEmpty(tagLabel) ? savedDevice.Acronym : $"{savedDevice.Acronym}_{tagLabel}", savedDevice.VendorAcronym, "ALOG", null, i).TruncateRight(200);
@@ -1196,7 +1196,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                         Measurement.Save(database, measurement);
                                     }
-                                    else if (measurement.SignalTypeID != signal.ID)
+                                    else // if (measurement.SignalTypeID != signal.ID)
                                     {
                                         measurement.HistorianID = savedDevice.HistorianID;
                                         measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i);
@@ -1232,17 +1232,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         Enabled = true
                                     };
 
+                                    Measurement.Save(database, measurement);
+                                }
+                                else
+                                {
+                                    measurement.HistorianID = savedDevice.HistorianID;
+                                    measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, signal.Acronym);
+                                    measurement.SignalReference = $"{savedDevice.Acronym}-{signal.Suffix}";
+                                    measurement.SignalTypeID = signal.ID;
+                                    measurement.Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} {signal.Name}";
 
                                     Measurement.Save(database, measurement);
                                 }
 
-                                // Based on query filter of SignalTypeSuffix, the following will never be true
-                                //else if (measurement.SignalTypeID != signal.ID)
-                                //{
-                                //    // Correct signal type if it has been changed
-                                //    measurement.SignalTypeID = signal.ID;
-                                //    Measurement.Save(database, measurement);
-                                //}
                                 break;
                             }
                         }
