@@ -36,7 +36,7 @@
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 12 AS VersionNumber;
+SELECT 13 AS VersionNumber;
 
 CREATE EXTENSION "uuid-ossp";
 
@@ -358,7 +358,7 @@ CREATE TABLE OutputStreamDeviceAnalog(
     NodeID NCHAR(36) NOT NULL,
     OutputStreamDeviceID INTEGER NOT NULL,
     ID SERIAL NOT NULL PRIMARY KEY,
-    Label VARCHAR(16) NOT NULL,
+    Label VARCHAR(200) NOT NULL,
     Type INTEGER NOT NULL DEFAULT 0,
     ScalingValue INTEGER NOT NULL DEFAULT 0,
     LoadOrder INTEGER NOT NULL DEFAULT 0,
