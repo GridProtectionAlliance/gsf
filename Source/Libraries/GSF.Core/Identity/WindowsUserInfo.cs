@@ -44,6 +44,7 @@ using Microsoft.Win32;
 using System.DirectoryServices.AccountManagement;
 #endif
 
+// ReSharper disable RedundantExplicitParamsArrayCreation
 namespace GSF.Identity
 {
     // Windows implementation of key UserInfo class elements
@@ -59,9 +60,7 @@ namespace GSF.Identity
         private readonly UserInfo m_parent;
         private DirectoryEntry m_userEntry;
         private bool m_domainRespondsForUser;
-        private bool m_isLocalAccount;
-        private bool m_useLegacyGroupLookups;
-        private bool m_enabled;
+        private readonly bool m_useLegacyGroupLookups;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -150,7 +149,6 @@ namespace GSF.Identity
                         IIdentity identity = principal?.Identity ?? WindowsIdentity.GetCurrent();
 
                         exists =
-                            (object)identity != null &&
                             !string.IsNullOrEmpty(m_parent.LoginID) &&
                             identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase) &&
                             identity.IsAuthenticated;
@@ -159,11 +157,11 @@ namespace GSF.Identity
 
                 if (!exists)
                 {
-                    if (m_isLocalAccount)
+                    if (IsLocalAccount)
                     {
                         try
                         {
-                            exists = DirectoryEntry.Exists("WinNT://" + m_parent.Domain + "/" + m_parent.UserName);
+                            exists = DirectoryEntry.Exists($"WinNT://{m_parent.Domain}/{m_parent.UserName}");
                         }
                         catch
                         {
@@ -172,7 +170,7 @@ namespace GSF.Identity
                     }
                     else
                     {
-                        exists = ((object)m_userEntry != null);
+                        exists = !(m_userEntry is null);
                     }
                 }
 
@@ -180,30 +178,19 @@ namespace GSF.Identity
             }
         }
 
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-            }
-        }
+        public bool Enabled { get; set; }
 
         public DateTime LastLogon
         {
             get
             {
-                if (m_enabled)
+                if (Enabled)
                 {
                     try
                     {
-                        if (m_isLocalAccount)
-                            return DateTime.Parse(GetUserPropertyValue("lastLogin"));
-
-                        return DateTime.FromFileTime(ConvertToLong(GetUserPropertyValueCollection("lastLogon").Value));
+                        return IsLocalAccount ? 
+                            DateTime.Parse(GetUserPropertyValue("lastLogin")) : 
+                            DateTime.FromFileTime(ConvertToLong(GetUserPropertyValueCollection("lastLogon").Value));
                     }
                     catch
                     {
@@ -219,11 +206,11 @@ namespace GSF.Identity
         {
             get
             {
-                if (m_enabled)
+                if (Enabled)
                 {
                     try
                     {
-                        if (m_isLocalAccount)
+                        if (IsLocalAccount)
                         {
                             string profilePath = GetUserPropertyValue("profile");
 
@@ -262,11 +249,11 @@ namespace GSF.Identity
             {
                 DateTime passwordChangeDate = DateTime.MaxValue;
 
-                if (m_enabled && !m_parent.PasswordCannotChange && !m_parent.PasswordDoesNotExpire)
+                if (Enabled && !m_parent.PasswordCannotChange && !m_parent.PasswordDoesNotExpire)
                 {
                     try
                     {
-                        if (m_isLocalAccount)
+                        if (IsLocalAccount)
                         {
                             Ticks maxPasswordTicksAge = MaximumPasswordAge;
 
@@ -323,11 +310,10 @@ namespace GSF.Identity
             get
             {
                 int userAccountControl = -1;
-                string userPropertyValue;
 
-                if (m_enabled && m_isLocalAccount)
+                if (Enabled && IsLocalAccount)
                 {
-                    userPropertyValue = GetUserPropertyValue("userFlags");
+                    string userPropertyValue = GetUserPropertyValue("userFlags");
 
                     if (string.IsNullOrEmpty(userPropertyValue))
                         throw new SecurityException(string.Format(UserInfo.SecurityExceptionFormat, "Local", UserInfo.CurrentUserID, "local machine accounts"));
@@ -344,45 +330,45 @@ namespace GSF.Identity
         {
             get
             {
-                if (m_enabled)
+                if (!Enabled)
+                    return -1;
+
+                string maxAgePropertyValue = string.Empty;
+
+                if (IsLocalAccount)
                 {
-                    string maxAgePropertyValue = string.Empty;
+                    maxAgePropertyValue = GetUserPropertyValue("maxPasswordAge");
+                }
+                else
+                {
+                    WindowsImpersonationContext currentContext = null;
 
-                    if (m_isLocalAccount)
+                    try
                     {
-                        maxAgePropertyValue = GetUserPropertyValue("maxPasswordAge");
-                    }
-                    else
-                    {
-                        WindowsImpersonationContext currentContext = null;
-                        try
+                        currentContext = m_parent.ImpersonatePrivilegedAccount();
+
+                        using (DirectorySearcher searcher = CreateDirectorySearcher())
                         {
-                            currentContext = m_parent.ImpersonatePrivilegedAccount();
-                            using (DirectorySearcher searcher = CreateDirectorySearcher())
-                            {
-                                SearchResult searchResult = searcher.FindOne();
-                                if ((object)searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
-                                    maxAgePropertyValue = searchResult.Properties["maxPwdAge"][0].ToString();
-                            }
-                        }
-                        finally
-                        {
-                            UserInfo.EndImpersonation(currentContext);
+                            SearchResult searchResult = searcher.FindOne();
+                            if (!(searchResult is null) && searchResult.Properties.Contains("maxPwdAge"))
+                                maxAgePropertyValue = searchResult.Properties["maxPwdAge"][0].ToString();
                         }
                     }
-
-                    if (string.IsNullOrEmpty(maxAgePropertyValue))
-                        return -1;
-
-                    long maxPasswordAge = long.Parse(maxAgePropertyValue);
-
-                    if (m_isLocalAccount)
-                        return Ticks.FromSeconds(maxPasswordAge);
-
-                    return maxPasswordAge;
+                    finally
+                    {
+                        UserInfo.EndImpersonation(currentContext);
+                    }
                 }
 
-                return -1;
+                if (string.IsNullOrEmpty(maxAgePropertyValue))
+                    return -1;
+
+                long maxPasswordAge = long.Parse(maxAgePropertyValue);
+
+                if (IsLocalAccount)
+                    return Ticks.FromSeconds(maxPasswordAge);
+
+                return maxPasswordAge;
             }
         }
 
@@ -391,21 +377,22 @@ namespace GSF.Identity
             get
             {
             #if !MONO
-                if (!m_enabled)
+                if (!Enabled)
                     return Array.Empty<string>();
                 
-                if (m_isLocalAccount || m_useLegacyGroupLookups)
+                if (IsLocalAccount || m_useLegacyGroupLookups)
                     return OldGetGroups();
 
                 try
                 {
-                    using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                    using (PrincipalContext context = IsLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
                     using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
                     {
-                        return principal.GetAuthorizationGroups()
+                        return principal?.GetAuthorizationGroups()
                             .Select(groupPrincipal => groupPrincipal.Sid.ToString())
                             .Select(SIDToAccountName)
-                            .ToArray();
+                            .ToArray() ?? 
+                             Array.Empty<string>();
                     }
                 }
                 catch (Exception ex)
@@ -427,23 +414,24 @@ namespace GSF.Identity
             get
             {
             #if !MONO
-                if (!m_enabled)
+                if (!Enabled)
                     return Array.Empty<string>();
 
-                if (m_isLocalAccount || m_useLegacyGroupLookups)
+                if (IsLocalAccount || m_useLegacyGroupLookups)
                     return OldGetLocalGroups();
 
                 try
                 {
-                    using (PrincipalContext context = m_isLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                    using (PrincipalContext context = IsLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
                     using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
                     {
-                        return principal.GetAuthorizationGroups()
+                        return principal?.GetAuthorizationGroups()
                             .Cast<GroupPrincipal>()
                             .Where(groupPrincipal => groupPrincipal.GroupScope == GroupScope.Local)
                             .Select(groupPrincipal => groupPrincipal.Sid.ToString())
                             .Select(SIDToAccountName)
-                            .ToArray();
+                            .ToArray() ??
+                             Array.Empty<string>();
                     }
                 }
                 catch (Exception ex)
@@ -473,13 +461,7 @@ namespace GSF.Identity
             }
         }
 
-        public bool IsLocalAccount
-        {
-            get
-            {
-                return m_isLocalAccount;
-            }
-        }
+        public bool IsLocalAccount { get; private set; }
 
         #endregion
 
@@ -500,153 +482,148 @@ namespace GSF.Identity
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         private void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
+                // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
+
+                m_userEntry?.Dispose();
+                m_userEntry = null;
+
+                // Attempt to detach from power mode changed system event
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        if ((object)m_userEntry != null)
-                            m_userEntry.Dispose();
-
-                        m_userEntry = null;
-
-                        // Attempt to detach from power mode changed system event
-                        try
-                        {
-                            SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
-                        }
-                        catch
-                        {
-                            // This event is not raised when running from a Windows service since
-                            // a service does not establish a message loop.
-                        }
-                    }
+                    SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
                 }
-                finally
+                catch
                 {
-                    m_enabled = false;  // Mark as disabled.
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    // This event is not raised when running from a Windows service since
+                    // a service does not establish a message loop.
                 }
+            }
+            finally
+            {
+                Enabled = false; // Mark as disabled.
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
         public bool Initialize()
         {
-            if (!m_initialized)
+            if (m_initialized)
+                return true;
+
+            // Load settings from config file.
+            m_parent.LoadSettings();
+
+            // Handle initialization
+            Enabled = false;
+
+            // Attempt do derive the domain if one is not specified
+            if (string.IsNullOrEmpty(m_parent.Domain))
             {
-                // Load settings from config file.
-                m_parent.LoadSettings();
-
-                // Handle initialization
-                m_enabled = false;
-
-                // Attempt do derive the domain if one is not specified
-                if (string.IsNullOrEmpty(m_parent.Domain))
+                if (!string.IsNullOrEmpty(m_parent.m_privilegedDomain))
                 {
-                    if (!string.IsNullOrEmpty(m_parent.m_privilegedDomain))
-                    {
-                        // Use domain specified for privileged account
-                        m_parent.Domain = m_parent.m_privilegedDomain;
-                    }
-                    else
-                    {
-                        // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
-                        // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
-                        m_parent.Domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
-                    }
-                }
-
-                // Set the domain as the local machine if one is not specified
-                if (string.IsNullOrEmpty(m_parent.Domain))
-                    m_parent.Domain = Environment.MachineName;
-
-                // WinNT directory entries will only resolve "BUILTIN" local prefixes with a "."
-                if (m_parent.Domain.Equals("BUILTIN", StringComparison.OrdinalIgnoreCase))
-                    m_parent.Domain = ".";
-
-                // Determine if "domain" is for local machine or active directory
-                if (UserInfo.IsLocalDomain(m_parent.Domain))
-                {
-                    try
-                    {
-                        // Initialize the directory entry object used to retrieve local account information
-                        m_userEntry = new DirectoryEntry("WinNT://" + m_parent.Domain + "/" + m_parent.UserName);
-                        m_isLocalAccount = true;
-                        m_enabled = true;
-                        m_parent.UserAccountControl = -1;
-
-                        if (m_parent.Domain.Equals("NT SERVICE", StringComparison.OrdinalIgnoreCase) || m_parent.Domain.Equals("NT AUTHORITY", StringComparison.OrdinalIgnoreCase))
-                            m_domainRespondsForUser = true;
-                        else
-                            m_domainRespondsForUser = DirectoryEntry.Exists("WinNT://" + m_parent.Domain + "/" + m_parent.UserName);
-                    }
-                    catch (ThreadAbortException)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        if ((object)m_userEntry != null)
-                            m_userEntry.Dispose();
-
-                        m_userEntry = null;
-                        m_domainRespondsForUser = false;
-
-                        throw new InitializationException(string.Format("Failed to initialize directory entry for user '{0}'", m_parent.LoginID), ex);
-                    }
+                    // Use domain specified for privileged account
+                    m_parent.Domain = m_parent.m_privilegedDomain;
                 }
                 else
                 {
-                    // Initialize the directory entry object used to retrieve active directory information
-                    WindowsImpersonationContext currentContext = null;
-
-                    try
-                    {
-                        // Impersonate to the privileged account if specified
-                        currentContext = m_parent.ImpersonatePrivilegedAccount();
-
-                        // Initialize the Active Directory searcher object
-                        using (DirectorySearcher searcher = CreateDirectorySearcher())
-                        {
-                            searcher.Filter = "(SAMAccountName=" + m_parent.UserName + ")";
-                            SearchResult result = searcher.FindOne();
-                            if ((object)result != null)
-                                m_userEntry = result.GetDirectoryEntry();
-                        }
-
-                        m_isLocalAccount = false;
-                        m_enabled = true;
-                        m_domainRespondsForUser = true;
-                        m_parent.UserAccountControl = -1;
-                    }
-                    catch (ThreadAbortException)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        if ((object)m_userEntry != null)
-                            m_userEntry.Dispose();
-
-                        m_userEntry = null;
-                        m_domainRespondsForUser = false;
-
-                        throw new InitializationException(string.Format("Failed to initialize directory entry for domain user '{0}'", m_parent.LoginID), ex);
-                    }
-                    finally
-                    {
-                        // Undo impersonation if it was performed
-                        UserInfo.EndImpersonation(currentContext);
-                    }
+                    // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
+                    // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
+                    m_parent.Domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
                 }
-
-                // Initialize user information only once
-                m_initialized = true;
             }
 
-            return m_initialized;
+            // Set the domain as the local machine if one is not specified
+            if (string.IsNullOrEmpty(m_parent.Domain))
+                m_parent.Domain = Environment.MachineName;
+
+            // WinNT directory entries will only resolve "BUILTIN" local prefixes with a "."
+            if (m_parent.Domain.Equals("BUILTIN", StringComparison.OrdinalIgnoreCase))
+                m_parent.Domain = ".";
+
+            // Determine if "domain" is for local machine or active directory
+            if (UserInfo.IsLocalDomain(m_parent.Domain))
+            {
+                try
+                {
+                    // Initialize the directory entry object used to retrieve local account information
+                    m_userEntry = new DirectoryEntry($"WinNT://{m_parent.Domain}/{m_parent.UserName}");
+                    IsLocalAccount = true;
+                    Enabled = true;
+                    m_parent.UserAccountControl = -1;
+
+                    if (m_parent.Domain.Equals("NT SERVICE", StringComparison.OrdinalIgnoreCase) || m_parent.Domain.Equals("NT AUTHORITY", StringComparison.OrdinalIgnoreCase))
+                        m_domainRespondsForUser = true;
+                    else
+                        m_domainRespondsForUser = DirectoryEntry.Exists($"WinNT://{m_parent.Domain}/{m_parent.UserName}");
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    m_userEntry?.Dispose();
+                    m_userEntry = null;
+                    m_domainRespondsForUser = false;
+
+                    throw new InitializationException($"Failed to initialize directory entry for user '{m_parent.LoginID}'", ex);
+                }
+            }
+            else
+            {
+                // Initialize the directory entry object used to retrieve active directory information
+                WindowsImpersonationContext currentContext = null;
+
+                try
+                {
+                    // Impersonate to the privileged account if specified
+                    currentContext = m_parent.ImpersonatePrivilegedAccount();
+
+                    // Initialize the Active Directory searcher object
+                    using (DirectorySearcher searcher = CreateDirectorySearcher())
+                    {
+                        searcher.Filter = $"(SAMAccountName={m_parent.UserName})";
+                        SearchResult result = searcher.FindOne();
+
+                        if (!(result is null))
+                            m_userEntry = result.GetDirectoryEntry();
+                    }
+
+                    IsLocalAccount = false;
+                    Enabled = true;
+                    m_domainRespondsForUser = true;
+                    m_parent.UserAccountControl = -1;
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    m_userEntry?.Dispose();
+                    m_userEntry = null;
+                    m_domainRespondsForUser = false;
+
+                    throw new InitializationException($"Failed to initialize directory entry for domain user '{m_parent.LoginID}'", ex);
+                }
+                finally
+                {
+                    // Undo impersonation if it was performed
+                    UserInfo.EndImpersonation(currentContext);
+                }
+            }
+
+            // Initialize user information only once
+            m_initialized = true;
+
+            return true;
         }
 
         // If the system is waking back up from a sleep state, this class should reinitialize in case
@@ -662,7 +639,7 @@ namespace GSF.Identity
             m_userEntry.Invoke("ChangePassword", oldPassword, newPassword);
 
             // Commit changes (required for non-local accounts)
-            if (!m_isLocalAccount)
+            if (!IsLocalAccount)
                 m_userEntry.CommitChanges();
         }
 
@@ -676,20 +653,20 @@ namespace GSF.Identity
                 Initialize();
 
                 // Quit if disabled
-                if (!m_enabled)
+                if (!Enabled)
                     return null;
 
-                if ((object)m_userEntry != null)
+                if (m_userEntry is null)
+                {
+                    return null;
+                }
+                else
                 {
                     // Impersonate to the privileged account if specified
                     currentContext = m_parent.ImpersonatePrivilegedAccount();
 
                     // Return requested Active Directory property value
                     return m_userEntry.Properties[propertyName];
-                }
-                else
-                {
-                    return null;
                 }
             }
             catch
@@ -707,35 +684,17 @@ namespace GSF.Identity
         {
             PropertyValueCollection value = GetUserPropertyValueCollection(propertyName);
 
-            if ((object)value != null && value.Count > 0)
+            if (!(value is null) && value.Count > 0)
                 return value[0].ToString().Replace("  ", " ").Trim();
 
             return string.Empty;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
-        private DirectorySearcher CreateDirectorySearcher()
-        {
-            DirectorySearcher searcher;
-
-            if (string.IsNullOrEmpty(m_parent.LdapPath))
-                searcher = new DirectorySearcher();
-            else
-                searcher = new DirectorySearcher(new DirectoryEntry(m_parent.LdapPath));
-
-            return searcher;
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        private long ConvertToLong(object largeInteger)
-        {
-            Type type = largeInteger.GetType();
-
-            int highPart = (int)type.InvokeMember("HighPart", BindingFlags.GetProperty, null, largeInteger, null);
-            int lowPart = (int)type.InvokeMember("LowPart", BindingFlags.GetProperty, null, largeInteger, null);
-
-            return (long)highPart << 32 | (uint)lowPart;
-        }
+        private DirectorySearcher CreateDirectorySearcher() =>
+            string.IsNullOrEmpty(m_parent.LdapPath) ? 
+                new DirectorySearcher() : 
+                new DirectorySearcher(new DirectoryEntry(m_parent.LdapPath));
 
         #endregion
 
@@ -803,7 +762,7 @@ namespace GSF.Identity
         {
             get
             {
-                using (ManagementObject wmi = new ManagementObject(string.Format("Win32_ComputerSystem.Name='{0}'", Environment.MachineName)))
+                using (ManagementObject wmi = new ManagementObject($"Win32_ComputerSystem.Name='{Environment.MachineName}'"))
                 {
                     wmi.Get();
                     return (bool)wmi["PartOfDomain"];
@@ -812,10 +771,19 @@ namespace GSF.Identity
         }
 
         // Static Methods
-        public static string[] GetBuiltInLocalGroups()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
+        private static long ConvertToLong(object largeInteger)
         {
-            return s_builtInLocalGroups;
+            Type type = largeInteger.GetType();
+
+            int highPart = (int)type.InvokeMember("HighPart", BindingFlags.GetProperty, null, largeInteger, null);
+            int lowPart = (int)type.InvokeMember("LowPart", BindingFlags.GetProperty, null, largeInteger, null);
+
+            return (long)highPart << 32 | (uint)lowPart;
         }
+
+        public static string[] GetBuiltInLocalGroups() => 
+            s_builtInLocalGroups;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         public static IPrincipal AuthenticateUser(string domain, string userName, string password, out string errorMessage)
@@ -845,6 +813,7 @@ namespace GSF.Identity
                     WindowsApi.CloseHandle(tokenHandle);
             }
 
+            // ReSharper disable once BadControlBracesIndent
             #region [ Alternate User Authentication Method ]
 
             // This requires reference to System.DirectoryServices.AccountManagement.
@@ -891,10 +860,10 @@ namespace GSF.Identity
             {
                 // Calls LogonUser to obtain a handle to an access token.
                 if (!WindowsApi.LogonUser(userName, domain, password, WindowsApi.LOGON32_LOGON_INTERACTIVE, WindowsApi.LOGON32_PROVIDER_DEFAULT, out userTokenHandle))
-                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\": {2}", domain, userName, WindowsApi.GetLastErrorMessage()));
+                    throw new InvalidOperationException($"Failed to impersonate user \"{domain}\\{userName}\": {WindowsApi.GetLastErrorMessage()}");
 
                 if (!WindowsApi.DuplicateToken(userTokenHandle, WindowsApi.SECURITY_IMPERSONATION, ref duplicateTokenHandle))
-                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - exception thrown while trying to duplicate token: {2}", domain, userName, WindowsApi.GetLastErrorMessage()));
+                    throw new InvalidOperationException($"Failed to impersonate user \"{domain}\\{userName}\" - exception thrown while trying to duplicate token: {WindowsApi.GetLastErrorMessage()}");
 
                 // The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation
                 impersonatedUser = WindowsIdentity.Impersonate(duplicateTokenHandle);
@@ -930,7 +899,7 @@ namespace GSF.Identity
                         string.Compare(domain, Environment.MachineName, StringComparison.OrdinalIgnoreCase) != 0)
                     {
                         // AD accounts that exist in local groups can be referenced by name
-                        accountEntry = new DirectoryEntry(string.Format("WinNT://{0}/{1}", domain, account));
+                        accountEntry = new DirectoryEntry($"WinNT://{domain}/{account}");
                         return true;
                     }
 
@@ -956,13 +925,10 @@ namespace GSF.Identity
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
-                DirectoryEntry userEntry;
-
                 // Determine if local user exists
-                bool userExists = LocalAccountExists(localMachine, userName, "user", false, out userEntry);
+                bool userExists = LocalAccountExists(localMachine, userName, "user", false, out DirectoryEntry userEntry);
 
-                if ((object)userEntry != null)
-                    userEntry.Dispose();
+                userEntry?.Dispose();
 
                 return userExists;
             }
@@ -983,7 +949,7 @@ namespace GSF.Identity
                         using (DirectoryEntry newUserEntry = localMachine.Children.Add(userName, "user"))
                         {
                             newUserEntry.Invoke("SetPassword", new object[] { password });
-                            newUserEntry.Invoke("Put", new object[] { "Description", userDescription ?? "Local account for " + userName });
+                            newUserEntry.Invoke("Put", new object[] { "Description", userDescription ?? $"Local account for {userName}"});
                             newUserEntry.CommitChanges();
                         }
                         return true;
@@ -991,16 +957,15 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot create local user \"{0}\": {1}", userName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot create local user \"{userName}\": {ex.Message}", ex);
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot create local user \"{0}\": {1}", userName, ex.InnerException.Message), ex.InnerException);
+                    throw new InvalidOperationException($"Cannot create local user \"{userName}\": {ex.InnerException?.Message}", ex.InnerException);
                 }
                 finally
                 {
-                    if ((object)userEntry != null)
-                        userEntry.Dispose();
+                    userEntry?.Dispose();
                 }
             }
 
@@ -1018,23 +983,22 @@ namespace GSF.Identity
                 {
                     // Determine if local user exists
                     if (!LocalAccountExists(localMachine, userName, "user", false, out userEntry))
-                        throw new InvalidOperationException(string.Format("Cannot set password for local user \"{0}\": user does not exist.", userName));
+                        throw new InvalidOperationException($"Cannot set password for local user \"{userName}\": user does not exist.");
 
                     userEntry.Invoke("SetPassword", new object[] { password });
                     userEntry.CommitChanges();
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot set password for local user \"{0}\": {1}", userName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot set password for local user \"{userName}\": {ex.Message}", ex);
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot set password for local user \"{0}\": {1}", userName, ex.InnerException.Message), ex.InnerException);
+                    throw new InvalidOperationException($"Cannot set password for local user \"{userName}\": {ex.InnerException?.Message}", ex.InnerException);
                 }
                 finally
                 {
-                    if ((object)userEntry != null)
-                        userEntry.Dispose();
+                    userEntry?.Dispose();
                 }
             }
         }
@@ -1057,12 +1021,11 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot remove local user \"{0}\": {1}", userName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot remove local user \"{userName}\": {ex.Message}", ex);
                 }
                 finally
                 {
-                    if ((object)userEntry != null)
-                        userEntry.Dispose();
+                    userEntry?.Dispose();
                 }
             }
 
@@ -1074,13 +1037,10 @@ namespace GSF.Identity
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
-                DirectoryEntry groupEntry;
-
                 // Determine if local group exists
-                bool groupExists = LocalAccountExists(localMachine, groupName, "group", false, out groupEntry);
+                bool groupExists = LocalAccountExists(localMachine, groupName, "group", false, out DirectoryEntry groupEntry);
 
-                if ((object)groupEntry != null)
-                    groupEntry.Dispose();
+                groupEntry?.Dispose();
 
                 return groupExists;
             }
@@ -1100,7 +1060,7 @@ namespace GSF.Identity
                     {
                         using (DirectoryEntry newGroupEntry = localMachine.Children.Add(groupName, "group"))
                         {
-                            newGroupEntry.Invoke("Put", new object[] { "Description", groupDescription ?? groupName + " group." });
+                            newGroupEntry.Invoke("Put", new object[] { "Description", groupDescription ?? $"{groupName} group."});
                             newGroupEntry.CommitChanges();
                         }
                         return true;
@@ -1108,16 +1068,15 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot create local group \"{0}\": {1}", groupName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot create local group \"{groupName}\": {ex.Message}", ex);
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot create local group \"{0}\": {1}", groupName, ex.InnerException.Message), ex.InnerException);
+                    throw new InvalidOperationException($"Cannot create local group \"{groupName}\": {ex.InnerException?.Message}", ex.InnerException);
                 }
                 finally
                 {
-                    if ((object)groupEntry != null)
-                        groupEntry.Dispose();
+                    groupEntry?.Dispose();
                 }
             }
 
@@ -1142,12 +1101,11 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot remove local group \"{0}\": {1}", groupName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot remove local group \"{groupName}\": {ex.Message}", ex);
                 }
                 finally
                 {
-                    if ((object)groupEntry != null)
-                        groupEntry.Dispose();
+                    groupEntry?.Dispose();
                 }
             }
 
@@ -1162,19 +1120,18 @@ namespace GSF.Identity
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
-                string userPath;
 
                 try
                 {
                     // Determine if local group exists
                     if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
-                        throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": group does not exist.", userName, groupName));
+                        throw new InvalidOperationException($"Cannot determine if user \"{userName}\" is in local group \"{groupName}\": group does not exist.");
 
                     // Determine if local user exists
                     if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
-                        throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": user does not exist.", userName, groupName));
+                        throw new InvalidOperationException($"Cannot determine if user \"{userName}\" is in local group \"{groupName}\": user does not exist.");
 
-                    userPath = userEntry.Path;
+                    string userPath = userEntry.Path;
 
                     // See if user is in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -1188,19 +1145,16 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": {2}", userName, groupName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot determine if user \"{userName}\" is in local group \"{groupName}\": {ex.Message}", ex);
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": {2}", userName, groupName, ex.InnerException.Message), ex.InnerException);
+                    throw new InvalidOperationException($"Cannot determine if user \"{userName}\" is in local group \"{groupName}\": {ex.InnerException?.Message}", ex.InnerException);
                 }
                 finally
                 {
-                    if ((object)groupEntry != null)
-                        groupEntry.Dispose();
-
-                    if ((object)userEntry != null)
-                        userEntry.Dispose();
+                    groupEntry?.Dispose();
+                    userEntry?.Dispose();
                 }
             }
 
@@ -1215,19 +1169,18 @@ namespace GSF.Identity
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
-                string userPath;
 
                 try
                 {
                     // Determine if local group exists
                     if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
-                        throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": group does not exist.", userName, groupName));
+                        throw new InvalidOperationException($"Cannot add user \"{userName}\" to local group \"{groupName}\": group does not exist.");
 
                     // Determine if user exists
                     if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
-                        throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": user does not exist.", userName, groupName));
+                        throw new InvalidOperationException($"Cannot add user \"{userName}\" to local group \"{groupName}\": user does not exist.");
 
-                    userPath = userEntry.Path;
+                    string userPath = userEntry.Path;
 
                     // See if user is already in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -1246,19 +1199,16 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": {2}", userName, groupName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot add user \"{userName}\" to local group \"{groupName}\": {ex.Message}", ex);
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": {2}", userName, groupName, ex.InnerException.Message), ex.InnerException);
+                    throw new InvalidOperationException($"Cannot add user \"{userName}\" to local group \"{groupName}\": {ex.InnerException?.Message}", ex.InnerException);
                 }
                 finally
                 {
-                    if ((object)groupEntry != null)
-                        groupEntry.Dispose();
-
-                    if ((object)userEntry != null)
-                        userEntry.Dispose();
+                    groupEntry?.Dispose();
+                    userEntry?.Dispose();
                 }
             }
         }
@@ -1271,19 +1221,18 @@ namespace GSF.Identity
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
-                string userPath;
 
                 try
                 {
                     // Determine if local group exists
                     if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
-                        throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": group does not exist.", userName, groupName));
+                        throw new InvalidOperationException($"Cannot remove user \"{userName}\" from local group \"{groupName}\": group does not exist.");
 
                     // Determine if user exists
                     if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
-                        throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": user does not exist.", userName, groupName));
+                        throw new InvalidOperationException($"Cannot remove user \"{userName}\" from local group \"{groupName}\": user does not exist.");
 
-                    userPath = userEntry.Path;
+                    string userPath = userEntry.Path;
 
                     // See if user is in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -1301,19 +1250,16 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": {2}", userName, groupName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot remove user \"{userName}\" from local group \"{groupName}\": {ex.Message}", ex);
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": {2}", userName, groupName, ex.InnerException.Message), ex.InnerException);
+                    throw new InvalidOperationException($"Cannot remove user \"{userName}\" from local group \"{groupName}\": {ex.InnerException?.Message}", ex.InnerException);
                 }
                 finally
                 {
-                    if ((object)groupEntry != null)
-                        groupEntry.Dispose();
-
-                    if ((object)userEntry != null)
-                        userEntry.Dispose();
+                    groupEntry?.Dispose();
+                    userEntry?.Dispose();
                 }
             }
 
@@ -1333,7 +1279,7 @@ namespace GSF.Identity
                 {
                     // Determine if local group exists
                     if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
-                        throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": group does not exist.", groupName));
+                        throw new InvalidOperationException($"Cannot get members for local group \"{groupName}\": group does not exist.");
 
                     // See if user is in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -1346,16 +1292,15 @@ namespace GSF.Identity
                 }
                 catch (COMException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": {1}", groupName, ex.Message), ex);
+                    throw new InvalidOperationException($"Cannot get members for local group \"{groupName}\": {ex.Message}", ex);
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": {1}", groupName, ex.InnerException.Message), ex.InnerException);
+                    throw new InvalidOperationException($"Cannot get members for local group \"{groupName}\": {ex.InnerException?.Message}", ex.InnerException);
                 }
                 finally
                 {
-                    if ((object)groupEntry != null)
-                        groupEntry.Dispose();
+                    groupEntry?.Dispose();
                 }
             }
 
@@ -1364,58 +1309,55 @@ namespace GSF.Identity
 
         public static string AccountNameToSID(string accountName)
         {
-            string[] accountParts;
-            NTAccount account;
-            SecurityIdentifier securityIdentifier;
-
-            string machineAlias;
-            string machineDomain;
-            string accountAlias;
-            string accountAliasSID;
-
-            if ((object)accountName == null)
+            if (accountName is null)
                 throw new ArgumentNullException(nameof(accountName));
 
-            try
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                accountParts = accountName.Split('\\');
-
-                if (accountParts.Length == 2)
-                    account = new NTAccount(accountParts[0], accountParts[1]);
-                else
-                    account = new NTAccount(accountName);
-
-                securityIdentifier = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
-
-                return securityIdentifier.ToString();
-            }
-            catch (IdentityNotMappedException ex)
-            {
-                Logger.SwallowException(ex, "WindowsUserInfo.cs AccountNameToSID: Error in mapping");
-                machineAlias = @".\";
-                machineDomain = Environment.MachineName + @"\";
-
-                if (accountName.StartsWith(machineAlias, StringComparison.OrdinalIgnoreCase))
+                try
                 {
-                    // If a '.' is specified as the domain, treat it as an alias for the machine domain and attempt the lookup again
-                    accountAlias = Regex.Replace(accountName, "^" + Regex.Escape(machineAlias), machineDomain, RegexOptions.IgnoreCase);
-                    accountAliasSID = AccountNameToSID(accountAlias);
+                    string[] accountParts = accountName.Split('\\');
+                    NTAccount account;
 
-                    if (!ReferenceEquals(accountAlias, accountAliasSID))
-                        return accountAliasSID;
+                    if (accountParts.Length == 2)
+                        account = new NTAccount(accountParts[0], accountParts[1]);
+                    else
+                        account = new NTAccount(accountName);
+
+                    SecurityIdentifier securityIdentifier = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
+
+                    return securityIdentifier.ToString();
                 }
-                else if (accountName.StartsWith(machineDomain, StringComparison.OrdinalIgnoreCase))
+                catch (IdentityNotMappedException ex)
                 {
-                    // If the machine domain is specified, attempt the lookup again using the BUILTIN domain instead
-                    accountAlias = Regex.Replace(accountName, "^" + Regex.Escape(machineDomain), @"BUILTIN\", RegexOptions.IgnoreCase);
-                    accountAliasSID = AccountNameToSID(accountAlias);
+                    Logger.SwallowException(ex, "WindowsUserInfo.cs AccountNameToSID: Error in mapping");
+                    const string MachineAlias = @".\";
+                    string machineDomain = $@"{Environment.MachineName}\";
+                    string accountAlias;
+                    string accountAliasSID;
 
-                    if (!ReferenceEquals(accountAlias, accountAliasSID))
-                        return accountAliasSID;
+                    if (accountName.StartsWith(MachineAlias, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // If a '.' is specified as the domain, treat it as an alias for the machine domain and attempt the lookup again
+                        accountAlias = Regex.Replace(accountName, $"^{Regex.Escape(MachineAlias)}", machineDomain, RegexOptions.IgnoreCase);
+                        accountAliasSID = AccountNameToSID(accountAlias);
+
+                        if (!ReferenceEquals(accountAlias, accountAliasSID))
+                            return accountAliasSID;
+                    }
+                    else if (accountName.StartsWith(machineDomain, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // If the machine domain is specified, attempt the lookup again using the BUILTIN domain instead
+                        accountAlias = Regex.Replace(accountName, $"^{Regex.Escape(machineDomain)}", @"BUILTIN\", RegexOptions.IgnoreCase);
+                        accountAliasSID = AccountNameToSID(accountAlias);
+
+                        if (!ReferenceEquals(accountAlias, accountAliasSID))
+                            return accountAliasSID;
+                    }
                 }
-            }
-            catch (SystemException)
-            {
+                catch (SystemException)
+                {
+                }
             }
 
             return accountName;
@@ -1423,46 +1365,40 @@ namespace GSF.Identity
 
         public static string SIDToAccountName(string sid)
         {
-            try
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                SecurityIdentifier securityIdentifier;
-                NTAccount account;
+                try
+                {
+                    if (sid is null)
+                        throw new ArgumentNullException(nameof(sid));
 
-                if ((object)sid == null)
-                    throw new ArgumentNullException(nameof(sid));
+                    SecurityIdentifier securityIdentifier = new SecurityIdentifier(CleanSid(sid));
+                    NTAccount account = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
 
-                securityIdentifier = new SecurityIdentifier(CleanSid(sid));
-                account = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
-
-                return account.ToString();
-            }
-            catch (IdentityNotMappedException)
-            {
-            }
-            catch (SystemException)
-            {
+                    return account.ToString();
+                }
+                catch (IdentityNotMappedException)
+                {
+                }
+                catch (SystemException)
+                {
+                }
             }
 
             return sid;
         }
 
-        public static bool IsUserSID(string sid)
-        {
-            return IsSchemaSID(sid, "User");
-        }
+        public static bool IsUserSID(string sid) => 
+            IsSchemaSID(sid, "User");
 
-        public static bool IsGroupSID(string sid)
-        {
-            return IsSchemaSID(sid, "Group");
-        }
+        public static bool IsGroupSID(string sid) => 
+            IsSchemaSID(sid, "Group");
 
         private static bool IsSchemaSID(string sid, string schemaClassName)
         {
             try
             {
-                string accountName;
-
-                if ((object)sid == null)
+                if (sid is null)
                     throw new ArgumentNullException(nameof(sid));
 
                 sid = CleanSid(sid);
@@ -1470,9 +1406,9 @@ namespace GSF.Identity
                 if (!sid.StartsWith("S-", StringComparison.OrdinalIgnoreCase))
                     return false;
 
-                accountName = SIDToAccountName(sid);
+                string accountName = SIDToAccountName(sid);
 
-                using (DirectoryEntry entry = new DirectoryEntry(string.Format("WinNT://{0}", UserInfo.ValidateGroupName(accountName).Replace('\\', '/'))))
+                using (DirectoryEntry entry = new DirectoryEntry($"WinNT://{UserInfo.ValidateGroupName(accountName).Replace('\\', '/')}"))
                 {
                     return entry.SchemaClassName.Equals(schemaClassName, StringComparison.OrdinalIgnoreCase);
                 }
@@ -1498,11 +1434,12 @@ namespace GSF.Identity
         private string[] OldGetGroups()
         {
             HashSet<string> groups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            string groupName;
 
-            if (m_enabled)
+            if (Enabled)
             {
-                if (m_isLocalAccount)
+                string groupName;
+
+                if (IsLocalAccount)
                 {
                     // Get fixed list of BUILTIN local groups
                     string[] builtInGroups = UserInfo.GetBuiltInLocalGroups();
@@ -1517,9 +1454,9 @@ namespace GSF.Identity
                             groupName = groupEntry.Name;
 
                             if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
-                                groups.Add(Environment.MachineName + "\\" + groupName);
+                                groups.Add($"{Environment.MachineName}\\{groupName}");
                             else
-                                groups.Add("BUILTIN\\" + groupName);
+                                groups.Add($"BUILTIN\\{groupName}");
                         }
                     }
 
@@ -1567,8 +1504,7 @@ namespace GSF.Identity
 
             // Get local groups that user is a member of
             DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
-            string userPath = string.Format("WinNT://{0}/{1}", m_parent.Domain, m_parent.UserName);
-            string groupName;
+            string userPath = $"WinNT://{m_parent.Domain}/{m_parent.UserName}";
 
             string[] builtInGroups = UserInfo.GetBuiltInLocalGroups();
 
@@ -1580,12 +1516,12 @@ namespace GSF.Identity
             {
                 if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
                 {
-                    groupName = groupEntry.Name;
+                    string groupName = groupEntry.Name;
 
                     if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
-                        groups.Add(Environment.MachineName + "\\" + groupName);
+                        groups.Add($"{Environment.MachineName}\\{groupName}");
                     else
-                        groups.Add("BUILTIN\\" + groupName);
+                        groups.Add($"BUILTIN\\{groupName}");
                 }
             }
 
