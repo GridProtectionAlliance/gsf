@@ -47,7 +47,7 @@ namespace eDNAAdapters
         public const string DigitalClearedString = "OFF";
         public const bool ValidateINIFileExists = false;
         public const double MaximumPointResolution = 0.0D;
-        public const int ConnectionMonitoringInterval = 1000;
+        public const int ConnectionMonitoringInterval = 5000;
         public const int WriteTimeout = Timeout.Infinite;
         public const bool ExpandDigitalWordBits = false;
     }

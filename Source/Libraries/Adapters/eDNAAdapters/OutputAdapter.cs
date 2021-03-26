@@ -113,9 +113,11 @@ namespace eDNAAdapters
         {
             m_dataConnection = uint.MaxValue;
             m_metaConnection = uint.MaxValue;
-            m_connectionMonitor = new Timer();
-            m_connectionMonitor.Enabled = false;
-            m_connectionMonitor.AutoReset = true;
+            m_connectionMonitor = new Timer
+            {
+                Enabled = false,
+                AutoReset = true
+            };
             m_connectionMonitor.Elapsed += m_connectionMonitor_Elapsed;
             m_pointMap = new ConcurrentDictionary<Guid, Point>();
             m_savePointMapCache = new LongSynchronizedOperation(SavePointMapCache, ex => OnProcessException(MessageLevel.Warning, ex));
@@ -1232,12 +1234,26 @@ namespace eDNAAdapters
             if (LinkMX.ISeDnaMxUniversalConnected(m_dataConnection))
             {
                 // Verify connection is up at socket level, API is not always accurate
-                Func<string, IPAddress> parseIP = host => string.IsNullOrWhiteSpace(host) ? IPAddress.None : IPAddress.Parse(host);
+                IPAddress parseIP(string host)
+                {
+                    if (string.IsNullOrWhiteSpace(host))
+                        return IPAddress.None;
+
+                    try
+                    {
+                        IPHostEntry result = Dns.GetHostEntry(host);
+                        return result.AddressList.FirstOrDefault() ?? IPAddress.None;
+                    }
+                    catch
+                    {
+                        return IPAddress.TryParse(host, out IPAddress hostAddress) ? hostAddress : IPAddress.None;
+                    }
+                }
 
                 IPAddress primaryIP = parseIP(PrimaryServer);
                 IPAddress secondaryIP = parseIP(SecondaryServer);
 
-                Func<TcpConnectionInformation, IPAddress, int, bool> isEstablished = (connection, address, port) =>
+                bool isEstablished(TcpConnectionInformation connection, IPAddress address, int port) => 
                     connection.RemoteEndPoint.Address.Equals(address) &&
                     connection.RemoteEndPoint.Port == port &&
                     connection.State == TcpState.Established;
