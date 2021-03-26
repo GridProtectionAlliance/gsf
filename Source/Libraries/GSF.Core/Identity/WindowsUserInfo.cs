@@ -383,25 +383,28 @@ namespace GSF.Identity
                 if (IsLocalAccount || m_useLegacyGroupLookups)
                     return OldGetGroups();
 
-                try
+                using (Logger.SuppressFirstChanceExceptionLogMessages())
                 {
-                    using (PrincipalContext context = IsLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
-                    using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                    try
                     {
-                        return principal?.GetAuthorizationGroups()
-                            .Select(groupPrincipal => groupPrincipal.Sid.ToString())
-                            .Select(SIDToAccountName)
-                            .ToArray() ?? 
-                             Array.Empty<string>();
+                        using (PrincipalContext context = IsLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                        using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                        {
+                            return principal?.GetAuthorizationGroups()
+                                .Select(groupPrincipal => groupPrincipal.Sid.ToString())
+                                .Select(SIDToAccountName)
+                                .ToArray() ?? 
+                                 Array.Empty<string>();
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Log.Publish(MessageLevel.Error, "Get Groups", ex.Message, null, ex);
+                    catch (Exception ex)
+                    {
+                        Log.Publish(MessageLevel.Error, "Get Groups", ex.Message, null, ex);
 
-                    // TODO: Fix random, inexplicable errors when looking up
-                    // identities via System.DirectoryServices.AccountManagement
-                    return OldGetGroups();
+                        // TODO: Fix random, inexplicable errors when looking up
+                        // identities via System.DirectoryServices.AccountManagement
+                        return OldGetGroups();
+                    }
                 }
             #else
                 return OldGetGroups();
@@ -420,27 +423,30 @@ namespace GSF.Identity
                 if (IsLocalAccount || m_useLegacyGroupLookups)
                     return OldGetLocalGroups();
 
-                try
+                using (Logger.SuppressFirstChanceExceptionLogMessages())
                 {
-                    using (PrincipalContext context = IsLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
-                    using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                    try
                     {
-                        return principal?.GetAuthorizationGroups()
-                            .Cast<GroupPrincipal>()
-                            .Where(groupPrincipal => groupPrincipal.GroupScope == GroupScope.Local)
-                            .Select(groupPrincipal => groupPrincipal.Sid.ToString())
-                            .Select(SIDToAccountName)
-                            .ToArray() ??
-                             Array.Empty<string>();
+                        using (PrincipalContext context = IsLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain))
+                        using (UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName))
+                        {
+                            return principal?.GetAuthorizationGroups()
+                                .Cast<GroupPrincipal>()
+                                .Where(groupPrincipal => groupPrincipal.GroupScope == GroupScope.Local)
+                                .Select(groupPrincipal => groupPrincipal.Sid.ToString())
+                                .Select(SIDToAccountName)
+                                .ToArray() ??
+                                 Array.Empty<string>();
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Log.Publish(MessageLevel.Error, "Get LocalGroups", ex.Message, null, ex);
+                    catch (Exception ex)
+                    {
+                        Log.Publish(MessageLevel.Error, "Get LocalGroups", ex.Message, null, ex);
 
-                    // TODO: Fix random, inexplicable errors when looking up
-                    // identities via System.DirectoryServices.AccountManagement
-                    return OldGetLocalGroups();
+                        // TODO: Fix random, inexplicable errors when looking up
+                        // identities via System.DirectoryServices.AccountManagement
+                        return OldGetLocalGroups();
+                    }
                 }
             #else
                 return OldGetLocalGroups();
