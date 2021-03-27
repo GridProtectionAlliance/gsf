@@ -32,7 +32,7 @@ namespace GrafanaAdapters
     /// Defines needed API calls for a Grafana data source.
     /// </summary>
     [ServiceContract]
-    public partial interface IGrafanaDataService
+    public interface IGrafanaDataService
     {
         /// <summary>
         /// Validates that openHistorian Grafana data source is responding as expected.
