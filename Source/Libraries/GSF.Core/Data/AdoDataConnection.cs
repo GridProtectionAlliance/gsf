@@ -38,6 +38,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using GSF.Annotations;
 using GSF.Configuration;
+using GSF.Diagnostics;
 
 namespace GSF.Data
 {
@@ -168,11 +169,8 @@ namespace GSF.Data
         #region [ Members ]
 
         // Fields
-        private IDbConnection m_connection;
-        private DatabaseType m_databaseType;
         private readonly string m_connectionString;
         private readonly Type m_connectionType;
-        private readonly Type m_adapterType;
         private readonly bool m_disposeConnection;
         private bool m_disposed;
 
@@ -191,9 +189,7 @@ namespace GSF.Data
                 throw new ArgumentNullException(nameof(settingsCategory), "Parameter cannot be null or empty");
 
             // Only need to establish data types and load settings once per defined section since they are being loaded from config file
-            AdoDataConnection configuredConnection;
-
-            if (!s_configuredConnections.TryGetValue(settingsCategory, out configuredConnection))
+            if (!s_configuredConnections.TryGetValue(settingsCategory, out AdoDataConnection configuredConnection))
             {
                 string connectionString, dataProviderString;
 
@@ -225,16 +221,20 @@ namespace GSF.Data
             try
             {
                 // Copy static instance data to member variables
-                m_databaseType = configuredConnection.m_databaseType;
+                DatabaseType = configuredConnection.DatabaseType;
                 m_connectionString = configuredConnection.m_connectionString;
                 m_connectionType = configuredConnection.m_connectionType;
-                m_adapterType = configuredConnection.m_adapterType;
+                AdapterType = configuredConnection.AdapterType;
                 m_disposeConnection = true;
 
                 // Open ADO.NET provider connection
-                m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
-                m_connection.ConnectionString = m_connectionString;
-                m_connection.Open();
+                Connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
+                Connection.ConnectionString = m_connectionString;
+
+                using (Logger.SuppressFirstChanceExceptionLogMessages())
+                {
+                    Connection.Open();
+                }
             }
             catch (Exception ex)
             {
@@ -269,16 +269,20 @@ namespace GSF.Data
 
             m_connectionString = connectionString;
             m_connectionType = connectionType;
-            m_adapterType = adapterType;
-            m_databaseType = GetDatabaseType();
+            AdapterType = adapterType;
+            DatabaseType = GetDatabaseType();
             m_disposeConnection = true;
 
             try
             {
                 // Open ADO.NET provider connection
-                m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
-                m_connection.ConnectionString = m_connectionString;
-                m_connection.Open();
+                Connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
+                Connection.ConnectionString = m_connectionString;
+
+                using (Logger.SuppressFirstChanceExceptionLogMessages())
+                {
+                    Connection.Open();
+                }
             }
             catch (Exception ex)
             {
@@ -298,11 +302,11 @@ namespace GSF.Data
             if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
                 throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", nameof(adapterType));
 
-            m_connection = connection;
+            Connection = connection;
             m_connectionString = connection.ConnectionString;
             m_connectionType = connection.GetType();
-            m_adapterType = adapterType;
-            m_databaseType = GetDatabaseType();
+            AdapterType = adapterType;
+            DatabaseType = GetDatabaseType();
             m_disposeConnection = disposeConnection;
         }
 
@@ -321,14 +325,10 @@ namespace GSF.Data
             try
             {
                 // Attempt to load configuration from an ADO.NET database connection
-                Dictionary<string, string> settings;
-                string assemblyName, connectionTypeName, adapterTypeName;
-                Assembly assembly;
-
-                settings = dataProviderString.ParseKeyValuePairs();
-                assemblyName = settings["AssemblyName"].ToNonNullString();
-                connectionTypeName = settings["ConnectionType"].ToNonNullString();
-                adapterTypeName = settings["AdapterType"].ToNonNullString();
+                Dictionary<string, string> settings = dataProviderString.ParseKeyValuePairs();
+                string assemblyName = settings["AssemblyName"].ToNonNullString();
+                string connectionTypeName = settings["ConnectionType"].ToNonNullString();
+                string adapterTypeName = settings["AdapterType"].ToNonNullString();
 
                 if (string.IsNullOrEmpty(connectionTypeName))
                     throw new NullReferenceException("ADO database connection type was undefined.");
@@ -336,10 +336,10 @@ namespace GSF.Data
                 if (string.IsNullOrEmpty(adapterTypeName))
                     throw new NullReferenceException("ADO database adapter type was undefined.");
 
-                assembly = Assembly.Load(new AssemblyName(assemblyName));
+                Assembly assembly = Assembly.Load(new AssemblyName(assemblyName));
                 m_connectionType = assembly.GetType(connectionTypeName);
-                m_adapterType = assembly.GetType(adapterTypeName);
-                m_databaseType = GetDatabaseType();
+                AdapterType = assembly.GetType(adapterTypeName);
+                DatabaseType = GetDatabaseType();
                 m_disposeConnection = true;
             }
             catch (Exception ex)
@@ -353,9 +353,13 @@ namespace GSF.Data
             try
             {
                 // Open ADO.NET provider connection
-                m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
-                m_connection.ConnectionString = m_connectionString;
-                m_connection.Open();
+                Connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
+                Connection.ConnectionString = m_connectionString;
+
+                using (Logger.SuppressFirstChanceExceptionLogMessages())
+                {
+                    Connection.Open();
+                }
             }
             catch (Exception ex)
             {
@@ -378,12 +382,12 @@ namespace GSF.Data
         /// <summary>
         /// Gets an open <see cref="IDbConnection"/> to configured ADO.NET data source.
         /// </summary>
-        public IDbConnection Connection => m_connection;
+        public IDbConnection  Connection { get; private set; }
 
         /// <summary>
         /// Gets the type of data adapter for configured ADO.NET data source.
         /// </summary>
-        public Type AdapterType => m_adapterType;
+        public Type AdapterType { get; }
 
         /// <summary>
         /// Gets or sets the type of the database underlying the <see cref="AdoDataConnection"/>.
@@ -394,17 +398,7 @@ namespace GSF.Data
         /// case, if you know the behavior of your custom ADO database connection matches that of another defined database
         /// type, you can manually assign the database type to allow for database interaction interoperability.
         /// </remarks>
-        public DatabaseType DatabaseType
-        {
-            get
-            {
-                return m_databaseType;
-            }
-            set
-            {
-                m_databaseType = value;
-            }
-        }
+        public DatabaseType DatabaseType { get; set; }
 
         /// <summary>
         /// Gets or sets default timeout for <see cref="AdoDataConnection"/> data operations.
@@ -421,56 +415,46 @@ namespace GSF.Data
                 if (IsJetEngine)
                     return DateTime.UtcNow.ToOADate();
 
-                if (IsSqlite)
-                    return new DateTime(DateTime.UtcNow.Ticks, DateTimeKind.Unspecified);
-
-                return DateTime.UtcNow;
+                return IsSqlite ? 
+                    new DateTime(DateTime.UtcNow.Ticks, DateTimeKind.Unspecified) :
+                    DateTime.UtcNow;
             }
         }
 
         /// <summary>
         /// Gets the default <see cref="IsolationLevel"/> for the connected <see cref=" AdoDataConnection"/> database type.
         /// </summary>
-        public IsolationLevel DefaultIsloationLevel
-        {
-            get
-            {
-                if (IsSQLServer)
-                    return IsolationLevel.ReadUncommitted;
-
-                return IsolationLevel.Unspecified;
-            }
-        }
+        public IsolationLevel DefaultIsloationLevel => IsSQLServer ? IsolationLevel.ReadUncommitted : IsolationLevel.Unspecified;
 
         /// <summary>
         /// Gets a value to indicate whether source database is Microsoft Access.
         /// </summary>
-        public bool IsJetEngine => m_databaseType == DatabaseType.Access;
+        public bool IsJetEngine => DatabaseType == DatabaseType.Access;
 
         /// <summary>
         /// Gets a value to indicate whether source database is Microsoft SQL Server.
         /// </summary>
-        public bool IsSQLServer => m_databaseType == DatabaseType.SQLServer;
+        public bool IsSQLServer => DatabaseType == DatabaseType.SQLServer;
 
         /// <summary>
         /// Gets a value to indicate whether source database is MySQL.
         /// </summary>
-        public bool IsMySQL => m_databaseType == DatabaseType.MySQL;
+        public bool IsMySQL => DatabaseType == DatabaseType.MySQL;
 
         /// <summary>
         /// Gets a value to indicate whether source database is Oracle.
         /// </summary>
-        public bool IsOracle => m_databaseType == DatabaseType.Oracle;
+        public bool IsOracle => DatabaseType == DatabaseType.Oracle;
 
         /// <summary>
         /// Gets a value to indicate whether source database is SQLite.
         /// </summary>
-        public bool IsSqlite => m_databaseType == DatabaseType.SQLite;
+        public bool IsSqlite => DatabaseType == DatabaseType.SQLite;
 
         /// <summary>
         /// Gets a value to indicate whether source database is PostgreSQL.
         /// </summary>
-        public bool IsPostgreSQL => m_databaseType == DatabaseType.PostgreSQL;
+        public bool IsPostgreSQL => DatabaseType == DatabaseType.PostgreSQL;
 
         #endregion
 
@@ -482,10 +466,8 @@ namespace GSF.Data
         /// <param name="scriptPath">The path to the SQL script.</param>
         public void ExecuteScript(string scriptPath)
         {
-            using (TextReader scriptReader = File.OpenText(scriptPath))
-            {
-                ExecuteScript(scriptReader);
-            }
+            using TextReader scriptReader = File.OpenText(scriptPath);
+            ExecuteScript(scriptReader);
         }
 
         /// <summary>
@@ -494,7 +476,11 @@ namespace GSF.Data
         /// <param name="scriptReader">The reader used to extract SQL statements to be executed.</param>
         public void ExecuteScript(TextReader scriptReader)
         {
-            switch (m_databaseType)
+            if (Connection is null)
+                throw new NullReferenceException("Cannot execute script, no connection established.");
+
+            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+            switch (DatabaseType)
             {
                 case DatabaseType.SQLServer:
                     // For the standard way to execute a TSQL script, refer to the following.
@@ -508,31 +494,31 @@ namespace GSF.Data
                     // application. For more information, refer to the following.
                     //
                     // http://web.archive.org/web/20130128072944/http://www.marklio.com/marklio/PermaLink,guid,ecc34c3c-be44-4422-86b7-900900e451f9.aspx
-                    m_connection.ExecuteTSQLScript(scriptReader);
+                    Connection.ExecuteTSQLScript(scriptReader);
                     break;
 
                 case DatabaseType.Oracle:
-                    m_connection.ExecuteOracleScript(scriptReader);
+                    Connection.ExecuteOracleScript(scriptReader);
                     break;
 
                 case DatabaseType.MySQL:
-                    Type mySqlScriptType = m_connection.GetType().Assembly.GetType("MySql.Data.MySqlClient.MySqlScript");
+                    Type mySqlScriptType = Connection.GetType().Assembly.GetType("MySql.Data.MySqlClient.MySqlScript");
 
-                    if ((object)mySqlScriptType != null)
+                    if (mySqlScriptType is null)
                     {
-                        object executor = Activator.CreateInstance(mySqlScriptType, m_connection, scriptReader.ReadToEnd());
-                        MethodInfo executeMethod = executor.GetType().GetMethod("Execute");
-                        executeMethod.Invoke(executor, null);
+                        Connection.ExecuteMySQLScript(scriptReader);
                     }
                     else
                     {
-                        m_connection.ExecuteMySQLScript(scriptReader);
+                        object executor = Activator.CreateInstance(mySqlScriptType, Connection, scriptReader.ReadToEnd());
+                        MethodInfo executeMethod = executor.GetType().GetMethod("Execute");
+                        executeMethod?.Invoke(executor, null);
                     }
 
                     break;
 
                 default:
-                    m_connection.ExecuteNonQuery(scriptReader.ReadToEnd());
+                    Connection.ExecuteNonQuery(scriptReader.ReadToEnd());
                     break;
             }
         }
@@ -544,10 +530,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>The number of rows affected.</returns>
         [StringFormatMethod("sqlFormat")]
-        public int ExecuteNonQuery(string sqlFormat, params object[] parameters)
-        {
-            return ExecuteNonQuery(DefaultTimeout, sqlFormat, parameters);
-        }
+        public int ExecuteNonQuery(string sqlFormat, params object[] parameters) => 
+            ExecuteNonQuery(DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the number of rows affected.
@@ -560,7 +544,7 @@ namespace GSF.Data
         public int ExecuteNonQuery(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            return m_connection.ExecuteNonQuery(sql, timeout, ResolveParameters(parameters));
+            return Connection.ExecuteNonQuery(sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -570,10 +554,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="IDataReader"/> object.</returns>
         [StringFormatMethod("sqlFormat")]
-        public IDataReader ExecuteReader(string sqlFormat, params object[] parameters)
-        {
-            return ExecuteReader(DefaultTimeout, sqlFormat, parameters);
-        }
+        public IDataReader ExecuteReader(string sqlFormat, params object[] parameters) => 
+            ExecuteReader(DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and builds a <see cref="IDataReader"/>.
@@ -583,10 +565,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="IDataReader"/> object.</returns>
         [StringFormatMethod("sqlFormat")]
-        public IDataReader ExecuteReader(int timeout, string sqlFormat, params object[] parameters)
-        {
-            return ExecuteReader(CommandBehavior.Default, timeout, sqlFormat, parameters);
-        }
+        public IDataReader ExecuteReader(int timeout, string sqlFormat, params object[] parameters) => 
+            ExecuteReader(CommandBehavior.Default, timeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and builds a <see cref="IDataReader"/>.
@@ -600,7 +580,7 @@ namespace GSF.Data
         public IDataReader ExecuteReader(CommandBehavior behavior, int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            return m_connection.ExecuteReader(sql, behavior, timeout, ResolveParameters(parameters));
+            return Connection.ExecuteReader(sql, behavior, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -611,10 +591,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public T ExecuteScalar<T>(string sqlFormat, params object[] parameters)
-        {
-            return ExecuteScalar<T>(DefaultTimeout, sqlFormat, parameters);
-        }
+        public T ExecuteScalar<T>(string sqlFormat, params object[] parameters) => 
+            ExecuteScalar<T>(DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -625,10 +603,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public T ExecuteScalar<T>(int timeout, string sqlFormat, params object[] parameters)
-        {
-            return ExecuteScalar(default(T), timeout, sqlFormat, parameters);
-        }
+        public T ExecuteScalar<T>(int timeout, string sqlFormat, params object[] parameters) => 
+            ExecuteScalar(default(T), timeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -640,10 +616,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public T ExecuteScalar<T>(T defaultValue, string sqlFormat, params object[] parameters)
-        {
-            return ExecuteScalar(defaultValue, DefaultTimeout, sqlFormat, parameters);
-        }
+        public T ExecuteScalar<T>(T defaultValue, string sqlFormat, params object[] parameters) => 
+            ExecuteScalar(defaultValue, DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -656,10 +630,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public T ExecuteScalar<T>(T defaultValue, int timeout, string sqlFormat, params object[] parameters)
-        {
-            return (T)ExecuteScalar(typeof(T), defaultValue, timeout, sqlFormat, parameters);
-        }
+        public T ExecuteScalar<T>(T defaultValue, int timeout, string sqlFormat, params object[] parameters) => 
+            (T)ExecuteScalar(typeof(T), defaultValue, timeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -670,10 +642,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public object ExecuteScalar(Type returnType, string sqlFormat, params object[] parameters)
-        {
-            return ExecuteScalar(returnType, DefaultTimeout, sqlFormat, parameters);
-        }
+        public object ExecuteScalar(Type returnType, string sqlFormat, params object[] parameters) => 
+            ExecuteScalar(returnType, DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -685,13 +655,10 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public object ExecuteScalar(Type returnType, int timeout, string sqlFormat, params object[] parameters)
-        {
-            if (returnType.IsValueType)
-                return ExecuteScalar(returnType, Activator.CreateInstance(returnType), timeout, sqlFormat, parameters);
-
-            return ExecuteScalar(returnType, (object)null, timeout, sqlFormat, parameters);
-        }
+        public object ExecuteScalar(Type returnType, int timeout, string sqlFormat, params object[] parameters) => 
+            returnType.IsValueType ? 
+                ExecuteScalar(returnType, Activator.CreateInstance(returnType), timeout, sqlFormat, parameters) : 
+                ExecuteScalar(returnType, (object)null, timeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -704,10 +671,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public object ExecuteScalar(Type returnType, object defaultValue, string sqlFormat, params object[] parameters)
-        {
-            return ExecuteScalar(returnType, defaultValue, DefaultTimeout, sqlFormat, parameters);
-        }
+        public object ExecuteScalar(Type returnType, object defaultValue, string sqlFormat, params object[] parameters) => 
+            ExecuteScalar(returnType, defaultValue, DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -729,7 +694,7 @@ namespace GSF.Data
             // whether it is assignable to the return type because this method is
             // sometimes used to return null for value types in default value
             // expressions where nullable types are not supported
-            if ((object)value == null || value == DBNull.Value)
+            if (value is null || value == DBNull.Value)
                 return defaultValue;
 
             // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
@@ -745,10 +710,9 @@ namespace GSF.Data
                 return value.ToString().ConvertToType(type);
 
             // Handle native types
-            if (value is IConvertible)
-                return Convert.ChangeType(value, type);
-
-            return value;
+            return value is IConvertible ? 
+                Convert.ChangeType(value, type) : 
+                value;
         }
 
         /// <summary>
@@ -759,10 +723,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public object ExecuteScalar(string sqlFormat, params object[] parameters)
-        {
-            return ExecuteScalar(DefaultTimeout, sqlFormat, parameters);
-        }
+        public object ExecuteScalar(string sqlFormat, params object[] parameters) => 
+            ExecuteScalar(DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
@@ -776,7 +738,7 @@ namespace GSF.Data
         public object ExecuteScalar(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            return m_connection.ExecuteScalar(sql, timeout, ResolveParameters(parameters));
+            return Connection.ExecuteScalar(sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -786,10 +748,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         [StringFormatMethod("sqlFormat")]
-        public DataRow RetrieveRow(string sqlFormat, params object[] parameters)
-        {
-            return RetrieveRow(DefaultTimeout, sqlFormat, parameters);
-        }
+        public DataRow RetrieveRow(string sqlFormat, params object[] parameters) => 
+            RetrieveRow(DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the first <see cref="DataRow"/> in the result set.
@@ -802,7 +762,7 @@ namespace GSF.Data
         public DataRow RetrieveRow(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            return m_connection.RetrieveRow(m_adapterType, sql, timeout, ResolveParameters(parameters));
+            return Connection.RetrieveRow(AdapterType, sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -813,10 +773,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         [StringFormatMethod("sqlFormat")]
-        public DataTable RetrieveData(string sqlFormat, params object[] parameters)
-        {
-            return RetrieveData(DefaultTimeout, sqlFormat, parameters);
-        }
+        public DataTable RetrieveData(string sqlFormat, params object[] parameters) => 
+            RetrieveData(DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the first <see cref="DataTable"/> 
@@ -830,7 +788,7 @@ namespace GSF.Data
         public DataTable RetrieveData(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            return m_connection.RetrieveData(m_adapterType, sql, timeout, ResolveParameters(parameters));
+            return Connection.RetrieveData(AdapterType, sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -841,10 +799,8 @@ namespace GSF.Data
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         [StringFormatMethod("sqlFormat")]
-        public DataSet RetrieveDataSet(string sqlFormat, params object[] parameters)
-        {
-            return RetrieveDataSet(DefaultTimeout, sqlFormat, parameters);
-        }
+        public DataSet RetrieveDataSet(string sqlFormat, params object[] parameters) => 
+            RetrieveDataSet(DefaultTimeout, sqlFormat, parameters);
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the <see cref="DataSet"/> that 
@@ -858,7 +814,7 @@ namespace GSF.Data
         public DataSet RetrieveDataSet(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
-            return m_connection.RetrieveDataSet(m_adapterType, sql, timeout, ResolveParameters(parameters));
+            return Connection.RetrieveDataSet(AdapterType, sql, timeout, ResolveParameters(parameters));
         }
 
         /// <summary>
@@ -876,23 +832,23 @@ namespace GSF.Data
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                if (m_disposeConnection)
                 {
-                    if (disposing)
-                    {
-                        if (m_disposeConnection && (object)m_connection != null)
-                        {
-                            m_connection.Dispose();
-                            m_connection = null;
-                        }
-                    }
+                    Connection?.Dispose();
+                    Connection = null;
                 }
-                finally
-                {
-                    m_disposed = true; // Prevent duplicate dispose.
-                }
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
@@ -914,7 +870,7 @@ namespace GSF.Data
             if (useAnsiQuotes)
                 return $"\"{identifier}\"";
 
-            switch (m_databaseType)
+            switch (DatabaseType)
             {
                 case DatabaseType.SQLServer:
                 case DatabaseType.Access:
@@ -991,30 +947,30 @@ namespace GSF.Data
         {
             DatabaseType type = DatabaseType.Other;
 
-            if ((object)m_adapterType != null)
+            if (AdapterType is null)
+                return type;
+
+            switch (AdapterType.Name.ToLowerInvariant())
             {
-                switch (m_adapterType.Name.ToLowerInvariant())
-                {
-                    case "sqldataadapter":
-                        type = DatabaseType.SQLServer;
-                        break;
-                    case "mysqldataadapter":
-                        type = DatabaseType.MySQL;
-                        break;
-                    case "oracledataadapter":
-                        type = DatabaseType.Oracle;
-                        break;
-                    case "sqlitedataadapter":
-                        type = DatabaseType.SQLite;
-                        break;
-                    case "npgsqldataadapter":
-                        type = DatabaseType.PostgreSQL;
-                        break;
-                    case "oledbdataadapter":
-                        if ((object)m_connectionString != null && m_connectionString.ToLowerInvariant().Contains("microsoft.jet.oledb"))
-                            type = DatabaseType.Access;
-                        break;
-                }
+                case "sqldataadapter":
+                    type = DatabaseType.SQLServer;
+                    break;
+                case "mysqldataadapter":
+                    type = DatabaseType.MySQL;
+                    break;
+                case "oracledataadapter":
+                    type = DatabaseType.Oracle;
+                    break;
+                case "sqlitedataadapter":
+                    type = DatabaseType.SQLite;
+                    break;
+                case "npgsqldataadapter":
+                    type = DatabaseType.PostgreSQL;
+                    break;
+                case "oledbdataadapter":
+                    if (!(m_connectionString is null) && m_connectionString.ToLowerInvariant().Contains("microsoft.jet.oledb"))
+                        type = DatabaseType.Access;
+                    break;
             }
 
             return type;
@@ -1023,7 +979,7 @@ namespace GSF.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GenericParameterizedQueryString(string sqlFormat, object[] parameters)
         {
-            string[] parameterNames = parameters.Select((parameter, index) => "p" + index).ToArray();
+            string[] parameterNames = parameters.Select((_, index) => "p" + index).ToArray();
             return ParameterizedQueryString(sqlFormat, parameterNames);
         }
 
@@ -1034,27 +990,26 @@ namespace GSF.Data
 
             if (parameters.Length > 0)
             {
-                using (IDbCommand command = m_connection.CreateCommand())
+                using (IDbCommand command = Connection.CreateCommand())
                 {
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         object value = parameters[i];
                         DbType? type = null;
 
-                        IDbDataParameter dataParameter = value as IDbDataParameter;
-
-                        if ((object)dataParameter != null)
+                        if (value is IDbDataParameter dataParameter)
                         {
                             type = dataParameter.DbType;
                             value = dataParameter.Value;
                         }
 
-                        if (value == null)
-                            value = DBNull.Value;
-                        else if (value is bool)
-                            value = Bool((bool)value);
-                        else if (value is Guid)
-                            value = Guid((Guid)value);
+                        value = value switch
+                        {
+                            null      => DBNull.Value,
+                            bool b    => Bool(b),
+                            Guid guid => Guid(guid),
+                            _         => value
+                        };
 
                         IDbDataParameter parameter = command.CreateParameter();
 
@@ -1077,24 +1032,16 @@ namespace GSF.Data
         #region [ Static ]
 
         // Static Fields
-        private static readonly ConcurrentDictionary<string, AdoDataConnection> s_configuredConnections;
-
-        // Static Constructor
-        static AdoDataConnection()
-        {
-            s_configuredConnections = new ConcurrentDictionary<string, AdoDataConnection>(StringComparer.OrdinalIgnoreCase);
-        }
+        private static readonly ConcurrentDictionary<string, AdoDataConnection> s_configuredConnections = 
+            new ConcurrentDictionary<string, AdoDataConnection>(StringComparer.OrdinalIgnoreCase);
 
         // Static Methods
 
         /// <summary>
         /// Forces a reload of cached configuration connection settings.
         /// </summary>
-        public static void ReloadConfigurationSettings()
-        {
-            if ((object)s_configuredConnections != null)
-                s_configuredConnections.Clear();
-        }
+        public static void ReloadConfigurationSettings() => 
+            s_configuredConnections?.Clear();
 
         /// <summary>
         /// Generates a data provider string for the given connection type and adapter type.
