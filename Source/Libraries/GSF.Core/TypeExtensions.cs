@@ -64,10 +64,8 @@ namespace GSF
         /// </summary>
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type)
-        {
-            return LoadImplementations(type, true);
-        }
+        public static List<Type> LoadImplementations(this Type type) => 
+            LoadImplementations(type, true);
 
         /// <summary>
         /// Loads public types from assemblies in the application binaries directory that implement the specified 
@@ -76,10 +74,8 @@ namespace GSF
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, bool excludeAbstractTypes)
-        {
-            return LoadImplementations(type, string.Empty, excludeAbstractTypes);
-        }
+        public static List<Type> LoadImplementations(this Type type, bool excludeAbstractTypes) => 
+            LoadImplementations(type, string.Empty, excludeAbstractTypes);
 
         /// <summary>
         /// Loads public types from assemblies in the specified <paramref name="binariesDirectory"/> that implement 
@@ -88,10 +84,8 @@ namespace GSF
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, string binariesDirectory)
-        {
-            return LoadImplementations(type, binariesDirectory, true);
-        }
+        public static List<Type> LoadImplementations(this Type type, string binariesDirectory) => 
+            LoadImplementations(type, binariesDirectory, true);
 
         /// <summary>
         /// Loads public types from assemblies in the specified <paramref name="binariesDirectory"/> that implement 
@@ -105,74 +99,68 @@ namespace GSF
         [SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom")]
         public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true)
         {
-            Assembly asm;
             List<Type> types = new List<Type>();
 
             if (string.IsNullOrEmpty(binariesDirectory))
             {
-                switch (Common.GetApplicationType())
+                binariesDirectory = Common.GetApplicationType() switch
                 {
-                    // The binaries directory is not specified.
-                    case ApplicationType.Web:
-                        // Use the bin directory for web applications.
-                        binariesDirectory = FilePath.GetAbsolutePath($"bin{Path.DirectorySeparatorChar}*.*");
-                        break;
-                    default:
-                        // Use application install directory for application.
-                        binariesDirectory = FilePath.GetAbsolutePath("*.*");
-                        break;
-                }
+                    // Use the bin directory for web applications.
+                    ApplicationType.Web => FilePath.GetAbsolutePath($"bin{Path.DirectorySeparatorChar}*.*"),
+                    _                   => FilePath.GetAbsolutePath("*.*")
+                };
             }
 
-            // Loop through all files in the binaries directory.
-            foreach (string bin in FilePath.GetFileList(binariesDirectory))
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                // Only process DLLs and EXEs.
-                if (!(string.Compare(FilePath.GetExtension(bin), ".dll", StringComparison.OrdinalIgnoreCase) == 0 ||
-                      string.Compare(FilePath.GetExtension(bin), ".exe", StringComparison.OrdinalIgnoreCase) == 0))
+                // Loop through all files in the binaries directory.
+                foreach (string bin in FilePath.GetFileList(binariesDirectory))
                 {
-                    continue;
-                }
-
-                try
-                {
-                    // Load the assembly in the current app domain.
-                    asm = Assembly.LoadFrom(bin);
-
-                    if (!validateReferences || asm.TryLoadAllReferences())
+                    // Only process DLLs and EXEs.
+                    if (!(string.Compare(FilePath.GetExtension(bin), ".dll", StringComparison.OrdinalIgnoreCase) == 0 ||
+                          string.Compare(FilePath.GetExtension(bin), ".exe", StringComparison.OrdinalIgnoreCase) == 0))
                     {
-                        // Process only the public types in the assembly.
-                        foreach (Type asmType in asm.GetExportedTypes())
+                        continue;
+                    }
+
+                    try
+                    {
+                        // Load the assembly in the current app domain.
+                        Assembly asm = Assembly.LoadFrom(bin);
+
+                        if (!validateReferences || asm.TryLoadAllReferences())
                         {
-                            if (!excludeAbstractTypes || !asmType.IsAbstract)
+                            // Process only the public types in the assembly.
+                            foreach (Type asmType in asm.GetExportedTypes())
                             {
-                                // Either the current type is not abstract or it's OK to include abstract types.
-                                if (type.IsClass && asmType.IsSubclassOf(type))
+                                if (!excludeAbstractTypes || !asmType.IsAbstract)
                                 {
-                                    // The type being tested is a class and current type derives from it.
-                                    types.Add(asmType);
-                                }
+                                    // Either the current type is not abstract or it's OK to include abstract types.
+                                    if (type.IsClass && asmType.IsSubclassOf(type))
+                                    {
+                                        // The type being tested is a class and current type derives from it.
+                                        types.Add(asmType);
+                                    }
 
-                                if (type.IsInterface && (object)asmType.GetInterface(type.FullName) != null)
-                                {
-                                    // The type being tested is an interface and current type implements it.
-                                    types.Add(asmType);
-                                }
+                                    if (type.IsInterface && (object)asmType.GetInterface(type.FullName) != null)
+                                    {
+                                        // The type being tested is an interface and current type implements it.
+                                        types.Add(asmType);
+                                    }
 
-                                if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
-                                {
-                                    // The type being tested is an attribute and current type has the attribute.
-                                    types.Add(asmType);
+                                    if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
+                                    {
+                                        // The type being tested is an attribute and current type has the attribute.
+                                        types.Add(asmType);
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logger.SwallowException(ex, "TypeExtensions.cs LoadImplementations: Failed to load for some reason.");
-
-                    // Absorb any exception thrown while processing the assembly.
+                    catch (Exception ex)
+                    {
+                        Logger.SwallowException(ex, $"TypeExtensions.cs LoadImplementations: Failed to load DLL \"{bin}\", may not be a managed assembly.");
+                    }
                 }
             }
 
