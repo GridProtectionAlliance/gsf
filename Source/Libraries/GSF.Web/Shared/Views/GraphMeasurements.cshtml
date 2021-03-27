@@ -38,6 +38,11 @@
 //  @Html.RenderResource("GSF.Web.Shared.Views.GraphMeasurements.cshtml")
 //  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
 //*****************************************************************************************************@
+@* ReSharper disable RedundantUsingDirective *@
+@* ReSharper disable Html.PathError *@
+@* ReSharper disable InlineOutVariableDeclaration *@
+@* ReSharper disable UnknownCssClass *@
+@* ReSharper disable CoercedEqualsUsing *@
 @using System.Collections.Generic
 @using System.Net.Http
 @using GSF
@@ -78,13 +83,13 @@
         }
 
         .list-group {
-            padding-left: 0px;
-            margin-left: 0px;
+            padding-left: 0;
+            margin-left: 0;
         }
 
         .list-group-item {
-            padding-left: 0px;
-            margin-left: 0px;
+            padding-left: 0;
+            margin-left: 0;
         }
 
         .panel-body {
@@ -121,23 +126,23 @@
             margin: 2rem auto;
         }
 
-        /* Collapsable button style */
-        .btn-collapsable.btn {
+        /* Collapsible button style */
+        .btn-collapsible.btn {
             color: rgb(255, 255, 255);
-            padding-bottom: 0px;
+            padding-bottom: 0;
             margin-left: -8px;
             font-family: "Glyphicons Halflings";
             font-size: 8pt;
             height: 22px;
         }
 
-        /* Collapsable button icon when content is shown - arrow down */
-        .btn-collapsable.btn:after {
+        /* Collapsible button icon when content is shown - arrow down */
+        .btn-collapsible.btn:after {
             content: "\e114";
         }
 
-        /* Collapsable button icon when content is hidden - arrow right */
-        .btn-collapsable.btn.collapsed:after {
+        /* Collapsible button icon when content is hidden - arrow right */
+        .btn-collapsible.btn.collapsed:after {
             content: "\e080";
         }
 
@@ -150,7 +155,7 @@
 
         @@-moz-keyframes spin {
             0% {
-                -moz-transform: rotate(0deg);
+                -moz-transform: rotate(0);
             }
 
             100% {
@@ -160,7 +165,7 @@
 
         @@-webkit-keyframes spin {
             0% {
-                -webkit-transform: rotate(0deg);
+                -webkit-transform: rotate(0);
             }
 
             100% {
@@ -170,7 +175,7 @@
 
         @@-o-keyframes spin {
             0% {
-                -o-transform: rotate(0deg);
+                -o-transform: rotate(0);
             }
 
             100% {
@@ -180,8 +185,8 @@
 
         @@keyframes spin {
             0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
+                -webkit-transform: rotate(0);
+                transform: rotate(0);
             }
 
             100% {
@@ -211,7 +216,7 @@
         (function ($) {
             var plot;
             var plotData = [];
-            var graphMeasurements = angular.module('GraphMeasurements', []);
+            const graphMeasurements = angular.module('GraphMeasurements', []);
             var root = "@Resources.Root";
 
             // Logs messages to an array so they can be
@@ -231,6 +236,9 @@
             // Removes invalid characters from an identifier
             // so it can be used as an ID in HTML
             function cleanIdentifier(identifier) {
+                if (identifier == null)
+                    return "";
+
                 return identifier.replace(/[!"#$%&'()*+,.\/:;<=>?@@[\\\]^`{|}~]/g, "-");
             }
 
@@ -284,23 +292,25 @@
             // Builds the stats modal for the device with the given acronym
             function buildModal(acronym) {
                 $("#modals").append('<div id="' + acronym + '"></div>');
-                html = '<div id="mod' + acronym + '" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">';
+
+                let html = '<div id="mod' + acronym + '" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="confirm-modal" aria-hidden="true">';
                 html += '<div class="modal-dialog">';
                 html += '<div class="modal-content">';
                 html += '<div class="modal-header">';
                 html += '<a class="close" data-dismiss="modal">×</a>';
-                html += '<h4>' + acronym + ' Statistics</h4>'
+                html += '<h4>' + acronym + ' Statistics</h4>';
                 html += '</div>';
                 html += '<div class="modal-body" style="height: 300px; overflow-y: scroll" >';
                 html += '<table id="stat' + acronym + '" class="table" style="font-size: x-small">';
                 html += '<thead>Run-time Statistics:<thead />';
-                html += '<tr><th>Stat ID</th><th>Statistic</th><th>Value</th><th>TimeTag</th></tr>';
+                html += '<tr><th style="text-align: center; white-space: nowrap">Stat ID</th><th>Statistic</th><th style="text-align: center">Value</th><th>TimeTag</th></tr>';
                 html += '</table>';
                 html += '</div>';
                 html += '<div class="modal-footer">';
                 html += '<span class="btn" data-dismiss="modal">Close</span>'; // close button
                 html += '</div>';  // footer
                 html += '</div>';  // modalWindow
+
                 $('#' + acronym).html(html);
                 $("#mod" + acronym).modal({ 'show': false });
             }
@@ -342,16 +352,16 @@
                 $scope.measurementCallbacks = {};
 
                 $.each($scope.selections, function (_, selection) {
-                    $scope.deviceCallbacks[selection.device] = function (device) {
-                        var identifier = cleanIdentifier(device.Acronym);
+                    $scope.deviceCallbacks[selection.device] = function (deviceMetadata) {
+                        const identifier = cleanIdentifier(deviceMetadata.acronym);
                         $("#dd" + identifier).removeClass("collapse");
-                        device.updateMeasurements();
+                        deviceMetadata.updateMeasurements();
                     }
 
-                    $scope.measurementCallbacks[selection.signalID] = function (measurement) {
-                        var cleanID = cleanIdentifier(measurement.ID);
+                    $scope.measurementCallbacks[selection.signalid] = function (measurementMetadata) {
+                        const cleanID = cleanIdentifier(measurementMetadata.id);
                         $("#cb" + cleanID).prop("checked", true);
-                        updateFilter($scope, true, measurement);
+                        updateFilter($scope, true, measurementMetadata);
                     }
                 });
 
@@ -364,9 +374,9 @@
 
                     if (selections) {
                         for (let i = 0; i < selections.length; i++) {
-                            if (selections[i].signalID == signalID)
+                            if (selections[i].signalid == signalID)
                                 return true;
-                        }                    
+                        }
                     }
                 }
 
@@ -374,31 +384,31 @@
             }
 
             // Updates the subscription filter for the data subscriber
-            function updateFilter($scope, checked, measurement) {
+            function updateFilter($scope, checked, measurementMetadata) {
                 if (!hubIsConnected)
                     return;
 
                 if (checked) {
-                    $scope.selectedMeasurements[measurement.SignalID] = {
+                    $scope.selectedMeasurements[measurementMetadata.signalid] = {
                         selection: {
-                            device: measurement.DeviceAcronym,
-                            signalID: measurement.SignalID
+                            device: measurementMetadata.deviceacronym,
+                            signalid: measurementMetadata.signalid
                         },
                         plotData: {
-                            label: measurement.PointTag + " - " + measurement.SignalAcronym,
-                            yaxis: measurement.YAxis,
+                            label: measurementMetadata.pointtag + " - " + measurementMetadata.signalacronym,
+                            yaxis: measurementMetadata.YAxis,
                             data: []
                         }
                     };
                 }
                 else {
-                    delete $scope.selectedMeasurements[measurement.SignalID];
+                    delete $scope.selectedMeasurements[measurementMetadata.signalid];
                 }
 
-                var selectedIDs = Object.keys($scope.selectedMeasurements);
+                const selectedIDs = Object.keys($scope.selectedMeasurements);
 
                 if (selectedIDs.length > 0) {
-                    var filterStr = selectedIDs.join(";");
+                    const filterStr = selectedIDs.join(";");
                     $scope.dataSubscriber.subscribe({ FilterExpression: filterStr });
                 } else {
                     $scope.dataSubscriber.unsubscribe();
@@ -418,16 +428,16 @@
             }
 
             // Queries metadata for the measurements associated with the given device
-            function getMeasurements($scope, device) {
+            function getMeasurements($scope, deviceMetadata) {
                 if (!hubIsConnected)
                     return;
 
-                $scope.dataSubscriber.getMetadata("MeasurementDetail", "DeviceAcronym = '" + device.Acronym + "' AND SignalAcronym <> 'STAT'")
+                $scope.dataSubscriber.getMetadata("MeasurementDetail", "DeviceAcronym = '" + deviceMetadata.acronym + "' AND SignalAcronym <> 'STAT'")
                     .fail(showErrorMessage)
                     .done(function (data) {
                         data.sort(function (m1, m2) {
-                            function signalIndex (measurement) {
-                                var matches = measurement.SignalReference.match(/[0-9]+$/);
+                            function signalIndex (measurementMetadata) {
+                                const matches = measurementMetadata.signalreference.match(/[0-9]+$/);
 
                                 if (matches === null)
                                     return 0;
@@ -435,17 +445,17 @@
                                 return Number(matches[0]);
                             }
 
-                            function pointID (measurement) {
-                                return Number(measurement.ID.split(':')[1]);
+                            function pointID (measurementMetadata) {
+                                return Number(measurementMetadata.id.split(':')[1]);
                             }
 
-                            var comparisons = [];
-                            comparisons.push({ m1: m1.SignalAcronym, m2: m2.SignalAcronym });
+                            const comparisons = [];
+                            comparisons.push({ m1: m1.signalacronym, m2: m2.signalacronym });
                             comparisons.push({ m1: signalIndex(m1), m2: signalIndex(m2) });
                             comparisons.push({ m1: pointID(m1), m2: pointID(m2) });
 
-                            for (var i = 0; i < comparisons.length; i++) {
-                                var comparison = comparisons[i];
+                            for (let i = 0; i < comparisons.length; i++) {
+                                const comparison = comparisons[i];
 
                                 if (comparison.m1 < comparison.m2)
                                     return -1;
@@ -457,28 +467,28 @@
                             return 0;
                         });
 
-                        $.each(data, function (_, measurement) {
-                            if (measurement.SignalAcronym === "FREQ")
-                                measurement.YAxis = 1;
-                            else if (measurement.SignalAcronym === "VPHM")
-                                measurement.YAxis = 2;
-                            else if (measurement.SignalAcronym === "IPHM")
-                                measurement.YAxis = 3;
-                            else if (measurement.SignalAcronym === "Angle")
-                                measurement.YAxis = 4;
+                        $.each(data, function (_, measurementMetadata) {
+                            if (measurementMetadata.signalacronym === "FREQ")
+                                measurementMetadata.YAxis = 1;
+                            else if (measurementMetadata.signalacronym === "VPHM")
+                                measurementMetadata.YAxis = 2;
+                            else if (measurementMetadata.signalacronym === "IPHM")
+                                measurementMetadata.YAxis = 3;
+                            else if (measurementMetadata.signalacronym.endsWith("PHA"))
+                                measurementMetadata.YAxis = 4;
                             else
-                                measurement.YAxis = 5;
+                                measurementMetadata.YAxis = 5;
                         });
 
-                        device.measurements = data;
+                        deviceMetadata.measurements = data;
                         $scope.$apply();
 
                         // Handle the callbacks for automatic measurement auto-selection
-                        $.each(data, function (_, measurement) {
-                            var callback = $scope.measurementCallbacks[measurement.SignalID];
+                        $.each(data, function (_, measurementMetadata) {
+                            const callback = $scope.measurementCallbacks[measurementMetadata.signalid];
 
                             if (callback !== undefined)
-                                callback(measurement);
+                                callback(measurementMetadata);
                         });
                     });
             }
@@ -490,8 +500,8 @@
                     .fail(showErrorMessage)
                     .done(function (data) {
                         data.sort(function (m1, m2) {
-                            function category(measurement) {
-                                var matches = measurement.SignalReference.match(/!([^-]+)-ST[0-9]+$/);
+                            function category(measurementMetadata) {
+                                const matches = measurementMetadata.signalreference.match(/!([^-]+)-ST[0-9]+$/);
 
                                 if (matches === null)
                                     return null;
@@ -499,8 +509,8 @@
                                 return matches[1];
                             }
 
-                            function signalIndex(measurement) {
-                                var matches = measurement.SignalReference.match(/[0-9]+$/);
+                            function signalIndex(measurementMetadata) {
+                                const matches = measurementMetadata.signalreference.match(/[0-9]+$/);
 
                                 if (matches === null)
                                     return null;
@@ -508,12 +518,12 @@
                                 return Number(matches[0]);
                             }
 
-                            var comparisons = [];
+                            const comparisons = [];
                             comparisons.push({ m1: category(m1), m2: category(m2) });
                             comparisons.push({ m1: signalIndex(m1), m2: signalIndex(m2) });
 
-                            for (var i = 0; i < comparisons.length; i++) {
-                                var comparison = comparisons[i];
+                            for (let i = 0; i < comparisons.length; i++) {
+                                const comparison = comparisons[i];
 
                                 if (comparison.m1 < comparison.m2)
                                     return -1;
@@ -525,23 +535,23 @@
                             return 0;
                         });
 
-                        $.each(data, function (_, measurement) {
-                            if (measurement.Enabled == true) {
-                                var stat = {
-                                    deviceAcronym: measurement.DeviceAcronym,
-                                    id: measurement.SignalID,
-                                    signalReference: measurement.SignalReference,
+                        $.each(data, function (_, measurementMetadata) {
+                            if (measurementMetadata.enabled == true) {
+                                const stat = {
+                                    deviceAcronym: measurementMetadata.deviceacronym,
+                                    id: measurementMetadata.signalid,
+                                    signalReference: measurementMetadata.signalreference,
                                     value: null,
                                     timestamp: null,
-                                    description: measurement.Description
+                                    description: measurementMetadata.description
                                 };
 
-                                $scope.statLookup[measurement.SignalID] = stat;
+                                $scope.statLookup[measurementMetadata.signalid] = stat;
 
-                                if (measurement.DeviceAcronym !== null) {
-                                    var splitSignalReference = measurement.SignalReference.split("!");
-                                    var statIdentifier = splitSignalReference[splitSignalReference.length - 1];
-                                    $('#stat' + $scope.cleanIdentifier(measurement.DeviceAcronym)).append('<tr><td>' + statIdentifier + '</td><td id="des' + measurement.SignalID + '">' + measurement.Description + '</td><td><span id="val' + measurement.SignalID + '" >' + stat.value + '</span></td><td><span id="time' + measurement.SignalID + '" >' + stat.timestamp + '</span></td></tr>');
+                                if (measurementMetadata.deviceacronym !== null) {
+                                    const splitSignalReference = measurementMetadata.signalreference.split("!");
+                                    const statIdentifier = splitSignalReference[splitSignalReference.length - 1];
+                                    $('#stat' + $scope.cleanIdentifier(measurementMetadata.deviceacronym)).append('<tr><td style="text-align: center">' + statIdentifier + '</td><td id="des' + measurementMetadata.signalid + '">' + measurementMetadata.description + '</td><td style="text-align: center"><span id="val' + measurementMetadata.signalid + '" >' + stat.value + '</span></td><td style="white-space: nowrap"><span id="time' + measurementMetadata.signalid + '" >' + stat.timestamp + '</span></td></tr>');
                                 }
                             }
                         });
@@ -553,11 +563,11 @@
 
                         // Handle the callbacks for automatic measurement auto-selection
                         $.each($scope.deviceData, function (_, parent) {
-                            $.each(parent.devices, function (_, device) {
-                                var callback = $scope.deviceCallbacks[device.Acronym];
+                            $.each(parent.devices, function (_, deviceMetadata) {
+                                const callback = $scope.deviceCallbacks[deviceMetadata.acronym];
 
                                 if (callback !== undefined)
-                                    callback(device);
+                                    callback(deviceMetadata);
                             });
                         });
                     });
@@ -572,15 +582,15 @@
                         var parents = {};
                         var parentAcronyms = [];
 
-                        $.each(data, function (_, device) {
-                            var parentAcronym = device.ParentAcronym;
+                        $.each(data, function (_, deviceMetadata) {
+                            var parentAcronym = deviceMetadata.parentacronym;
 
                             if (parentAcronym === "")
                                 parentAcronym = "DIRECT_CONNECTED";
 
                             var parent = parents[parentAcronym];
 
-                            if (parent === undefined) {
+                            if (parent == null) {
                                 parent = parents[parentAcronym] = {
                                     parent: parentAcronym,
                                     devices: []
@@ -592,15 +602,17 @@
                                 buildModal(parentAcronym);
                             }
 
-                            device.updateMeasurements = function () {
-                                if (device.measurements !== undefined)
+                            deviceMetadata.updateMeasurements = function () {
+                                if (deviceMetadata.measurements != null)
                                     return;
 
-                                getMeasurements($scope, device);
+                                getMeasurements($scope, deviceMetadata);
                             }
 
-                            parent.devices.push(device);
-                            buildModal($scope.cleanIdentifier(device.Acronym));
+                            if (parent != null)
+                                parent.devices.push(deviceMetadata);
+
+                            buildModal($scope.cleanIdentifier(deviceMetadata.acronym));
                         });
 
                         parentAcronyms.sort();
@@ -619,16 +631,16 @@
             // Updates the plot data to display the latest values in the chart
             function updatePlotData($scope, measurements) {
                 $.each(measurements, function (_, measurement) {
-                    var selectedMeasurement = $scope.selectedMeasurements[measurement.signalID];
+                    const selectedMeasurement = $scope.selectedMeasurements[measurement.signalid];
 
-                    if (selectedMeasurement === undefined)
+                    if (selectedMeasurement == null)
                         return;
 
                     selectedMeasurement.plotData.data.push([measurement.timestamp, measurement.value]);
                 });
 
                 $.each(plotData, function (_, plotData) {
-                    var data = plotData.data;
+                    const data = plotData.data;
 
                     if (data.length > $scope.dataPoints)
                         data.splice(0, data.length - $scope.dataPoints);
@@ -642,21 +654,21 @@
             // Updates the stat data to display the latest values in the modals
             function updateStatData($scope, measurements) {
                 $.each(measurements, function (_, measurement) {
-                    var stat = $scope.statLookup[measurement.signalID];
+                    const stat = $scope.statLookup[measurement.signalid];
 
-                    if (stat === undefined)
+                    if (stat == null)
                         return;
 
                     stat.value = measurement.value;
                     stat.timestamp = measurement.timestamp;
 
                     if (stat.deviceAcronym !== null) {
-                        if ($('#des' + measurement.signalID).text().indexOf("Boolean") >= 0)
-                            $('#val' + measurement.signalID).text(Boolean(measurement.value));
+                        if ($('#des' + measurement.signalid).text().indexOf("Boolean") >= 0)
+                            $('#val' + measurement.signalid).text(Boolean(measurement.value));
                         else
-                            $('#val' + measurement.signalID).text(measurement.value);
+                            $('#val' + measurement.signalid).text(measurement.value);
 
-                        $('#time' + measurement.signalID).text(new Date(measurement.timestamp).formatDate(DateTimeFormat));
+                        $('#time' + measurement.signalid).text(new Date(measurement.timestamp).formatDate(DateTimeFormat));
 
                         if (/!(IS-ST8|SUB-ST1|PMU-ST4)$/.test(stat.signalReference)) {
                             if (stat.value !== null && (stat.value === true || stat.value !== 0))
@@ -684,8 +696,8 @@
                     return measurementChecked($scope, signalID);
                 }
 
-                $scope.updateFilter = function (checked, measurement) {
-                    updateFilter($scope, checked, measurement);
+                $scope.updateFilter = function (checked, measurementMetadata) {
+                    updateFilter($scope, checked, measurementMetadata);
                 }
 
                 $scope.dataSubscriber.connectionEstablished = function () {
@@ -731,7 +743,8 @@
             }
 
             // Sets ups the angular controller for the graph measurements page
-            var MeasurementsCtrl = graphMeasurements.controller("MeasurementsCtrl", function ($scope) {
+            // ReSharper disable once UnusedLocals
+            const MeasurementsCtrl = graphMeasurements.controller("MeasurementsCtrl", function ($scope) {
                 resetFilter = function () {
                     $("input[type=checkbox]").prop("checked", false);
                     $scope.selectedMeasurements = {};
@@ -750,8 +763,8 @@
                     return cleanIdentifier(identifier);
                 }
 
-                $scope.cleanPointTag = function (object) {
-                    return cleanIdentifier(object.PointTag);
+                $scope.cleanPointTag = function (metadata) {
+                    return cleanIdentifier(metadata.pointtag);
                 }
 
                 // function called to update settings on change from the inputs
@@ -811,7 +824,7 @@
                 const sidebar = $("#sidebar");
 
                 sidebar.resizable({
-                    handles: "e",
+                    handles: "e"
                 });
 
                 $(".ui-resizable-e").height(sidebar.prop("title", "Resize areas"));
@@ -879,20 +892,20 @@
                         <div class="panel-body">
                             <div id="dd{{parentDevice.parent}}" class="panel-collapse collapse in">
                                 <ul class="list-group nowrap" id="parent{{parentDevice.parent}}">
-                                    <li class="list-group-item nowrap" ng-repeat="device in parentDevice.devices">
-                                        <img id="img{{cleanIdentifier(device.Acronym)}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
-                                        <button class="btn btn-link btn-sm" style="font-size: x-small;" title="{{device.Name}}" data-toggle="collapse" data-target="#dd{{cleanIdentifier(device.Acronym)}}" ng-click="device.updateMeasurements()">{{device.Acronym}}</button>
-                                        <button id="btn{{cleanIdentifier(device.Acronym)}}" class="btn btn-xs badge" data-toggle="modal" data-target="#mod{{cleanIdentifier(device.Acronym)}}" style="font-size: xx-small;">Stats</button>
-                                        <div id="dd{{cleanIdentifier(device.Acronym)}}" class="collapse">
-                                            <table class="table" style="width: 15%; font-size: x-small;" id="tb{{cleanIdentifier(device.Acronym)}}">
+                                    <li class="list-group-item nowrap" ng-repeat="deviceMetadata in parentDevice.devices">
+                                        <img id="img{{cleanIdentifier(deviceMetadata.acronym)}}" src="@Resources.Root/Shared/Images/StatusLights/Small/greylight.png" style="padding-left: 5px" />
+                                        <button class="btn btn-link btn-sm" style="font-size: x-small;" title="{{deviceMetadata.name}}" data-toggle="collapse" data-target="#dd{{cleanIdentifier(deviceMetadata.acronym)}}" ng-click="deviceMetadata.updateMeasurements()">{{deviceMetadata.acronym}}</button>
+                                        <button id="btn{{cleanIdentifier(deviceMetadata.acronym)}}" class="btn btn-xs badge" data-toggle="modal" data-target="#mod{{cleanIdentifier(deviceMetadata.acronym)}}" style="font-size: xx-small;">Stats</button>
+                                        <div id="dd{{cleanIdentifier(deviceMetadata.acronym)}}" class="collapse">
+                                            <table class="table" style="width: 15%; font-size: x-small;" id="tb{{cleanIdentifier(deviceMetadata.acronym)}}">
                                                 <tr><th></th><th>ID</th><th>Stream</th><th>Signal</th><th></th></tr>
-                                                <tr title="{{measurement.Description}}" ng-repeat="measurement in device.measurements">
+                                                <tr title="{{measurementMetadata.description}}" ng-repeat="measurementMetadata in deviceMetadata.measurements">
                                                     <td>
-                                                        <input type="checkbox" id="cb{{cleanIdentifier(measurement.ID)}}" value="{{measurement.ID}}#{{measurement.SignalID}}" ng-model="checked" ng-init="checked=measurementChecked(measurement.SignalID)" ng-change="updateFilter(checked, measurement)" />
+                                                        <input type="checkbox" id="cb{{cleanIdentifier(measurementMetadata.id)}}" value="{{measurementMetadata.id}}#{{measurementMetadata.signalid}}" ng-model="checked" ng-init="checked=measurementChecked(measurementMetadata.signalid)" ng-change="updateFilter(checked, measurementMetadata)" />
                                                     </td>
-                                                    <td>{{measurement.ID.split(':')[1]}}</td>
-                                                    <td>{{cleanPointTag(measurement)}}</td>
-                                                    <td>{{measurement.SignalAcronym}}</td>
+                                                    <td>{{measurementMetadata.id.split(':')[1]}}</td>
+                                                    <td>{{cleanPointTag(measurementMetadata)}}</td>
+                                                    <td>{{measurementMetadata.signalacronym}}</td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -900,14 +913,14 @@
                                 </ul>
                             </div>
                         </div>
-      
+
                     </div>
                 </div>
             </div>
         </div>
         <div id="graphContainer" class="col-md-9 content" style="height: 100%">
             <div class="pull-left">
-                <button id="collapseSidebarBtn" type="button" class="btn btn-primary btn-xs btn-collapsable" data-toggle="collapse" data-target="#sidebar" title="Collapse measurement selection section..."></button>
+                <button id="collapseSidebarBtn" type="button" class="btn btn-primary btn-xs btn-collapsible" data-toggle="collapse" data-target="#sidebar" title="Collapse measurement selection section..."></button>
                 <button type="button" class="btn btn-primary btn-xs" onclick="resetFilter()">Clear Signals</button>
             </div>
             <div id="messageBlock">

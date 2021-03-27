@@ -84,7 +84,7 @@ namespace GSF.Web.Shared
 
             public void SetFormat(Guid signalID, string format, string dataType)
             {
-                if ((object)m_formats == null)
+                if (m_formats is null)
                     m_formats = new Dictionary<Guid, Tuple<string, string>>();
 
                 m_formats[signalID] = new Tuple<string, string>(format, dataType);
@@ -95,7 +95,7 @@ namespace GSF.Web.Shared
                 format = null;
                 dataType = null;
 
-                if ((object)m_formats == null)
+                if (m_formats is null)
                     return false;
 
                 if (m_formats.TryGetValue(signalID, out Tuple<string, string> tuple))
@@ -110,7 +110,7 @@ namespace GSF.Web.Shared
 
             public void RemoveFormat(Guid signalID)
             {
-                if ((object)m_formats == null || !m_formats.ContainsKey(signalID))
+                if (m_formats is null || !m_formats.ContainsKey(signalID))
                     return;
 
                 if (m_formats.Remove(signalID) && m_formats.Count == 0)
@@ -174,19 +174,15 @@ namespace GSF.Web.Shared
             Subscriber subscriber = GetOrCreate(subscriberID);
             DataSet metadata = subscriber.Metadata;
 
-            if ((object)metadata == null)
+            if (metadata is null)
                 return null;
 
             if (string.IsNullOrEmpty(tableName) || !metadata.Tables.Contains(tableName))
                 return null;
 
             DataTable table = metadata.Tables[tableName];
-            IEnumerable<DataRow> rows;
 
-            if (string.IsNullOrEmpty(filter))
-                rows = table.Select();
-            else
-                rows = table.Select(filter);
+            IEnumerable<DataRow> rows = string.IsNullOrEmpty(filter) ? table.Select() : table.Select(filter);
 
             if (!string.IsNullOrEmpty(sortField) && table.Columns.Contains(sortField))
                 rows = rows.OrderBy(row => row[sortField]);
@@ -326,45 +322,30 @@ namespace GSF.Web.Shared
         private Subscriber GetOrCreate(string subscriberID)
         {
             string connectionID = Context.ConnectionId;
-            Connection connection = s_connectionLookup.GetOrAdd(connectionID, id => new Connection());
+            Connection connection = s_connectionLookup.GetOrAdd(connectionID, _ => new Connection());
 
-            return connection.SubscriberLookup.GetOrAdd(subscriberID, id =>
+            return connection.SubscriberLookup.GetOrAdd(subscriberID, _ =>
             {
-                Subscriber subscriber = new Subscriber();
-                subscriber.DataSubscriber = new DataSubscriber();
-                subscriber.DataSubscriber.ConnectionEstablished += (sender, args) => Subscriber_ConnectionEstablished(connectionID, subscriberID);
-                subscriber.DataSubscriber.ConnectionTerminated += (sender, args) => Subscriber_ConnectionTerminated(connectionID, subscriberID);
-                subscriber.DataSubscriber.MetaDataReceived += (sender, args) => Subscriber_MetadataReceived(connectionID, subscriberID, subscriber, args.Argument);
-                subscriber.DataSubscriber.ConfigurationChanged += (sender, args) => Subscriber_ConfigurationChanged(connectionID, subscriberID);
-                subscriber.DataSubscriber.NewMeasurements += (sender, args) => Subscriber_NewMeasurements(connectionID, subscriberID, args.Argument);
-                subscriber.DataSubscriber.StatusMessage += (sender, args) => Subscriber_StatusMessage(connectionID, subscriberID, args.Argument);
-                subscriber.DataSubscriber.ProcessException += (sender, args) => Subscriber_ProcessException(connectionID, subscriberID, args.Argument);
-                subscriber.DataSubscriber.ConnectionString = GetInternalPublisherConnectionString();
-                subscriber.DataSubscriber.CompressionModes = CompressionModes.TSSC | CompressionModes.GZip;
-                subscriber.DataSubscriber.AutoSynchronizeMetadata = false;
-                subscriber.DataSubscriber.ReceiveInternalMetadata = true;
-                subscriber.DataSubscriber.ReceiveExternalMetadata = true;
-                subscriber.DataSubscriber.Initialize();
+                DataSubscriber dataSubscriber = new DataSubscriber();
+                Subscriber subscriber = new Subscriber { DataSubscriber = dataSubscriber };
+
+                dataSubscriber.ConnectionEstablished += (_, _) => Subscriber_ConnectionEstablished(connectionID, subscriberID);
+                dataSubscriber.ConnectionTerminated += (_, _) => Subscriber_ConnectionTerminated(connectionID, subscriberID);
+                dataSubscriber.MetaDataReceived += (_, args) => Subscriber_MetadataReceived(connectionID, subscriberID, subscriber, args.Argument);
+                dataSubscriber.ConfigurationChanged += (_, _) => Subscriber_ConfigurationChanged(connectionID, subscriberID);
+                dataSubscriber.NewMeasurements += (_, args) => Subscriber_NewMeasurements(connectionID, subscriberID, args.Argument);
+                dataSubscriber.StatusMessage += (_, args) => Subscriber_StatusMessage(connectionID, subscriberID, args.Argument);
+                dataSubscriber.ProcessException += (_, args) => Subscriber_ProcessException(connectionID, subscriberID, args.Argument);
+                dataSubscriber.ConnectionString = GetInternalPublisherConnectionString();
+                dataSubscriber.CompressionModes = CompressionModes.TSSC | CompressionModes.GZip;
+                dataSubscriber.AutoSynchronizeMetadata = false;
+                dataSubscriber.ReceiveInternalMetadata = true;
+                dataSubscriber.ReceiveExternalMetadata = true;
+
+                dataSubscriber.Initialize();
+
                 return subscriber;
             });
-        }
-
-        private string GetInternalPublisherConnectionString()
-        {
-            ConfigurationFile configurationFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection internalDataPublisher = configurationFile.Settings["internaldatapublisher"];
-            string configurationString = internalDataPublisher["ConfigurationString"]?.Value ?? "";
-            Dictionary<string, string> settings = configurationString.ParseKeyValuePairs();
-
-            if (!settings.TryGetValue("port", out string portSetting) || !int.TryParse(portSetting, out int port))
-                port = 6165;
-
-            if (settings.TryGetValue("interface", out string interfaceSetting))
-                interfaceSetting = $"Interface={interfaceSetting}";
-            else
-                interfaceSetting = string.Empty;
-
-            return $"Server=localhost:{port};{interfaceSetting};BypassStatistics=true";
         }
 
         private SubscriptionInfo ToSubscriptionInfo(string subscriberID, JObject obj)
@@ -374,7 +355,7 @@ namespace GSF.Web.Shared
 
             IEnumerable<dynamic> formatRecords = info.FormatRecords;
 
-            if (formatRecords != null)
+            if (!(formatRecords is null))
                 SetMeasurementFormats(subscriberID, formatRecords);
 
             if (synchronized)
@@ -383,89 +364,21 @@ namespace GSF.Web.Shared
             return ToUnsynchronizedSubscriptionInfo(obj);
         }
 
-        private SynchronizedSubscriptionInfo ToSynchronizedSubscriptionInfo(JObject obj)
-        {
-            dynamic info = obj;
-
-            if (info.remotelySynchronized == null)
-                info.remotelySynchronized = info.RemotelySynchronized ?? false;
-
-            if (info.framesPerSecond == null)
-                info.framesPerSecond = info.FramesPerSecond ?? 30;
-
-            return obj.ToObject<SynchronizedSubscriptionInfo>();
-        }
-
         private UnsynchronizedSubscriptionInfo ToUnsynchronizedSubscriptionInfo(JObject obj)
         {
             dynamic info = obj;
 
-            if (info.throttled == null)
+            if (info.throttled is null)
                 info.throttled = info.Throttled ?? false;
 
             return obj.ToObject<UnsynchronizedSubscriptionInfo>();
         }
 
-        private object FromDataRow(DataRow dataRow)
-        {
-            JObject obj = new JObject();
-
-            foreach (DataColumn dataColumn in dataRow.Table.Columns)
-                obj[dataColumn.ColumnName] = JToken.FromObject(dataRow[dataColumn]);
-
-            return obj;
-        }
-
-        private object ToJsonMeasurement(Subscriber subscriber, IMeasurement measurement)
-        {
-            Guid signalID = measurement.ID;
-            double value = measurement.AdjustedValue;
-            dynamic obj = new JObject();
-
-            obj.signalID = signalID;
-
-            if (subscriber.TryGetFormat(signalID, out string format, out string dataType))
-                obj.value = string.Format(format, ConvertValueToType(value, dataType));
-            else
-                obj.value = value;
-
-            obj.timestamp = (measurement.Timestamp - UnixTimeTag.BaseTicks).ToMilliseconds();
-
-            return obj;
-        }
-
-        private object ConvertValueToType(double value, string dataType)
-        {
-            if (string.IsNullOrWhiteSpace(dataType))
-                dataType = "System.Double";
-
-            try
-            {
-                switch (dataType)
-                {
-                    case "System.Double":
-                        return value;
-                    case "System.DateTime":
-                        return new DateTime((long)value);
-                }
-
-                return Convert.ChangeType(value, Type.GetType(dataType) ?? typeof(double));
-            }
-            catch
-            {
-                return value;
-            }
-        }
-
-        private void Subscriber_ConnectionEstablished(string connectionID, string subscriberID)
-        {
+        private void Subscriber_ConnectionEstablished(string connectionID, string subscriberID) => 
             Clients.Client(connectionID).ConnectionEstablished(subscriberID);
-        }
 
-        private void Subscriber_ConnectionTerminated(string connectionID, string subscriberID)
-        {
+        private void Subscriber_ConnectionTerminated(string connectionID, string subscriberID) => 
             Clients.Client(connectionID).ConnectionTerminated(connectionID, subscriberID);
-        }
 
         private void Subscriber_NewMeasurements(string connectionID, string subscriberID, ICollection<IMeasurement> measurements)
         {
@@ -484,20 +397,14 @@ namespace GSF.Web.Shared
             Clients.Client(connectionID).MetadataReceived(subscriberID);
         }
 
-        private void Subscriber_ConfigurationChanged(string connectionID, string subscriberID)
-        {
+        private void Subscriber_ConfigurationChanged(string connectionID, string subscriberID) => 
             Clients.Client(connectionID).ConfigurationChanged(subscriberID);
-        }
 
-        private void Subscriber_StatusMessage(string connectionID, string subscriberID, string message)
-        {
+        private void Subscriber_StatusMessage(string connectionID, string subscriberID, string message) => 
             Clients.Client(connectionID).StatusMessage(subscriberID, message);
-        }
 
-        private void Subscriber_ProcessException(string connectionID, string subscriberID, Exception ex)
-        {
+        private void Subscriber_ProcessException(string connectionID, string subscriberID, Exception ex) => 
             Clients.Client(connectionID).ProcessException(subscriberID, ex);
-        }
 
         #endregion
 
@@ -510,6 +417,88 @@ namespace GSF.Web.Shared
         static SubscriberHub()
         {
             s_connectionLookup = new ConcurrentDictionary<string, Connection>();
+        }
+
+        // Static Methods
+        private static string GetInternalPublisherConnectionString()
+        {
+            ConfigurationFile configurationFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection internalDataPublisher = configurationFile.Settings["internaldatapublisher"];
+            string configurationString = internalDataPublisher["ConfigurationString"]?.Value ?? "";
+            Dictionary<string, string> settings = configurationString.ParseKeyValuePairs();
+
+            if (!settings.TryGetValue("port", out string portSetting) || !int.TryParse(portSetting, out int port))
+                port = 6165;
+
+            if (settings.TryGetValue("interface", out string interfaceSetting))
+                interfaceSetting = $"Interface={interfaceSetting}";
+            else
+                interfaceSetting = string.Empty;
+
+            return $"Server=localhost:{port};{interfaceSetting};BypassStatistics=true";
+        }
+
+        private static object ConvertValueToType(double value, string dataType)
+        {
+            if (string.IsNullOrWhiteSpace(dataType))
+                dataType = "System.Double";
+
+            try
+            {
+                return dataType switch
+                {
+                    "System.Double"   => value,
+                    "System.DateTime" => new DateTime((long)value),
+                    _                 => Convert.ChangeType(value, Type.GetType(dataType) ?? typeof(double))
+                };
+            }
+            catch
+            {
+                return value;
+            }
+        }
+
+        private static SynchronizedSubscriptionInfo ToSynchronizedSubscriptionInfo(JObject obj)
+        {
+            dynamic info = obj;
+
+            if (info.remotelySynchronized is null)
+                info.remotelySynchronized = info.RemotelySynchronized ?? false;
+
+            if (info.framesPerSecond is null)
+                info.framesPerSecond = info.FramesPerSecond ?? 30;
+
+            return obj.ToObject<SynchronizedSubscriptionInfo>();
+        }
+
+        private static object FromDataRow(DataRow dataRow)
+        {
+            JObject obj = new JObject();
+
+            foreach (DataColumn dataColumn in dataRow.Table.Columns)
+                obj[dataColumn.ColumnName.ToLowerInvariant()] = JToken.FromObject(dataRow[dataColumn]);
+
+            return obj;
+        }
+
+        private static object ToJsonMeasurement(Subscriber subscriber, IMeasurement measurement)
+        {
+            Guid signalID = measurement.ID;
+            double value = measurement.AdjustedValue;
+            dynamic obj = new JObject();
+
+            // Custom property made lowercase to match lowercase field
+            // definitions to make Javascript code less confusing
+            obj.signalid = signalID;
+
+            if (subscriber.TryGetFormat(signalID, out string format, out string dataType))
+                obj.value = string.Format(format, ConvertValueToType(value, dataType));
+            else
+                obj.value = value;
+
+            obj.timestamp = (measurement.Timestamp - UnixTimeTag.BaseTicks).ToMilliseconds();
+
+            return obj;
         }
 
         #endregion
