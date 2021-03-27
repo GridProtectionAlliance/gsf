@@ -298,32 +298,32 @@ namespace GSF.Reflection
         // Recursively attempts to load all assemblies referenced from the given assembly.
         private static bool TryLoadAllReferences(Assembly assembly, ISet<string> validNames)
         {
-            try
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                Assembly referencedAssembly;
-
-                // Base case: all referenced assemblies' names are present in the set of valid names
-                IEnumerable<AssemblyName> referencedAssemblyNames = assembly.GetReferencedAssemblies()
-                    .Where(referencedAssemblyName => !validNames.Contains(referencedAssemblyName.ToString()));
-
-                // Load each referenced assembly and recursively load their references as well
-                foreach (AssemblyName referencedAssemblyName in referencedAssemblyNames)
+                try
                 {
-                    referencedAssembly = Assembly.Load(referencedAssemblyName);
-                    validNames.Add(referencedAssemblyName.ToString());
+                    // Base case: all referenced assemblies' names are present in the set of valid names
+                    IEnumerable<AssemblyName> referencedAssemblyNames = assembly.GetReferencedAssemblies()
+                        .Where(referencedAssemblyName => !validNames.Contains(referencedAssemblyName.ToString()));
 
-                    if (!TryLoadAllReferences(referencedAssembly, validNames))
-                        return false;
+                    // Load each referenced assembly and recursively load their references as well
+                    foreach (AssemblyName referencedAssemblyName in referencedAssemblyNames)
+                    {
+                        Assembly referencedAssembly = Assembly.Load(referencedAssemblyName);
+                        validNames.Add(referencedAssemblyName.ToString());
+
+                        if (!TryLoadAllReferences(referencedAssembly, validNames))
+                            return false;
+                    }
+
+                    // All referenced assemblies loaded successfully
+                    return true;
                 }
-
-                // All referenced assemblies loaded successfully
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Logger.SwallowException(ex, "AssemblyExtensions.cs TryLoadAllReferences: Failed to load for some reason.");
-                // Error loading a referenced assembly
-                return false;
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, "AssemblyExtensions.cs TryLoadAllReferences: Failed to load referenced assembly.");
+                    return false;
+                }
             }
         }
     }
