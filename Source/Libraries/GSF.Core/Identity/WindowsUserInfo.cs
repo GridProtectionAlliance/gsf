@@ -737,23 +737,23 @@ namespace GSF.Identity
                 WellKnownSidType.BuiltinUsersSid
             };
 
-            SecurityIdentifier securityIdentifier;
-            NTAccount groupAccount;
-
-            foreach (WellKnownSidType builtInSid in builtInSids)
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                try
+                foreach (WellKnownSidType builtInSid in builtInSids)
                 {
-                    // Attempt to translate well-known SID to a local NT group - if this fails, local group is not defined
-                    securityIdentifier = new SecurityIdentifier(builtInSid, null);
-                    groupAccount = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
+                    try
+                    {
+                        // Attempt to translate well-known SID to a local NT group - if this fails, local group is not defined
+                        SecurityIdentifier securityIdentifier = new SecurityIdentifier(builtInSid, null);
+                        NTAccount groupAccount = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
 
-                    // Don't include "BUILTIN\" prefix for group names so they are easily comparable
-                    builtInGroups.Add(groupAccount.ToString().Substring(8));
-                }
-                catch (IdentityNotMappedException ex)
-                {
-                    Logger.SwallowException(ex, "WindowsUserInfo.cs Static Constructor: Failed to lookup identity", builtInSid.ToString());
+                        // Don't include "BUILTIN\" prefix for group names so they are easily comparable
+                        builtInGroups.Add(groupAccount.ToString().Substring(8));
+                    }
+                    catch (IdentityNotMappedException ex)
+                    {
+                        Logger.SwallowException(ex, "WindowsUserInfo.cs Static Constructor: Failed to lookup identity", builtInSid.ToString());
+                    }
                 }
             }
 
