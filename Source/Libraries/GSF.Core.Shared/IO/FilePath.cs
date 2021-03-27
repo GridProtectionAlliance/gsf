@@ -58,6 +58,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Diagnostics;
 
 namespace GSF.IO
 {
@@ -733,14 +734,17 @@ namespace GSF.IO
         /// </remarks>
         public static string GetDirectoryName(string filePath)
         {
-            // Test for case where valid path does not end in directory separator, Path.GetDirectoryName assumes
-            // this is a file name - whether is exists or not :-(
-            string directoryName = AddPathSuffix(filePath);
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
+            {
+                // Test for case where valid path does not end in directory separator, Path.GetDirectoryName assumes
+                // this is a file name - whether is exists or not :-(
+                string directoryName = AddPathSuffix(filePath);
 
-            if (Directory.Exists(directoryName))
-                return directoryName;
+                if (Directory.Exists(directoryName))
+                    return directoryName;
 
-            return AddPathSuffix(Path.GetDirectoryName(filePath) ?? filePath);
+                return AddPathSuffix(Path.GetDirectoryName(filePath) ?? filePath);
+            }
         }
 
         /// <summary>
