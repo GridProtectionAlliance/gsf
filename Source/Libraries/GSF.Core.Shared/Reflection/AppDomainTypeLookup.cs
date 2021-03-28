@@ -81,13 +81,13 @@ namespace GSF.Reflection
 
                 foreach (Assembly assembly in assemblies)
                 {
-                    if (!m_loadedAssemblies.Contains(assembly))
-                    {
-                        m_loadedAssemblies.Add(assembly);
+                    if (m_loadedAssemblies.Contains(assembly))
+                        continue;
 
-                        if (!assembly.IsDynamic)
-                            FindAllModules(types, assembly);
-                    }
+                    m_loadedAssemblies.Add(assembly);
+
+                    if (!assembly.IsDynamic)
+                        FindAllModules(types, assembly);
                 }
             }
             catch (Exception ex)
@@ -98,7 +98,7 @@ namespace GSF.Reflection
             return types;
         }
 
-        private void FindAllModules(List<Type> types, Assembly assembly)
+        private static void FindAllModules(List<Type> types, Assembly assembly)
         {
             Log.Publish(MessageLevel.Debug, "Loading Assembly", assembly.GetName().Name);
 
@@ -117,30 +117,31 @@ namespace GSF.Reflection
             }
         }
 
-        private void FindAllTypes(List<Type> newlyFoundObjects, Assembly assembly, Module module)
+        private static void FindAllTypes(List<Type> newlyFoundObjects, Assembly assembly, Module module)
         {
             Type[] types;
 
-            try
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                types = module.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                //Since its possible that during enumeration, the GetTypes method can error, this will allow us 
-                //to enumerate the types that did not error.
-                Log.Publish(MessageLevel.Error, "Reflection Load Error Occurred", assembly.GetName().Name, ex.ToString() + Environment.NewLine + String.Join(Environment.NewLine, ex.LoaderExceptions.Select(x => x.ToString())), ex);
-                types = ex.Types;
+                try
+                {
+                    types = module.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    //Since its possible that during enumeration, the GetTypes method can error, this will allow us 
+                    //to enumerate the types that did not error.
+                    Log.Publish(MessageLevel.Error, "Reflection Load Error Occurred", assembly.GetName().Name, $"{ex}{Environment.NewLine}{string.Join(Environment.NewLine, ex.LoaderExceptions.Select(x => x.ToString()))}", ex);
+                    types = ex.Types;
+                }
             }
 
             foreach (Type assemblyType in types)
             {
                 try
                 {
-                    if ((object)assemblyType != null)
-                    {
+                    if (!(assemblyType is null))
                         newlyFoundObjects.Add(assemblyType);
-                    }
                 }
                 catch (Exception ex)
                 {
