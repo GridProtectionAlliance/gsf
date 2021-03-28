@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System.Text.RegularExpressions;
+using GSF.IO;
 using GSF.Web.Security;
 using GSF.Web.Shared;
 
@@ -56,9 +58,19 @@ namespace GSF.Web.Hosting
         public const bool DefaultMinifyJavascript = true;
 
         /// <summary>
+        /// Default value for the <see cref="MinifyJavascriptExclusionExpression"/>.
+        /// </summary>
+        public const string DefaultMinifyJavascriptExclusionExpression = "";
+
+        /// <summary>
         /// Default value for <see cref="MinifyStyleSheets"/>.
         /// </summary>
         public const bool DefaultMinifyStyleSheets = true;
+
+        /// <summary>
+        /// Default value for the <see cref="MinifyStyleSheetsExclusionExpression"/>.
+        /// </summary>
+        public const string DefaultMinifyStyleSheetsExclusionExpression = "";
 
         /// <summary>
         /// Default value for <see cref="UseMinifyInDebug"/>.
@@ -67,6 +79,25 @@ namespace GSF.Web.Hosting
 
         // Fields
         private string m_authTestPage;
+        private string m_webRootPath;
+        private string m_minifyJavascriptExclusionExpression;
+        private string m_minifyStyleSheetsExclusionExpression;
+        private Regex m_minifyJavascriptExclusionRegex;
+        private Regex m_minifyStyleSheetsExclusionRegex;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="WebServerOptions"/> instance.
+        /// </summary>
+        public WebServerOptions()
+        {
+            WebRootPath = DefaultWebRootPath;
+            MinifyJavascriptExclusionExpression = DefaultMinifyJavascriptExclusionExpression;
+            MinifyStyleSheetsExclusionExpression = DefaultMinifyStyleSheetsExclusionExpression;
+        }
 
         #endregion
 
@@ -75,7 +106,20 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets or sets root path defined for this <see cref="WebServer"/>.
         /// </summary>
-        public string WebRootPath { get; set; } = DefaultWebRootPath;
+        public string WebRootPath
+        {
+            get => m_webRootPath;
+            set
+            {
+                m_webRootPath = value;
+                PhysicalWebRootPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(m_webRootPath));
+            }
+        }
+
+        /// <summary>
+        /// Gets physical path for <see cref="WebRootPath"/>.
+        /// </summary>
+        public string PhysicalWebRootPath { get; private set; }
 
         /// <summary>
         /// Gets or sets flag that determines if cache control is enabled for browser clients; default to <c>true</c>.
@@ -88,9 +132,41 @@ namespace GSF.Web.Hosting
         public bool MinifyJavascript { get; set; } = DefaultMinifyJavascript;
 
         /// <summary>
+        /// Gets or sets the regular expression that will exclude Javascript files from being minified.
+        /// Assigning empty or <c>null</c> value results in all files targeted for minification.
+        /// </summary>
+        public string MinifyJavascriptExclusionExpression
+        {
+            get => m_minifyJavascriptExclusionExpression;
+            set
+            {
+                m_minifyJavascriptExclusionExpression = value;
+                m_minifyJavascriptExclusionRegex = string.IsNullOrWhiteSpace(value) ?
+                    null : 
+                    new Regex(value, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets value that determines if minification should be applied to rendered CSS files.
         /// </summary>
         public bool MinifyStyleSheets { get; set; } = DefaultMinifyStyleSheets;
+
+        /// <summary>
+        /// Gets or sets the regular expression that will exclude CSS files from being minified.
+        /// Assigning empty or <c>null</c> value results in all files targeted for minification.
+        /// </summary>
+        public string MinifyStyleSheetsExclusionExpression
+        {
+            get => m_minifyStyleSheetsExclusionExpression;
+            set
+            { 
+                m_minifyStyleSheetsExclusionExpression = value;
+                m_minifyStyleSheetsExclusionRegex = string.IsNullOrWhiteSpace(value) ?
+                    null :
+                    new Regex(value, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+        }
 
         /// <summary>
         /// Gets or sets value that determines if minification should be applied when running a Debug build.
@@ -139,6 +215,50 @@ namespace GSF.Web.Hosting
         public ReadonlyWebServerOptions Readonly => new ReadonlyWebServerOptions(this);
 
         #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Determines if Javascript file referenced by <paramref name="urlPath"/> should be minified
+        /// according to <see cref="MinifyJavascriptExclusionExpression"/>.
+        /// </summary>
+        /// <param name="urlPath">Javascript filename to check.</param>
+        /// <returns><c>true</c> if <paramref name="urlPath"/> should be minified; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Result will always be <c>false</c> if <see cref="MinifyJavascript"/> is not <c>true</c>.
+        /// </remarks>
+        public bool MinifyJavascriptResource(string urlPath)
+        {
+            if (!MinifyJavascript)
+                return false;
+
+            if (m_minifyJavascriptExclusionRegex is null)
+                return true;
+
+            return !m_minifyJavascriptExclusionRegex.IsMatch(urlPath);
+        }
+
+        /// <summary>
+        /// Determines if CSS file referenced by <paramref name="urlPath"/> should be minified
+        /// according to <see cref="MinifyStyleSheetsExclusionExpression"/>.
+        /// </summary>
+        /// <param name="urlPath">CSS filename to check.</param>
+        /// <returns><c>true</c> if <paramref name="urlPath"/> should be minified; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Result will always be <c>false</c> if <see cref="MinifyStyleSheets"/> is not <c>true</c>.
+        /// </remarks>
+        public bool MinifyStyleSheetResource(string urlPath)
+        {
+            if (!MinifyStyleSheets)
+                return false;
+
+            if (m_minifyStyleSheetsExclusionRegex is null)
+                return true;
+
+            return !m_minifyStyleSheetsExclusionRegex.IsMatch(urlPath);
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -157,6 +277,7 @@ namespace GSF.Web.Hosting
 
         internal ReadonlyWebServerOptions(WebServerOptions webServerOptions)
         {
+            // Make sure exposed properties cannot change source web server options
             m_webServerOptions = webServerOptions;
         }
 
@@ -170,6 +291,11 @@ namespace GSF.Web.Hosting
         public string WebRootPath => m_webServerOptions.WebRootPath;
 
         /// <summary>
+        /// Gets physical path for <see cref="WebRootPath"/>.
+        /// </summary>
+        public string PhysicalWebRootPath => m_webServerOptions.PhysicalWebRootPath;
+
+        /// <summary>
         /// Gets flag that determines if cache control is enabled for browser clients; default to <c>true</c>.
         /// </summary>
         public bool ClientCacheEnabled => m_webServerOptions.ClientCacheEnabled;
@@ -180,9 +306,19 @@ namespace GSF.Web.Hosting
         public bool MinifyJavascript => m_webServerOptions.MinifyJavascript;
 
         /// <summary>
+        /// Gets regular expression that will exclude Javascript files from being minified.
+        /// </summary>
+        public string MinifyJavascriptExclusionExpression => m_webServerOptions.MinifyJavascriptExclusionExpression;
+
+        /// <summary>
         /// Gets value that determines if minification should be applied to rendered CSS files.
         /// </summary>
         public bool MinifyStyleSheets => m_webServerOptions.MinifyStyleSheets;
+
+        /// <summary>
+        /// Gets regular expression that will exclude CSS files from being minified.
+        /// </summary>
+        public string MinifyStyleSheetsExclusionExpression => m_webServerOptions.MinifyStyleSheetsExclusionExpression;
 
         /// <summary>
         /// Gets value that determines if minification should be applied when running a Debug build.

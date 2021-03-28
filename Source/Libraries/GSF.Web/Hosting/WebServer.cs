@@ -230,32 +230,31 @@ namespace GSF.Web.Hosting
 
                             await Task.Run(async () =>
                             {
-                                using (Stream source = await OpenResourceAsync(fileName, embeddedResource, cancellationToken))
+                                using Stream source = await OpenResourceAsync(pageName, fileName, embeddedResource);
+
+                                // Calculate check-sum for file
+                                const int BufferSize = 32768;
+                                byte[] buffer = new byte[BufferSize];
+                                Crc32 calculatedHash = new Crc32();
+
+                                int bytesRead = await source.ReadAsync(buffer, 0, BufferSize, cancellationToken);
+
+                                while (bytesRead > 0)
                                 {
-                                    // Calculate check-sum for file
-                                    const int BufferSize = 32768;
-                                    byte[] buffer = new byte[BufferSize];
-                                    Crc32 calculatedHash = new Crc32();
-
-                                    int bytesRead = await source.ReadAsync(buffer, 0, BufferSize, cancellationToken);
-
-                                    while (bytesRead > 0)
-                                    {
-                                        calculatedHash.Update(buffer, 0, bytesRead);
-                                        bytesRead = await source.ReadAsync(buffer, 0, BufferSize, cancellationToken);
-                                    }
-
-                                    responseHash = calculatedHash.Value;
-                                    m_etagCache.TryAdd(fileName, responseHash);
-
-                                    OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
+                                    calculatedHash.Update(buffer, 0, bytesRead);
+                                    bytesRead = await source.ReadAsync(buffer, 0, BufferSize, cancellationToken);
                                 }
+
+                                responseHash = calculatedHash.Value;
+                                m_etagCache.TryAdd(fileName, responseHash);
+
+                                OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
                             }, cancellationToken);
                         }
 
                         if (PublishResponseContent(request, response, responseHash))
                         {
-                            response.Content = new StreamContent(await OpenResourceAsync(fileName, embeddedResource, cancellationToken));
+                            response.Content = new StreamContent(await OpenResourceAsync(pageName, fileName, embeddedResource));
                             response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
                         }
                     }
@@ -267,7 +266,7 @@ namespace GSF.Web.Hosting
                             break;
                         }
 
-                        response.Content = new StreamContent(await OpenResourceAsync(fileName, embeddedResource, cancellationToken));
+                        response.Content = new StreamContent(await OpenResourceAsync(pageName, fileName, embeddedResource));
                         response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
                     }
                     break;
@@ -288,7 +287,7 @@ namespace GSF.Web.Hosting
                     return;
                 }
 
-                using Stream source = await OpenResourceAsync(fileName, embeddedResource, cancellationToken);
+                using Stream source = await OpenResourceAsync(pageName, fileName, embeddedResource);
 
                 string handlerHeader;
 
@@ -339,14 +338,10 @@ namespace GSF.Web.Hosting
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetResourceFileName(string pageName, bool embeddedResource) => 
-            embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_options.WebRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+            embeddedResource ? pageName : $"{m_options.PhysicalWebRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool ResourceExists(string fileName, bool embeddedResource) => 
-            embeddedResource ? WebExtensions.EmbeddedResourceExists(fileName) : File.Exists(fileName);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task<Stream> OpenResourceAsync(string fileName, bool embeddedResource, CancellationToken cancellationToken)
+        private async Task<Stream> OpenResourceAsync(string pageName, string fileName, bool embeddedResource)
         {
             Stream stream = embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(fileName) : File.OpenRead(fileName);
 
@@ -358,29 +353,22 @@ namespace GSF.Web.Hosting
             if (string.IsNullOrWhiteSpace(extension))
                 return stream;
 
-            Minifier minifier = new Minifier();
             Stream minimizedStream = null;
 
             switch (extension)
             {
                 case ".js":
-                    if (m_options.MinifyJavascript)
+                    if (m_options.MinifyJavascriptResource(pageName))
                     {
-                        await Task.Run(async () =>
-                        {
-                            using StreamReader reader = new StreamReader(stream);
-                            minimizedStream = await minifier.MinifyJavaScript(await reader.ReadToEndAsync()).ToStreamAsync();
-                        }, cancellationToken);
+                        using StreamReader reader = new StreamReader(stream);
+                        minimizedStream = await new Minifier().MinifyJavaScript(await reader.ReadToEndAsync()).ToStreamAsync();
                     }
                     break;
                 case ".css":
-                    if (m_options.MinifyStyleSheets)
+                    if (m_options.MinifyStyleSheetResource(pageName))
                     {
-                        await Task.Run(async () =>
-                        {
-                            using StreamReader reader = new StreamReader(stream);
-                            minimizedStream = await minifier.MinifyStyleSheet(await reader.ReadToEndAsync()).ToStreamAsync();
-                        }, cancellationToken);
+                        using StreamReader reader = new StreamReader(stream);
+                        minimizedStream = await new Minifier().MinifyStyleSheet(await reader.ReadToEndAsync()).ToStreamAsync();
                     }
                     break;
             }
@@ -412,29 +400,6 @@ namespace GSF.Web.Hosting
 
             response.Headers.ETag = new EntityTagHeaderValue($"\"{responseHash}\"");
             return true;
-        }
-
-        private HttpResponseMessage CreateAuthTestResponse(HttpRequestMessage request, HttpResponseMessage response)
-        {
-            if (request.Method != HttpMethod.Post)
-                throw new SecurityException("Authorization test only operates with validated HTTP post operation");
-
-            response.Content = new StringContent($@"
-                <html>
-                <head>
-                    <title>Authentication Test</title>
-                    <link rel=""shortcut icon"" href=""@GSF/Web/Shared/Images/Icons/favicon.ico"" />
-                </head>
-                <body>
-                    {(int)response.StatusCode} ({response.StatusCode}) for user
-                    {request.GetRequestContext().Principal?.Identity.Name ?? "Undefined"}
-                </body>
-                </html>
-            ");
-
-            response.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
-
-            return response;
         }
 
         private void OnExecutionException(Exception exception) => 
@@ -495,30 +460,62 @@ namespace GSF.Web.Hosting
                     // Get configured web server settings
                     CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[category];
 
-                    settings.Add("WebRootPath", WebServerOptions.DefaultWebRootPath, "The root path for the hosted web server files. Location will be relative to install folder if full path is not specified.");
-                    settings.Add("ClientCacheEnabled", WebServerOptions.DefaultClientCacheEnabled, "Determines if cache control is enabled for web server when rendering content to browser clients.");
-                    settings.Add("MinifyJavascript", WebServerOptions.DefaultMinifyJavascript, "Determines if minification should be applied to rendered Javascript files.");
-                    settings.Add("MinifyStyleSheets", WebServerOptions.DefaultMinifyStyleSheets, "Determines if minification should be applied to rendered CSS files.");
-                    settings.Add("UseMinifyInDebug", WebServerOptions.DefaultUseMinifyInDebug, "Determines if minification should be applied when running a Debug build.");
-                    settings.Add("SessionToken", SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
-                    settings.Add("AuthTestPage", AuthenticationOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated.");
-                    settings.Add("ErrorTemplateName", "", "Defines the template file name to use when a Razor compile or execution exception occurs. Leave blank for none.");
+                    settings.Add(nameof(WebServerOptions.WebRootPath), WebServerOptions.DefaultWebRootPath, "The root path for the hosted web server files. Location will be relative to install folder if full path is not specified.");
+                    settings.Add(nameof(WebServerOptions.ClientCacheEnabled), WebServerOptions.DefaultClientCacheEnabled, "Determines if cache control is enabled for web server when rendering content to browser clients.");
+                    settings.Add(nameof(WebServerOptions.MinifyJavascript), WebServerOptions.DefaultMinifyJavascript, "Determines if minification should be applied to rendered Javascript files.");
+                    settings.Add(nameof(WebServerOptions.MinifyJavascriptExclusionExpression), WebServerOptions.DefaultMinifyJavascriptExclusionExpression, "Defines the regular expression that will exclude Javascript files from being minified. Empty value will target all files for minification.");
+                    settings.Add(nameof(WebServerOptions.MinifyStyleSheets), WebServerOptions.DefaultMinifyStyleSheets, "Determines if minification should be applied to rendered CSS files.");
+                    settings.Add(nameof(WebServerOptions.MinifyStyleSheetsExclusionExpression), WebServerOptions.DefaultMinifyStyleSheetsExclusionExpression, "Defines the regular expression that will exclude CSS files from being minified. Empty value will target all files for minification.");
+                    settings.Add(nameof(WebServerOptions.UseMinifyInDebug), WebServerOptions.DefaultUseMinifyInDebug, "Determines if minification should be applied when running a Debug build.");
+                    settings.Add(nameof(SessionHandler.SessionToken), SessionHandler.DefaultSessionToken, "Defines the token used for identifying the session ID in cookie headers.");
+                    settings.Add(nameof(AuthenticationOptions.AuthTestPage), AuthenticationOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated.");
+                    settings.Add(nameof(WebServerOptions.ErrorTemplateName), WebServerOptions.DefaultErrorTemplateName, "Defines the template file name to use when a Razor compile or execution exception occurs. Leave blank for none.");
 
                     WebServerOptions options = new WebServerOptions
                     {
-                        WebRootPath = settings["WebRootPath"].ValueAs(WebServerOptions.DefaultWebRootPath),
-                        ClientCacheEnabled = settings["ClientCacheEnabled"].ValueAsBoolean(WebServerOptions.DefaultClientCacheEnabled),
-                        MinifyJavascript = settings["MinifyJavascript"].ValueAsBoolean(WebServerOptions.DefaultMinifyJavascript),
-                        MinifyStyleSheets = settings["MinifyStyleSheets"].ValueAsBoolean(WebServerOptions.DefaultMinifyStyleSheets),
-                        UseMinifyInDebug = settings["UseMinifyInDebug"].ValueAsBoolean(WebServerOptions.DefaultUseMinifyInDebug),
-                        SessionToken = settings["SessionToken"].ValueAs(SessionHandler.DefaultSessionToken),
-                        AuthTestPage = settings["AuthTestPage"].ValueAs(AuthenticationOptions.DefaultAuthTestPage),
-                        ErrorTemplateName = settings["ErrorTemplateName"].Value
+                        WebRootPath = settings[nameof(WebServerOptions.WebRootPath)].ValueAs(WebServerOptions.DefaultWebRootPath),
+                        ClientCacheEnabled = settings[nameof(WebServerOptions.ClientCacheEnabled)].ValueAsBoolean(WebServerOptions.DefaultClientCacheEnabled),
+                        MinifyJavascript = settings[nameof(WebServerOptions.MinifyJavascript)].ValueAsBoolean(WebServerOptions.DefaultMinifyJavascript),
+                        MinifyJavascriptExclusionExpression = settings[nameof(WebServerOptions.MinifyJavascriptExclusionExpression)].ValueAs(WebServerOptions.DefaultMinifyJavascriptExclusionExpression),
+                        MinifyStyleSheets = settings[nameof(WebServerOptions.MinifyStyleSheets)].ValueAsBoolean(WebServerOptions.DefaultMinifyStyleSheets),
+                        MinifyStyleSheetsExclusionExpression = settings[nameof(WebServerOptions.MinifyStyleSheetsExclusionExpression)].ValueAs(WebServerOptions.DefaultMinifyStyleSheetsExclusionExpression),
+                        UseMinifyInDebug = settings[nameof(WebServerOptions.UseMinifyInDebug)].ValueAsBoolean(WebServerOptions.DefaultUseMinifyInDebug),
+                        SessionToken = settings[nameof(SessionHandler.SessionToken)].ValueAs(SessionHandler.DefaultSessionToken),
+                        AuthTestPage = settings[nameof(AuthenticationOptions.AuthTestPage)].ValueAs(AuthenticationOptions.DefaultAuthTestPage),
+                        ErrorTemplateName = settings[nameof(WebServerOptions.ErrorTemplateName)].ValueAs(WebServerOptions.DefaultErrorTemplateName)
                     };
 
                     return new WebServer(options, razorEngineCS, razorEngineVB);
                 });
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool ResourceExists(string fileName, bool embeddedResource) =>
+            embeddedResource ? WebExtensions.EmbeddedResourceExists(fileName) : File.Exists(fileName);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static HttpResponseMessage CreateAuthTestResponse(HttpRequestMessage request, HttpResponseMessage response)
+        {
+            if (request.Method != HttpMethod.Post)
+                throw new SecurityException("Authorization test only operates with validated HTTP post operation");
+
+            response.Content = new StringContent($@"
+                <html>
+                <head>
+                    <title>Authentication Test</title>
+                    <link rel=""shortcut icon"" href=""@GSF/Web/Shared/Images/Icons/favicon.ico"" />
+                </head>
+                <body>
+                    {(int)response.StatusCode} ({response.StatusCode}) for user
+                    {request.GetRequestContext().Principal?.Identity.Name ?? "Undefined"}
+                </body>
+                </html>
+            ");
+
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
+
+            return response;
         }
 
         #endregion
