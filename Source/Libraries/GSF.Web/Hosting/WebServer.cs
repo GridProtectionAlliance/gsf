@@ -91,7 +91,7 @@ namespace GSF.Web.Hosting
         {
             m_releaseMode = !AssemblyInfo.EntryAssembly.Debuggable;
 
-            if ((object)options == null)
+            if (options is null)
                 options = new WebServerOptions();
 
             m_options = options;
@@ -161,17 +161,17 @@ namespace GSF.Web.Hosting
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                        m_fileWatcher?.Dispose();
-                }
-                finally
-                {
-                    m_disposed = true; // Prevent duplicate dispose.
-                }
+                if (disposing)
+                    m_fileWatcher?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
@@ -288,43 +288,42 @@ namespace GSF.Web.Hosting
                     return;
                 }
 
-                using (Stream source = await OpenResourceAsync(fileName, embeddedResource, cancellationToken))
-                {
-                    string handlerHeader;
+                using Stream source = await OpenResourceAsync(fileName, embeddedResource, cancellationToken);
 
-                    // Parse class name from ASHX handler header parameters
-                    using (StreamReader reader = new StreamReader(source))
-                        handlerHeader = (await reader.ReadToEndAsync()).RemoveCrLfs().Trim();
+                string handlerHeader;
 
-                    // Clean up header formatting to make parsing easier
-                    handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
+                // Parse class name from ASHX handler header parameters
+                using (StreamReader reader = new StreamReader(source))
+                    handlerHeader = (await reader.ReadToEndAsync()).RemoveCrLfs().Trim();
 
-                    string[] tokens = handlerHeader.Split(' ');
+                // Clean up header formatting to make parsing easier
+                handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
 
-                    if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
-                        throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
+                string[] tokens = handlerHeader.Split(' ');
 
-                    Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
+                if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
 
-                    if (!parameters.TryGetValue("Class", out string className))
-                        throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
+                Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
 
-                    // Remove quotes from class name
-                    className = className.Substring(1, className.Length - 2).Trim();
+                if (!parameters.TryGetValue("Class", out string className))
+                    throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
 
-                    handlerType = AssemblyInfo.FindType(className);
+                // Remove quotes from class name
+                className = className.Substring(1, className.Length - 2).Trim();
 
-                    if (m_handlerTypeCache.TryAdd(fileName, handlerType))
-                        OnStatusMessage($"Cached handler type [{handlerType?.FullName}] for file \"{fileName}\"");
-                }
+                handlerType = AssemblyInfo.FindType(className);
+
+                if (m_handlerTypeCache.TryAdd(fileName, handlerType))
+                    OnStatusMessage($"Cached handler type [{handlerType?.FullName}] for file \"{fileName}\"");
             }
 
             IHostedHttpHandler handler = null;
 
-            if ((object)handlerType != null)
+            if (!(handlerType is null))
                 handler = Activator.CreateInstance(handlerType) as IHostedHttpHandler;
 
-            if ((object)handler == null)
+            if (handler is null)
                 throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{handlerType?.FullName}\" - make sure class implements IHostedHttpHandler interface.");
 
             if (m_options.ClientCacheEnabled && handler.UseClientCache)
@@ -339,16 +338,12 @@ namespace GSF.Web.Hosting
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private string GetResourceFileName(string pageName, bool embeddedResource)
-        {
-            return embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_options.WebRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
-        }
+        private string GetResourceFileName(string pageName, bool embeddedResource) => 
+            embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_options.WebRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool ResourceExists(string fileName, bool embeddedResource)
-        {
-            return embeddedResource ? WebExtensions.EmbeddedResourceExists(fileName) : File.Exists(fileName);
-        }
+        private bool ResourceExists(string fileName, bool embeddedResource) => 
+            embeddedResource ? WebExtensions.EmbeddedResourceExists(fileName) : File.Exists(fileName);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task<Stream> OpenResourceAsync(string fileName, bool embeddedResource, CancellationToken cancellationToken)
@@ -373,8 +368,8 @@ namespace GSF.Web.Hosting
                     {
                         await Task.Run(async () =>
                         {
-                            using (StreamReader reader = new StreamReader(stream))
-                                minimizedStream = await minifier.MinifyJavaScript(await reader.ReadToEndAsync()).ToStreamAsync();
+                            using StreamReader reader = new StreamReader(stream);
+                            minimizedStream = await minifier.MinifyJavaScript(await reader.ReadToEndAsync()).ToStreamAsync();
                         }, cancellationToken);
                     }
                     break;
@@ -383,8 +378,8 @@ namespace GSF.Web.Hosting
                     {
                         await Task.Run(async () =>
                         {
-                            using (StreamReader reader = new StreamReader(stream))
-                                minimizedStream = await minifier.MinifyStyleSheet(await reader.ReadToEndAsync()).ToStreamAsync();
+                            using StreamReader reader = new StreamReader(stream);
+                            minimizedStream = await minifier.MinifyStyleSheet(await reader.ReadToEndAsync()).ToStreamAsync();
                         }, cancellationToken);
                     }
                     break;
@@ -442,15 +437,11 @@ namespace GSF.Web.Hosting
             return response;
         }
 
-        private void OnExecutionException(Exception exception)
-        {
+        private void OnExecutionException(Exception exception) => 
             ExecutionException?.Invoke(this, new EventArgs<Exception>(exception));
-        }
 
-        private void OnStatusMessage(string message)
-        {
+        private void OnStatusMessage(string message) => 
             StatusMessage?.Invoke(this, new EventArgs<string>(message));
-        }
 
         private void m_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
         {
@@ -474,7 +465,7 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets default configured web server instance.
         /// </summary>
-        public static WebServer Default => s_defaultServer ?? (s_defaultServer = GetConfiguredServer());
+        public static WebServer Default => s_defaultServer ??= GetConfiguredServer();
 
         // Static Constructor
         static WebServer()
