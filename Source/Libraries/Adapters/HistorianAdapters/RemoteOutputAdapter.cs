@@ -53,7 +53,7 @@ namespace HistorianAdapters
     /// <summary>
     /// Represents an output adapter that publishes measurements to openHistorian for archival.
     /// </summary>
-    [Description("Remote Historian: Forwards measurements to a remote openHistorian for archival")]
+    [Description("Remote v1.0 Historian Publisher: Forwards measurements to a remote 1.0 openHistorian for archival")]
     public class RemoteOutputAdapter : OutputAdapterBase
     {
         #region [ Members ]

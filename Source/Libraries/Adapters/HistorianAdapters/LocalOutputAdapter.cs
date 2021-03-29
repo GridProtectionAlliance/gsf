@@ -87,7 +87,7 @@ namespace HistorianAdapters
     /// <summary>
     /// Represents an output adapter that archives measurements to a local archive.
     /// </summary>
-    [Description("Local Historian: archives measurements to a local in-process openHistorian.")]
+    [Description("Local v1.0 openHistorian: [Deprecated for v2.0, see openHistorian.com] Archives measurements to a local in-process 1.0 openHistorian.")]
     public class LocalOutputAdapter : OutputAdapterBase
     {
         #region [ Members ]
