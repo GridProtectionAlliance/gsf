@@ -25,7 +25,7 @@
 
 SETLOCAL EnableDelayedExpansion
 
-IF "%git%" == "" SET git=%PROGRAMFILES(X86)%\Git\cmd\git.exe
+IF "%git%" == "" SET git=%PROGRAMFILES%\Git\cmd\git.exe
 
 SET db[1]=GSFSchema.db
 SET db[2]=GSFSchema-InitialDataSet.db
