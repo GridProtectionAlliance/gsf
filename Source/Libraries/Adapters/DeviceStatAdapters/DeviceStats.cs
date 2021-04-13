@@ -188,14 +188,10 @@ namespace DeviceStatAdapters
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.AppendFormat("    Monitored Device Count: {0:N0}", InputMeasurementKeys?.Length ?? 0);
-                status.AppendLine();
-                status.AppendFormat("         Measurement Tests: {0:N0}", m_measurementTests);
-                status.AppendLine();
-                status.AppendFormat("           Database Writes: {0:N0}", m_databaseWrites);
-                status.AppendLine();
-                status.AppendFormat("      Last Database Result: {0}", m_lastDatabaseResult ?? "N/A");
-                status.AppendLine();
+                status.AppendLine($"    Monitored Device Count: {InputMeasurementKeys?.Length ?? 0:N0}");
+                status.AppendLine($"         Measurement Tests: {m_measurementTests:N0}");
+                status.AppendLine($"           Database Writes: {m_databaseWrites:N0}");
+                status.AppendLine($"      Last Database Result: {m_lastDatabaseResult ?? "N/A"}");
 
                 return status.ToString();
             }
@@ -220,7 +216,7 @@ namespace DeviceStatAdapters
             {
                 List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
 
-                using (AdoDataConnection statConnection = string.IsNullOrWhiteSpace(DatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
+                using (AdoDataConnection statConnection = GetDatabaseConnection())
                 using (AdoDataConnection gsfConnection = new AdoDataConnection("systemSettings"))
                 {
                     // Load any newly defined devices into the statistics device table
@@ -265,7 +261,7 @@ namespace DeviceStatAdapters
                 // Load desired input measurements
                 InputMeasurementKeys = inputMeasurementKeys.ToArray();
             },
-            exception => OnProcessException(MessageLevel.Warning, exception));
+            ex => OnProcessException(MessageLevel.Warning, ex));
 
             m_deviceSyncOperation.Run();
         }
@@ -274,17 +270,16 @@ namespace DeviceStatAdapters
         /// Queues database sync operation for device meta-data.
         /// </summary>
         [AdapterCommand("Queues database sync operation for device meta-data.", "Administrator", "Editor")]
-        public void QueueDeviceSync() => m_deviceSyncOperation?.RunOnceAsync();
+        public void QueueDeviceSync() =>
+            m_deviceSyncOperation?.RunOnceAsync();
 
         /// <summary>
         /// Gets a short one-line status of this adapter.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this adapter.</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            return (Enabled ? $"Actively counting statistics for {InputMeasurementKeys.Length:N0} devices, {m_databaseWrites:N0} database writes so far..." : "Adapter is not running").CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) => 
+            (Enabled ? $"Actively counting statistics for {InputMeasurementKeys.Length:N0} devices, {m_databaseWrites:N0} database writes so far..." : "Adapter is not running").CenterText(maxLength);
 
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
@@ -344,7 +339,7 @@ namespace DeviceStatAdapters
         {
             try
             {
-                using (AdoDataConnection connection = string.IsNullOrWhiteSpace(DatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
+                using (AdoDataConnection connection = GetDatabaseConnection())
                 {
                     TableOperations<MinuteStats> minuteStatsTable = new TableOperations<MinuteStats>(connection);
 
@@ -371,6 +366,10 @@ namespace DeviceStatAdapters
                 m_lastDatabaseResult = ex.Message;
             }
         }
+
+        private AdoDataConnection GetDatabaseConnection() => string.IsNullOrWhiteSpace(DatabaseConnnectionString) ?
+            new AdoDataConnection("systemSettings") :
+            new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString);
 
         #endregion
 
@@ -400,7 +399,7 @@ namespace DeviceStatAdapters
             {
                 using (Stream resourceStream = executingAssembly.GetManifestResourceStream(name))
                 {
-                    if (resourceStream == null)
+                    if (resourceStream is null)
                         continue;
 
                     string sourceNamespace = $"{nameof(DeviceStatAdapters)}.";
