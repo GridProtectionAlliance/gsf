@@ -81,7 +81,7 @@ namespace DynamicCalculator
         private const string TimeVariable = "TIME";
         private const string UtcTimeVariable = "UTCTIME";
         private const string LocalTimeVariable = "LOCALTIME";
-        private const string SystemNameVariable = "SYSTENAME";
+        private const string SystemNameVariable = "SYSTEMNAME";
 
         private static readonly string[] ReservedVariableNames = { TimeVariable, UtcTimeVariable, LocalTimeVariable, SystemNameVariable };
 
