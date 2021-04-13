@@ -102,11 +102,7 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the database connection string used for saving device stats.")]
-        public string DatabaseConnnectionString
-        {
-            get;
-            set;
-        }
+        public string DatabaseConnnectionString { get; set; }
 
         /// <summary>
         /// Gets or sets the external database provider string used for saving device stats.
@@ -114,11 +110,7 @@ namespace DeviceStatAdapters
         [ConnectionStringParameter]
         [Description("Defines the external database provider string used for saving device stats.")]
         [DefaultValue("AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter")]
-        public string DatabaseProviderString
-        {
-            get;
-            set;
-        }
+        public string DatabaseProviderString { get; set; }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the adapter expects, if any.
@@ -154,21 +146,13 @@ namespace DeviceStatAdapters
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)] // Not used
-        public new double LagTime
-        {
-            get;
-            set;
-        }
+        public new double LagTime { get; set; }
 
         /// <summary>
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)] // Not used
-        public new double LeadTime
-        {
-            get;
-            set;
-        }
+        public new double LeadTime { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="AdapterBase"/>.
@@ -236,7 +220,7 @@ namespace DeviceStatAdapters
             {
                 List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
 
-                using (AdoDataConnection statConnection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
+                using (AdoDataConnection statConnection = string.IsNullOrWhiteSpace(DatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
                 using (AdoDataConnection gsfConnection = new AdoDataConnection("systemSettings"))
                 {
                     // Load any newly defined devices into the statistics device table
@@ -360,7 +344,7 @@ namespace DeviceStatAdapters
         {
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
+                using (AdoDataConnection connection = string.IsNullOrWhiteSpace(DatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
                 {
                     TableOperations<MinuteStats> minuteStatsTable = new TableOperations<MinuteStats>(connection);
 
