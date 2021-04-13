@@ -27,6 +27,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -40,8 +41,9 @@ using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.IO;
+using GSF.Parsing;
 using GSF.Reflection;
-
+using GSF.Scheduling;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
 
 // ReSharper disable UnusedMember.Global
@@ -70,6 +72,8 @@ namespace DeviceStatAdapters
 
         // Fields
         private ShortSynchronizedOperation m_deviceSyncOperation;
+        private ShortSynchronizedOperation m_databaseOperation;
+        private ScheduleManager m_scheduleManager;
         private readonly ConcurrentDictionary<Guid, int> m_measurementDevice;
         private readonly ConcurrentDictionary<int, Ticks> m_deviceMinuteTime;
         private readonly ConcurrentDictionary<int, MinuteCounts> m_deviceMinuteCounts;
@@ -77,6 +81,9 @@ namespace DeviceStatAdapters
         private long m_measurementTests;
         private long m_databaseWrites;
         private string m_lastDatabaseResult;
+        private long m_totalDatabaseOperations;
+        private object m_lastDatabaseOperationResult;
+        private bool m_disposed;
 
         #endregion
 
@@ -111,6 +118,28 @@ namespace DeviceStatAdapters
         [Description("Defines the external database provider string used for saving device stats.")]
         [DefaultValue("AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter")]
         public string DatabaseProviderString { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command used for database operation, e.g., a stored procedure name or SQL expression like "INSERT".
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the command used for database operation, e.g., a stored procedure name or SQL expression like \"INSERT\".")]
+        public string DatabaseCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the parameters for the command that includes any desired value substitutions used for database operation. Available substitutions: {Acronym} and {Timestamp}.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the parameters for the command that includes any desired value substitutions used for database operation. Available substitutions: {Acronym} and {Timestamp}.")]
+        public string DatabaseCommandParameters { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CRON schedule on which to execute the defined database command.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the CRON schedule on which to execute the defined database command. Defaults to once per day.")]
+        [DefaultValue("0 0 * * *")]
+        public string DatabaseCommandSchedule { get; set; }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the adapter expects, if any.
@@ -193,6 +222,17 @@ namespace DeviceStatAdapters
                 status.AppendLine($"           Database Writes: {m_databaseWrites:N0}");
                 status.AppendLine($"      Last Database Result: {m_lastDatabaseResult ?? "N/A"}");
 
+                if (!string.IsNullOrWhiteSpace(DatabaseCommand))
+                {
+                    status.AppendLine($"Scheduled Database Command: {DatabaseCommand}");
+                    status.AppendLine($"Command Parameters, if any: {DatabaseCommandParameters}");
+                    status.AppendLine($"  Total Command Operations: {m_totalDatabaseOperations:N0}");
+                    status.AppendLine($"       Last Command Result: {m_lastDatabaseOperationResult}");
+                    
+                    if (m_scheduleManager?.Schedules.Count > 0)
+                        status.AppendLine(m_scheduleManager.Schedules[0].Status);
+                }
+
                 return status.ToString();
             }
         }
@@ -200,6 +240,34 @@ namespace DeviceStatAdapters
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="DeviceStats"/> adapter and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (m_disposed)
+                return;
+
+            try
+            {
+                if (!disposing)
+                    return;
+
+                if (!(m_scheduleManager is null))
+                {
+                    m_scheduleManager.ScheduleDue -= ScheduleManager_ScheduleDue;
+                    m_scheduleManager.Dispose();
+                    m_scheduleManager = null;
+                }
+            }
+            finally
+            {
+                m_disposed = true;       // Prevent duplicate dispose.
+                base.Dispose(disposing); // Call base class Dispose().
+            }
+        }
 
         /// <summary>
         /// Initializes <see cref="DeviceStats" />.
@@ -264,7 +332,70 @@ namespace DeviceStatAdapters
             ex => OnProcessException(MessageLevel.Warning, ex));
 
             m_deviceSyncOperation.Run();
+
+            // Setup optional scheduled database command operation
+            if (string.IsNullOrWhiteSpace(DatabaseCommand))
+                return;
+
+            m_databaseOperation = new ShortSynchronizedOperation(() =>
+            {
+                OnStatusMessage(MessageLevel.Info, $"Executing scheduled database operation \"{DatabaseCommand}\"...");
+
+                using (AdoDataConnection connection = GetDatabaseConnection())
+                {
+                    List<object> parameters = new List<object>();
+
+                    if (!string.IsNullOrWhiteSpace(DatabaseCommandParameters))
+                    {
+                        TemplatedExpressionParser parameterTemplate = new TemplatedExpressionParser
+                        {
+                            TemplatedExpression = DatabaseCommandParameters
+                        };
+
+                        Dictionary<string, string> substitutions = new Dictionary<string, string>
+                        {
+                            ["{Acronym}"] = Name,
+                            ["{Timestamp}"] = RealTime.ToString(TimeTagBase.DefaultFormat)
+                        };
+
+                        string[] commandParameters = parameterTemplate.Execute(substitutions).Split(',');
+
+                        // Do some basic typing on command parameters
+                        foreach (string commandParameter in commandParameters)
+                        {
+                            string parameter = commandParameter.Trim();
+
+                            if (parameter.StartsWith("'") && parameter.EndsWith("'"))
+                                parameters.Add(parameter.Length > 2 ? parameter.Substring(1, parameter.Length - 2) : "");
+                            else if (int.TryParse(parameter, out int ival))
+                                parameters.Add(ival);
+                            else if (double.TryParse(parameter, out double dval))
+                                parameters.Add(dval);
+                            else if (bool.TryParse(parameter, out bool bval))
+                                parameters.Add(bval);
+                            else if (DateTime.TryParseExact(parameter, TimeTagBase.DefaultFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dtval))
+                                parameters.Add(dtval);
+                            else if (DateTime.TryParse(parameter, out dtval))
+                                parameters.Add(dtval);
+                            else
+                                parameters.Add(parameter);
+                        }
+                    }
+
+                    m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommand, parameters.ToArray());
+                    m_totalDatabaseOperations++;
+                }
+            },
+            ex => OnProcessException(MessageLevel.Warning, ex));
+
+            m_scheduleManager = new ScheduleManager();
+            m_scheduleManager.ScheduleDue += ScheduleManager_ScheduleDue;
+            m_scheduleManager.AddSchedule($"{Name}:{nameof(DeviceStats)}DatabaseOperation", DatabaseCommandSchedule);
+            m_scheduleManager.Start();
         }
+
+        private void ScheduleManager_ScheduleDue(object sender, EventArgs<Schedule> e) => 
+            m_databaseOperation?.RunOnceAsync();
 
         /// <summary>
         /// Queues database sync operation for device meta-data.
@@ -272,6 +403,13 @@ namespace DeviceStatAdapters
         [AdapterCommand("Queues database sync operation for device meta-data.", "Administrator", "Editor")]
         public void QueueDeviceSync() =>
             m_deviceSyncOperation?.RunOnceAsync();
+
+        /// <summary>
+        /// Queues database operation for execution. Operation will execute immediately if not already running.
+        /// </summary>
+        [AdapterCommand("Queues database operation for execution. Operation will execute immediately if not already running.", "Administrator", "Editor")]
+        public void QueueDatabaseOperation() =>
+            m_databaseOperation?.RunOnceAsync();
 
         /// <summary>
         /// Gets a short one-line status of this adapter.
