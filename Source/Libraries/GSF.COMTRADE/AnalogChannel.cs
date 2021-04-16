@@ -73,7 +73,6 @@ namespace GSF.COMTRADE
         public const double DefaultAnalogMultipler = 0.04D;
 
         // Fields
-        private readonly int m_version;
         private readonly bool m_targetFloatingPoint;
         private string m_stationName;
         private string m_channelName;
@@ -96,7 +95,7 @@ namespace GSF.COMTRADE
         /// <param name="targetFloatingPoint">Determines if file type is targeting floating point.</param>
         public AnalogChannel(int version = 1999, bool targetFloatingPoint = false)
         {
-            m_version = version;
+            Version = version;
             m_targetFloatingPoint = targetFloatingPoint;
             m_phaseDesignation = char.MinValue;
             m_signalKind = SignalKind.Analog;
@@ -123,7 +122,7 @@ namespace GSF.COMTRADE
             // An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
             string[] parts = lineImage.Split(',');
 
-            m_version = version;
+            Version = version;
             m_targetFloatingPoint = targetFloatingPoint;
 
             if (parts.Length < 10 || (!useRelaxedValidation && parts.Length != 10 && parts.Length != 13))
@@ -194,14 +193,8 @@ namespace GSF.COMTRADE
         /// </summary>
         public string StationName
         {
-            get
-            {
-                return m_stationName;
-            }
-            set
-            {
-                m_stationName = value.Replace(":", "_").Trim();
-            }
+            get => m_stationName;
+            set => m_stationName = value.Replace(":", "_").Trim();
         }
 
         /// <summary>
@@ -209,14 +202,8 @@ namespace GSF.COMTRADE
         /// </summary>
         public string ChannelName
         {
-            get
-            {
-                return m_channelName;
-            }
-            set
-            {
-                m_channelName = value.Replace(":", "_").Trim();
-            }
+            get => m_channelName;
+            set => m_channelName = value.Replace(":", "_").Trim();
         }
 
         /// <summary>
@@ -319,10 +306,7 @@ namespace GSF.COMTRADE
         /// <exception cref="ArgumentException">Value is not a valid phase designation.</exception>
         public string PhaseDesignation
         {
-            get
-            {
-                return m_phaseDesignation.ToString().RemoveNull();
-            }
+            get => m_phaseDesignation.ToString().RemoveNull();
             set
             {
                 value = value.Trim();
@@ -382,10 +366,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public double NominalFrequency
         {
-            get
-            {
-                return m_nominalFrequency;
-            }
+            get => m_nominalFrequency;
             set
             {
                 m_nominalFrequency = value;
@@ -401,10 +382,7 @@ namespace GSF.COMTRADE
         /// <exception cref="ArgumentException">Value is not a valid analog signal kind.</exception>
         public SignalKind SignalKind
         {
-            get
-            {
-                return m_signalKind;
-            }
+            get => m_signalKind;
             set
             {
                 if (s_validAnalogSignalKinds.BinarySearch(value) < 0)
@@ -475,10 +453,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public string CircuitComponent
         {
-            get
-            {
-                return m_circuitComponent;
-            }
+            get => m_circuitComponent;
             set
             {
                 if (!string.IsNullOrWhiteSpace(value))
@@ -496,10 +471,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public string Units
         {
-            get
-            {
-                return m_units;
-            }
+            get => m_units;
             set
             {
                 m_units = string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
@@ -551,10 +523,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public char ScalingIdentifier
         {
-            get
-            {
-                return m_scalingIdentifier;
-            }
+            get => m_scalingIdentifier;
             set
             {
                 value = char.ToUpper(value);
@@ -575,7 +544,7 @@ namespace GSF.COMTRADE
         /// Gets target schema version.
         /// </summary>
         [JsonIgnore]
-        public int Version => m_version;
+        public int Version { get; }
 
         #endregion
 
@@ -602,7 +571,7 @@ namespace GSF.COMTRADE
             };
 
             // ...,primary,secondary,PS
-            if (m_version >= 1999)
+            if (Version >= 1999)
             {
                 values.Add(PrimaryRatio.ToString(CultureInfo.InvariantCulture));
                 values.Add(SecondaryRatio.ToString(CultureInfo.InvariantCulture));
@@ -631,9 +600,7 @@ namespace GSF.COMTRADE
         // Attempt to parse units as an AngleUnit enum value
         private static AngleUnit GetAngleUnit(string units)
         {
-            AngleUnit angleUnit;
-
-            if (!Enum.TryParse(units, true, out angleUnit))
+            if (!Enum.TryParse(units, true, out AngleUnit angleUnit))
             {
                 // Fall back on other common names for angle units
                 if (units.StartsWith("deg", StringComparison.OrdinalIgnoreCase))

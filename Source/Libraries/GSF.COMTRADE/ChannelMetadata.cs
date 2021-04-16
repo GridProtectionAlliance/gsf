@@ -79,12 +79,10 @@ namespace GSF.COMTRADE
         /// <returns>Comparison sort order of metadata record.</returns>
         public int Compare(ChannelMetadata left, ChannelMetadata right)
         {
-            int leftIndex, rightIndex;
-
             // Make sure digitals (status flags first) fall behind analogs. All
             // values not in the dictionary will return 0 thus sorting higher.
-            s_sortOrder.TryGetValue(left.SignalType, out leftIndex);
-            s_sortOrder.TryGetValue(right.SignalType, out rightIndex);
+            s_sortOrder.TryGetValue(left.SignalType, out int leftIndex);
+            s_sortOrder.TryGetValue(right.SignalType, out int rightIndex);
 
             return leftIndex.CompareTo(rightIndex);
         }

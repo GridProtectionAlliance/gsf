@@ -68,20 +68,22 @@ namespace GSF.COMTRADE
                 // Image example: -5h30
                 string[] parts = lineImage.Split('h');
 
-                if (parts.Length == 1)
+                switch (parts.Length)
                 {
-                    validFormat = int.TryParse(lineImage, out hours);
-                }
-                else if (parts.Length == 2)
-                {
-                    validFormat = int.TryParse(parts[0], out hours);
+                    case 1:
+                        validFormat = int.TryParse(lineImage, out hours);
+                        break;
+                    case 2:
+                    {
+                        validFormat = int.TryParse(parts[0], out hours);
 
-                    if (validFormat)
-                        validFormat = int.TryParse(parts[1], out minutes);
-                }
-                else
-                {
-                    validFormat = false;
+                        if (validFormat)
+                            validFormat = int.TryParse(parts[1], out minutes);
+                        break;
+                    }
+                    default:
+                        validFormat = false;
+                        break;
                 }
             }
 
@@ -105,10 +107,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public int Hours
         {
-            get
-            {
-                return m_hours;
-            }
+            get => m_hours;
             set
             {
                 if (Math.Abs(value) > 23)
@@ -123,10 +122,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public int Minutes
         {
-            get
-            {
-                return m_minutes;
-            }
+            get => m_minutes;
             set
             {
                 if (value < 0)
@@ -165,10 +161,8 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Converts <see cref="TimeOffset"/> to its string format.
         /// </summary>
-        public override string ToString()
-        {
-            return NotApplicable ? "x" : $"{Hours}h{Minutes:00}";
-        }
+        public override string ToString() => 
+            NotApplicable ? "x" : $"{Hours}h{Minutes:00}";
 
         #endregion
     }

@@ -37,7 +37,6 @@ namespace GSF.COMTRADE
         #region [ Members ]
 
         // Fields
-        private readonly int m_version;
         private string m_stationName;
         private string m_channelName;
         private string m_phaseID;
@@ -53,7 +52,7 @@ namespace GSF.COMTRADE
         /// <param name="version">Target schema version.</param>
         public DigitalChannel(int version = 1999)
         {
-            m_version = version;
+            Version = version;
         }
 
         /// <summary>
@@ -67,7 +66,7 @@ namespace GSF.COMTRADE
             // Dn,ch_id,ph,ccbm,y
             string[] parts = lineImage.Split(',');
 
-            m_version = version;
+            Version = version;
 
             if (parts.Length < 3 || (!useRelaxedValidation && parts.Length != 3 && parts.Length != 5))
                 throw new InvalidOperationException($"Unexpected number of line image elements for digital channel definition: {parts.Length} - expected 3 or 5{Environment.NewLine}Image = {lineImage}");
@@ -103,13 +102,7 @@ namespace GSF.COMTRADE
         /// <exception cref="FormatException">Name must be formatted as station_name:channel_name.</exception>
         public string Name
         {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(m_stationName))
-                    return m_channelName;
-
-                return $"{m_stationName}:{m_channelName}";
-            }
+            get => string.IsNullOrWhiteSpace(m_stationName) ? m_channelName : $"{m_stationName}:{m_channelName}";
             set
             {
                 string[] parts = value.Split(':');
@@ -132,14 +125,8 @@ namespace GSF.COMTRADE
         /// </summary>
         public string StationName
         {
-            get
-            {
-                return m_stationName;
-            }
-            set
-            {
-                m_stationName = value.Replace(":", "_").Trim();
-            }
+            get => m_stationName;
+            set => m_stationName = value.Replace(":", "_").Trim();
         }
 
         /// <summary>
@@ -147,14 +134,8 @@ namespace GSF.COMTRADE
         /// </summary>
         public string ChannelName
         {
-            get
-            {
-                return m_channelName;
-            }
-            set
-            {
-                m_channelName = value.Replace(":", "_").Trim();
-            }
+            get => m_channelName;
+            set => m_channelName = value.Replace(":", "_").Trim();
         }
 
         /// <summary>
@@ -162,10 +143,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public string PhaseID
         {
-            get
-            {
-                return m_phaseID;
-            }
+            get => m_phaseID;
             set
             {
                 m_phaseID = string.IsNullOrWhiteSpace(value) ? "" : value.Trim();
@@ -182,16 +160,10 @@ namespace GSF.COMTRADE
         /// </summary>
         public string CircuitComponent
         {
-            get
-            {
-                return m_circuitComponent;
-            }
+            get => m_circuitComponent;
             set
             {
-                if (!string.IsNullOrWhiteSpace(value))
-                    m_circuitComponent = value.Trim();
-                else
-                    m_circuitComponent = "";
+                m_circuitComponent = !string.IsNullOrWhiteSpace(value) ? value.Trim() : "";
 
                 if (m_circuitComponent.Length > 64)
                     m_circuitComponent = m_circuitComponent.Substring(0, 64);
@@ -207,7 +179,7 @@ namespace GSF.COMTRADE
         /// Gets target schema version.
         /// </summary>
         [JsonIgnore]
-        public int Version => m_version;
+        public int Version { get; }
 
         #endregion
 
@@ -220,7 +192,7 @@ namespace GSF.COMTRADE
         {
             List<string> values;
 
-            if (m_version >= 1999)
+            if (Version >= 1999)
             {
                 // Dn,ch_id,ph,ccbm,y
                 values = new List<string>

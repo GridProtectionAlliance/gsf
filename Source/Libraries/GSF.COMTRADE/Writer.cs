@@ -156,7 +156,7 @@ namespace GSF.COMTRADE
                 }
             }
 
-            // Add meta data for selected points sorted analogs followed by status flags then digitals
+            // Add meta data for selected points sorted by analogs followed by status flags then digitals
             foreach (ChannelMetadata record in metadata.OrderBy(m => m, ChannelMetadataSorter.Default))
             {
                 if (record.IsDigital)
@@ -482,7 +482,7 @@ namespace GSF.COMTRADE
                         output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
                 }
 
-                output.Write(LittleEndian.GetBytes((ushort)value), 0, 2);
+                output.Write(LittleEndian.GetBytes((ushort)value), 0, 2); // 16-bit binary integer values
             }
 
             // Make sure FRACSEC values are injected
@@ -525,7 +525,7 @@ namespace GSF.COMTRADE
                     value -= schema.AnalogChannels[i].Adder;
                     value /= schema.AnalogChannels[i].Multiplier;
 
-                    output.Write(LittleEndian.GetBytes((uint)value), 0, 4);
+                    output.Write(LittleEndian.GetBytes((uint)value), 0, 4); // 32-bit binary integer values
                 }
                 else
                 {
@@ -582,7 +582,7 @@ namespace GSF.COMTRADE
                     value -= schema.AnalogChannels[i].Adder;
                     value /= schema.AnalogChannels[i].Multiplier;
 
-                    output.Write(LittleEndian.GetBytes((float)value), 0, 4);
+                    output.Write(LittleEndian.GetBytes((float)value), 0, 4); // 32-bit binary float values
                 }
                 else
                 {

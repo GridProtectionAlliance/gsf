@@ -28,6 +28,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -51,6 +52,21 @@ namespace LibraryTester
         {
             // Add references for projects as needed, then add a simple call so that immediate window
             // will have access to assembly. Only a single call per assembly is needed.
+
+            DateTime.TryParseExact("19/12/1972,16:19:05.765", new[]
+            {
+                "d/M/yyyy,H:mm:ss",
+                "d/M/yyyy,H:mm:ss.FFF",
+                "d/M/yyyy,H:mm:ss.FFFFFF",
+                "d/M/yyyy,H:mm:ss.FFFFFFF",
+                "M/d/yyyy,H:mm:ss",
+                "M/d/yyyy,H:mm:ss.FFF",
+                "M/d/yyyy,H:mm:ss.FFFFFF",
+                "M/d/yyyy,H:mm:ss.FFFFFFF"
+            },
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result);
+
+            Debug.WriteLine(result);
 
             DataSet dataSet = new DataSet();
             dataSet.ReadXml(@"..\..\..\TimeSeries Platform Library Samples\FilterExpressionTests\MetadataSample1.xml");

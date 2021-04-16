@@ -56,18 +56,12 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Creates a new instance of the COMTRADE <see cref="Parser"/>.
         /// </summary>
-        public Parser()
-        {
-            InferTimeFromSampleRates = true;
-        }
+        public Parser() { }
 
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="Parser"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~Parser()
-        {
-            Dispose(false);
-        }
+        ~Parser() => Dispose(false);
 
         #endregion
 
@@ -83,15 +77,16 @@ namespace GSF.COMTRADE
         /// </remarks>
         public Schema Schema
         {
-            get
-            {
-                return m_schema;
-            }
+            get => m_schema;
             set
             {
                 m_schema = value;
 
-                if ((object)m_schema != null)
+                if (m_schema is null)
+                {
+                    Values = null;
+                }
+                else
                 {
                     if (m_schema.TotalChannels > 0)
                         Values = new double[m_schema.TotalChannels];
@@ -116,10 +111,6 @@ namespace GSF.COMTRADE
                             FileName = dataFile2;
                     }
                 }
-                else
-                {
-                    Values = null;
-                }
             }
         }
 
@@ -131,7 +122,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets flag that determines if time should be inferred from sample rates.
         /// </summary>
-        public bool InferTimeFromSampleRates { get; set; }
+        public bool InferTimeFromSampleRates { get; set; } = true;
 
         /// <summary>
         /// Gets timestamp of current record.
@@ -150,7 +141,7 @@ namespace GSF.COMTRADE
         {
             get
             {
-                if ((object)m_primaryValues == null)
+                if (m_primaryValues is null)
                 {
                     m_primaryValues = new double[Values.Length];
 
@@ -179,7 +170,7 @@ namespace GSF.COMTRADE
         {
             get
             {
-                if ((object)m_secondaryValues == null)
+                if (m_secondaryValues is null)
                 {
                     m_secondaryValues = new double[Values.Length];
 
@@ -234,19 +225,17 @@ namespace GSF.COMTRADE
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        CloseFiles();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                if (disposing)
+                    CloseFiles();
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
@@ -285,7 +274,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public void CloseFiles()
         {
-            if ((object)m_fileStreams != null)
+            if (!(m_fileStreams is null))
             {
                 foreach (FileStream fileStream in m_fileStreams)
                     fileStream?.Dispose();
@@ -297,13 +286,13 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Reads next COMTRADE record.
         /// </summary>
-        /// <returns><c>true</c> if read succeeded; otherwise <c>false</c> if end of data set was reached.</returns>
+        /// <returns><c>true</c> if read succeeded; otherwise, <c>false</c> if end of data set was reached.</returns>
         public bool ReadNext()
         {
-            if ((object)m_fileStreams == null)
+            if (m_fileStreams is null)
                 throw new InvalidOperationException("COMTRADE data files are not open, cannot read next record.");
 
-            if ((object)m_schema == null)
+            if (m_schema is null)
                 throw new InvalidOperationException("No COMTRADE schema has been defined, cannot read records.");
 
             if (m_streamIndex > m_fileStreams.Length)
@@ -331,7 +320,7 @@ namespace GSF.COMTRADE
         private bool ReadNextAscii()
         {
             // For ASCII files, we wrap file streams with file readers
-            if ((object)m_fileReaders == null)
+            if (m_fileReaders is null)
             {
                 m_fileReaders = new StreamReader[m_fileStreams.Length];
 
@@ -342,10 +331,10 @@ namespace GSF.COMTRADE
             // Read next line of record values
             StreamReader reader = m_fileReaders[m_streamIndex];
             string line = reader.ReadLine();
-            string[] elems = ((object)line != null) ? line.Split(',') : null;
+            string[] elems = line?.Split(',');
 
             // See if we have reached the end of this file
-            if ((object)elems == null || elems.Length != Values.Length + 2)
+            if (elems is null || elems.Length != Values.Length + 2)
             {
                 if (reader.EndOfStream)
                     return ReadNextFile();
@@ -568,6 +557,7 @@ namespace GSF.COMTRADE
 
                 // Distribute each bit of digital word through next 16 digital values
                 for (int j = 0; j < 16 && valueIndex < Values.Length; j++, valueIndex++)
+                    // OPTIMIZE: You could eek out a little more parse speed here
                     Values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
             }
         }

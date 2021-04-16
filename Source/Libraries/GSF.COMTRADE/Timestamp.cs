@@ -54,7 +54,6 @@ namespace GSF.COMTRADE
         {
             string[] parts = lineImage.Split(':');
 
-            double seconds;
             double milliseconds = 0.0D;
 
             if (parts.Length == 4)
@@ -63,15 +62,13 @@ namespace GSF.COMTRADE
                 parts = new[] { parts[0], parts[1], parts[2] };
             }
 
-            double.TryParse(parts[parts.Length - 1], out seconds);
+            double.TryParse(parts[parts.Length - 1], out double seconds);
 
             seconds += milliseconds;
 
             parts[parts.Length - 1] = seconds.ToString("00.000000");
 
             lineImage = string.Join(":", parts).RemoveWhiteSpace();
-
-            DateTime result;
 
             DateTime.TryParseExact(lineImage, new[]
             {
@@ -82,7 +79,7 @@ namespace GSF.COMTRADE
                 "M/d/yyyy,H:mm:ss.fff",
                 "M/d/yyyy,H:mm:ss.ffffff"
             },
-            CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result);
 
             Value = result.Ticks;
         }

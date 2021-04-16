@@ -259,8 +259,7 @@ namespace GSF.COMTRADE
             TriggerTime = new Timestamp(lines[lineNumber++]);
 
             // Parse file type
-            FileType fileType;
-            Enum.TryParse(lines[lineNumber++], true, out fileType);
+            Enum.TryParse(lines[lineNumber++], true, out FileType fileType);
             FileType = fileType;
 
             // Parse analog definitions - we do this after knowing file type to better assign default linear scaling factors
@@ -354,16 +353,13 @@ namespace GSF.COMTRADE
         /// </summary>
         public double NominalFrequency
         {
-            get
-            {
-                return m_nominalFrequency;
-            }
+            get => m_nominalFrequency;
             set
             {
                 m_nominalFrequency = value;
 
                 // Cascade nominal frequency update to analog channels
-                if ((object)AnalogChannels != null)
+                if (!(AnalogChannels is null))
                 {
                     foreach (AnalogChannel analogChannel in AnalogChannels)
                         analogChannel.NominalFrequency = m_nominalFrequency;
@@ -376,17 +372,8 @@ namespace GSF.COMTRADE
         /// </summary>
         public SampleRate[] SampleRates
         {
-            get
-            {
-                return m_sampleRates;
-            }
-            set
-            {
-                if ((object)value == null)
-                    m_sampleRates = new[] { new SampleRate { Rate = 0, EndSample = 1 } };
-                else
-                    m_sampleRates = value;
-            }
+            get => m_sampleRates;
+            set => m_sampleRates = value ?? new[] { new SampleRate { Rate = 0, EndSample = 1 } };
         }
 
         /// <summary>
