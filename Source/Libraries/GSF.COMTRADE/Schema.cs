@@ -30,6 +30,7 @@ using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Text;
+using GSF.IO;
 
 namespace GSF.COMTRADE
 {
@@ -191,16 +192,53 @@ namespace GSF.COMTRADE
 
             // Cache configuration file name used to create schema
             FileName = fileName;
+            IsCombinedFileFormat = HasCFFExtension(FileName);
 
-            string[] lines = File.ReadAllLines(fileName);
-            string[] parts;
+            string[] lines;
+
+            if (IsCombinedFileFormat)
+            {
+                // Read out configuration file section
+                using (StreamReader fileReader = new StreamReader(FileName))
+                {
+                    List<string> fileLines = new List<string>();
+                    bool firstLine = true;
+
+                    do
+                    {
+                        string line = fileReader.ReadLine();
+
+                        if (firstLine)
+                        {
+                            if (!IsFileSectionSeparator(line, out string sectionType) || sectionType != "CFG")
+                                throw new InvalidOperationException($"Unexpected file section separator for configuration file type: expected \"--- file type: CFG ---\"{Environment.NewLine}Image = {line}");
+
+                            firstLine = false;
+                            continue;
+                        }
+
+                        if (line is null || IsFileSectionSeparator(line))
+                            break;
+
+                        fileLines.Add(line);
+                    }
+                    while (true);
+
+                    lines = fileLines.ToArray();
+                }
+            }
+            else
+            {
+                lines = File.ReadAllLines(fileName);
+            }
+
             int lineNumber = 0;
 
             // Parse version line
-            parts = lines[lineNumber++].Split(',');
+            string[] parts = lines[lineNumber++].Split(',');
 
             if (parts.Length < 2 || (!useRelaxedValidation && parts.Length != 2 && parts.Length != 3))
-                throw new InvalidOperationException($"Unexpected number of line image elements for first configuration file line: {parts.Length} - expected 2 or 3{Environment.NewLine}Image = {lines[0]}");
+                throw new InvalidOperationException($"Unexpected number of line image elements for first configuration file line: {parts.Length} - expected 2 or 3{Environment.NewLine}Image = {lines[lineNumber - 1]}");
 
             StationName = parts[0].Trim();
             DeviceID = parts[1].Trim();
@@ -214,14 +252,14 @@ namespace GSF.COMTRADE
             parts = lines[lineNumber++].Split(',');
 
             if (parts.Length < 3 || (!useRelaxedValidation && parts.Length != 3))
-                throw new InvalidOperationException($"Unexpected number of line image elements for second configuration file line: {parts.Length} - expected 3{Environment.NewLine}Image = {lines[1]}");
+                throw new InvalidOperationException($"Unexpected number of line image elements for second configuration file line: {parts.Length} - expected 3{Environment.NewLine}Image = {lines[lineNumber - 1]}");
 
             int totalChannels = int.Parse(parts[0].Trim());
             int totalAnalogChannels = int.Parse(parts[1].Trim().Split('A')[0]);
             int totalDigitalChannels = int.Parse(parts[2].Trim().Split('D')[0]);
 
             if (totalChannels != totalAnalogChannels + totalDigitalChannels)
-                throw new InvalidOperationException($"Total defined channels must equal the sum of the total number of analog and digital channel definitions.{Environment.NewLine}Image = {lines[1]}");
+                throw new InvalidOperationException($"Total defined channels must equal the sum of the total number of analog and digital channel definitions.{Environment.NewLine}Image = {lines[lineNumber - 1]}");
 
             // Cache analog line image definitions - will parse after file type is known
             List<string> analogLineImages = new List<string>();
@@ -307,6 +345,11 @@ namespace GSF.COMTRADE
         /// Gets the file name used to generate this schema when constructed with one; otherwise, <c>null</c>.
         /// </summary>
         public string FileName { get; }
+
+        /// <summary>
+        /// Gets flag that determines if <see cref="FileName"/> is a Combined File Format (.cff) file.
+        /// </summary>
+        public bool IsCombinedFileFormat { get; }
 
         /// <summary>
         /// Gets or sets free-form station name for this <see cref="Schema"/>.
@@ -508,6 +551,44 @@ namespace GSF.COMTRADE
 
                 return fileImage.ToString();
             }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        internal static bool HasCFFExtension(string fileName) =>
+            !(fileName is null) && string.Equals(FilePath.GetExtension(fileName), ".cff", StringComparison.OrdinalIgnoreCase);
+
+        internal static bool IsFileSectionSeparator(string line) =>
+            IsFileSectionSeparator(line, out _, out _);
+
+        internal static bool IsFileSectionSeparator(string line, out string sectionType) =>
+            IsFileSectionSeparator(line, out sectionType, out _);
+
+        internal static bool IsFileSectionSeparator(string line, out string sectionType, out long byteCount)
+        {
+            if (line?.Trim().StartsWith("---") ?? false)
+            {
+                string[] parts = line.Replace("---", "").Trim().Split(':');
+
+                if (parts.Length >= 2 && string.Equals(parts[0].Trim(), "file type", StringComparison.OrdinalIgnoreCase))
+                {
+                    sectionType = parts[1].Trim().ToUpperInvariant();
+
+                    if (parts.Length > 2 && sectionType == "DAT BINARY")
+                        long.TryParse(parts[2].Trim(), out byteCount);
+                    else
+                        byteCount = default;
+
+                    return true;
+                }
+            }
+
+            sectionType = default;
+            byteCount = default;
+            return false;
         }
 
         #endregion
