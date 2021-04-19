@@ -42,21 +42,17 @@ namespace GSF.COMTRADE
 
         // Fields
         private Schema m_schema;
-        private bool m_disposed;
+        private string m_fileName;
         private FileStream[] m_fileStreams;
         private StreamReader[] m_fileReaders;
         private int m_streamIndex;
         private double[] m_primaryValues;
         private double[] m_secondaryValues;
+        private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new instance of the COMTRADE <see cref="Parser"/>.
-        /// </summary>
-        public Parser() { }
 
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="Parser"/> object is reclaimed by <see cref="GC"/>.
@@ -73,7 +69,7 @@ namespace GSF.COMTRADE
         /// <remarks>
         /// Upon assignment, any <see cref="COMTRADE.Schema.FileName"/> value will be used to
         /// initialize the parser's initial <see cref="FileName"/> property when an associated
-        /// data file that ends with either ".dat" or ".d00" is found to exist.
+        /// data file that ends with ".cff", ".dat" or ".d00" is found to exist.
         /// </remarks>
         public Schema Schema
         {
@@ -96,19 +92,30 @@ namespace GSF.COMTRADE
                     if (m_schema.TotalSampleRates == 0)
                         InferTimeFromSampleRates = false;
 
-                    // If no data file name is already defined, attempt to find initial data file with same
-                    // root file name as schema configuration file but with a ".dat" or ".d00" extension:
-                    if (string.IsNullOrWhiteSpace(FileName) && !string.IsNullOrWhiteSpace(m_schema.FileName))
+                    // If no data file name is already defined, assume same file name for ".cff" files, otherwise,
+                    // attempt to find initial data file with same root file name as schema configuration file but
+                    // with a ".dat" or ".d00" extension:
+                    if (string.IsNullOrWhiteSpace(m_fileName) && !string.IsNullOrWhiteSpace(m_schema.FileName))
                     {
-                        string directory = FilePath.GetDirectoryName(m_schema.FileName);
-                        string rootFileName = FilePath.GetFileNameWithoutExtension(m_schema.FileName);
-                        string dataFile1 = Path.Combine(directory, $"{rootFileName}.dat");
-                        string dataFile2 = Path.Combine(directory, $"{rootFileName}.d00");
+                        if (HasCFFExtension(m_schema.FileName))
+                        {
+                            IsCombinedFileFormat = true;
+                            m_fileName = m_schema.FileName;
+                        }
+                        else
+                        {
+                            IsCombinedFileFormat = false;
 
-                        if (File.Exists(dataFile1))
-                            FileName = dataFile1;
-                        else if (File.Exists(dataFile2))
-                            FileName = dataFile2;
+                            string directory = FilePath.GetDirectoryName(m_schema.FileName);
+                            string rootFileName = FilePath.GetFileNameWithoutExtension(m_schema.FileName);
+                            string dataFile1 = Path.Combine(directory, $"{rootFileName}.dat");
+                            string dataFile2 = Path.Combine(directory, $"{rootFileName}.d00");
+
+                            if (File.Exists(dataFile1))
+                                m_fileName = dataFile1;
+                            else if (File.Exists(dataFile2))
+                                m_fileName = dataFile2;
+                        }
                     }
                 }
             }
@@ -117,7 +124,25 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets COMTRADE data filename. If there are more than one data files in a set, this should be set to first file name in the set, e.g., DATA123.D00.
         /// </summary>
-        public string FileName { get; set; }
+        public string FileName
+        {
+            get => m_fileName;
+            set
+            {
+                m_fileName = value;
+                IsCombinedFileFormat = HasCFFExtension(m_fileName);
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if <see cref="FileName"/> is a Combined File Format (.cff) file.
+        /// </summary>
+        public bool IsCombinedFileFormat { get; private set; }
+
+        /// <summary>
+        /// Gets the byte count as parsed from a Combined File Format (.cff) file targeted with binary format.
+        /// </summary>
+        public long BinaryByteCount { get; private set; }
 
         /// <summary>
         /// Gets or sets flag that determines if time should be inferred from sample rates.
@@ -250,15 +275,24 @@ namespace GSF.COMTRADE
             if (!File.Exists(FileName))
                 throw new FileNotFoundException($"Specified COMTRADE data file \"{FileName}\" was not found, cannot open files.");
 
-            // Get all data files in the collection
-            const string FileRegex = @"(?:\.dat|\.d\d\d)$";
-            string directory = FilePath.GetDirectoryName(FileName);
-            string fileNamePattern = $"{FilePath.GetFileNameWithoutExtension(FileName)}.d*";
-            
-            string[] fileNames = FilePath.GetFileList(Path.Combine(directory, fileNamePattern))
-                .Where(fileName => Regex.IsMatch(fileName, FileRegex, RegexOptions.IgnoreCase))
-                .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            string[] fileNames;
+
+            if (IsCombinedFileFormat)
+            {
+                fileNames = new[] { FileName };
+            }
+            else
+            {
+                // Get all data files in the collection
+                const string FileRegex = @"(?:\.dat|\.d\d\d)$";
+                string directory = FilePath.GetDirectoryName(FileName);
+                string fileNamePattern = $"{FilePath.GetFileNameWithoutExtension(FileName)}.d*";
+
+                fileNames = FilePath.GetFileList(Path.Combine(directory, fileNamePattern))
+                    .Where(fileName => Regex.IsMatch(fileName, FileRegex, RegexOptions.IgnoreCase))
+                    .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+            }
 
             // Create a new file stream for each file
             m_fileStreams = new FileStream[fileNames.Length];
@@ -267,6 +301,38 @@ namespace GSF.COMTRADE
                 m_fileStreams[i] = new FileStream(fileNames[i], FileMode.Open, FileAccess.Read, FileShare.Read);
 
             m_streamIndex = 0;
+
+            if (IsCombinedFileFormat)
+            {
+                // Scan ahead to data section (do not dispose stream reader - this would dispose base stream)
+                StreamReader fileReader = new StreamReader(m_fileStreams[0]);
+
+                do
+                {
+                    string line = fileReader.ReadLine();
+
+                    if (line is null || line.StartsWith("--- file type: DAT", StringComparison.OrdinalIgnoreCase))
+                    {
+                        long byteCount = 0;
+
+                        if (line?.Length > 0)
+                        {
+                            // Attempt to parse out binary byte count, if available
+                            string[] parts = line.Split(':');
+
+                            if (parts.Length == 3 && parts[1].ToUpperInvariant().Contains("BINARY"))
+                            {
+                                string byteCountValue = parts[2].Replace("---", "").Trim();
+                                long.TryParse(byteCountValue, out byteCount);
+                            }
+                        }
+
+                        BinaryByteCount = byteCount;
+                        break;
+                    }
+                }
+                while (true);
+            }
         }
 
         /// <summary>
@@ -567,11 +633,17 @@ namespace GSF.COMTRADE
         #region [ Static ]
 
         // Static Methods
-        private static double ReadInt16(byte[] buffer, int startIndex) => LittleEndian.ToInt16(buffer, startIndex);
+        private static double ReadInt16(byte[] buffer, int startIndex) =>
+            LittleEndian.ToInt16(buffer, startIndex);
 
-        private static double ReadInt32(byte[] buffer, int startIndex) => LittleEndian.ToInt32(buffer, startIndex);
+        private static double ReadInt32(byte[] buffer, int startIndex) =>
+            LittleEndian.ToInt32(buffer, startIndex);
 
-        private static double ReadFloat(byte[] buffer, int startIndex) => LittleEndian.ToSingle(buffer, startIndex);
+        private static double ReadFloat(byte[] buffer, int startIndex) =>
+            LittleEndian.ToSingle(buffer, startIndex);
+
+        private static bool HasCFFExtension(string fileName) =>
+            !(fileName is null) && string.Equals(FilePath.GetExtension(fileName), ".cff", StringComparison.OrdinalIgnoreCase);
 
         #endregion
     }
