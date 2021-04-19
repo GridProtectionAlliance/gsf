@@ -97,15 +97,14 @@ namespace GSF.COMTRADE
                     // with a ".dat" or ".d00" extension:
                     if (string.IsNullOrWhiteSpace(m_fileName) && !string.IsNullOrWhiteSpace(m_schema.FileName))
                     {
-                        if (HasCFFExtension(m_schema.FileName))
+                        IsCombinedFileFormat = m_schema.IsCombinedFileFormat;
+
+                        if (IsCombinedFileFormat)
                         {
-                            IsCombinedFileFormat = true;
                             m_fileName = m_schema.FileName;
                         }
                         else
                         {
-                            IsCombinedFileFormat = false;
-
                             string directory = FilePath.GetDirectoryName(m_schema.FileName);
                             string rootFileName = FilePath.GetFileNameWithoutExtension(m_schema.FileName);
                             string dataFile1 = Path.Combine(directory, $"{rootFileName}.dat");
@@ -130,7 +129,7 @@ namespace GSF.COMTRADE
             set
             {
                 m_fileName = value;
-                IsCombinedFileFormat = HasCFFExtension(m_fileName);
+                IsCombinedFileFormat = Schema.HasCFFExtension(m_fileName);
             }
         }
 
@@ -311,22 +310,11 @@ namespace GSF.COMTRADE
                 {
                     string line = fileReader.ReadLine();
 
-                    if (line is null || line.StartsWith("--- file type: DAT", StringComparison.OrdinalIgnoreCase))
+                    if (line is null)
+                        break;
+
+                    if (Schema.IsFileSectionSeparator(line, out string sectionType, out long byteCount) && sectionType.StartsWith("DAT"))
                     {
-                        long byteCount = 0;
-
-                        if (line?.Length > 0)
-                        {
-                            // Attempt to parse out binary byte count, if available
-                            string[] parts = line.Split(':');
-
-                            if (parts.Length == 3 && parts[1].ToUpperInvariant().Contains("BINARY"))
-                            {
-                                string byteCountValue = parts[2].Replace("---", "").Trim();
-                                long.TryParse(byteCountValue, out byteCount);
-                            }
-                        }
-
                         BinaryByteCount = byteCount;
                         break;
                     }
@@ -641,9 +629,6 @@ namespace GSF.COMTRADE
 
         private static double ReadFloat(byte[] buffer, int startIndex) =>
             LittleEndian.ToSingle(buffer, startIndex);
-
-        private static bool HasCFFExtension(string fileName) =>
-            !(fileName is null) && string.Equals(FilePath.GetExtension(fileName), ".cff", StringComparison.OrdinalIgnoreCase);
 
         #endregion
     }
