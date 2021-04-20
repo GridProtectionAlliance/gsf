@@ -465,7 +465,10 @@ namespace GSF.COMTRADE
             }
             else
             {
-                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE BINARY file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+                if (buffer[bytesRead - 1] == 0x1A)
+                    return ReadNextFile();
+
+                throw new InvalidOperationException($"Failed to read enough bytes from COMTRADE BINARY file for a record as defined by schema - possible schema/data file mismatch or file corruption. Failed position = {currentFile.Position:N0}");
             }
 
             return true;
@@ -496,7 +499,10 @@ namespace GSF.COMTRADE
             }
             else
             {
-                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE BINARY32 file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+                if (buffer[bytesRead - 1] == 0x1A)
+                    return ReadNextFile();
+
+                throw new InvalidOperationException($"Failed to read enough bytes from COMTRADE BINARY32 file for a record as defined by schema - possible schema/data file mismatch or file corruption. Failed position = {currentFile.Position:N0}");
             }
 
             return true;
@@ -526,7 +532,10 @@ namespace GSF.COMTRADE
             }
             else
             {
-                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE FLOAT32 file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+                if (buffer[bytesRead - 1] == 0x1A)
+                    return ReadNextFile();
+
+                throw new InvalidOperationException($"Failed to read enough bytes from COMTRADE FLOAT32 file for a record as defined by schema - possible schema/data file mismatch or file corruption. Failed position = {currentFile.Position:N0}");
             }
 
             return true;
