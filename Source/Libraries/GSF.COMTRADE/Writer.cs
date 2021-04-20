@@ -37,6 +37,16 @@ namespace GSF.COMTRADE
     public static class Writer
     {
         /// <summary>
+        /// Defines the maximum file size for this COMTRADE implementation.
+        /// </summary>
+        /// <remarks>
+        /// Value represents 256TB, arbitrarily chosen extreme maximum file size.
+        /// </remarks>
+        public const long MaxFileSize = 281474976710656L;
+
+        private static readonly string MaxByteCountString = new string('0', $"{MaxFileSize}".Length);
+
+        /// <summary>
         /// Creates a new COMTRADE configuration <see cref="Schema"/>.
         /// </summary>
         /// <param name="metadata">Schema <see cref="ChannelMetadata"/> records.</param>
@@ -359,6 +369,115 @@ namespace GSF.COMTRADE
         }
 
         /// <summary>
+        /// Creates a new Combined File Format (.cff) COMTRADE file stream.
+        /// </summary>
+        /// <param name="fileName">Target file name. Must have ".cff" extension.</param>
+        /// <param name="schema">Schema of file stream.</param>
+        /// <param name="infLines">Lines of "INF" section to write to stream, if any.</param>
+        /// <param name="hdrLines">Lines of "HDR" section to write to stream, if any.</param>
+        /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
+        /// <returns>New file stream for Combined File Format (.cff) COMTRADE file, ready to write at data section.</returns>
+        public static FileStream CreateCFFStream(string fileName, Schema schema, string[] infLines = null, string[] hdrLines = null, Encoding encoding = null) => 
+            CreateCFFStream(fileName, schema, infLines, hdrLines, encoding, out _);
+
+        /// <summary>
+        /// Creates a new Combined File Format (.cff) COMTRADE file stream targeted for ASCII.
+        /// </summary>
+        /// <param name="fileName">Target file name. Must have ".cff" extension.</param>
+        /// <param name="schema">Schema of file stream.</param>
+        /// <param name="infLines">Lines of "INF" section to write to stream, if any.</param>
+        /// <param name="hdrLines">Lines of "HDR" section to write to stream, if any.</param>
+        /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
+        /// <returns>New stream writer for Combined File Format (.cff) COMTRADE file, ready to write at data section.</returns>
+        /// <remarks>
+        /// For COMTRADE versions greater than 2001, any use of the term ASCII also inherently implies Unicode UTF-8.
+        /// When then <paramref name="encoding"/> parameter is <c>null</c>, the default, UTF-8 encoding will be used
+        /// for text writes. If ASCII encoding needs to be enforced for backwards compatibility reasons, then the
+        /// <paramref name="encoding"/> parameter will need to be set to <see cref="Encoding.ASCII"/>.
+        /// </remarks>
+        public static StreamWriter CreateCFFStreamAscii(string fileName, Schema schema, string[] infLines = null, string[] hdrLines = null, Encoding encoding = null)
+        {
+            if (schema.FileType != FileType.Ascii)
+                throw new ArgumentException($"Cannot create ASCII file stream using schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
+
+            CreateCFFStream(fileName, schema, infLines, hdrLines, encoding, out StreamWriter writer);
+            return writer;
+        }
+
+        private static FileStream CreateCFFStream(string fileName, Schema schema, string[] infLines, string[] hdrLines, Encoding encoding, out StreamWriter writer)
+        {
+            const string CRLF = "\r\n";
+
+            if (schema is null)
+                throw new ArgumentNullException(nameof(schema));
+
+            if (schema.Version < 2013)
+                throw new ArgumentException("Minimum COMTRADE version for a Combined File Format (.cff) file is 2013", nameof(schema));
+
+            if (fileName is null)
+                throw new ArgumentNullException(nameof(fileName));
+
+            if (!Schema.HasCFFExtension(fileName))
+                throw new ArgumentException("Specified file name is not using standard Combined File Format COMTRADE file extension: \".cff\".", nameof(fileName));
+
+            FileStream stream = File.Create(fileName);
+
+            writer = new StreamWriter(stream, encoding ?? new UTF8Encoding(false)) { NewLine = CRLF };
+
+            writer.WriteLine("--- file type: CFG ---");
+            writer.WriteLine(schema.FileImage);
+
+            writer.WriteLine("--- file type: INF ---");
+            writer.WriteLine(string.Join(CRLF, infLines ?? Array.Empty<string>()));
+
+            writer.WriteLine("--- file type: HDR ---");
+            writer.WriteLine(string.Join(CRLF, hdrLines ?? Array.Empty<string>()));
+
+            // Reserve space for binary byte count
+            writer.WriteLine($"--- file type: DAT {(schema.FileType == FileType.Ascii ? "ASCII" : $"BINARY: {MaxByteCountString}")} ---");
+
+            // Do not dispose writer as this will dispose base stream
+            writer.Flush();
+
+            return stream;
+        }
+
+        /// <summary>
+        /// Updates a Combined File Format (.cff) COMTRADE file stream with a final binary byte count.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="byteCount">Binary byte count.</param>
+        /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
+        public static void UpdateCFFStreamBinaryByteCount(Stream output, long byteCount, Encoding encoding = null)
+        {
+            if (byteCount > MaxFileSize)
+                throw new ArgumentOutOfRangeException(nameof(byteCount), $"Max byte count currently set to 256TB ({MaxFileSize:N0} bytes)");
+
+            output.Position = 0;
+
+            // Scan ahead to data section (do not dispose stream reader - this would dispose base stream)
+            StreamReader fileReader = new StreamReader(output);
+
+            do
+            {
+                long position = output.Position;
+                string line = fileReader.ReadLine();
+
+                if (line is null)
+                    break;
+
+                if (Schema.IsFileSectionSeparator(line, out string sectionType, out _) && sectionType == "DAT BINARY")
+                {
+                    output.Position = position + "--- file type: DAT BINARY: ".Length;
+                    StreamWriter writer = new StreamWriter(output, encoding ?? new UTF8Encoding(false));
+                    writer.Write($"{byteCount} ---".PadRight($"{MaxByteCountString} ---".Length));
+                    break;
+                }
+            }
+            while (true);
+        }
+
+        /// <summary>
         /// Writes next COMTRADE record in ASCII format.
         /// </summary>
         /// <param name="output">Destination stream.</param>
@@ -375,6 +494,9 @@ namespace GSF.COMTRADE
         /// </remarks>
         public static void WriteNextRecordAscii(StreamWriter output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
         {
+            if (schema.FileType != FileType.Ascii)
+                throw new ArgumentException($"Cannot write ASCII record to schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
+
             // Make timestamp relative to beginning of file
             timestamp -= schema.StartTime.Value;
 
@@ -455,6 +577,9 @@ namespace GSF.COMTRADE
         /// </remarks>
         public static void WriteNextRecordBinary(Stream output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
         {
+            if (schema.FileType != FileType.Binary)
+                throw new ArgumentException($"Cannot write BINARY record to schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
+
             // Make timestamp relative to beginning of file
             timestamp -= schema.StartTime.Value;
 
@@ -507,6 +632,9 @@ namespace GSF.COMTRADE
         /// </remarks>
         public static void WriteNextRecordBinary32(Stream output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
         {
+            if (schema.FileType != FileType.Binary32)
+                throw new ArgumentException($"Cannot write BINARY32 record to schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
+
             // Make timestamp relative to beginning of file
             timestamp -= schema.StartTime.Value;
 
@@ -564,6 +692,9 @@ namespace GSF.COMTRADE
         /// </remarks>
         public static void WriteNextRecordFloat32(Stream output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
         {
+            if (schema.FileType != FileType.Float32)
+                throw new ArgumentException($"Cannot write FLOAT32 record to schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
+
             // Make timestamp relative to beginning of file
             timestamp -= schema.StartTime.Value;
 
