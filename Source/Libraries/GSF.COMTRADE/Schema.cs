@@ -524,11 +524,16 @@ namespace GSF.COMTRADE
                 // Write line frequency
                 fileImage.AppendLine(NominalFrequency.ToString(CultureInfo.InvariantCulture));
 
-                // Write total number of sample rates
+                // Write total number of sample rates (zero signifies no fixed sample rates)
                 fileImage.AppendLine(TotalSampleRates.ToString());
 
+                int totalSampleRates = TotalSampleRates;
+
+                if (totalSampleRates == 0)
+                    totalSampleRates = 1;
+
                 // Write sample rates
-                for (int i = 0; i < TotalSampleRates; i++)
+                for (int i = 0; i < totalSampleRates; i++)
                     fileImage.AppendLine(SampleRates[i].ToString());
 
                 // Write timestamps
