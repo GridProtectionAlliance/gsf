@@ -26,6 +26,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using GSF.IO;
 using GSF.Units;
@@ -305,6 +306,8 @@ namespace GSF.COMTRADE
             {
                 // Scan ahead to data section (do not dispose stream reader - this would dispose base stream)
                 StreamReader fileReader = new StreamReader(m_fileStreams[0]);
+                Encoding utf8 = new UTF8Encoding(false);
+                long position = 0;
 
                 do
                 {
@@ -313,9 +316,12 @@ namespace GSF.COMTRADE
                     if (line is null)
                         break;
 
+                    position += utf8.GetBytes(line).Length + 2;
+
                     if (Schema.IsFileSectionSeparator(line, out string sectionType, out long byteCount) && sectionType.StartsWith("DAT"))
                     {
                         BinaryByteCount = byteCount;
+                        m_fileStreams[0].Position = position;
                         break;
                     }
                 }
@@ -414,7 +420,7 @@ namespace GSF.COMTRADE
 
             // Fall back on specified microsecond time
             if (Timestamp == DateTime.MinValue)
-                Timestamp = new DateTime(Ticks.FromMicroseconds(uint.Parse(elems[1]) * m_schema.TimeFactor) + m_schema.StartTime.Value);
+                Timestamp = new DateTime(Ticks.FromMicroseconds(double.Parse(elems[1]) * m_schema.TimeFactor) + m_schema.StartTime.Value);
 
             // Apply timestamp offset to restore UTC timezone
             if (AdjustToUTC)
