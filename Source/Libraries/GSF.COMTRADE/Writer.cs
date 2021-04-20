@@ -457,10 +457,11 @@ namespace GSF.COMTRADE
 
             // Scan ahead to data section (do not dispose stream reader - this would dispose base stream)
             StreamReader fileReader = new StreamReader(output);
+            Encoding utf8 = new UTF8Encoding(false);
+            long position = 0;
 
             do
             {
-                long position = output.Position;
                 string line = fileReader.ReadLine();
 
                 if (line is null)
@@ -469,10 +470,12 @@ namespace GSF.COMTRADE
                 if (Schema.IsFileSectionSeparator(line, out string sectionType, out _) && sectionType == "DAT BINARY")
                 {
                     output.Position = position + "--- file type: DAT BINARY: ".Length;
-                    StreamWriter writer = new StreamWriter(output, encoding ?? new UTF8Encoding(false));
+                    StreamWriter writer = new StreamWriter(output, encoding ?? utf8);
                     writer.Write($"{byteCount} ---".PadRight($"{MaxByteCountString} ---".Length));
                     break;
                 }
+
+                position += utf8.GetBytes(line).Length + 2;
             }
             while (true);
         }
