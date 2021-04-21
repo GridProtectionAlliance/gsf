@@ -2369,11 +2369,8 @@
                                 powerCalculation.CurrentMagSignalID = iphmID;
                                 powerCalculation.Enabled = true;
 
-                                // For direct phase power calculations, do not apply voltage adjustment strategy
-                                if (phase === "A" || phase === "B" || phase === "C")
-                                    powerCalculation.CircuitDescription = circuitDescription + "; AdjustmentStrategy = None";
-                                else
-                                    powerCalculation.CircuitDescription = circuitDescription;
+                                // For all phase power calculations, do not apply any voltage adjustment strategy
+                                powerCalculation.CircuitDescription = circuitDescription + "; AdjustmentStrategy = None";
 
                                 if (powerCalculation.ID === 0) {
                                     return phasorHub.addNewPowerCalculation(powerCalculation).fail(function (error) {
