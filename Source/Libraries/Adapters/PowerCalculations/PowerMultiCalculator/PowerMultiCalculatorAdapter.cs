@@ -136,10 +136,25 @@ namespace PowerCalculations.PowerMultiCalculator
             get
             {
                 StringBuilder status = new StringBuilder();
+                VoltageAdjustmentStrategy[] strategies = m_adjustmentStrategies?.Values.ToArray() ?? Array.Empty<VoltageAdjustmentStrategy>();
 
                 status.Append(base.Status);
 
-                status.AppendLine($"    Per-calculation Adjustments: {m_adjustmentStrategies.Count:N0}");
+                status.AppendLine($"    Default Adjustment Strategy: {AdjustmentStrategy}");
+                status.AppendLine($"  Total Per-Circuit Adjustments: {strategies.Length:N0}");
+
+                if (strategies.Length > 0)
+                {
+                    int strategyCount(params VoltageAdjustmentStrategy[] targetStrategies) =>
+                        strategies.Count(targetStrategies.Contains);
+
+                    status.AppendLine("      -- Totals per Adjustment Strategy --");
+                    status.AppendLine($"             Est. 3-Phase Line-to-Line    : {strategyCount(VoltageAdjustmentStrategy.LineToLine):N0}");
+                    status.AppendLine($"             Est. 3-Phase Line-to-Neutral : {strategyCount(VoltageAdjustmentStrategy.LineToNeutral):N0}");
+                    status.AppendLine($"             1-Phase Line-to-Line         : {strategyCount(VoltageAdjustmentStrategy.LineToLineSinglePhase):N0}");
+                    status.AppendLine($"             1-Phase Line-to-Neutral/None : {strategyCount(VoltageAdjustmentStrategy.LineToNeutralSinglePhase, VoltageAdjustmentStrategy.None):N0}");
+                }
+
                 status.AppendLine($"        Last Total Calculations: {m_lastTotalCalculations}");
                 status.AppendLine($"     Average Total Calculations: {Math.Round(m_averageCalculationsPerFrame.Average):N3} per frame");
                 status.AppendLine($"       Average Calculation Time: {m_averageCalculationTime.Average:N3} ms");
@@ -214,9 +229,9 @@ namespace PowerCalculations.PowerMultiCalculator
                 tableName = DefaultTableName;
 
             string query = "SELECT " +
-                           //            1                   2                     3                   4                     5
+                         // 0          1                    2                     3                   4                     5
                            "ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
-                           //         6                        7                            8
+                         //            6                          7                            8
                            "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID FROM " + tableName + " " +
                            "WHERE NodeId = {0} AND Enabled <> 0 ";
 
@@ -250,26 +265,26 @@ namespace PowerCalculations.PowerMultiCalculator
 
             Dictionary<string, string> settings = Settings;
 
-            if (settings.TryGetValue("AlwaysProduceResult", out string setting))
+            if (settings.TryGetValue(nameof(AlwaysProduceResult), out string setting))
                 AlwaysProduceResult = setting.ParseBoolean();
 
-            if (settings.TryGetValue("AdjustmentStrategy", out setting) && Enum.TryParse(setting, out VoltageAdjustmentStrategy adjustmentStrategy))
+            if (settings.TryGetValue(nameof(AdjustmentStrategy), out setting) && Enum.TryParse(setting, out VoltageAdjustmentStrategy adjustmentStrategy))
                 AdjustmentStrategy = adjustmentStrategy;
 
-            if (settings.TryGetValue("EnableTemporalProcessing", out setting))
+            if (settings.TryGetValue(nameof(EnableTemporalProcessing), out setting))
                 EnableTemporalProcessing = setting.ParseBoolean();
 
             // Define per power calculation line adjustment strategies
             foreach (PowerCalculation powerCalculation in m_configuredCalculations)
             {
-                if (powerCalculation.VoltageMagnitudeMeasurementKey == null || string.IsNullOrWhiteSpace(powerCalculation.CircuitDescription))
+                if (powerCalculation.VoltageMagnitudeMeasurementKey is null || string.IsNullOrWhiteSpace(powerCalculation.CircuitDescription))
                     continue;
 
                 try
                 {
                     Dictionary<string, string> circuitSettings = powerCalculation.CircuitDescription.ParseKeyValuePairs();
 
-                    if (circuitSettings.TryGetValue("AdjustmentStrategy", out setting) && Enum.TryParse(setting, out adjustmentStrategy))
+                    if (circuitSettings.TryGetValue(nameof(AdjustmentStrategy), out setting) && Enum.TryParse(setting, out adjustmentStrategy))
                         m_adjustmentStrategies[powerCalculation.VoltageMagnitudeMeasurementKey] = adjustmentStrategy;
                 }
                 catch (Exception ex)
@@ -290,12 +305,12 @@ namespace PowerCalculations.PowerMultiCalculator
             Ticks totalCalculationTime = DateTime.UtcNow.Ticks;
             Ticks lastCalculationTime = DateTime.UtcNow.Ticks;
             List<IMeasurement> outputMeasurements = new List<IMeasurement>();
-            IMeasurement measurement;
             int calculations = 0;
 
             foreach (PowerCalculation powerCalculation in m_configuredCalculations)
             {
                 double activePower = double.NaN, reactivePower = double.NaN, apparentPower = double.NaN;
+                IMeasurement measurement;
 
                 try
                 {
@@ -314,11 +329,15 @@ namespace PowerCalculations.PowerMultiCalculator
                         switch (adjustmentStrategy)
                         {
                             case VoltageAdjustmentStrategy.LineToNeutral:
-                                voltageMagnitude *= 3;
+                                voltageMagnitude *= 3.0D;
                                 break;
 
                             case VoltageAdjustmentStrategy.LineToLine:
                                 voltageMagnitude *= SqrtOf3;
+                                break;
+
+                            case VoltageAdjustmentStrategy.LineToLineSinglePhase:
+                                voltageMagnitude /= SqrtOf3;
                                 break;
                         }
 
@@ -356,7 +375,7 @@ namespace PowerCalculations.PowerMultiCalculator
                 }
                 finally
                 {
-                    if ((object)powerCalculation.ActivePowerOutputMeasurement != null)
+                    if (!(powerCalculation.ActivePowerOutputMeasurement is null))
                     {
                         Measurement activePowerMeasurement = Measurement.Clone(powerCalculation.ActivePowerOutputMeasurement, activePower, frame.Timestamp);
 
@@ -371,7 +390,7 @@ namespace PowerCalculations.PowerMultiCalculator
                         }
                     }
 
-                    if ((object)powerCalculation.ReactivePowerOutputMeasurement != null)
+                    if (!(powerCalculation.ReactivePowerOutputMeasurement is null))
                     {
                         Measurement reactivePowerMeasurement = Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp);
 
@@ -386,7 +405,7 @@ namespace PowerCalculations.PowerMultiCalculator
                         }
                     }
 
-                    if ((object)powerCalculation.ApparentPowerOutputMeasurement != null)
+                    if (!(powerCalculation.ApparentPowerOutputMeasurement is null))
                     {
                         Measurement apparentPowerMeasurement = Measurement.Clone(powerCalculation.ApparentPowerOutputMeasurement, apparentPower, frame.Timestamp);
 
@@ -414,17 +433,22 @@ namespace PowerCalculations.PowerMultiCalculator
             OnNewMeasurements(outputMeasurements);
         }
 
-        private Measurement AddOutputMeasurement(Guid signalID, HashSet<IMeasurement> outputMeasurements)
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        private static Measurement AddOutputMeasurement(Guid signalID, HashSet<IMeasurement> outputMeasurements)
         {
             Measurement measurement = GetMeasurement(signalID);
 
-            if ((object)measurement != null)
+            if (!(measurement is null))
                 outputMeasurements.Add(measurement);
 
             return measurement;
         }
 
-        private Measurement GetMeasurement(Guid signalID)
+        private static Measurement GetMeasurement(Guid signalID)
         {
             MeasurementKey key = MeasurementKey.LookUpBySignalID(signalID);
 
