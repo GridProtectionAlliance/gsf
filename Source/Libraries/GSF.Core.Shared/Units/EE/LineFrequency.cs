@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 
 namespace GSF.Units.EE
 {
@@ -34,10 +35,12 @@ namespace GSF.Units.EE
         /// <summary>
         /// 50Hz nominal frequency.
         /// </summary>
+        [Description("Selects 50Hz as the nominal system frequency")]
         Hz50 = 50,
         /// <summary>
         /// 60Hz nominal frequency.
         /// </summary>
+        [Description("Selects 60Hz as the nominal system frequency")]
         Hz60 = 60
     }
 }
