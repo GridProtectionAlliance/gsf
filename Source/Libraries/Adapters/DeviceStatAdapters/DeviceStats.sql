@@ -92,6 +92,8 @@ CREATE TABLE [dbo].[Device](
 	[Acronym] [varchar](16) NOT NULL,
 	[ParentAcronym] [varchar](16) NULL,
 	[Protocol] [varchar](32) NULL,
+	[Longitude] [decimal](9, 6) NULL,
+	[Latitude] [decimal](9, 6) NULL,
 	[FramesPerSecond] [int] NOT NULL,
  CONSTRAINT [PK_Device] PRIMARY KEY CLUSTERED 
 (
