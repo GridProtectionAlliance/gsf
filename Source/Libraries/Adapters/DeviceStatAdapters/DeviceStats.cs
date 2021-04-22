@@ -124,6 +124,7 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the command used for database operation, e.g., a stored procedure name or SQL expression like \"INSERT\".")]
+        [DefaultValue("")]
         public string DatabaseCommand { get; set; }
 
         /// <summary>
@@ -131,6 +132,7 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the parameters for the command that includes any desired value substitutions used for database operation. Available substitutions: {Acronym} and {Timestamp}.")]
+        [DefaultValue("")]
         public string DatabaseCommandParameters { get; set; }
 
         /// <summary>
