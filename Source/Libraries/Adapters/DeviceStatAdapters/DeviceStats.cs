@@ -42,7 +42,6 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.IO;
 using GSF.Parsing;
-using GSF.Reflection;
 using GSF.Scheduling;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
 
@@ -101,7 +100,7 @@ namespace DeviceStatAdapters
         }
 
         #endregion
-        
+
         #region [ Properties ]
 
         /// <summary>
@@ -531,7 +530,7 @@ namespace DeviceStatAdapters
         // Static Methods
         private static void RestoreSQLScripts()
         {
-            Assembly executingAssembly = AssemblyInfo.ExecutingAssembly.Assembly;
+            Assembly executingAssembly = typeof(DeviceStats).Assembly;
             string targetPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(""));
 
             // This simple file restoration assumes embedded resources to restore are in root namespace
