@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Reflection;
@@ -95,9 +96,10 @@ namespace GSF
         /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
         /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
         /// <param name="validateReferences">True to validate references of loaded assemblies before attempting to instantiate types; false otherwise.</param>
+        /// <param name="executeStaticConstructors">True to execute static constructors of loaded implementations; false otherwise.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
         [SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom")]
-        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true)
+        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true, bool executeStaticConstructors = false)
         {
             List<Type> types = new List<Type>();
 
@@ -160,6 +162,22 @@ namespace GSF
                     catch (Exception ex)
                     {
                         Logger.SwallowException(ex, $"TypeExtensions.cs LoadImplementations: Failed to load DLL \"{bin}\", may not be a managed assembly.");
+                    }
+                }
+
+                if (executeStaticConstructors)
+                {
+                    // Make sure static constructor is executed for each loaded type
+                    foreach (Type asmType in types)
+                    {
+                        try
+                        {
+                            RuntimeHelpers.RunClassConstructor(asmType.TypeHandle);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.SwallowException(ex, $"TypeExtensions.cs LoadImplementations: Failed to run static constructor for \"{asmType.FullName}\": {ex.Message}");
+                        }
                     }
                 }
             }
