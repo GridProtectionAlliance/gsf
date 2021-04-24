@@ -48,6 +48,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Reflection;
@@ -65,7 +66,7 @@ namespace GSF
         /// </summary>
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type) => 
+        public static List<Type> LoadImplementations(this Type type) =>
             LoadImplementations(type, true);
 
         /// <summary>
@@ -75,7 +76,7 @@ namespace GSF
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, bool excludeAbstractTypes) => 
+        public static List<Type> LoadImplementations(this Type type, bool excludeAbstractTypes) =>
             LoadImplementations(type, string.Empty, excludeAbstractTypes);
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace GSF
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, string binariesDirectory) => 
+        public static List<Type> LoadImplementations(this Type type, string binariesDirectory) =>
             LoadImplementations(type, binariesDirectory, true);
 
         /// <summary>
@@ -167,18 +168,25 @@ namespace GSF
 
                 if (executeStaticConstructors)
                 {
-                    // Make sure static constructor is executed for each loaded type
-                    foreach (Type asmType in types)
+                    ThreadPool.QueueUserWorkItem(state =>
                     {
-                        try
+                        if (state is not Type[] asmTypes)
+                            return;
+
+                        // Make sure static constructor is executed for each loaded type
+                        foreach (Type asmType in asmTypes)
                         {
-                            RuntimeHelpers.RunClassConstructor(asmType.TypeHandle);
+                            try
+                            {
+                                RuntimeHelpers.RunClassConstructor(asmType.TypeHandle);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.SwallowException(ex, $"TypeExtensions.cs LoadImplementations: Failed to run static constructor for \"{asmType.FullName}\": {ex.Message}");
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            Logger.SwallowException(ex, $"TypeExtensions.cs LoadImplementations: Failed to run static constructor for \"{asmType.FullName}\": {ex.Message}");
-                        }
-                    }
+                    },
+                    types.ToArray());
                 }
             }
 
