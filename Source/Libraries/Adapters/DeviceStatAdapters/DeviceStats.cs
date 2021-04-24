@@ -57,6 +57,48 @@ namespace DeviceStatAdapters
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Defines the default value for <see cref="DatabaseConnnectionString"/>.
+        /// </summary>
+        public const string DefaultDatabaseConnnectionString = "";
+
+        /// <summary>
+        /// Defines the default value for <see cref="DatabaseProviderString"/>.
+        /// </summary>
+        public const string DefaultDatabaseProviderString = "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter";
+
+        /// <summary>
+        /// Defines the default value for <see cref="DatabaseCommand"/>.
+        /// </summary>
+        public const string DefaultDatabaseCommand = "";
+
+        /// <summary>
+        /// Defines the default value for <see cref="DatabaseCommandParameters"/>.
+        /// </summary>
+        public const string DefaultDatabaseCommandParameters = "";
+
+        /// <summary>
+        /// Defines the default value for <see cref="DatabaseCommandSchedule"/>.
+        /// </summary>
+        public const string DefaultDatabaseCommandSchedule = "0 0 * * *";
+
+        /// <summary>
+        /// Defines the default value for <see cref="EnableTimeReasonabilityCheck"/>.
+        /// </summary>
+        public const bool DefaultEnableTimeReasonabilityCheck = true;
+
+        /// <summary>
+        /// Defines the default value for <see cref="PastTimeReasonabilityLimit"/>.
+        /// </summary>
+        public const double DefaultPastTimeReasonabilityLimit = 43200.0D;
+
+        /// <summary>
+        /// Defines the default value for <see cref="FutureTimeReasonabilityLimit"/>.
+        /// </summary>
+        public const double DefaultFutureTimeReasonabilityLimit = 43200.0D;
+
         // Nested Types
         private class MinuteCounts
         {
@@ -77,6 +119,8 @@ namespace DeviceStatAdapters
         private readonly ConcurrentDictionary<int, Ticks> m_deviceMinuteTime;
         private readonly ConcurrentDictionary<int, MinuteCounts> m_deviceMinuteCounts;
         private readonly HashSet<int> m_deviceMinuteInitialized;
+        private long m_pastTimeReasonabilityLimit;
+        private long m_futureTimeReasonabilityLimit;
         private long m_measurementTests;
         private long m_databaseWrites;
         private string m_lastDatabaseResult;
@@ -107,7 +151,8 @@ namespace DeviceStatAdapters
         /// Gets or sets the external database connection string used for saving device stats.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines the database connection string used for saving device stats.")]
+        [Description("Defines the database connection string used for saving device stats. Leave empty to use current configured host database connection.")]
+        [DefaultValue(DefaultDatabaseConnnectionString)]
         public string DatabaseConnnectionString { get; set; }
 
         /// <summary>
@@ -115,7 +160,7 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the external database provider string used for saving device stats.")]
-        [DefaultValue("AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter")]
+        [DefaultValue(DefaultDatabaseProviderString)]
         public string DatabaseProviderString { get; set; }
 
         /// <summary>
@@ -123,7 +168,7 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the command used for database operation, e.g., a stored procedure name or SQL expression like \"INSERT\".")]
-        [DefaultValue("")]
+        [DefaultValue(DefaultDatabaseCommand)]
         public string DatabaseCommand { get; set; }
 
         /// <summary>
@@ -131,7 +176,7 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the parameters for the command that includes any desired value substitutions used for database operation. Available substitutions: {Acronym} and {Timestamp}.")]
-        [DefaultValue("")]
+        [DefaultValue(DefaultDatabaseCommandParameters)]
         public string DatabaseCommandParameters { get; set; }
 
         /// <summary>
@@ -139,8 +184,40 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the CRON schedule on which to execute the defined database command. Defaults to once per day.")]
-        [DefaultValue("0 0 * * *")]
+        [DefaultValue(DefaultDatabaseCommandSchedule)]
         public string DatabaseCommandSchedule { get; set; }
+
+        /// <summary>
+        /// Gets or sets flag that indicates if incoming timestamps to the historian should be validated for reasonability.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the flag that indicates if incoming timestamps to the historian should be validated for reasonability.")]
+        [DefaultValue(DefaultEnableTimeReasonabilityCheck)]
+        public bool EnableTimeReasonabilityCheck { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of seconds that a past timestamp, as compared to local clock, will be considered valid.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the maximum number of seconds that a past timestamp, as compared to local clock, will be considered valid.")]
+        [DefaultValue(DefaultPastTimeReasonabilityLimit)]
+        public double PastTimeReasonabilityLimit
+        {
+            get => new Ticks(m_pastTimeReasonabilityLimit).ToSeconds();
+            set => m_pastTimeReasonabilityLimit = Ticks.FromSeconds(Math.Abs(value));
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of seconds that a future timestamp, as compared to local clock, will be considered valid.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the maximum number of seconds that a future timestamp, as compared to local clock, will be considered valid.")]
+        [DefaultValue(DefaultFutureTimeReasonabilityLimit)]
+        public double FutureTimeReasonabilityLimit
+        {
+            get => new Ticks(m_futureTimeReasonabilityLimit).ToSeconds();
+            set => m_futureTimeReasonabilityLimit = Ticks.FromSeconds(Math.Abs(value));
+        }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the adapter expects, if any.
@@ -232,6 +309,14 @@ namespace DeviceStatAdapters
                     
                     if (m_scheduleManager?.Schedules.Count > 0)
                         status.AppendLine(m_scheduleManager.Schedules[0].Status);
+                }
+
+                status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
+
+                if (EnableTimeReasonabilityCheck)
+                {
+                    status.AppendLine($"   Maximum past time limit: {PastTimeReasonabilityLimit:N4}s, i.e., {new Ticks(m_pastTimeReasonabilityLimit).ToElapsedTimeString(4)}");
+                    status.AppendLine($" Maximum future time limit: {FutureTimeReasonabilityLimit:N4}s, i.e., {new Ticks(m_futureTimeReasonabilityLimit).ToElapsedTimeString(4)}");
                 }
 
                 return status.ToString();
@@ -383,8 +468,15 @@ namespace DeviceStatAdapters
                         }
                     }
 
-                    m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommand, parameters.ToArray());
-                    m_totalDatabaseOperations++;
+                    try
+                    {
+                        m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommand, parameters.ToArray());
+                        m_totalDatabaseOperations++;
+                    }
+                    catch (Exception ex)
+                    {
+                        m_lastDatabaseOperationResult = $"ERROR: {ex.Message}";
+                    }
                 }
             },
             ex => OnProcessException(MessageLevel.Warning, ex));
@@ -426,6 +518,15 @@ namespace DeviceStatAdapters
 
             foreach (IMeasurement measurement in measurements)
             {
+                // Validate timestamp reasonability as compared to local clock, when enabled
+                if (EnableTimeReasonabilityCheck)
+                {
+                    long deviation = DateTime.UtcNow.Ticks - measurement.Timestamp.Value;
+
+                    if (deviation < -m_futureTimeReasonabilityLimit || deviation > m_pastTimeReasonabilityLimit)
+                        continue;
+                }
+
                 if (!m_measurementDevice.TryGetValue(measurement.ID, out int deviceID))
                     continue;
 
