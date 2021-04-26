@@ -205,6 +205,11 @@ namespace GSF.TimeSeries.Statistics
             return source is DataPublisher publisher ? publisher.RunTime : GetPropertyValue<Time>(source, "RunTime");
         }
 
+        private static double GetPublisherStatistic_TLSSecuredChannel(object source, string arguments)
+        {
+            return string.Equals(source is DataPublisher publisher ? publisher.SecurityMode.ToString() : GetPropertyValue<object>(source, "SecurityMode").ToString(), "TLS", StringComparison.OrdinalIgnoreCase) ? 1.0D : 0.0D;
+        }
+
         #endregion
 
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
