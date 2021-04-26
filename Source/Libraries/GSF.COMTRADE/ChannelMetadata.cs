@@ -96,16 +96,15 @@ namespace GSF.COMTRADE
 
         static ChannelMetadataSorter()
         {
-            int index = 1;
-
             // Define proper sort order for key signal types. Status flags are types of digital fields, but
             // they are stored as a 32-bit value with an abstracted set of flags (high order) as well as the
             // original flags (low order), since they are greater than 16-bits they are defined in the historian
             // as an analog value. Even so they need to sort as a digital.
             s_sortOrder = new Dictionary<SignalType, int>
             {
-                { SignalType.FLAG, index++ },  // Status Flags
-                { SignalType.DIGI, index }     // Digital Value
+                { SignalType.FLAG, 1 }, // Status Flags
+                { SignalType.DIGI, 2 }, // Digital Value
+                { SignalType.QUAL, 3 }  // Quality Flags
             };
 
             Default = new ChannelMetadataSorter();
