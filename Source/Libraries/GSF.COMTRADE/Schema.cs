@@ -504,28 +504,33 @@ namespace GSF.COMTRADE
             {
                 StringBuilder fileImage = new StringBuilder();
 
+                void appendLine(string line)
+                {
+                    // The standard .NET "Environment.NewLine" constant can just be a line feed on some operating systems,
+                    // but the COMTRADE standard requires that end of line markers be both a carriage return and line feed.
+                    fileImage.Append(line);
+                    fileImage.Append(Writer.CRLF);
+                }
+
                 // Write version line
-                if (Version >= 1999)
-                    fileImage.AppendLine($"{StationName},{DeviceID},{Version}");
-                else
-                    fileImage.AppendLine($"{StationName},{DeviceID}");
+                appendLine($"{StationName},{DeviceID}{(Version >= 1999 ? $",{Version}" : "")}");
 
                 // Write totals line
-                fileImage.AppendLine($"{TotalChannels},{TotalAnalogChannels}A,{TotalDigitalChannels}D");
+                appendLine($"{TotalChannels},{TotalAnalogChannels}A,{TotalDigitalChannels}D");
 
                 // Write analog definitions
                 for (int i = 0; i < TotalAnalogChannels; i++)
-                    fileImage.AppendLine(AnalogChannels[i].ToString());
+                    appendLine(AnalogChannels[i].ToString());
 
                 // Write digital definitions
                 for (int i = 0; i < TotalDigitalChannels; i++)
-                    fileImage.AppendLine(DigitalChannels[i].ToString());
+                    appendLine(DigitalChannels[i].ToString());
 
                 // Write line frequency
-                fileImage.AppendLine(NominalFrequency.ToString(CultureInfo.InvariantCulture));
+                appendLine(NominalFrequency.ToString(CultureInfo.InvariantCulture));
 
                 // Write total number of sample rates (zero signifies no fixed sample rates)
-                fileImage.AppendLine(TotalSampleRates.ToString());
+                appendLine(TotalSampleRates.ToString());
 
                 int totalSampleRates = TotalSampleRates;
 
@@ -534,24 +539,24 @@ namespace GSF.COMTRADE
 
                 // Write sample rates
                 for (int i = 0; i < totalSampleRates; i++)
-                    fileImage.AppendLine(SampleRates[i].ToString());
+                    appendLine(SampleRates[i].ToString());
 
                 // Write timestamps
-                fileImage.AppendLine(StartTime.ToString());
-                fileImage.AppendLine(TriggerTime.ToString());
+                appendLine(StartTime.ToString());
+                appendLine(TriggerTime.ToString());
 
                 // Write file type
-                fileImage.AppendLine(FileType.ToString().ToUpper());
+                appendLine(FileType.ToString().ToUpper());
 
                 // Write time factor
                 if (Version >= 1999)
-                    fileImage.AppendLine(TimeFactor.ToString(CultureInfo.InvariantCulture));
+                    appendLine(TimeFactor.ToString(CultureInfo.InvariantCulture));
 
                 // Write per data set time info and state
                 if (Version >= 2013)
                 {
-                    fileImage.AppendLine($"{TimeCode},{LocalCode}");
-                    fileImage.AppendLine($"{(byte)TimeQualityIndicatorCode:X},{(byte)LeapSecondIndicator}");
+                    appendLine($"{TimeCode},{LocalCode}");
+                    appendLine($"{(byte)TimeQualityIndicatorCode:X},{(byte)LeapSecondIndicator}");
                 }
 
                 return fileImage.ToString();

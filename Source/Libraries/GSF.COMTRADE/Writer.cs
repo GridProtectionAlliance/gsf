@@ -47,6 +47,16 @@ namespace GSF.COMTRADE
         private static readonly string MaxByteCountString = new string('0', $"{MaxFileSize}".Length);
 
         /// <summary>
+        /// Defines a carriage return and line feed constant, i.e., <c>"\r\n"</c>.
+        /// </summary>
+        /// <remarks>
+        /// The standard .NET <see cref="Environment.NewLine"/> constant can just be a line feed, <c>"\n"</c>,
+        /// on some operating systems, e.g., Linux, however the COMTRADE standard requires that end of line
+        /// markers be both a carriage return and line feed, <c>"\r\n"</c>.
+        /// </remarks>
+        public const string CRLF = "\r\n";
+
+        /// <summary>
         /// Creates a new COMTRADE configuration <see cref="Schema"/>.
         /// </summary>
         /// <param name="metadata">Schema <see cref="ChannelMetadata"/> records.</param>
@@ -363,10 +373,8 @@ namespace GSF.COMTRADE
         /// that will be the contents of the configuration file.
         /// </remarks>
         [Obsolete("Switch to constructor overload that specifies a schema version and enumeration value to use for file type - this constructor may be removed from future builds", false)]
-        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
-        {
-            return CreateSchema(metadata, stationName, deviceID, dataStartTime, sampleCount, 1999, isBinary ? FileType.Binary : FileType.Ascii, timeFactor, samplingRate, nominalFrequency, includeFracSecDefinition);
-        }
+        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true) => 
+            CreateSchema(metadata, stationName, deviceID, dataStartTime, sampleCount, 1999, isBinary ? FileType.Binary : FileType.Ascii, timeFactor, samplingRate, nominalFrequency, includeFracSecDefinition);
 
         /// <summary>
         /// Creates a new Combined File Format (.cff) COMTRADE file stream.
@@ -406,8 +414,6 @@ namespace GSF.COMTRADE
 
         private static FileStream CreateCFFStream(string fileName, Schema schema, string[] infLines, string[] hdrLines, Encoding encoding, out StreamWriter writer)
         {
-            const string CRLF = "\r\n";
-
             if (schema is null)
                 throw new ArgumentNullException(nameof(schema));
 
