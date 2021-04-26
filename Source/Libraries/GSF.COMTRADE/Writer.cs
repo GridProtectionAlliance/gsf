@@ -473,6 +473,92 @@ namespace GSF.COMTRADE
         }
 
         /// <summary>
+        /// Updates a Combined File Format (.cff) COMTRADE file stream with a final end sample number.
+        /// </summary>
+        /// <param name="output">Destination stream.</param>
+        /// <param name="endSample">End sample value.</param>
+        /// <param name="rateIndex">Zero-based rate index to update.</param>
+        /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
+        public static void UpdateCFFEndSample(Stream output, long endSample, int rateIndex = 0, Encoding encoding = null)
+        {
+            if (endSample > MaxEndSample)
+                throw new ArgumentOutOfRangeException(nameof(endSample), $"Max end sample for COMTRADE is {MaxEndSample:N0}");
+
+            if (rateIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(rateIndex), "Rate index cannot be a negative value");
+
+            output.Position = 0;
+
+            // Do not dispose stream reader - this would dispose base stream
+            StreamReader fileReader = new StreamReader(output);
+            Encoding utf8 = new UTF8Encoding(false);
+            string lastLine = null;
+            long position = 0;
+
+            string readLine()
+            {
+                if (lastLine?.Length > 0)
+                    position += utf8.GetBytes(lastLine).Length + 2;
+
+                string nextLine = fileReader.ReadLine();
+
+                if (nextLine is null)
+                    throw new InvalidOperationException($"Unexpected end of configuration section");
+
+                return lastLine = nextLine;
+            }
+
+            // Read configuration section separator
+            string line = readLine();
+
+            if (!Schema.IsFileSectionSeparator(line, out string sectionType) || sectionType != "CFG")
+                throw new InvalidOperationException($"Unexpected file section separator for configuration file type: expected \"--- file type: CFG ---\"{Environment.NewLine}Image = {line}");
+
+            // Skip Version line
+            readLine();
+
+            // Parse totals line
+            string[] parts = readLine().Split(',');
+
+            if (parts.Length < 3)
+                throw new InvalidOperationException($"Unexpected number of line image elements for second configuration file line: {parts.Length} - expected 3{Environment.NewLine}Image = {line}");
+
+            int totalAnalogChannels = int.Parse(parts[1].Trim().Split('A')[0]);
+            int totalDigitalChannels = int.Parse(parts[2].Trim().Split('D')[0]);
+
+            // Skip analog definitions
+            for (int i = 0; i < totalAnalogChannels; i++)
+                readLine();
+
+            // Skip digital definitions
+            for (int i = 0; i < totalDigitalChannels; i++)
+                readLine();
+
+            // Skip line frequency
+            readLine();
+
+            // Parse total number of sample rates
+            int totalSampleRates = int.Parse(readLine());
+
+            if (totalSampleRates == 0)
+                totalSampleRates = 1;
+
+            if (rateIndex > totalSampleRates - 1)
+                throw new ArgumentOutOfRangeException(nameof(rateIndex), $"Rate index {rateIndex} exceeds available sampling rates: {totalSampleRates:N0}");
+
+            // Skip to target rate index
+            for (int i = 0; i < rateIndex; i++)
+                readLine();
+
+            // Parse target sample rate
+            line = readLine();
+            SampleRate sampleRate = new SampleRate(line) { EndSample = endSample };
+            output.Position = position;
+            StreamWriter writer = new StreamWriter(output, encoding ?? utf8);
+            writer.Write(sampleRate.ToString().PadRight(line.Length));
+        }
+
+        /// <summary>
         /// Updates a Combined File Format (.cff) COMTRADE file stream with a final binary byte count.
         /// </summary>
         /// <param name="output">Destination stream.</param>
