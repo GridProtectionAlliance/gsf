@@ -47,6 +47,11 @@ namespace GSF.COMTRADE
         private static readonly string MaxByteCountString = new string('0', $"{MaxFileSize}".Length);
 
         /// <summary>
+        /// Defines the maximum COMTRADE end sample number.
+        /// </summary>
+        public const long MaxEndSample = 9999999999L;
+
+        /// <summary>
         /// Defines a carriage return and line feed constant, i.e., <c>"\r\n"</c>.
         /// </summary>
         /// <remarks>
@@ -381,7 +386,7 @@ namespace GSF.COMTRADE
         public static StreamWriter CreateCFFStreamAscii(string fileName, Schema schema, string[] infLines = null, string[] hdrLines = null, Encoding encoding = null)
         {
             if (schema.FileType != FileType.Ascii)
-                throw new ArgumentException($"Cannot create ASCII file stream using schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
+                throw new ArgumentException($"Cannot create ASCII CFF stream using schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
 
             CreateCFFStream(fileName, schema, infLines, hdrLines, encoding, out StreamWriter writer);
             return writer;
@@ -389,12 +394,6 @@ namespace GSF.COMTRADE
 
         private static FileStream CreateCFFStream(string fileName, Schema schema, string[] infLines, string[] hdrLines, Encoding encoding, out StreamWriter writer)
         {
-            if (schema is null)
-                throw new ArgumentNullException(nameof(schema));
-
-            if (schema.Version < 2013)
-                throw new ArgumentException("Minimum COMTRADE version for a Combined File Format (.cff) file is 2013", nameof(schema));
-
             if (fileName is null)
                 throw new ArgumentNullException(nameof(fileName));
 
@@ -402,6 +401,58 @@ namespace GSF.COMTRADE
                 throw new ArgumentException("Specified file name is not using standard Combined File Format COMTRADE file extension: \".cff\".", nameof(fileName));
 
             FileStream stream = File.Create(fileName);
+
+            CreateCFFStream(stream, schema, infLines, hdrLines, encoding, out writer);
+
+            return stream;
+        }
+
+        /// <summary>
+        /// Creates a new Combined File Format (.cff) COMTRADE file stream.
+        /// </summary>
+        /// <param name="stream">Target stream.</param>
+        /// <param name="schema">Schema of file stream.</param>
+        /// <param name="infLines">Lines of "INF" section to write to stream, if any.</param>
+        /// <param name="hdrLines">Lines of "HDR" section to write to stream, if any.</param>
+        /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
+        /// <returns>New file stream for Combined File Format (.cff) COMTRADE file, ready to write at data section.</returns>
+        public static void CreateCFFStream(Stream stream, Schema schema, string[] infLines = null, string[] hdrLines = null, Encoding encoding = null) =>
+            CreateCFFStream(stream, schema, infLines, hdrLines, encoding, out _);
+
+        /// <summary>
+        /// Creates a new Combined File Format (.cff) COMTRADE file stream targeted for ASCII.
+        /// </summary>
+        /// <param name="stream">Target stream.</param>
+        /// <param name="schema">Schema of file stream.</param>
+        /// <param name="infLines">Lines of "INF" section to write to stream, if any.</param>
+        /// <param name="hdrLines">Lines of "HDR" section to write to stream, if any.</param>
+        /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
+        /// <returns>New stream writer for Combined File Format (.cff) COMTRADE file, ready to write at data section.</returns>
+        /// <remarks>
+        /// For COMTRADE versions greater than 2001, any use of the term ASCII also inherently implies Unicode UTF-8.
+        /// When then <paramref name="encoding"/> parameter is <c>null</c>, the default, UTF-8 encoding will be used
+        /// for text writes. If ASCII encoding needs to be enforced for backwards compatibility reasons, then the
+        /// <paramref name="encoding"/> parameter will need to be set to <see cref="Encoding.ASCII"/>.
+        /// </remarks>
+        public static StreamWriter CreateCFFStreamAscii(Stream stream, Schema schema, string[] infLines = null, string[] hdrLines = null, Encoding encoding = null)
+        {
+            if (schema.FileType != FileType.Ascii)
+                throw new ArgumentException($"Cannot create ASCII CFF stream using schema targeted for {schema.FileType.ToString().ToUpperInvariant()}", nameof(schema));
+
+            CreateCFFStream(stream, schema, infLines, hdrLines, encoding, out StreamWriter writer);
+            return writer;
+        }
+
+        private static void CreateCFFStream(Stream stream, Schema schema, string[] infLines, string[] hdrLines, Encoding encoding, out StreamWriter writer)
+        {
+            if (stream is null)
+                throw new ArgumentNullException(nameof(stream));
+
+            if (schema is null)
+                throw new ArgumentNullException(nameof(schema));
+
+            if (schema.Version < 2013)
+                throw new ArgumentException("Minimum COMTRADE version for a Combined File Format (.cff) file is 2013", nameof(schema));
 
             writer = new StreamWriter(stream, encoding ?? new UTF8Encoding(false)) { NewLine = CRLF };
 
@@ -419,8 +470,6 @@ namespace GSF.COMTRADE
 
             // Do not dispose writer as this will dispose base stream
             writer.Flush();
-
-            return stream;
         }
 
         /// <summary>
