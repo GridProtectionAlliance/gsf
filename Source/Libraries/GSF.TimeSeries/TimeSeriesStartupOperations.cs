@@ -342,7 +342,7 @@ namespace GSF.TimeSeries
                                                 "Number of defined measurements from device during last reporting interval."
                                               };
 
-            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency", "Up Time" };
+            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency", "Up Time", "TLS Secured Channel" };
 
             string[] SubscriberStatDescriptions = { "Boolean value representing if the subscriber was continually connected during last reporting interval.",
                                                     "Boolean value representing if the subscriber was authenticated to the publisher during last reporting interval.",
@@ -358,12 +358,13 @@ namespace GSF.TimeSeries
                                                     "Minimum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
                                                     "Maximum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
                                                     "Average latency from output stream, in milliseconds, during the lifetime of the subscriber.",
-                                                    "Total number of seconds subscriber has been running."
+                                                    "Total number of seconds subscriber has been running.",
+                                                    "Boolean value representing if subscriber command channel has transport layer security enabled"
                                                   };
 
-            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };
-            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double" };
-            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s" };
+            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime", "TLSSecuredChannel" };
+            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double", "System.Boolean" };
+            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s", "{0}" };
 
             string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements", "Total Bytes Sent", "Lifetime Measurements", "Lifetime Bytes Sent", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency", "Up Time", "TLS Secured Channel" };
 

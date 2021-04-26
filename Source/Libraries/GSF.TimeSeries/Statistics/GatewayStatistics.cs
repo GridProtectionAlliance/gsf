@@ -127,6 +127,11 @@ namespace GSF.TimeSeries.Statistics
             return source is DataSubscriber subscriber ? subscriber.RunTime : GetPropertyValue<Time>(source, "RunTime");
         }
 
+        private static double GetSubscriberStatistic_TLSSecuredChannel(object source, string arguments)
+        {
+            return string.Equals(source is DataSubscriber subscriber ? subscriber.SecurityMode.ToString() : GetPropertyValue<object>(source, "SecurityMode").ToString(), "TLS", StringComparison.OrdinalIgnoreCase) ? 1.0D : 0.0D;
+        }
+
         #endregion
 
         #region [ Publisher Statistics ]
