@@ -45,7 +45,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Last sample number at sample rate.
         /// </summary>
-        public int EndSample;
+        public long EndSample;
 
         #endregion
 
@@ -65,7 +65,7 @@ namespace GSF.COMTRADE
                 throw new InvalidOperationException($"Unexpected number of line image elements for sample rate definition: {parts.Length} - expected 2{Environment.NewLine}Image = {lineImage}");
 
             Rate = double.Parse(parts[0].Trim());
-            EndSample = int.Parse(parts[1].Trim());
+            EndSample = long.Parse(parts[1].Trim());
         }
 
         #endregion

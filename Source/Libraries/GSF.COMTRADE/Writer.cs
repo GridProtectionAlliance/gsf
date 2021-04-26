@@ -86,7 +86,7 @@ namespace GSF.COMTRADE
         /// will be <c>0.0</c> for all analog values.
         /// </para>
         /// </remarks>
-        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, int version = 1999, FileType fileType = FileType.Binary, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
+        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, long sampleCount, int version = 1999, FileType fileType = FileType.Binary, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
         {
             Schema schema = new Schema
             {
@@ -350,31 +350,6 @@ namespace GSF.COMTRADE
 
             return schema;
         }
-
-        /// <summary>
-        /// Creates a new COMTRADE configuration <see cref="Schema"/>.
-        /// </summary>
-        /// <param name="metadata">Schema <see cref="ChannelMetadata"/> records.</param>
-        /// <param name="stationName">Station name for the schema.</param>
-        /// <param name="deviceID">Device ID for the schema.</param>
-        /// <param name="dataStartTime">Data start time.</param>
-        /// <param name="sampleCount">Total data samples (i.e., total number of rows).</param>
-        /// <param name="isBinary">Determines if data file should be binary or ASCII - defaults to <c>true</c> for binary.</param>
-        /// <param name="timeFactor">Time factor to use in schema - defaults to 1000.</param>
-        /// <param name="samplingRate">Desired sampling rate - defaults to 33.3333Hz.</param>
-        /// <param name="nominalFrequency">Nominal frequency - defaults to 60Hz.</param>
-        /// <param name="includeFracSecDefinition">Determines if the FRACSEC word digital definitions should be included - defaults to <c>true</c>.</param>
-        /// <returns>New COMTRADE configuration <see cref="Schema"/>.</returns>
-        /// <remarks>
-        /// This function is primarily intended to create a configuration based on synchrophasor data
-        /// (see Annex H: Schema for Phasor Data 2150 Using the COMTRADE File Standard in IEEE C37.111-2010),
-        /// it may be necessary to manually create a schema object for other COMTRADE needs. You can call
-        /// the <see cref="Schema.FileImage"/> property to return a string that can be written to a file
-        /// that will be the contents of the configuration file.
-        /// </remarks>
-        [Obsolete("Switch to constructor overload that specifies a schema version and enumeration value to use for file type - this constructor may be removed from future builds", false)]
-        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1.0D, double samplingRate = 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true) => 
-            CreateSchema(metadata, stationName, deviceID, dataStartTime, sampleCount, 1999, isBinary ? FileType.Binary : FileType.Ascii, timeFactor, samplingRate, nominalFrequency, includeFracSecDefinition);
 
         /// <summary>
         /// Creates a new Combined File Format (.cff) COMTRADE file stream.

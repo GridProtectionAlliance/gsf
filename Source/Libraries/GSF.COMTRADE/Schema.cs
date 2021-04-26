@@ -427,7 +427,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets total number of samples, i.e., rows per timestamp, as reported by the sample rates.
         /// </summary>
-        public long TotalSamples => m_sampleRates.Max(sampleRate => (long)sampleRate.EndSample);
+        public long TotalSamples => m_sampleRates.Max(sampleRate => sampleRate.EndSample);
 
         /// <summary>
         /// Gets total number of channels values, i.e., <c>TotalChannels * TotalSamples</c>.
