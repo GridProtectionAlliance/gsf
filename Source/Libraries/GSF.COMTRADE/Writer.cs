@@ -118,7 +118,7 @@ namespace GSF.COMTRADE
 
             List<AnalogChannel> analogChannels = new List<AnalogChannel>();
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
-            bool targetFloatingPoint = fileType == FileType.Float32;
+            bool targetFloatingPoint = fileType == FileType.Ascii || fileType == FileType.Float32;
 
             int analogIndex = 1;
             int digitalIndex = 1;
@@ -481,11 +481,11 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Updates a Combined File Format (.cff) COMTRADE file stream with a final end sample number.
         /// </summary>
-        /// <param name="output">Destination stream.</param>
+        /// <param name="stream">Destination stream.</param>
         /// <param name="endSample">End sample value.</param>
         /// <param name="rateIndex">Zero-based rate index to update.</param>
         /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
-        public static void UpdateCFFEndSample(Stream output, long endSample, int rateIndex = 0, Encoding encoding = null)
+        public static void UpdateCFFEndSample(Stream stream, long endSample, int rateIndex = 0, Encoding encoding = null)
         {
             if (endSample > MaxEndSample)
                 throw new ArgumentOutOfRangeException(nameof(endSample), $"Max end sample for COMTRADE is {MaxEndSample:N0}");
@@ -493,10 +493,10 @@ namespace GSF.COMTRADE
             if (rateIndex < 0)
                 throw new ArgumentOutOfRangeException(nameof(rateIndex), "Rate index cannot be a negative value");
 
-            output.Position = 0;
+            stream.Position = 0;
 
             // Do not dispose stream reader - this would dispose base stream
-            StreamReader fileReader = new StreamReader(output);
+            StreamReader fileReader = new StreamReader(stream);
             Encoding utf8 = new UTF8Encoding(false);
             string lastLine = null;
             long position = 0;
@@ -561,26 +561,26 @@ namespace GSF.COMTRADE
             SampleRate sampleRate = new SampleRate(line) { EndSample = endSample };
 
             // Write updated sample rate
-            output.Position = position;
-            StreamWriter writer = new StreamWriter(output, encoding ?? utf8);
+            stream.Position = position;
+            StreamWriter writer = new StreamWriter(stream, encoding ?? utf8);
             writer.Write(sampleRate.ToString().PadRight(line.Length));
         }
 
         /// <summary>
         /// Updates a Combined File Format (.cff) COMTRADE file stream with a final binary byte count.
         /// </summary>
-        /// <param name="output">Destination stream.</param>
+        /// <param name="stream">Destination stream.</param>
         /// <param name="byteCount">Binary byte count.</param>
         /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
-        public static void UpdateCFFStreamBinaryByteCount(Stream output, long byteCount, Encoding encoding = null)
+        public static void UpdateCFFStreamBinaryByteCount(Stream stream, long byteCount, Encoding encoding = null)
         {
             if (byteCount > MaxFileSize)
                 throw new ArgumentOutOfRangeException(nameof(byteCount), $"Max byte count currently set to 256TB ({MaxFileSize:N0} bytes)");
 
-            output.Position = 0;
+            stream.Position = 0;
 
             // Scan ahead to data section (do not dispose stream reader - this would dispose base stream)
-            StreamReader fileReader = new StreamReader(output);
+            StreamReader fileReader = new StreamReader(stream);
             Encoding utf8 = new UTF8Encoding(false);
             long position = 0;
 
@@ -593,8 +593,8 @@ namespace GSF.COMTRADE
 
                 if (Schema.IsFileSectionSeparator(line, out string sectionType, out _) && sectionType == "DAT BINARY")
                 {
-                    output.Position = position + "--- file type: DAT BINARY: ".Length;
-                    StreamWriter writer = new StreamWriter(output, encoding ?? utf8);
+                    stream.Position = position + "--- file type: DAT BINARY: ".Length;
+                    StreamWriter writer = new StreamWriter(stream, encoding ?? utf8);
                     writer.Write($"{byteCount} ---".PadRight($"{MaxByteCountString} ---".Length));
                     break;
                 }
