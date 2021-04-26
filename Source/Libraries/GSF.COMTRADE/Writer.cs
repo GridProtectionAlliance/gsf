@@ -544,7 +544,7 @@ namespace GSF.COMTRADE
                 totalSampleRates = 1;
 
             if (rateIndex > totalSampleRates - 1)
-                throw new ArgumentOutOfRangeException(nameof(rateIndex), $"Rate index {rateIndex} exceeds available sampling rates: {totalSampleRates:N0}");
+                throw new ArgumentOutOfRangeException(nameof(rateIndex), $"Rate index {rateIndex:N0} exceeds available sampling rates: {totalSampleRates:N0}");
 
             // Skip to target rate index
             for (int i = 0; i < rateIndex; i++)
@@ -553,6 +553,8 @@ namespace GSF.COMTRADE
             // Parse target sample rate
             line = readLine();
             SampleRate sampleRate = new SampleRate(line) { EndSample = endSample };
+
+            // Write updated sample rate
             output.Position = position;
             StreamWriter writer = new StreamWriter(output, encoding ?? utf8);
             writer.Write(sampleRate.ToString().PadRight(line.Length));
