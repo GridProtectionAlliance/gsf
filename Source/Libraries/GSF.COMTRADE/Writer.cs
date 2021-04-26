@@ -186,78 +186,8 @@ namespace GSF.COMTRADE
             {
                 if (record.IsDigital)
                 {
-                    // Every synchrophasor digital is 16-bits
-                    for (int i = 0; i < 16; i++)
-                    {
-                        digitalChannels.Add(new DigitalChannel(schema.Version)
-                        {
-                            Index = digitalIndex++,
-                            Name = record.Name,
-                            PhaseID = "B" + i.ToString("X")
-                        });
-                    }
-                }
-                else
-                {
                     switch (record.SignalType)
                     {
-                        case SignalType.IPHM: // Current Magnitude
-                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
-                            {
-                                Index = analogIndex++,
-                                Name = record.Name,
-                                Units = record.Units ?? "A",
-                                PhaseID = "Pm",
-                                CircuitComponent = record.CircuitComponent,
-                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultCurrentMagnitudeMultiplier
-                            });
-                            break;
-                        case SignalType.VPHM: // Voltage Magnitude
-                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
-                            {
-                                Index = analogIndex++,
-                                Name = record.Name,
-                                Units = record.Units ?? "V",
-                                PhaseID = "Pm",
-                                CircuitComponent = record.CircuitComponent,
-                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultVoltageMagnitudeMultiplier
-                            });
-                            break;
-                        case SignalType.IPHA: // Current Phase Angle
-                        case SignalType.VPHA: // Voltage Phase Angle
-                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
-                            {
-                                Index = analogIndex++,
-                                Name = record.Name,
-                                Units = record.Units ?? "Rads",
-                                PhaseID = "Pa",
-                                CircuitComponent = record.CircuitComponent,
-                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultPhaseAngleMultiplier
-                            });
-                            break;
-                        case SignalType.FREQ: // Frequency
-                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
-                            {
-                                Index = analogIndex++,
-                                Name = record.Name,
-                                Units = record.Units ?? "Hz",
-                                PhaseID = "F",
-                                CircuitComponent = record.CircuitComponent,
-                                Adder = targetFloatingPoint ? 0.0D : nominalFrequency,
-                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultFrequencyMultiplier
-                            });
-                            break;
-                        case SignalType.DFDT: // Frequency Delta (dF/dt)
-                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
-                            {
-                                Index = analogIndex++,
-                                Name = record.Name,
-                                Units = record.Units ?? "Hz/s",
-                                PhaseID = "dF",
-                                CircuitComponent = record.CircuitComponent,
-                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultDfDtMultiplier
-                            });
-                            break;
                         case SignalType.FLAG: // Status flags
                             // Add synchrophasor status flag specific digitals
                             int statusIndex = 0;
@@ -332,6 +262,82 @@ namespace GSF.COMTRADE
                                 Index = digitalIndex++,
                                 Name = record.Name + ":DTVLD",
                                 PhaseID = "S" + statusIndex.ToString("X")
+                            });
+                            break;
+                        default:
+                            // Every synchrophasor digital is 16-bits
+                            for (int i = 0; i < 16; i++)
+                            {
+                                digitalChannels.Add(new DigitalChannel(schema.Version)
+                                {
+                                    Index = digitalIndex++,
+                                    Name = record.Name,
+                                    PhaseID = "B" + i.ToString("X"),
+                                    CircuitComponent = record.CircuitComponent
+                                });
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (record.SignalType)
+                    {
+                        case SignalType.IPHM: // Current Magnitude
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
+                            {
+                                Index = analogIndex++,
+                                Name = record.Name,
+                                Units = record.Units ?? "A",
+                                PhaseID = "Pm",
+                                CircuitComponent = record.CircuitComponent,
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultCurrentMagnitudeMultiplier
+                            });
+                            break;
+                        case SignalType.VPHM: // Voltage Magnitude
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
+                            {
+                                Index = analogIndex++,
+                                Name = record.Name,
+                                Units = record.Units ?? "V",
+                                PhaseID = "Pm",
+                                CircuitComponent = record.CircuitComponent,
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultVoltageMagnitudeMultiplier
+                            });
+                            break;
+                        case SignalType.IPHA: // Current Phase Angle
+                        case SignalType.VPHA: // Voltage Phase Angle
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
+                            {
+                                Index = analogIndex++,
+                                Name = record.Name,
+                                Units = record.Units ?? "Rads",
+                                PhaseID = "Pa",
+                                CircuitComponent = record.CircuitComponent,
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultPhaseAngleMultiplier
+                            });
+                            break;
+                        case SignalType.FREQ: // Frequency
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
+                            {
+                                Index = analogIndex++,
+                                Name = record.Name,
+                                Units = record.Units ?? "Hz",
+                                PhaseID = "F",
+                                CircuitComponent = record.CircuitComponent,
+                                Adder = targetFloatingPoint ? 0.0D : nominalFrequency,
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultFrequencyMultiplier
+                            });
+                            break;
+                        case SignalType.DFDT: // Frequency Delta (dF/dt)
+                            analogChannels.Add(new AnalogChannel(schema.Version, targetFloatingPoint)
+                            {
+                                Index = analogIndex++,
+                                Name = record.Name,
+                                Units = record.Units ?? "Hz/s",
+                                PhaseID = "dF",
+                                CircuitComponent = record.CircuitComponent,
+                                Multiplier = targetFloatingPoint ? 1.0D : AnalogChannel.DefaultDfDtMultiplier
                             });
                             break;
                         default:     // All other signals assumed to be analog values
