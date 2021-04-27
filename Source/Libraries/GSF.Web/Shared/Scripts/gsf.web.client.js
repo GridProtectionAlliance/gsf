@@ -136,7 +136,7 @@ function clearCachedCredentials(securedUrl, successCallback) {
         if (successCallback)
             xhr.onreadystatechange = function() {
                 if (this.readyState === XMLHttpRequest.DONE)
-                    successCallback(this.status === 401 || this.status === 403);
+                    successCallback(this.status === 200, this.responseText);
             };
 
         xhr.send();

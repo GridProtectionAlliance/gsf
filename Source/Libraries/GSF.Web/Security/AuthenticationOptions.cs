@@ -66,6 +66,11 @@ namespace GSF.Web.Security
         public const string DefaultLoginPage = Resources.Root + "/Security/Views/Login.cshtml";
 
         /// <summary>
+        /// Default value for <see cref="LogoutPage"/>.
+        /// </summary>
+        public const string DefaultLogoutPage = "/Security/logout";
+
+        /// <summary>
         /// Default value for <see cref="AuthTestPage"/>.
         /// </summary>
         public const string DefaultAuthTestPage = "/AuthTest";
@@ -158,6 +163,11 @@ namespace GSF.Web.Security
         /// Gets or sets the login page used as a redirect location when authentication fails.
         /// </summary>
         public string LoginPage { get; set; } = DefaultLoginPage;
+
+        /// <summary>
+        /// Gets or sets the path for the logout page.
+        /// </summary>
+        public string LogoutPage { get; set; } = DefaultLogoutPage;
 
         /// <summary>
         /// Gets or sets the page name used to test user authorization.
@@ -358,6 +368,11 @@ namespace GSF.Web.Security
         /// Gets the login page used as a redirect location when authentication fails.
         /// </summary>
         public string LoginPage => m_authenticationOptions.LoginPage;
+
+        /// <summary>
+        /// Gets the path for the logout page.
+        /// </summary>
+        public string LogoutPage => m_authenticationOptions.LogoutPage;
 
         /// <summary>
         /// Gets the page name used to test user authorization.
