@@ -170,17 +170,34 @@ function loginComplete(success, response) {
     }
 }
 
-function logoutComplete(success) {
+function logoutComplete(success, response) {
     $("#workingIcon").hide();
     $("#reloginForm").show();
 
-    if (getBool(getParameterByName("sessionCleared"))) {
+    var sessionClearedParameter = getParameterByName("sessionCleared");
+
+    if (sessionClearedParameter && getBool(sessionClearedParameter)) {
         if (success) {
             $("#response").text("Logout Succeeded");
         }
         else {
             $("#response").text("Partial Logout - Session Only");
             $("#message").text("Client session cache cleared but failed to clear browser cached credentials");
+            $("#responsePanel").show();
+        }
+    }
+    else if (response) {
+        if (success && response === "Logout complete") {
+            $("#response").text("Logout Succeeded");
+        }
+        else if (success) {
+            $("#response").text("Partial Logout - Browser Credentials Only");
+            $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
+            $("#responsePanel").show();
+        }
+        else {
+            $("#response").text("Failed to Logout");
+            $("#message").text("Failed to clear client session cache and failed to clear browser cached credentials");
             $("#responsePanel").show();
         }
     }
@@ -241,8 +258,8 @@ function logout() {
     persistentStorage.removeItem("passthrough");
 
     // Attempt to clear any credentials cached by browser
-    clearCachedCredentials(clearCredentialsPage, function (success) {
-        logoutComplete(success);
+    clearCachedCredentials(logoutPage, function (success, response) {
+        logoutComplete(success, response);
     });
 }
 

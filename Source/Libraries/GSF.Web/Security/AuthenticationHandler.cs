@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
@@ -86,76 +87,83 @@ namespace GSF.Web.Security
         /// <returns>The ticket data provided by the authentication logic</returns>
         protected override Task<AuthenticationTicket> AuthenticateCoreAsync()
         {
-            return Task.Run(() =>
+            SecurityPrincipal securityPrincipal;
+
+            // Track original principal
+            Request.Environment["OriginalPrincipal"] = Request.User;
+            Request.Environment["AuthenticationOptions"] = Options.Readonly;
+
+            // No authentication required for anonymous resources
+            if (Options.IsAnonymousResource(Request.Path.Value))
+                return Task.FromResult<AuthenticationTicket>(null);
+
+            // Attempt to read the session ID from the HTTP cookies
+            Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
+
+            if (Request.Uri.LocalPath == Options.LogoutPage)
             {
-                SecurityPrincipal securityPrincipal;
+                IIdentity logoutIdentity = new GenericIdentity(sessionID.ToString());
+                string[] logoutRoles = { "logout" };
+                Request.User = new GenericPrincipal(logoutIdentity, logoutRoles);
 
-                // Track original principal
-                Request.Environment["OriginalPrincipal"] = Request.User;
-                Request.Environment["AuthenticationOptions"] = Options.Readonly;
+                return Task.FromResult<AuthenticationTicket>(null);
+            }
 
-                // No authentication required for anonymous resources
-                if (Options.IsAnonymousResource(Request.Path.Value))
-                    return null;
+            AuthenticationHeaderValue authorization = AuthorizationHeader;
 
-                // Attempt to read the session ID from the HTTP cookies
-                Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
-                AuthenticationHeaderValue authorization = AuthorizationHeader;
+            // Attempt to retrieve the user's credentials that were cached to the user's session
+            if (TryGetPrincipal(sessionID, out securityPrincipal))
+            {
+                bool useCachedCredentials =
+                    (object)Request.User == null ||
+                    Request.User.Identity.Name.Equals(securityPrincipal.Identity.Name, StringComparison.OrdinalIgnoreCase) ||
+                    authorization?.Scheme != "Basic";
 
-                // Attempt to retrieve the user's credentials that were cached to the user's session
-                if (TryGetPrincipal(sessionID, out securityPrincipal))
+                if (!useCachedCredentials)
                 {
-                    bool useCachedCredentials =
-                        (object)Request.User == null ||
-                        Request.User.Identity.Name.Equals(securityPrincipal.Identity.Name, StringComparison.OrdinalIgnoreCase) ||
-                        authorization?.Scheme != "Basic";
-
-                    if (!useCachedCredentials)
-                    {
-                        // Explicit login attempts as a different user
-                        // cause credentials to be flushed from the session
-                        ClearAuthorizationCache(sessionID);
-                        securityPrincipal = null;
-                    }
+                    // Explicit login attempts as a different user
+                    // cause credentials to be flushed from the session
+                    ClearAuthorizationCache(sessionID);
+                    securityPrincipal = null;
                 }
+            }
 
-                if ((object)authorization == null && (object)securityPrincipal == null)
-                {
-                    // Attempt to authenticate using cached credentials associated with the authentication token cookie
-                    string authenticationToken = SessionHandler.GetAuthenticationTokenFromCookie(Request, Options.AuthenticationToken);
+            if ((object)authorization == null && (object)securityPrincipal == null)
+            {
+                // Attempt to authenticate using cached credentials associated with the authentication token cookie
+                string authenticationToken = SessionHandler.GetAuthenticationTokenFromCookie(Request, Options.AuthenticationToken);
 
-                    securityPrincipal = AuthenticateCachedCredentials(authenticationToken);
+                securityPrincipal = AuthenticateCachedCredentials(authenticationToken);
 
-                    // If authentication using cached credentials fails,
-                    // fall back on the other authentication methods
-                    if (securityPrincipal?.Identity.IsAuthenticated != true)
-                        securityPrincipal = null;
+                // If authentication using cached credentials fails,
+                // fall back on the other authentication methods
+                if (securityPrincipal?.Identity.IsAuthenticated != true)
+                    securityPrincipal = null;
 
-                    // Attempt to cache the security principal to the session
-                    if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                        CachePrincipal(sessionID, securityPrincipal);
-                }
+                // Attempt to cache the security principal to the session
+                if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
+                    CachePrincipal(sessionID, securityPrincipal);
+            }
 
-                if ((object)securityPrincipal == null)
-                {
-                    // Pick the appropriate authentication logic based
-                    // on the authorization type in the HTTP headers
-                    if (authorization?.Scheme == "Basic")
-                        securityPrincipal = AuthenticateBasic(authorization.Parameter);
-                    else
-                        securityPrincipal = AuthenticatePassthrough();
+            if ((object)securityPrincipal == null)
+            {
+                // Pick the appropriate authentication logic based
+                // on the authorization type in the HTTP headers
+                if (authorization?.Scheme == "Basic")
+                    securityPrincipal = AuthenticateBasic(authorization.Parameter);
+                else
+                    securityPrincipal = AuthenticatePassthrough();
 
-                    // Attempt to cache the security principal to the session
-                    if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                        CachePrincipal(sessionID, securityPrincipal);
-                }
+                // Attempt to cache the security principal to the session
+                if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
+                    CachePrincipal(sessionID, securityPrincipal);
+            }
 
-                // Set the principal of the IOwinRequest so that it
-                // can be propagated through the Owin pipeline
-                Request.User = securityPrincipal ?? AnonymousPrincipal;
+            // Set the principal of the IOwinRequest so that it
+            // can be propagated through the Owin pipeline
+            Request.User = securityPrincipal ?? AnonymousPrincipal;
 
-                return (AuthenticationTicket)null;
-            });
+            return Task.FromResult<AuthenticationTicket>(null);
         }
 
         /// <summary>
@@ -169,7 +177,7 @@ namespace GSF.Web.Security
         /// Returning true will cause the common code to begin the async completion journey
         /// without calling the rest of the middle-ware pipeline.
         /// </returns>
-        public override Task<bool> InvokeAsync()
+        public override async Task<bool> InvokeAsync()
         {
             // Use Cases:
             //
@@ -178,64 +186,85 @@ namespace GSF.Web.Security
             //  --- remaining use cases are unauthorized ---
             //  (3) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
             //  (4) Access all other resources - respond with 401 and abort pipeline
-            return Task.Run(() =>
+            SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
+            string urlPath = Request.Path.Value;
+
+            if (!(Request.User is null) && Request.User.IsInRole("logout"))
             {
-                SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
-                string urlPath = Request.Path.Value;
+                string identityName = Request.User.Identity.Name;
 
-                // If request is for an anonymous resource or user is properly authenticated, allow
-                // request to propagate through the Owin pipeline
-                if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
-                    return false; // Let pipeline continue
+                string bodyMessage = Guid.TryParse(identityName, out Guid sessionID) && LogOut(sessionID)
+                    ? "Logout complete"
+                    : "Unable to locate the user session";
 
-                // Abort pipeline with appropriate response
-                if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
+                using TextWriter writer = new StreamWriter(Response.Body, Encoding.UTF8, 4096, true);
+                await writer.WriteAsync(bodyMessage);
+                Response.StatusCode = 200;
+                return true; // Abort pipeline
+            }
+
+            // If request is for an anonymous resource or user is properly authenticated, allow
+            // request to propagate through the Owin pipeline
+            if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
+                return false; // Let pipeline continue
+
+            // Abort pipeline with appropriate response
+            if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
+            {
+                byte[] pathBytes;
+                string base64Path, encodedPath, referrer = null;
+                    
+                if (Request.Headers.TryGetValue("Referer", out string[] values) && values.Length == 1)
                 {
-                    byte[] pathBytes;
-                    string base64Path, encodedPath, referrer = null;
-                    
-                    if (Request.Headers.TryGetValue("Referer", out string[] values) && values.Length == 1)
-                    {
-                        pathBytes = Encoding.UTF8.GetBytes(values[0]);
-                        base64Path = Convert.ToBase64String(pathBytes);
-                        encodedPath = WebUtility.UrlEncode(base64Path);
-                        referrer = $"&referrer={encodedPath}";
-                    }
-
-                    string urlQueryString = Request.QueryString.HasValue ? "?" + Request.QueryString.Value : "";
-                    
-                    pathBytes = Encoding.UTF8.GetBytes(urlPath + urlQueryString);
+                    pathBytes = Encoding.UTF8.GetBytes(values[0]);
                     base64Path = Convert.ToBase64String(pathBytes);
                     encodedPath = WebUtility.UrlEncode(base64Path);
-                    
-                    Response.Redirect($"{Options.LoginPage}?redir={encodedPath}{referrer}");
-                }
-                else
-                {
-                    Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    referrer = $"&referrer={encodedPath}";
                 }
 
-                // Add current identity to unauthorized response header
-                string currentIdentity = securityPrincipal?.Identity.Name ?? "anonymous";
-                object value;
+                string urlQueryString = Request.QueryString.HasValue ? "?" + Request.QueryString.Value : "";
 
-                if (Request.Environment.TryGetValue("OriginalPrincipal", out value))
-                {
-                    IPrincipal originalPrincpal = value as IPrincipal;
+                pathBytes = Encoding.UTF8.GetBytes(urlPath + urlQueryString);
+                base64Path = Convert.ToBase64String(pathBytes);
+                encodedPath = WebUtility.UrlEncode(base64Path);
 
-                    if ((object)originalPrincpal != null && (object)originalPrincpal.Identity != null)
-                        currentIdentity = AdjustedUserName(originalPrincpal.Identity.Name);
-                }
+                Response.Redirect($"{Options.LoginPage}?redir={encodedPath}{referrer}");
+            }
+            else
+            {
+                Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            }
 
-                bool debuggable = Common.GetApplicationType() != ApplicationType.Web && AssemblyInfo.EntryAssembly.Debuggable;
-                Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
-                Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, debuggable);
+            // Add current identity to unauthorized response header
+            string currentIdentity = securityPrincipal?.Identity.Name ?? "anonymous";
+            object value;
 
-                string failureReason = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, true);
-                Log.Publish(MessageLevel.Info, "AuthenticationFailure", $"Failed to authenticate {currentIdentity} for {Request.Path}: {failureReason}");
+            if (Request.Environment.TryGetValue("OriginalPrincipal", out value))
+            {
+                IPrincipal originalPrincpal = value as IPrincipal;
+
+                if ((object)originalPrincpal != null && (object)originalPrincpal.Identity != null)
+                    currentIdentity = AdjustedUserName(originalPrincpal.Identity.Name);
+            }
+
+            bool debuggable = Common.GetApplicationType() != ApplicationType.Web && AssemblyInfo.EntryAssembly.Debuggable;
+            Response.Headers.Add("CurrentIdentity", new[] { currentIdentity });
+            Response.ReasonPhrase = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, debuggable);
+
+            string failureReason = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, true);
+            Log.Publish(MessageLevel.Info, "AuthenticationFailure", $"Failed to authenticate {currentIdentity} for {Request.Path}: {failureReason}");
                 
-                return true; // Abort pipeline
-            });
+            return true; // Abort pipeline
+        }
+
+        private bool LogOut(Guid sessionID)
+        {
+            // Flush any cached information that has been saved for this user
+            if (TryGetPrincipal(sessionID, out SecurityPrincipal securityPrincipal))
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
+
+            // Clear any cached session state for user (this also clears any cached authorizations)
+            return SessionHandler.ClearSessionCache(sessionID);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
