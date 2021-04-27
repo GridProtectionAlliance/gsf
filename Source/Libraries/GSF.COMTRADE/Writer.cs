@@ -421,7 +421,6 @@ namespace GSF.COMTRADE
         /// <param name="infLines">Lines of "INF" section to write to stream, if any.</param>
         /// <param name="hdrLines">Lines of "HDR" section to write to stream, if any.</param>
         /// <param name="encoding">Target encoding; <c>null</c> value will default to UTF-8 (no BOM).</param>
-        /// <returns>New file stream for Combined File Format (.cff) COMTRADE file, ready to write at data section.</returns>
         public static void CreateCFFStream(Stream stream, Schema schema, string[] infLines = null, string[] hdrLines = null, Encoding encoding = null) =>
             CreateCFFStream(stream, schema, infLines, hdrLines, encoding, out _);
 
