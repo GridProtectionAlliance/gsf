@@ -174,7 +174,7 @@ function logoutComplete(success, response) {
     $("#workingIcon").hide();
     $("#reloginForm").show();
 
-    var sessionClearedParameter = getParameterByName("sessionCleared");
+    const sessionClearedParameter = getParameterByName("sessionCleared");
 
     if (sessionClearedParameter && getBool(sessionClearedParameter)) {
         if (success) {
