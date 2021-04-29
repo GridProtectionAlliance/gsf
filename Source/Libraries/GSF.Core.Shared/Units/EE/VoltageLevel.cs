@@ -36,7 +36,7 @@ namespace GSF.Units.EE
         // Note: Not assigning kV level as enum value is intentional so
         // that enum value will fit within a byte. Use extension method
         // "Value()" to get actual voltage level value, e.g.:
-        // (int)VoltageLevel.kV115 == 2 && VoltageLevel.kV115.Value() == 115
+        // (int)VoltageLevel.kV115 == 3 && VoltageLevel.kV115.Value() == 115
 
         /// <summary>
         /// 44 kV.

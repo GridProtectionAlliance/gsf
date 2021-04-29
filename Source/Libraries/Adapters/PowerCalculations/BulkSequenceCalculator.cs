@@ -465,7 +465,7 @@ namespace PowerCalculations
                         break;
                 }
 
-                return $"{adapterDetail.DeviceName} {adapterDetail.PhasorLabel} {phaseKind} Sequence {measurementKind}";
+                return $"{adapterDetail.DeviceAcronym} {adapterDetail.PhasorLabel} {phaseKind} Sequence {measurementKind}";
             }
             set => base.DescriptionTemplate = value;
         }
