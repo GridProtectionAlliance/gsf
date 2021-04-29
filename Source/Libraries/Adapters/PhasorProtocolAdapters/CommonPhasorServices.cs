@@ -206,41 +206,83 @@ namespace PhasorProtocolAdapters
                 try
                 {
                     Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-                    ushort accessID;
+                    List<ushort> accessIDList = new List<ushort>();
+                    int serverCount;
 
-                    // Get accessID from connection string
-                    if (settings.TryGetValue("accessID", out string setting))
-                        accessID = ushort.Parse(setting);
+                    // Parse any defined access ID
+                    if (!settings.TryGetValue("accessID", out string setting) || string.IsNullOrWhiteSpace(setting) || !ushort.TryParse(setting, out ushort defaultAccessID))
+                        defaultAccessID = 1;
+
+                    // Parse any defined access IDs from server list, this assumes TCP connection since this is currently the only connection type that supports multiple end points
+                    if (settings.TryGetValue("server", out setting) && !string.IsNullOrWhiteSpace(setting))
+                    {
+                        List<string> serverList = new List<string>();
+                        
+                        string[] servers = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        foreach (string server in servers)
+                        {
+                            string[] parts = server.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (parts.Length == 0)
+                                continue;
+
+                            if (parts.Length < 2 || !ushort.TryParse(parts[1], out ushort accessID))
+                                accessID = defaultAccessID;
+
+                            serverList.Add(parts[0].Trim());
+                            accessIDList.Add(accessID);
+                        }
+
+                        settings["server"] = string.Join(",", serverList);
+                        connectionString = settings.JoinKeyValuePairs();
+
+                        if (accessIDList.Count == 0)
+                            accessIDList.Add(defaultAccessID);
+
+                        serverCount = serverList.Count;
+                    }
                     else
-                        accessID = 1;
+                    {
+                        accessIDList.Add(defaultAccessID);
+                        serverCount = 1;
+                    }
 
-                    // Most of the parameters in the connection string will be for the data source in the frame parser
-                    // so we provide all of them, other parameters will simply be ignored
-                    m_frameParser.ConnectionString = connectionString;
+                    // Try connection for server in list
+                    for (int i = 0; i < serverCount; i++)
+                    {
+                        // Most of the parameters in the connection string will be for the data source in the frame parser
+                        // so we provide all of them, other parameters will simply be ignored
+                        m_frameParser.ConnectionString = connectionString;
 
-                    // Provide access ID to frame parser as this may be necessary to make a phasor connection
-                    m_frameParser.DeviceID = accessID;
+                        // Provide access ID to frame parser as this may be necessary to make a phasor connection
+                        m_frameParser.DeviceID = accessIDList[m_frameParser.ServerIndex];
 
-                    // Clear any existing configuration frame
-                    m_configurationFrame = null;
+                        // Clear any existing configuration frame
+                        m_configurationFrame = null;
 
-                    // Inform user of temporary loss of command access
-                    OnStatusMessage(MessageLevel.Info, $"\r\n{stars}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{stars}");
+                        // Inform user of temporary loss of command access
+                        OnStatusMessage(MessageLevel.Info, $"\r\n{stars}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{stars}");
 
-                    // Make sure the wait handle is not set
-                    m_configurationWaitHandle.Reset();
+                        // Make sure the wait handle is not set
+                        m_configurationWaitHandle.Reset();
 
-                    // Start the frame parser - this will attempt connection
-                    m_frameParser.Start();
+                        // Start the frame parser - this will attempt connection
+                        m_frameParser.Start();
 
-                    // We wait a maximum of 60 seconds to receive the configuration frame - this delay should be the maximum time ever needed
-                    // to receive a configuration frame. If the device connection is Active or Hybrid then the configuration frame should be
-                    // returned immediately - for purely Passive connections the configuration frame is delivered once per minute.
-                    if (!m_configurationWaitHandle.WaitOne(60000))
-                        OnStatusMessage(MessageLevel.Info, "WARNING: Timed-out waiting to retrieve remote device configuration.");
+                        // We wait a maximum of 60 seconds to receive the configuration frame - this delay should be the maximum time ever needed
+                        // to receive a configuration frame. If the device connection is Active or Hybrid then the configuration frame should be
+                        // returned immediately - for purely Passive connections the configuration frame is delivered once per minute.
+                        if (!m_configurationWaitHandle.WaitOne(60000 / serverCount))
+                            OnStatusMessage(MessageLevel.Info, "WARNING: Timed-out waiting to retrieve remote device configuration.");
 
-                    // Terminate connection to device
-                    m_frameParser.Stop();
+                        // Terminate connection to device
+                        m_frameParser.Stop();
+
+                        // Exit connection test loop if config frame was received
+                        if (!(m_configurationFrame is null))
+                            break;
+                    }
 
                     if (m_configurationFrame is null)
                     {
