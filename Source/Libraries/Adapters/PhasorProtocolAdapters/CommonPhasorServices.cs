@@ -279,8 +279,8 @@ namespace PhasorProtocolAdapters
                         // Terminate connection to device
                         m_frameParser.Stop();
 
-                        // Exit connection test loop if config frame was received
-                        if (!(m_configurationFrame is null))
+                        // Exit connection test loop if config frame was received or cancellation is requested
+                        if (!(m_configurationFrame is null) || m_cancelConfigurationFrameRequest)
                             break;
                     }
 
@@ -288,10 +288,9 @@ namespace PhasorProtocolAdapters
                     {
                         m_configurationFrame = new ConfigurationErrorFrame();
 
-                        if (m_cancelConfigurationFrameRequest)
-                            OnStatusMessage(MessageLevel.Info, "Configuration frame request canceled by user.");
-                        else
-                            OnStatusMessage(MessageLevel.Info, "Failed to retrieve remote device configuration.");
+                        OnStatusMessage(MessageLevel.Info, m_cancelConfigurationFrameRequest ? 
+                            "Configuration frame request canceled by user." : 
+                            "Failed to retrieve remote device configuration.");
                     }
 
                     return m_configurationFrame;
