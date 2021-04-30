@@ -130,6 +130,15 @@ namespace GSF.Web.Hubs
         // Static Methods
 
         /// <summary>
+        /// Attempts to get hub client for SignalR session with specified <paramref name="connectionID"/>.
+        /// </summary>
+        /// <param name="connectionID">SignalR session ID to attempt to find.</param>
+        /// <param name="client">Associated client, if found.</param>
+        /// <returns><c>true</c> if session was found; otherwise, <c>false</c>.</returns>
+        public bool TryGetHubClient(string connectionID, out T client) => 
+            s_hubClients.TryGetValue(connectionID, out client);
+
+        /// <summary>
         /// Disposes any associated <see cref="IHubClient"/> when SignalR session is disconnected.
         /// </summary>
         /// <param name="connectionID">SignalR connection ID.</param>
@@ -138,10 +147,8 @@ namespace GSF.Web.Hubs
         /// </remarks>
         public static void EndSession(string connectionID)
         {
-            T client;
-
             // Dispose of hub client when SignalR session is disconnected
-            if (!string.IsNullOrEmpty(connectionID) && s_hubClients.TryRemove(connectionID, out client))
+            if (!string.IsNullOrEmpty(connectionID) && s_hubClients.TryRemove(connectionID, out T client))
                 client?.Dispose();
         }
 
