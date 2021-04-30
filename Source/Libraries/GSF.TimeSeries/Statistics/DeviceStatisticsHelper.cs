@@ -35,9 +35,6 @@ namespace GSF.TimeSeries.Statistics
         #region [ Members ]
 
         // Fields
-        private readonly T m_device;
-        private int m_expectedMeasurementsPerSecond;
-
         private long m_lastUpdateTicks;
         private int m_measurementsInSecond;
         private int m_errorsInSecond;
@@ -53,7 +50,7 @@ namespace GSF.TimeSeries.Statistics
         /// <param name="device">The device whose statistics are to be calculated using this helper.</param>
         public DeviceStatisticsHelper(T device)
         {
-            m_device = device;
+            Device = device;
             m_lastUpdateTicks = DateTime.UtcNow.Ticks;
         }
 
@@ -64,28 +61,12 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Gets the device whose statistics are being calculated using this helper.
         /// </summary>
-        public T Device
-        {
-            get
-            {
-                return m_device;
-            }
-        }
+        public T Device { get; }
 
         /// <summary>
         /// Gets or sets the number of measurements expected to be received from the device per second.
         /// </summary>
-        public int ExpectedMeasurementsPerSecond
-        {
-            get
-            {
-                return m_expectedMeasurementsPerSecond;
-            }
-            set
-            {
-                m_expectedMeasurementsPerSecond = value;
-            }
-        }
+        public int ExpectedMeasurementsPerSecond { get; set; }
 
         #endregion
 
@@ -99,10 +80,8 @@ namespace GSF.TimeSeries.Statistics
         /// Call this each time measurements have been received by the device in order
         /// to properly track the <see cref="IDevice.MeasurementsReceived"/> statistic.
         /// </remarks>
-        public void AddToMeasurementsReceived(int count)
-        {
+        public void AddToMeasurementsReceived(int count) => 
             Interlocked.Add(ref m_measurementsInSecond, count);
-        }
 
         /// <summary>
         /// Increases the count of the number of measurements received while the device is reporting errors.
@@ -112,10 +91,8 @@ namespace GSF.TimeSeries.Statistics
         /// Call this each time measurements with errors have been received by the device in order
         /// to properly track the <see cref="IDevice.MeasurementsWithError"/> statistic.
         /// </remarks>
-        public void AddToMeasurementsWithError(int count)
-        {
+        public void AddToMeasurementsWithError(int count) => 
             Interlocked.Add(ref m_errorsInSecond, count);
-        }
 
         /// <summary>
         /// Updates the statistics for the number of measurements received and the number
@@ -127,10 +104,8 @@ namespace GSF.TimeSeries.Statistics
         /// <see cref="IDevice.MeasurementsWithError"/>, and
         /// <see cref="IDevice.MeasurementsExpected"/> statistics.
         /// </remarks>
-        public void Update()
-        {
+        public void Update() => 
             Update(DateTime.UtcNow.Ticks);
-        }
 
         /// <summary>
         /// Updates the statistics for the number of measurements received and the number
@@ -149,18 +124,16 @@ namespace GSF.TimeSeries.Statistics
         {
             int measurementsInSecond = Interlocked.Exchange(ref m_measurementsInSecond, 0);
             int errorsInSecond = Interlocked.Exchange(ref m_errorsInSecond, 0);
-            long expectedMeasurementsInSecond;
-            double diff;
 
             if (m_lastUpdateTicks > 0L)
             {
-                diff = (nowTicks - m_lastUpdateTicks) / (double)Ticks.PerSecond;
-                m_expectedMeasurements += diff * m_expectedMeasurementsPerSecond;
-                expectedMeasurementsInSecond = (long)m_expectedMeasurements;
+                double diff = (nowTicks - m_lastUpdateTicks) / (double)Ticks.PerSecond;
+                m_expectedMeasurements += diff * ExpectedMeasurementsPerSecond;
+                long expectedMeasurementsInSecond = (long)m_expectedMeasurements;
 
-                m_device.MeasurementsReceived += measurementsInSecond;
-                m_device.MeasurementsWithError += errorsInSecond;
-                m_device.MeasurementsExpected += expectedMeasurementsInSecond;
+                Device.MeasurementsReceived += measurementsInSecond;
+                Device.MeasurementsWithError += errorsInSecond;
+                Device.MeasurementsExpected += expectedMeasurementsInSecond;
 
                 m_expectedMeasurements -= expectedMeasurementsInSecond;
             }
@@ -181,10 +154,8 @@ namespace GSF.TimeSeries.Statistics
         /// was not being called in order to avoid momentary, unexpectedly
         /// large values to be calculated for measurements expected.
         /// </remarks>
-        public void Reset()
-        {
+        public void Reset() => 
             Reset(DateTime.UtcNow.Ticks);
-        }
 
         /// <summary>
         /// Resets the member variables used to track

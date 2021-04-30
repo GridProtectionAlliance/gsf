@@ -21,128 +21,39 @@
 //
 //******************************************************************************************************
 
+// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedParameter.Local
 namespace GSF.TimeSeries.Statistics
 {
-    class DeviceStatistics
+    internal class DeviceStatistics
     {
-        /// <summary>
-        /// Calculates number of data quality errors reported by device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Data Quality Errors Statistic.</returns>
-        private static double GetDeviceStatistic_DataQualityErrors(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            IDevice device = source as IDevice;
+        // Calculates number of data quality errors reported by device during last reporting interval.
+        private static double GetDeviceStatistic_DataQualityErrors(object source, string _) => 
+            source is IDevice device ? s_statisticValueCache.GetDifference(device, device.DataQualityErrors, nameof(device.DataQualityErrors)) : 0.0D;
 
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.DataQualityErrors, nameof(device.DataQualityErrors));
+        // Calculates number of time quality errors reported by device during last reporting interval.
+        private static double GetDeviceStatistic_TimeQualityErrors(object source, string _) => 
+            source is IDevice device ? s_statisticValueCache.GetDifference(device, device.TimeQualityErrors, nameof(device.TimeQualityErrors)) : 0.0D;
 
-            return statistic;
-        }
+        // Calculates number of device errors reported by device during last reporting interval.
+        private static double GetDeviceStatistic_DeviceErrors(object source, string _) => 
+            source is IDevice device ? s_statisticValueCache.GetDifference(device, device.DeviceErrors, nameof(device.DeviceErrors)) : 0.0D;
 
-        /// <summary>
-        /// Calculates number of time quality errors reported by device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Time Quality Errors Statistic.</returns>
-        private static double GetDeviceStatistic_TimeQualityErrors(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            IDevice device = source as IDevice;
+        // Calculates number of measurements received from device during last reporting interval.
+        private static double GetDeviceStatistic_MeasurementsReceived(object source, string _) => 
+            source is IDevice device ? s_statisticValueCache.GetDifference(device, device.MeasurementsReceived, nameof(device.MeasurementsReceived)) : 0.0D;
 
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.TimeQualityErrors, nameof(device.TimeQualityErrors));
+        // Calculates expected number of measurements received from device during last reporting interval.
+        private static double GetDeviceStatistic_MeasurementsExpected(object source, string _) => 
+            source is IDevice device ? s_statisticValueCache.GetDifference(device, device.MeasurementsExpected, nameof(device.MeasurementsExpected)) : 0.0D;
 
-            return statistic;
-        }
+        // Calculates expected number of measurements received while device was reporting errors during last reporting interval.
+        private static double GetDeviceStatistic_MeasurementsWithError(object source, string _) => 
+            source is IDevice device ? s_statisticValueCache.GetDifference(device, device.MeasurementsWithError, nameof(device.MeasurementsWithError)) : 0.0D;
 
-        /// <summary>
-        /// Calculates number of device errors reported by device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Device Errors Statistic.</returns>
-        private static double GetDeviceStatistic_DeviceErrors(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            IDevice device = source as IDevice;
-
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.DeviceErrors, nameof(device.DeviceErrors));
-
-            return statistic;
-        }
-
-        /// <summary>
-        /// Calculates number of measurements received from device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Measurements Received Statistic.</returns>
-        private static double GetDeviceStatistic_MeasurementsReceived(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            IDevice device = source as IDevice;
-
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsReceived, nameof(device.MeasurementsReceived));
-
-            return statistic;
-        }
-
-        /// <summary>
-        /// Calculates expected number of measurements received from device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Measurements Expected Statistic.</returns>
-        private static double GetDeviceStatistic_MeasurementsExpected(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            IDevice device = source as IDevice;
-
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsExpected, nameof(device.MeasurementsExpected));
-
-            return statistic;
-        }
-
-        /// <summary>
-        /// Calculates expected number of measurements received while device was reporting errors during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Measurements Expected Statistic.</returns>
-        private static double GetDeviceStatistic_MeasurementsWithError(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            IDevice device = source as IDevice;
-
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsWithError, nameof(device.MeasurementsWithError));
-
-            return statistic;
-        }
-
-        /// <summary>
-        /// Calculates number of defined measurements from device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Defined Measurements Statistic.</returns>
-        private static double GetDeviceStatistic_MeasurementsDefined(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            IDevice device = source as IDevice;
-
-            if ((object)device != null)
-                statistic = device.MeasurementsDefined;
-
-            return statistic;
-        }
+        // Calculates number of defined measurements from device during last reporting interval.
+        private static double GetDeviceStatistic_MeasurementsDefined(object source, string _) => 
+            source is IDevice device ? device.MeasurementsDefined : 0.0D;
 
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
     }

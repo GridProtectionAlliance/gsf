@@ -66,12 +66,11 @@ namespace GSF.TimeSeries.Statistics
         /// <returns>Difference from last cached statistic value.</returns>
         public double GetDifference(object source, double statistic, string name)
         {
-            Dictionary<string, StatisticValueState> valueStates;
-            StatisticValueState valueState;
-
             lock (m_statisticValueStates)
             {
-                if (m_statisticValueStates.TryGetValue(source, out valueStates))
+                StatisticValueState valueState;
+
+                if (m_statisticValueStates.TryGetValue(source, out Dictionary<string, StatisticValueState> valueStates))
                 {
                     if (valueStates.TryGetValue(name, out valueState))
                     {
@@ -80,17 +79,14 @@ namespace GSF.TimeSeries.Statistics
                     }
                     else
                     {
-                        valueState = new StatisticValueState(name);
-                        valueState.PreviousState = statistic;
+                        valueState = new StatisticValueState(name) { PreviousState = statistic };
                         valueStates.Add(name, valueState);
                     }
                 }
                 else
                 {
                     valueStates = new Dictionary<string, StatisticValueState>();
-
-                    valueState = new StatisticValueState(name);
-                    valueState.PreviousState = statistic;
+                    valueState = new StatisticValueState(name) { PreviousState = statistic };
                     valueStates.Add(name, valueState);
 
                     m_statisticValueStates.Add(source, valueStates);
@@ -110,9 +106,7 @@ namespace GSF.TimeSeries.Statistics
         private void StatisticSourceDisposed(object sender, EventArgs e)
         {
             lock (m_statisticValueStates)
-            {
                 m_statisticValueStates.Remove(sender);
-            }
         }
 
         #endregion
