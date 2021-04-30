@@ -152,7 +152,9 @@
     <Compile Include="Collections\PagedList.cs" />
     <Compile Include="Data\Schema.cs" />
     <Compile Include="Diagnostics\ChildProcessManager.cs" />
+    <Compile Include="Diagnostics\PerformanceMonitorBase.cs" />
     <Compile Include="Diagnostics\ProcessUtilizationCalculator.cs" />
+    <Compile Include="Diagnostics\SystemPerformanceMonitor.cs" />
     <Compile Include="Diagnostics\ThreadPoolMonitor.cs" />
     <Compile Include="Drawing\Point.cs" />
     <Compile Include="Identity\IUserInfo.cs" />
