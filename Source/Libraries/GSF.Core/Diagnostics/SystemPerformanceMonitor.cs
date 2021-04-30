@@ -46,7 +46,7 @@ namespace GSF.Diagnostics
             : base(samplingInterval)
         {
             AddCounter("Processor", "% Processor Time", "_Total", "CPU Utilization", "Average %", 1.0F);
-            AddCounter("Memory", "Available MBytes", "", "Available Memory", "MB", 1.0F);
+            AddCounter("Memory", "Available MBytes", "", "Available Memory", "GB", 1024.0F);
         }
 
         #endregion
