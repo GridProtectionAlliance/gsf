@@ -161,9 +161,8 @@ namespace GSF.TimeSeries
             string id;
             string sid;
             string accountName;
-            Dictionary<string, string> updateMap;
 
-            updateMap = new Dictionary<string, string>();
+            Dictionary<string, string> updateMap = new Dictionary<string, string>();
 
             // Find user accounts that need to be updated
             using (IDataReader userAccountReader = database.Connection.ExecuteReader(SelectUserAccountQuery))
@@ -231,9 +230,8 @@ namespace GSF.TimeSeries
             if (!string.IsNullOrEmpty(arguments))
             {
                 Dictionary<string, string> kvps = arguments.ParseKeyValuePairs();
-                string value;
 
-                if (kvps.TryGetValue("internalDataPublisherEnabled", out value))
+                if (kvps.TryGetValue("internalDataPublisherEnabled", out string value))
                     internalDataPublisherEnabled = value.ParseBoolean();
 
                 if (kvps.TryGetValue("externalDataPublisherEnabled", out value))
@@ -311,90 +309,279 @@ namespace GSF.TimeSeries
             // Names and descriptions for each of the statistics
 
             // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
-            string[] SystemStatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "IP Data Send Rate", "Average IP Data Send Rate", "IP Data Receive Rate", "Average IP Data Receive Rate", "Up Time" };
+            string[] SystemStatNames =
+            {
+                /* 01 */ "CPU Usage", 
+                /* 02 */ "Average CPU Usage", 
+                /* 03 */ "Memory Usage", 
+                /* 04 */ "Average Memory Usage", 
+                /* 05 */ "Thread Count", 
+                /* 06 */ "Average Thread Count", 
+                /* 07 */ "Threading Contention Rate", 
+                /* 08 */ "Average Threading Contention Rate", 
+                /* 09 */ "IO Usage", 
+                /* 10 */ "Average IO Usage", 
+                /* 11 */ "IP Data Send Rate", 
+                /* 12 */ "Average IP Data Send Rate", 
+                /* 13 */ "IP Data Receive Rate", 
+                /* 14 */ "Average IP Data Receive Rate", 
+                /* 15 */ "Up Time",
+                /* 16 */ "System CPU Usage",
+                /* 17 */ "Average System CPU Usage",
+                /* 18 */ "Available System Memory",
+                /* 19 */ "Average Available System Memory"
+            };
 
-            string[] SystemStatDescriptions = { "Percentage of CPU currently used by this process.",
-                                                "Average percentage of CPU used by this process.",
-                                                "Amount of memory currently used by this process in megabytes.",
-                                                "Average amount of memory used by this process in megabytes.",
-                                                "Number of threads currently used by this process.",
-                                                "Average number of threads used by this process.",
-                                                "Current thread lock contention rate in attempts per second.",
-                                                "Average thread lock contention rate in attempts per second.",
-                                                "Amount of IO currently used by this process in kilobytes per second.",
-                                                "Average amount of IO used by this process in kilobytes per second.",
-                                                "Number of IP datagrams (or bytes on Mono) currently sent by this process per second.",
-                                                "Average number of IP datagrams (or bytes on Mono) sent by this process per second.",
-                                                "Number of IP datagrams (or bytes on Mono) currently received by this process per second.",
-                                                "Average number of IP datagrams (or bytes on Mono) received by this process per second.",
-                                                "Total number of seconds system has been running."
-                                              };
-
-            // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
-            string[] DeviceStatNames = { "Data Quality Errors", "Time Quality Errors", "Device Errors", "Measurements Received", "Measurements Expected", "Measurements With Error", "Measurements Defined" };
-
-            string[] DeviceStatDescriptions = { "Number of data quality errors reported by device during last reporting interval.",
-                                                "Number of time quality errors reported by device during last reporting interval.",
-                                                "Number of device errors reported by device during last reporting interval.",
-                                                "Number of measurements received from device during last reporting interval.",
-                                                "Expected number of measurements received from device during last reporting interval.",
-                                                "Number of measurements received while device was reporting errors during last reporting interval.",
-                                                "Number of defined measurements from device during last reporting interval."
-                                              };
-
-            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency", "Up Time", "TLS Secured Channel" };
-
-            string[] SubscriberStatDescriptions = { "Boolean value representing if the subscriber was continually connected during last reporting interval.",
-                                                    "Boolean value representing if the subscriber was authenticated to the publisher during last reporting interval.",
-                                                    "Number of processed measurements reported by the subscriber during last reporting interval.",
-                                                    "Number of bytes received from subscriber during last reporting interval.",
-                                                    "Number of signals authorized to the subscriber by the publisher.",
-                                                    "Number of signals denied to the subscriber by the publisher.",
-                                                    "Number of processed measurements reported by the subscriber during the lifetime of the subscriber.",
-                                                    "Number of bytes received from subscriber during the lifetime of the subscriber.",
-                                                    "The minimum number of measurements received per second during the last reporting interval.",
-                                                    "The maximum number of measurements received per second during the last reporting interval.",
-                                                    "The average number of measurements received per second during the last reporting interval.",
-                                                    "Minimum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
-                                                    "Maximum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
-                                                    "Average latency from output stream, in milliseconds, during the lifetime of the subscriber.",
-                                                    "Total number of seconds subscriber has been running.",
-                                                    "Boolean value representing if subscriber command channel has transport layer security enabled"
-                                                  };
-
-            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime", "TLSSecuredChannel" };
-            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double", "System.Boolean" };
-            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s", "{0}" };
-
-            string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements", "Total Bytes Sent", "Lifetime Measurements", "Lifetime Bytes Sent", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency", "Up Time", "TLS Secured Channel" };
-
-            string[] PublisherStatDescriptions = { "Boolean value representing if the publisher was continually connected during last reporting interval.",
-                                                   "Number of clients connected to the command channel of the publisher during last reporting interval.",
-                                                   "Number of processed measurements reported by the publisher during last reporting interval.",
-                                                   "Number of bytes sent by the publisher during the last reporting interval.",
-                                                   "Number of processed measurements reported by the publisher during the lifetime of the publisher.",
-                                                   "Number of bytes sent by the publisher during the lifetime of the publisher.",
-                                                   "The minimum number of measurements sent per second during the last reporting interval.",
-                                                   "The maximum number of measurements sent per second during the last reporting interval.",
-                                                   "The average number of measurements sent per second during the last reporting interval.",
-                                                   "Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                   "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                   "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                   "Total number of seconds publisher has been running.",
-                                                   "Boolean value representing if publisher command channel has transport layer security enabled"
-                                                  };
-
-            string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements", "TotalBytesSent", "LifetimeMeasurements", "LifetimeBytesSent", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime", "TLSSecuredChannel" };
-            string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double", "System.Boolean" };
-            string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s", "{0}" };
+            string[] SystemStatDescriptions = 
+            {
+                /* 01 */ "Percentage of CPU currently used by this process.",
+                /* 02 */ "Average percentage of CPU used by this process.",
+                /* 03 */ "Amount of memory currently used by this process in megabytes.",
+                /* 04 */ "Average amount of memory used by this process in megabytes.",
+                /* 05 */ "Number of threads currently used by this process.",
+                /* 06 */ "Average number of threads used by this process.",
+                /* 07 */ "Current thread lock contention rate in attempts per second.",
+                /* 08 */ "Average thread lock contention rate in attempts per second.",
+                /* 09 */ "Amount of IO currently used by this process in kilobytes per second.",
+                /* 10 */ "Average amount of IO used by this process in kilobytes per second.",
+                /* 11 */ "Number of IP datagrams (or bytes on Mono) currently sent by this process per second.",
+                /* 12 */ "Average number of IP datagrams (or bytes on Mono) sent by this process per second.",
+                /* 13 */ "Number of IP datagrams (or bytes on Mono) currently received by this process per second.",
+                /* 14 */ "Average number of IP datagrams (or bytes on Mono) received by this process per second.",
+                /* 15 */ "Total number of seconds system has been running.",
+                /* 16 */ "Percentage of total CPU currently used by the host system.",
+                /* 17 */ "Average percentage of total CPU used by the host system.",
+                /* 18 */ "Amount of memory available on the host system in gigabytes",
+                /* 19 */ "Average amount of memory available on the host system in gigabytes"
+            };
 
             // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
-            string[] ProcessStatNames = { "CPU Usage", "Memory Usage", "Up Time" };
+            string[] DeviceStatNames =
+            { 
+                /* 01 */ "Data Quality Errors", 
+                /* 02 */ "Time Quality Errors", 
+                /* 03 */ "Device Errors", 
+                /* 04 */ "Measurements Received", 
+                /* 05 */ "Measurements Expected", 
+                /* 06 */ "Measurements With Error", 
+                /* 07 */ "Measurements Defined"
+            };
 
-            string[] ProcessStatDescriptions = { "Percentage of CPU currently used by the launched process.",
-                                                "Amount of memory currently used by the launched process in megabytes.",
-                                                "Total number of seconds the launched process has been running."
-                                               };
+            string[] DeviceStatDescriptions =
+            {
+                /* 01 */ "Number of data quality errors reported by device during last reporting interval.",
+                /* 02 */ "Number of time quality errors reported by device during last reporting interval.",
+                /* 03 */ "Number of device errors reported by device during last reporting interval.",
+                /* 04 */ "Number of measurements received from device during last reporting interval.",
+                /* 05 */ "Expected number of measurements received from device during last reporting interval.",
+                /* 06 */ "Number of measurements received while device was reporting errors during last reporting interval.",
+                /* 07 */ "Number of defined measurements from device during last reporting interval."
+            };
+
+            string[] SubscriberStatNames =
+            {
+                /* 01 */ "Subscriber Connected", 
+                /* 02 */ "Subscriber Authenticated", 
+                /* 03 */ "Processed Measurements", 
+                /* 04 */ "Total Bytes Received", 
+                /* 05 */ "Authorized Signal Count", 
+                /* 06 */ "Unauthorized Signal Count", 
+                /* 07 */ "Lifetime Measurements", 
+                /* 08 */ "Lifetime Bytes Received", 
+                /* 09 */ "Minimum Measurements Per Second", 
+                /* 10 */ "Maximum Measurements Per Second", 
+                /* 11 */ "Average Measurements Per Second", 
+                /* 12 */ "Lifetime Minimum Latency", 
+                /* 13 */ "Lifetime Maximum Latency", 
+                /* 14 */ "Lifetime Average Latency", 
+                /* 15 */ "Up Time", 
+                /* 16 */ "TLS Secured Channel"
+            };
+
+            string[] SubscriberStatDescriptions =
+            {
+                /* 01 */ "Boolean value representing if the subscriber was continually connected during last reporting interval.",
+                /* 02 */ "Boolean value representing if the subscriber was authenticated to the publisher during last reporting interval.",
+                /* 03 */ "Number of processed measurements reported by the subscriber during last reporting interval.",
+                /* 04 */ "Number of bytes received from subscriber during last reporting interval.",
+                /* 05 */ "Number of signals authorized to the subscriber by the publisher.",
+                /* 06 */ "Number of signals denied to the subscriber by the publisher.",
+                /* 07 */ "Number of processed measurements reported by the subscriber during the lifetime of the subscriber.",
+                /* 08 */ "Number of bytes received from subscriber during the lifetime of the subscriber.",
+                /* 09 */ "The minimum number of measurements received per second during the last reporting interval.",
+                /* 10 */ "The maximum number of measurements received per second during the last reporting interval.",
+                /* 11 */ "The average number of measurements received per second during the last reporting interval.",
+                /* 12 */ "Minimum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
+                /* 13 */ "Maximum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
+                /* 14 */ "Average latency from output stream, in milliseconds, during the lifetime of the subscriber.",
+                /* 15 */ "Total number of seconds subscriber has been running.",
+                /* 16 */ "Boolean value representing if subscriber command channel has transport layer security enabled"
+            };
+
+            string[] SubscriberStatMethodSuffix =
+            { 
+                /* 01 */ "Connected", 
+                /* 02 */ "Authenticated", 
+                /* 03 */ "ProcessedMeasurements", 
+                /* 04 */ "TotalBytesReceived", 
+                /* 05 */ "AuthorizedCount", 
+                /* 06 */ "UnauthorizedCount", 
+                /* 07 */ "LifetimeMeasurements", 
+                /* 08 */ "LifetimeBytesReceived", 
+                /* 09 */ "MinimumMeasurementsPerSecond", 
+                /* 10 */ "MaximumMeasurementsPerSecond", 
+                /* 11 */ "AverageMeasurementsPerSecond", 
+                /* 12 */ "LifetimeMinimumLatency", 
+                /* 13 */ "LifetimeMaximumLatency", 
+                /* 14 */ "LifetimeAverageLatency", 
+                /* 15 */ "UpTime", 
+                /* 16 */ "TLSSecuredChannel"
+            };
+
+            string[] SubscriberStatTypes =
+            {
+                /* 01 */ "System.Boolean", 
+                /* 02 */ "System.Boolean", 
+                /* 03 */ "System.Int32", 
+                /* 04 */ "System.Int32", 
+                /* 05 */ "System.Int32", 
+                /* 06 */ "System.Int32", 
+                /* 07 */ "System.Int64", 
+                /* 08 */ "System.Int64", 
+                /* 09 */ "System.Int32", 
+                /* 10 */ "System.Int32", 
+                /* 11 */ "System.Int32", 
+                /* 12 */ "System.Int32", 
+                /* 13 */ "System.Int32", 
+                /* 14 */ "System.Int32", 
+                /* 15 */ "System.Double", 
+                /* 16 */ "System.Boolean"
+            };
+            
+            string[] SubscriberStatFormats =
+            {
+                /* 01 */ "{0}",
+                /* 02 */ "{0}", 
+                /* 03 */ "{0:N0}", 
+                /* 04 */ "{0:N0}", 
+                /* 05 */ "{0:N0}", 
+                /* 06 */ "{0:N0}", 
+                /* 07 */ "{0:N0}", 
+                /* 08 */ "{0:N0}", 
+                /* 09 */ "{0:N0}", 
+                /* 10 */ "{0:N0}", 
+                /* 11 */ "{0:N0}", 
+                /* 12 */ "{0:N0} ms", 
+                /* 13 */ "{0:N0} ms", 
+                /* 14 */ "{0:N0} ms", 
+                /* 15 */ "{0:N3} s", 
+                /* 16 */ "{0}"
+            };
+
+            string[] PublisherStatNames =
+            { 
+                /* 01 */ "Publisher Connected", 
+                /* 02 */ "Connected Clients", 
+                /* 03 */ "Processed Measurements", 
+                /* 04 */ "Total Bytes Sent", 
+                /* 05 */ "Lifetime Measurements", 
+                /* 06 */ "Lifetime Bytes Sent", 
+                /* 07 */ "Minimum Measurements Per Second", 
+                /* 08 */ "Maximum Measurements Per Second", 
+                /* 09 */ "Average Measurements Per Second", 
+                /* 10 */ "Lifetime Minimum Latency", 
+                /* 11 */ "Lifetime Maximum Latency", 
+                /* 12 */ "Lifetime Average Latency", 
+                /* 13 */ "Up Time", 
+                /* 14 */ "TLS Secured Channel"
+            };
+
+            string[] PublisherStatDescriptions =
+            {
+                /* 01 */ "Boolean value representing if the publisher was continually connected during last reporting interval.",
+                /* 02 */ "Number of clients connected to the command channel of the publisher during last reporting interval.",
+                /* 03 */ "Number of processed measurements reported by the publisher during last reporting interval.",
+                /* 04 */ "Number of bytes sent by the publisher during the last reporting interval.",
+                /* 05 */ "Number of processed measurements reported by the publisher during the lifetime of the publisher.",
+                /* 06 */ "Number of bytes sent by the publisher during the lifetime of the publisher.",
+                /* 07 */ "The minimum number of measurements sent per second during the last reporting interval.",
+                /* 08 */ "The maximum number of measurements sent per second during the last reporting interval.",
+                /* 09 */ "The average number of measurements sent per second during the last reporting interval.",
+                /* 10 */ "Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                /* 11 */ "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                /* 12 */ "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                /* 13 */ "Total number of seconds publisher has been running.",
+                /* 14 */ "Boolean value representing if publisher command channel has transport layer security enabled"
+            };
+
+            string[] PublisherStatMethodSuffix =
+            { 
+                /* 01 */ "Connected", 
+                /* 02 */ "ConnectedClientCount", 
+                /* 03 */ "ProcessedMeasurements", 
+                /* 04 */ "TotalBytesSent", 
+                /* 05 */ "LifetimeMeasurements", 
+                /* 06 */ "LifetimeBytesSent", 
+                /* 07 */ "MinimumMeasurementsPerSecond", 
+                /* 08 */ "MaximumMeasurementsPerSecond", 
+                /* 09 */ "AverageMeasurementsPerSecond", 
+                /* 10 */ "LifetimeMinimumLatency", 
+                /* 11 */ "LifetimeMaximumLatency", 
+                /* 12 */ "LifetimeAverageLatency", 
+                /* 13 */ "UpTime", 
+                /* 14 */ "TLSSecuredChannel"
+            };
+
+            string[] PublisherStatTypes =
+            { 
+                /* 01 */ "System.Boolean", 
+                /* 02 */ "System.Int32", 
+                /* 03 */ "System.Int32", 
+                /* 04 */ "System.Int32", 
+                /* 05 */ "System.Int64", 
+                /* 06 */ "System.Int64", 
+                /* 07 */ "System.Int32", 
+                /* 08 */ "System.Int32", 
+                /* 09 */ "System.Int32", 
+                /* 10 */ "System.Int32", 
+                /* 11 */ "System.Int32", 
+                /* 12 */ "System.Int32", 
+                /* 13 */ "System.Double", 
+                /* 14 */ "System.Boolean"
+            };
+
+            string[] PublisherStatFormats =
+            { 
+                /* 01 */ "{0}", 
+                /* 02 */ "{0:N0}", 
+                /* 03 */ "{0:N0}", 
+                /* 04 */ "{0:N0}", 
+                /* 05 */ "{0:N0}", 
+                /* 06 */ "{0:N0}", 
+                /* 07 */ "{0:N0}", 
+                /* 08 */ "{0:N0}", 
+                /* 09 */ "{0:N0}", 
+                /* 10 */ "{0:N0} ms", 
+                /* 11 */ "{0:N0} ms", 
+                /* 12 */ "{0:N0} ms", 
+                /* 13 */ "{0:N3} s", 
+                /* 14 */ "{0}"
+            };
+
+            // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
+            string[] ProcessStatNames =
+            { 
+                /* 01 */ "CPU Usage", 
+                /* 02 */ "Memory Usage", 
+                /* 03 */ "Up Time"
+            };
+
+            string[] ProcessStatDescriptions =
+            { 
+                /* 01 */ "Percentage of CPU currently used by the launched process.",
+                /* 02 */ "Amount of memory currently used by the launched process in megabytes.",
+                /* 03 */ "Total number of seconds the launched process has been running."
+            };
 
             // Query for count values to ensure existence of these records
             int statConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatConfigEntityCountFormat));
@@ -531,11 +718,6 @@ namespace GSF.TimeSeries
 
             bool alarmTableExists;
 
-            Guid nodeID;
-            int alarmAdapterCount;
-            int alarmConfigEntityCount;
-            int alarmSignalTypeCount;
-
             try
             {
                 // Determine whether the alarm table exists
@@ -550,22 +732,22 @@ namespace GSF.TimeSeries
 
             if (alarmTableExists)
             {
-                nodeID = Guid.Parse(nodeIDQueryString.Trim('\''));
+                Guid nodeID = Guid.Parse(nodeIDQueryString.Trim('\''));
 
                 // Ensure that the alarm adapter is defined.
-                alarmAdapterCount = connection.ExecuteScalar<int>(AlarmAdapterCountFormat, nodeID);
+                int alarmAdapterCount = connection.ExecuteScalar<int>(AlarmAdapterCountFormat, nodeID);
 
                 if (alarmAdapterCount == 0)
                     connection.ExecuteNonQuery(AlarmAdapterInsertFormat, nodeID);
 
                 // Ensure that the alarm record is defined in the ConfigurationEntity table.
-                alarmConfigEntityCount = connection.ExecuteScalar<int>(AlarmConfigEntityCountFormat);
+                int alarmConfigEntityCount = connection.ExecuteScalar<int>(AlarmConfigEntityCountFormat);
 
                 if (alarmConfigEntityCount == 0)
                     connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
 
                 // Ensure that the alarm record is defined in the SignalType table.
-                alarmSignalTypeCount = connection.ExecuteScalar<int>(AlarmSignalTypeCountFormat);
+                int alarmSignalTypeCount = connection.ExecuteScalar<int>(AlarmSignalTypeCountFormat);
 
                 if (alarmSignalTypeCount == 0)
                     connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
@@ -580,29 +762,20 @@ namespace GSF.TimeSeries
             const string MaxSignalIndexFormat = "SELECT COALESCE(MAX(SignalIndex), 0) FROM Statistic WHERE Source = {0}";
             const string InsertAlarmStatisticFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12})";
 
-            string methodName;
-
-            DataTable missingStatistics;
-
-            int signalIndex;
-            int severity;
-            string name;
-            string description;
-
             // Add statistics for the alarms defined in the Alarm table.
-            methodName = $"Get{source}Statistic_MeasurementCountForSeverity";
-            missingStatistics = connection.RetrieveData(MissingStatisticsFormat, source, methodName);
+            string methodName = $"Get{source}Statistic_MeasurementCountForSeverity";
+            DataTable missingStatistics = connection.RetrieveData(MissingStatisticsFormat, source, methodName);
 
             if (missingStatistics.Rows.Count > 0)
             {
-                signalIndex = connection.ExecuteScalar<int>(MaxSignalIndexFormat, source);
+                int signalIndex = connection.ExecuteScalar<int>(MaxSignalIndexFormat, source);
 
                 foreach (DataRow missingStatistic in missingStatistics.Rows)
                 {
                     signalIndex++;
-                    severity = missingStatistic.ConvertField<int>("Severity");
-                    name = $"Alarm Severity {severity}";
-                    description = $"Number of measurements received while alarm with severity {severity} was raised during the last reporting interval.";
+                    int severity = missingStatistic.ConvertField<int>("Severity");
+                    string name = $"Alarm Severity {severity}";
+                    string description = $"Number of measurements received while alarm with severity {severity} was raised during the last reporting interval.";
 
                     connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, name, description, "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, severity, 1, "System.Int32", "{0:N0}", 0, 1001 - severity);
                 }

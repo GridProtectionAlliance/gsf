@@ -61,7 +61,7 @@ namespace GSF.Diagnostics
             FindCounter("% Processor Time");
 
         /// <summary>
-        /// Gets the <see cref="PerformanceCounter"/> that monitors the remaining available memory of the system.
+        /// Gets the <see cref="PerformanceCounter"/> that monitors the remaining available memory of the system in GB.
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter AvailableMemory =>
