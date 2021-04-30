@@ -84,7 +84,7 @@ namespace GSF.Diagnostics
     /// <seealso cref="PerformanceCounter"/>
     public class PerformanceMonitor : IDisposable, IProvideStatus
     {
-    #region [ Members ]
+        #region [ Members ]
 
         // Constants
     #if !MONO
@@ -105,9 +105,9 @@ namespace GSF.Diagnostics
         private readonly Timer m_samplingTimer;
         private bool m_disposed;
 
-    #endregion
+        #endregion
 
-    #region [ Constructors ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
@@ -250,9 +250,9 @@ namespace GSF.Diagnostics
         ~PerformanceMonitor() => 
             Dispose(false);
 
-    #endregion
+        #endregion
 
-    #region [ Properties ]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the name of the <see cref="Process"/> to be monitored.
@@ -543,9 +543,9 @@ namespace GSF.Diagnostics
             }
         }
 
-    #endregion
+        #endregion
 
-    #region [ Methods ]
+        #region [ Methods ]
 
         /// <summary>
         /// Releases all the resources used by the <see cref="PerformanceMonitor"/> object.
@@ -788,9 +788,9 @@ namespace GSF.Diagnostics
         private void m_samplingTimer_Elapsed(object sender, ElapsedEventArgs e) => 
             SampleCounters();
 
-    #endregion
+        #endregion
 
-    #region [ Static ]
+        #region [ Static ]
 
     #if !MONO
         // Static Constructor
@@ -838,6 +838,6 @@ namespace GSF.Diagnostics
         }
     #endif
 
-    #endregion
+        #endregion
     }
 }
