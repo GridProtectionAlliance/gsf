@@ -135,7 +135,7 @@ namespace GSF.Web.Hubs
         /// <param name="connectionID">SignalR session ID to attempt to find.</param>
         /// <param name="client">Associated client, if found.</param>
         /// <returns><c>true</c> if session was found; otherwise, <c>false</c>.</returns>
-        public bool TryGetHubClient(string connectionID, out T client) => 
+        public static bool TryGetHubClient(string connectionID, out T client) => 
             s_hubClients.TryGetValue(connectionID, out client);
 
         /// <summary>
