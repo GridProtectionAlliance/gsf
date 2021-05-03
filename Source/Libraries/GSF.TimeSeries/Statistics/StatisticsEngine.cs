@@ -332,6 +332,15 @@ namespace GSF.TimeSeries.Statistics
         /// </summary>
         public static event EventHandler Calculated;
 
+        /// <summary>
+        /// Event is raised when a new statistics source is registered.
+        /// </summary>
+        public static event EventHandler<EventArgs<object>> SourceRegistered;
+
+        /// <summary>
+        /// Event is raised when a statistics source is unregistered.
+        /// </summary>
+        public static event EventHandler<EventArgs<object>> SourceUnregistered;
 
         // Fields
         private readonly object m_statisticsLock;
@@ -1016,7 +1025,6 @@ namespace GSF.TimeSeries.Statistics
 
         // Static Fields
         private static readonly List<StatisticSource> StatisticSources;
-        private static event EventHandler<EventArgs> SourceRegistered;
         private static readonly bool s_forwardToSnmp;
 
         // Static Constructor
@@ -1082,7 +1090,7 @@ namespace GSF.TimeSeries.Statistics
                 StatisticSources.Add(sourceInfo);
             }
 
-            OnSourceRegistered();
+            OnSourceRegistered(source);
         }
 
         /// <summary>
@@ -1112,6 +1120,8 @@ namespace GSF.TimeSeries.Statistics
                     }
                 }
             }
+
+            OnSourceUnregistered(source);
         }
 
         /// <summary>
@@ -1208,8 +1218,30 @@ namespace GSF.TimeSeries.Statistics
         }
 
         // Triggered when a source registers with the statistics engine.
-        private static void OnSourceRegistered() => 
-            SourceRegistered?.Invoke(null, EventArgs.Empty);
+        private static void OnSourceRegistered(object source)
+        {
+            try
+            {
+                SourceRegistered?.Invoke(null, new EventArgs<object>(source));
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+        }
+
+        // Triggered when a source unregisters with the statistics engine.
+        private static void OnSourceUnregistered(object source)
+        {
+            try
+            {
+                SourceUnregistered?.Invoke(null, new EventArgs<object>(source));
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+        }
 
         private static void ValidateSourceReferences()
         {
