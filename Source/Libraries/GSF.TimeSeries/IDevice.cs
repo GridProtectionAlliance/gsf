@@ -31,64 +31,36 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets total data quality errors of this <see cref="IDevice"/>.
         /// </summary>
-        long DataQualityErrors
-        {
-            get;
-            set;
-        }
+        long DataQualityErrors { get; set; }
 
         /// <summary>
         /// Gets or sets total time quality errors of this <see cref="IDevice"/>.
         /// </summary>
-        long TimeQualityErrors
-        {
-            get;
-            set;
-        }
+        long TimeQualityErrors { get; set; }
 
         /// <summary>
         /// Gets or sets total device errors of this <see cref="IDevice"/>.
         /// </summary>
-        long DeviceErrors
-        {
-            get;
-            set;
-        }
+        long DeviceErrors { get; set; }
 
         /// <summary>
         /// Gets or sets total measurements received for this <see cref="IDevice"/>.
         /// </summary>
-        long MeasurementsReceived
-        {
-            get;
-            set;
-        }
+        long MeasurementsReceived { get; set; }
 
         /// <summary>
         /// Gets or sets total measurements expected to have been received for this <see cref="IDevice"/>.
         /// </summary>
-        long MeasurementsExpected
-        {
-            get;
-            set;
-        }
+        long MeasurementsExpected { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of measurements recevied while this <see cref="IDevice"/> was reporting errors.
+        /// Gets or sets the number of measurements received while this <see cref="IDevice"/> was reporting errors.
         /// </summary>
-        long MeasurementsWithError
-        {
-            get;
-            set;
-        }
+        long MeasurementsWithError { get; set; }
 
         /// <summary>
         /// Gets or sets the number of measurements (per frame) defined for this <see cref="IDevice"/>.
         /// </summary>
-        long MeasurementsDefined
-        {
-            get;
-            set;
-        }
+        long MeasurementsDefined { get; set; }
     }
 }
