@@ -1013,11 +1013,29 @@ namespace GSF.TimeSeries.Statistics
         private void StatisticCalculationTimer_Elapsed(object sender, ElapsedEventArgs e) => 
             m_calculateStatisticsOperation.TryRunOnce();
 
-        private void OnBeforeCalculate() => 
-            BeforeCalculate?.Invoke(this, new EventArgs());
+        private void OnBeforeCalculate()
+        {
+            try
+            {
+                BeforeCalculate?.Invoke(this, new EventArgs());
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+        }
 
-        private void OnCalculated() => 
-            Calculated?.Invoke(this, new EventArgs());
+        private void OnCalculated()
+        {
+            try
+            {
+                Calculated?.Invoke(this, new EventArgs());
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+        }
 
         #endregion
 
@@ -1222,7 +1240,7 @@ namespace GSF.TimeSeries.Statistics
         {
             try
             {
-                SourceRegistered?.Invoke(null, new EventArgs<object>(source));
+                SourceRegistered?.Invoke(typeof(StatisticsEngine), new EventArgs<object>(source));
             }
             catch (Exception ex)
             {
@@ -1235,7 +1253,7 @@ namespace GSF.TimeSeries.Statistics
         {
             try
             {
-                SourceUnregistered?.Invoke(null, new EventArgs<object>(source));
+                SourceUnregistered?.Invoke(typeof(StatisticsEngine), new EventArgs<object>(source));
             }
             catch (Exception ex)
             {
