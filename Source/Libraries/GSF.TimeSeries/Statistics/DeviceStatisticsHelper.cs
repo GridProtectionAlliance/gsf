@@ -22,10 +22,75 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace GSF.TimeSeries.Statistics
 {
+    internal static class GlobalDeviceStatistics
+    {
+        private class LatestDeviceTime
+        {
+            public long Ticks;
+        }
+
+        private static readonly ConcurrentDictionary<IDevice, LatestDeviceTime> s_latestDeviceTimes;
+        private static Dictionary<IDevice, long> s_deviceTimesSnapshot;
+        private static long s_snapshotTime;
+
+        static GlobalDeviceStatistics()
+        {
+            s_latestDeviceTimes = new ConcurrentDictionary<IDevice, LatestDeviceTime>();
+            StatisticsEngine.SourceRegistered += StatisticsEngine_SourceRegistered;
+            StatisticsEngine.SourceUnregistered += StatisticsEngine_SourceUnregistered;
+            StatisticsEngine.BeforeCalculate += StatisticsEngine_BeforeCalculate;
+        }
+
+        public static long AverageTime { get; private set; }
+
+        public static long MinimumTime { get; private set; }
+
+        public static long MaximumTime { get; private set; }
+
+        public static long GetDeviceTimeDeviationFromAverage(IDevice device) => 
+            s_deviceTimesSnapshot.TryGetValue(device, out long currentDeviceTime) ? AverageTime - currentDeviceTime : 0L;
+
+        public static long GetLocalClockTimeDeviationFromAverage() => 
+            AverageTime - s_snapshotTime;
+
+        public static void MarkDeviceTimestamp(IDevice device, long ticks)
+        {
+            if (s_latestDeviceTimes.TryGetValue(device, out LatestDeviceTime latestDeviceTime))
+                latestDeviceTime.Ticks = ticks;
+        }
+
+        private static void StatisticsEngine_SourceRegistered(object sender, EventArgs<object> e)
+        {
+            if (e.Argument is IDevice device)
+                s_latestDeviceTimes[device] = new LatestDeviceTime();
+        }
+
+        private static void StatisticsEngine_SourceUnregistered(object sender, EventArgs<object> e)
+        {
+            if (e.Argument is IDevice device)
+                s_latestDeviceTimes.TryRemove(device, out _);
+        }
+
+        private static void StatisticsEngine_BeforeCalculate(object sender, EventArgs e)
+        {
+            s_deviceTimesSnapshot = s_latestDeviceTimes.ToArray().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Ticks);
+            s_snapshotTime = DateTime.UtcNow.Ticks;
+            
+            long[] deviceTimes = s_deviceTimesSnapshot.Select(kvp => kvp.Value).Where(ticks => ticks > 0L).ToArray();
+
+            AverageTime = (long)deviceTimes.Average();
+            MinimumTime = deviceTimes.Min();
+            MaximumTime = deviceTimes.Max();
+        }
+    }
+
     /// <summary>
     /// Helper class for calculating device statistics.
     /// </summary>
@@ -93,6 +158,13 @@ namespace GSF.TimeSeries.Statistics
         /// </remarks>
         public void AddToMeasurementsWithError(int count) => 
             Interlocked.Add(ref m_errorsInSecond, count);
+
+        /// <summary>
+        /// Marks the latest timestamp of device measurements used to calculate global timestamp statistics.
+        /// </summary>
+        /// <param name="ticks">Latest timestamp of device measurements.</param>
+        public void MarkDeviceTimestamp(long ticks) => 
+            GlobalDeviceStatistics.MarkDeviceTimestamp(Device, ticks);
 
         /// <summary>
         /// Updates the statistics for the number of measurements received and the number
