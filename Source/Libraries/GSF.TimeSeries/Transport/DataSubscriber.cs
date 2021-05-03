@@ -4813,6 +4813,9 @@ namespace GSF.TimeSeries.Transport
                 {
                     case "FLAG":
                     case "STAT":
+                    case "CALC":
+                    case "ALRM":
+                    case "QUAL":
                         return 0;
 
                     default:
