@@ -294,7 +294,7 @@ namespace GSF.TimeSeries
             const string StatHistorianInsertFormat = "INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'TestingAdapters.dll', 'TestingAdapters.VirtualOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)";
             const string StatEngineInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, LoadOrder, Enabled) VALUES({0}, 'STATISTIC!SERVICES', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.StatisticsEngine', 0, 1)";
             const string SystemStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
-            const string DeviceStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.DeviceStatistics', 'GetDeviceStatistic_{3}', '', 1, 'System.Int32', '{{0:N0}}', 0, {0})";
+            const string DeviceStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.DeviceStatistics', 'GetDeviceStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
             const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Subscriber', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
             const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Publisher', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
             const string ProcessStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Process', {0}, '{1}', '{2}', 'FileAdapters.dll', 'FileAdapters.ProcessLauncher', 'GetProcessStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
@@ -426,7 +426,8 @@ namespace GSF.TimeSeries
                 /* 04 */ "Measurements Received", 
                 /* 05 */ "Measurements Expected", 
                 /* 06 */ "Measurements With Error", 
-                /* 07 */ "Measurements Defined"
+                /* 07 */ "Measurements Defined",
+                /* 08 */ "Device Time Deviation From Average"
             };
 
             string[] DeviceStatDescriptions =
@@ -437,7 +438,32 @@ namespace GSF.TimeSeries
                 /* 04 */ "Number of measurements received from device during last reporting interval.",
                 /* 05 */ "Expected number of measurements received from device during last reporting interval.",
                 /* 06 */ "Number of measurements received while device was reporting errors during last reporting interval.",
-                /* 07 */ "Number of defined measurements from device during last reporting interval."
+                /* 07 */ "Number of defined measurements from device during last reporting interval.",
+                /* 08 */ "Device time deviation from average for all input devices in seconds"
+            };
+
+            string[] DeviceStatTypes =
+            {
+                /* 01 */ "System.Int32",
+                /* 02 */ "System.Int32",
+                /* 03 */ "System.Int32",
+                /* 04 */ "System.Int32",
+                /* 05 */ "System.Int32",
+                /* 06 */ "System.Int32",
+                /* 07 */ "System.Int32",
+                /* 08 */ "System.Double"
+            };
+
+            string[] DeviceStatFormats =
+            {
+                /* 01 */ "{0:N0}",
+                /* 02 */ "{0:N0}",
+                /* 03 */ "{0:N0}",
+                /* 04 */ "{0:N0}",
+                /* 05 */ "{0:N0}",
+                /* 06 */ "{0:N0}",
+                /* 07 */ "{0:N0}",
+                /* 08 */ "{0:N3} s"
             };
 
             string[] SubscriberStatNames =
@@ -709,7 +735,9 @@ namespace GSF.TimeSeries
                     statName = DeviceStatNames[i];
                     statDescription = DeviceStatDescriptions[i];
                     statMethodSuffix = statName.Replace(" ", "");
-                    database.Connection.ExecuteNonQuery(string.Format(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                    statType = DeviceStatTypes[i];
+                    statFormat = DeviceStatFormats[i];
+                    database.Connection.ExecuteNonQuery(string.Format(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
                 }
             }
 

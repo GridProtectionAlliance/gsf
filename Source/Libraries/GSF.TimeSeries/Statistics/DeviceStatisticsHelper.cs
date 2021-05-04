@@ -55,7 +55,7 @@ namespace GSF.TimeSeries.Statistics
         public static long MaximumTime { get; private set; }
 
         public static long GetDeviceTimeDeviationFromAverage(IDevice device) => 
-            s_deviceTimesSnapshot.TryGetValue(device, out long currentDeviceTime) ? AverageTime - currentDeviceTime : 0L;
+            s_deviceTimesSnapshot.TryGetValue(device, out long deviceTime) && deviceTime > 0L ? AverageTime - deviceTime : long.MinValue;
 
         public static long GetSystemTimeDeviationFromAverage() => 
             AverageTime - s_snapshotTime;

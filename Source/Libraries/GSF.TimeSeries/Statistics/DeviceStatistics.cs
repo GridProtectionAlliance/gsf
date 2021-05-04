@@ -55,6 +55,18 @@ namespace GSF.TimeSeries.Statistics
         private static double GetDeviceStatistic_MeasurementsDefined(object source, string _) => 
             source is IDevice device ? device.MeasurementsDefined : 0.0D;
 
+        // Calculates the difference between a device time and the average of all devices
+        private static double GetDeviceStatistic_DeviceTimeDeviationFromAverage(object source, string _)
+        {
+            if (source is IDevice device)
+            {
+                long deviation = GlobalDeviceStatistics.GetDeviceTimeDeviationFromAverage(device);
+                return deviation > long.MinValue ? new Ticks(deviation).ToSeconds() : double.NaN;
+            }
+
+            return double.NaN;
+        }
+
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
     }
 }
