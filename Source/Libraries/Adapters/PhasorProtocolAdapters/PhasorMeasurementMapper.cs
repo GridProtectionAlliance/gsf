@@ -1857,7 +1857,10 @@ namespace PhasorProtocolAdapters
 
                         // Map frequency
                         if (measurements.Length > FrequencyIndex)
+                        {
                             MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Frequency), measurements[FrequencyIndex]);
+                            statisticsHelper.MarkDeviceTimestamp(measurements[FrequencyIndex].Timestamp);
+                        }
 
                         // Map dF/dt
                         if (measurements.Length > DfDtIndex)
