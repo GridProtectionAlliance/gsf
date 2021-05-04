@@ -3364,19 +3364,24 @@ namespace GSF.TimeSeries.Transport
 
                                         // Zero is not a valid value for frequency.
                                         // If frequency is zero, invalidate both frequency and delta frequency
-                                        if ((object)frequency != null && frequency.Value == 0.0D)
+                                        if ((object)frequency != null)
                                         {
-                                            if ((object)deltaFrequency != null && !double.IsNaN(deltaFrequency.Value))
-                                                measurementsReceived -= 2;
-                                            else
-                                                measurementsReceived--;
+                                            statisticsHelper.MarkDeviceTimestamp(frequency.Timestamp);
 
-                                            if (hasError(frequency.StateFlags))
+                                            if (frequency.Value == 0.0D)
                                             {
                                                 if ((object)deltaFrequency != null && !double.IsNaN(deltaFrequency.Value))
-                                                    measurementsWithError -= 2;
+                                                    measurementsReceived -= 2;
                                                 else
-                                                    measurementsWithError--;
+                                                    measurementsReceived--;
+
+                                                if (hasError(frequency.StateFlags))
+                                                {
+                                                    if ((object)deltaFrequency != null && !double.IsNaN(deltaFrequency.Value))
+                                                        measurementsWithError -= 2;
+                                                    else
+                                                        measurementsWithError--;
+                                                }
                                             }
                                         }
 
