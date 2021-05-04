@@ -85,9 +85,18 @@ namespace GSF.TimeSeries.Statistics
             
             long[] deviceTimes = s_deviceTimesSnapshot.Select(kvp => kvp.Value).Where(ticks => ticks > 0L).ToArray();
 
-            AverageTime = (long)deviceTimes.Average();
-            MinimumTime = deviceTimes.Min();
-            MaximumTime = deviceTimes.Max();
+            if (deviceTimes.Length > 0)
+            {
+                AverageTime = (long)deviceTimes.Average();
+                MinimumTime = deviceTimes.Min();
+                MaximumTime = deviceTimes.Max();
+            }
+            else
+            {
+                AverageTime = 0L;
+                MinimumTime = 0L;
+                MaximumTime = 0L;
+            }
         }
     }
 
