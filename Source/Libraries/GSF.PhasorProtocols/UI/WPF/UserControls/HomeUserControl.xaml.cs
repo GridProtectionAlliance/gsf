@@ -668,10 +668,10 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private void StatsSubscriptionConnectionEstablished(object sender, EventArgs e)
         {
             const string StatsFilterExpression = "SignalAcronym = 'STAT' AND (" +
-                                                 "SignalReference LIKE '%SYSTEM-ST16' OR" + // [0] System CPU Usage
-                                                 "SignalReference LIKE '%SYSTEM-ST20' OR" + // [1] System Memory Usage
-                                                 "SignalReference LIKE '%SYSTEM-ST24' OR" + // [2] System Time Deviation
-                                                 "SignalReference LIKE '%SYSTEM-ST25')";    // [3] Primary Disk Usage
+                                                 "SignalReference LIKE '%SYSTEM-ST16' OR " + // [0] System CPU Usage
+                                                 "SignalReference LIKE '%SYSTEM-ST20' OR " + // [1] System Memory Usage
+                                                 "SignalReference LIKE '%SYSTEM-ST24' OR " + // [2] System Time Deviation
+                                                 "SignalReference LIKE '%SYSTEM-ST25')";     // [3] Primary Disk Usage
 
             m_statSignalIDs = Measurement.LoadSignalIDs(null, StatsFilterExpression, "SignalReference").ToArray();
             m_statsSubscription.UnsynchronizedSubscribe(true, true, string.Join(";", m_statSignalIDs));
@@ -688,16 +688,19 @@ namespace GSF.PhasorProtocols.UI.UserControls
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
+                    double value = stat.AdjustedValue;
+                    string formattedValue = double.IsNaN(value) ? "..." : $"{value:N2}";
+
                     Guid signalID = stat.ID;
 
                     if (signalID == m_statSignalIDs[0])
-                        CPU.Content = $"{stat.AdjustedValue:N3}%";
+                        CPU.Content = $"{formattedValue}%";
                     else if (signalID == m_statSignalIDs[1])
-                        Memory.Content = $"{stat.AdjustedValue:N3}%";
+                        Memory.Content = $"{formattedValue}%";
                     else if (signalID == m_statSignalIDs[2])
-                        Time.Content = $"{stat.AdjustedValue:N3} seconds";
+                        Time.Content = $"{formattedValue} seconds";
                     else if (signalID == m_statSignalIDs[3])
-                        Disk.Content = $"{stat.AdjustedValue:N3}%";
+                        Disk.Content = $"{formattedValue}%";
                 }));
             }
         }
@@ -727,6 +730,14 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             try
             {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    CPU.Content = "...%";
+                    Memory.Content = "...%";
+                    Disk.Content = "...%";
+                    Time.Content = "... seconds";
+                }));
+
                 if (!(m_statsSubscription is null))
                 {
                     m_statsSubscription.Unsubscribe();

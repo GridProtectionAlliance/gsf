@@ -154,16 +154,16 @@
         </GroupBox>
 
         <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="30" Margin="-2 -4 0 0" >
-            <Label Content="CPU:" VerticalAlignment="Center" />
+            <Label Content="System CPU Utilization:" VerticalAlignment="Center" />
             <Label x:Name="CPU" Content="...%" VerticalAlignment="Center" />
             <Label Content="|" VerticalAlignment="Center" />
-            <Label Content="Memory:" VerticalAlignment="Center" />
+            <Label Content="System Memory Utilization:" VerticalAlignment="Center" />
             <Label x:Name="Memory" Content="...%" VerticalAlignment="Center" />
             <Label Content="|" VerticalAlignment="Center" />
-            <Label Content="Disk:" VerticalAlignment="Center" />
+            <Label Content="Primary Disk Utilization:" VerticalAlignment="Center" />
             <Label x:Name="Disk" Content="...%" VerticalAlignment="Center" />
             <Label Content="|" VerticalAlignment="Center" />
-            <Label Content="Clock Deviation:" VerticalAlignment="Center" />
+            <Label Content="Local Clock Deviation:" VerticalAlignment="Center" />
             <Label x:Name="Time" Content="... seconds" VerticalAlignment="Center" />
         </StackPanel>
 
