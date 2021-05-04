@@ -151,7 +151,7 @@ namespace GSF.Diagnostics
             if (addDefaultCounters)
             {
                 // Add default process and .NET counters
-                AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Average % / CPU", Environment.ProcessorCount);
+                AddCounter("Process", "% Processor Time", m_processName, "Process CPU Usage", "Average % / CPU", Environment.ProcessorCount);
             #if !MONO
                 AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", SI2.Kilo);
                 AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
