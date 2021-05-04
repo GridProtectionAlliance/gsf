@@ -133,10 +133,19 @@ namespace GSF.TimeSeries.Statistics
 
         #endregion
 
-        #region [ System Uptime ]
+        #region [ System Times ]
 
         private static double GetSystemStatistic_UpTime(object source, string _) => 
             !(SystemRunTimeLog?.IsDisposed ?? true) ? SystemRunTimeLog.UpTime.TotalSeconds : double.NaN;
+
+        private static double GetSystemStatistic_AverageDeviceTime(object source, string _) =>
+            (double)new UnixTimeTag(GlobalDeviceStatistics.AverageTime).Value;
+
+        private static double GetSystemStatistic_MinimumDeviceTime(object source, string _) =>
+            (double)new UnixTimeTag(GlobalDeviceStatistics.MinimumTime).Value;
+
+        private static double GetSystemStatistic_MaximumDeviceTime(object source, string _) =>
+            (double)new UnixTimeTag(GlobalDeviceStatistics.MaximumTime).Value;
 
         #endregion
     }

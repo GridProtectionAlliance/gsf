@@ -293,7 +293,7 @@ namespace GSF.TimeSeries
 
             const string StatHistorianInsertFormat = "INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'TestingAdapters.dll', 'TestingAdapters.VirtualOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)";
             const string StatEngineInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, LoadOrder, Enabled) VALUES({0}, 'STATISTIC!SERVICES', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.StatisticsEngine', 0, 1)";
-            const string SystemStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
+            const string SystemStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
             const string DeviceStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.DeviceStatistics', 'GetDeviceStatistic_{3}', '', 1, 'System.Int32', '{{0:N0}}', 0, {0})";
             const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Subscriber', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
             const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Publisher', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
@@ -329,7 +329,10 @@ namespace GSF.TimeSeries
                 /* 16 */ "System CPU Usage",
                 /* 17 */ "Average System CPU Usage",
                 /* 18 */ "Available System Memory",
-                /* 19 */ "Average Available System Memory"
+                /* 19 */ "Average Available System Memory",
+                /* 20 */ "Average Device Time",
+                /* 21 */ "Minimum Device Time",
+                /* 22 */ "Maximum Device Time"
             };
 
             string[] SystemStatDescriptions = 
@@ -352,7 +355,62 @@ namespace GSF.TimeSeries
                 /* 16 */ "Percentage of total CPU currently used by the host system.",
                 /* 17 */ "Average percentage of total CPU used by the host system.",
                 /* 18 */ "Amount of memory available on the host system in gigabytes",
-                /* 19 */ "Average amount of memory available on the host system in gigabytes"
+                /* 19 */ "Average amount of memory available on the host system in gigabytes",
+                /* 20 */ "Average time for all input devices",
+                /* 21 */ "Minimum time for all input devices",
+                /* 22 */ "Maximum time for all input devices"
+            };
+
+            string[] SystemStatTypes =
+            {
+                /* 01 */ "System.Double",
+                /* 02 */ "System.Double",
+                /* 03 */ "System.Double",
+                /* 04 */ "System.Double",
+                /* 05 */ "System.Int32",
+                /* 06 */ "System.Double",
+                /* 07 */ "System.Double",
+                /* 08 */ "System.Double",
+                /* 09 */ "System.Double",
+                /* 10 */ "System.Double",
+                /* 11 */ "System.Double",
+                /* 12 */ "System.Double",
+                /* 13 */ "System.Double",
+                /* 14 */ "System.Double",
+                /* 15 */ "System.Double",
+                /* 16 */ "System.Double",
+                /* 17 */ "System.Double",
+                /* 18 */ "System.Double",
+                /* 19 */ "System.Double",
+                /* 20 */ "GSF.UnixTimeTag",
+                /* 21 */ "GSF.UnixTimeTag",
+                /* 22 */ "GSF.UnixTimeTag"
+            };
+
+            string[] SystemStatFormats =
+            {
+                /* 01 */ "{0:N3} %",
+                /* 02 */ "{0:N3} %",
+                /* 03 */ "{0:N3} MB",
+                /* 04 */ "{0:N3} MB",
+                /* 05 */ "{0:N0}",
+                /* 06 */ "{0:N3}",
+                /* 07 */ "{0:N3}",
+                /* 08 */ "{0:N3}",
+                /* 09 */ "{0:N3} KBps",
+                /* 10 */ "{0:N3} KBps",
+                /* 11 */ "{0:N3}",
+                /* 12 */ "{0:N3}",
+                /* 13 */ "{0:N3}",
+                /* 14 */ "{0:N3}",
+                /* 15 */ "{0:N3} s",
+                /* 16 */ "{0:N3} %",
+                /* 17 */ "{0:N3} %",
+                /* 18 */ "{0:N3} GB",
+                /* 19 */ "{0:N3} GB",
+                /* 20 */ "{0:yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'fff}",
+                /* 21 */ "{0:yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'fff}",
+                /* 22 */ "{0:yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'fff}"
             };
 
             // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
@@ -630,7 +688,9 @@ namespace GSF.TimeSeries
                     statName = SystemStatNames[i];
                     statDescription = SystemStatDescriptions[i];
                     statMethodSuffix = statName.Replace(" ", "");
-                    database.Connection.ExecuteNonQuery(string.Format(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                    statType = SystemStatTypes[i];
+                    statFormat = SystemStatFormats[i];
+                    database.Connection.ExecuteNonQuery(string.Format(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
                 }
             }
 
