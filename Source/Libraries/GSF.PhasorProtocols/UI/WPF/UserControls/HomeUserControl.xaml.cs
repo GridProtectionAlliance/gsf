@@ -674,7 +674,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                                                  "SignalReference LIKE '%SYSTEM-ST25')";     // [3] Primary Disk Usage
 
             m_statSignalIDs = Measurement.LoadSignalIDs(null, StatsFilterExpression, "SignalReference").ToArray();
-            m_statsSubscription.UnsynchronizedSubscribe(true, true, string.Join(";", m_statSignalIDs));
+            m_statsSubscription.UnsynchronizedSubscribe(true, true, string.Join(";", m_statSignalIDs), lagTime: 5.0D);
         }
 
         private void StatsSubscriptionNewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
