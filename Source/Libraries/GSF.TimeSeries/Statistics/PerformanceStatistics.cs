@@ -23,8 +23,10 @@
 //
 //******************************************************************************************************
 
+using System;
 using GSF.Diagnostics;
 using GSF.IO;
+using static GSF.Common;
 
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedParameter.Local
@@ -32,8 +34,24 @@ namespace GSF.TimeSeries.Statistics
 {
     internal static class PerformanceStatistics
     {
+        private static readonly double s_totalPhysicalMemory;
+
         // Run-time log used to calculate system run-time
         internal static RunTimeLog SystemRunTimeLog;
+
+        static PerformanceStatistics()
+        {
+            try
+            {
+                // Total physical memory not expected to change over process lifetime
+                s_totalPhysicalMemory = GetTotalPhysicalMemory();
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+                s_totalPhysicalMemory = double.NaN;
+            }
+        }
 
         #region [ CPU Usage ]
 
@@ -64,6 +82,19 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_AverageAvailableSystemMemory(object source, string _) =>
             SystemPerformanceMonitor.Default?.AvailableMemory?.AverageValue ?? double.NaN;
+
+        private static double GetSystemStatistic_SystemMemoryUsage(object source, string _)
+        {
+            try
+            {
+                return (s_totalPhysicalMemory - GetAvailablePhysicalMemory()) / s_totalPhysicalMemory * 100.0D;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+                return double.NaN;
+            }
+        }
 
         #endregion
 
