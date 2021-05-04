@@ -449,6 +449,7 @@ namespace GSF.Web.Shared
                 {
                     "System.Double"   => value,
                     "System.DateTime" => new DateTime((long)value),
+                    "GSF.UnixTimeTag" => new UnixTimeTag((decimal)value),
                     _                 => Convert.ChangeType(value, Type.GetType(dataType) ?? typeof(double))
                 };
             }
