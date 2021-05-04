@@ -798,7 +798,7 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
-        /// Converts xml element to datatype
+        /// Converts value to specified type.
         /// </summary>
         /// <param name="xmlValue"></param>
         /// <param name="xmlDataType"></param>
@@ -806,20 +806,23 @@ namespace GSF.TimeSeries.UI
         public static object ConvertValueToType(string xmlValue, string xmlDataType)
         {
             Type dataType = Type.GetType(xmlDataType);
-            float value;
 
-            if (float.TryParse(xmlValue, out value))
+            if (double.TryParse(xmlValue, out double value))
             {
                 switch (xmlDataType)
                 {
+                    case "System.Double":
+                        return value;
                     case "System.DateTime":
                         return new DateTime((long)value);
+                    case "GSF.UnixTimeTag":
+                        return new UnixTimeTag((decimal)value);
                     default:
-                        return Convert.ChangeType(value, dataType);
+                        return Convert.ChangeType(value, dataType ?? typeof(double));
                 }
             }
 
-            return "".ConvertToType(dataType);
+            return string.Empty.ConvertToType(dataType);
         }
 
         /// <summary>
