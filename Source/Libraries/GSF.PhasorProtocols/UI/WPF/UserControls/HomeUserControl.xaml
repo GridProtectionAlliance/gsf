@@ -20,10 +20,11 @@
     </UserControl.Resources>
 
     <Grid>
-       
+
         <Grid.RowDefinitions>
-            <RowDefinition Height="10*"/>            
+            <RowDefinition Height="10*"/>
             <RowDefinition Height="13*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -43,8 +44,8 @@
             </StackPanel>
         </GroupBox>
 
-        <Grid Grid.Row="0" Grid.Column="1">   
-            
+        <Grid Grid.Row="0" Grid.Column="1">
+
             <!--<Grid.Resources>
                 <Style TargetType="chartingToolkit:LineDataPoint">
                     <Setter Property="Background" Value="Blue"/>
@@ -54,24 +55,24 @@
                     <Setter Property="StrokeThickness" Value="1"/>
                 </Style>
             </Grid.Resources>-->
-            
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <ComboBox x:Name="ComboBoxDevice" Margin="0,0,5,0" SelectionChanged="ComboBoxDevice_SelectionChanged" DisplayMemberPath="Value" Width="Auto" MinWidth="150"/>
-                <ComboBox x:Name="ComboBoxMeasurement" Margin="0,0,5,0" SelectionChanged="ComboBoxMeasurement_SelectionChanged" DisplayMemberPath="PointTag" SelectedValuePath="SignalID" Width="Auto" MinWidth="150"/>                
+                <ComboBox x:Name="ComboBoxMeasurement" Margin="0,0,5,0" SelectionChanged="ComboBoxMeasurement_SelectionChanged" DisplayMemberPath="PointTag" SelectedValuePath="SignalID" Width="Auto" MinWidth="150"/>
             </StackPanel>
 
-            <d3:ChartPlotter Name="ChartPlotterDynamic" Grid.Row="1" Margin="2" Height="225" Width="590" MainHorizontalAxisVisibility="Collapsed">                
-            </d3:ChartPlotter>          
+            <d3:ChartPlotter Name="ChartPlotterDynamic" Grid.Row="1" Margin="2" Height="225" Width="590" MainHorizontalAxisVisibility="Collapsed">
+            </d3:ChartPlotter>
 
         </Grid>
-        
+
         <GroupBox Header="Current Configuration" Grid.Row="1" Grid.Column="0">
-            
+
             <Grid >
 
                 <Grid.ColumnDefinitions>
@@ -104,9 +105,9 @@
 
                 <TextBlock Text="Current User" Grid.Row="3" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockUser" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap"/>
-                
+
                 <TextBlock Text="Version Information" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontWeight="Bold"/>
-                
+
                 <TextBlock Text="Server" Grid.Row="5" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockVersion" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Left"/>
 
@@ -128,7 +129,7 @@
         </GroupBox>
 
         <GroupBox x:Name="GroupBoxSystemHealth" Header="System Health" Grid.Row="1" Grid.Column="1">
-        
+
             <StackPanel Orientation="Vertical">
                 <tsf:TsfPopup x:Name="PopupStatus" Topmost="False" Placement="Center">
                     <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
@@ -145,12 +146,26 @@
                         </StackPanel>
                     </Border>
                 </tsf:TsfPopup>
-                
+
                 <TextBlock x:Name="TextBlockSystemHealth" FontFamily="Courier New" FontSize="12" HorizontalAlignment="Left" TextAlignment="Left" TextWrapping="Wrap"/>
-            
+
             </StackPanel>
-        
+
         </GroupBox>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="30" Margin="-2 -4 0 0" >
+            <Label Content="CPU:" VerticalAlignment="Center" />
+            <Label x:Name="CPU" Content="...%" VerticalAlignment="Center" />
+            <Label Content="|" VerticalAlignment="Center" />
+            <Label Content="Memory:" VerticalAlignment="Center" />
+            <Label x:Name="Memory" Content="...%" VerticalAlignment="Center" />
+            <Label Content="|" VerticalAlignment="Center" />
+            <Label Content="Disk:" VerticalAlignment="Center" />
+            <Label x:Name="Disk" Content="...%" VerticalAlignment="Center" />
+            <Label Content="|" VerticalAlignment="Center" />
+            <Label Content="Clock Deviation:" VerticalAlignment="Center" />
+            <Label x:Name="Time" Content="... seconds" VerticalAlignment="Center" />
+        </StackPanel>
 
     </Grid>
 

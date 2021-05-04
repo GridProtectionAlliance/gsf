@@ -37,6 +37,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using GSF.Communication;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Identity;
 using GSF.PhasorProtocols.UI.DataModels;
@@ -57,7 +58,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
     /// <summary>
     /// Interaction logic for HomeUserControl.xaml
     /// </summary>
-    public partial class HomeUserControl : UserControl
+    public partial class HomeUserControl
     {
         #region [ Members ]
 
@@ -67,8 +68,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private DispatcherTimer m_refreshTimer;
 
         // Subscription fields
-        private DataSubscriber m_unsynchronizedSubscriber;
-        private bool m_subscribedUnsynchronized;
+        private DataSubscriber m_chartSubscription;
+        private DataSubscriber m_statsSubscription;
+        private bool m_chartSubscriptionConnected;
         private string m_signalID;
         private int m_processingUnsynchronizedMeasurements;
         private double m_refreshInterval = 0.25;
@@ -81,6 +83,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private int m_numberOfPointsToPlot = 60;
         private bool m_eventHandlerRegistered;
         private Measurement m_selectedMeasurement;
+        private Guid[] m_statSignalIDs;
+
         #endregion
 
         #region [ Constructor ]
@@ -112,20 +116,20 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             try
             {
-                if (m_windowsServiceClient != null && m_windowsServiceClient.Helper != null)
-                {
+                if (!(m_windowsServiceClient?.Helper is null))
                     m_windowsServiceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
-                }
 
-                if (m_refreshTimer != null)
+                if (!(m_refreshTimer is null))
                     m_refreshTimer.Stop();
 
-                UnsubscribeUnsynchronizedData();
+                UnsubscribeChartData();
+                UnsubscribeStatsData();
             }
             finally
             {
                 m_refreshTimer = null;
-                m_unsynchronizedSubscriber = null;
+                m_chartSubscription = null;
+                m_statsSubscription = null;
             }
         }
 
@@ -139,7 +143,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
 
-            if (m_windowsServiceClient == null || m_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
+            if (m_windowsServiceClient is null || m_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
             {
                 ButtonRestart.IsEnabled = false;
             }
@@ -153,20 +157,15 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_eventHandlerRegistered = true;
             }
 
-            m_refreshTimer = new DispatcherTimer();
-            m_refreshTimer.Interval = TimeSpan.FromSeconds(5);
+            m_refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
             m_refreshTimer.Tick += RefreshTimer_Tick;
             m_refreshTimer.Start();
 
-            if (IntPtr.Size == 8)
-                TextBlockInstance.Text = "64-bit";
-            else
-                TextBlockInstance.Text = "32-bit";
-
+            TextBlockInstance.Text = IntPtr.Size == 8 ? "64-bit" : "32-bit";
             TextBlockLocalTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
             Version appVersion = AssemblyInfo.EntryAssembly.Version;
-            TextBlockManagerVersion.Text = appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ".0";
+            TextBlockManagerVersion.Text = $"{appVersion.Major}.{appVersion.Minor}.{appVersion.Build}.0";
 
             try
             {
@@ -200,7 +199,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             }
             catch
             {
-                TextBlockDatabaseName.Text = "Not Avaliable";
+                TextBlockDatabaseName.Text = "Not Available";
             }
 
             try
@@ -222,18 +221,22 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             //Remove legend on the right.
             Panel legendParent = (Panel)ChartPlotterDynamic.Legend.ContentGrid.Parent;
-            if (legendParent != null)
+            
+            if (!(legendParent is null))
                 legendParent.Children.Remove(ChartPlotterDynamic.Legend.ContentGrid);
 
             ChartPlotterDynamic.NewLegendVisible = false;
 
             m_xAxisDataCollection = new int[m_numberOfPointsToPlot];
+            
             for (int i = 0; i < m_numberOfPointsToPlot; i++)
                 m_xAxisDataCollection[i] = i;
+            
             m_xAxisBindingCollection = new EnumerableDataSource<int>(m_xAxisDataCollection);
             m_xAxisBindingCollection.SetXMapping(x => x);
 
             LoadComboBoxDeviceAsync();
+            InitializeStatsSubscription();
         }
 
         private void LoadComboBoxDeviceAsync()
@@ -281,10 +284,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
             t.Start();
         }
 
-        void RefreshTimer_Tick(object sender, EventArgs e)
+        private void RefreshTimer_Tick(object sender, EventArgs e)
         {
-            if (m_windowsServiceClient != null && m_windowsServiceClient.Helper != null &&
-                m_windowsServiceClient.Helper.RemotingClient != null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+            if (!(m_windowsServiceClient?.Helper?.RemotingClient is null) && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
             {
                 try
                 {
@@ -304,8 +306,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     if (PopupStatus.IsOpen)
                         CommonFunctions.SendCommandToService("Status -actionable");
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logger.SwallowException(ex);
                 }
             }
             else
@@ -331,7 +334,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 {
                     GetMenuDataItem(m_menuDataItems, stringToMatch, ref item);
 
-                    if ((object)item.MenuText != null)
+                    if (!(item.MenuText is null))
                         item.Command.Execute(null);
                 }
             }
@@ -374,7 +377,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             }
             catch
             {
-                MessageBox.Show("Failed sent RESTART command to the service." + Environment.NewLine + "Service is either offline or disconnected.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed sent RESTART command to the service.{Environment.NewLine}Service is either offline or disconnected.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -385,46 +388,44 @@ namespace GSF.PhasorProtocols.UI.UserControls
         /// <param name="e">Event arguments.</param>
         private void Helper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
         {
-            string sourceCommand;
-            bool responseSuccess;
-
-            if (ClientHelper.TryParseActionableResponse(e.Argument, out sourceCommand, out responseSuccess))
+            if (ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out bool _))
             {
-                if (sourceCommand.ToLower() == "health")
+                switch (sourceCommand.ToLower())
                 {
-                    this.Dispatcher.BeginInvoke((Action)delegate
+                    case "health":
+                        this.Dispatcher.BeginInvoke((Action)delegate
                         {
                             TextBlockSystemHealth.Text = e.Argument.Message.TrimEnd();
-                            GroupBoxSystemHealth.Header = "System Health (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
+                            GroupBoxSystemHealth.Header = $"System Health (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
                         });
-                }
-                else if (sourceCommand.ToLower() == "status")
-                {
-                    this.Dispatcher.BeginInvoke((Action)delegate
+                        break;
+                    case "status":
+                        this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                            GroupBoxStatus.Header = "System Status (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
+                            GroupBoxStatus.Header = $"System Status (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
                             TextBlockStatus.Text = e.Argument.Message.TrimEnd();
                         });
-                }
-                else if (sourceCommand.ToLower() == "version")
-                {
-                    this.Dispatcher.BeginInvoke((Action)delegate
-                    {
-                        TextBlockVersion.Text = e.Argument.Message.Substring(e.Argument.Message.ToLower().LastIndexOf("version:") + 8).Trim();
-                    });
-                }
-                else if (sourceCommand.ToLower() == "time")
-                {
-                    this.Dispatcher.BeginInvoke((Action)delegate
+                        break;
+                    case "version":
+                        this.Dispatcher.BeginInvoke((Action)delegate
+                        {
+                            TextBlockVersion.Text = e.Argument.Message.Substring(e.Argument.Message.ToLower().LastIndexOf("version:", StringComparison.Ordinal) + 8).Trim();
+                        });
+                        break;
+                    case "time":
+                        this.Dispatcher.BeginInvoke((Action)delegate
                         {
                             string[] times = Regex.Split(e.Argument.Message, "\r\n");
-                            if (times.Count() > 0)
+                            
+                            if (times.Any())
                             {
                                 string[] currentTimes = Regex.Split(times[0], ",");
-                                if (currentTimes.Count() > 0)
-                                    TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:") + 12).Trim();
+                                
+                                if (currentTimes.Any())
+                                    TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:", StringComparison.Ordinal) + 12).Trim();
                             }
                         });
+                        break;
                 }
             }
         }
@@ -432,8 +433,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private void ButtonStatus_Click(object sender, RoutedEventArgs e)
         {
             PopupStatus.IsOpen = true;
-            if (m_windowsServiceClient != null && m_windowsServiceClient.Helper != null &&
-                   m_windowsServiceClient.Helper.RemotingClient != null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+
+            if (!(m_windowsServiceClient?.Helper?.RemotingClient is null) && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                 CommonFunctions.SendCommandToService("Status -actionable");
         }
 
@@ -457,26 +458,32 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 else
                     Application.Current.Resources.Add("SelectedMeasurement_Home", ComboBoxMeasurement.SelectedIndex);
 
-                if (m_selectedMeasurement != null)
+                if (!(m_selectedMeasurement is null))
                 {
                     m_signalID = m_selectedMeasurement.SignalID.ToString();
 
-                    if (m_selectedMeasurement.SignalSuffix == "PA")
-                        ChartPlotterDynamic.Visible = DataRect.Create(0, -180, m_numberOfPointsToPlot, 180);
-                    else if (m_selectedMeasurement.SignalSuffix == "FQ")
+                    switch (m_selectedMeasurement.SignalSuffix)
                     {
-                        double frequencyMin = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMin"));
-                        double frequencyMax = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMax"));
+                        case "PA":
+                            ChartPlotterDynamic.Visible = DataRect.Create(0, -180, m_numberOfPointsToPlot, 180);
+                            break;
+                        case "FQ":
+                        {
+                            double frequencyMin = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMin"));
+                            double frequencyMax = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMax"));
 
-                        ChartPlotterDynamic.Visible = DataRect.Create(0, Math.Min(frequencyMin, frequencyMax), m_numberOfPointsToPlot, Math.Max(frequencyMin, frequencyMax));
+                            ChartPlotterDynamic.Visible = DataRect.Create(0, Math.Min(frequencyMin, frequencyMax), m_numberOfPointsToPlot, Math.Max(frequencyMin, frequencyMax));
+                            break;
+                        }
                     }
-
                 }
             }
             else
+            {
                 m_signalID = string.Empty;
+            }
 
-            SubscribeUnsynchronizedData();
+            SubscribeChartData();
         }
 
         private void ComboBoxDevice_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -495,162 +502,244 @@ namespace GSF.PhasorProtocols.UI.UserControls
             LoadComboBoxMeasurementAsync();
         }
 
-        #region [ Unsynchronized Subscription ]
+        #region [ Chart Subscription ]
 
-        private void m_unsynchronizedSubscriber_ConnectionTerminated(object sender, EventArgs e)
+        private void ChartSubscriptionConnectionTerminated(object sender, EventArgs e)
         {
-            m_subscribedUnsynchronized = false;
-            UnsubscribeUnsynchronizedData();
+            m_chartSubscriptionConnected = false;
+            UnsubscribeChartData();
 
             try
             {
                 ChartPlotterDynamic.Dispatcher.BeginInvoke(new Action(() => ChartPlotterDynamic.Children.Remove(m_lineGraph)));
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex);
             }
 
             if (m_restartConnectionCycle)
-                InitializeUnsynchronizedSubscription();
+                InitializeChartSubscription();
         }
 
-        private void m_unsynchronizedSubscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        private void ChartSubscriptionNewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
-            if (0 == Interlocked.Exchange(ref m_processingUnsynchronizedMeasurements, 1))
+            if (0 != Interlocked.Exchange(ref m_processingUnsynchronizedMeasurements, 1))
+                return;
+
+            try
             {
-                try
+                foreach (IMeasurement measurement in e.Argument)
                 {
-                    foreach (IMeasurement measurement in e.Argument)
+                    double tempValue = measurement.AdjustedValue;
+
+                    if (!double.IsNaN(tempValue) && !double.IsInfinity(tempValue)) // Process data only if it is not NaN or infinity.
                     {
-                        double tempValue = measurement.AdjustedValue;
-
-                        if (!double.IsNaN(tempValue) && !double.IsInfinity(tempValue)) // Process data only if it is not NaN or infinity.
+                        ChartPlotterDynamic.Dispatcher.Invoke(DispatcherPriority.Normal, (Action)delegate
                         {
-                            ChartPlotterDynamic.Dispatcher.Invoke(DispatcherPriority.Normal, (Action)delegate
+                            if (m_yAxisDataCollection.Count == 0)
                             {
-                                if (m_yAxisDataCollection.Count == 0)
-                                {
-                                    for (int i = 0; i < m_numberOfPointsToPlot; i++)
-                                        m_yAxisDataCollection.Enqueue(tempValue);
+                                for (int i = 0; i < m_numberOfPointsToPlot; i++)
+                                    m_yAxisDataCollection.Enqueue(tempValue);
 
-                                    m_yAxisBindingCollection = new EnumerableDataSource<double>(m_yAxisDataCollection);
-                                    m_yAxisBindingCollection.SetYMapping(y => y);
+                                m_yAxisBindingCollection = new EnumerableDataSource<double>(m_yAxisDataCollection);
+                                m_yAxisBindingCollection.SetYMapping(y => y);
 
-                                    m_lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, m_yAxisBindingCollection), Color.FromArgb(255, 25, 25, 200), 1, "");
+                                m_lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, m_yAxisBindingCollection), Color.FromArgb(255, 25, 25, 200), 1, string.Empty);
 
-                                }
-                                else
-                                {
-                                    double oldValue;
-                                    
-                                    if (m_yAxisDataCollection.TryDequeue(out oldValue))
-                                        m_yAxisDataCollection.Enqueue(tempValue);
-                                }
-                                m_yAxisBindingCollection.RaiseDataChanged();
-                            });
-                        }
+                            }
+                            else
+                            {
+                                if (m_yAxisDataCollection.TryDequeue(out double _))
+                                    m_yAxisDataCollection.Enqueue(tempValue);
+                            }
+                            m_yAxisBindingCollection.RaiseDataChanged();
+                        });
                     }
                 }
-                finally
-                {
-                    Interlocked.Exchange(ref m_processingUnsynchronizedMeasurements, 0);
-                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref m_processingUnsynchronizedMeasurements, 0);
             }
         }
 
-        private void m_unsynchronizedSubscriber_ConnectionEstablished(object sender, EventArgs e)
+        private void ChartSubscriptionConnectionEstablished(object sender, EventArgs e)
         {
-            m_subscribedUnsynchronized = true;
-            SubscribeUnsynchronizedData();
+            m_chartSubscriptionConnected = true;
+            SubscribeChartData();
         }
 
-        private void m_unsynchronizedSubscriber_ProcessException(object sender, EventArgs<Exception> e)
-        {
-
-        }
-
-        private void m_unsynchronizedSubscriber_StatusMessage(object sender, EventArgs<string> e)
-        {
-
-        }
-
-        private void InitializeUnsynchronizedSubscription()
+        private void InitializeChartSubscription()
         {
             try
             {
                 using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
                 {
-                    m_unsynchronizedSubscriber = new DataSubscriber();
-                    m_unsynchronizedSubscriber.StatusMessage += m_unsynchronizedSubscriber_StatusMessage;
-                    m_unsynchronizedSubscriber.ProcessException += m_unsynchronizedSubscriber_ProcessException;
-                    m_unsynchronizedSubscriber.ConnectionEstablished += m_unsynchronizedSubscriber_ConnectionEstablished;
-                    m_unsynchronizedSubscriber.NewMeasurements += m_unsynchronizedSubscriber_NewMeasurements;
-                    m_unsynchronizedSubscriber.ConnectionTerminated += m_unsynchronizedSubscriber_ConnectionTerminated;
-                    m_unsynchronizedSubscriber.ConnectionString = database.DataPublisherConnectionString();
-                    m_unsynchronizedSubscriber.Initialize();
-                    m_unsynchronizedSubscriber.Start();
+                    m_chartSubscription = new DataSubscriber();
+                    m_chartSubscription.ConnectionEstablished += ChartSubscriptionConnectionEstablished;
+                    m_chartSubscription.NewMeasurements += ChartSubscriptionNewMeasurements;
+                    m_chartSubscription.ConnectionTerminated += ChartSubscriptionConnectionTerminated;
+                    m_chartSubscription.ConnectionString = database.DataPublisherConnectionString();
+                    m_chartSubscription.Initialize();
+                    m_chartSubscription.Start();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Failed to initialize subscription." + Environment.NewLine + ex.Message, "Failed to Subscribe", MessageBoxButton.OK);
+                MessageBox.Show($"Failed to initialize subscription.{Environment.NewLine}{ex.Message}", "Failed to Subscribe", MessageBoxButton.OK);
             }
         }
 
-        private void StopUnsynchronizedSubscription()
+        private void DisposeChartSubscription()
         {
-            if (m_unsynchronizedSubscriber != null)
-            {
-                m_unsynchronizedSubscriber.StatusMessage -= m_unsynchronizedSubscriber_StatusMessage;
-                m_unsynchronizedSubscriber.ProcessException -= m_unsynchronizedSubscriber_ProcessException;
-                m_unsynchronizedSubscriber.ConnectionEstablished -= m_unsynchronizedSubscriber_ConnectionEstablished;
-                m_unsynchronizedSubscriber.NewMeasurements -= m_unsynchronizedSubscriber_NewMeasurements;
-                m_unsynchronizedSubscriber.ConnectionTerminated -= m_unsynchronizedSubscriber_ConnectionTerminated;
-                m_unsynchronizedSubscriber.Stop();
-                m_unsynchronizedSubscriber.Dispose();
-                m_unsynchronizedSubscriber = null;
-            }
+            if (m_chartSubscription is null)
+                return;
+
+            m_chartSubscription.ConnectionEstablished -= ChartSubscriptionConnectionEstablished;
+            m_chartSubscription.NewMeasurements -= ChartSubscriptionNewMeasurements;
+            m_chartSubscription.ConnectionTerminated -= ChartSubscriptionConnectionTerminated;
+            m_chartSubscription.Stop();
+            m_chartSubscription.Dispose();
+            m_chartSubscription = null;
         }
 
-        private void SubscribeUnsynchronizedData()
+        private void SubscribeChartData()
         {
-            if (m_unsynchronizedSubscriber == null)
-                InitializeUnsynchronizedSubscription();
+            if (m_chartSubscription is null)
+                InitializeChartSubscription();
 
             try
             {
                 ChartPlotterDynamic.Dispatcher.BeginInvoke(new Action(() => ChartPlotterDynamic.Children.Remove(m_lineGraph)));
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex);
             }
 
             m_yAxisDataCollection = new ConcurrentQueue<double>();
 
-            if (m_subscribedUnsynchronized && (object)m_unsynchronizedSubscriber != null && !string.IsNullOrEmpty(m_signalID))
-                m_unsynchronizedSubscriber.UnsynchronizedSubscribe(true, true, m_signalID, null, true, m_refreshInterval);
+            if (m_chartSubscriptionConnected && m_chartSubscription != null && !string.IsNullOrEmpty(m_signalID))
+                m_chartSubscription.UnsynchronizedSubscribe(true, true, m_signalID, null, true, m_refreshInterval);
         }
 
-        /// <summary>
-        /// Unsubscribes data from the service.
-        /// </summary>
-        public void UnsubscribeUnsynchronizedData()
+        private void UnsubscribeChartData()
         {
             try
             {
-                if (m_unsynchronizedSubscriber != null)
+                if (m_chartSubscription != null)
                 {
-                    m_unsynchronizedSubscriber.Unsubscribe();
-                    StopUnsynchronizedSubscription();
+                    m_chartSubscription.Unsubscribe();
+                    DisposeChartSubscription();
                 }
             }
             catch
             {
-                m_unsynchronizedSubscriber = null;
+                m_chartSubscription = null;
             }
         }
 
         #endregion
+
+        #region [ Stats Subscription ]
+
+        private void InitializeStatsSubscription()
+        {
+            try
+            {
+                using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+                {
+                    m_statsSubscription = new DataSubscriber();
+                    m_statsSubscription.ConnectionEstablished += StatsSubscriptionConnectionEstablished;
+                    m_statsSubscription.NewMeasurements += StatsSubscriptionNewMeasurements;
+                    m_statsSubscription.ConnectionTerminated += StatsSubscriptionConnectionTerminated;
+                    m_statsSubscription.ConnectionString = database.DataPublisherConnectionString();
+                    m_statsSubscription.Initialize();
+                    m_statsSubscription.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+        }
+
+        private void StatsSubscriptionConnectionEstablished(object sender, EventArgs e)
+        {
+            const string StatsFilterExpression = "SignalAcronym = 'STAT' AND (" +
+                                                 "SignalReference LIKE '%SYSTEM-ST16' OR" + // [0] System CPU Usage
+                                                 "SignalReference LIKE '%SYSTEM-ST20' OR" + // [1] System Memory Usage
+                                                 "SignalReference LIKE '%SYSTEM-ST24' OR" + // [2] System Time Deviation
+                                                 "SignalReference LIKE '%SYSTEM-ST25')";    // [3] Primary Disk Usage
+
+            m_statSignalIDs = Measurement.LoadSignalIDs(null, StatsFilterExpression, "SignalReference").ToArray();
+            m_statsSubscription.UnsynchronizedSubscribe(true, true, string.Join(";", m_statSignalIDs));
+        }
+
+        private void StatsSubscriptionNewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        {
+            // [0] System CPU Usage
+            // [1] System Memory Usage
+            // [2] System Time Deviation From Average
+            // [3] Primary Disk Usage
+
+            foreach (IMeasurement stat in e.Argument)
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    Guid signalID = stat.ID;
+
+                    if (signalID == m_statSignalIDs[0])
+                        CPU.Content = $"{stat.AdjustedValue:N3}%";
+                    else if (signalID == m_statSignalIDs[1])
+                        Memory.Content = $"{stat.AdjustedValue:N3}%";
+                    else if (signalID == m_statSignalIDs[2])
+                        Time.Content = $"{stat.AdjustedValue:N3} seconds";
+                    else if (signalID == m_statSignalIDs[3])
+                        Disk.Content = $"{stat.AdjustedValue:N3}%";
+                }));
+            }
+        }
+
+        private void StatsSubscriptionConnectionTerminated(object sender, EventArgs e)
+        {
+            UnsubscribeStatsData();
+
+            if (m_restartConnectionCycle)
+                InitializeStatsSubscription();
+        }
+
+        private void DisposeStatsSubscription()
+        {
+            if (m_statsSubscription is null)
+                return;
+
+            m_statsSubscription.ConnectionEstablished -= StatsSubscriptionConnectionEstablished;
+            m_statsSubscription.NewMeasurements -= StatsSubscriptionNewMeasurements;
+            m_statsSubscription.ConnectionTerminated -= StatsSubscriptionConnectionTerminated;
+            m_statsSubscription.Stop();
+            m_statsSubscription.Dispose();
+            m_statsSubscription = null;
+        }
+
+        private void UnsubscribeStatsData()
+        {
+            try
+            {
+                if (!(m_statsSubscription is null))
+                {
+                    m_statsSubscription.Unsubscribe();
+                    DisposeStatsSubscription();
+                }
+            }
+            catch
+            {
+                m_statsSubscription = null;
+            }
+        }
+
+        #endregion 
 
         #endregion
     }
