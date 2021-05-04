@@ -334,7 +334,8 @@ namespace GSF.TimeSeries
                 /* 21 */ "Average Device Time",
                 /* 22 */ "Minimum Device Time",
                 /* 23 */ "Maximum Device Time",
-                /* 24 */ "System Time Deviation From Average"
+                /* 24 */ "System Time Deviation From Average",
+                /* 25 */ "Primary Disk Usage"
             };
 
             string[] SystemStatDescriptions = 
@@ -362,7 +363,8 @@ namespace GSF.TimeSeries
                 /* 21 */ "Average time for all input devices",
                 /* 22 */ "Minimum time for all input devices",
                 /* 23 */ "Maximum time for all input devices",
-                /* 24 */ "System time deviation from average for all input devices in seconds"
+                /* 24 */ "System time deviation from average for all input devices in seconds",
+                /* 25 */ "Percentage of primary disk (C: or /) usage on the host system"
             };
 
             string[] SystemStatTypes =
@@ -390,7 +392,8 @@ namespace GSF.TimeSeries
                 /* 21 */ "GSF.UnixTimeTag",
                 /* 22 */ "GSF.UnixTimeTag",
                 /* 23 */ "GSF.UnixTimeTag",
-                /* 24 */ "System.Double"
+                /* 24 */ "System.Double",
+                /* 25 */ "System.Double"
             };
 
             string[] SystemStatFormats =
@@ -418,7 +421,8 @@ namespace GSF.TimeSeries
                 /* 21 */ "{0:yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'fff}",
                 /* 22 */ "{0:yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'fff}",
                 /* 23 */ "{0:yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'fff}",
-                /* 24 */ "{0:N3} s"
+                /* 24 */ "{0:N3} s",
+                /* 25 */ "{0:N3} %"
             };
 
             // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences

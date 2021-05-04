@@ -126,6 +126,20 @@ namespace GSF.TimeSeries.Statistics
         private static double GetSystemStatistic_AverageIOUsage(object source, string _) =>
             source is PerformanceMonitor perfMon ? perfMon.IOUsage?.AverageValue ?? double.NaN : double.NaN;
 
+        private static double GetSystemStatistic_PrimaryDiskUsage(object source, string _)
+        {
+            try
+            {
+                string primaryDrive = IsPosixEnvironment ? "/" : "C:\\";
+                return FilePath.GetAvailableFreeSpace(primaryDrive, out long freeSpace, out long totalSize) ? (totalSize - freeSpace) / (double)totalSize * 100.0D : double.NaN;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+                return double.NaN;
+            }
+        }
+
         #endregion
 
         #region [ IP Data Send Rate ]
