@@ -147,6 +147,9 @@ namespace GSF.TimeSeries.Statistics
         private static double GetSystemStatistic_MaximumDeviceTime(object source, string _) =>
             (double)new UnixTimeTag(GlobalDeviceStatistics.MaximumTime).Value;
 
+        private static double GetSystemStatistic_SystemTimeDeviationFromAverage(object source, string _) =>
+            new Ticks(GlobalDeviceStatistics.GetSystemTimeDeviationFromAverage()).ToSeconds();
+
         #endregion
     }
 }

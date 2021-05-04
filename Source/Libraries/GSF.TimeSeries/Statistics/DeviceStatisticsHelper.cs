@@ -57,7 +57,7 @@ namespace GSF.TimeSeries.Statistics
         public static long GetDeviceTimeDeviationFromAverage(IDevice device) => 
             s_deviceTimesSnapshot.TryGetValue(device, out long currentDeviceTime) ? AverageTime - currentDeviceTime : 0L;
 
-        public static long GetLocalClockTimeDeviationFromAverage() => 
+        public static long GetSystemTimeDeviationFromAverage() => 
             AverageTime - s_snapshotTime;
 
         public static void MarkDeviceTimestamp(IDevice device, long ticks)
