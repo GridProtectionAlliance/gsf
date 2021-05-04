@@ -30,6 +30,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Timers;
@@ -1083,6 +1084,8 @@ namespace GSF.TimeSeries.Statistics
         /// <param name="statisticMeasurementNameFormat">Format string used to name statistic measurements for this source.</param>
         public static void Register(object source, string sourceName, string sourceCategory, string sourceAcronym, string statisticMeasurementNameFormat = "{}")
         {
+            RuntimeHelpers.RunClassConstructor(typeof(GlobalDeviceStatistics).TypeHandle);
+
             StatisticSource sourceInfo = new StatisticSource()
             {
                 SourceReference = new WeakReference<object>(source),
