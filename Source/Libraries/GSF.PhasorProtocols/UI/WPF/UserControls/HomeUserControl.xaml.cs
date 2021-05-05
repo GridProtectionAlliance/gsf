@@ -27,15 +27,16 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using GSF.Communication;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -74,7 +75,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private string m_signalID;
         private int m_processingUnsynchronizedMeasurements;
         private double m_refreshInterval = 0.25;
-        private bool m_restartConnectionCycle = true;
         private int[] m_xAxisDataCollection;                                // Source data for the binding collection.
         private EnumerableDataSource<int> m_xAxisBindingCollection;         // Values plotted on X-Axis.        
         private ConcurrentQueue<double> m_yAxisDataCollection;              // Source data for the binding collection. Format is <signalID, collection of values from subscription API>.
@@ -123,7 +123,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     m_refreshTimer.Stop();
 
                 UnsubscribeChartData();
-                UnsubscribeStatsData();
+                DisposeStatsSubscription();
             }
             finally
             {
@@ -146,6 +146,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (m_windowsServiceClient is null || m_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
             {
                 ButtonRestart.IsEnabled = false;
+                m_statsSubscription?.Stop();
             }
             else
             {
@@ -163,6 +164,20 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             TextBlockInstance.Text = IntPtr.Size == 8 ? "64-bit" : "32-bit";
             TextBlockLocalTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+            // Initialize default brush
+            if (s_defaultBrush is null)
+                s_defaultBrush = TextBlockInstance.Background;
+
+            // Get needed styles
+            if (s_underlineStyle is null)
+                s_underlineStyle = FindResource("Underline") as Style;
+
+            if (s_shadowStyle is null)
+                s_shadowStyle = FindResource("Shadow") as Style;
+
+            if (s_underlineShadowStyle is null)
+                s_underlineShadowStyle = FindResource("UnderlineShadow") as Style;
 
             Version appVersion = AssemblyInfo.EntryAssembly.Version;
             TextBlockManagerVersion.Text = $"{appVersion.Major}.{appVersion.Minor}.{appVersion.Build}.0";
@@ -206,10 +221,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             {
                 using (UserInfo info = new UserInfo(CommonFunctions.CurrentUser))
                 {
-                    if (info.Exists)
-                        TextBlockUser.Text = info.LoginID;
-                    else
-                        TextBlockUser.Text = CommonFunctions.CurrentUser;
+                    TextBlockUser.Text = info.Exists ? info.LoginID : CommonFunctions.CurrentUser;
                 }
             }
             catch
@@ -221,17 +233,17 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             //Remove legend on the right.
             Panel legendParent = (Panel)ChartPlotterDynamic.Legend.ContentGrid.Parent;
-            
+
             if (!(legendParent is null))
                 legendParent.Children.Remove(ChartPlotterDynamic.Legend.ContentGrid);
 
             ChartPlotterDynamic.NewLegendVisible = false;
 
             m_xAxisDataCollection = new int[m_numberOfPointsToPlot];
-            
+
             for (int i = 0; i < m_numberOfPointsToPlot; i++)
                 m_xAxisDataCollection[i] = i;
-            
+
             m_xAxisBindingCollection = new EnumerableDataSource<int>(m_xAxisDataCollection);
             m_xAxisBindingCollection.SetXMapping(x => x);
 
@@ -305,6 +317,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
                     if (PopupStatus.IsOpen)
                         CommonFunctions.SendCommandToService("Status -actionable");
+
+                    if (!(m_statsSubscription is null) && !m_statsSubscription.Enabled)
+                        m_statsSubscription?.Start();
                 }
                 catch (Exception ex)
                 {
@@ -390,12 +405,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             if (ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out bool _))
             {
-                switch (sourceCommand.ToLower())
+                switch (sourceCommand.ToLowerInvariant())
                 {
                     case "health":
                         this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                            TextBlockSystemHealth.Text = e.Argument.Message.TrimEnd();
+                            string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                            TextBlockSystemHealth.Text = string.Join(Environment.NewLine, lines.Take(21));
                             GroupBoxSystemHealth.Header = $"System Health (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
                         });
                         break;
@@ -415,13 +431,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     case "time":
                         this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                            string[] times = Regex.Split(e.Argument.Message, "\r\n");
-                            
-                            if (times.Any())
+                            string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+                            if (lines.Length > 0)
                             {
-                                string[] currentTimes = Regex.Split(times[0], ",");
-                                
-                                if (currentTimes.Any())
+                                string[] currentTimes = lines[0].Split(',');
+
+                                if (currentTimes.Length > 0)
                                     TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:", StringComparison.Ordinal) + 12).Trim();
                             }
                         });
@@ -468,13 +484,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
                             ChartPlotterDynamic.Visible = DataRect.Create(0, -180, m_numberOfPointsToPlot, 180);
                             break;
                         case "FQ":
-                        {
-                            double frequencyMin = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMin"));
-                            double frequencyMax = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMax"));
+                            {
+                                double frequencyMin = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMin"));
+                                double frequencyMax = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMax"));
 
-                            ChartPlotterDynamic.Visible = DataRect.Create(0, Math.Min(frequencyMin, frequencyMax), m_numberOfPointsToPlot, Math.Max(frequencyMin, frequencyMax));
-                            break;
-                        }
+                                ChartPlotterDynamic.Visible = DataRect.Create(0, Math.Min(frequencyMin, frequencyMax), m_numberOfPointsToPlot, Math.Max(frequencyMin, frequencyMax));
+                                break;
+                            }
                     }
                 }
             }
@@ -501,6 +517,16 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             LoadComboBoxMeasurementAsync();
         }
+        private void TimeLabel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            MessageBox.Show("Clicked!");
+        }
+
+        private void TimeLabel_MouseEnter(object sender, MouseEventArgs e) =>
+            TimeLabel.FontWeight = FontWeights.Bold;
+
+        private void TimeLabel_OnMouseLeave(object sender, MouseEventArgs e) =>
+            TimeLabel.FontWeight = FontWeights.Normal;
 
         #region [ Chart Subscription ]
 
@@ -518,8 +544,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 Logger.SwallowException(ex);
             }
 
-            if (m_restartConnectionCycle)
-                InitializeChartSubscription();
+            InitializeChartSubscription();
         }
 
         private void ChartSubscriptionNewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
@@ -648,15 +673,18 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             try
             {
-                using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+                if (m_statsSubscription is null)
                 {
-                    m_statsSubscription = new DataSubscriber();
-                    m_statsSubscription.ConnectionEstablished += StatsSubscriptionConnectionEstablished;
-                    m_statsSubscription.NewMeasurements += StatsSubscriptionNewMeasurements;
-                    m_statsSubscription.ConnectionTerminated += StatsSubscriptionConnectionTerminated;
-                    m_statsSubscription.ConnectionString = database.DataPublisherConnectionString();
-                    m_statsSubscription.Initialize();
-                    m_statsSubscription.Start();
+                    using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+                    {
+                        m_statsSubscription = new DataSubscriber();
+                        m_statsSubscription.ConnectionEstablished += StatsSubscriptionConnectionEstablished;
+                        m_statsSubscription.NewMeasurements += StatsSubscriptionNewMeasurements;
+                        m_statsSubscription.ConnectionTerminated += StatsSubscriptionConnectionTerminated;
+                        m_statsSubscription.ConnectionString = database.DataPublisherConnectionString();
+                        m_statsSubscription.Initialize();
+                        m_statsSubscription.Start();
+                    }
                 }
             }
             catch (Exception ex)
@@ -677,6 +705,24 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_statsSubscription.UnsynchronizedSubscribe(true, true, string.Join(";", m_statSignalIDs), lagTime: 5.0D);
         }
 
+        private void StatsSubscriptionConnectionTerminated(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                CPUValue.Text = "...%";
+                UpdateHighlighting(CPULabel, CPUValue, s_defaultBrush, null, null);
+
+                MemoryValue.Text = "...%";
+                UpdateHighlighting(MemoryLabel, MemoryValue, s_defaultBrush, null, null);
+
+                DiskValue.Text = "...%";
+                UpdateHighlighting(DiskLabel, DiskValue, s_defaultBrush, null, null);
+
+                TimeValue.Text = "... seconds";
+                UpdateHighlighting(TimeLabel, TimeValue, s_defaultBrush, s_underlineStyle, null);
+            }));
+        }
+
         private void StatsSubscriptionNewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             // [0] System CPU Usage
@@ -694,23 +740,51 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     Guid signalID = stat.ID;
 
                     if (signalID == m_statSignalIDs[0])
-                        CPU.Content = $"{formattedValue}%";
+                    {
+                        CPUValue.Text = $"{formattedValue}%";
+
+                        if (value > s_cpuAlarm)
+                            UpdateHighlighting(CPULabel, CPUValue, s_alarmBrush, s_shadowStyle, s_shadowStyle);
+                        else if (value > s_cpuWarning)
+                            UpdateHighlighting(CPULabel, CPUValue, s_warningBrush, s_shadowStyle, s_shadowStyle);
+                        else
+                            UpdateHighlighting(CPULabel, CPUValue, s_defaultBrush, null, null);
+                    }
                     else if (signalID == m_statSignalIDs[1])
-                        Memory.Content = $"{formattedValue}%";
+                    {
+                        MemoryValue.Text = $"{formattedValue}%";
+
+                        if (value > s_memoryAlarm)
+                            UpdateHighlighting(MemoryLabel, MemoryValue, s_alarmBrush, s_shadowStyle, s_shadowStyle);
+                        else if (value > s_memoryWarning)
+                            UpdateHighlighting(MemoryLabel, MemoryValue, s_warningBrush, s_shadowStyle, s_shadowStyle);
+                        else
+                            UpdateHighlighting(MemoryLabel, MemoryValue, s_defaultBrush, null, null);
+                    }
                     else if (signalID == m_statSignalIDs[2])
-                        Time.Content = $"{formattedValue} seconds";
+                    {
+                        TimeValue.Text = $"{formattedValue} seconds";
+
+                        if (Math.Abs(value) > s_timeAlarm)
+                            UpdateHighlighting(TimeLabel, TimeValue, s_alarmBrush, s_underlineShadowStyle, s_shadowStyle);
+                        else if (Math.Abs(value) > s_timeWarning)
+                            UpdateHighlighting(TimeLabel, TimeValue, s_warningBrush, s_underlineShadowStyle, s_shadowStyle);
+                        else
+                            UpdateHighlighting(TimeLabel, TimeValue, s_defaultBrush, s_underlineStyle, null);
+                    }
                     else if (signalID == m_statSignalIDs[3])
-                        Disk.Content = $"{formattedValue}%";
+                    {
+                        DiskValue.Text = $"{formattedValue}%";
+
+                        if (value > s_diskAlarm)
+                            UpdateHighlighting(DiskLabel, DiskValue, s_alarmBrush, s_shadowStyle, s_shadowStyle);
+                        else if (value > s_diskWarning)
+                            UpdateHighlighting(DiskLabel, DiskValue, s_warningBrush, s_shadowStyle, s_shadowStyle);
+                        else
+                            UpdateHighlighting(DiskLabel, DiskValue, s_defaultBrush, null, null);
+                    }
                 }));
             }
-        }
-
-        private void StatsSubscriptionConnectionTerminated(object sender, EventArgs e)
-        {
-            UnsubscribeStatsData();
-
-            if (m_restartConnectionCycle)
-                InitializeStatsSubscription();
         }
 
         private void DisposeStatsSubscription()
@@ -718,39 +792,96 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (m_statsSubscription is null)
                 return;
 
+            m_statsSubscription.Stop();
             m_statsSubscription.ConnectionEstablished -= StatsSubscriptionConnectionEstablished;
             m_statsSubscription.NewMeasurements -= StatsSubscriptionNewMeasurements;
             m_statsSubscription.ConnectionTerminated -= StatsSubscriptionConnectionTerminated;
-            m_statsSubscription.Stop();
             m_statsSubscription.Dispose();
             m_statsSubscription = null;
         }
 
-        private void UnsubscribeStatsData()
+        #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        private const string DefaultWarningBrush = "#FFCAD43E";
+        private const string DefaultAlarmBrush = "#FFFF1111";
+
+        // Static Fields
+        private static readonly double s_cpuWarning = 75.0D;
+        private static readonly double s_cpuAlarm = 95.0D;
+        private static readonly double s_memoryWarning = 75.0D;
+        private static readonly double s_memoryAlarm = 95.0D;
+        private static readonly double s_diskWarning = 75.0D;
+        private static readonly double s_diskAlarm = 95.0D;
+        private static readonly double s_timeWarning = 3.0D;
+        private static readonly double s_timeAlarm = 5.0D;
+        private static readonly SolidColorBrush s_warningBrush;
+        private static readonly SolidColorBrush s_alarmBrush;
+        private static Brush s_defaultBrush;
+        private static Style s_underlineStyle;
+        private static Style s_shadowStyle;
+        private static Style s_underlineShadowStyle;
+
+        // Static Constructor
+        static HomeUserControl()
         {
             try
             {
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    CPU.Content = "...%";
-                    Memory.Content = "...%";
-                    Disk.Content = "...%";
-                    Time.Content = "... seconds";
-                }));
+                // Load home screen threshold settings
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings["HomeScreenThresholds"];
 
-                if (!(m_statsSubscription is null))
-                {
-                    m_statsSubscription.Unsubscribe();
-                    DisposeStatsSubscription();
-                }
+                // Make sure needed settings exist
+                settings.Add("CPUWarning", s_cpuWarning, "CPU utilization warning threshold, in percent.");
+                settings.Add("CPUAlarm", s_cpuAlarm, "CPU utilization alarm threshold, in percent.");
+                settings.Add("MemoryWarning", s_memoryWarning, "Memory utilization warning threshold, in percent.");
+                settings.Add("MemoryAlarm", s_memoryAlarm, "Memory utilization alarm threshold, in percent.");
+                settings.Add("DiskWarning", s_diskWarning, "Primary disk utilization warning threshold, in percent.");
+                settings.Add("DiskAlarm", s_diskAlarm, "Primary disk utilization alarm threshold, in percent.");
+                settings.Add("TimeWarning", s_timeWarning, "Local clock time deviation warning threshold, in seconds.");
+                settings.Add("TimeAlarm", s_timeAlarm, "Local clock time deviation alarm threshold, in seconds.");
+                settings.Add("WarningColor", DefaultWarningBrush, "Background color for warning labels, commonly yellow.");
+                settings.Add("AlarmColor", DefaultAlarmBrush, "Background color for alarm labels, commonly red.");
+
+                // Load configured settings
+                s_cpuWarning = settings["CPUWarning"].ValueAs(s_cpuWarning);
+                s_cpuAlarm = settings["CPUAlarm"].ValueAs(s_cpuAlarm);
+                s_memoryWarning = settings["MemoryWarning"].ValueAs(s_memoryWarning);
+                s_memoryAlarm = settings["MemoryAlarm"].ValueAs(s_memoryAlarm);
+                s_diskWarning = settings["DiskWarning"].ValueAs(s_diskWarning);
+                s_diskAlarm = settings["DiskAlarm"].ValueAs(s_diskAlarm);
+                s_timeWarning = settings["TimeWarning"].ValueAs(s_timeWarning);
+                s_timeAlarm = settings["TimeAlarm"].ValueAs(s_timeAlarm);
+                s_warningBrush = new SolidColorBrush((Color)(ColorConverter.ConvertFromString(settings["WarningColor"].ValueAs(DefaultWarningBrush)) ?? Colors.Yellow));
+                s_alarmBrush = new SolidColorBrush((Color)(ColorConverter.ConvertFromString(settings["AlarmColor"].ValueAs(DefaultWarningBrush)) ?? Colors.Red));
+
+                // Save changes, if any
+                config.Save();
             }
-            catch
+            catch (Exception ex)
             {
-                m_statsSubscription = null;
+                Logger.SwallowException(ex);
             }
         }
 
-        #endregion 
+        // Static Methods
+        private static void UpdateHighlighting(TextBlock statLabel, TextBlock statValue, Brush color, Style statLabelStyle, Style statValueStyle)
+        {
+            void setParentLabelBackground(TextBlock textBlock)
+            {
+                if (textBlock.Parent is Label label)
+                    label.Background = color;
+            }
+
+            setParentLabelBackground(statLabel);
+            statLabel.Style = statLabelStyle;
+
+            setParentLabelBackground(statValue);
+            statValue.Style = statValueStyle;
+        }
 
         #endregion
     }
