@@ -496,6 +496,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_include = value;
                 OnPropertyChanged("Include");
+
+                if (!m_include && Phase.Length > 1)
+                    Phase = Phase.Substring(0, 1);
             }
         }
 
