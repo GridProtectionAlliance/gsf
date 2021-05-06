@@ -1085,7 +1085,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                         m_statsSubscription.ConnectionEstablished += StatsSubscriptionConnectionEstablished;
                         m_statsSubscription.NewMeasurements += StatsSubscriptionNewMeasurements;
                         m_statsSubscription.ConnectionTerminated += StatsSubscriptionConnectionTerminated;
-                        m_statsSubscription.ConnectionString = database.DataPublisherConnectionString();
+                        m_statsSubscription.ConnectionString = connectionString;
                         m_statsSubscription.Initialize();
                         m_statsSubscription.Start();
                     }

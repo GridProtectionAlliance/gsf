@@ -131,7 +131,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         }
 
         /// <summary>
-        /// Hanldes checked event on the select all check box.
+        /// Handles checked event on the select all check box.
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event arguments.</param>

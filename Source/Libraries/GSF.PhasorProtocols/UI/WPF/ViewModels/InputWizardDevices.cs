@@ -1706,17 +1706,27 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             if (oldPhasor is null)
                                 continue;
 
-                            int oldSourceIndex = oldPhasor.SourceIndex;
+                            if (inputPhasor.Include)
+                            {
+                                int oldSourceIndex = oldPhasor.SourceIndex;
 
-                            // Update old phasor and save
-                            oldPhasor.DeviceID = device.ID;
-                            oldPhasor.SourceIndex = index + 1;
-                            oldPhasor.Type = inputPhasor.Type;
-                            oldPhasor.Phase = inputPhasor.Phase;
-                            oldPhasor.BaseKV = inputPhasor.BaseKV;
-                            oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
-                            oldPhasor.AngleAdder = inputPhasor.AngleAdder;
-                            Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
+                                // Update old phasor and save
+                                oldPhasor.DeviceID = device.ID;
+                                oldPhasor.SourceIndex = index + 1;
+                                oldPhasor.Type = inputPhasor.Type;
+                                oldPhasor.Phase = inputPhasor.Phase;
+                                oldPhasor.BaseKV = inputPhasor.BaseKV;
+                                oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
+                                oldPhasor.AngleAdder = inputPhasor.AngleAdder;
+                                Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
+                            }
+                            else
+                            {
+                                Phasor existing = Phasor.GetPhasor(database, $"WHERE DeviceID = {device.ID} AND Label = '{inputPhasor.Label}'");
+
+                                if (!(existing is null))
+                                    Phasor.Delete(database, existing.ID);
+                            }
 
                             // Remove phasor from the sets of unsaved phasors
                             unsavedInputPhasorSet.Remove(inputPhasor);
@@ -1736,15 +1746,25 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                             if (unsavedInputPhasorSet.Contains(inputPhasor))
                             {
-                                // Update old phasor and save
-                                oldPhasor.DeviceID = device.ID;
-                                oldPhasor.Label = inputPhasor.Label;
-                                oldPhasor.Type = inputPhasor.Type;
-                                oldPhasor.Phase = inputPhasor.Phase;
-                                oldPhasor.BaseKV = inputPhasor.BaseKV;
-                                oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
-                                oldPhasor.AngleAdder = inputPhasor.AngleAdder;
-                                Phasor.Save(database, oldPhasor);
+                                if (inputPhasor.Include)
+                                {
+                                    // Update old phasor and save
+                                    oldPhasor.DeviceID = device.ID;
+                                    oldPhasor.Label = inputPhasor.Label;
+                                    oldPhasor.Type = inputPhasor.Type;
+                                    oldPhasor.Phase = inputPhasor.Phase;
+                                    oldPhasor.BaseKV = inputPhasor.BaseKV;
+                                    oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
+                                    oldPhasor.AngleAdder = inputPhasor.AngleAdder;
+                                    Phasor.Save(database, oldPhasor);
+                                }
+                                else
+                                {
+                                    Phasor existing = Phasor.GetPhasor(database, $"WHERE DeviceID = {device.ID} AND SourceIndex = {oldPhasor.SourceIndex}");
+
+                                    if (!(existing is null))
+                                        Phasor.Delete(database, existing.ID);
+                                }
 
                                 // Remove phasor from the sets of unsaved phasors
                                 unsavedInputPhasorSet.Remove(inputPhasor);
@@ -1758,17 +1778,27 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             inputPhasor = inputPhasorList.First(unsavedInputPhasorSet.Contains);
                             oldPhasor = oldPhasorList.First(unsavedOldPhasorSet.Contains);
 
-                            // Update old phasor and save
-                            int oldSourceIndex = oldPhasor.SourceIndex;
-                            oldPhasor.DeviceID = device.ID;
-                            oldPhasor.SourceIndex = index + 1;
-                            oldPhasor.Label = inputPhasor.Label;
-                            oldPhasor.Type = inputPhasor.Type;
-                            oldPhasor.Phase = inputPhasor.Phase;
-                            oldPhasor.BaseKV = inputPhasor.BaseKV;
-                            oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
-                            oldPhasor.AngleAdder = inputPhasor.AngleAdder;
-                            Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
+                            if (inputPhasor.Include)
+                            {
+                                // Update old phasor and save
+                                int oldSourceIndex = oldPhasor.SourceIndex;
+                                oldPhasor.DeviceID = device.ID;
+                                oldPhasor.SourceIndex = index + 1;
+                                oldPhasor.Label = inputPhasor.Label;
+                                oldPhasor.Type = inputPhasor.Type;
+                                oldPhasor.Phase = inputPhasor.Phase;
+                                oldPhasor.BaseKV = inputPhasor.BaseKV;
+                                oldPhasor.MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier;
+                                oldPhasor.AngleAdder = inputPhasor.AngleAdder;
+                                Phasor.SaveAndReorder(database, oldPhasor, oldSourceIndex);
+                            }
+                            else
+                            {
+                                Phasor existing = Phasor.GetPhasor(database, $"WHERE DeviceID = {device.ID} AND SourceIndex = {oldPhasor.SourceIndex}");
+
+                                if (!(existing is null))
+                                    Phasor.Delete(database, existing.ID);
+                            }
 
                             // Remove phasor from the sets of unsaved phasors
                             unsavedInputPhasorSet.Remove(inputPhasor);
@@ -1787,19 +1817,22 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             if (!unsavedInputPhasorSet.Contains(inputPhasor))
                                 continue;
 
-                            oldPhasor = new Phasor
+                            if (inputPhasor.Include)
                             {
-                                DeviceID = device.ID,
-                                SourceIndex = index + 1,
-                                Label = inputPhasor.Label,
-                                Type = inputPhasor.Type,
-                                Phase = inputPhasor.Phase,
-                                BaseKV = inputPhasor.BaseKV,
-                                MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier,
-                                AngleAdder = inputPhasor.AngleAdder
-                            };
+                                oldPhasor = new Phasor
+                                {
+                                    DeviceID = device.ID,
+                                    SourceIndex = index + 1,
+                                    Label = inputPhasor.Label,
+                                    Type = inputPhasor.Type,
+                                    Phase = inputPhasor.Phase,
+                                    BaseKV = inputPhasor.BaseKV,
+                                    MagnitudeMultiplier = inputPhasor.MagnitudeMultiplier,
+                                    AngleAdder = inputPhasor.AngleAdder
+                                };
 
-                            Phasor.Save(database, oldPhasor);
+                                Phasor.Save(database, oldPhasor);
+                            }
                         }
                     }
 
