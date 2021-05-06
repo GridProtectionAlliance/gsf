@@ -18,15 +18,21 @@
 //  ----------------------------------------------------------------------------------------------------
 //  11/09/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
-// 30/07/2012 - Aniket Salver
+//  30/07/2012 - Aniket Salver
 //       Remembers the last graph selection. 
+//  05/05/2021 - J.Ritchie Carroll
+//       Added new alarm/warning stats row.
+//
 //******************************************************************************************************
 
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,10 +40,13 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using GSF.Communication;
+using GSF.ComponentModel;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Identity;
@@ -54,6 +63,8 @@ using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 #pragma warning disable 612,618
 
+// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace GSF.PhasorProtocols.UI.UserControls
 {
     /// <summary>
@@ -62,6 +73,28 @@ namespace GSF.PhasorProtocols.UI.UserControls
     public partial class HomeUserControl
     {
         #region [ Members ]
+
+        // Nested Types
+        private class CustomActionAdapter
+        {
+            [PrimaryKey(true)]
+            public int ID { get; set; }
+
+            public string AdapterName { get; set; }
+
+            public string AssemblyName { get; set; }
+
+            public string ConnectionString { get; set; }
+
+            [UpdateValueExpression("DateTime.UtcNow")]
+            public DateTime UpdatedOn { get; set; }
+
+            [UpdateValueExpression("UserInfo.CurrentUserID")]
+            public string UpdatedBy { get; set; }
+        }
+
+        // Constants
+        private const string SystemSettings = CommonFunctions.DefaultSettingsCategory;
 
         // Fields
         private readonly ObservableCollection<MenuDataItem> m_menuDataItems;
@@ -84,6 +117,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private bool m_eventHandlerRegistered;
         private Measurement m_selectedMeasurement;
         private Guid[] m_statSignalIDs;
+        private bool m_serverIsLocal;
+        private bool m_timeReasonabilityPopupIsForLocalTime;
+        private double m_lastLocalToServerTimeDeviation;
+        private double m_lastLocalTimeDeviation;
+        private double m_lastServerTimeDeviation;
 
         #endregion
 
@@ -139,7 +177,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 ButtonRestart.IsEnabled = false;
 
             if (!CommonFunctions.CurrentPrincipal.IsInRole("Administrator,Editor"))
+            {
                 ButtonInputWizard.IsEnabled = false;
+                ApplyToServer.IsEnabled = false;
+                ApplyToServer.Foreground = new SolidColorBrush(Colors.Gray);
+                ServerTimeLabel.Cursor = null;
+            }
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
 
@@ -249,6 +292,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             LoadComboBoxDeviceAsync();
             InitializeStatsSubscription();
+            InitializeTimeReasonabilitySettings();
         }
 
         private void LoadComboBoxDeviceAsync()
@@ -355,28 +399,19 @@ namespace GSF.PhasorProtocols.UI.UserControls
             }
         }
 
-        /// <summary>
-        /// Recursively finds menu item to navigate to when a button is clicked on the UI.
-        /// </summary>
-        /// <param name="items">Collection of menu items.</param>
-        /// <param name="stringToMatch">Item to search for in menu items collection.</param>
-        /// <param name="item">Returns a menu item.</param>
-        private void GetMenuDataItem(ObservableCollection<MenuDataItem> items, string stringToMatch, ref MenuDataItem item)
+        // Recursively finds menu item to navigate to when a button is clicked on the UI.
+        private void GetMenuDataItem(ObservableCollection<MenuDataItem> dataItems, string stringToMatch, ref MenuDataItem item)
         {
-            for (int i = 0; i < items.Count; i++)
+            foreach (MenuDataItem dataItem in dataItems)
             {
-                if (items[i].UserControlPath.ToLower() == stringToMatch.ToLower())
+                if (string.Equals(dataItem.UserControlPath, stringToMatch, StringComparison.OrdinalIgnoreCase))
                 {
-                    item = items[i];
+                    item = dataItem;
                     break;
                 }
-                else
-                {
-                    if (items[i].SubMenuItems.Count > 0)
-                    {
-                        GetMenuDataItem(items[i].SubMenuItems, stringToMatch, ref item);
-                    }
-                }
+
+                if (dataItem.SubMenuItems.Count > 0)
+                    GetMenuDataItem(dataItem.SubMenuItems, stringToMatch, ref item);
             }
         }
 
@@ -418,8 +453,19 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     case "status":
                         this.Dispatcher.BeginInvoke((Action)delegate
                         {
+                            string trimEnd(string value)
+                            {
+                                const int MaxLength = 80;
+
+                                if (string.IsNullOrEmpty(value))
+                                    return "";
+
+                                return value.Length <= MaxLength ? value : string.Concat(value.Substring(0, MaxLength - 3), "...");
+                            }
+
+                            string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                            TextBlockStatus.Text = string.Join(Environment.NewLine, lines.Select(trimEnd));
                             GroupBoxStatus.Header = $"System Status (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
-                            TextBlockStatus.Text = e.Argument.Message.TrimEnd();
                         });
                         break;
                     case "version":
@@ -435,10 +481,17 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
                             if (lines.Length > 0)
                             {
-                                string[] currentTimes = lines[0].Split(',');
+                                string[] currentServiceTimes = lines[0].Split(',');
 
-                                if (currentTimes.Length > 0)
-                                    TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:", StringComparison.Ordinal) + 12).Trim();
+                                if (currentServiceTimes.Length > 0)
+                                {
+                                    string currentServiceTime = currentServiceTimes[0].Substring(currentServiceTimes[0].ToLower().LastIndexOf("system time:", StringComparison.Ordinal) + 12).Trim();
+
+                                    if (DateTime.TryParse(currentServiceTime, out DateTime serviceTime) && DateTime.TryParse(TextBlockLocalTime.Text, out DateTime localTime))
+                                        m_lastLocalToServerTimeDeviation = new Ticks(localTime.Ticks - serviceTime.Ticks).ToSeconds();
+                                    
+                                    TextBlockServerTime.Text = currentServiceTime;
+                                }
                             }
                         });
                         break;
@@ -484,13 +537,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
                             ChartPlotterDynamic.Visible = DataRect.Create(0, -180, m_numberOfPointsToPlot, 180);
                             break;
                         case "FQ":
-                            {
-                                double frequencyMin = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMin"));
-                                double frequencyMax = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMax"));
+                        {
+                            double frequencyMin = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMin"));
+                            double frequencyMax = Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("FrequencyRangeMax"));
 
-                                ChartPlotterDynamic.Visible = DataRect.Create(0, Math.Min(frequencyMin, frequencyMax), m_numberOfPointsToPlot, Math.Max(frequencyMin, frequencyMax));
-                                break;
-                            }
+                            ChartPlotterDynamic.Visible = DataRect.Create(0, Math.Min(frequencyMin, frequencyMax), m_numberOfPointsToPlot, Math.Max(frequencyMin, frequencyMax));
+                            break;
+                        }
                     }
                 }
             }
@@ -517,16 +570,345 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             LoadComboBoxMeasurementAsync();
         }
-        private void TimeLabel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
         {
-            MessageBox.Show("Clicked!");
+            Regex regex = new Regex("[^0-9.-]+");
+            e.Handled = regex.IsMatch(e.Text);
         }
 
-        private void TimeLabel_MouseEnter(object sender, MouseEventArgs e) =>
-            TimeLabel.FontWeight = FontWeights.Bold;
+        private void LocalTimeLabel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            double timeDeviation = m_lastLocalTimeDeviation;
 
-        private void TimeLabel_OnMouseLeave(object sender, MouseEventArgs e) =>
-            TimeLabel.FontWeight = FontWeights.Normal;
+            if (double.IsNaN(timeDeviation) || double.IsInfinity(timeDeviation) || timeDeviation == default)
+                timeDeviation = s_timeAlarm;
+
+            double lagTime = Math.Ceiling(timeDeviation * 1.2D);
+            double leadTime = Math.Ceiling(lagTime * 1.2D);
+
+            LagTime.Text = lagTime.ToString("N2");
+            LeadTime.Text = leadTime.ToString("N2");
+
+            TimeReasonabilityGroupBox.Header = "Change Local Time Reasonability Parameters";
+            m_timeReasonabilityPopupIsForLocalTime = true;
+
+            ApplyToManager.Visibility = m_serverIsLocal ? Visibility.Visible : Visibility.Collapsed;
+            ApplyToManager.IsChecked = true;
+
+            ApplyToServer.Visibility = m_serverIsLocal ? Visibility.Visible : Visibility.Collapsed;
+            ApplyToServer.IsChecked = !m_serverIsLocal;
+
+            LabelManagerUpdateNote.Visibility = Visibility.Visible;
+            LabelServerUpdateNote.Visibility = Visibility.Collapsed;
+
+            TimeReasonabilityPopup.IsOpen = true;
+            LagTime.Focus();
+        }
+
+        private void LocalTimeLabel_MouseEnter(object sender, MouseEventArgs e) =>
+            LocalTimeLabel.FontWeight = FontWeights.Bold;
+
+        private void LocalTimeLabel_OnMouseLeave(object sender, MouseEventArgs e) =>
+            LocalTimeLabel.FontWeight = FontWeights.Normal;
+
+        private void ServerTimeLabel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!ApplyToServer.IsEnabled)
+                return;
+
+            double timeDeviation = m_lastServerTimeDeviation;
+
+            if (double.IsNaN(timeDeviation) || double.IsInfinity(timeDeviation) || timeDeviation == default)
+                timeDeviation = s_timeAlarm;
+
+            double lagTime = Math.Ceiling(timeDeviation * 1.2D);
+            double leadTime = Math.Ceiling(lagTime * 1.2D);
+
+            LagTime.Text = lagTime.ToString("N2");
+            LeadTime.Text = leadTime.ToString("N2");
+
+            TimeReasonabilityGroupBox.Header = "Change Server Time Reasonability Parameters";
+            m_timeReasonabilityPopupIsForLocalTime = false;
+
+            ApplyToManager.Visibility = Visibility.Collapsed;
+            ApplyToManager.IsChecked = true;
+
+            ApplyToServer.Visibility = Visibility.Collapsed;
+            ApplyToServer.IsChecked = true;
+
+            LabelManagerUpdateNote.Visibility = Visibility.Collapsed;
+            LabelServerUpdateNote.Visibility = Visibility.Visible;
+
+            TimeReasonabilityPopup.IsOpen = true;
+            LagTime.Focus();
+        }
+
+        private void ServerTimeLabel_MouseEnter(object sender, MouseEventArgs e) =>
+            ServerTimeLabel.FontWeight = ApplyToServer.IsEnabled ? FontWeights.Bold : FontWeights.Normal;
+
+        private void ServerTimeLabel_OnMouseLeave(object sender, MouseEventArgs e) =>
+            ServerTimeLabel.FontWeight = FontWeights.Normal;
+
+        private void ApplyToManager_OnChecked(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LabelManagerUpdateNote.Visibility = m_timeReasonabilityPopupIsForLocalTime ? Visibility.Visible : Visibility.Collapsed;
+                VerifyButtonApplyEnabledState();
+            }));
+        }
+
+        private void ApplyToManager_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LabelManagerUpdateNote.Visibility = Visibility.Collapsed;
+                VerifyButtonApplyEnabledState();
+            }));
+        }
+
+        private void ApplyToServer_OnChecked(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LabelServerUpdateNote.Visibility = !m_timeReasonabilityPopupIsForLocalTime || m_serverIsLocal ? Visibility.Visible : Visibility.Collapsed;
+                VerifyButtonApplyEnabledState();
+            }));
+        }
+
+        private void ApplyToServer_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LabelServerUpdateNote.Visibility = Visibility.Collapsed;
+                VerifyButtonApplyEnabledState();
+            }));
+        }
+
+        private void VerifyButtonApplyEnabledState() => 
+            ButtonApply.IsEnabled = ApplyToManager.IsChecked.GetValueOrDefault() || ApplyToServer.IsChecked.GetValueOrDefault();
+
+        private void ButtonCancel_OnClick(object sender, RoutedEventArgs e) =>
+            TimeReasonabilityPopup.IsOpen = false;
+
+        private void ButtonApply_OnClick(object sender, RoutedEventArgs e)
+        {
+            TimeReasonabilityPopup.IsOpen = false;
+
+            if (!double.TryParse(LagTime.Text, out double lagTime) || !double.TryParse(LeadTime.Text, out double leadTime))
+            {
+                MessageBox.Show($"Failed to parse lag time \"{LagTime.Text}\" and/or lead time \"{LeadTime.Text}\" as a floating point value", "Time Reasonability Parse Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                string lagTimeText = lagTime.ToString(CultureInfo.InvariantCulture);
+                string leadTimeText = leadTime.ToString(CultureInfo.InvariantCulture);
+
+                if (m_timeReasonabilityPopupIsForLocalTime && ApplyToManager.IsChecked.GetValueOrDefault())
+                {
+                    try
+                    {
+                        // Update warning and alarm thresholds in manager configuration file
+                        s_timeWarning = lagTime * 0.75D;
+                        s_timeAlarm = lagTime;
+
+                        // Load home screen threshold settings
+                        ConfigurationFile config = ConfigurationFile.Current;
+                        CategorizedSettingsElementCollection settings = config.Settings["HomeScreenThresholds"];
+
+                        // Make sure needed settings exist
+                        settings.Add("TimeWarning", s_timeWarning, "Local clock time deviation warning threshold, in seconds.");
+                        settings.Add("TimeAlarm", s_timeAlarm, "Local clock time deviation alarm threshold, in seconds.");
+
+                        // Update settings
+                        settings["TimeWarning"].Update(s_timeWarning);
+                        settings["TimeAlarm"].Update(s_timeAlarm);
+
+                        // Save changes
+                        config.Save();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to update manager warning and alarm configuration thresholds: {ex.Message}", "Time Reasonability Manager Update Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+
+                    try
+                    {
+                        // Update internal lead/lag time settings used by manager screens
+                        IsolatedStorageManager.WriteToIsolatedStorage("LagTime", lagTimeText);
+                        IsolatedStorageManager.WriteToIsolatedStorage("LeadTime", leadTimeText);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to update manager lead/lag times in isolated storage: {ex.Message}", "Time Reasonability Manager Update Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                
+                if (ApplyToServer.IsEnabled && (!m_timeReasonabilityPopupIsForLocalTime || m_serverIsLocal) && ApplyToServer.IsChecked.GetValueOrDefault())
+                {
+                    try
+                    {
+                        // Define common custom action adapter assemblies for which to not apply lead/lag time updates
+                        HashSet<string> excludedAssemblies = new HashSet<string>(new[]
+                        { 
+                            "GSF.TimeSeries.dll", 
+                            "DataQualityMonitoring.dll", 
+                            "FileAdapters.dll", 
+                            "sttp.gsf.dll"
+                        },
+                        StringComparer.OrdinalIgnoreCase);
+
+                        // Update lead/lag time values in connection strings for each custom action adapter
+                        using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+                        {
+                            TableOperations<CustomActionAdapter> actionAdapterTable = new TableOperations<CustomActionAdapter>(database);
+
+                            foreach (CustomActionAdapter actionAdapter in actionAdapterTable.QueryRecords())
+                            {
+                                if (excludedAssemblies.Contains(actionAdapter.AssemblyName))
+                                    continue;
+
+                                string connectionString = actionAdapter.ConnectionString;
+
+                                if (string.IsNullOrWhiteSpace(connectionString))
+                                    continue;
+
+                                Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+                                
+                                settings["LagTime"] = lagTimeText;
+                                settings["LeadTime"] = leadTimeText;
+
+                                actionAdapter.ConnectionString = settings.JoinKeyValuePairs();
+                                actionAdapterTable.UpdateRecord(actionAdapter);
+
+                                try
+                                {
+                                    if (m_windowsServiceClient?.Helper.RemotingClient.CurrentState == ClientState.Connected)
+                                        CommonFunctions.SendCommandToService($"Init {actionAdapter.AdapterName}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.SwallowException(ex);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to update host service custom action adapters lag/lead times: {ex.Message}", "Time Reasonability Server Update Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+
+                    try
+                    {
+                        // Update default lead/lag time config file values for calculations
+                        XAttribute getElementValue(XElement[] elements, string name)
+                        {
+                            XElement element = elements.Elements("add").FirstOrDefault(elem =>
+                                elem.Attributes("name").Any(nameAttribute => 
+                                string.Compare(nameAttribute.Value, name, StringComparison.OrdinalIgnoreCase) == 0));
+
+                            return element?.Attributes("value").FirstOrDefault();
+                        }
+
+                        string configPath = FilePath.GetAbsolutePath(ConfigurationFile.Current.Configuration.FilePath.Replace("Manager", ""));
+
+                        if (File.Exists(configPath))
+                        {
+                            XDocument hostConfig = XDocument.Load(configPath);
+                            XElement[] systemSettings = hostConfig.Descendants(SystemSettings).ToArray();
+
+                            getElementValue(systemSettings, "DefaultCalculationLagTime").Value = lagTimeText;
+                            getElementValue(systemSettings, "DefaultCalculationLeadTime").Value = leadTimeText;
+
+                            hostConfig.Save(configPath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to update host service configuration default calculation lag/lead times: {ex.Message}", "Time Reasonability Server Update Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+        }
+
+        private void SetTimeReasonabilityLabelFontSizes(double fontSize)
+        {
+            LabelCPULabel.FontSize = LabelCPUValue.FontSize = 
+            LabelMemoryLabel.FontSize = LabelMemoryValue.FontSize = 
+            LabelDiskLabel.FontSize = LabelDiskValue.FontSize =
+            LabelLocalTimeLabel.FontSize = LabelLocalTimeValue.FontSize =
+            LabelServerTimeLabel.FontSize = LabelServerTimeValue.FontSize = 
+                fontSize;
+        }
+
+        private void SetTimeReasonabilityLabelDefaults()
+        {
+            CPUValue.Text = "...%";
+            UpdateHighlighting(CPULabel, CPUValue, s_defaultBrush, null, null);
+
+            MemoryValue.Text = "...%";
+            UpdateHighlighting(MemoryLabel, MemoryValue, s_defaultBrush, null, null);
+
+            DiskValue.Text = "...%";
+            UpdateHighlighting(DiskLabel, DiskValue, s_defaultBrush, null, null);
+
+            LocalTimeValue.Text = $"... {(m_serverIsLocal ? "seconds" : "secs")}";
+            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_defaultBrush, s_underlineStyle, null);
+
+            ServerTimeValue.Text = $"... {(m_serverIsLocal ? "seconds" : "secs")}";
+            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_defaultBrush, ApplyToServer.IsEnabled ? s_underlineStyle : null, null);
+        }
+
+        private void InitializeTimeReasonabilitySettings()
+        {
+            if (m_serverIsLocal)
+            {
+                LabelServerTimeSeparator.Visibility = Visibility.Collapsed;
+                LabelServerTimeLabel.Visibility = Visibility.Collapsed;
+                LabelServerTimeValue.Visibility = Visibility.Collapsed;
+                CPULabel.Text = "System CPU Usage:";
+                MemoryLabel.Text = "System Memory Usage:";
+                DiskLabel.Text = "Primary Disk Usage:";
+                SetTimeReasonabilityLabelFontSizes(13);
+            }
+            else
+            {
+                LabelServerTimeSeparator.Visibility = Visibility.Visible;
+                LabelServerTimeLabel.Visibility = Visibility.Visible;
+                LabelServerTimeValue.Visibility = Visibility.Visible;
+                CPULabel.Text = "Sys CPU Usage:";
+                MemoryLabel.Text = "Sys Mem Usage:";
+                DiskLabel.Text = "Prim Disk Usage:";
+                SetTimeReasonabilityLabelFontSizes(11);
+            }
+
+            SetTimeReasonabilityLabelDefaults();
+        }
+
+        private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // Fetch the real key
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+            
+            // Check for Ctrl+Shift+S to toggle server local mode
+            if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && 
+                (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) &&
+                key == Key.S)
+            {
+                TimeReasonabilityPopup.IsOpen = false;
+                m_serverIsLocal = !m_serverIsLocal;
+                InitializeTimeReasonabilitySettings();
+            }
+        }
 
         #region [ Chart Subscription ]
 
@@ -677,6 +1059,28 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 {
                     using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
                     {
+                        string connectionString = database.DataPublisherConnectionString();
+
+                        Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+                        if (settings.TryGetValue("server", out string server))
+                        {
+                            try
+                            {
+                                string[] parts = server.Split(':');
+
+                                if (parts.Length > 1)
+                                    server = parts[0];
+
+                                m_serverIsLocal = Transport.IsLocalAddress(server);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.SwallowException(ex);
+                                m_serverIsLocal = false;
+                            }
+                        }
+                        
                         m_statsSubscription = new DataSubscriber();
                         m_statsSubscription.ConnectionEstablished += StatsSubscriptionConnectionEstablished;
                         m_statsSubscription.NewMeasurements += StatsSubscriptionNewMeasurements;
@@ -705,39 +1109,23 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_statsSubscription.UnsynchronizedSubscribe(true, true, string.Join(";", m_statSignalIDs), lagTime: 5.0D);
         }
 
-        private void StatsSubscriptionConnectionTerminated(object sender, EventArgs e)
-        {
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                CPUValue.Text = "...%";
-                UpdateHighlighting(CPULabel, CPUValue, s_defaultBrush, null, null);
-
-                MemoryValue.Text = "...%";
-                UpdateHighlighting(MemoryLabel, MemoryValue, s_defaultBrush, null, null);
-
-                DiskValue.Text = "...%";
-                UpdateHighlighting(DiskLabel, DiskValue, s_defaultBrush, null, null);
-
-                TimeValue.Text = "... seconds";
-                UpdateHighlighting(TimeLabel, TimeValue, s_defaultBrush, s_underlineStyle, null);
-            }));
-        }
+        private void StatsSubscriptionConnectionTerminated(object sender, EventArgs e) => 
+            Dispatcher.BeginInvoke(new Action(SetTimeReasonabilityLabelDefaults));
 
         private void StatsSubscriptionNewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             // [0] System CPU Usage
             // [1] System Memory Usage
-            // [2] System Time Deviation From Average
+            // [2] System Time Deviation
             // [3] Primary Disk Usage
 
             foreach (IMeasurement stat in e.Argument)
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
+                    Guid signalID = stat.ID;
                     double value = stat.AdjustedValue;
                     string formattedValue = double.IsNaN(value) ? "..." : $"{value:N2}";
-
-                    Guid signalID = stat.ID;
 
                     if (signalID == m_statSignalIDs[0])
                     {
@@ -763,14 +1151,28 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     }
                     else if (signalID == m_statSignalIDs[2])
                     {
-                        TimeValue.Text = $"{formattedValue} seconds";
+                        ServerTimeValue.Text = $"{formattedValue} {(m_serverIsLocal ? "seconds" : "secs")}";
+                        m_lastServerTimeDeviation = Math.Abs(value);
 
-                        if (Math.Abs(value) > s_timeAlarm)
-                            UpdateHighlighting(TimeLabel, TimeValue, s_alarmBrush, s_underlineShadowStyle, s_shadowStyle);
-                        else if (Math.Abs(value) > s_timeWarning)
-                            UpdateHighlighting(TimeLabel, TimeValue, s_warningBrush, s_underlineShadowStyle, s_shadowStyle);
+                        if (m_lastServerTimeDeviation > s_timeAlarm)
+                            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_alarmBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
+                        else if (m_lastServerTimeDeviation > s_timeWarning)
+                            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_warningBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
                         else
-                            UpdateHighlighting(TimeLabel, TimeValue, s_defaultBrush, s_underlineStyle, null);
+                            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_defaultBrush, ApplyToServer.IsEnabled ? s_underlineStyle : null, null);
+
+                        // Calculate local time deviation
+                        value += m_lastLocalToServerTimeDeviation;
+                        m_lastLocalTimeDeviation = Math.Abs(value);
+                        formattedValue = double.IsNaN(value) ? "..." : $"{value:N2}";
+                        LocalTimeValue.Text = $"{formattedValue} {(m_serverIsLocal ? "seconds" : "secs")}";
+
+                        if (m_lastLocalTimeDeviation > s_timeAlarm)
+                            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_alarmBrush, s_underlineShadowStyle, s_shadowStyle);
+                        else if (m_lastLocalTimeDeviation > s_timeWarning)
+                            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_warningBrush, s_underlineShadowStyle, s_shadowStyle);
+                        else
+                            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_defaultBrush, s_underlineStyle, null);
                     }
                     else if (signalID == m_statSignalIDs[3])
                     {
@@ -816,8 +1218,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private static readonly double s_memoryAlarm = 95.0D;
         private static readonly double s_diskWarning = 75.0D;
         private static readonly double s_diskAlarm = 95.0D;
-        private static readonly double s_timeWarning = 3.0D;
-        private static readonly double s_timeAlarm = 5.0D;
+        private static double s_timeWarning = 3.0D;
+        private static double s_timeAlarm = 5.0D;
         private static readonly SolidColorBrush s_warningBrush;
         private static readonly SolidColorBrush s_alarmBrush;
         private static Brush s_defaultBrush;
