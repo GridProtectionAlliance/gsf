@@ -29,6 +29,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -819,13 +820,29 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
                         if (File.Exists(configPath))
                         {
-                            XDocument hostConfig = XDocument.Load(configPath);
-                            XElement[] systemSettings = hostConfig.Descendants(SystemSettings).ToArray();
+                            if (UserHasWriteAccess())
+                            {
+                                XDocument hostConfig = XDocument.Load(configPath);
+                                XElement[] systemSettings = hostConfig.Descendants(SystemSettings).ToArray();
 
-                            getElementValue(systemSettings, "DefaultCalculationLagTime").Value = lagTimeText;
-                            getElementValue(systemSettings, "DefaultCalculationLeadTime").Value = leadTimeText;
+                                getElementValue(systemSettings, "DefaultCalculationLagTime").Value = lagTimeText;
+                                getElementValue(systemSettings, "DefaultCalculationLeadTime").Value = leadTimeText;
 
-                            hostConfig.Save(configPath);
+                                hostConfig.Save(configPath);
+                            }
+                            else if (MessageBox.Show($"Custom action adapters lag/lead times were successfully updated, however, elevated privileges are required{Environment.NewLine}in order to update service configuration default calculation lag/lead times.{Environment.NewLine}Do you want to relaunch the manager as an administrator so this task can be completed?", "Time Reasonability Server Update Requires Elevation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            {
+                                ProcessStartInfo startInfo = new ProcessStartInfo
+                                {
+                                    FileName = Environment.GetCommandLineArgs()[0],
+                                    Arguments = $"{string.Join(" ", Environment.GetCommandLineArgs().Skip(1))} -elevated",
+                                    UseShellExecute = true,
+                                    Verb = "runas"
+                                };
+
+                                using (Process.Start(startInfo)) { }
+                                Environment.Exit(0);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -838,6 +855,30 @@ namespace GSF.PhasorProtocols.UI.UserControls
             {
                 Mouse.OverrideCursor = null;
             }
+        }
+
+        private bool UserHasWriteAccess()
+        {
+            try
+            {
+                // Validate that user has write access to the local folder
+                string tempFile = FilePath.GetAbsolutePath(Guid.NewGuid() + ".tmp");
+
+                using (File.Create(tempFile))
+                {
+                }
+
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+
+            return false;
         }
 
         private void SetTimeReasonabilityLabelFontSizes(double fontSize)
