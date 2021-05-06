@@ -830,8 +830,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
                                 hostConfig.Save(configPath);
                             }
-                            else if (MessageBox.Show($"Custom action adapters lag/lead times were successfully updated, however, elevated privileges are required{Environment.NewLine}in order to update service configuration default calculation lag/lead times.{Environment.NewLine}Do you want to relaunch the manager as an administrator so this task can be completed?", "Time Reasonability Server Update Requires Elevation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            else if (MessageBox.Show($"All custom action adapter lag/lead times were successfully updated, however, elevated privileges are required in order to update the service configuration file with new default calculation lag/lead time values.{Environment.NewLine}{Environment.NewLine}Do you want to relaunch the manager with elevated privileges so this task can be completed?", "Time Reasonability Server Update Requires Elevation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                             {
+                                if (!(Application.Current?.MainWindow is null))
+                                    Application.Current.MainWindow.Visibility = Visibility.Hidden;
+
                                 ProcessStartInfo startInfo = new ProcessStartInfo
                                 {
                                     FileName = Environment.GetCommandLineArgs()[0],
