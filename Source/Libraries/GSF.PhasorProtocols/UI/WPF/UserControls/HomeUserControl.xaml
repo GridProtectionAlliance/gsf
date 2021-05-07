@@ -189,11 +189,17 @@
                         <StackPanel Orientation="Vertical">
                             <GroupBox x:Name="TimeReasonabilityGroupBox" Header="Change Local Time Reasonability Parameters" FontWeight="DemiBold" Margin="5">
                                 <StackPanel Orientation="Vertical">
+                                    <Label x:Name="RecommendedValues" FontSize="10" FontStyle="Italic" HorizontalContentAlignment="Center" Margin="0 -2 0 -6">
+                                        <TextBlock TextAlignment="Center" Margin="0">
+                                            The following are recommended lag and lead time<LineBreak/>
+                                            values calculated based on current clock deviation:
+                                        </TextBlock>
+                                    </Label>
                                     <StackPanel Orientation="Horizontal">
                                         <Label Width="80" HorizontalContentAlignment="Right">
                                             <TextBlock Text="Lag Time:"  Margin="0 3 -5 0"/>
                                         </Label>
-                                        <TextBox x:Name="LagTime" Width="50" PreviewTextInput="NumberValidationTextBox" />
+                                        <TextBox x:Name="LagTime" Width="50" PreviewTextInput="TimeReasonability_PreviewTextInput" TextChanged="TimeReasonability_TextChanged" />
                                         <Label Margin="-10 -2 0 0">
                                             <TextBlock Text="seconds" TextAlignment="Left"/>
                                         </Label>
@@ -202,18 +208,26 @@
                                         <Label Width="80" HorizontalContentAlignment="Right">
                                             <TextBlock Text="Lead Time:" TextAlignment="Right" Margin="0 1 -5 0"/>
                                         </Label>
-                                        <TextBox x:Name="LeadTime" Width="50" PreviewTextInput="NumberValidationTextBox" />
+                                        <TextBox x:Name="LeadTime" Width="50" PreviewTextInput="TimeReasonability_PreviewTextInput" TextChanged="TimeReasonability_TextChanged" />
                                         <Label Margin="-10 -3 0 0">
                                             <TextBlock Text="seconds" TextAlignment="Left"/>
                                         </Label>
                                     </StackPanel>
+                                    <Label x:Name="LargeValueWarning" FontSize="10.5" HorizontalContentAlignment="Center" Margin="0 -2 0 2" Padding="0"   BorderThickness="1" BorderBrush="Black">
+                                        <TextBlock TextAlignment="Justify" Margin="0" Padding="8 3 8 3" Background="Yellow">
+                                            WARNING: The defined lead or lag time value is<LineBreak/>
+                                            very large. These values are used to compensate<LineBreak/>
+                                            for clock deviations, consider synchronizing<LineBreak/> 
+                                            clocks where possible to reduce deviations.
+                                        </TextBlock>
+                                    </Label>
                                     <Rectangle HorizontalAlignment="Stretch" Fill="Blue" Height="3" Margin="0"/>
                                     <CheckBox x:Name="ApplyToManager" IsChecked="True" Checked="ApplyToManager_OnChecked" Unchecked="ApplyToManager_OnUnchecked">Apply to local manager (recommended)</CheckBox>
-                                    <CheckBox x:Name="ApplyToServer" IsChecked="False" Checked="ApplyToServer_OnChecked" Unchecked="ApplyToServer_OnUnchecked">Apply to host service (use with caution)</CheckBox>
                                     <Label x:Name="LabelManagerUpdateNote" Width="250" HorizontalContentAlignment="Center">
                                         <TextBlock x:Name="ManagerUpdateNote" TextWrapping="Wrap" TextAlignment="Left" FontStyle="Italic" FontWeight="DemiBold" FontSize="11" Margin="0 0 0 0"
-                                            Text="Reasonability changes will be applied to the local manager settings, current user only." />
+                                                   Text="Reasonability changes will be applied to the local manager settings, current user only." />
                                     </Label>
+                                    <CheckBox x:Name="ApplyToServer" IsChecked="False" Checked="ApplyToServer_OnChecked" Unchecked="ApplyToServer_OnUnchecked">Apply to host service (use with caution)</CheckBox>
                                     <Label x:Name="LabelServerUpdateNote" Width="250" HorizontalContentAlignment="Center">
                                         <TextBlock x:Name="ServerUpdateNote" TextWrapping="Wrap" TextAlignment="Left" FontStyle="Italic" FontWeight="DemiBold" FontSize="11" Margin="0 0 0 0"
                                             Text="Reasonability changes will be applied to all adapters in host service, adjust with caution." />

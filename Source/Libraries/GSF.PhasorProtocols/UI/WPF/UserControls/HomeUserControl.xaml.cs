@@ -572,11 +572,20 @@ namespace GSF.PhasorProtocols.UI.UserControls
             LoadComboBoxMeasurementAsync();
         }
 
-        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
+        private void TimeReasonability_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            Regex regex = new Regex("[^0-9.-]+");
+            Regex regex = new Regex("[^0-9.]+");
             e.Handled = regex.IsMatch(e.Text);
+
+            if (!e.Handled)
+                RecommendedValues.Visibility = Visibility.Collapsed;
         }
+
+        // Show time reasonability large value warning when either lag time or lead time value is greater than 10 seconds
+        private void TimeReasonability_TextChanged(object sender, TextChangedEventArgs e) => LargeValueWarning.Visibility = 
+            double.TryParse(LagTime.Text, out double lagTime) && lagTime > 10.0D || 
+            double.TryParse(LeadTime.Text, out double leadTime) && leadTime > 10.0D ?
+                Visibility.Visible : Visibility.Collapsed;
 
         private void LocalTimeLabel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
@@ -590,6 +599,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             LagTime.Text = lagTime.ToString("N2");
             LeadTime.Text = leadTime.ToString("N2");
+            RecommendedValues.Visibility = Visibility.Visible;
 
             TimeReasonabilityGroupBox.Header = "Change Local Time Reasonability Parameters";
             m_timeReasonabilityPopupIsForLocalTime = true;
@@ -695,17 +705,22 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonApply_OnClick(object sender, RoutedEventArgs e)
         {
-            TimeReasonabilityPopup.IsOpen = false;
-
             if (!double.TryParse(LagTime.Text, out double lagTime) || !double.TryParse(LeadTime.Text, out double leadTime))
             {
                 MessageBox.Show($"Failed to parse lag time \"{LagTime.Text}\" and/or lead time \"{LeadTime.Text}\" as a floating point value", "Time Reasonability Parse Failure", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
+            if (lagTime <= 0.0D || leadTime <= 0.0D)
+            {
+                MessageBox.Show($"Lag time \"{LagTime.Text}\" and/or lead time \"{LeadTime.Text}\" has a value of less than or equal to zero. Values must be greater than zero, but can be a fractional value less than one.", "Time Reasonability Range Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             try
             {
                 Mouse.OverrideCursor = Cursors.Wait;
+                TimeReasonabilityPopup.IsOpen = false;
 
                 string lagTimeText = lagTime.ToString(CultureInfo.InvariantCulture);
                 string leadTimeText = leadTime.ToString(CultureInfo.InvariantCulture);
