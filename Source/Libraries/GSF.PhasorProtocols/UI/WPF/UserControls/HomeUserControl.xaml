@@ -215,7 +215,7 @@
                                     </StackPanel>
                                     <Label x:Name="LargeValueWarning" FontSize="10.5" HorizontalContentAlignment="Center" Margin="0 -2 0 2" Padding="0"   BorderThickness="1" BorderBrush="Black">
                                         <TextBlock TextAlignment="Justify" Margin="0" Padding="8 3 8 3" Background="Yellow">
-                                            WARNING: The defined lead or lag time value is<LineBreak/>
+                                            WARNING: The defined lag or lead time value is<LineBreak/>
                                             very large. These values are used to compensate<LineBreak/>
                                             for clock deviations, consider synchronizing<LineBreak/> 
                                             clocks where possible to reduce deviations.

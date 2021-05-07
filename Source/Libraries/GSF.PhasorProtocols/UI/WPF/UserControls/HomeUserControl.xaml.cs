@@ -638,6 +638,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             LagTime.Text = lagTime.ToString("N2");
             LeadTime.Text = leadTime.ToString("N2");
+            RecommendedValues.Visibility = Visibility.Visible;
 
             TimeReasonabilityGroupBox.Header = "Change Server Time Reasonability Parameters";
             m_timeReasonabilityPopupIsForLocalTime = false;
