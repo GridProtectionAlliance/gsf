@@ -1318,7 +1318,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 s_timeWarning = settings["TimeWarning"].ValueAs(s_timeWarning);
                 s_timeAlarm = settings["TimeAlarm"].ValueAs(s_timeAlarm);
                 s_warningBrush = new SolidColorBrush((Color)(ColorConverter.ConvertFromString(settings["WarningColor"].ValueAs(DefaultWarningBrush)) ?? Colors.Yellow));
-                s_alarmBrush = new SolidColorBrush((Color)(ColorConverter.ConvertFromString(settings["AlarmColor"].ValueAs(DefaultWarningBrush)) ?? Colors.Red));
+                s_alarmBrush = new SolidColorBrush((Color)(ColorConverter.ConvertFromString(settings["AlarmColor"].ValueAs(DefaultAlarmBrush)) ?? Colors.Red));
 
                 // Save changes, if any
                 config.Save();
