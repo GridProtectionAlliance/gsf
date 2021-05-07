@@ -4,13 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:tsf="clr-namespace:GSF.TimeSeries.UI;assembly=GSF.TimeSeries.UI.WPF"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" 
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              xmlns:d3="http://research.microsoft.com/DynamicDataDisplay/1.0"
-             Background="Transparent">
-
-    <!--d:DesignHeight="600" d:DesignWidth="850"-->
+             Background="Transparent" PreviewKeyDown="UserControl_PreviewKeyDown">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -18,6 +16,40 @@
                 <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
                 <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/StyleResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <sdk:Style x:Key="GroupBoxNoHeader" TargetType="{x:Type sdk:GroupBox}">
+                <sdk:Setter Property="BorderBrush" Value="#D5DFE5"/>
+                <sdk:Setter Property="BorderThickness" Value="1"/>
+                <sdk:Setter Property="Template">
+                    <sdk:Setter.Value>
+                        <sdk:ControlTemplate TargetType="{x:Type sdk:GroupBox}">
+                            <sdk:Grid SnapsToDevicePixels="true">
+                                <sdk:Grid.ColumnDefinitions>
+                                    <sdk:ColumnDefinition Width="6"/>
+                                    <sdk:ColumnDefinition Width="Auto"/>
+                                    <sdk:ColumnDefinition Width="*"/>
+                                    <sdk:ColumnDefinition Width="6"/>
+                                </sdk:Grid.ColumnDefinitions>
+                                <sdk:Grid.RowDefinitions>
+                                    <sdk:RowDefinition Height="Auto"/>
+                                    <sdk:RowDefinition Height="Auto"/>
+                                    <sdk:RowDefinition Height="*"/>
+                                    <sdk:RowDefinition Height="6"/>
+                                </sdk:Grid.RowDefinitions>
+                                <sdk:Border BorderBrush="Transparent" BorderThickness="{sdk:TemplateBinding BorderThickness}" Background="{sdk:TemplateBinding Background}" sdk:Grid.ColumnSpan="4" sdk:Grid.Column="0" CornerRadius="4" sdk:Grid.Row="1" sdk:Grid.RowSpan="3"/>
+                                <sdk:Border BorderBrush="White" BorderThickness="{sdk:TemplateBinding BorderThickness}" sdk:Grid.ColumnSpan="4" CornerRadius="4" sdk:Grid.Row="1" sdk:Grid.RowSpan="3">
+                                    <sdk:Border BorderBrush="{sdk:TemplateBinding BorderBrush}" BorderThickness="{sdk:TemplateBinding BorderThickness}" CornerRadius="3">
+                                        <sdk:Border BorderBrush="White" BorderThickness="{sdk:TemplateBinding BorderThickness}" CornerRadius="2"/>
+                                    </sdk:Border>
+                                </sdk:Border>
+                                <sdk:Border x:Name="Header" sdk:Grid.Column="1" Padding="3,1,3,0" sdk:Grid.Row="0" sdk:Grid.RowSpan="2">
+                                    <sdk:ContentPresenter ContentSource="Header" RecognizesAccessKey="True" SnapsToDevicePixels="{sdk:TemplateBinding SnapsToDevicePixels}"/>
+                                </sdk:Border>
+                                <sdk:ContentPresenter sdk:Grid.ColumnSpan="2" sdk:Grid.Column="1" Margin="{sdk:TemplateBinding Padding}" sdk:Grid.Row="2" SnapsToDevicePixels="{sdk:TemplateBinding SnapsToDevicePixels}"/>
+                            </sdk:Grid>
+                        </sdk:ControlTemplate>
+                    </sdk:Setter.Value>
+                </sdk:Setter>
+            </sdk:Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -26,6 +58,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="10*"/>
             <RowDefinition Height="13*"/>
+            <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -34,7 +67,6 @@
         </Grid.ColumnDefinitions>
 
         <GroupBox Header="Quick Links" Grid.Row="0" Grid.Column="0" >
-
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -77,26 +109,16 @@
                     </TextBlock>
                 </Border>
 
-                <Button Content="Authorization Request" Grid.Row="0" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberRequestUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
-                <Button Content="Measurement Subscriptions" Grid.Row="1" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscribeMeasurementUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Authorization Request" Grid.Row="0" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberRequestUserControl" Click="ButtonQuickLink_Click" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Measurement Subscriptions" Grid.Row="1" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscribeMeasurementUserControl" Click="ButtonQuickLink_Click" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
 
-                <Button Content="Authorize Subscribers" Grid.Row="2" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
-                <Button Content="Measurement Access" Grid.Row="3" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberMeasurementUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
-                <Button Content="Subscription Status" Grid.Row="4" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberStatusUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Authorize Subscribers" Grid.Row="2" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberUserControl" Click="ButtonQuickLink_Click" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Measurement Access" Grid.Row="3" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberMeasurementUserControl" Click="ButtonQuickLink_Click" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Subscription Status" Grid.Row="4" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberStatusUserControl" Click="ButtonQuickLink_Click" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
 
-                <Button Content="Browse Input Devices" Grid.Row="5" Grid.Column="1" Tag="GSF.PhasorProtocols.UI.UserControls.DeviceListUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
-                <Button Content="Restart Service" Grid.Row="6" Grid.Column="1" Tag="Restart" x:Name="ButtonRestart" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Browse Input Devices" Grid.Row="5" Grid.Column="1" Tag="GSF.PhasorProtocols.UI.UserControls.DeviceListUserControl" Click="ButtonQuickLink_Click" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Restart Service" Grid.Row="6" Grid.Column="1" Tag="Restart" x:Name="ButtonRestart" Click="ButtonQuickLink_Click" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
             </Grid>
-
-
-            <!--<StackPanel Orientation="Vertical">
-                
-                
-                
-                
-                
-                
-            </StackPanel>-->
         </GroupBox>
 
         <Grid Grid.Row="0" Grid.Column="1">
@@ -111,13 +133,14 @@
                 <ComboBox x:Name="ComboBoxMeasurement" Margin="0,0,5,0" SelectionChanged="ComboBoxMeasurement_SelectionChanged" DisplayMemberPath="PointTag" SelectedValuePath="SignalID" Width="Auto" MinWidth="150"/>
             </StackPanel>
 
-            <d3:ChartPlotter Name="ChartPlotterDynamic" Grid.Row="1" Margin="2" Height="250" Width="585" MainHorizontalAxisVisibility="Collapsed" ></d3:ChartPlotter>
+            <d3:ChartPlotter Name="ChartPlotterDynamic" Grid.Row="1" Margin="2" Height="225" Width="590" MainHorizontalAxisVisibility="Collapsed">
+            </d3:ChartPlotter>
 
         </Grid>
 
         <GroupBox Header="Current Configuration" Grid.Row="1" Grid.Column="0">
 
-            <Grid>
+            <Grid >
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -141,47 +164,49 @@
                 <TextBlock Text="Instance Type" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockInstance" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"/>
 
-                <TextBlock Text="Server Time" Grid.Column="0"  Grid.Row="1" FontWeight="Bold"/>
+                <TextBlock Text="Server Time" Grid.Row="1" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockServerTime" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"/>
 
-                <TextBlock Text="Local Time" Grid.Column="0"  Grid.Row="2" FontWeight="Bold"/>
+                <TextBlock Text="Local Time" Grid.Row="2" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockLocalTime" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left"/>
 
-                <TextBlock Text="Current User" Grid.Column="0"  Grid.Row="3" FontWeight="Bold"/>
+                <TextBlock Text="Current User" Grid.Row="3" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockUser" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap"/>
 
-                <TextBlock Text="Version Information"  Grid.Column="0" Grid.ColumnSpan="2"  Grid.Row="4" FontWeight="Bold" HorizontalAlignment="Left"/>
+                <TextBlock Text="Version Information" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontWeight="Bold"/>
 
-                <TextBlock Text="Server" Grid.Column="0"  Grid.Row="5" FontWeight="Bold"/>
+                <TextBlock Text="Server" Grid.Row="5" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockVersion" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Left"/>
 
-                <TextBlock Text="Manager" Grid.Column="0"  Grid.Row="6" FontWeight="Bold"/>
-                <TextBlock x:Name="TextBlockManagerVersion" Grid.Row="6" Grid.Column="1" HorizontalAlignment="Left" />
+                <TextBlock Text="Manager" Grid.Row="6" Grid.Column="0" FontWeight="Bold"/>
+                <TextBlock x:Name="TextBlockManagerVersion" Grid.Row="6" Grid.Column="1" HorizontalAlignment="Left"/>
 
-                <TextBlock Text="Database Information" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="7" HorizontalAlignment="Left" FontWeight="Bold"/>
-                <TextBlock Text="Type" Grid.Column="0" Grid.Row="8" FontWeight="Bold"/>
-                <TextBlock x:Name="TextBlockDatabaseType" Grid.Column="1" Grid.Row="8" HorizontalAlignment="Left" TextWrapping="Wrap"/>
+                <TextBlock Text="Database Information" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontWeight="Bold"/>
+                <TextBlock Text="Type" Grid.Row="8" Grid.Column="0" FontWeight="Bold"/>
 
-                <TextBlock Text="Name" Grid.Column="0" Grid.Row="9" FontWeight="Bold" />
-                <TextBlock x:Name="TextBlockDatabaseName" Grid.Column="1" Grid.Row="9" HorizontalAlignment="Left" TextWrapping="Wrap"/>
+                <TextBlock x:Name="TextBlockDatabaseType" Grid.Row="8" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap"/>
 
-                <Button Content="System Status" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="10" Width="160" Height="32" FontWeight="Bold" VerticalAlignment="Bottom" Click="ButtonStatus_Click"/>
+                <TextBlock Text="Name" Grid.Row="9" Grid.Column="0" FontWeight="Bold"/>
+                <TextBlock x:Name="TextBlockDatabaseName" Grid.Row="9" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap"/>
+
+                <Button Content="System Status" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Width="160" Height="32" FontWeight="Bold" VerticalAlignment="Bottom"
+                        Click="ButtonStatus_Click"/>
 
             </Grid>
 
         </GroupBox>
 
-        <GroupBox x:Name="GroupBoxSystemHealth" Header="System Health" Grid.Column="1" Grid.Row="1" VerticalContentAlignment="Bottom" >
+        <GroupBox x:Name="GroupBoxSystemHealth" Header="System Health" Grid.Row="1" Grid.Column="1">
 
             <StackPanel Orientation="Vertical">
                 <tsf:TsfPopup x:Name="PopupStatus" Topmost="False" Placement="Center">
                     <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
                         <StackPanel Orientation="Vertical">
-                            <GroupBox x:Name="GroupBoxStatus" Header="Systemn Status">
-                                <ScrollViewer Margin="2" Height="275"
-                                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
+                            <GroupBox x:Name="GroupBoxStatus" Header="System Status">
+                                <ScrollViewer Margin="2" Height="275" 
+                                        VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
                                     <ScrollViewer.Content>
-                                        <TextBlock x:Name="TextBlockStatus" FontFamily="Courier New" FontSize="12" HorizontalAlignment="Left" TextAlignment="Left" TextWrapping="Wrap" />
+                                        <TextBlock x:Name="TextBlockStatus" FontFamily="Courier New" FontSize="12" HorizontalAlignment="Left" TextAlignment="Left" TextWrapping="Wrap"/>
                                     </ScrollViewer.Content>
                                 </ScrollViewer>
                             </GroupBox>
@@ -190,11 +215,117 @@
                     </Border>
                 </tsf:TsfPopup>
 
-                <TextBlock x:Name="TextBlockSystemHealth" FontFamily="Courier New" FontSize="12" HorizontalAlignment="Left" TextAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                <TextBlock x:Name="TextBlockSystemHealth" FontFamily="Courier New" FontSize="12" HorizontalAlignment="Left" TextAlignment="Left" TextWrapping="Wrap"/>
+
+                <tsf:TsfPopup x:Name="TimeReasonabilityPopup" Topmost="False" Placement="Center">
+                    <Border CornerRadius="4" BorderThickness="3" Background="White" BorderBrush="Blue">
+                        <StackPanel Orientation="Vertical">
+                            <GroupBox x:Name="TimeReasonabilityGroupBox" Header="Change Local Time Reasonability Parameters" FontWeight="DemiBold" Margin="5">
+                                <StackPanel Orientation="Vertical">
+                                    <Label x:Name="RecommendedValues" FontSize="10" FontStyle="Italic" HorizontalContentAlignment="Center" Margin="0 -2 0 -6">
+                                        <TextBlock TextAlignment="Center" Margin="0">
+                                            The following are recommended lag and lead time<LineBreak/>
+                                            values calculated based on current clock deviation:
+                                        </TextBlock>
+                                    </Label>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label Width="80" HorizontalContentAlignment="Right">
+                                            <TextBlock Text="Lag Time:"  Margin="0 3 -5 0"/>
+                                        </Label>
+                                        <TextBox x:Name="LagTime" Width="50" PreviewTextInput="TimeReasonability_PreviewTextInput" TextChanged="TimeReasonability_TextChanged" />
+                                        <Label Margin="-10 -2 0 0">
+                                            <TextBlock Text="seconds" TextAlignment="Left"/>
+                                        </Label>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0 -8 0 0">
+                                        <Label Width="80" HorizontalContentAlignment="Right">
+                                            <TextBlock Text="Lead Time:" TextAlignment="Right" Margin="0 1 -5 0"/>
+                                        </Label>
+                                        <TextBox x:Name="LeadTime" Width="50" PreviewTextInput="TimeReasonability_PreviewTextInput" TextChanged="TimeReasonability_TextChanged" />
+                                        <Label Margin="-10 -3 0 0">
+                                            <TextBlock Text="seconds" TextAlignment="Left"/>
+                                        </Label>
+                                    </StackPanel>
+                                    <Label x:Name="LargeValueWarning" FontSize="10.5" HorizontalContentAlignment="Center" Margin="0 -2 0 2" Padding="0"   BorderThickness="1" BorderBrush="Black">
+                                        <TextBlock TextAlignment="Justify" Margin="0" Padding="8 3 8 3" Background="Yellow">
+                                            WARNING: The defined lag or lead time value is<LineBreak/>
+                                            very large. These values are used to compensate<LineBreak/>
+                                            for clock deviations, consider synchronizing<LineBreak/> 
+                                            clocks where possible to reduce deviations.
+                                        </TextBlock>
+                                    </Label>
+                                    <Rectangle HorizontalAlignment="Stretch" Fill="Blue" Height="3" Margin="0"/>
+                                    <CheckBox x:Name="ApplyToManager" IsChecked="True" Checked="ApplyToManager_OnChecked" Unchecked="ApplyToManager_OnUnchecked">Apply to local manager (recommended)</CheckBox>
+                                    <Label x:Name="LabelManagerUpdateNote" Width="250" HorizontalContentAlignment="Center">
+                                        <TextBlock x:Name="ManagerUpdateNote" TextWrapping="Wrap" TextAlignment="Left" FontStyle="Italic" FontWeight="DemiBold" FontSize="11" Margin="0 0 0 0"
+                                                   Text="Reasonability changes will be applied to the local manager settings, current user only." />
+                                    </Label>
+                                    <CheckBox x:Name="ApplyToServer" IsChecked="False" Checked="ApplyToServer_OnChecked" Unchecked="ApplyToServer_OnUnchecked">Apply to host service (use with caution)</CheckBox>
+                                    <Label x:Name="LabelServerUpdateNote" Width="250" HorizontalContentAlignment="Center">
+                                        <TextBlock x:Name="ServerUpdateNote" TextWrapping="Wrap" TextAlignment="Left" FontStyle="Italic" FontWeight="DemiBold" FontSize="11" Margin="0 0 0 0"
+                                            Text="Reasonability changes will be applied to all adapters in host service, adjust with caution." />
+                                    </Label>
+                                </StackPanel>
+                            </GroupBox>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 0 5 5">
+                                <Button x:Name="ButtonCancel" Content="Cancel" Click="ButtonCancel_OnClick"/>
+                                <Button x:Name="ButtonApply" Content="Apply" Click="ButtonApply_OnClick"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </tsf:TsfPopup>
 
             </StackPanel>
 
         </GroupBox>
 
+        <GroupBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{DynamicResource GroupBoxNoHeader}" Margin="0 1 0 -2">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Height="30" Margin="2 6 0 0">
+                <Label x:Name="LabelCPULabel" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesLeft}" FontSize="10.5">
+                    <TextBlock x:Name="CPULabel" Text="System CPU Usage:" Margin="0" />
+                </Label>
+                <Label x:Name="LabelCPUValue" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesRight}" FontSize="10.5">
+                    <TextBlock x:Name="CPUValue" Text="...%" Margin="0"/>
+                </Label>
+                <Label VerticalAlignment="Center">
+                    <TextBlock Text="|" Margin="0" />
+                </Label>
+                <Label x:Name="LabelMemoryLabel" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesLeft}" FontSize="10.5">
+                    <TextBlock x:Name="MemoryLabel" Text="System Memory Usage:" Margin="0" />
+                </Label>
+                <Label x:Name="LabelMemoryValue" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesRight}" FontSize="10.5">
+                    <TextBlock x:Name="MemoryValue" Text="...%" Margin="0" />
+                </Label>
+                <Label VerticalAlignment="Center">
+                    <TextBlock Text="|" Margin="0" />
+                </Label>
+                <Label x:Name="LabelDiskLabel" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesLeft}" FontSize="10.5">
+                    <TextBlock x:Name="DiskLabel" Text="Primary Disk Usage:" Margin="0" />
+                </Label>
+                <Label x:Name="LabelDiskValue" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesRight}" FontSize="10.5">
+                    <TextBlock x:Name="DiskValue" Text="...%" Margin="0"/>
+                </Label>
+                <Label VerticalAlignment="Center">
+                    <TextBlock Text="|" Margin="0" />
+                </Label>
+                <Label x:Name="LabelLocalTimeLabel" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesLeft}" FontSize="10.5" MouseLeftButtonUp="LocalTimeLabel_MouseLeftButtonUp" MouseEnter="LocalTimeLabel_MouseEnter" MouseLeave="LocalTimeLabel_OnMouseLeave">
+                    <TextBlock x:Name="LocalTimeLabel" Style="{DynamicResource Underline}" Cursor="Hand" Text="Local Clock Deviation:" Margin="0" />
+                </Label>
+                <Label x:Name="LabelLocalTimeValue" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesRight}" FontSize="10.5">
+                    <TextBlock x:Name="LocalTimeValue" Text="... seconds" Margin="0" />
+                </Label>
+                <Label x:Name="LabelServerTimeSeparator" VerticalAlignment="Center">
+                    <TextBlock Text="|" Margin="0" />
+                </Label>
+                <Label x:Name="LabelServerTimeLabel" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesLeft}" FontSize="10.5" MouseLeftButtonUp="ServerTimeLabel_MouseLeftButtonUp" MouseEnter="ServerTimeLabel_MouseEnter" MouseLeave="ServerTimeLabel_OnMouseLeave">
+                    <TextBlock x:Name="ServerTimeLabel" Style="{DynamicResource Underline}" Cursor="Hand" Text="Server Clock Deviation:" Margin="0" />
+                </Label>
+                <Label x:Name="LabelServerTimeValue" VerticalAlignment="Center" Style="{DynamicResource RoundedEdgesRight}" FontSize="10.5">
+                    <TextBlock x:Name="ServerTimeValue" Text="... seconds" Margin="0" />
+                </Label>
+            </StackPanel>
+        </GroupBox>
+
     </Grid>
+
 </UserControl>
