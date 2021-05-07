@@ -60,12 +60,13 @@ using GSF.TimeSeries.UI;
 using Microsoft.Research.DynamicDataDisplay;
 using Microsoft.Research.DynamicDataDisplay.Charts;
 using Microsoft.Research.DynamicDataDisplay.DataSources;
-using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
+using MeasurementModel = GSF.TimeSeries.UI.DataModels.Measurement;
 
 #pragma warning disable 612,618
 
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable RedundantNameQualifier
 namespace GSF.PhasorProtocols.UI.UserControls
 {
     /// <summary>
@@ -116,7 +117,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private LineGraph m_lineGraph;
         private int m_numberOfPointsToPlot = 60;
         private bool m_eventHandlerRegistered;
-        private Measurement m_selectedMeasurement;
+        private MeasurementModel m_selectedMeasurement;
         private Guid[] m_statSignalIDs;
         private bool m_serverIsLocal;
         private bool m_timeReasonabilityPopupIsForLocalTime;
@@ -323,8 +324,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             Thread t = new Thread(() =>
             {
-                ObservableCollection<Measurement> measurements = Measurement.Load(null, selectedDeviceID);
-                ObservableCollection<Measurement> itemsSource = new ObservableCollection<Measurement>(measurements.Where(m => m.SignalSuffix == "PA" || m.SignalSuffix == "FQ"));
+                ObservableCollection<MeasurementModel> measurements = MeasurementModel.Load(null, selectedDeviceID);
+                ObservableCollection<MeasurementModel> itemsSource = new ObservableCollection<MeasurementModel>(measurements.Where(m => m.SignalSuffix == "PA" || m.SignalSuffix == "FQ"));
 
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
@@ -517,7 +518,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             if (ComboBoxMeasurement.Items.Count > 0)
             {
-                m_selectedMeasurement = (Measurement)ComboBoxMeasurement.SelectedItem;
+                m_selectedMeasurement = (MeasurementModel)ComboBoxMeasurement.SelectedItem;
 
                 // Capture's the Selected index of measurement Combo Box
                 if (Application.Current.Resources.Contains("SelectedMeasurement_Home"))
@@ -1132,7 +1133,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                                 if (parts.Length > 1)
                                     server = parts[0];
 
-                                m_serverIsLocal = Transport.IsLocalAddress(server);
+                                m_serverIsLocal = Communication.Transport.IsLocalAddress(server);
                             }
                             catch (Exception ex)
                             {
@@ -1165,7 +1166,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                                                  "SignalReference LIKE '%SYSTEM-ST24' OR " + // [2] System Time Deviation
                                                  "SignalReference LIKE '%SYSTEM-ST25')";     // [3] Primary Disk Usage
 
-            m_statSignalIDs = Measurement.LoadSignalIDs(null, StatsFilterExpression, "SignalReference").ToArray();
+            m_statSignalIDs = MeasurementModel.LoadSignalIDs(null, StatsFilterExpression, "SignalReference").ToArray();
             m_statsSubscription.UnsynchronizedSubscribe(true, true, string.Join(";", m_statSignalIDs), lagTime: 5.0D);
         }
 

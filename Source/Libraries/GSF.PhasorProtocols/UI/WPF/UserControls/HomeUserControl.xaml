@@ -16,7 +16,6 @@
                 <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
                 <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/StyleResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <sdk:BorderGapMaskConverter x:Key="BorderGapMaskConverter"/>
             <sdk:Style x:Key="GroupBoxNoHeader" TargetType="{x:Type sdk:GroupBox}">
                 <sdk:Setter Property="BorderBrush" Value="#D5DFE5"/>
                 <sdk:Setter Property="BorderThickness" Value="1"/>
@@ -81,16 +80,6 @@
 
         <Grid Grid.Row="0" Grid.Column="1">
 
-            <!--<Grid.Resources>
-                <Style TargetType="chartingToolkit:LineDataPoint">
-                    <Setter Property="Background" Value="Blue"/>
-                    <Setter Property="Visibility" Value="Collapsed"/>                    
-                </Style>
-                <Style TargetType="Polyline">
-                    <Setter Property="StrokeThickness" Value="1"/>
-                </Style>
-            </Grid.Resources>-->
-
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -141,7 +130,7 @@
                 <TextBlock Text="Current User" Grid.Row="3" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockUser" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap"/>
 
-                <TextBlock Text="Version Information" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontWeight="Bold"/>
+                <TextBlock Text="Version Information" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontWeight="Bold"/>
 
                 <TextBlock Text="Server" Grid.Row="5" Grid.Column="0" FontWeight="Bold"/>
                 <TextBlock x:Name="TextBlockVersion" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Left"/>
@@ -151,6 +140,7 @@
 
                 <TextBlock Text="Database Information" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" FontWeight="Bold"/>
                 <TextBlock Text="Type" Grid.Row="8" Grid.Column="0" FontWeight="Bold"/>
+
                 <TextBlock x:Name="TextBlockDatabaseType" Grid.Row="8" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap"/>
 
                 <TextBlock Text="Name" Grid.Row="9" Grid.Column="0" FontWeight="Bold"/>
