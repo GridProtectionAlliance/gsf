@@ -41,6 +41,7 @@ using System.Windows;
 using System.Windows.Data;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
@@ -180,6 +181,24 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             // Post base class constructor call, reset changed state value back to false
             m_autoPublishConfigFrameChangedByUser = false; // Called 3rd
+
+            try
+            {
+                // Set default lead/lag time settings to those used by manager screens
+                object lagTimeValue = IsolatedStorageManager.ReadFromIsolatedStorage("LagTime");
+
+                if (!(lagTimeValue is null) && double.TryParse(lagTimeValue.ToString(), out double lagTime) && lagTime > 0.0D)
+                    m_lagTime = lagTime;
+
+                object leadTimeValue = IsolatedStorageManager.ReadFromIsolatedStorage("LeadTime");
+
+                if (!(leadTimeValue is null) && double.TryParse(leadTimeValue.ToString(), out double leadTime) && leadTime > 0.0D)
+                    m_leadTime = leadTime;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
         }
 
         #endregion
