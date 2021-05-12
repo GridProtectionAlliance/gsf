@@ -72,7 +72,7 @@ namespace GSF.Diagnostics
     /// </example>
     public class PerformanceCounter : IDisposable
     {
-    #region [ Members ]
+        #region [ Members ]
 
         // Constants
 
@@ -104,9 +104,9 @@ namespace GSF.Diagnostics
         private long m_lifetimeSampleCount;
         private bool m_disposed;
 
-    #endregion
+        #endregion
 
-    #region [ Constructors ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceCounter"/> class.
@@ -214,9 +214,9 @@ namespace GSF.Diagnostics
         ~PerformanceCounter() =>
             Dispose(false);
 
-    #endregion
+        #endregion
 
-    #region [ Properties ]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets an alias name for the <see cref="PerformanceCounter"/>.
@@ -394,9 +394,17 @@ namespace GSF.Diagnostics
         public System.Diagnostics.PerformanceCounter BaseCounter => m_counter;
 
         /// <summary>
-        /// Gets or sets an optional custom sample adjustment function.
+        /// Gets or sets an optional custom sample adjustment function. Can be used to apply linear adjustments to sampled values.
         /// </summary>
         public Func<float, float> SampleAdjuster { get; set; }
+
+        /// <summary>
+        /// Gets or sets an optional custom sample filter function. Can be used to skip sampled values that are unreasonable.
+        /// </summary>
+        /// <remarks>
+        /// Return <c>true</c> if sample should be filtered; otherwise, <c>false</c>.
+        /// </remarks>
+        public Func<float, bool> SampleFilter { get; set; }
 
         #endregion
 
@@ -453,6 +461,9 @@ namespace GSF.Diagnostics
 
                 float currentSample = m_counter.NextValue();
 
+                if (SampleFilter?.Invoke(currentSample) ?? false)
+                    return;
+
                 if (!(SampleAdjuster is null))
                     currentSample = SampleAdjuster(currentSample);
 
@@ -501,6 +512,6 @@ namespace GSF.Diagnostics
                 m_samples.Clear();
         }
 
-    #endregion
+        #endregion
     }
 }

@@ -325,13 +325,15 @@ namespace GSF.Diagnostics
         /// <param name="valueDivisor">The divisor to be applied to the statistical values of the <see cref="PerformanceCounter"/> object.</param>
         /// <param name="readOnly">Flag that determines if this counter is read-only.</param>
         /// <param name="sampleAdjuster">Defines a custom sample adjustment function for the counter.</param>
-        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor, bool readOnly = true, Func<float, float> sampleAdjuster = null)
+        /// <param name="sampleFilter">Defines a custom sample filter function for the counter.</param>
+        public void AddCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor, bool readOnly = true, Func<float, float> sampleAdjuster = null, Func<float, bool> sampleFilter = null)
         {
             try
             {
                 AddCounter(new PerformanceCounter(categoryName, counterName, instanceName, aliasName, valueUnit, valueDivisor, readOnly)
                 { 
-                    SampleAdjuster = sampleAdjuster
+                    SampleAdjuster = sampleAdjuster,
+                    SampleFilter = sampleFilter
                 });
             }
             catch
