@@ -45,7 +45,8 @@ namespace GSF.Diagnostics
         public SystemPerformanceMonitor(double samplingInterval = DefaultSamplingInterval) 
             : base(samplingInterval)
         {
-            AddCounter("Processor", "% Processor Time", "_Total", "CPU Utilization", "Average %", 1.0F);
+            // This counter matches task manager for process utilization:
+            AddCounter("Processor Information", "% Processor Utility", "_Total", "CPU Utilization", "Average %", 1.0F, true, sampleFilter: value => value <= 0.0D);
             AddCounter("Memory", "Available MBytes", "", "Available Memory", "GB", 1024.0F);
         }
 
@@ -58,7 +59,7 @@ namespace GSF.Diagnostics
         /// </summary>
         /// <remarks>This <see cref="PerformanceCounter"/> is added by default.</remarks>
         public PerformanceCounter CPUUsage =>
-            FindCounter("% Processor Time");
+            FindCounter("% Processor Utility");
 
         /// <summary>
         /// Gets the <see cref="PerformanceCounter"/> that monitors the remaining available memory of the system in GB.
