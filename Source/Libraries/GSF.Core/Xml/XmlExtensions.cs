@@ -288,7 +288,7 @@ namespace GSF.Xml
         /// <param name="attributeName">Attribute name to match.</param>
         /// <returns>Matching sets of <see cref="XElement"/> items and associated attribute values.</returns>
         /// <remarks>
-        /// When used in conjuction with the <see cref="Is"/> extension, allows for expressions like:
+        /// When used in conjunction with the <see cref="Is"/> extension, allows for expressions like:
         /// <code>
         /// var globals = XDocument.Load(configFile)
         ///     .Descendants("SettingsGroup")
@@ -307,7 +307,7 @@ namespace GSF.Xml
         /// <param name="ignoreCase">Flag that determines if attribute value match is case sensitive.</param>
         /// <returns><see cref="XElement"/> items that match <paramref name="attributeValue"/>.</returns>
         /// <remarks>
-        /// When used in conjuction with the <see cref="WhereAttribute"/> extension, allows for expressions like:
+        /// When used in conjunction with the <see cref="WhereAttribute"/> extension, allows for expressions like:
         /// <code>
         /// var globals = XDocument.Load(configFile)
         ///     .Descendants("SettingsGroup")
