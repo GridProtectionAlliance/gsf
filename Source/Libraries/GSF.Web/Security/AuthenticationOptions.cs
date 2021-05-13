@@ -240,8 +240,8 @@ namespace GSF.Web.Security
         /// <summary>
         /// Determines whether the given resource is an authentication failure redirect resource.
         /// </summary>
-        /// <param name="urlPath">Path to check as an anonymous resource.</param>
-        /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
+        /// <param name="urlPath">Path to check as an authentication failure redirect resource.</param>
+        /// <returns><c>true</c> if path is an authentication failure redirect resource; otherwise, <c>false</c>.</returns>
         public bool IsAuthFailureRedirectResource(string urlPath)
         {
             if (m_authFailureRedirectResourceExpression is null)
@@ -407,8 +407,8 @@ namespace GSF.Web.Security
         /// <summary>
         /// Determines whether the given resource is an authentication failure redirect resource.
         /// </summary>
-        /// <param name="urlPath">Path to check as an anonymous resource.</param>
-        /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
+        /// <param name="urlPath">Path to check as an authentication failure redirect resource.</param>
+        /// <returns><c>true</c> if path is an authentication failure redirect resource; otherwise, <c>false</c>.</returns>
         public bool IsAuthFailureRedirectResource(string urlPath) =>
             m_authenticationOptions.IsAuthFailureRedirectResource(urlPath);
 
