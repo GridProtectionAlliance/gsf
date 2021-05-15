@@ -396,15 +396,15 @@ namespace GSF.Web.Shared
         /// <returns>Associated Statistic record, if measurement is a statistic; otherwise, returns <c>null</c>.</returns>
         /// <remarks>
         /// For best results, this function should be called after all statistic engine sources have been registered.
-        /// <paramref name="metadataRecord"/> object expected to contain a "SignalID" and "SignalReference" property.
+        /// <paramref name="metadataRecord"/> object expected to contain a "signalid" and "signalreference" property.
         /// </remarks>
         public Statistic GetStatistic(dynamic metadataRecord)
         {
-            Guid signalID = metadataRecord.SignalID;
+            Guid signalID = metadataRecord.signalid;
 
             return s_statisticReferences.GetOrAdd(signalID, _ =>
             {
-                string signalReference = metadataRecord.SignalReference;
+                string signalReference = metadataRecord.signalreference;
 
                 if (string.IsNullOrWhiteSpace(signalReference))
                     return null;
@@ -442,7 +442,7 @@ namespace GSF.Web.Shared
         private object ToJsonFormatRecord(dynamic metadataRecord)
         {
             Statistic statistic = GetStatistic(metadataRecord);
-            Guid signalID = metadataRecord.SignalID;
+            Guid signalID = metadataRecord.signalid;
             dynamic obj = new JObject();
 
             obj.signalID = signalID;
