@@ -560,9 +560,9 @@ namespace GSF.COMTRADE
             SampleRate sampleRate = new SampleRate(line) { EndSample = endSample };
 
             // Write updated sample rate
+            byte[] bytes = (encoding ?? utf8).GetBytes(sampleRate.ToString().PadRight(line.Length));
             stream.Position = position;
-            StreamWriter writer = new StreamWriter(stream, encoding ?? utf8);
-            writer.Write(sampleRate.ToString().PadRight(line.Length));
+            stream.Write(bytes, 0, bytes.Length);
         }
 
         /// <summary>
@@ -592,9 +592,9 @@ namespace GSF.COMTRADE
 
                 if (Schema.IsFileSectionSeparator(line, out string sectionType, out _) && sectionType == "DAT BINARY")
                 {
+                    byte[] bytes = (encoding ?? utf8).GetBytes($"{byteCount} ---".PadRight($"{MaxByteCountString} ---".Length));
                     stream.Position = position + "--- file type: DAT BINARY: ".Length;
-                    StreamWriter writer = new StreamWriter(stream, encoding ?? utf8);
-                    writer.Write($"{byteCount} ---".PadRight($"{MaxByteCountString} ---".Length));
+                    stream.Write(bytes, 0, bytes.Length);
                     break;
                 }
 
