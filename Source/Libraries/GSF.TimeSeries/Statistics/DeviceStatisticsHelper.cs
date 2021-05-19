@@ -62,8 +62,11 @@ namespace GSF.TimeSeries.Statistics
         public static long GetSystemTimeDeviationFromAverage() =>
             AverageTime > 0L ? AverageTime - s_snapshotTime : long.MinValue;
 
-        public static void MarkDeviceTimestamp(IDevice device, long ticks) => 
-            s_latestDeviceTimes.GetOrAdd(device, _ => new LatestDeviceTime()).Ticks = ticks;
+        public static void MarkDeviceTimestamp(IDevice device, long ticks)
+        {
+            if (s_latestDeviceTimes.TryGetValue(device, out LatestDeviceTime latestDeviceTime))
+                latestDeviceTime.Ticks = ticks;
+        }
 
         private static void StatisticsEngine_SourceRegistered(object sender, EventArgs<object> e)
         {
