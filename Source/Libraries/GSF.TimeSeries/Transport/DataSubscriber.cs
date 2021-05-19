@@ -3366,7 +3366,8 @@ namespace GSF.TimeSeries.Transport
                                         // If frequency is zero, invalidate both frequency and delta frequency
                                         if ((object)frequency != null)
                                         {
-                                            statisticsHelper.MarkDeviceTimestamp(frequency.Timestamp);
+                                            if (!this.TemporalConstraintIsDefined())
+                                                statisticsHelper.MarkDeviceTimestamp(frequency.Timestamp);
 
                                             if (frequency.Value == 0.0D)
                                             {
