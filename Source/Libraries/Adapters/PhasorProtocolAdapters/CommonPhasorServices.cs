@@ -1147,7 +1147,7 @@ namespace PhasorProtocolAdapters
             {
                 statusMessage("Renaming all point tags...");
 
-                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase, BaseKV FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
+                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase, BaseKV, AlternateTag FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
                 {
                     company = measurement.ConvertField<string>("CompanyAcronym");
 
