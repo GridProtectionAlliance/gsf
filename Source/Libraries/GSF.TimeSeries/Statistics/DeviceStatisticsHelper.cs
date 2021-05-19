@@ -93,9 +93,9 @@ namespace GSF.TimeSeries.Statistics
                     decimal variance = deviceTimes.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
 
                     // Only use timestamps within three-sigma, i.e., within 3 standard deviations of the mean
-                    decimal sigma = (decimal)(3.0D * Math.Sqrt((double)variance / sampleCount));
-                    long lowerBound = (long)(mean - sigma);
-                    long upperBound = (long)(mean + sigma);
+                    decimal sigma = (decimal)(3.0D * Math.Sqrt((double)(variance / sampleCount)));
+                    decimal lowerBound = mean - sigma;
+                    decimal upperBound = mean + sigma;
 
                     deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
                     sampleCount = deviceTimes.Length;
