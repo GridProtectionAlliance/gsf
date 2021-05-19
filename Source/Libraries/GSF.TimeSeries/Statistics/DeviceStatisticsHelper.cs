@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  02/24/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  05/03/2021 - J. Ritchie Carroll
+//       Added global devices statistics, e.g., avg/min/max timestamps
 //
 //******************************************************************************************************
 
@@ -81,7 +83,7 @@ namespace GSF.TimeSeries.Statistics
             s_deviceTimesSnapshot = s_latestDeviceTimes.ToArray().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Ticks);
             s_snapshotTime = DateTime.UtcNow.Ticks;
             
-            // Using decimal type for to allow for very large long value totals, e.g., for mean
+            // Using decimal type to allow for very large long value totals, e.g., for mean
             decimal[] deviceTimes = s_deviceTimesSnapshot.Select(kvp => (decimal)kvp.Value).Where(ticks => ticks > 0M).ToArray();
             int sampleCount = deviceTimes.Length;
 
