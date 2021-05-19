@@ -60,11 +60,8 @@ namespace GSF.TimeSeries.Statistics
         public static long GetSystemTimeDeviationFromAverage() =>
             AverageTime > 0L ? AverageTime - s_snapshotTime : long.MinValue;
 
-        public static void MarkDeviceTimestamp(IDevice device, long ticks)
-        {
-            if (s_latestDeviceTimes.TryGetValue(device, out LatestDeviceTime latestDeviceTime))
-                latestDeviceTime.Ticks = ticks;
-        }
+        public static void MarkDeviceTimestamp(IDevice device, long ticks) => 
+            s_latestDeviceTimes.GetOrAdd(device, _ => new LatestDeviceTime()).Ticks = ticks;
 
         private static void StatisticsEngine_SourceRegistered(object sender, EventArgs<object> e)
         {
@@ -80,22 +77,67 @@ namespace GSF.TimeSeries.Statistics
 
         private static void StatisticsEngine_BeforeCalculate(object sender, EventArgs e)
         {
+            // ToArray on concurrent dictionary provides safe iteration of all values
             s_deviceTimesSnapshot = s_latestDeviceTimes.ToArray().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Ticks);
             s_snapshotTime = DateTime.UtcNow.Ticks;
             
-            long[] deviceTimes = s_deviceTimesSnapshot.Select(kvp => kvp.Value).Where(ticks => ticks > 0L).ToArray();
+            // Using decimal type for to allow for very large long value totals, e.g., for mean
+            decimal[] deviceTimes = s_deviceTimesSnapshot.Select(kvp => (decimal)kvp.Value).Where(ticks => ticks > 0M).ToArray();
+            int sampleCount = deviceTimes.Length;
 
-            if (deviceTimes.Length > 0)
+            if (sampleCount > 0)
             {
-                AverageTime = (long)deviceTimes.Average();
-                MinimumTime = deviceTimes.Min();
-                MaximumTime = deviceTimes.Max();
+                if (sampleCount > 1)
+                {
+                    decimal mean = deviceTimes.Average();
+                    decimal variance = deviceTimes.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
+
+                    // Only use timestamps within three-sigma, i.e., within 3 standard deviations of the mean
+                    decimal sigma = (decimal)(3.0D * Math.Sqrt((double)variance / sampleCount));
+                    long lowerBound = (long)(mean - sigma);
+                    long upperBound = (long)(mean + sigma);
+
+                    deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
+                    sampleCount = deviceTimes.Length;
+
+                    if (sampleCount > 1)
+                    {
+                        decimal total = 0M;
+                        decimal min = long.MaxValue;
+                        decimal max = long.MinValue;
+
+                        for (int i = 0; i < sampleCount; i++)
+                        {
+                            decimal time = deviceTimes[i];
+                            total += time;
+
+                            if (time > max)
+                                max = time;
+
+                            if (time < min)
+                                min = time;
+                        }
+
+                        AverageTime = (long)(total / sampleCount);
+                        MinimumTime = (long)min;
+                        MaximumTime = (long)max;
+                    }
+                    else
+                    {
+                        if (sampleCount > 0)
+                            AverageTime = MinimumTime = MaximumTime = (long)deviceTimes[0];
+                        else
+                            AverageTime = MinimumTime = MaximumTime = 0L;
+                    }
+                }
+                else
+                {
+                    AverageTime = MinimumTime = MaximumTime = (long)deviceTimes[0];
+                }
             }
             else
             {
-                AverageTime = 0L;
-                MinimumTime = 0L;
-                MaximumTime = 0L;
+                AverageTime = MinimumTime = MaximumTime = 0L;
             }
         }
     }
