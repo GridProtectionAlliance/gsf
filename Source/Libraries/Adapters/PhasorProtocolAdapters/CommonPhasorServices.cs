@@ -470,13 +470,13 @@ namespace PhasorProtocolAdapters
         /// <param name="deviceAcronym">Device name acronym to use for the point tag.</param>
         /// <param name="vendorAcronym">Vendor name acronym to use for the point tag. Can be null.</param>
         /// <param name="signalTypeAcronym">Acronym of signal type of the point.</param>
-        /// <param name="phasorLabel">The label of the phasor associated with the point.</param>
+        /// <param name="label">The label associated with the point, e.g., the phasor or analog label.</param>
         /// <param name="signalIndex">Signal index of the point, if any.</param>
         /// <param name="phase">Signal phase of the point, if any.</param>
         /// <param name="baseKV">Nominal kV of line associated with phasor.</param>
         /// <returns>A new point tag created using the configured point tag name expression.</returns>
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string phasorLabel = null, int signalIndex = -1, char phase = '_', int baseKV = 0)
+        public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string label = null, int signalIndex = -1, char phase = '_', int baseKV = 0)
         {
             // Initialize point tag expression parser
             if (s_pointTagExpressionParser is null)
@@ -501,8 +501,8 @@ namespace PhasorProtocolAdapters
             if (vendorAcronym is null)
                 vendorAcronym = "";
 
-            if (phasorLabel is null)
-                phasorLabel = "";
+            if (label is null)
+                label = "";
 
             companyAcronym = companyAcronym.Trim();
             deviceAcronym = deviceAcronym.Trim();
@@ -514,7 +514,8 @@ namespace PhasorProtocolAdapters
                 { "{CompanyAcronym}", companyAcronym },
                 { "{DeviceAcronym}", deviceAcronym },
                 { "{VendorAcronym}", vendorAcronym },
-                { "{PhasorLabel}", phasorLabel },
+                { "{PhasorLabel}", label },
+                { "{Label}", label },
                 { "{SignalIndex}", signalIndex.ToString() },
                 { "{Phase}", phase.ToString() },
                 { "{BaseKV}", baseKV.ToString() }
