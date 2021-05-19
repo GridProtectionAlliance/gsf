@@ -1176,11 +1176,14 @@ namespace PhasorProtocolAdapters
                         signalIndex = -1;
                     }
 
-                    string phasorLabel = measurement.ConvertField<string>("PhasorLabel");
+                    string label = measurement.ConvertField<string>("PhasorLabel");
                     char? phase = measurement.ConvertNullableField<char>("Phase");
                     int baseKV = measurement.ConvertField<int>("BaseKV");
 
-                    database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, phasorLabel, signalIndex, phase ?? '_', baseKV)}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
+                    if (string.IsNullOrWhiteSpace(label))
+                        label = measurement.ConvertField<string>("AlternateTag");
+
+                    database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, label, signalIndex, phase ?? '_', baseKV)}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
                 }
             }
 

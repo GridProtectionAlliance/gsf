@@ -2257,7 +2257,7 @@
 
                             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
                             promises.push(phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
-                                return phasorHub.createIndexedPointTag(cell.IDLabel(), analogSignalType.Acronym, index).then(function (pointTag) {
+                                return phasorHub.createIndexedPointTag(cell.IDLabel(), analogSignalType.Acronym, index, analogDefinition.Label).then(function (pointTag) {
                                     measurement.DeviceID = cell.ID;
                                     measurement.HistorianID = viewModel.historianID();
                                     measurement.PointTag = pointTag;
@@ -2302,18 +2302,18 @@
 
                         for (let i = 0; i < cell.DigitalDefinitions.length; i++) {
                             const index = i + 1;
-                            const digitialDefinition = cell.DigitalDefinitions[i];
+                            const digitalDefinition = cell.DigitalDefinitions[i];
                             const orgSignalReference = String.format("{0}-{1}{2}", cell.OriginalAcronym(), digitalSignalType.Suffix, index);
                             const signalReference = String.format("{0}-{1}{2}", cell.IDLabel(), digitalSignalType.Suffix, index);
 
                             // Query existing measurement record for specified signal reference - function will create a new blank measurement record if one does not exist
                             promises.push(phasorHub.queryMeasurement(orgSignalReference).then(function (measurement) {
-                                return phasorHub.createIndexedPointTag(cell.IDLabel(), digitalSignalType.Acronym, index).then(function (pointTag) {
+                                return phasorHub.createIndexedPointTag(cell.IDLabel(), digitalSignalType.Acronym, index, digitalDefinition.Label).then(function (pointTag) {
                                     measurement.DeviceID = cell.ID;
                                     measurement.HistorianID = viewModel.historianID();
                                     measurement.PointTag = pointTag;
-                                    measurement.AlternateTag = digitialDefinition.Label;
-                                    measurement.Description = String.format("{0} Digital Value {1}: {2}", cell.IDLabel(), index, digitialDefinition.Label);
+                                    measurement.AlternateTag = digitalDefinition.Label;
+                                    measurement.Description = String.format("{0} Digital Value {1}: {2}", cell.IDLabel(), index, digitalDefinition.Label);
                                     measurement.SignalReference = signalReference;
                                     measurement.SignalTypeID = digitalSignalType.ID;
                                     measurement.Internal = true;

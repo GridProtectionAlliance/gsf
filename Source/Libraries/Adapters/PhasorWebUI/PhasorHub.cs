@@ -541,9 +541,9 @@ namespace PhasorWebUI
             return CommonPhasorServices.CreatePointTag(CompanyAcronym, deviceAcronym, null, signalTypeAcronym);
         }
 
-        public string CreateIndexedPointTag(string deviceAcronym, string signalTypeAcronym, int signalIndex)
+        public string CreateIndexedPointTag(string deviceAcronym, string signalTypeAcronym, int signalIndex, string label)
         {
-            return CommonPhasorServices.CreatePointTag(CompanyAcronym, deviceAcronym, null, signalTypeAcronym, null, signalIndex);
+            return CommonPhasorServices.CreatePointTag(CompanyAcronym, deviceAcronym, null, signalTypeAcronym, label, signalIndex);
         }
 
         public string CreatePhasorPointTag(string deviceAcronym, string signalTypeAcronym, string phasorLabel, string phase, int signalIndex, int baseKV)

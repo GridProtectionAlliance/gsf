@@ -1123,8 +1123,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                 for (int i = 1; i <= analogCount; i++)
                                 {
                                     measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {savedDevice.ID} AND SignalReference = '{savedDevice.Acronym}-AV{i}'");
-                                    string label = analogLabels?[i - 1] is null ? "" : analogLabels[i - 1].Trim();
-                                    string tagLabel = string.IsNullOrEmpty(label) ? "" : Regex.Replace(label.ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
+                                    string label = analogLabels?[i - 1] is null ? string.Empty : analogLabels[i - 1].Trim();
+                                    string tagLabel = string.IsNullOrEmpty(label) ? string.Empty : Regex.Replace(label.ToUpperInvariant(), @"[^A-Z0-9\-!_\.@#\$]+", "_", RegexOptions.Compiled);
 
                                     if (measurement is null)
                                     {
@@ -1132,7 +1132,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         {
                                             DeviceID = savedDevice.ID,
                                             HistorianID = savedDevice.HistorianID,
-                                            PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, string.IsNullOrEmpty(tagLabel) ? savedDevice.Acronym : $"{savedDevice.Acronym}_{tagLabel}", savedDevice.VendorAcronym, "ALOG", null, i).TruncateRight(200),
+                                            PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, string.IsNullOrEmpty(tagLabel) ? savedDevice.Acronym : $"{savedDevice.Acronym}_{tagLabel}", savedDevice.VendorAcronym, "ALOG", label, i).TruncateRight(200),
                                             AlternateTag = label,
                                             SignalReference = $"{savedDevice.Acronym}-AV{i}",
                                             Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Analog Value {i}: {label}",
@@ -1153,7 +1153,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     else // if (measurement.SignalTypeID != signal.ID)
                                     {
                                         measurement.HistorianID = savedDevice.HistorianID;
-                                        measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, string.IsNullOrEmpty(tagLabel) ? savedDevice.Acronym : $"{savedDevice.Acronym}_{tagLabel}", savedDevice.VendorAcronym, "ALOG", null, i).TruncateRight(200);
+                                        measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, string.IsNullOrEmpty(tagLabel) ? savedDevice.Acronym : $"{savedDevice.Acronym}_{tagLabel}", savedDevice.VendorAcronym, "ALOG", label, i).TruncateRight(200);
                                         measurement.AlternateTag = label;
                                         measurement.Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Analog Value {i}: {label}";
                                         measurement.SignalTypeID = signal.ID;
@@ -1183,7 +1183,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         {
                                             DeviceID = savedDevice.ID,
                                             HistorianID = savedDevice.HistorianID,
-                                            PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i),
+                                            PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", digitalLabels?[i - 1] ?? string.Empty, i),
                                             SignalReference = $"{savedDevice.Acronym}-DV{i}",
                                             SignalTypeID = signal.ID,
                                             Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Digital Value {i}",
@@ -1199,7 +1199,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     else // if (measurement.SignalTypeID != signal.ID)
                                     {
                                         measurement.HistorianID = savedDevice.HistorianID;
-                                        measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", null, i);
+                                        measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", digitalLabels?[i - 1] ?? string.Empty, i);
                                         measurement.SignalTypeID = signal.ID;
                                         measurement.Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Digital Value {i}";
 
