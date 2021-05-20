@@ -97,8 +97,10 @@ namespace GSF.TimeSeries.Statistics
                     decimal mean = deviceTimes.Average();
                     decimal variance = deviceTimes.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
 
-                    // Only use timestamps within three-sigma, i.e., within 3 standard deviations of the mean
-                    decimal sigma = (decimal)(3.0D * Math.Sqrt((double)(variance / sampleCount)));
+                    // Only use timestamps within five-sigma, i.e., within 5 standard deviations of the mean. Note
+                    // that use of five-sigma is because PMU-timestamps do not always follow a normal distribution:
+                    // https://ieeexplore.ieee.org/document/8494760
+                    decimal sigma = (decimal)(5.0D * Math.Sqrt((double)(variance / sampleCount)));
                     decimal lowerBound = mean - sigma;
                     decimal upperBound = mean + sigma;
 
