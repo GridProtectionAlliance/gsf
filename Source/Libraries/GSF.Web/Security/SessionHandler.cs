@@ -38,6 +38,8 @@ using System.Timers;
 using System.Web.Http;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Diagnostics;
+using GSF.IO;
 using GSF.Security;
 using Microsoft.AspNet.SignalR;
 using Microsoft.Owin;
@@ -59,7 +61,7 @@ namespace GSF.Web.Security
         // Nested Types
         private class Session
         {
-            public readonly DynamicViewBag State = new DynamicViewBag();
+            public readonly DynamicViewBag State = new();
             public DateTime LastAccess;
         }
 
@@ -76,23 +78,27 @@ namespace GSF.Web.Security
             [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
             public Credential(Stream stream)
             {
-                byte[] protectedCredentials;
-
-                using (BinaryReader reader = new BinaryReader(stream, Encoding.Unicode, true))
+                try
                 {
+                    using BinaryReader reader = new(stream, Encoding.Unicode, true);
                     int length = reader.ReadInt32();
-                    protectedCredentials = reader.ReadBytes(length);
-                }
+                    byte[] protectedCredentials = reader.ReadBytes(length);
+                    byte[] credentials = ProtectedData.Unprotect(protectedCredentials, null, DataProtectionScope.CurrentUser);
 
-                byte[] credentials = ProtectedData.Unprotect(protectedCredentials, null, DataProtectionScope.LocalMachine);
+                    using MemoryStream memStream = new(credentials);
+                    using BinaryReader memReader = new(memStream, Encoding.Unicode, true);
 
-                using (MemoryStream memStream = new MemoryStream(credentials))
-                using (BinaryReader memReader = new BinaryReader(memStream, Encoding.Unicode, true))
-                {
                     Validator = memReader.ReadString();
                     Username = memReader.ReadString();
                     Password = memReader.ReadString();
                     Expiration = new DateTime(memReader.ReadInt64());
+                }
+                catch (Exception ex)
+                {
+                    // Invalidate cache entry for decrypt failures (service could be running as different user)
+                    Validator = Username = Password = null;
+                    Expiration = DateTime.MinValue;
+                    Logger.SwallowException(ex);
                 }
             }
 
@@ -117,25 +123,19 @@ namespace GSF.Web.Security
             [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
             public void WriteTo(Stream stream)
             {
-                byte[] credentials;
+                using MemoryStream memStream = new();
+                using BinaryWriter memWriter = new(memStream, Encoding.Unicode, true);
+                
+                memWriter.Write(Validator);
+                memWriter.Write(Username);
+                memWriter.Write(Password);
+                memWriter.Write(Expiration.Ticks);
 
-                using (MemoryStream memStream = new MemoryStream())
-                using (BinaryWriter memWriter = new BinaryWriter(memStream, Encoding.Unicode, true))
-                {
-                    memWriter.Write(Validator);
-                    memWriter.Write(Username);
-                    memWriter.Write(Password);
-                    memWriter.Write(Expiration.Ticks);
-                    credentials = memStream.ToArray();
-                }
+                byte[] credentials = memStream.ToArray();
+                byte[] protectedCredentials = ProtectedData.Protect(credentials, null, DataProtectionScope.CurrentUser);
 
-                byte[] protectedCredentials = ProtectedData.Protect(credentials, null, DataProtectionScope.LocalMachine);
-
-                using (BinaryWriter writer = new BinaryWriter(stream, Encoding.Unicode, true))
-                {
-                    writer.Write(protectedCredentials.Length);
-                    writer.Write(protectedCredentials);
-                }
+                using BinaryWriter writer = new(stream, Encoding.Unicode, true);
+                writer.Write(protectedCredentials.Length);
             }
 
             #endregion
@@ -152,6 +152,11 @@ namespace GSF.Web.Security
         /// Default value for <see cref="SessionMonitorInterval"/>.
         /// </summary>
         public const double DefaultSessionMonitorInterval = 60000.0D;
+
+        /// <summary>
+        /// Default value for a cached session expiration, in days.
+        /// </summary>
+        public const double DefaultSessionExpirationDays = 30.0D;
 
         /// <summary>
         /// Default value for <see cref="AuthenticationToken"/>;
@@ -252,7 +257,7 @@ namespace GSF.Web.Security
                         new CookieHeaderValue(AuthenticationToken, authenticationToken)
                         {
                             Path = request.RequestUri.LocalPath,
-                            MaxAge = TimeSpan.FromDays(30.0D)
+                            MaxAge = TimeSpan.FromDays(s_sessionExpirationDays)
                         }
                     });
                 }
@@ -276,18 +281,13 @@ namespace GSF.Web.Security
             Random.GetBytes(buffer);
             string validator = Convert.ToBase64String(buffer);
 
-            // Determine where the credential cache is located
-            ConfigurationFile configFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-
-            string configurationCachePath = systemSettings["ConfigurationCachePath"].Value;
-            string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
-
-            // Open the credential cache
-            lock (s_credentialCacheLock)
+            if (s_sessionCredentialCache is not null)
             {
-                using (FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath))
+                // Open the credential cache
+                lock (s_sessionCredentialCacheLock)
                 {
+                    using FileBackedDictionary<string, Credential> credentialCache = new(s_sessionCredentialCache);
+
                     // Clean out expired credentials before issuing a new one
                     DateTime now = DateTime.UtcNow;
 
@@ -296,10 +296,13 @@ namespace GSF.Web.Security
                         .Select(kvp => kvp.Key)
                         .ToList();
 
-                    foreach (string expiredSelector in expiredSelectors)
-                        credentialCache.Remove(expiredSelector);
+                    if (expiredSelectors.Count > 0)
+                    {
+                        foreach (string expiredSelector in expiredSelectors)
+                            credentialCache.Remove(expiredSelector);
 
-                    credentialCache.Compact();
+                        credentialCache.Compact();
+                    }
 
                     // Enter the new token into the credential cache
                     credentialCache[selector] = new Credential
@@ -307,7 +310,7 @@ namespace GSF.Web.Security
                         Validator = validator,
                         Username = username,
                         Password = password,
-                        Expiration = DateTime.UtcNow.AddDays(30.0D)
+                        Expiration = DateTime.UtcNow.AddDays(s_sessionExpirationDays)
                     };
                 }
             }
@@ -320,25 +323,19 @@ namespace GSF.Web.Security
             // Get the authentication token provided by the client in the request message
             string authenticationToken = GetAuthenticationTokenFromCookie(request, AuthenticationToken);
 
-            if (authenticationToken == null)
+            if (authenticationToken is null)
                 return;
 
             string selector = authenticationToken.Split(':')[0];
 
-            // Determine where the credential cache is located
-            ConfigurationFile configFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-
-            string configurationCachePath = systemSettings["ConfigurationCachePath"].Value;
-            string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
+            if (s_sessionCredentialCache is null)
+                return;
 
             // Open the credential cache
-            lock (s_credentialCacheLock)
+            lock (s_sessionCredentialCacheLock)
             {
-                using (FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath))
-                {
-                    credentialCache.Remove(selector);
-                }
+                using FileBackedDictionary<string, Credential> credentialCache = new(s_sessionCredentialCache);
+                credentialCache.Remove(selector);
             }
         }
 
@@ -361,15 +358,21 @@ namespace GSF.Web.Security
         // Static Fields
         private static readonly Timer s_sessionCacheMonitor;
         private static readonly ConcurrentDictionary<Guid, Session> s_sessionCache;
-        private static readonly object s_credentialCacheLock = new object();
+        private static readonly string s_sessionCredentialCache;
+        private static readonly object s_sessionCredentialCacheLock;
+        private static readonly double s_sessionExpirationDays;
 
         // Static Constructor
         static SessionHandler()
         {
             CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
-            
+
             settings.Add("SessionTimeout", DefaultSessionTimeout, "The timeout, in minutes, for which inactive client sessions will be expired and removed from the cache.");
             settings.Add("SessionMonitorInterval", DefaultSessionMonitorInterval, "The interval, in milliseconds, over which the client session cache will be evaluated for expired sessions.");
+            settings.Add("ConfigurationCachePath", $"{FilePath.GetAbsolutePath("")}{Path.DirectorySeparatorChar}ConfigurationCache{Path.DirectorySeparatorChar}", "Defines the path used to cache serialized phasor protocol configurations");
+            settings.Add("SessionCredentialCacheEnabled", true, "Defines flag that determines if session credentials cache is enabled");
+            settings.Add("SessionCredentialCache", Path.Combine(settings["ConfigurationCachePath"].Value, "CredentialCache.bin"), "Path and file name of session credentials cache");
+            settings.Add("SessionExpirationDays", s_sessionExpirationDays, "Default number of days for session expirations");
 
             SessionTimeout = settings["SessionTimeout"].ValueAs(DefaultSessionTimeout);
             SessionMonitorInterval = settings["SessionMonitorInterval"].ValueAs(DefaultSessionMonitorInterval);
@@ -378,6 +381,14 @@ namespace GSF.Web.Security
             s_sessionCacheMonitor.Elapsed += s_sessionCacheMonitor_Elapsed;
             s_sessionCacheMonitor.Enabled = false;
             s_sessionCache = new ConcurrentDictionary<Guid, Session>();
+
+            if (settings["SessionCredentialCacheEnabled"].ValueAs(true))
+            {
+                s_sessionCredentialCache = settings["SessionCredentialCache"].Value;
+                s_sessionCredentialCacheLock = new object();
+            }
+
+            s_sessionExpirationDays = settings["SessionExpirationDays"].ValueAs(DefaultSessionExpirationDays);
         }
 
         // Static Properties
@@ -419,37 +430,33 @@ namespace GSF.Web.Security
         {
             try
             {
-                // Parse the selector and validator from the authentication token
-                string[] authenticationTokenParts = authenticationToken.Split(':');
-
-                if (authenticationTokenParts.Length != 2)
+                if (s_sessionCredentialCache is not null)
                 {
-                    username = null;
-                    password = null;
-                    return false;
-                }
+                    // Parse the selector and validator from the authentication token
+                    string[] authenticationTokenParts = authenticationToken.Split(':');
 
-                string selector = authenticationTokenParts[0];
-                string validator = authenticationTokenParts[1];
-
-                // Determine where the credential cache is located
-                ConfigurationFile configFile = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-
-                string configurationCachePath = systemSettings["ConfigurationCachePath"].Value;
-                string credentialCachePath = Path.Combine(configurationCachePath, "CredentialCache.bin");
-
-                // Read the credential cache to retrieve the user's
-                // credentials that were mapped to this authentication token
-                lock (s_credentialCacheLock)
-                {
-                    using FileBackedDictionary<string, Credential> credentialCache = new FileBackedDictionary<string, Credential>(credentialCachePath);
-                    
-                    if (credentialCache.TryGetValue(selector, out Credential credential) && validator == credential.Validator && DateTime.UtcNow < credential.Expiration)
+                    if (authenticationTokenParts.Length != 2)
                     {
-                        username = credential.Username;
-                        password = credential.Password;
-                        return true;
+                        username = null;
+                        password = null;
+                        return false;
+                    }
+
+                    string selector = authenticationTokenParts[0];
+                    string validator = authenticationTokenParts[1];
+
+                    // Read the credential cache to retrieve the user's
+                    // credentials that were mapped to this authentication token
+                    lock (s_sessionCredentialCacheLock)
+                    {
+                        using FileBackedDictionary<string, Credential> credentialCache = new(s_sessionCredentialCache);
+
+                        if (credentialCache.TryGetValue(selector, out Credential credential) && validator == credential.Validator && DateTime.UtcNow < credential.Expiration)
+                        {
+                            username = credential.Username;
+                            password = credential.Password;
+                            return username is not null;
+                        }
                     }
                 }
             }
@@ -519,10 +526,8 @@ namespace GSF.Web.Security
         /// <param name="request">The target Owin request.</param>
         /// <param name="authenticationToken">Token used for identifying the authentication token in cookie headers.</param>
         /// <returns>Authentication token string, if defined; otherwise, <c>null</c>.</returns>
-        public static string GetAuthenticationTokenFromCookie(IOwinRequest request, string authenticationToken)
-        {
-            return request?.Cookies?[authenticationToken ?? DefaultAuthenticationToken];
-        }
+        public static string GetAuthenticationTokenFromCookie(IOwinRequest request, string authenticationToken) => 
+            request?.Cookies?[authenticationToken ?? DefaultAuthenticationToken];
 
         /// <summary>
         /// Gets the session ID Guid as defined in the request cookie header values.
@@ -583,15 +588,11 @@ namespace GSF.Web.Security
             s_sessionCacheMonitor.Enabled = true;
         }
 
-        private static void OnSessionExpired(Guid sessionID, DynamicViewBag sessionState)
-        {
+        private static void OnSessionExpired(Guid sessionID, DynamicViewBag sessionState) => 
             SessionExpired?.Invoke(typeof(SessionHandler), new EventArgs<Guid, DynamicViewBag>(sessionID, sessionState));
-        }
 
-        private static void OnProcessException(Exception ex)
-        {
+        private static void OnProcessException(Exception ex) => 
             ProcessException?.Invoke(typeof(SessionHandler), new EventArgs<Exception>(ex));
-        }
 
         private static void s_sessionCacheMonitor_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -659,22 +660,18 @@ namespace GSF.Web.Security
         /// Adds a new anti-forgery request verification token to the headers of the specified <paramref name="request"/>.
         /// </summary>
         /// <param name="request">HTTP request message.</param>
-        public static void AddRequestVerificationHeaderToken(this HttpRequestMessage request)
-        {
+        public static void AddRequestVerificationHeaderToken(this HttpRequestMessage request) =>
             request.Headers.Add(
                 request.GetAuthenticationOptions().RequestVerificationToken, 
                 request.GenerateRequestVerficationHeaderToken());
-        }
 
         /// <summary>
         /// Validates that the anti-forgery request verification token value comes from the user who submitted the data.
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="formValidation">Flag that determines if form validation should be used.</param>
-        public static void ValidateRequestVerificationToken(this HttpRequestMessage request, bool formValidation = false)
-        {
+        public static void ValidateRequestVerificationToken(this HttpRequestMessage request, bool formValidation = false) => 
             ValidateRequestVerificationToken(request, request.GetAuthenticationOptions(), formValidation);
-        }
 
         /// <summary>
         /// Validates that the anti-forgery request verification token value comes from the user who submitted the data.
