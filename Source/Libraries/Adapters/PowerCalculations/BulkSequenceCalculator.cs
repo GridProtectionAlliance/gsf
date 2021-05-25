@@ -44,6 +44,7 @@ using SignalType = GSF.Units.EE.SignalType;
 using PhaseDetail = System.Tuple<GSF.TimeSeries.MeasurementKey, GSF.Units.EE.SignalType, GSF.TimeSeries.Model.Measurement, GSF.TimeSeries.Model.Phasor>;
 using static PowerCalculations.SequenceCalculator.Output;
 
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 namespace PowerCalculations
 {
     /// <summary>
@@ -163,7 +164,7 @@ namespace PowerCalculations
         {
             get
             {
-                if (Initialized && m_perAdapterOutputNames != null)
+                if (Initialized && m_perAdapterOutputNames?.Count > 0)
                     return m_perAdapterOutputNames;
 
                 ReadOnlyCollection<string> generatePerAdapterOutputNames()
@@ -360,7 +361,7 @@ namespace PowerCalculations
             get
             {
                 if (CurrentAdapterIndex < 0 || CurrentAdapterIndex >= m_adapterDetails.Count || CurrentOutputIndex < 0 || CurrentOutputIndex >= PerAdapterOutputNames.Count)
-                    return base.PointTagTemplate;
+                    throw new IndexOutOfRangeException($"Current adapter index {CurrentAdapterIndex:N0} is invalid for PointTagTemplate");
 
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
                 SignalType signalType = GetSignalTypes()?[CurrentOutputIndex] ?? SignalType;
@@ -380,25 +381,12 @@ namespace PowerCalculations
             get
             {
                 if (CurrentAdapterIndex < 0 || CurrentAdapterIndex >= m_adapterDetails.Count || CurrentOutputIndex < 0 || CurrentOutputIndex >= PerAdapterOutputNames.Count)
-                    return base.SignalReferenceTemplate;
+                    throw new IndexOutOfRangeException($"Current adapter index {CurrentAdapterIndex:N0} is invalid for SignalReferenceTemplate");
 
                 AdapterDetail adapterDetail = m_adapterDetails[CurrentAdapterIndex];
                 SignalType signalType = GetSignalTypes()?[CurrentOutputIndex] ?? SignalType;
                 SignalKind signalKind;
-                int signalIndex;
-
-                switch (signalType)
-                {
-                    case SignalType.VPHA:
-                    case SignalType.VPHM:
-                    case SignalType.IPHA:
-                    case SignalType.IPHM:
-                        signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * (PerAdapterOutputNames.Count / 2) + (CurrentOutputIndex / 2) + 1;
-                        break;
-                    default:
-                        signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex + 1;
-                        break;
-                }
+                int signalIndex = adapterDetail.SourcePhaseCount + CurrentAdapterIndex * PerAdapterOutputNames.Count + CurrentOutputIndex + 1;
 
                 switch (signalType)
                 {
@@ -517,6 +505,8 @@ namespace PowerCalculations
 
             if (!settings.TryGetValue(nameof(InputMeasurementKeys), out string setting) || string.IsNullOrWhiteSpace(setting))
                 settings[nameof(InputMeasurementKeys)] = DefaultInputMeasurementKeys;
+
+            m_perAdapterOutputNames = null;
 
             base.ParseConnectionString();
 
