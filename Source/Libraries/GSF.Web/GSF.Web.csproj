@@ -147,6 +147,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\ModelController.cs" />
     <Compile Include="Security\AntiForgery.cs" />
     <Compile Include="Security\AntiForgeryConfig.cs" />
     <Compile Include="Security\AntiCsrf\AntiForgeryToken.cs" />
