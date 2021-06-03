@@ -2837,7 +2837,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Command will only be sent if <see cref="DeviceSupportsCommands"/> is <c>true</c> and <see cref="MultiProtocolFrameParser"/>.
         /// </remarks>
-        /// <returns>A <see cref="WaitHandle"/>.</returns>
+        /// <returns>A <see cref="WaitHandle"/> for send operation.</returns>
         public WaitHandle SendRawDeviceCommand(ushort rawCommand) => SendDeviceCommand((DeviceCommand)rawCommand);
 
         /// <summary>
@@ -2847,7 +2847,12 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Command will only be sent if <see cref="DeviceSupportsCommands"/> is <c>true</c> and <see cref="MultiProtocolFrameParser"/>.
         /// </remarks>
-        /// <returns>A <see cref="WaitHandle"/>.</returns>
+        /// <returns>A <see cref="WaitHandle"/> for send operation.</returns>
+        /// <remarks>
+        /// This function will not throw an exception. Any send exceptions will be logged to <see cref="ParsingException"/> event. Consumer
+        /// can assume function failed if returned <see cref="WaitHandle"/> is <c>null</c>, which will be the case if device does not support
+        /// commands or no channel is available for publication.
+        /// </remarks>
         public WaitHandle SendDeviceCommand(DeviceCommand command)
         {
             WaitHandle handle = null;
@@ -2864,6 +2869,7 @@ namespace GSF.PhasorProtocols
                         command = DeviceCommand.SendConfigurationFrame2;
 
                     // Only the IEEE, SEL Fast Message and Macrodyne protocols support commands
+                    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
                     switch (m_phasorProtocol)
                     {
                         case PhasorProtocol.IEEEC37_118V2:
@@ -2895,35 +2901,57 @@ namespace GSF.PhasorProtocols
                     }
 
                     if (!(commandFrame is null))
-                    {
-                        byte[] buffer = commandFrame.BinaryImage();
-
-                        // Send command over appropriate communications channel - command channel, if defined,
-                        // will take precedence over other communications channels for command traffic...
-                        if (!(m_commandChannel is null) && m_commandChannel.CurrentState == ClientState.Connected)
-                        {
-                            handle = m_commandChannel.SendAsync(buffer, 0, buffer.Length);
-                        }
-                        else if (!(m_dataChannel is null) && m_dataChannel.CurrentState == ClientState.Connected)
-                        {
-                            handle = m_dataChannel.SendAsync(buffer, 0, buffer.Length);
-                        }
-                        else if (!(m_serverBasedDataChannel is null) && m_serverBasedDataChannel.CurrentState == ServerState.Running)
-                        {
-                            WaitHandle[] handles = m_serverBasedDataChannel.MulticastAsync(buffer, 0, buffer.Length);
-
-                            if (!(handles is null) && handles.Length > 0)
-                                handle = handles[0];
-                        }
-
-                        SentCommandFrame?.Invoke(this, new EventArgs<ICommandFrame>(commandFrame));
-                    }
+                        handle = SendDeviceCommand(commandFrame);
                 }
             }
             catch (Exception ex)
             {
                 OnParsingException(new ConnectionException($"Failed to send device command \"{command}\": {ex.Message}", ex));
             }
+
+            return handle;
+        }
+
+        /// <summary>
+        /// Sends the specified <see cref="ICommandFrame"/> to the remote device.
+        /// </summary>
+        /// <param name="commandFrame">Command frame to send.</param>
+        /// <returns>A <see cref="WaitHandle"/> for send operation.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="commandFrame"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">Device does not support commands - or - No channel open for command publication.</exception>
+        public WaitHandle SendDeviceCommand(ICommandFrame commandFrame)
+        {
+            if (commandFrame is null)
+                throw new ArgumentNullException(nameof(commandFrame));
+
+            if (!DeviceSupportsCommands)
+                throw new InvalidOperationException("Device does not support commands");
+            
+            if (m_dataChannel is null && m_serverBasedDataChannel is null && m_commandChannel is null)
+                throw new InvalidOperationException("No channel open for command publication");
+
+            WaitHandle handle = null;
+            byte[] buffer = commandFrame.BinaryImage();
+
+            // Send command over appropriate communications channel - command channel, if defined,
+            // will take precedence over other communications channels for command traffic...
+            if (!(m_commandChannel is null) && m_commandChannel.CurrentState == ClientState.Connected)
+            {
+                handle = m_commandChannel.SendAsync(buffer, 0, buffer.Length);
+            }
+            else if (!(m_dataChannel is null) && m_dataChannel.CurrentState == ClientState.Connected)
+            {
+                handle = m_dataChannel.SendAsync(buffer, 0, buffer.Length);
+            }
+            else if (!(m_serverBasedDataChannel is null) && m_serverBasedDataChannel.CurrentState == ServerState.Running)
+            {
+                WaitHandle[] handles = m_serverBasedDataChannel.MulticastAsync(buffer, 0, buffer.Length);
+
+                if (!(handles is null) && handles.Length > 0)
+                    handle = handles[0];
+            }
+
+            SentCommandFrame?.Invoke(this, new EventArgs<ICommandFrame>(commandFrame));
 
             return handle;
         }
