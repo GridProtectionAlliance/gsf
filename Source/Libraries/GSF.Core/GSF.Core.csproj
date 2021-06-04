@@ -141,6 +141,7 @@
     <Compile Include="Data\Model\SearchableAttribute.cs" />
     <Compile Include="Data\Model\AmendExpressionAttribute.cs" />
     <Compile Include="Data\Model\FieldDataTypeAttribute.cs" />
+    <Compile Include="Data\Model\SettingsCategoryAttribute.cs" />
     <Compile Include="Data\Model\UseEscapedNameAttribute.cs" />
     <Compile Include="Data\Model\TableNameAttribute.cs" />
     <Compile Include="Data\Model\FieldNameAttribute.cs" />
