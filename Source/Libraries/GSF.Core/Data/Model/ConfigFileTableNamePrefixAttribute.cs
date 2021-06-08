@@ -55,5 +55,35 @@ namespace GSF.Data.Model
             string prefix = settings["TableNamePrefix"].ValueAsString("");
             Prefix = prefix;
         }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigFileTableNamePrefixAttribute"/> from the systemSettings section and <paramref name="setting"/> used in the config file.
+        /// </summary>
+        /// 
+        /// <param name="setting">Name the setting to use out of the config file systemSettings section.</param>
+        public ConfigFileTableNamePrefixAttribute(string setting)
+        {
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
+            settings.Add(setting, "", "Allows for a general prefixing of table names so databases can be consolidated.");
+            string prefix = settings[setting].ValueAsString("");
+            Prefix = prefix;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConfigFileTableNamePrefixAttribute"/> from the <paramref name="settingsCategory"/> and <paramref name="setting"/> used in the config file.
+        /// </summary>
+        /// 
+        /// <param name="settingsCategory">Name the settings category to use out of the config file systemSettings section.</param>
+        /// <param name="setting">Name the setting to use out of the config file systemSettings section.</param>
+        public ConfigFileTableNamePrefixAttribute(string settingsCategory, string setting)
+        {
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
+            settings.Add(setting, "", "Allows for a general prefixing of table names so databases can be consolidated.");
+            string prefix = settings[setting].ValueAsString("");
+            Prefix = prefix;
+        }
+
     }
 }
