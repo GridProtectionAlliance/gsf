@@ -44,7 +44,7 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Creates a new <see cref="TableNameAttribute"/>.
+        /// Creates a new <see cref="ConfigFileTableNamePrefixAttribute"/>.
         /// </summary>
         /// 
         public ConfigFileTableNamePrefixAttribute()
