@@ -2245,6 +2245,10 @@ namespace GSF.Data.Model
             if (typeof(T).TryGetAttribute(out TableNameAttribute tableNameAttribute) && !string.IsNullOrWhiteSpace(tableNameAttribute.TableName))
                 s_tableName = tableNameAttribute.TableName;
 
+            // Check for table name preface
+            if (typeof(T).TryGetAttribute(out ConfigFileTableNamePrefixAttribute prefixAttribute) && !string.IsNullOrWhiteSpace(prefixAttribute.Prefix))
+                s_tableName = prefixAttribute.Prefix + s_tableName;
+
             // Check for escaped table name targets
             if (typeof(T).TryGetAttributes(out UseEscapedNameAttribute[] useEscapedNameAttributes))
                 s_escapedTableNameTargets = DeriveEscapedNameTargets(useEscapedNameAttributes);
