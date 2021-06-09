@@ -2532,6 +2532,35 @@ namespace GSF.Data.Model
                 return new TableOperations<T>(connection).ApplyRecordUpdates;
         }
 
+        /// <summary>
+        /// Gets table name for model applying model attributes <see cref="TableNameAttribute"/>, <see cref="ConfigFileTableNamePrefixAttribute"/>, and <see cref="UseEscapedNameAttribute"/>
+        /// </summary>
+        /// <returns>The table name describe using model attributes</returns>
+        public static string GetTableName() {
+            // Table name will default to class name of modeled table
+            string tableName = typeof(T).Name;
+            Dictionary<DatabaseType, bool> escapedTableNameTargets = null;
+
+            // Check for overridden table name
+            if (typeof(T).TryGetAttribute(out TableNameAttribute tableNameAttribute) && !string.IsNullOrWhiteSpace(tableNameAttribute.TableName))
+                tableName = tableNameAttribute.TableName;
+
+            // Check for table name prefix
+            if (typeof(T).TryGetAttribute(out ConfigFileTableNamePrefixAttribute prefixAttribute) && !string.IsNullOrWhiteSpace(prefixAttribute.Prefix))
+                tableName = prefixAttribute.Prefix + tableName;
+
+            // Check for escaped table name targets
+            if (typeof(T).TryGetAttributes(out UseEscapedNameAttribute[] useEscapedNameAttributes))
+                escapedTableNameTargets = DeriveEscapedNameTargets(useEscapedNameAttributes);
+
+            if ((object)escapedTableNameTargets != null)
+                tableName = $"\"{tableName}\"";
+
+            return tableName;
+
+        }
+
+
         private static string GetFieldName(PropertyInfo property)
         {
             if (property.TryGetAttribute(out FieldNameAttribute fieldNameAttribute) && !string.IsNullOrEmpty(fieldNameAttribute?.FieldName))
