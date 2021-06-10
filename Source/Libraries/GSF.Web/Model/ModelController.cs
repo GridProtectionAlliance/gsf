@@ -212,12 +212,7 @@ namespace GSF.Web.Model
 
                     if (result == null)
                     {
-                        TableNameAttribute tableNameAttribute;
-                        string tableName;
-                        if (typeof(T).TryGetAttribute(out tableNameAttribute))
-                            tableName = tableNameAttribute.TableName;
-                        else
-                            tableName = typeof(T).Name;
+                        string tableName = TableOperations<T>.GetTableName();
                         return BadRequest(string.Format(PrimaryKeyField + " provided does not exist in '{0}'.", tableName));
                     }
                     else
@@ -383,12 +378,7 @@ namespace GSF.Web.Model
 
                     using (AdoDataConnection connection = new AdoDataConnection(Connection))
                     {
-                        TableNameAttribute tableNameAttribute;
-                        string tableName;
-                        if (typeof(T).TryGetAttribute(out tableNameAttribute))
-                            tableName = tableNameAttribute.TableName;
-                        else
-                            tableName = typeof(T).Name;
+                        string tableName = new TableOperations<T>(connection).TableName;
 
                         PropertyInfo idProp = typeof(T).GetProperty(PrimaryKeyField);
                         if (idProp.PropertyType == typeof(int))
@@ -489,12 +479,7 @@ namespace GSF.Web.Model
             {
                 try
                 {
-                    TableNameAttribute tableNameAttribute;
-                    string tableName;
-                    if (typeof(T).TryGetAttribute(out tableNameAttribute))
-                        tableName = tableNameAttribute.TableName;
-                    else
-                        tableName = typeof(T).Name;
+                    string tableName = new TableOperations<T>(connection).TableName;
 
                     string query = @"SELECT MIN(UpdatedOn) AS lastUpdate, AdditionalField.ExternalDB AS name  
                                     FROM 
