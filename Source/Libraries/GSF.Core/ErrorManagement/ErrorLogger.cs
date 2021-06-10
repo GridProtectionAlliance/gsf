@@ -1534,7 +1534,7 @@ namespace GSF.ErrorManagement
             {
                 using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                 using (IDbCommand command = database.Connection.CreateCommand())
-                using (IDbTransaction transaction = database.Connection.BeginTransaction(database.DefaultIsloationLevel))
+                using (IDbTransaction transaction = database.Connection.BeginTransaction(database.DefaultIsolationLevel))
                 {
                     bool executingTransaction = false;
 

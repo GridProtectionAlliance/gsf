@@ -424,7 +424,7 @@ namespace GSF.Data
         /// <summary>
         /// Gets the default <see cref="IsolationLevel"/> for the connected <see cref=" AdoDataConnection"/> database type.
         /// </summary>
-        public IsolationLevel DefaultIsloationLevel => IsSQLServer ? IsolationLevel.ReadUncommitted : IsolationLevel.Unspecified;
+        public IsolationLevel DefaultIsolationLevel => IsSQLServer ? IsolationLevel.ReadUncommitted : IsolationLevel.Unspecified;
 
         /// <summary>
         /// Gets a value to indicate whether source database is Microsoft Access.

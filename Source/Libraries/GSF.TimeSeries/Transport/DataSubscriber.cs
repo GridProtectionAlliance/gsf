@@ -3799,7 +3799,7 @@ namespace GSF.TimeSeries.Transport
                     IDbTransaction transaction = null;
 
                     if (m_useTransactionForMetadata)
-                        transaction = database.Connection.BeginTransaction(database.DefaultIsloationLevel);
+                        transaction = database.Connection.BeginTransaction(database.DefaultIsolationLevel);
 
                     try
                     {
