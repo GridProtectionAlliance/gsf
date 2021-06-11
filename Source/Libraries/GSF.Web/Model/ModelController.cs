@@ -43,7 +43,7 @@ namespace GSF.Web.Model
     /// <typeparam name="T">The corresponding Model.</typeparam>
     public class ModelController<T> : ApiController where T : class, new()
     {
-        #region [Members ]
+        #region [ Members ]
         /// <summary>
         /// Class Providing Search Parameters for the Search Endpoints
         /// </summary>
@@ -72,59 +72,49 @@ namespace GSF.Web.Model
         /// </summary>
         public ModelController()
         {
-        }
+            PrimaryKeyField = typeof(T).GetProperties().First(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "ID";
 
-        /// <summary>
-        /// Creates a new <see cref="ModelController{T}"/>
-        /// </summary>
-        /// <param name="hasParent"> Indicates if the Model has a Parent Model.</param>
-        /// <param name="parentKey"> The key Associated with the Parent Model.</param>
-        /// <param name="primaryKeyField"> The Primary Identifier Field for this Model.</param>
-        public ModelController(bool hasParent, string parentKey, string primaryKeyField = "ID")
-        {
-            HasParent = hasParent;
-            ParentKey = parentKey;
-            HasUniqueKey = false;
-            UniqueKeyField = "";
-            PrimaryKeyField = primaryKeyField;
+            ParentKey = typeof(T).GetProperties().First(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
+            Connection = typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory ?? "systemSettings";
 
-        }
+            PropertyInfo pi = typeof(T).GetProperties().First(p => p.GetCustomAttributes<DefaultSortOrderAttribute>().Any());
+            DefaultSortOrderAttribute dsoa = pi?.GetCustomAttribute<DefaultSortOrderAttribute>();
+            if (dsoa != null)
+                DefaultSort = $"{pi.Name} {(dsoa.Ascending ? "ASC" : "DESC")}";
 
-        /// <summary>
-        /// Creates a new <see cref="ModelController{T}"/>
-        /// </summary>
-        /// <param name="hasParent"> Indicates if the Model has a Parent Model.</param>
-        /// <param name="parentKey"> The key Associated with the Parent Model.</param>
-        /// <param name="hasUniqueKey"> Indicates if the Model also has a unique Key.</param>
-        /// <param name="uniqueKey"> The Unique Key Field for this Model.</param>
-        public ModelController(bool hasParent, string parentKey, bool hasUniqueKey, string uniqueKey)
-        {
-            HasParent = hasParent;
-            ParentKey = parentKey;
-            HasUniqueKey = hasUniqueKey;
-            UniqueKeyField = uniqueKey;
+            PostRoles = typeof(T).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
+            GetRoles = typeof(T).GetCustomAttribute<GetRolesAttribute>()?.Roles ?? "";
+            PatchRoles = typeof(T).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
+            DeleteRoles = typeof(T).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
+
+            CustomView = typeof(T).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "";
+            ViewOnly = typeof(T).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false;
+            AllowSearch = typeof(T).GetCustomAttribute<AllowSearchAttribute>()?.AllowSearch ?? false;
+
         }
 
         #endregion
 
         #region [ Properties ]
-        protected virtual bool HasParent { get; set; } = false;
-        protected virtual string ParentKey { get; set; } = "";
-        protected virtual string PrimaryKeyField { get; set; } = "ID";
-        protected bool HasUniqueKey { get; set; } = false;
-        protected string UniqueKeyField { get; set; } = "";
-        protected virtual string Connection { get; } = "systemSettings";
-        protected virtual string GetRoles { get; } = "";
-        protected virtual string PostRoles { get; } = "Administrator";
-        protected virtual string PatchRoles { get; } = "Administrator";
-        protected virtual string DeleteRoles { get; } = "Administrator";
-        protected virtual string DefaultSort { get; } = null;
-        protected virtual bool ViewOnly { get; } = false;
-        protected virtual bool AllowSearch { get; } = false;
-        protected virtual string CustomView { get; } = "";
+        private bool ViewOnly { get; } = false;
+        private bool AllowSearch { get; } = false;
+        private string CustomView { get; } = "";
+        private string PrimaryKeyField { get; set; } = "ID";
+        private string ParentKey { get; set; } = "";
+        private string Connection { get; } = "systemSettings";
+        private string DefaultSort { get; } = null;
+        private string GetRoles { get; } = "";
+        private string PostRoles { get; } = "Administrator";
+        private string PatchRoles { get; } = "Administrator";
+        private string DeleteRoles { get; } = "Administrator";
+
         #endregion
 
         #region [ Http Methods ]
+        /// <summary>
+        /// Used to get an empty record
+        /// </summary>
+        /// <returns>An empty record</returns>
         [HttpGet, Route("New")]
         public virtual IHttpActionResult GetNew()
         {
@@ -150,6 +140,11 @@ namespace GSF.Web.Model
 
         }
 
+        /// <summary>
+        /// Gets all records from associated table, filtered to parent key ID if provided
+        /// </summary>
+        /// <param name="parentID">Parent ID to be used if Table has a set Parent Key</param>
+        /// <returns><see cref="IHttpActionResult"/> contiaining <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
         [HttpGet, Route("{parentID?}")]
         public virtual IHttpActionResult Get(string parentID = null)
         {
@@ -159,7 +154,7 @@ namespace GSF.Web.Model
                 try
                 {
                     IEnumerable<T> result;
-                    if (HasParent && parentID != null)
+                    if (ParentKey != string.Empty && parentID != null)
                     {
                         PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                         if (parentKey.PropertyType == typeof(int))
@@ -193,6 +188,11 @@ namespace GSF.Web.Model
 
         }
 
+        /// <summary>
+        /// Gets record from associated table with a primary key matching the id provided
+        /// </summary>
+        /// <param name="id">Parent ID to be used if Table has a set Parent Key</param>
+        /// <returns><see cref="IHttpActionResult"/> contiaining <see cref="T"/> or <see cref="Exception"/></returns>
         [HttpGet, Route("One/{id}")]
         public virtual IHttpActionResult GetOne(string id)
         {
@@ -275,7 +275,7 @@ namespace GSF.Web.Model
                 try
                 {
                     IEnumerable<T> result;
-                    if (HasParent && parentID != null)
+                    if (ParentKey != string.Empty && parentID != null)
                     {
                         PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                         if (parentKey.PropertyType == typeof(int))
@@ -315,13 +315,13 @@ namespace GSF.Web.Model
 
                         T newRecord = record.ToObject<T>();
                         int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
-                        if (HasUniqueKey)
+                        if (PrimaryKeyField != string.Empty)
                         {
-                            PropertyInfo prop = typeof(T).GetProperty(UniqueKeyField);
+                            PropertyInfo prop = typeof(T).GetProperty(PrimaryKeyField);
                             if (prop != null)
                             {
                                 object uniqueKey = prop.GetValue(newRecord);
-                                newRecord = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
+                                newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
                                 return Ok(newRecord);
                             }
 
