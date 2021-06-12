@@ -53,7 +53,6 @@ namespace GSF.Web.Model
             public string SearchText { get; set; }
             public string Operator { get; set; }
             public string Type { get; set; }
-
             public bool isPivotColumn { get; set; } = false;
         }
 
@@ -91,6 +90,11 @@ namespace GSF.Web.Model
             ViewOnly = typeof(T).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false;
             AllowSearch = typeof(T).GetCustomAttribute<AllowSearchAttribute>()?.AllowSearch ?? false;
 
+            SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
+
+            // Custom View Models are ViewOnly.
+            ViewOnly = ViewOnly || CustomView == String.Empty;
+
         }
 
         #endregion
@@ -107,7 +111,7 @@ namespace GSF.Web.Model
         private string PostRoles { get; } = "Administrator";
         private string PatchRoles { get; } = "Administrator";
         private string DeleteRoles { get; } = "Administrator";
-
+        private AdditionalFieldSearchAttribute SearchSettings { get; } = null;
         #endregion
 
         #region [ Http Methods ]
@@ -118,6 +122,9 @@ namespace GSF.Web.Model
         [HttpGet, Route("New")]
         public virtual IHttpActionResult GetNew()
         {
+            if (ViewOnly)
+                return Unauthorized();
+
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
                 using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -144,7 +151,7 @@ namespace GSF.Web.Model
         /// Gets all records from associated table, filtered to parent key ID if provided
         /// </summary>
         /// <param name="parentID">Parent ID to be used if Table has a set Parent Key</param>
-        /// <returns><see cref="IHttpActionResult"/> contiaining <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
+        /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
         [HttpGet, Route("{parentID?}")]
         public virtual IHttpActionResult Get(string parentID = null)
         {
@@ -191,8 +198,8 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets record from associated table with a primary key matching the id provided
         /// </summary>
-        /// <param name="id">Parent ID to be used if Table has a set Parent Key</param>
-        /// <returns><see cref="IHttpActionResult"/> contiaining <see cref="T"/> or <see cref="Exception"/></returns>
+        /// <param name="id">ID to be used</param>
+        /// <returns><see cref="IHttpActionResult"/> containing <see cref="T"/> or <see cref="Exception"/></returns>
         [HttpGet, Route("One/{id}")]
         public virtual IHttpActionResult GetOne(string id)
         {
@@ -231,6 +238,12 @@ namespace GSF.Web.Model
 
         }
 
+        /// <summary>
+        /// Gets a sorted list of <see cref="T"/>.
+        /// </summary>
+        /// <param name="sort"> the Field to be sorted by.</param>
+        /// <param name="ascending"> parameter to indicate whether the list is in ascending order.</param>
+        /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
         [HttpGet, Route("{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string sort, int ascending)
         {
@@ -261,6 +274,13 @@ namespace GSF.Web.Model
 
         }
 
+        /// <summary>
+        /// Gets all records from associated table, filtered to parent key ID if provided, sorted by the provided Field.
+        /// </summary>
+        /// <param name="parentID">Parent ID to be used if Table has a set Parent Key</param>
+        /// <param name="sort"> the Field to be sorted by.</param>
+        /// <param name="ascending"> parameter to indicate whether the list is in ascending order.</param>
+        /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
         [HttpGet, Route("{parentID}/{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string parentID, string sort, int ascending)
         {
@@ -303,12 +323,18 @@ namespace GSF.Web.Model
 
         }
 
+
+        /// <summary>
+        /// Adds a new Record.
+        /// </summary>
+        /// <param name="record"> The <see cref="T"/> record to be added.</param>
+        /// <returns><see cref="IHttpActionResult"/> containing the added record or <see cref="Exception"/> </returns>
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
         {
             try
             {
-                if (PostRoles == string.Empty || User.IsInRole(PostRoles) && !ViewOnly)
+                if ((PostRoles == string.Empty || User.IsInRole(PostRoles)) && !ViewOnly)
                 {
                     using (AdoDataConnection connection = new AdoDataConnection(Connection))
                     {
@@ -341,17 +367,36 @@ namespace GSF.Web.Model
             }
         }
 
+        /// <summary>
+        /// Updates an existing Record.
+        /// </summary>
+        /// <param name="record"> The <see cref="T"/> record to be updated.</param>
+        /// <returns><see cref="IHttpActionResult"/> containing the updated record or <see cref="Exception"/> </returns>
+
         [HttpPatch, Route("Update")]
         public virtual IHttpActionResult Patch([FromBody] T record)
         {
             try
             {
-                if (PatchRoles == string.Empty || User.IsInRole(PatchRoles) && !ViewOnly && CustomView == string.Empty)
+                if (PatchRoles == string.Empty || User.IsInRole(PatchRoles) && !ViewOnly)
                 {
 
                     using (AdoDataConnection connection = new AdoDataConnection(Connection))
                     {
                         int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
+
+                        if (PrimaryKeyField != string.Empty)
+                        {
+                            T newRecord = record;
+                            PropertyInfo prop = typeof(T).GetProperty(PrimaryKeyField);
+                            if (prop != null)
+                            {
+                                object uniqueKey = prop.GetValue(newRecord);
+                                newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
+                                return Ok(newRecord);
+                            }
+
+                        }
                         return Ok(result);
                     }
                 }
@@ -368,12 +413,18 @@ namespace GSF.Web.Model
             }
         }
 
+        /// <summary>
+        /// Deletes an existing Record.
+        /// </summary>
+        /// <param name="record"> The <see cref="T"/> record to be deleted.</param>
+        /// <returns><see cref="IHttpActionResult"/> containing the number of records deleted or <see cref="Exception"/> </returns>
+
         [HttpDelete, Route("Delete")]
         public virtual IHttpActionResult Delete(T record)
         {
             try
             {
-                if (DeleteRoles == string.Empty || User.IsInRole(DeleteRoles) && !ViewOnly && CustomView == string.Empty)
+                if ((DeleteRoles == string.Empty || User.IsInRole(DeleteRoles)) && !ViewOnly)
                 {
 
                     using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -421,6 +472,12 @@ namespace GSF.Web.Model
             }
         }
 
+        /// <summary>
+        /// Gets all records from associated table, filtered and sorted as defined in <see cref="postData"/>.
+        /// </summary>
+        /// <param name="postData"><see cref="PostData"/> containing the search and sort parameters</param>
+       /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
+
         [HttpPost, Route("SearchableList")]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData)
         {
@@ -434,158 +491,92 @@ namespace GSF.Web.Model
 
                 using (AdoDataConnection connection = new AdoDataConnection(Connection))
                 {
-                    string tableName = new TableOperations<T>(connection).TableName;
+                    string tableName = TableOperations<T>.GetTableName();
 
                     string sql = "";
-                    if (CustomView == string.Empty)
-                        sql = $@"
-                    DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                        SELECT * FROM {tableName}
-                        {whereClause.Replace("'", "''")}
-                        ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}
-                    '
-                    exec sp_executesql @SQLStatement";
+
+                    if (SearchSettings == null && CustomView == String.Empty)
+                        sql = $@" SELECT * FROM {tableName} {whereClause}
+                            ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")} ";
+
+                    else if (SearchSettings == null)
+                        sql = $@" SELECT* FROM({CustomView}) T1 
+                         {whereClause}
+                        ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
 
                     else
-                        sql = $@"
-                    DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                        SELECT * FROM ({CustomView.Replace("'", "''")}) T1
-                        {whereClause.Replace("'", "''")}
-                        ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}
-                    '
-                    exec sp_executesql @SQLStatement";
-                    DataTable table = connection.RetrieveData(sql, "");
-
-                    return Ok(JsonConvert.SerializeObject(table));
-                }
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
-        }
-
-        protected class ExtDB
-        {
-            public string name;
-            public DateTime lastupdate;
-        }
-
-        [HttpGet, Route("extDataBases")]
-        public virtual IHttpActionResult GetExtendedDataBases()
-        {
-
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                try
-                {
-                    string tableName = new TableOperations<T>(connection).TableName;
-
-                    string query = @"SELECT MIN(UpdatedOn) AS lastUpdate, AdditionalField.ExternalDB AS name  
-                                    FROM 
-                                    AdditionalField LEFT JOIN AdditionalFieldValue ON AdditionalField.ID = AdditionalFieldValue.AdditionalFieldID
-                                    WHERE AdditionalField.OpenXDAParentTable = {0} AND AdditionalField.ExternalDB IS NOT NULL AND AdditionalField.ExternalDB <> ''
-                                    GROUP BY AdditionalField.ExternalDB";
-
-                    DataTable table = connection.RetrieveData(query, tableName);
-
-                    List<ExtDB> result = new List<ExtDB>();
-                    foreach (DataRow row in table.Rows)
                     {
-                        result.Add(new ExtDB() { name = row.ConvertField<string>("name"), lastupdate = row.ConvertField<DateTime>("lastUpdate") });
+                        string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
+
+                        if (pivotCollums == "()")
+                            pivotCollums = "('')";
+
+                        string collumnCondition = SearchSettings.Condition;
+                        if (collumnCondition != String.Empty)
+                            collumnCondition = collumnCondition + " AND";
+                        collumnCondition = collumnCondition + $"{SearchSettings.FieldKeyField} IN {pivotCollums}";
+
+                        string joinCondition = $"af.FieldName IN {pivotCollums.Replace("'", "''")} AND ";
+                        joinCondition = joinCondition + SearchSettings.Condition.Replace("'", "''");
+                        if (SearchSettings.Condition != String.Empty)
+                            joinCondition = joinCondition + " AND ";
+                        joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
+
+                        if (CustomView == String.Empty)
+                            sql = $@"
+                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
+                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
+                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} WHERE collumnCondition  ) AS [Fields]
+
+                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
+                                SELECT * INTO #Tbl FROM (
+                                SELECT 
+                                    SRC.*,
+                                    AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
+	                                AF.{SearchSettings.ValueField} AS AFValue,
+                                FROM ( {tableName} SRC LEFT JOIN 
+                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
+                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
+                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
+                                {whereClause.Replace("'", "''")}
+                                ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")};
+
+                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
+                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
+                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
+		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl''
+
+		                        exec sp_executesql @CleanSQL
+                            '
+                            exec sp_executesql @SQLStatement";
+                        else
+                            sql = $@"
+                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
+                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
+                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} WHERE collumnCondition  ) AS [Fields]
+
+                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
+                                SELECT * INTO #Tbl FROM (
+                                SELECT 
+                                    SRC.*,
+                                    AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
+	                                AF.{SearchSettings.ValueField} AS AFValue,
+                                FROM ( ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
+                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
+                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
+                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
+                                {whereClause.Replace("'", "''")}
+                                ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")};
+
+                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
+                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
+                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
+		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl''
+
+		                        exec sp_executesql @CleanSQL
+                            '
+                            exec sp_executesql @SQLStatement";
                     }
-
-                    return Ok(result);
-
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
-            }
-        }
-
-        [HttpPost, Route("ExtendedSearchableList")]
-        public virtual IHttpActionResult GetExtendedSearchableList([FromBody] PostData postData)
-        {
-            if (!AllowSearch || (GetRoles != string.Empty && !User.IsInRole(GetRoles)))
-                return Unauthorized();
-
-            try
-            {
-
-                string whereClause = BuildWhereClause(postData.Searches);
-
-                string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
-
-                if (pivotCollums == "()")
-                    pivotCollums = "('')";
-
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
-                {
-                    string tableName = new TableOperations<T>(connection).TableName;
-
-
-                    string sql = "";
-
-                    if (CustomView == string.Empty)
-                        sql = $@"
-                        DECLARE @PivotColumns NVARCHAR(MAX) = N''
-                        SELECT @PivotColumns = @PivotColumns + '[AFV_' + t.FieldName + '],'
-                            FROM (Select DISTINCT FieldName FROM [SystemCenter.AdditionalField] WHERE ParentTable = '{tableName}' AND FieldName IN {pivotCollums} ) AS t
-
-                        DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                            SELECT * INTO #Tbl FROM (
-                            SELECT 
-                                M.*,
-                                (CONCAT(''AFV_'',af.FieldName)) AS FieldName,
-	                            afv.Value
-                            FROM ( {tableName}  M LEFT JOIN 
-                                [SystemCenter.AdditionalField] af on af.ParentTable = ''{tableName}'' AND af.FieldName IN {pivotCollums.Replace("'", "''")} LEFT JOIN
-	                            [SystemCenter.AdditionalFieldValue] afv ON m.ID = afv.ParentTableID AND af.ID = afv.AdditionalFieldID
-                            ) as T ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                Max(T.Value) FOR T.FieldName IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
-                            {whereClause.Replace("'", "''")}
-                            ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")};
-
-                            DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
-                                SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
-                                    FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                    DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl''
-
-		                    exec sp_executesql @CleanSQL
-                        '
-                        exec sp_executesql @SQLStatement";
-
-                    else
-                        sql = $@"
-                        DECLARE @PivotColumns NVARCHAR(MAX) = N''
-                        SELECT @PivotColumns = @PivotColumns + '[AFV_' + t.FieldName + '],'
-                            FROM (Select DISTINCT FieldName FROM [SystemCenter.AdditionalField] WHERE ParentTable = '{tableName}'  AND FieldName IN {pivotCollums}) AS t
-
-                        DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                            SELECT * INTO #Tbl FROM (
-                            SELECT 
-                                M.*,
-                                (CONCAT(''AFV_'',af.FieldName)) AS FieldName,
-	                            afv.Value
-                            FROM ({CustomView.Replace("'", "''")}) M LEFT JOIN 
-                                [SystemCenter.AdditionalField] af on af.ParentTable = ''{tableName}'' AND af.FieldName IN {pivotCollums.Replace("'", "''")} LEFT JOIN
-	                            [SystemCenter.AdditionalFieldValue] afv ON m.ID = afv.ParentTableID AND af.ID = afv.AdditionalFieldID
-                            ) as T ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                Max(T.Value) FOR T.FieldName IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + '
-                            {whereClause.Replace("'", "''")}
-                            ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")};
-
-                            DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
-                                SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
-                                    FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                    DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl''
-
-		                    exec sp_executesql @CleanSQL
-                        '
-                        exec sp_executesql @SQLStatement";
-
                     DataTable table = connection.RetrieveData(sql, "");
 
                     return Ok(JsonConvert.SerializeObject(table));
