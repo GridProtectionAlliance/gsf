@@ -100,18 +100,18 @@ namespace GSF.Web.Model
         #endregion
 
         #region [ Properties ]
-        private bool ViewOnly { get; } = false;
-        private bool AllowSearch { get; } = false;
-        private string CustomView { get; } = "";
-        private string PrimaryKeyField { get; set; } = "ID";
-        private string ParentKey { get; set; } = "";
-        private string Connection { get; } = "systemSettings";
-        private string DefaultSort { get; } = null;
-        private string GetRoles { get; } = "";
+        protected bool ViewOnly { get; } = false;
+        protected bool AllowSearch { get; } = false;
+        protected string CustomView { get; } = "";
+        protected string PrimaryKeyField { get; set; } = "ID";
+        protected string ParentKey { get; set; } = "";
+        protected string Connection { get; } = "systemSettings";
+        protected string DefaultSort { get; } = null;
+        protected string GetRoles { get; } = "";
         private string PostRoles { get; } = "Administrator";
-        private string PatchRoles { get; } = "Administrator";
-        private string DeleteRoles { get; } = "Administrator";
-        private AdditionalFieldSearchAttribute SearchSettings { get; } = null;
+        protected string PatchRoles { get; } = "Administrator";
+        protected string DeleteRoles { get; } = "Administrator";
+        protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
         #endregion
 
         #region [ Http Methods ]
