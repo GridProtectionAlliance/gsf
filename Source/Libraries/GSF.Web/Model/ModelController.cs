@@ -108,7 +108,7 @@ namespace GSF.Web.Model
         protected string Connection { get; } = "systemSettings";
         protected string DefaultSort { get; } = null;
         protected string GetRoles { get; } = "";
-        private string PostRoles { get; } = "Administrator";
+        protected string PostRoles { get; } = "Administrator";
         protected string PatchRoles { get; } = "Administrator";
         protected string DeleteRoles { get; } = "Administrator";
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
