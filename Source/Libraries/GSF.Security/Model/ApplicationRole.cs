@@ -33,6 +33,8 @@ namespace GSF.Security.Model
     /// Model for ApplicationRole table.
     /// </summary>
     [PrimaryLabel("Name")]
+    [GetRoles("Administrator")]
+    [ViewOnly]
     public class ApplicationRole
     {
         /// <summary>

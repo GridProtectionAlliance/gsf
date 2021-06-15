@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using GSF.Data.Model;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -29,6 +30,9 @@ namespace GSF.Security.Model
     /// <summary>
     /// Model for ApplicationRoleUserAccount table.
     /// </summary>
+    [PostRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    [DeleteRoles("Administrator")]
     public class ApplicationRoleUserAccount
     {
         /// <summary>
@@ -44,6 +48,7 @@ namespace GSF.Security.Model
         /// User account ID field.
         /// </summary>
         [Required]
+        [ParentKey(typeof(UserAccount))]
         public Guid UserAccountID
         {
             get; set;
