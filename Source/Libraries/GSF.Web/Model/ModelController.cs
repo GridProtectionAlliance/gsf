@@ -71,12 +71,12 @@ namespace GSF.Web.Model
         /// </summary>
         public ModelController()
         {
-            PrimaryKeyField = typeof(T).GetProperties().First(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "ID";
+            PrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "ID";
 
-            ParentKey = typeof(T).GetProperties().First(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
+            ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
             Connection = typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory ?? "systemSettings";
 
-            PropertyInfo pi = typeof(T).GetProperties().First(p => p.GetCustomAttributes<DefaultSortOrderAttribute>().Any());
+            PropertyInfo pi = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<DefaultSortOrderAttribute>().Any());
             DefaultSortOrderAttribute dsoa = pi?.GetCustomAttribute<DefaultSortOrderAttribute>();
             if (dsoa != null)
                 DefaultSort = $"{pi.Name} {(dsoa.Ascending ? "ASC" : "DESC")}";
