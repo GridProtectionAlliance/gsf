@@ -546,7 +546,7 @@ namespace PowerCalculations
                 for (int i = 0; i < inputMeasurementKeys.Length; i++)
                 {
                     MeasurementKey key = inputMeasurementKeys[i];
-                    SignalType signalType = InputMeasurementKeyTypes[i];
+                    SignalType signalType = inputMeasurementKeyTypes[i];
 
                     switch (signalType)
                     {

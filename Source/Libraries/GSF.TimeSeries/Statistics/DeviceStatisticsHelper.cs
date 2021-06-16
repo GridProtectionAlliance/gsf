@@ -28,6 +28,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using GSF.Collections;
+using GSF.Configuration;
 
 namespace GSF.TimeSeries.Statistics
 {
@@ -38,13 +40,22 @@ namespace GSF.TimeSeries.Statistics
             public long Ticks;
         }
 
+        private const double DefaultMedianTimestampDeviation = 30.0D;
+
+        private static readonly decimal s_medianTimestampDeviation;
         private static readonly ConcurrentDictionary<IDevice, LatestDeviceTime> s_latestDeviceTimes;
         private static Dictionary<IDevice, long> s_deviceTimesSnapshot;
         private static long s_snapshotTime;
 
         static GlobalDeviceStatistics()
         {
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
+
+            settings.Add("MedianTimestampDeviation", DefaultMedianTimestampDeviation, "Maximum allowed deviation from median timestamp, in seconds, for consideration in average timestamp calculation.");
+
+            s_medianTimestampDeviation = Ticks.FromSeconds(settings["MedianTimestampDeviation"].ValueAs(DefaultMedianTimestampDeviation)).Value;
             s_latestDeviceTimes = new ConcurrentDictionary<IDevice, LatestDeviceTime>();
+            
             StatisticsEngine.SourceRegistered += StatisticsEngine_SourceRegistered;
             StatisticsEngine.SourceUnregistered += StatisticsEngine_SourceUnregistered;
             StatisticsEngine.BeforeCalculate += StatisticsEngine_BeforeCalculate;
@@ -94,29 +105,46 @@ namespace GSF.TimeSeries.Statistics
             {
                 if (sampleCount > 1)
                 {
-                    decimal mean = deviceTimes.Average();
-                    decimal variance = deviceTimes.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
+                    // Filter any timestamps that are outside configured max deviation from the median (defaults to 30 seconds)
+                    Array.Sort(deviceTimes);
+                    decimal median = deviceTimes.Median().Average();
+                    decimal lowerBound = median - s_medianTimestampDeviation;
+                    decimal upperBound = median + s_medianTimestampDeviation;
+
+                    deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
+
+                    #region [ Sigma Filter ]
+
+                    //decimal mean = deviceTimes.Average();
+                    //decimal variance = deviceTimes.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
 
                     // Only use timestamps within five-sigma, i.e., within 5 standard deviations of the mean. Note
                     // that use of five-sigma is because PMU-timestamps do not always follow a normal distribution:
                     // https://ieeexplore.ieee.org/document/8494760
-                    decimal sigma = (decimal)(5.0D * Math.Sqrt((double)(variance / sampleCount)));
-                    decimal lowerBound = mean - sigma;
-                    decimal upperBound = mean + sigma;
+                    //decimal sigma = (decimal)(5.0D * Math.Sqrt((double)(variance / sampleCount)));
+                    //lowerBound = mean - sigma;
+                    //upperBound = mean + sigma;
 
-                    deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
+                    //deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
+
+                    #endregion
+
                     sampleCount = deviceTimes.Length;
 
                     if (sampleCount > 1)
                     {
-                        decimal total = 0M;
+                        decimal weightedSum = 0M;
+                        decimal totalWeights = 0M;
                         decimal min = long.MaxValue;
                         decimal max = long.MinValue;
 
                         for (int i = 0; i < sampleCount; i++)
                         {
                             decimal time = deviceTimes[i];
-                            total += time;
+                            decimal weight = Math.Abs(median - Math.Abs(time - median)) / median;
+
+                            weightedSum += time * weight;
+                            totalWeights += weight;
 
                             if (time > max)
                                 max = time;
@@ -125,7 +153,7 @@ namespace GSF.TimeSeries.Statistics
                                 min = time;
                         }
 
-                        AverageTime = (long)(total / sampleCount);
+                        AverageTime = (long)(weightedSum / totalWeights);
                         MinimumTime = (long)min;
                         MaximumTime = (long)max;
                     }
