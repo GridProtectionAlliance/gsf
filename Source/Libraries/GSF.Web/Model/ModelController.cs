@@ -174,13 +174,7 @@ namespace GSF.Web.Model
                     else
                         result = QueryRecords();
 
-                    if (DefaultSort != null)
-                    {
-                        PropertyInfo prop = typeof(T).GetProperty(DefaultSort);
-                        return Ok(result.OrderBy(x => prop.GetValue(x)));
-                    }
-                    else
-                        return Ok(result);
+                    return Ok(result);
                 }
                 catch (Exception ex)
                 {
@@ -250,14 +244,9 @@ namespace GSF.Web.Model
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
 
-                string orderByExpression = DefaultSort;
-
-                if (sort != null && sort != string.Empty)
-                    orderByExpression = $"{sort} {(ascending == 1 ? "ASC" : "DESC")}";
-
                 try
                 {
-                    IEnumerable<T> result = QueryRecords(orderByExpression);
+                    IEnumerable<T> result = QueryRecords();
 
                     return Ok(JsonConvert.SerializeObject(result));
                 }
@@ -287,10 +276,6 @@ namespace GSF.Web.Model
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
 
-                string orderByExpression = DefaultSort;
-
-                if (sort != null && sort != string.Empty)
-                    orderByExpression = $"{sort} {(ascending == 1 ? "ASC" : "DESC")}";
 
                 try
                 {
@@ -299,14 +284,14 @@ namespace GSF.Web.Model
                     {
                         PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                         if (parentKey.PropertyType == typeof(int))
-                            result = QueryRecords(orderByExpression, new RecordRestriction(ParentKey + " = {0}", int.Parse(parentID)));
+                            result = QueryRecordsWhere(ParentKey + " = {0}", int.Parse(parentID));
                         else if (parentKey.PropertyType == typeof(Guid))
-                            result = QueryRecords(orderByExpression, new RecordRestriction(ParentKey + " = {0}", Guid.Parse(parentID)));
+                            result = QueryRecordsWhere(ParentKey + " = {0}", Guid.Parse(parentID));
                         else
-                            result = QueryRecords(orderByExpression, new RecordRestriction(ParentKey + " = {0}", parentID));
+                            result = QueryRecordsWhere(ParentKey + " = {0}", parentID);
                     }
                     else
-                        result = QueryRecords(orderByExpression);
+                        result = QueryRecords();
 
                     return Ok(JsonConvert.SerializeObject(result));
                 }
@@ -622,11 +607,14 @@ namespace GSF.Web.Model
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 if (CustomView == String.Empty)
-                    return new TableOperations<T>(connection).QueryRecordsWhere(filterExpression, parameters);
+                    return new TableOperations<T>(connection).QueryRecords(DefaultSort, new RecordRestriction(filterExpression, parameters));
 
-                string whereClause = " WHERE " + filterExpression;
-                string sql = "SELECT * FROM (" + CustomView + ") T1";
-                DataTable dataTbl = connection.RetrieveData(sql + whereClause, parameters);
+                string sql = $@"
+                    SELECT * FROM 
+                    ({CustomView}) T1 
+                    WHERE {filterExpression}
+                    {(DefaultSort != null ? " ORDER BY " +DefaultSort : "")}";
+                DataTable dataTbl = connection.RetrieveData(sql, parameters);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -637,8 +625,6 @@ namespace GSF.Web.Model
                 return result;
             }
         }
-
-        private IEnumerable<T> QueryRecords() => QueryRecords(DefaultSort);
 
         private T QueryRecordWhere(string filterExpression, params object[] parameters)
         {
@@ -659,16 +645,19 @@ namespace GSF.Web.Model
             }
         }
 
-        private IEnumerable<T> QueryRecords(string orderBy)
+        private IEnumerable<T> QueryRecords()
         {
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 if (CustomView == String.Empty)
-                    return new TableOperations<T>(connection).QueryRecords(orderBy);
+                    return new TableOperations<T>(connection).QueryRecords(DefaultSort);
 
-                string sql = "SELECT * FROM (" + CustomView + ") T1";
+                string sql = $@"
+                    SELECT * FROM 
+                    ({CustomView}) T1 
+                    {(DefaultSort != null ? " ORDER BY " + DefaultSort : "")}";
 
-                DataTable dataTbl = connection.RetrieveData(sql + "ORDER BY " + orderBy);
+                DataTable dataTbl = connection.RetrieveData(sql);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -680,28 +669,6 @@ namespace GSF.Web.Model
             }
         }
 
-        private IEnumerable<T> QueryRecords(string orderBy, RecordRestriction restriction)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
-            {
-                if (CustomView == String.Empty)
-                    return new TableOperations<T>(connection).QueryRecords(orderBy, restriction);
-
-                string restrictionString = "" + restriction.FilterExpression;
-
-                string sql = "SELECT * FROM (" + CustomView + ") T1";
-
-                DataTable dataTbl = connection.RetrieveData(sql + " WHERE " + restrictionString + "ORDER BY " + orderBy, restriction.Parameters);
-
-                List<T> result = new List<T>();
-                TableOperations<T> tblOperations = new TableOperations<T>(connection);
-                foreach (DataRow row in dataTbl.Rows)
-                {
-                    result.Add(tblOperations.LoadRecord(row));
-                }
-                return result;
-            }
-        }
         #endregion
     }
 }
