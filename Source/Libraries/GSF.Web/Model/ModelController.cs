@@ -93,7 +93,7 @@ namespace GSF.Web.Model
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
 
             // Custom View Models are ViewOnly.
-            ViewOnly = ViewOnly || CustomView == String.Empty;
+            ViewOnly = ViewOnly || CustomView != String.Empty;
 
         }
 
