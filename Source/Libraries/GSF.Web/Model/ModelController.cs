@@ -420,21 +420,21 @@ namespace GSF.Web.Model
                         if (idProp.PropertyType == typeof(int))
                         {
                             int id = (int)idProp.GetValue(record);
-                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete '{tableName}', '{PrimaryKeyField} = {id}'");
+                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = {id}'");
                             return Ok(result);
 
                         }
                         else if (idProp.PropertyType == typeof(Guid))
                         {
                             Guid id = (Guid)idProp.GetValue(record);
-                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete '{tableName}', '{PrimaryKeyField} = ''{id}'''");
+                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
                             return Ok(result);
 
                         }
                         else if (idProp.PropertyType == typeof(string))
                         {
                             string id = (string)idProp.GetValue(record);
-                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete '{tableName}', '{PrimaryKeyField} = ''{id}'''");
+                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
                             return Ok(result);
 
                         }
