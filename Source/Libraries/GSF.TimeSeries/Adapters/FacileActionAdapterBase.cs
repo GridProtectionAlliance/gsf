@@ -45,6 +45,43 @@ namespace GSF.TimeSeries.Adapters
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Default value for the <see cref="RespectInputDemands"/> property.
+        /// </summary>
+        public const bool DefaultRespectInputDemands = false;
+
+        /// <summary>
+        /// Default value for the <see cref="RespectOutputDemands"/> property.
+        /// </summary>
+        public const bool DefaultRespectOutputDemands = true;
+
+        /// <summary>
+        /// Default value for the <see cref="FramesPerSecond"/> property.
+        /// </summary>
+        public const int DefaultFramesPerSecond = 0;
+
+        /// <summary>
+        /// Default value for the <see cref="LagTime"/> property.
+        /// </summary>
+        public const double DefaultLagTime = 10.0D;
+
+        /// <summary>
+        /// Default value for the <see cref="LeadTime"/> property.
+        /// </summary>
+        public const double DefaultLeadTime = 5.0D;
+
+        /// <summary>
+        /// Default value for the <see cref="TrackLatestMeasurements"/> property.
+        /// </summary>
+        public const bool DefaultTrackLatestMeasurements = false;
+
+        /// <summary>
+        /// Default value for the <see cref="UseLocalClockAsRealTime"/> property.
+        /// </summary>
+        public const bool DefaultUseLocalClockAsRealTime = true;
+
         // Events
 
         /// <summary>
@@ -74,15 +111,8 @@ namespace GSF.TimeSeries.Adapters
         // Fields
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
-        private MeasurementKey[] m_requestedInputMeasurementKeys;
-        private MeasurementKey[] m_requestedOutputMeasurementKeys;
-        private bool m_respectInputDemands;
-        private bool m_respectOutputDemands;
-        private int m_framesPerSecond;                                  // Defined frames per second, if defined
-        private bool m_trackLatestMeasurements;                         // Determines whether or not to track latest measurements
-        private readonly ImmediateMeasurements m_latestMeasurements;    // Absolute latest received measurement values
-        private bool m_useLocalClockAsRealTime;                         // Determines whether or not to use local system clock as "real-time"
-        private long m_realTimeTicks;                                   // Timestamp of real-time or the most recently received measurement
+        private readonly ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
+        private long m_realTimeTicks;                                // Timestamp of real-time or the most recently received measurement
 
         #endregion
 
@@ -93,9 +123,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected FacileActionAdapterBase()
         {
-            m_latestMeasurements = new ImmediateMeasurements();
-            m_latestMeasurements.RealTimeFunction = () => RealTime;
-            m_useLocalClockAsRealTime = true;
+            m_latestMeasurements = new ImmediateMeasurements { RealTimeFunction = () => RealTime };
         }
 
         #endregion
@@ -105,16 +133,13 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="FacileActionAdapterBase"/> expects, if any.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override MeasurementKey[] InputMeasurementKeys
         {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
+            get => base.InputMeasurementKeys;
             set
             {
                 base.InputMeasurementKeys = value;
@@ -134,16 +159,10 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string[] InputSourceIDs
         {
-            get
-            {
-                if ((object)m_inputSourceIDs == null)
-                    return null;
-
-                return m_inputSourceIDs.ToArray();
-            }
+            get => m_inputSourceIDs?.ToArray();
             set
             {
-                if ((object)value == null)
+                if (value is null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -167,16 +186,10 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string[] OutputSourceIDs
         {
-            get
-            {
-                if (m_outputSourceIDs == null)
-                    return null;
-
-                return m_outputSourceIDs.ToArray();
-            }
+            get => m_outputSourceIDs?.ToArray();
             set
             {
-                if ((object)value == null)
+                if (value is null)
                 {
                     m_outputSourceIDs = null;
                 }
@@ -194,32 +207,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedInputMeasurementKeys
-        {
-            get
-            {
-                return m_requestedInputMeasurementKeys;
-            }
-            set
-            {
-                m_requestedInputMeasurementKeys = value;
-            }
-        }
+        public virtual MeasurementKey[] RequestedInputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
-        {
-            get
-            {
-                return m_requestedOutputMeasurementKeys;
-            }
-            set
-            {
-                m_requestedOutputMeasurementKeys = value;
-            }
-        }
+        public virtual MeasurementKey[] RequestedOutputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
@@ -229,17 +222,7 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
         /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
         /// </remarks>
-        public virtual bool RespectInputDemands
-        {
-            get
-            {
-                return m_respectInputDemands;
-            }
-            set
-            {
-                m_respectInputDemands = value;
-            }
-        }
+        public virtual bool RespectInputDemands { get; set; } = DefaultRespectInputDemands;
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
@@ -249,17 +232,7 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
         /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
         /// </remarks>
-        public virtual bool RespectOutputDemands
-        {
-            get
-            {
-                return m_respectOutputDemands;
-            }
-            set
-            {
-                m_respectOutputDemands = value;
-            }
-        }
+        public virtual bool RespectOutputDemands { get; set; } = DefaultRespectOutputDemands;
 
         /// <summary>
         /// Gets or sets the frames per second to be used by the <see cref="FacileActionAdapterBase"/>.
@@ -267,20 +240,10 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This value is only tracked in the <see cref="FacileActionAdapterBase"/>, derived class will determine its use.
         /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(0),
-        Description("Defines the number of frames per second expected by the adapter.")]
-        public virtual int FramesPerSecond
-        {
-            get
-            {
-                return m_framesPerSecond;
-            }
-            set
-            {
-                m_framesPerSecond = value;
-            }
-        }
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultFramesPerSecond)]
+        [Description("Defines the number of frames per second expected by the adapter.")]
+        public virtual int FramesPerSecond { get; set; } = DefaultFramesPerSecond;
 
         /// <summary>
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
@@ -291,19 +254,13 @@ namespace GSF.TimeSeries.Adapters
         /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
-        [ConnectionStringParameter,
-        DefaultValue(10.0D),
-        Description("Defines the allowed past time deviation tolerance, in seconds (can be sub-second).")]
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultLagTime)]
+        [Description("Defines the allowed past time deviation tolerance, in seconds (can be sub-second).")]
         public double LagTime
         {
-            get
-            {
-                return LatestMeasurements.LagTime;
-            }
-            set
-            {
-                LatestMeasurements.LagTime = value;
-            }
+            get => LatestMeasurements.LagTime;
+            set => LatestMeasurements.LagTime = value;
         }
 
         /// <summary>
@@ -315,19 +272,13 @@ namespace GSF.TimeSeries.Adapters
         /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
-        [ConnectionStringParameter,
-        DefaultValue(5.0D),
-        Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second).")]
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultLeadTime)]
+        [Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second).")]
         public double LeadTime
         {
-            get
-            {
-                return LatestMeasurements.LeadTime;
-            }
-            set
-            {
-                LatestMeasurements.LeadTime = value;
-            }
+            get => LatestMeasurements.LeadTime;
+            set => LatestMeasurements.LeadTime = value;
         }
 
         /// <summary>
@@ -336,17 +287,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Latest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
         /// </remarks>
-        public virtual bool TrackLatestMeasurements
-        {
-            get
-            {
-                return m_trackLatestMeasurements;
-            }
-            set
-            {
-                m_trackLatestMeasurements = value;
-            }
-        }
+        public virtual bool TrackLatestMeasurements { get; set; } = DefaultTrackLatestMeasurements;
 
         /// <summary>
         /// Gets reference to the collection of absolute latest received measurement values.
@@ -361,17 +302,7 @@ namespace GSF.TimeSeries.Adapters
         /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
         /// Turn this off if the class is intended to process historical data.
         /// </remarks>
-        public virtual bool UseLocalClockAsRealTime
-        {
-            get
-            {
-                return m_useLocalClockAsRealTime;
-            }
-            set
-            {
-                m_useLocalClockAsRealTime = value;
-            }
-        }
+        public virtual bool UseLocalClockAsRealTime { get; set; } = DefaultUseLocalClockAsRealTime;
 
         /// <summary>
         /// Gets the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
@@ -404,14 +335,12 @@ namespace GSF.TimeSeries.Adapters
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.AppendFormat("        Defined frame rate: {0} frames/sec", FramesPerSecond);
-                status.AppendLine();
-                status.AppendFormat("      Measurement tracking: {0}", m_trackLatestMeasurements ? "Enabled" : "Disabled");
-                status.AppendLine();
-                status.AppendFormat("  Respecting input demands: {0}", RespectInputDemands);
-                status.AppendLine();
-                status.AppendFormat(" Respecting output demands: {0}", RespectOutputDemands);
-                status.AppendLine();
+                status.AppendLine($"        Defined frame rate: {FramesPerSecond} frames/sec");
+                status.AppendLine($"      Measurement tracking: {(TrackLatestMeasurements ? "Enabled" : "Disabled")}");
+                status.AppendLine($"  Respecting input demands: {RespectInputDemands}");
+                status.AppendLine($" Respecting output demands: {RespectOutputDemands}");
+                status.AppendLine($"  Local clock is real time: {UseLocalClockAsRealTime}");
+                status.AppendLine($"   Current real time value: {RealTime:yyyy-MM-dd HH:mm:ss.fff}");
 
                 return status.ToString();
             }
@@ -429,49 +358,41 @@ namespace GSF.TimeSeries.Adapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
-            if (settings.TryGetValue("framesPerSecond", out setting))
+            if (settings.TryGetValue(nameof(FramesPerSecond), out string setting))
                 FramesPerSecond = int.Parse(setting);
 
-            if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
+            if (settings.TryGetValue(nameof(UseLocalClockAsRealTime), out setting))
                 UseLocalClockAsRealTime = setting.ParseBoolean();
 
-            if (settings.TryGetValue("trackLatestMeasurements", out setting))
+            if (settings.TryGetValue(nameof(TrackLatestMeasurements), out setting))
                 TrackLatestMeasurements = setting.ParseBoolean();
 
             if (TrackLatestMeasurements)
             {
-                if (settings.TryGetValue("lagTime", out setting))
-                    LatestMeasurements.LagTime = double.Parse(setting);
-                else
-                    LatestMeasurements.LagTime = 10.0;
-
-                if (settings.TryGetValue("leadTime", out setting))
-                    LatestMeasurements.LeadTime = double.Parse(setting);
-                else
-                    LatestMeasurements.LeadTime = 5.0;
+                LatestMeasurements.LagTime = settings.TryGetValue(nameof(LagTime), out setting) ? double.Parse(setting) : DefaultLagTime;
+                LatestMeasurements.LeadTime = settings.TryGetValue(nameof(LeadTime), out setting) ? double.Parse(setting) : DefaultLeadTime;
             }
 
-            if (settings.TryGetValue("respectInputDemands", out setting))
+            if (settings.TryGetValue(nameof(RespectInputDemands), out setting))
                 RespectInputDemands = setting.ParseBoolean();
-            else
-                RespectInputDemands = false;
 
-            if (settings.TryGetValue("respectOutputDemands", out setting))
+            if (settings.TryGetValue(nameof(RespectOutputDemands), out setting))
                 RespectOutputDemands = setting.ParseBoolean();
-            else
-                RespectOutputDemands = true;
+
+            if (settings.TryGetValue(nameof(InputSourceIDs), out setting))
+                InputSourceIDs = setting.Split(',');
+
+            if (settings.TryGetValue(nameof(OutputSourceIDs), out setting))
+                OutputSourceIDs = setting.Split(',');
         }
 
         /// <summary>
         /// Queues a single measurement for processing.
         /// </summary>
         /// <param name="measurement">Measurement to queue for processing.</param>
-        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
-        {
+        public virtual void QueueMeasurementForProcessing(IMeasurement measurement) => 
             QueueMeasurementsForProcessing(new[] { measurement });
-        }
 
         /// <summary>
         /// Queues a collection of measurements for processing.
@@ -479,21 +400,21 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            if (!TrackLatestMeasurements)
+                return;
+
             // If enabled, facile adapter will track the absolute latest measurement values.
-            if (m_trackLatestMeasurements)
+            bool useLocalClockAsRealTime = UseLocalClockAsRealTime;
+
+            foreach (IMeasurement measurement in measurements)
             {
-                bool useLocalClockAsRealTime = UseLocalClockAsRealTime;
+                m_latestMeasurements.UpdateMeasurementValue(measurement);
 
-                foreach (IMeasurement measurement in measurements)
-                {
-                    m_latestMeasurements.UpdateMeasurementValue(measurement);
-
-                    // Track latest timestamp as real-time, if requested.
-                    // This class is not currently going through hassle of determining if
-                    // the latest timestamp is reasonable...
-                    if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks && measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
-                        m_realTimeTicks = measurement.Timestamp;
-                }
+                // Track latest timestamp as real-time, if requested.
+                // This class is not currently going through hassle of determining if
+                // the latest timestamp is reasonable...
+                if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks && measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
+                    m_realTimeTicks = measurement.Timestamp;
             }
         }
 
@@ -505,7 +426,6 @@ namespace GSF.TimeSeries.Adapters
             try
             {
                 NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
-
                 IncrementProcessedMeasurements(measurements.Count);
             }
             catch (Exception ex)
