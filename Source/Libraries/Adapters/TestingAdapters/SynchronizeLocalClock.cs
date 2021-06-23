@@ -81,8 +81,10 @@ namespace TestingAdapters
 
         // Fields
         private Timer m_updateTimer;
-        private long m_totalUpdates;
         private long m_skippedUpdates;
+        private long m_failedUpdates;
+        private long m_successfulUpdates;
+        private long m_timerEvents;
         private long m_updateTolerance;
         private bool m_goodSourceTime;
         private Ticks m_latestTime;
@@ -174,7 +176,8 @@ namespace TestingAdapters
                 status.AppendLine($"Absolute latest time value: {(m_latestTime.Value > 0L ? $"{m_latestTime: yyyy-MM-dd HH:mm:ss.fff}" : "No time value has been received")}");
                 status.AppendLine($"          Update tolerance: {UpdateTolerance:N6} seconds");
                 status.AppendLine($"     Skipped clock updates: {m_skippedUpdates:N0} were within update tolerance");
-                status.AppendLine($"       Total clock updates: {m_totalUpdates:N0}");
+                status.AppendLine($"      Failed clock updates: {m_failedUpdates:N0}");
+                status.AppendLine($"  Successful clock updates: {m_successfulUpdates:N0}");
 
                 return status.ToString();
             }
@@ -276,10 +279,17 @@ namespace TestingAdapters
                 return;
             }
 
-            SetSystemTime(targetTime);
-            m_totalUpdates++;
-
-            OnStatusMessage(MessageLevel.Info, $"Manually updated local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}");
+            try
+            {
+                SetSystemTime(targetTime);
+                m_successfulUpdates++;
+                OnStatusMessage(MessageLevel.Info, $"Manually updated local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}");
+            }
+            catch (Exception ex)
+            {
+                m_failedUpdates++;
+                OnStatusMessage(MessageLevel.Error, $"Failed to manually update local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -292,10 +302,17 @@ namespace TestingAdapters
 
             if (targetTime.Value > 0L)
             {
-                SetSystemTime(targetTime);
-                m_totalUpdates++;
-                
-                OnStatusMessage(MessageLevel.Info, $"Forced local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}");
+                try
+                {
+                    SetSystemTime(targetTime);
+                    m_successfulUpdates++;
+                    OnStatusMessage(MessageLevel.Info, $"Forced local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}");
+                }
+                catch (Exception ex)
+                {
+                    m_failedUpdates++;
+                    OnStatusMessage(MessageLevel.Error, $"Failed to force local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}: {ex.Message}");
+                }
             }
             else
             {
@@ -313,7 +330,7 @@ namespace TestingAdapters
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
-        public override string GetShortStatus(int maxLength) => $"Updated clock {m_totalUpdates:N0} times out of {m_skippedUpdates + m_totalUpdates:N0} checks so far...".CenterText(maxLength);
+        public override string GetShortStatus(int maxLength) => $"Updated clock {m_successfulUpdates:N0} times out of {m_timerEvents:N0} checks so far...".CenterText(maxLength);
 
         /// <summary>
         /// Queues a collection of measurements for processing.
@@ -349,6 +366,8 @@ namespace TestingAdapters
         {
             try
             {
+                m_timerEvents++;
+                
                 Ticks newSystemTime = RealTime;
 
                 if (newSystemTime <= 0L)
@@ -361,13 +380,14 @@ namespace TestingAdapters
                 }
 
                 SetSystemTime(RealTime);
-                m_totalUpdates++;
+                m_successfulUpdates++;
 
                 if (!m_goodSourceTime)
                     OnStatusMessage(MessageLevel.Warning, "WARNING: Clock set with measurement that has bad quality -- increase measurement sources.");
             }
             catch (Exception ex)
             {
+                m_failedUpdates++;
                 OnProcessException(MessageLevel.Error, ex);
             }
         }
