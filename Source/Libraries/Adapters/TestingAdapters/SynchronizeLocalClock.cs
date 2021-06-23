@@ -234,6 +234,8 @@ namespace TestingAdapters
 
             if (settings.TryGetValue(nameof(UpdateTolerance), out setting) && double.TryParse(setting, out double tolerance))
                 UpdateTolerance = tolerance;
+            else
+                UpdateTolerance = DefaultUpdateTolerance;
 
             m_updateTimer = new Timer(UpdateFrequency);
             m_updateTimer.Elapsed += UpdateTimer_Elapsed;
