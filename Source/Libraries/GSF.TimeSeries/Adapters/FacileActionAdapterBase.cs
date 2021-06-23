@@ -82,6 +82,11 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public const bool DefaultUseLocalClockAsRealTime = true;
 
+        /// <summary>
+        /// Default value for the <see cref="FallBackOnLocalClock"/> property.
+        /// </summary>
+        public const bool DefaultFallBackOnLocalClock = false;
+
         // Events
 
         /// <summary>
@@ -302,7 +307,21 @@ namespace GSF.TimeSeries.Adapters
         /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
         /// Turn this off if the class is intended to process historical data.
         /// </remarks>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultUseLocalClockAsRealTime)]
+        [Description("Defines flag that determines whether or not to use the local clock time as real time.")]
         public virtual bool UseLocalClockAsRealTime { get; set; } = DefaultUseLocalClockAsRealTime;
+
+        /// <summary>
+        /// Gest or sets flag that determines whether to fall back on local clock time as real time when time is unreasonable.
+        /// </summary>
+        /// <remarks>
+        /// This property is only applicable when <see cref="UseLocalClockAsRealTime"/> is <c>false</c>.
+        /// </remarks>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultFallBackOnLocalClock)]
+        [Description("Defines flag that determines whether to fall back on local clock time as real time when time is unreasonable. Only applicable when UseLocalClockAsRealTime is false.")]
+        public virtual bool FallBackOnLocalClock { get; set; } = DefaultFallBackOnLocalClock;
 
         /// <summary>
         /// Gets the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
@@ -340,6 +359,7 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine($"  Respecting input demands: {RespectInputDemands}");
                 status.AppendLine($" Respecting output demands: {RespectOutputDemands}");
                 status.AppendLine($"  Local clock is real time: {UseLocalClockAsRealTime}");
+                status.AppendLine($"  Fall back on local clock: {(UseLocalClockAsRealTime ? "N/A" : $"{FallBackOnLocalClock}")}");
                 status.AppendLine($"   Current real time value: {RealTime:yyyy-MM-dd HH:mm:ss.fff}");
 
                 return status.ToString();
@@ -364,6 +384,9 @@ namespace GSF.TimeSeries.Adapters
 
             if (settings.TryGetValue(nameof(UseLocalClockAsRealTime), out setting))
                 UseLocalClockAsRealTime = setting.ParseBoolean();
+
+            if (settings.TryGetValue(nameof(FallBackOnLocalClock), out setting))
+                FallBackOnLocalClock = setting.ParseBoolean();
 
             if (settings.TryGetValue(nameof(TrackLatestMeasurements), out setting))
                 TrackLatestMeasurements = setting.ParseBoolean();
@@ -411,10 +434,13 @@ namespace GSF.TimeSeries.Adapters
                 m_latestMeasurements.UpdateMeasurementValue(measurement);
 
                 // Track latest timestamp as real-time, if requested.
-                // This class is not currently going through hassle of determining if
-                // the latest timestamp is reasonable...
-                if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks && measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
-                    m_realTimeTicks = measurement.Timestamp;
+                if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks)
+                {
+                    if (measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
+                        m_realTimeTicks = measurement.Timestamp;
+                    else if (FallBackOnLocalClock)
+                        m_realTimeTicks = DateTime.UtcNow.Ticks;
+                }
             }
         }
 
