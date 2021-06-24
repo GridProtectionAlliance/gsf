@@ -173,8 +173,8 @@ namespace TestingAdapters
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.AppendLine($"Absolute latest time value: {(m_latestTime.Value > 0L ? $"{m_latestTime: yyyy-MM-dd HH:mm:ss.fff}" : "No time value has been received")}");
-                status.AppendLine($"          Update tolerance: {UpdateTolerance:N6} seconds");
+                status.AppendLine($"Absolute latest time value: {(m_latestTime.Value > 0L ? $"{m_latestTime:yyyy-MM-dd HH:mm:ss.fff}" : "No time value has been received")}");
+                status.AppendLine($"          Update tolerance: {UpdateTolerance:N3} seconds ({TimeSpan.FromSeconds(UpdateTolerance).TotalMilliseconds:N3} milliseconds)");
                 status.AppendLine($"     Skipped clock updates: {m_skippedUpdates:N0} were within update tolerance");
                 status.AppendLine($"      Failed clock updates: {m_failedUpdates:N0}");
                 status.AppendLine($"  Successful clock updates: {m_successfulUpdates:N0}");
