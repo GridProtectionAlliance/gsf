@@ -326,17 +326,7 @@ namespace GSF.Web.Model
 
                         T newRecord = record.ToObject<T>();
                         int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
-                        if (PrimaryKeyField != string.Empty)
-                        {
-                            PropertyInfo prop = typeof(T).GetProperty(PrimaryKeyField);
-                            if (prop != null)
-                            {
-                                object uniqueKey = prop.GetValue(newRecord);
-                                newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
-                                return Ok(newRecord);
-                            }
-
-                        }
+                        
                         return Ok(result);
                     }
                 }
