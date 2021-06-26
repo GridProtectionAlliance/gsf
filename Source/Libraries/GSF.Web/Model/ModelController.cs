@@ -488,28 +488,28 @@ namespace GSF.Web.Model
 
                         string collumnCondition = SearchSettings.Condition;
                         if (collumnCondition != String.Empty)
-                            collumnCondition = collumnCondition + " AND";
+                            collumnCondition = $"AF.{collumnCondition} AND ";
                         collumnCondition = collumnCondition + $"{SearchSettings.FieldKeyField} IN {pivotCollums}";
 
                         string joinCondition = $"af.FieldName IN {pivotCollums.Replace("'", "''")} AND ";
                         joinCondition = joinCondition + SearchSettings.Condition.Replace("'", "''");
                         if (SearchSettings.Condition != String.Empty)
-                            joinCondition = joinCondition + " AND ";
+                            joinCondition = $"{joinCondition} AND ";
                         joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
 
                         if (CustomView == String.Empty)
                             sql = $@"
                             DECLARE @PivotColumns NVARCHAR(MAX) = N''
                             SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
-                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} WHERE collumnCondition  ) AS [Fields]
+                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
 
                             DECLARE @SQLStatement NVARCHAR(MAX) = N'
                                 SELECT * INTO #Tbl FROM (
                                 SELECT 
                                     SRC.*,
-                                    AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-	                                AF.{SearchSettings.ValueField} AS AFValue,
-                                FROM ( {tableName} SRC LEFT JOIN 
+                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
+	                                AF.{SearchSettings.ValueField} AS AFValue
+                                FROM  {tableName} SRC LEFT JOIN 
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
                                     Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
@@ -528,15 +528,15 @@ namespace GSF.Web.Model
                             sql = $@"
                             DECLARE @PivotColumns NVARCHAR(MAX) = N''
                             SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
-                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} WHERE collumnCondition  ) AS [Fields]
+                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
 
                             DECLARE @SQLStatement NVARCHAR(MAX) = N'
                                 SELECT * INTO #Tbl FROM (
                                 SELECT 
                                     SRC.*,
-                                    AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-	                                AF.{SearchSettings.ValueField} AS AFValue,
-                                FROM ( ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
+                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
+	                                AF.{SearchSettings.ValueField} AS AFValue
+                                FROM  ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
                                     Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
