@@ -52,8 +52,10 @@
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
     string parameter;
+    string acronymn = "";
 
     parameters.TryGetValue("ShowMenu", out parameter);
+    parameters.TryGetValue("Acronym", out acronymn);
 
     if (string.IsNullOrEmpty(parameter)) {
         parameter = "true";
@@ -153,7 +155,7 @@
                 return dataHub.queryEnabledDevices("@ViewBag.NodeID", self.itemLimit(), self.filterText).done(function(devices) {
                     self.items.removeAll();
                     self.items(devices);
-
+                    $(self).trigger('itemsQueried');
                     //$.each(devices, function(i, d) {
                     //    dataHub.getStatusLogForDevice(d.Acronym).done(function(data) {
                     //        $('#lastSuccessful' + d.Acronym).text(data.LastSuccess.formatDate(DateTimeFormat));
@@ -174,7 +176,20 @@
         //    return acronym.replace(/[^A-Za-z0-9]/g, "");
         //}
 
+
         const viewModel = new StatusViewModel();
+
+        $(viewModel).one('itemsQueried', function () {
+            var acronym = '@Raw(acronymn)'
+            if (acronym != '') {
+                viewModel.filterText = acronym
+                $('#searchFilter').val(acronym);
+                viewModel.queryItems();
+                $(viewModel).one('itemsQueried', function () {
+                    $('#' + acronym + 'Heading').click();
+                })
+            }
+        });
 
         const ProgressState = {
             Queued: 0,
