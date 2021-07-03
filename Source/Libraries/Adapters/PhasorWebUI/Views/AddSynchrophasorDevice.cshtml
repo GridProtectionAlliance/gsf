@@ -1360,7 +1360,7 @@
                 self.configFrameDetails("Analyzing...");
 
                 phasorHub.extractConfigurationFrame(deviceID).done(self.loadConfigFrame).fail(function (error) {
-                    showErrorMessage(String.format("Failed to extract config file from existing device: {0}", error));
+                    showErrorMessage(String.format("Failed to extract config file from existing device: {0}", error), null, true);
 
                     self.configFrameDetails("Unavailable");
                     $("[id=voltageRow]").css("visibility", "visible");
@@ -1395,7 +1395,7 @@
                         serviceHub.sendCommand("connect " + deviceID);
                 })
                 .fail(function (error) {
-                    showErrorMessage(String.format("Failed to analyze config file: {0}", error));
+                    showErrorMessage(String.format("Failed to analyze config file: {0}", error), null, true);
 
                     self.configFrameDetails("Unavailable");
                     $("[id=voltageRow]").css("visibility", "visible");
@@ -1760,7 +1760,7 @@
 
                 reader.onloadend = function () {
                     if (reader.error && reader.error.message)
-                        showErrorMessage("Failed to load configuration: " + reader.error.message);
+                        showErrorMessage("Failed to load configuration: " + reader.error.message, null, true);
                 };
 
                 reader.readAsText(fileBlob);
@@ -1868,15 +1868,15 @@
                     measurement.Enabled = phasorDefinition.Enabled();
 
                     return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
-                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
+                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error, null, true);
                     });
                 })
                 .fail(function (error) {
-                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error);
+                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error, null, true);
                 });
             })
             .fail(function (error) {
-                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error);
+                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error, null, true);
             });
         }
 
@@ -1888,7 +1888,7 @@
             const vphaSignalType = getPhasorSignalType("VPHA");
 
             if (iphmSignalType == null || iphaSignalType == null || vphmSignalType == null || vphaSignalType == null) {
-                showErrorMessage("Failed to find one or more phasor signal type records.");
+                showErrorMessage("Failed to find one or more phasor signal type records.", null, true);
                 return $.Deferred().resolve().promise();
             }
 
@@ -1935,20 +1935,20 @@
 
                                 if (measurement.PhasorSourceIndex === phasorDefinition.SourceIndex) {
                                     promises.push(phasorHub.deleteMeasurement(measurement.PointID).fail(function (error) {
-                                        showErrorMessage("Failed to delete phasor measurement: " + error);
+                                        showErrorMessage("Failed to delete phasor measurement: " + error, null, true);
                                     }));
                                 }
                             }
 
                             // Remove phasor
                             promises.push(phasorHub.deletePhasor(phasorDefinition.ID).fail(function (error) {
-                                showErrorMessage("Failed to delete phasor: " + error);
+                                showErrorMessage("Failed to delete phasor: " + error, null, true);
                             }));
 
                             return $(promises).whenAll();
                         })
                             .fail(function (error) {
-                                showErrorMessage("Failed to query device measurements: " + error);
+                                showErrorMessage("Failed to query device measurements: " + error, null, true);
                             }));
                     }
                     else {
@@ -2002,16 +2002,16 @@
                                             voltageIDMap[voltage.ID] = newPhasor.ID;
                                         })
                                         .fail(function (error) {
-                                            showErrorMessage("Failed to query voltage phasor: " + error);
+                                            showErrorMessage("Failed to query voltage phasor: " + error, null, true);
                                         });
                                     });
                                 })
                                 .fail(function (error) {
-                                    showErrorMessage("Failed to save new voltage phasor: " + error);
+                                    showErrorMessage("Failed to save new voltage phasor: " + error, null, true);
                                 });
                             })
                             .fail(function (error) {
-                                showErrorMessage("Failed to create new voltage phasor: " + error);
+                                showErrorMessage("Failed to create new voltage phasor: " + error, null, true);
                             }));
                         }
 
@@ -2070,11 +2070,11 @@
                                         });
                                     })
                                     .fail(function (error) {
-                                        showErrorMessage("Failed to save new current phasor: " + error);
+                                        showErrorMessage("Failed to save new current phasor: " + error, null, true);
                                     });
                                 })
                                 .fail(function (error) {
-                                    showErrorMessage("Failed to create current new phasor: " + error);
+                                    showErrorMessage("Failed to create current new phasor: " + error, null, true);
                                 }));
                             }
 
@@ -2082,7 +2082,7 @@
                         });
                     })
                     .fail(function (error) {
-                        showErrorMessage("Failed to delete old phasors: " + error);
+                        showErrorMessage("Failed to delete old phasors: " + error, null, true);
                     }));
                 }
                 else {
@@ -2123,11 +2123,11 @@
                                 });
                             })
                             .fail(function (error) {
-                                showErrorMessage("Failed to save voltage phasor: " + error);
+                                showErrorMessage("Failed to save voltage phasor: " + error, null, true);
                             });
                         })
                         .fail(function (error) {
-                            showErrorMessage("Failed to query voltage phasor: " + error);
+                            showErrorMessage("Failed to query voltage phasor: " + error, null, true);
                         }));
                     }
 
@@ -2173,11 +2173,11 @@
                                 });
                             })
                             .fail(function (error) {
-                                showErrorMessage("Failed to save current phasor: " + error);
+                                showErrorMessage("Failed to save current phasor: " + error, null, true);
                             });
                         })
                         .fail(function (error) {
-                            showErrorMessage("Failed to query current phasor: " + error);
+                            showErrorMessage("Failed to query current phasor: " + error, null, true);
                         }));
                     }
                 }
@@ -2185,7 +2185,7 @@
                 return $(saveDevicePromises).whenAll();
             })
             .fail(function (error) {
-                showErrorMessage("Failed to query phasor count: " + error);
+                showErrorMessage("Failed to query phasor count: " + error, null, true);
             });
         }
 
@@ -2206,15 +2206,15 @@
                     measurement.Enabled = true;
 
                     return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
-                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
+                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error, null, true);
                     });
                 })
                 .fail(function (error) {
-                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error);
+                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error, null, true);
                 });
             })
             .fail(function (error) {
-                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error);
+                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error, null, true);
             });
         }
 
@@ -2228,7 +2228,7 @@
             const flagSignalType = getDeviceSignalType("FLAG");
 
             if (freqSignalType == null || dfdtSignalType == null || flagSignalType == null) {
-                showErrorMessage("Failed to find one or more signal type records.");
+                showErrorMessage("Failed to find one or more signal type records.", null, true);
                 return $.Deferred().resolve().promise();
             }
 
@@ -2269,22 +2269,22 @@
                                     measurement.Enabled = true;
 
                                     return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
-                                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
+                                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error, null, true);
                                     });
                                 })
                                 .fail(function (error) {
-                                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error);
+                                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error, null, true);
                                 });
                             })
                             .fail(function (error) {
-                                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error);
+                                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error, null, true);
                             }));
                         }
 
                         return $(promises).whenAll();
                     }
                     else {
-                        showErrorMessage("Failed to find analog signal type record.");
+                        showErrorMessage("Failed to find analog signal type record.", null, true);
                         return $.Deferred().resolve().promise();
                     }
                 }
@@ -2320,22 +2320,22 @@
                                     measurement.Enabled = true;
 
                                     return phasorHub.addNewOrUpdateMeasurement(measurement).fail(function (error) {
-                                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
+                                        showErrorMessage("Save failed for new measurement " + signalReference + ": " + error, null, true);
                                     });
                                 })
                                 .fail(function (error) {
-                                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error);
+                                    showErrorMessage("Failed to create point tag for measurement " + signalReference + ": " + error, null, true);
                                 });
                             })
                             .fail(function (error) {
-                                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error);
+                                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error, null, true);
                             }));
                         }
 
                         return $(promises).whenAll();
                     }
                     else {
-                        showErrorMessage("Failed to find digital signal type record.");
+                        showErrorMessage("Failed to find digital signal type record.", null, true);
                         return $.Deferred().resolve().promise();
                     }
                 }
@@ -2381,17 +2381,17 @@
 
                                 if (powerCalculation.ID === 0) {
                                     return phasorHub.addNewPowerCalculation(powerCalculation).fail(function (error) {
-                                        showErrorMessage("Failed to add new power calculation record: " + error);
+                                        showErrorMessage("Failed to add new power calculation record: " + error, null, true);
                                     });
                                 }
                                 else {
                                     return phasorHub.updatePowerCalculation(powerCalculation).fail(function (error) {
-                                        showErrorMessage("Failed to update power calculation record: " + error);
+                                        showErrorMessage("Failed to update power calculation record: " + error, null, true);
                                     });
                                 }
                             })
                             .fail(function (error) {
-                                showErrorMessage("Failed to query power calculation record: " + error);
+                                showErrorMessage("Failed to query power calculation record: " + error, null, true);
                             }));
                         }
                     }
@@ -2525,7 +2525,7 @@
                 return $.Deferred().resolve(null).promise();
             })
             .fail(function (error) {
-                showErrorMessage("Failed to query power calculation record: " + error);
+                showErrorMessage("Failed to query power calculation record: " + error, null, true);
             });
         }
 
@@ -2618,23 +2618,23 @@
                                         return serviceHub.sendCommand("initialize " + adapter.AdapterName);
                                     })
                                     .fail(function (error) {
-                                        showErrorMessage("Save failed for new custom action adapter: " + error);
+                                        showErrorMessage("Save failed for new custom action adapter: " + error, null, true);
                                     });
                                 })
                                 .fail(function (error) {
-                                    showErrorMessage("Failed to create new custom action adapter record: " + error);
+                                    showErrorMessage("Failed to create new custom action adapter record: " + error, null, true);
                                 });
                             })
                             .fail(function (error) {
-                                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error);
+                                showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error, null, true);
                             });
                         })
                         .fail(function (error) {
-                            showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
+                            showErrorMessage("Save failed for new measurement " + signalReference + ": " + error, null, true);
                         });
                     })
                     .fail(function (error) {
-                        showErrorMessage("Failed to lookup or create measurement " + signalReference + ": " + error);
+                        showErrorMessage("Failed to lookup or create measurement " + signalReference + ": " + error, null, true);
                     });
                 }));
             }
@@ -3024,23 +3024,23 @@
                                             return serviceHub.sendCommand("initialize " + adapter.AdapterName);
                                         })
                                         .fail(function (error) {
-                                            showErrorMessage("Save failed for new custom action adapter: " + error);
+                                            showErrorMessage("Save failed for new custom action adapter: " + error, null, true);
                                         });
                                     })
                                     .fail(function (error) {
-                                        showErrorMessage("Failed to create new custom action adapter record: " + error);
+                                        showErrorMessage("Failed to create new custom action adapter record: " + error, null, true);
                                     });
                                 })
                                 .fail(function (error) {
-                                    showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error);
+                                    showErrorMessage("Failed to lookup measurement " + signalReference + ": " + error, null, true);
                                 });
                             })
                             .fail(function (error) {
-                                showErrorMessage("Save failed for new measurement " + signalReference + ": " + error);
+                                showErrorMessage("Save failed for new measurement " + signalReference + ": " + error, null, true);
                             });
                         })
                         .fail(function (error) {
-                            showErrorMessage("Failed to lookup or create measurement " + signalReference + ": " + error);
+                            showErrorMessage("Failed to lookup or create measurement " + signalReference + ": " + error, null, true);
                         }));
                     }
                 }
@@ -3063,11 +3063,11 @@
                     return serviceHub.sendCommand("initialize " + adapter.AdapterName);
                 })
                 .fail(function (error) {
-                    showErrorMessage("Save failed for new custom action adapter: " + error);
+                    showErrorMessage("Save failed for new custom action adapter: " + error, null, true);
                 });
             })
             .fail(function (error) {
-                showErrorMessage("Failed to create new custom action adapter record: " + error);
+                showErrorMessage("Failed to create new custom action adapter record: " + error, null, true);
             });
         }
 
@@ -3084,7 +3084,7 @@
             const calcSignalType = getDeviceSignalType("CALC");
 
             if (calcSignalType == null && !errorDisplayed) {
-                showErrorMessage("Cannot save tag template calculations: no signal type record found for 'CALC'");
+                showErrorMessage("Cannot save tag template calculations: no signal type record found for 'CALC'", null, true);
                 return $.Deferred().resolve().promise();
             }
 
@@ -3155,12 +3155,12 @@
                         });
                     })
                     .fail(function (error) {
-                        showErrorMessage("Failed to validate calculator configurations: " + error);
+                        showErrorMessage("Failed to validate calculator configurations: " + error, null, true);
                     });
                 });
             })
             .fail(function (error) {
-                showErrorMessage("Failed to load " + templateType + " tag template: " + error);
+                showErrorMessage("Failed to load " + templateType + " tag template: " + error, null, true);
             });
         }
 
@@ -3170,7 +3170,7 @@
             const cellCount = cells.length;
 
             if (cellCount === 0) {
-                showErrorMessage("Cannot save device records: no devices were defined in loaded configuration.");
+                showErrorMessage("Cannot save device records: no devices were defined in loaded configuration.", null, true);
                 return $.Deferred().resolve().promise();
             }
 
@@ -3183,7 +3183,7 @@
 
                     // Chain multiple devices saves behind one another...
                     deviceSaveChain = deviceSaveChain.then(function () {
-                        showInfoMessage(String.format("Saving \"{0}\" device {1} / {2} please wait...", cell.IDLabel(), index + 1, cellCount), -1);
+                        showInfoMessage(String.format("Saving \"{0}\" device {1} / {2} please wait...", cell.IDLabel(), index + 1, cellCount), -1, true);
 
                         // Query existing child device record - function will create a new blank device record if one does not exist
                         return phasorHub.queryDeviceByID(cell.ID).then(function (device) {
@@ -3229,11 +3229,11 @@
                                             });
                                         })
                                         .fail(function (error) {
-                                            showErrorMessage("Failed while querying new device " + device.Acronym + " - no measurements saved: " + error);
+                                            showErrorMessage("Failed while querying new device " + device.Acronym + " - no measurements saved: " + error, null, true);
                                         });
                                     })
                                     .fail(function (error) {
-                                        showErrorMessage("Save failed for new device " + device.Acronym + ": " + error);
+                                        showErrorMessage("Save failed for new device " + device.Acronym + ": " + error, null, true);
                                     });
                                 }
                                 else {
@@ -3247,13 +3247,13 @@
                                         });
                                     })
                                     .fail(function (error) {
-                                        showErrorMessage("Update failed for existing device " + device.Acronym + " - no measurements updated: " + error);
+                                        showErrorMessage("Update failed for existing device " + device.Acronym + " - no measurements updated: " + error, null, true);
                                     });
                                 }
                             }
                         })
                         .fail(function (error) {
-                            showErrorMessage("Save failed for new device " + device.Acronym + " - could not create new or lookup existing device: " + error);
+                            showErrorMessage("Save failed for new device " + device.Acronym + " - could not create new or lookup existing device: " + error, null, true);
                         });
                     });
                 }
@@ -3277,7 +3277,7 @@
                 return $.Deferred().resolve().promise();
             }
 
-            showInfoMessage("Saving device connection, please wait...", -1);
+            showInfoMessage("Saving device connection, please wait...", -1, true);
             disableUIButtons();
 
             // Query existing device record - function will create a new blank device record if one does not exist
@@ -3341,12 +3341,12 @@
                             });
                         })
                         .fail(function (error) {
-                            showErrorMessage("Failed while querying new device " + device.Acronym + " - no measurements saved: " + error);
+                            showErrorMessage("Failed while querying new device " + device.Acronym + " - no measurements saved: " + error, null, true);
                             enableUIButtons();
                         });
                     })
                     .fail(function (error) {
-                        showErrorMessage("Save failed for new device " + device.Acronym + ": " + error);
+                        showErrorMessage("Save failed for new device " + device.Acronym + ": " + error, null, true);
                         enableUIButtons();
                     });
                 }
@@ -3365,13 +3365,13 @@
                         });
                     })
                     .fail(function (error) {
-                        showErrorMessage("Update failed for existing device " + device.Acronym + " - no measurements updated: " + error);
+                        showErrorMessage("Update failed for existing device " + device.Acronym + " - no measurements updated: " + error, null, true);
                         enableUIButtons();
                     });
                 }
             })
             .fail(function (error) {
-                showErrorMessage("Save failed for new device " + device.Acronym + " - could not create new or lookup existing device: " + error);
+                showErrorMessage("Save failed for new device " + device.Acronym + " - could not create new or lookup existing device: " + error, null, true);
                 enableUIButtons();
             });
         }
@@ -3388,7 +3388,7 @@
                 viewModel.latitude(device.Latitude);
             })
             .fail(function (error) {
-                showErrorMessage(String.format("Failed to load existing device \"{0}\": {1}", id, error));
+                showErrorMessage(String.format("Failed to load existing device \"{0}\": {1}", id, error), null, true);
             });
         }
 
@@ -3536,13 +3536,13 @@
             function encodeInfoMessage(message, timeout) {
                 // Html encode message
                 const encodedMessage = $("<div />").text(message).html();
-                showInfoMessage(encodedMessage, timeout);
+                showInfoMessage(encodedMessage, timeout, true);
             }
 
             function encodeErrorMessage(message, timeout) {
                 // Html encode message
                 const encodedMessage = $("<div />").text(message).html();
-                showErrorMessage(encodedMessage, timeout);
+                showErrorMessage(encodedMessage, timeout, true);
             }
 
             // Register info and error message handlers for each hub client

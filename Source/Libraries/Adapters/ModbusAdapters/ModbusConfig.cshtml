@@ -948,7 +948,7 @@
                     viewModel.loadSequenceMap(files[0], loadAppendMode);
 
                     if (files.length > 1)
-                        showInfoMessage("Only loaded first file from the selected set. Use \"Append Mapping\" to load multiple mappings into the current configuration.", -1);
+                        showInfoMessage("Only loaded first file from the selected set. Use \"Append Mapping\" to load multiple mappings into the current configuration.", 10000, true);
                 }
 
                 $("#loadMappingFileName").val("");
@@ -1126,15 +1126,15 @@
 
             $(queryPromises).whenAll().done(function () {
                 $(addNewPromises).whenAll().done(function () {
-                    showInfoMessage("Save complete for device " + viewModel.deviceName() + ".");
+                    showInfoMessage("Save complete for device " + viewModel.deviceName() + ".", null, true);
 
                     // Intialize device after save
                     serviceHub.sendCommand("initialize " + device.Acronym);
                 }).fail(function (error) {
-                    showErrorMessage("Failed while saving device " + viewModel.deviceName() + " measurements: " + error);
+                    showErrorMessage("Failed while saving device " + viewModel.deviceName() + " measurements: " + error, null, true);
                 });
             }).fail(function (error) {
-                showErrorMessage("Failed while saving device " + viewModel.deviceName() + " measurement - could not create new or lookup existing measurement: " + error);
+                showErrorMessage("Failed while saving device " + viewModel.deviceName() + " measurement - could not create new or lookup existing measurement: " + error, null, true);
             });
         }
 
@@ -1176,7 +1176,7 @@
             $("#saveDeviceConnectionDialog").hide();
 
             if (hubIsConnected) {
-                showInfoMessage("Saving device connection and new measurements, please wait...", 5000);
+                showInfoMessage("Saving device connection and new measurements, please wait...", 5000, true);
 
                 // Query existing device with specified acronym or create a new onw
                 dataHub.queryDevice(viewModel.deviceName()).done(function(device) {
@@ -1198,10 +1198,10 @@
                                         // Save device measurement records...
                                         saveDeviceMeasurements(newDevice);
                                     }).fail(function(error) {
-                                        showErrorMessage("Failed while querying new device " + viewModel.deviceName() + " - no measurements saved: " + error);
+                                        showErrorMessage("Failed while querying new device " + viewModel.deviceName() + " - no measurements saved: " + error, null, true);
                                     });
                                 }).fail(function(error) {
-                                    showErrorMessage("Save failed for new device " + viewModel.deviceName() + ": " + error);
+                                    showErrorMessage("Save failed for new device " + viewModel.deviceName() + ": " + error, null, true);
                                 });
                             }
                             else {
@@ -1209,20 +1209,20 @@
                                     // Save device measurement records...
                                     saveDeviceMeasurements(device);
                                 }).fail(function(error) {
-                                    showErrorMessage("Update failed for existing device " + viewModel.deviceName() + " - no measurements updated: " + error);
+                                    showErrorMessage("Update failed for existing device " + viewModel.deviceName() + " - no measurements updated: " + error, null, true);
                                 });
                             }
                         }).fail(function(error) {
-                            showErrorMessage("Save failed for new device " + viewModel.deviceName() + " - could not lookup Modbus protocol ID: " + error);
+                            showErrorMessage("Save failed for new device " + viewModel.deviceName() + " - could not lookup Modbus protocol ID: " + error, null, true);
                         });
                     }).fail(function(error) {
-                        showErrorMessage("Failed to save device " + viewModel.deviceName() + " mapping: " + error);
+                        showErrorMessage("Failed to save device " + viewModel.deviceName() + " mapping: " + error, null, true);
                     });
                 }).fail(function(error) {
-                    showErrorMessage("Save failed for new device " + viewModel.deviceName() + " - could not create new or lookup existing device: " + error);
+                    showErrorMessage("Save failed for new device " + viewModel.deviceName() + " - could not create new or lookup existing device: " + error, null, true);
                 });
             } else {
-                showErrorMessage("Cannot save device connection, cannot connect to server.", -1);
+                showErrorMessage("Cannot save device connection, cannot connect to server.", -1, null, true);
             }
         }
 
@@ -1301,7 +1301,7 @@
                 $(promises).whenAll().done(function() {
                     $("#loadingTagDataMessage").hide();
                 }).fail(function(error) {
-                    showErrorMessage("Failed while loading tag data: " + error);
+                    showErrorMessage("Failed while loading tag data: " + error, null, true);
                     $("#loadingTagDataMessage").hide();
                 });
             });
@@ -1343,7 +1343,7 @@
                 else
                     dataHub.modbusConnect($("#inputConnectionString").val());
             } else {
-                showErrorMessage("Device is inaccessible, cannot connect to server.", -1);
+                showErrorMessage("Device is inaccessible, cannot connect to server.", null, true);
             }
         }
 

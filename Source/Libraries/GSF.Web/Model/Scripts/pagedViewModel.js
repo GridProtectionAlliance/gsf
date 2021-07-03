@@ -427,7 +427,7 @@ function PagedViewModel() {
                 // Validate proper page size after any record refresh
                 setTimeout(self.calculatePageSize, 150);
             }).fail(function(error) {
-                showErrorMessage(error);
+                showErrorMessage(error, null, true);
             });
 
             self.queryRecordCount(self.filterText).done(function(count) {
@@ -453,7 +453,7 @@ function PagedViewModel() {
                 $(self).trigger("recordDeleted", [record]);
                 showInfoMessage("Deleted record...");
             }).fail(function(error) {
-                showErrorMessage(error);
+                showErrorMessage(error, null, true);
             });
         }
     }
@@ -480,7 +480,7 @@ function PagedViewModel() {
                     $(self).trigger("recordSaved", [record, false]);
                     showInfoMessage("Saved updated record...");
                 }).fail(function(error) {
-                    showErrorMessage(error);
+                    showErrorMessage(error, null, true);
                 });
             });
         }
