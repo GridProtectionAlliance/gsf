@@ -513,13 +513,12 @@ namespace GSF.Web.Model
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
                                     Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
-                                {whereClause.Replace("'", "''")}
-                                ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")};
+                                {whereClause.Replace("'", "''")};
 
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
                                     SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
                                         FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl''
+		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
 
 		                        exec sp_executesql @CleanSQL
                             '
@@ -540,13 +539,12 @@ namespace GSF.Web.Model
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
                                     Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
-                                {whereClause.Replace("'", "''")}
-                                ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")};
+                                {whereClause.Replace("'", "''")};
 
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
                                     SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
                                         FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl''
+		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
 
 		                        exec sp_executesql @CleanSQL
                             '
