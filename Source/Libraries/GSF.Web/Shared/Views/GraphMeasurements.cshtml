@@ -433,7 +433,7 @@
                     return;
 
                 $scope.dataSubscriber.getMetadata("MeasurementDetail", "DeviceAcronym = '" + deviceMetadata.acronym + "' AND SignalAcronym <> 'STAT'")
-                    .fail(showErrorMessage)
+                    .fail(e => showErrorMessage(e, null, true))
                     .done(function (data) {
                         data.sort(function (m1, m2) {
                             function signalIndex (measurementMetadata) {
@@ -497,7 +497,7 @@
             // the modals to display stat information
             function getStatistics($scope) {
                 $scope.dataSubscriber.getMetadata("MeasurementDetail", "SignalAcronym = 'STAT'")
-                    .fail(showErrorMessage)
+                    .fail(e => showErrorMessage(e, null, true))
                     .done(function (data) {
                         data.sort(function (m1, m2) {
                             function category(measurementMetadata) {
@@ -577,7 +577,7 @@
             // selection control on the left side of the page
             function getDevices($scope) {
                 $scope.dataSubscriber.getMetadata("DeviceDetail", null, "Acronym")
-                    .fail(showErrorMessage)
+                    .fail(e => showErrorMessage(e, null, true))
                     .done(function (data) {
                         var parents = {};
                         var parentAcronyms = [];
@@ -704,7 +704,7 @@
                     showGraphMessage("Loading subscription metadata...", true);
 
                     $scope.dataSubscriber.sendCommand("MetadataRefresh")
-                        .fail(showErrorMessage);
+                        .fail(e => showErrorMessage(e, null, true));
                 }
 
                 $scope.dataSubscriber.metadataReceived = function () {

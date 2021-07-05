@@ -422,11 +422,11 @@
 
                         if (element.prop("checked")) {
                             securityHub.addUserToRole(userID, roleID).fail(function(error) {
-                                showErrorMessage(error);
+                                showErrorMessage(error, null, true);
                             });
                         } else {
                             securityHub.removeUserFromRole(userID, roleID).fail(function(error) {
-                                showErrorMessage(error);
+                                showErrorMessage(error, null, true);
                             });
                         }
                     }

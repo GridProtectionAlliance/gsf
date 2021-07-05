@@ -91,6 +91,7 @@ namespace GSF.Web.Model
             AllowSearch = typeof(T).GetCustomAttribute<AllowSearchAttribute>()?.AllowSearch ?? false;
 
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
+            Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
             // Custom View Models are ViewOnly.
             ViewOnly = ViewOnly || CustomView != String.Empty;
@@ -111,6 +112,8 @@ namespace GSF.Web.Model
         protected string PostRoles { get; } = "Administrator";
         protected string PatchRoles { get; } = "Administrator";
         protected string DeleteRoles { get; } = "Administrator";
+        private int? Take { get; } = null;
+
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
         #endregion
 
@@ -595,8 +598,13 @@ namespace GSF.Web.Model
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 if (CustomView == String.Empty)
-                    return new TableOperations<T>(connection).QueryRecords(DefaultSort, new RecordRestriction(filterExpression, parameters));
+                {
+                    if(Take == null)
+                        return new TableOperations<T>(connection).QueryRecords(DefaultSort, new RecordRestriction(filterExpression, parameters));
+                    else
+                        return new TableOperations<T>(connection).QueryRecords(DefaultSort, new RecordRestriction(filterExpression, parameters)).Take((int)Take);
 
+                }
                 string sql = $@"
                     SELECT * FROM 
                     ({CustomView}) T1 
@@ -610,9 +618,13 @@ namespace GSF.Web.Model
                 {
                     result.Add(tblOperations.LoadRecord(row));
                 }
-                return result;
+                if (Take == null)
+                    return result;
+                else
+                    return result.Take((int)Take);
             }
         }
+
 
         private T QueryRecordWhere(string filterExpression, params object[] parameters)
         {
@@ -638,7 +650,14 @@ namespace GSF.Web.Model
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 if (CustomView == String.Empty)
-                    return new TableOperations<T>(connection).QueryRecords(DefaultSort);
+                {
+                    if (Take == null)
+                        return new TableOperations<T>(connection).QueryRecords(DefaultSort);
+                    else
+                        return new TableOperations<T>(connection).QueryRecords(DefaultSort).Take((int)Take);
+
+
+                }
 
                 string sql = $@"
                     SELECT * FROM 
@@ -653,7 +672,10 @@ namespace GSF.Web.Model
                 {
                     result.Add(tblOperations.LoadRecord(row));
                 }
-                return result;
+                if (Take == null)
+                    return result;
+                else
+                    return result.Take((int)Take);
             }
         }
 

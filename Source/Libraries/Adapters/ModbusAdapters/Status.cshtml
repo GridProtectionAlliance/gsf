@@ -39,6 +39,10 @@
 //  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
 //
 //*****************************************************************************************************@
+@* ReSharper disable RedundantUsingDirective *@
+@* ReSharper disable Html.PathError *@
+@* ReSharper disable UnknownCssClass *@
+@* ReSharper disable InlineOutVariableDeclaration *@
 @using System.Net.Http
 @using GSF
 @using GSF.Web
@@ -51,13 +55,15 @@
     ViewBag.Title = "Status";
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
-    string parameter;
+    string parameter, acronymn;
 
     parameters.TryGetValue("ShowMenu", out parameter);
 
     if (string.IsNullOrEmpty(parameter)) {
         parameter = "true";
     }
+
+    parameters.TryGetValue("Acronym", out acronymn);
 
     ViewBag.ShowMenu = parameter.ParseBoolean();
 }
@@ -77,10 +83,6 @@
             <input class='form-control' type='search' id='searchFilter' placeholder='Search'/>
         </div>
     </div>
-    @*<div class='form-group' style='margin-top: 5px; margin-bottom: 10px'>
-        <label for='inputQueryLimit'>Query Limit:</label> <input id='inputQueryLimit' data-bind='value: itemLimit' type='number' style='width: 50px'/>
-        <button type='button' class='btn btn-primary pull-right' data-bind='click: queueAll()'>Queue All for Processing...</button>
-    </div>*@
 }
 @section Scripts {
     <script src="@Resources.Root/Shared/Scripts/knockout.js"></script>
@@ -114,7 +116,7 @@
                     if (value < 1)
                         value = 1;
 
-                    if (value != self._itemLimit()) {
+                    if (value !== self._itemLimit()) {
                         self._itemLimit(value);
                         self.queryItems();
                     }
@@ -148,20 +150,12 @@
 
             self.queryItems = function() {
                 if (!hubIsConnected)
-                    return;
+                    return $.Deferred().resolve().promise();
 
                 return dataHub.queryEnabledDevices("@ViewBag.NodeID", self.itemLimit(), self.filterText).done(function(devices) {
                     self.items.removeAll();
                     self.items(devices);
-
-                    //$.each(devices, function(i, d) {
-                    //    dataHub.getStatusLogForDevice(d.Acronym).done(function(data) {
-                    //        $('#lastSuccessful' + d.Acronym).text(data.LastSuccess.formatDate(DateTimeFormat));
-                    //        $('#lastUnsuccessful' + d.Acronym).text(data.LastFailure.formatDate(DateTimeFormat));
-                    //        $('#lastMessage' + d.Acronym).text(data.Message);
-                    //    });
-                    //});
-
+                    $(self).trigger("itemsQueried");
                 });
             }
 
@@ -170,11 +164,21 @@
             }
         }
 
-        //fixAcronyms = function(acronym) {
-        //    return acronym.replace(/[^A-Za-z0-9]/g, "");
-        //}
-
         const viewModel = new StatusViewModel();
+
+        $(viewModel).one("itemsQueried", function () {
+            const acronym = "@Raw(acronymn)";
+
+            if (notNull(acronym)) {
+                $(viewModel).one("itemsQueried", function () {
+                    $(`#${viewModel.fixAcronym(acronym)}Heading`).click();
+                });
+
+                $("#searchFilter").val(acronym);
+                viewModel.filterText = acronym;
+                viewModel.queryItems();
+            }
+        });
 
         const ProgressState = {
             Queued: 0,
@@ -189,15 +193,16 @@
 
             dataHubClient.deviceProgressUpdate = function (deviceName, updates) {
                 var fixedDeviceName = viewModel.fixAcronym(deviceName);
-                const messageWell = $("#" + fixedDeviceName + "Message");
-                const heading = $("#" + fixedDeviceName + "Heading");
+                const messageWell = $(`#${fixedDeviceName}Message`);
+                const heading = $(`#${fixedDeviceName}Heading`);
                 var progress = deviceProgress[deviceName];
 
+                // TODO: This function is a mess, all the variable redeclarations are confusing, needs simplification:
                 $.each(updates, function (_, update) {
                     if (!progress) {
                         heading.click(function () {
                             $.each(viewModel.items(), function (_, item) {
-                                $("#" + viewModel.fixAcronym(item.Acronym) + "Message").text("");
+                                $(`#${viewModel.fixAcronym(item.Acronym)}Message`).text("");
                             });
 
                             var progress = deviceProgress[deviceName];
@@ -209,7 +214,7 @@
                             var progressBar;
                             var progressValue;
 
-                            progressBar = $("#" + fixedDeviceName + "CurrentProgress");
+                            progressBar = $(`#${fixedDeviceName}CurrentProgress`);
                             progressValue = Math.ceil(progress.progress / progress.progressTotal * 100.0);
 
                             if (isNumber(progressValue)) {
@@ -222,7 +227,7 @@
                                     progressBar.removeClass("active");
                             }
 
-                            progressBar = $("#" + fixedDeviceName + "OverallProgress");
+                            progressBar = $(`#${fixedDeviceName}OverallProgress`);
                             progressValue = Math.ceil(progress.overallProgress / progress.overallProgressTotal * 100.0);
 
                             if (isNumber(progressValue)) {
@@ -253,7 +258,7 @@
                     }
 
                     if (update.State !== undefined) {
-                        const panel = $("#" + fixedDeviceName + "Panel");
+                        const panel = $(`#${fixedDeviceName}Panel`);
                         panel.removeClass("panel-default panel-primary panel-info panel-success panel-warning panel-danger");
                         progress.state = update.State;
 
@@ -297,7 +302,7 @@
                         if (messageText !== progress.lastErrorMessageText) {
                             progress.lastErrorMessageText = messageText;
 
-                            var message = '<span style="color: red">' + update.ErrorMessage + '</span>'
+                            var message = `<span style="color: red">${update.ErrorMessage}</span>`
                             progress.messages.push(message);
 
                             if (!heading.hasClass("collapsed"))
@@ -306,7 +311,7 @@
                     }
 
                     if (update.Progress !== undefined || update.ProgressTotal !== undefined) {
-                        var progressBar = $("#" + fixedDeviceName + "CurrentProgress");
+                        var progressBar = $(`#${fixedDeviceName}CurrentProgress`);
 
                         if (update.Progress !== undefined)
                             progress.progress = update.Progress;
@@ -326,7 +331,7 @@
                     }
 
                     if (update.OverallProgress !== undefined || update.OverallProgressTotal !== undefined) {
-                        var progressBar = $("#" + fixedDeviceName + "OverallProgress");
+                        var progressBar = $(`#${fixedDeviceName}OverallProgress`);
 
                         if (update.OverallProgress !== undefined)
                             progress.overallProgress = update.OverallProgress;
@@ -377,11 +382,11 @@
             if (!hubIsConnected)
                 return;
 
-            serviceHub.sendCommand("invoke " + record.Acronym + " QueueTasks");
+            serviceHub.sendCommand(`INVOKE ${record.Acronym} QueueTasks`);
         }
 
         function queueAll() {
-            for (var i = 0; i < viewModel.items().length; i++) {
+            for (let i = 0; i < viewModel.items().length; i++) {
                 queueNow(viewModel.items()[i]);
             }
         }

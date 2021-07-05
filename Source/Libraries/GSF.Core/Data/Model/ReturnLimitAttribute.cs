@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  AssemblyInfo.cs - Gbtc
+//  ReturnLimitAttribute.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,36 +16,37 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/20/2016 - Ritchie Carroll
+//  06/28/2021 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+
 using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
 
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.3.472.0")]
-[assembly: AssemblyInformationalVersion("2.3.472-beta")]
+namespace GSF.Data.Model
+{
+    /// <summary>
+    /// Defines an attribute that will allows a top number of results to be returned when queried
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    public sealed class ReturnLimitAttribute : Attribute
+    {
+        /// <summary>
+        /// Gets field name to use for property.
+        /// </summary>
+        public int Limit
+        {
+            get;
+        }
 
-// Informational attributes.
-[assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2016.  All Rights Reserved.")]
-[assembly: AssemblyProduct("Grid Solutions Framework")]
-
-// Assembly manifest attributes.
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug Build")]
-#else
-[assembly: AssemblyConfiguration("Release Build")]
-#endif
-
-[assembly: AssemblyDefaultAlias("GrafanaAdapters")]
-[assembly: AssemblyDescription("Grafana Adapters")]
-[assembly: AssemblyTitle("GrafanaAdapters")]
-
-// Other configuration attributes.
-[assembly: CLSCompliant(false)]
-[assembly: ComVisible(false)]
-[assembly: Guid("3c8d8504-1880-4cc4-ab1a-8793f3625a31")]
+        /// <summary>
+        /// Creates a new <see cref="ReturnLimitAttribute"/>.
+        /// </summary>
+        /// <param name="limit">Number of top records to return.</param>
+        public ReturnLimitAttribute(int limit)
+        {
+            Limit = limit;
+        }
+    }
+}

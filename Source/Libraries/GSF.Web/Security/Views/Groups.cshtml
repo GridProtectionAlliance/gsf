@@ -396,11 +396,11 @@
 
                         if (element.prop("checked")) {
                             securityHub.addGroupToRole(groupID, roleID).fail(function (error) {
-                                showErrorMessage(error);
+                                showErrorMessage(error, null, true);
                             });
                         } else {
                             securityHub.removeGroupFromRole(groupID, roleID).fail(function (error) {
-                                showErrorMessage(error);
+                                showErrorMessage(error, null, true);
                             });
                         }
                     }
