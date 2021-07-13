@@ -497,7 +497,7 @@ function PagedViewModel() {
                     $(self).trigger("recordSaved", [record, true]);
                     showInfoMessage("Saved new record...");
                 }).fail(function(error) {
-                    showErrorMessage(error);
+                    showErrorMessage(error, null, true);
                 });
             });
         }
