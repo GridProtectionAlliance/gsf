@@ -554,13 +554,14 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <returns>The collection of types found as well as their descriptions.</returns>
         private List<Tuple<Type, AdapterTypeDescription>> GetAdapterTypeList(string searchDirectory, Type adapterType)
         {
-            return adapterType.LoadImplementations(searchDirectory, true, true, true)
-                        .Distinct()
-                        .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
-                        .Select(type => Tuple.Create(type, GetDescription(type)))
-                        .OrderByDescending(pair => pair.Item1.TryGetAttribute(out DescriptionAttribute _))
-                        .ThenBy(pair => pair.Item2.ToString())
-                        .ToList();
+            return adapterType
+                .LoadImplementations(searchDirectory, true, true, true)
+                .Distinct()
+                .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
+                .Select(type => Tuple.Create(type, GetDescription(type)))
+                .OrderByDescending(pair => pair.Item1.TryGetAttribute(out DescriptionAttribute _))
+                .ThenBy(pair => pair.Item2.ToString())
+                .ToList();
         }
 
         /// <summary>
