@@ -555,7 +555,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         private List<Tuple<Type, AdapterTypeDescription>> GetAdapterTypeList(string searchDirectory, Type adapterType)
         {
             return adapterType
-                .LoadImplementations(searchDirectory, true, true, true)
+                .LoadImplementations(searchDirectory, true, false, true)
                 .Distinct()
                 .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
                 .Select(type => Tuple.Create(type, GetDescription(type)))
