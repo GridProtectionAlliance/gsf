@@ -23,6 +23,12 @@ namespace GrafanaAdapters
         public string State { get; set; }
 
         /// <summary>
+        /// Recommended Action for the User if a <see cref="AlarmDevice"/> is in this <see cref="AlarmState"/>
+        /// </summary>
+        [StringLength(500)]
+        public string RecommendedAction { get; set; }
+
+        /// <summary>
         /// Color associated with the <see cref="AlarmState"/>.
         /// </summary>
         [StringLength(50)]
