@@ -41,6 +41,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using AnalogDefinition = PhasorWebUI.Adapters.AnalogDefinition;
@@ -870,6 +871,10 @@ namespace PhasorWebUI
 
         public IEnumerable<TagTemplate> LoadTemplate(string templateType)
         {
+            // Prevent file access leakage
+            if (!string.IsNullOrEmpty(Path.GetDirectoryName(templateType)))
+                throw new SecurityException("Path access error");
+
             List<TagTemplate> tagTemplates = new List<TagTemplate>();
  
             foreach (string line in File.ReadLines(FilePath.GetAbsolutePath($"{templateType}.TagTemplate")))
