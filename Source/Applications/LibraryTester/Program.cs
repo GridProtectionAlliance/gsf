@@ -50,6 +50,11 @@ namespace LibraryTester
 
         static void Main(string[] args)
         {
+            Debug.WriteLine(Word.MakeWord(30, 120));
+            Debug.WriteLine(Word.MakeWord(15, 60));
+            Debug.WriteLine(Word.MakeWord(5, 20));
+            Debug.WriteLine(Word.MakeWord(1, 4));
+
             // Add references for projects as needed, then add a simple call so that immediate window
             // will have access to assembly. Only a single call per assembly is needed.
 
