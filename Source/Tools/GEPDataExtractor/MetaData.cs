@@ -57,6 +57,7 @@ namespace GEPDataExtractor
     {
         public bool Selected { get; set; }
         public string Name { get; set; }
+        public string Description { get; set; }
         public bool Concentrator { get; set; }
         public string Company { get; set; }
         public string VendorName { get; set; }
@@ -69,6 +70,7 @@ namespace GEPDataExtractor
         {
             Selected = true;
             Name = row["Acronym"].ToString();
+            Description = $"{row["Name"]} {row["ParentAcronym"]} {row["OriginalSource"]}";
             Concentrator = row["IsConcentrator"].ToString().ParseBoolean();
             Company = row["CompanyAcronym"].ToString();
             VendorName = row["VendorAcronym"].ToString();

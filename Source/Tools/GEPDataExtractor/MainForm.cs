@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -30,6 +32,7 @@ using System.Threading;
 using System.Windows.Forms;
 using GSF;
 using GSF.ComponentModel;
+using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
@@ -357,6 +360,9 @@ namespace GEPDataExtractor
 
             if (selectedDeviceCount > 0)
                 filterExpression.Append($"Device IN ({string.Join(", ", m_metadata.Devices.Where(device => device.Selected).Select(device => $"'{device.Name}'"))})");
+
+            if (m_settings.DeviceFilter?.Length > 0)
+                filterExpression.Append($" AND Device LIKE '{m_settings.DeviceFilter}'");
 
             if (signalTypes.Any())
             {
@@ -709,6 +715,7 @@ namespace GEPDataExtractor
                 long receivedPoints = 0L;
                 int exports = 0;
                 int totalExports;
+                bool exportComplete = false;
 
                 Ticks[] subseconds = Ticks.SubsecondDistribution(frameRate);
                 long interval = subseconds.Length > 1 ? subseconds[1].Value : Ticks.PerSecond;
@@ -878,7 +885,8 @@ namespace GEPDataExtractor
                         int exportFraction = (int)(100.0D * exports / totalExports);
                         double currentExportProgress = 1.0D - (endTime.Ticks - measurement.Timestamp).ToSeconds() / timeRange;
 
-                        UpdateProgressBar(exportFraction + (int)(currentExportProgress / totalExports * 100.0D));
+                        if (!exportComplete)
+                            UpdateProgressBar(exportFraction + (int)(currentExportProgress / totalExports * 100.0D));
                     }
                 }
 
@@ -905,7 +913,8 @@ namespace GEPDataExtractor
                     else
                         ShowUpdateMessage($"{exports} of {totalExports} data reads completed.");
 
-                    UpdateProgressBar((int)(100.0D * exports / totalExports));
+                    if (!exportComplete)
+                        UpdateProgressBar((int)(100.0D * exports / totalExports));
                 }
 
                 void exportData(HashSet<string> signalTypes, string suffix = null)
@@ -913,9 +922,9 @@ namespace GEPDataExtractor
                     string fileName;
 
                     if (string.IsNullOrEmpty(suffix))
-                        fileName = exportFileName;
+                        fileName = $"{FilePath.GetDirectoryName(exportFileName)}{startTime:yyMMdd},{startTime:HHmmss},0,{FilePath.GetFileNameWithoutExtension(exportFileName)}{FilePath.GetExtension(exportFileName)}";
                     else
-                        fileName = $"{FilePath.GetDirectoryName(exportFileName)}{FilePath.GetFileNameWithoutExtension(exportFileName)}_{suffix}{FilePath.GetExtension(exportFileName)}";
+                        fileName = $"{FilePath.GetDirectoryName(exportFileName)}{startTime:yyMMdd},{startTime:HHmmss},0,{FilePath.GetFileNameWithoutExtension(exportFileName)},{suffix}{FilePath.GetExtension(exportFileName)}";
 
                     readComplete = false;
                     lastTimestamp = 0L;
@@ -1038,6 +1047,7 @@ namespace GEPDataExtractor
                 }
 
                 Ticks operationTime = DateTime.UtcNow.Ticks - operationStartTime;
+                exportComplete = true;
 
                 if (m_formClosing || !m_exporting)
                 {
@@ -1061,6 +1071,31 @@ namespace GEPDataExtractor
             {
                 SetButtonsEnabledState(true);
             }
+        }
+
+        private void linkLabelOpenExportPage_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("http://localhost:8180/TrendMeasurements.cshtml");
+        }
+
+        private void buttonRestoreDefaults_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(this, "Are you sure you want to restore the default settings?", "Restore Defaults", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            MessageBox.Show(this, "Application will shutdown to clear user settings", "Restore Defaults", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+
+            string userSettingsFile = Path.Combine(FilePath.GetApplicationDataFolder(), "Settings.xml");
+
+            ConfigurationFile.Current.Save(ConfigurationSaveMode.Full);
+
+            Hide();
+            Thread.Sleep(2000);
+
+            if (File.Exists(userSettingsFile))
+                File.Delete(userSettingsFile);
+
+            Application.Exit();
         }
 
         #endregion

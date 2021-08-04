@@ -124,6 +124,14 @@ namespace GEPDataExtractor
         public DateTime EndTime { get; set; }
 
         /// <summary>
+        /// Gets or sets device filter.
+        /// </summary>
+        [TypeConvertedValueExpression("Form.textBoxDeviceFilter.Text")]
+        [Description("Device LIKE filter expression.")]
+        [UserScopedSetting]
+        public string DeviceFilter { get; set; }
+
+        /// <summary>
         /// Gets or sets filter expression used for historian read.
         /// </summary>
         [TypeConvertedValueExpression("Form.textBoxFilterExpression.Text")]
