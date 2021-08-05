@@ -42,8 +42,14 @@
             this.textBoxMessageOutput = new System.Windows.Forms.TextBox();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.groupBoxOptions = new System.Windows.Forms.GroupBox();
+            this.buttonCancelExport = new System.Windows.Forms.Button();
+            this.linkLabelOpenExportPage = new System.Windows.Forms.LinkLabel();
             this.tabControlOptions = new System.Windows.Forms.TabControl();
             this.tabPageTimeRange = new System.Windows.Forms.TabPage();
+            this.textBoxDeviceFilter = new System.Windows.Forms.TextBox();
+            this.labelDeviceFilter = new System.Windows.Forms.Label();
+            this.labelEndTimeUTC = new System.Windows.Forms.Label();
+            this.labelStartTimeUTC = new System.Windows.Forms.Label();
             this.buttonShowGraph = new System.Windows.Forms.Button();
             this.buttonCancelPreFilter = new System.Windows.Forms.Button();
             this.buttonPreFilter = new System.Windows.Forms.Button();
@@ -57,10 +63,8 @@
             this.dateTimePickerSourceTime = new System.Windows.Forms.DateTimePicker();
             this.checkBoxSelectAllDevices = new System.Windows.Forms.CheckBox();
             this.labelSelectCount = new System.Windows.Forms.Label();
-            this.tabPageAdvanced = new System.Windows.Forms.TabPage();
-            this.labelFilterExpression = new System.Windows.Forms.Label();
-            this.textBoxFilterExpression = new System.Windows.Forms.TextBox();
             this.tabPageSettings = new System.Windows.Forms.TabPage();
+            this.buttonRestoreDefaults = new System.Windows.Forms.Button();
             this.maskedTextBoxAcceptableMissingData = new System.Windows.Forms.MaskedTextBox();
             this.labelAcceptableMissingData = new System.Windows.Forms.Label();
             this.maskedTextBoxAcceptableBadTime = new System.Windows.Forms.MaskedTextBox();
@@ -86,6 +90,9 @@
             this.labelBadDataPercent = new System.Windows.Forms.Label();
             this.labelMissingDataPercent = new System.Windows.Forms.Label();
             this.labelBadTimePercent = new System.Windows.Forms.Label();
+            this.tabPageAdvanced = new System.Windows.Forms.TabPage();
+            this.labelFilterExpression = new System.Windows.Forms.Label();
+            this.textBoxFilterExpression = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.checkBoxExportFilePerDataType = new System.Windows.Forms.CheckBox();
             this.labelExportFileName = new System.Windows.Forms.Label();
@@ -94,21 +101,14 @@
             this.radioButtonCOMTRADE = new System.Windows.Forms.RadioButton();
             this.radioButtonCSV = new System.Windows.Forms.RadioButton();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.buttonCancelExport = new System.Windows.Forms.Button();
-            this.labelStartTimeUTC = new System.Windows.Forms.Label();
-            this.labelEndTimeUTC = new System.Windows.Forms.Label();
-            this.linkLabelOpenExportPage = new System.Windows.Forms.LinkLabel();
-            this.buttonRestoreDefaults = new System.Windows.Forms.Button();
-            this.labelDeviceFilter = new System.Windows.Forms.Label();
-            this.textBoxDeviceFilter = new System.Windows.Forms.TextBox();
             this.groupBoxServerConnection.SuspendLayout();
             this.groupBoxMessages.SuspendLayout();
             this.groupBoxOptions.SuspendLayout();
             this.tabControlOptions.SuspendLayout();
             this.tabPageTimeRange.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewDevices)).BeginInit();
-            this.tabPageAdvanced.SuspendLayout();
             this.tabPageSettings.SuspendLayout();
+            this.tabPageAdvanced.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -277,6 +277,31 @@
             this.groupBoxOptions.TabStop = false;
             this.groupBoxOptions.Text = "&Options";
             // 
+            // buttonCancelExport
+            // 
+            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancelExport.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonCancelExport.Location = new System.Drawing.Point(515, 8);
+            this.buttonCancelExport.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonCancelExport.Name = "buttonCancelExport";
+            this.buttonCancelExport.Size = new System.Drawing.Size(88, 27);
+            this.buttonCancelExport.TabIndex = 13;
+            this.buttonCancelExport.Text = "Cancel...";
+            this.buttonCancelExport.UseVisualStyleBackColor = true;
+            this.buttonCancelExport.Visible = false;
+            this.buttonCancelExport.Click += new System.EventHandler(this.buttonExportCancel_Click);
+            // 
+            // linkLabelOpenExportPage
+            // 
+            this.linkLabelOpenExportPage.AutoSize = true;
+            this.linkLabelOpenExportPage.Location = new System.Drawing.Point(235, 19);
+            this.linkLabelOpenExportPage.Name = "linkLabelOpenExportPage";
+            this.linkLabelOpenExportPage.Size = new System.Drawing.Size(153, 13);
+            this.linkLabelOpenExportPage.TabIndex = 1;
+            this.linkLabelOpenExportPage.TabStop = true;
+            this.linkLabelOpenExportPage.Text = "Open Web-Based Export Page";
+            this.linkLabelOpenExportPage.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelOpenExportPage_LinkClicked);
+            // 
             // tabControlOptions
             // 
             this.tabControlOptions.Controls.Add(this.tabPageTimeRange);
@@ -315,6 +340,45 @@
             this.tabPageTimeRange.Size = new System.Drawing.Size(600, 238);
             this.tabPageTimeRange.TabIndex = 0;
             this.tabPageTimeRange.Text = "Time Range";
+            // 
+            // textBoxDeviceFilter
+            // 
+            this.textBoxDeviceFilter.Location = new System.Drawing.Point(12, 210);
+            this.textBoxDeviceFilter.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxDeviceFilter.Name = "textBoxDeviceFilter";
+            this.textBoxDeviceFilter.Size = new System.Drawing.Size(79, 20);
+            this.textBoxDeviceFilter.TabIndex = 17;
+            this.textBoxDeviceFilter.Text = "P_%";
+            this.textBoxDeviceFilter.TextChanged += new System.EventHandler(this.FormElementChanged);
+            // 
+            // labelDeviceFilter
+            // 
+            this.labelDeviceFilter.AutoSize = true;
+            this.labelDeviceFilter.Location = new System.Drawing.Point(9, 195);
+            this.labelDeviceFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelDeviceFilter.Name = "labelDeviceFilter";
+            this.labelDeviceFilter.Size = new System.Drawing.Size(69, 13);
+            this.labelDeviceFilter.TabIndex = 16;
+            this.labelDeviceFilter.Text = "Device Filter:";
+            this.labelDeviceFilter.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // labelEndTimeUTC
+            // 
+            this.labelEndTimeUTC.AutoSize = true;
+            this.labelEndTimeUTC.Location = new System.Drawing.Point(460, 17);
+            this.labelEndTimeUTC.Name = "labelEndTimeUTC";
+            this.labelEndTimeUTC.Size = new System.Drawing.Size(29, 13);
+            this.labelEndTimeUTC.TabIndex = 15;
+            this.labelEndTimeUTC.Text = "UTC";
+            // 
+            // labelStartTimeUTC
+            // 
+            this.labelStartTimeUTC.AutoSize = true;
+            this.labelStartTimeUTC.Location = new System.Drawing.Point(218, 17);
+            this.labelStartTimeUTC.Name = "labelStartTimeUTC";
+            this.labelStartTimeUTC.Size = new System.Drawing.Size(29, 13);
+            this.labelStartTimeUTC.TabIndex = 14;
+            this.labelStartTimeUTC.Text = "UTC";
             // 
             // buttonShowGraph
             // 
@@ -485,43 +549,6 @@
             this.labelSelectCount.Tag = "";
             this.labelSelectCount.Text = "{0} devices selected";
             // 
-            // tabPageAdvanced
-            // 
-            this.tabPageAdvanced.BackColor = System.Drawing.Color.Transparent;
-            this.tabPageAdvanced.Controls.Add(this.labelFilterExpression);
-            this.tabPageAdvanced.Controls.Add(this.textBoxFilterExpression);
-            this.tabPageAdvanced.Location = new System.Drawing.Point(4, 22);
-            this.tabPageAdvanced.Name = "tabPageAdvanced";
-            this.tabPageAdvanced.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageAdvanced.Size = new System.Drawing.Size(600, 238);
-            this.tabPageAdvanced.TabIndex = 1;
-            this.tabPageAdvanced.Text = "Advanced Selection";
-            // 
-            // labelFilterExpression
-            // 
-            this.labelFilterExpression.AutoSize = true;
-            this.labelFilterExpression.Location = new System.Drawing.Point(5, 11);
-            this.labelFilterExpression.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.labelFilterExpression.Name = "labelFilterExpression";
-            this.labelFilterExpression.Size = new System.Drawing.Size(86, 13);
-            this.labelFilterExpression.TabIndex = 0;
-            this.labelFilterExpression.Text = "Filter Expression:";
-            this.labelFilterExpression.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // textBoxFilterExpression
-            // 
-            this.textBoxFilterExpression.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxFilterExpression.Location = new System.Drawing.Point(7, 27);
-            this.textBoxFilterExpression.Multiline = true;
-            this.textBoxFilterExpression.Name = "textBoxFilterExpression";
-            this.textBoxFilterExpression.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxFilterExpression.Size = new System.Drawing.Size(587, 205);
-            this.textBoxFilterExpression.TabIndex = 1;
-            this.textBoxFilterExpression.Text = "FILTER ActiveMeasurements WHERE {0}";
-            this.textBoxFilterExpression.TextChanged += new System.EventHandler(this.FormElementChanged);
-            // 
             // tabPageSettings
             // 
             this.tabPageSettings.BackColor = System.Drawing.Color.Transparent;
@@ -556,6 +583,16 @@
             this.tabPageSettings.Size = new System.Drawing.Size(600, 238);
             this.tabPageSettings.TabIndex = 2;
             this.tabPageSettings.Text = "Settings";
+            // 
+            // buttonRestoreDefaults
+            // 
+            this.buttonRestoreDefaults.Location = new System.Drawing.Point(449, 168);
+            this.buttonRestoreDefaults.Name = "buttonRestoreDefaults";
+            this.buttonRestoreDefaults.Size = new System.Drawing.Size(100, 23);
+            this.buttonRestoreDefaults.TabIndex = 25;
+            this.buttonRestoreDefaults.Text = "Restore Defaults";
+            this.buttonRestoreDefaults.UseVisualStyleBackColor = true;
+            this.buttonRestoreDefaults.Click += new System.EventHandler(this.buttonRestoreDefaults_Click);
             // 
             // maskedTextBoxAcceptableMissingData
             // 
@@ -847,6 +884,43 @@
             this.labelBadTimePercent.TabIndex = 23;
             this.labelBadTimePercent.Text = "%";
             // 
+            // tabPageAdvanced
+            // 
+            this.tabPageAdvanced.BackColor = System.Drawing.Color.Transparent;
+            this.tabPageAdvanced.Controls.Add(this.labelFilterExpression);
+            this.tabPageAdvanced.Controls.Add(this.textBoxFilterExpression);
+            this.tabPageAdvanced.Location = new System.Drawing.Point(4, 22);
+            this.tabPageAdvanced.Name = "tabPageAdvanced";
+            this.tabPageAdvanced.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageAdvanced.Size = new System.Drawing.Size(600, 238);
+            this.tabPageAdvanced.TabIndex = 1;
+            this.tabPageAdvanced.Text = "Advanced Selection";
+            // 
+            // labelFilterExpression
+            // 
+            this.labelFilterExpression.AutoSize = true;
+            this.labelFilterExpression.Location = new System.Drawing.Point(5, 11);
+            this.labelFilterExpression.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelFilterExpression.Name = "labelFilterExpression";
+            this.labelFilterExpression.Size = new System.Drawing.Size(86, 13);
+            this.labelFilterExpression.TabIndex = 0;
+            this.labelFilterExpression.Text = "Filter Expression:";
+            this.labelFilterExpression.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // textBoxFilterExpression
+            // 
+            this.textBoxFilterExpression.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxFilterExpression.Location = new System.Drawing.Point(7, 27);
+            this.textBoxFilterExpression.Multiline = true;
+            this.textBoxFilterExpression.Name = "textBoxFilterExpression";
+            this.textBoxFilterExpression.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxFilterExpression.Size = new System.Drawing.Size(587, 205);
+            this.textBoxFilterExpression.TabIndex = 1;
+            this.textBoxFilterExpression.Text = "FILTER ActiveMeasurements WHERE {0}";
+            this.textBoxFilterExpression.TextChanged += new System.EventHandler(this.FormElementChanged);
+            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.checkBoxExportFilePerDataType);
@@ -936,81 +1010,6 @@
             this.saveFileDialog.Filter = "CSV Files|*.csv|All Files|*.*";
             this.saveFileDialog.Title = "Select Export File Name";
             // 
-            // buttonCancelExport
-            // 
-            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancelExport.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancelExport.Location = new System.Drawing.Point(515, 8);
-            this.buttonCancelExport.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonCancelExport.Name = "buttonCancelExport";
-            this.buttonCancelExport.Size = new System.Drawing.Size(88, 27);
-            this.buttonCancelExport.TabIndex = 13;
-            this.buttonCancelExport.Text = "Cancel...";
-            this.buttonCancelExport.UseVisualStyleBackColor = true;
-            this.buttonCancelExport.Visible = false;
-            this.buttonCancelExport.Click += new System.EventHandler(this.buttonExportCancel_Click);
-            // 
-            // labelStartTimeUTC
-            // 
-            this.labelStartTimeUTC.AutoSize = true;
-            this.labelStartTimeUTC.Location = new System.Drawing.Point(218, 17);
-            this.labelStartTimeUTC.Name = "labelStartTimeUTC";
-            this.labelStartTimeUTC.Size = new System.Drawing.Size(29, 13);
-            this.labelStartTimeUTC.TabIndex = 14;
-            this.labelStartTimeUTC.Text = "UTC";
-            // 
-            // labelEndTimeUTC
-            // 
-            this.labelEndTimeUTC.AutoSize = true;
-            this.labelEndTimeUTC.Location = new System.Drawing.Point(460, 17);
-            this.labelEndTimeUTC.Name = "labelEndTimeUTC";
-            this.labelEndTimeUTC.Size = new System.Drawing.Size(29, 13);
-            this.labelEndTimeUTC.TabIndex = 15;
-            this.labelEndTimeUTC.Text = "UTC";
-            // 
-            // linkLabelOpenExportPage
-            // 
-            this.linkLabelOpenExportPage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.linkLabelOpenExportPage.AutoSize = true;
-            this.linkLabelOpenExportPage.Location = new System.Drawing.Point(235, 19);
-            this.linkLabelOpenExportPage.Name = "linkLabelOpenExportPage";
-            this.linkLabelOpenExportPage.Size = new System.Drawing.Size(94, 13);
-            this.linkLabelOpenExportPage.TabIndex = 1;
-            this.linkLabelOpenExportPage.TabStop = true;
-            this.linkLabelOpenExportPage.Text = "Open Export Page";
-            this.linkLabelOpenExportPage.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelOpenExportPage_LinkClicked);
-            // 
-            // buttonRestoreDefaults
-            // 
-            this.buttonRestoreDefaults.Location = new System.Drawing.Point(449, 168);
-            this.buttonRestoreDefaults.Name = "buttonRestoreDefaults";
-            this.buttonRestoreDefaults.Size = new System.Drawing.Size(100, 23);
-            this.buttonRestoreDefaults.TabIndex = 25;
-            this.buttonRestoreDefaults.Text = "Restore Defaults";
-            this.buttonRestoreDefaults.UseVisualStyleBackColor = true;
-            this.buttonRestoreDefaults.Click += new System.EventHandler(this.buttonRestoreDefaults_Click);
-            // 
-            // labelDeviceFilter
-            // 
-            this.labelDeviceFilter.AutoSize = true;
-            this.labelDeviceFilter.Location = new System.Drawing.Point(9, 195);
-            this.labelDeviceFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.labelDeviceFilter.Name = "labelDeviceFilter";
-            this.labelDeviceFilter.Size = new System.Drawing.Size(69, 13);
-            this.labelDeviceFilter.TabIndex = 16;
-            this.labelDeviceFilter.Text = "Device Filter:";
-            this.labelDeviceFilter.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // textBoxDeviceFilter
-            // 
-            this.textBoxDeviceFilter.Location = new System.Drawing.Point(12, 210);
-            this.textBoxDeviceFilter.Margin = new System.Windows.Forms.Padding(2);
-            this.textBoxDeviceFilter.Name = "textBoxDeviceFilter";
-            this.textBoxDeviceFilter.Size = new System.Drawing.Size(79, 20);
-            this.textBoxDeviceFilter.TabIndex = 17;
-            this.textBoxDeviceFilter.Text = "P_%";
-            this.textBoxDeviceFilter.TextChanged += new System.EventHandler(this.FormElementChanged);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1039,10 +1038,10 @@
             this.tabPageTimeRange.ResumeLayout(false);
             this.tabPageTimeRange.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewDevices)).EndInit();
-            this.tabPageAdvanced.ResumeLayout(false);
-            this.tabPageAdvanced.PerformLayout();
             this.tabPageSettings.ResumeLayout(false);
             this.tabPageSettings.PerformLayout();
+            this.tabPageAdvanced.ResumeLayout(false);
+            this.tabPageAdvanced.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
