@@ -228,7 +228,9 @@ namespace GSF.Web.Security
                 base64Path = Convert.ToBase64String(pathBytes);
                 encodedPath = WebUtility.UrlEncode(base64Path);
 
-                Response.Redirect($"{Options.LoginPage}?redir={encodedPath}{referrer}");
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider("", autoRefresh: false);
+
+                Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage,encodedPath,referrer));
             }
             else
             {
