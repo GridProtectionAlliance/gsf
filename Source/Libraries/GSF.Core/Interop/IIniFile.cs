@@ -31,11 +31,7 @@ namespace GSF.Interop
         /// <summary>
         /// File name of the INI file.
         /// </summary>
-        string FileName
-        {
-            get;
-            set;
-        }
+        string FileName { get; set; }
 
         /// <summary>
         /// Gets the value of the specified key.
@@ -45,10 +41,7 @@ namespace GSF.Interop
         /// <param name="defaultValue">Default value of key.</param>
         /// <returns>Value of key.</returns>
         /// <remarks>This is the default member of this class.</remarks>
-        string this[string section, string entry, string defaultValue]
-        {
-            get;
-        }
+        string this[string section, string entry, string defaultValue] { get; }
 
         /// <summary>
         /// Gets or sets the value of the specified key.
@@ -58,10 +51,7 @@ namespace GSF.Interop
         /// <value>The new key value to store in the INI file.</value>
         /// <returns>Value of key.</returns>
         /// <remarks>This is the default member of this class.</remarks>
-        string this[string section, string entry]
-        {
-            set;
-        }
+        string this[string section, string entry] { set; }
 
         /// <summary>
         /// Gets an array of keys from the specified section in the INI file.

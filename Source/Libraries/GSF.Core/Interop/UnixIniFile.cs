@@ -64,10 +64,7 @@ namespace GSF.Interop
         /// </summary>
         public string FileName
         {
-            get
-            {
-                return m_fileName;
-            }
+            get => m_fileName;
             set
             {
                 m_fileName = value;
@@ -119,24 +116,17 @@ namespace GSF.Interop
         /// </summary>
         /// <param name="section">Section to retrieve keys from.</param>
         /// <returns>Array of <see cref="string"/> keys from the specified section of the INI file.</returns>
-        public string[] GetSectionKeys(string section)
-        {
-            ConcurrentDictionary<string, string> sectionEntries;
-
-            if (m_iniData.TryGetValue(section, out sectionEntries))
-                return sectionEntries.Keys.ToArray();
-
-            return new string[0];
-        }
+        public string[] GetSectionKeys(string section) =>
+            m_iniData.TryGetValue(section, out ConcurrentDictionary<string, string> sectionEntries) ?
+                sectionEntries.Keys.ToArray() :
+                Array.Empty<string>();
 
         /// <summary>
         /// Gets an array of that section names that exist in the INI file.
         /// </summary>
         /// <returns>Array of <see cref="string"/> section names from the INI file.</returns>
-        public string[] GetSectionNames()
-        {
-            return m_iniData.Keys.ToArray();
-        }
+        public string[] GetSectionNames() =>
+            m_iniData.Keys.ToArray();
 
         private void Load()
         {
@@ -145,76 +135,69 @@ namespace GSF.Interop
             if (!File.Exists(m_fileName))
                 return;
 
-            using (StreamReader reader = new StreamReader(m_fileName))
+            using StreamReader reader = new(m_fileName);
+            string line = reader.ReadLine();
+            ConcurrentDictionary<string, string> section = null;
+
+            while (line is not null)
             {
-                string line = reader.ReadLine();
-                ConcurrentDictionary<string, string> section = null;
+                line = IniFile.RemoveComments(line);
 
-                while ((object)line != null)
+                if (line.Length > 0)
                 {
-                    line = IniFile.RemoveComments(line);
+                    // Check for new section				
+                    int startBracketIndex = line.IndexOf('[');
 
-                    if (line.Length > 0)
+                    if (startBracketIndex == 0)
                     {
-                        // Check for new section				
-                        int startBracketIndex = line.IndexOf('[');
+                        int endBracketIndex = line.IndexOf(']');
 
-                        if (startBracketIndex == 0)
+                        if (endBracketIndex > 1)
                         {
-                            int endBracketIndex = line.IndexOf(']');
+                            string sectionName = line.Substring(startBracketIndex + 1, endBracketIndex - 1);
 
-                            if (endBracketIndex > 1)
-                            {
-                                string sectionName = line.Substring(startBracketIndex + 1, endBracketIndex - 1);
-
-                                if (!string.IsNullOrEmpty(sectionName))
-                                    section = m_iniData.GetOrAdd(sectionName, CreateNewSection);
-                            }
-                        }
-
-                        if ((object)section == null)
-                            throw new InvalidOperationException("INI file did not begin with a [section]");
-
-                        // Check for key/value pair
-                        int equalsIndex = line.IndexOf("=", StringComparison.Ordinal);
-
-                        if (equalsIndex > 0)
-                        {
-                            string key = line.Substring(0, equalsIndex).Trim();
-
-                            if (!string.IsNullOrEmpty(key))
-                                section[key] = line.Substring(equalsIndex + 1).Trim();
+                            if (!string.IsNullOrEmpty(sectionName))
+                                section = m_iniData.GetOrAdd(sectionName, CreateNewSection);
                         }
                     }
 
-                    line = reader.ReadLine();
+                    if (section is null)
+                        throw new InvalidOperationException("INI file did not begin with a [section]");
+
+                    // Check for key/value pair
+                    int equalsIndex = line.IndexOf("=", StringComparison.Ordinal);
+
+                    if (equalsIndex > 0)
+                    {
+                        string key = line.Substring(0, equalsIndex).Trim();
+
+                        if (!string.IsNullOrEmpty(key))
+                            section[key] = line.Substring(equalsIndex + 1).Trim();
+                    }
                 }
+
+                line = reader.ReadLine();
             }
         }
 
         private void Save()
         {
             // Saving INI file will strip comments - sorry :-(
-            using (StreamWriter writer = new StreamWriter(m_fileName))
+            using StreamWriter writer = new(m_fileName);
+
+            foreach (KeyValuePair<string, ConcurrentDictionary<string, string>> section in m_iniData)
             {
-                foreach (KeyValuePair<string, ConcurrentDictionary<string, string>> section in m_iniData)
-                {
-                    writer.WriteLine("[{0}]", section.Key);
+                writer.WriteLine("[{0}]", section.Key);
 
-                    foreach (KeyValuePair<string, string> entry in section.Value)
-                    {
-                        writer.WriteLine("{0} = {1}", entry.Key, entry.Value);
-                    }
+                foreach (KeyValuePair<string, string> entry in section.Value)
+                    writer.WriteLine("{0} = {1}", entry.Key, entry.Value);
 
-                    writer.WriteLine();
-                }
+                writer.WriteLine();
             }
         }
 
-        private ConcurrentDictionary<string, string> CreateNewSection(string sectionName)
-        {
-            return new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        }
+        private ConcurrentDictionary<string, string> CreateNewSection(string sectionName) => 
+            new(StringComparer.OrdinalIgnoreCase);
 
         #endregion
     }

@@ -69,12 +69,10 @@ namespace GSF.Interop
         /// Creates a new <see cref="IniFile"/> using the specified INI file name.
         /// </summary>
         /// <param name="fileName">Specified INI file name to use.</param>
-        public IniFile(string fileName)
-        {
+        public IniFile(string fileName) =>
             m_iniFile = Common.IsPosixEnvironment ? 
                 new UnixIniFile(fileName) : 
                 new WindowsIniFile(fileName);
-        }
 
         #endregion
 
@@ -97,7 +95,8 @@ namespace GSF.Interop
         /// <param name="defaultValue">Default value of key.</param>
         /// <returns>Value of key.</returns>
         /// <remarks>This is the default member of this class.</remarks>
-        public string this[string section, string entry, string defaultValue] => m_iniFile[section, entry, defaultValue];
+        public string this[string section, string entry, string defaultValue] =>
+            m_iniFile[section, entry, defaultValue];
 
         /// <summary>
         /// Gets or sets the value of the specified key.

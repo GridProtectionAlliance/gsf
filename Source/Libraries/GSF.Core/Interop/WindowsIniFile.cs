@@ -46,10 +46,8 @@ namespace GSF.Interop
         /// Creates a new <see cref="WindowsIniFile"/> using the specified INI file name.
         /// </summary>
         /// <param name="fileName">Specified INI file name to use.</param>
-        public WindowsIniFile(string fileName)
-        {
+        public WindowsIniFile(string fileName) => 
             FileName = fileName;
-        }
 
         #endregion
 
@@ -72,7 +70,7 @@ namespace GSF.Interop
         {
             get
             {
-                StringBuilder buffer = new StringBuilder(BufferSize);
+                StringBuilder buffer = new(BufferSize);
                 GetPrivateProfileString(section, entry, defaultValue ?? "", buffer, BufferSize, FileName);
                 return IniFile.RemoveComments(buffer.ToString());
             }
@@ -103,7 +101,7 @@ namespace GSF.Interop
         /// <returns>Array of <see cref="string"/> keys from the specified section of the INI file.</returns>
         public string[] GetSectionKeys(string section)
         {
-            List<string> keys = new List<string>();
+            List<string> keys = new();
             byte[] buffer = new byte[BufferSize];
             int startIndex = 0;
 
@@ -138,7 +136,7 @@ namespace GSF.Interop
         /// <returns>Array of <see cref="string"/> section names from the INI file.</returns>
         public string[] GetSectionNames()
         {
-            List<string> sections = new List<string>();
+            List<string> sections = new();
             byte[] buffer = new byte[BufferSize];
             int startIndex = 0;
 
