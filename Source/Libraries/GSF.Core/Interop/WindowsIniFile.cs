@@ -38,9 +38,6 @@ namespace GSF.Interop
         // Constants
         private const int BufferSize = 32768;
 
-        // Fields
-        private string m_fileName;
-
         #endregion
 
         #region [ Constructors ]
@@ -51,7 +48,7 @@ namespace GSF.Interop
         /// <param name="fileName">Specified INI file name to use.</param>
         public WindowsIniFile(string fileName)
         {
-            m_fileName = fileName;
+            FileName = fileName;
         }
 
         #endregion
@@ -61,17 +58,7 @@ namespace GSF.Interop
         /// <summary>
         /// File name of the INI file.
         /// </summary>
-        public string FileName
-        {
-            get
-            {
-                return m_fileName;
-            }
-            set
-            {
-                m_fileName = value;
-            }
-        }
+        public string FileName { get; set; }
 
         /// <summary>
         /// Gets the value of the specified key.
@@ -81,18 +68,12 @@ namespace GSF.Interop
         /// <param name="defaultValue">Default value of key.</param>
         /// <returns>Value of key.</returns>
         /// <remarks>This is the default member of this class.</remarks>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "GSF.Interop.WindowsIniFile.GetPrivateProfileString(System.String,System.String,System.String,System.Text.StringBuilder,System.Int32,System.String)")]
         public string this[string section, string entry, string defaultValue]
         {
             get
             {
                 StringBuilder buffer = new StringBuilder(BufferSize);
-
-                if ((object)defaultValue == null)
-                    defaultValue = "";
-
-                GetPrivateProfileString(section, entry, defaultValue, buffer, BufferSize, m_fileName);
-
+                GetPrivateProfileString(section, entry, defaultValue ?? "", buffer, BufferSize, FileName);
                 return IniFile.RemoveComments(buffer.ToString());
             }
         }
@@ -105,17 +86,10 @@ namespace GSF.Interop
         /// <value>The new key value to store in the INI file.</value>
         /// <returns>Value of key.</returns>
         /// <remarks>This is the default member of this class.</remarks>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "GSF.Interop.WindowsIniFile.WritePrivateProfileString(System.String,System.String,System.String,System.String)")]
         public string this[string section, string entry]
         {
-            get
-            {
-                return this[section, entry, null];
-            }
-            set
-            {
-                WritePrivateProfileString(section, entry, value, m_fileName);
-            }
+            get => this[section, entry, null];
+            set => WritePrivateProfileString(section, entry, value, FileName);
         }
 
         #endregion
@@ -132,16 +106,14 @@ namespace GSF.Interop
             List<string> keys = new List<string>();
             byte[] buffer = new byte[BufferSize];
             int startIndex = 0;
-            int readLength;
-            int nullIndex;
 
-            readLength = GetPrivateProfileSection(section, buffer, BufferSize, m_fileName);
+            int readLength = GetPrivateProfileSection(section, buffer, BufferSize, FileName);
 
             if (readLength > 0)
             {
                 while (startIndex < readLength)
                 {
-                    nullIndex = Array.IndexOf(buffer, (byte)0, startIndex);
+                    int nullIndex = Array.IndexOf(buffer, (byte)0, startIndex);
 
                     if (nullIndex > -1)
                     {
@@ -151,7 +123,9 @@ namespace GSF.Interop
                         startIndex = nullIndex + 1;
                     }
                     else
+                    {
                         break;
+                    }
                 }
             }
 
@@ -167,16 +141,14 @@ namespace GSF.Interop
             List<string> sections = new List<string>();
             byte[] buffer = new byte[BufferSize];
             int startIndex = 0;
-            int readLength;
-            int nullIndex;
 
-            readLength = GetPrivateProfileSectionNames(buffer, BufferSize, m_fileName);
+            int readLength = GetPrivateProfileSectionNames(buffer, BufferSize, FileName);
 
             if (readLength > 0)
             {
                 while (startIndex < readLength)
                 {
-                    nullIndex = Array.IndexOf(buffer, (byte)0, startIndex);
+                    int nullIndex = Array.IndexOf(buffer, (byte)0, startIndex);
 
                     if (nullIndex > -1)
                     {
@@ -186,7 +158,9 @@ namespace GSF.Interop
                         startIndex = nullIndex + 1;
                     }
                     else
+                    {
                         break;
+                    }
                 }
             }
 
