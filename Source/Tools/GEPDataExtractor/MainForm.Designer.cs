@@ -300,6 +300,7 @@
             this.linkLabelOpenExportPage.TabIndex = 1;
             this.linkLabelOpenExportPage.TabStop = true;
             this.linkLabelOpenExportPage.Text = "Open Web-Based Export Page";
+            this.linkLabelOpenExportPage.Visible = false;
             this.linkLabelOpenExportPage.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelOpenExportPage_LinkClicked);
             // 
             // tabControlOptions

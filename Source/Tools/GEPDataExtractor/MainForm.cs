@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using GSF;
 using GSF.ComponentModel;
 using GSF.Configuration;
+using GSF.Console;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
@@ -102,6 +103,9 @@ namespace GEPDataExtractor
                 this.RestoreLayout();
 
                 m_formLoaded = true;
+
+                Arguments args = new Arguments(Environment.CommandLine, true);
+                linkLabelOpenExportPage.Visible = args.Exists("showLinkLabel");
             }
             catch (Exception ex)
             {
