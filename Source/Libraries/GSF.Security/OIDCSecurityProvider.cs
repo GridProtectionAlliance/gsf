@@ -1,0 +1,619 @@
+﻿//******************************************************************************************************
+//  OIDCSecurityProvider.cs - Gbtc
+//
+//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  08/05/2021 - C. Lackner
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
+using System.Runtime.Caching;
+using System.Security;
+using System.Text.RegularExpressions;
+using System.Threading;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Diagnostics;
+using GSF.Identity;
+using JWT;
+using JWT.Algorithms;
+using JWT.Exceptions;
+using JWT.Serializers;
+using Newtonsoft.Json;
+
+#pragma warning disable S2068
+
+namespace GSF.Security
+{
+    /// <summary>
+    /// Represents an <see cref="ISecurityProvider"/> that uses openID Connect
+    /// </summary>
+    /// <example>
+    /// Required config file entries (automatically added):
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="GSF.Configuration.CategorizedSettingsSection, GSF.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityProvider>
+    ///       <add name="ProviderType" value="GSF.Security.OIDCSecurityProvider, GSF.Security" description="The type to be used for enforcing security."
+    ///         encrypted="false" />
+    ///       <add name="ClientID" value="xxxx-xxxx-xxxx" description="Defines the ClientID as required per OpenID Connect Standard." encrypted="false" />
+    ///       <add name="Scope" value="user" description="Defines the Scope as required per OpenID Connect Standard." encrypted="false" />
+    ///       <add name="AuthorizationEndpoint" value="user" description="Defines the Endpoint to redirect the user for Authorization." encrypted="false" />
+    ///       <add name="RedirectURI" value="https://localhost:8986/" description="Defines the URI the User get's redirected to after signing in." encrypted="false" />
+    ///       <add name="ClientSecret" value="sssss-ssssss-sssss" description="Defines the Client Secret to encrypt User Information." encrypted="false" />
+    ///       <add name="TokenEndpoint" value="user" description="Defines the Endpoint to get the User Token from." encrypted="false" />
+    ///     </securityProvider>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
+
+    public class OIDCSecurityProvider : SecurityProviderBase
+    {
+        #region [ Members ]
+
+        // Constants
+        private const string ResponseType = "code";                          // Response Type the SecurityProvider expects
+        //private const string ResponseMode = "form_post";                     // The mode used to get ID Token for the end-user
+        private int NonceSlidingExpiration = 600;                            // Time in Seconds that a Nonce is valid for. This prevents replay attacks
+        // Fields
+        private string m_ClientID;
+        private string m_AuthorizationEndpoint;
+        private string m_TokenEndpoint;
+        private string m_Scope;
+        private string m_RedirectURI;
+        private string m_ClientSecret;
+        private string m_RolesClaim;
+
+        /// <summary>
+        /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
+        /// </summary>
+        public new const int ProviderID = 3;
+
+        /// <summary>
+        /// The ClienID used to identify this Application with the Authorization Server
+        /// </summary>
+        public string ClientID
+        {
+            get
+            {
+                return m_ClientID;
+            }
+            set
+            {
+                m_ClientID = value;
+            }
+        }
+
+        /// <summary>
+        /// The Scope used to obtain UserInformation from the Authorization Server
+        /// </summary>
+        public string Scope
+        {
+            get
+            {
+                return m_Scope;
+            }
+            set
+            {
+                m_Scope = value;
+            }
+        }
+
+        /// <summary>
+        /// The Endpoint used to redirect the User
+        /// </summary>
+        public string AuthorizationEndpoint
+        {
+            get
+            {
+                return m_AuthorizationEndpoint;
+            }
+            set
+            {
+                m_AuthorizationEndpoint = value;
+            }
+        }
+
+        /// <summary>
+        /// The Endpoint to get the User Token
+        /// </summary>
+        public string TokenEndpoint
+        {
+            get
+            {
+                return m_TokenEndpoint;
+            }
+            set
+            {
+                m_TokenEndpoint = value;
+            }
+        }
+
+        /// <summary>
+        /// The URI the User get's redirected to after signing in.
+        /// </summary>
+        public string RedirectURI
+        {
+            get
+            {
+                return m_RedirectURI;
+            }
+            set
+            {
+                m_RedirectURI = value;
+            }
+        }
+
+        /// <summary>
+        /// The ClientSecret used to encrypt the user data
+        /// </summary>
+        public string ClientSecret
+        {
+            get
+            {
+                return m_ClientSecret;
+            }
+            set
+            {
+                m_ClientSecret = value;
+            }
+        }
+
+        /// <summary>
+        /// The Claim used to get the Roles for the user
+        /// </summary>
+        public string RolesClaim
+        {
+            get
+            {
+                return m_RolesClaim;
+            }
+            set
+            {
+                m_RolesClaim = value;
+            }
+        }
+
+        private class TokenResponse
+        {
+            public string access_token { get; set; }
+            public string id_token { get; set; }
+        }
+        #endregion
+
+        #region [ Constructor ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AdoSecurityProvider"/> class.
+        /// </summary>
+        /// <param name="username">Name that uniquely identifies the user.</param>
+        public OIDCSecurityProvider(string username)
+            : this(username, true, false, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AdoSecurityProvider"/> class.
+        /// </summary>
+        /// <param name="username">Name that uniquely identifies the user.</param>
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
+        /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+        /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
+        protected OIDCSecurityProvider(string username, bool canRefreshData, bool canResetPassword, bool canChangePassword)
+            : base(username, canRefreshData, canResetPassword, canChangePassword)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets last exception reported by the <see cref="AdoSecurityProvider"/>.
+        /// </summary>
+        public Exception LastException
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="LogAuthenticationAttempt"/> and <see cref="LogError"/> should
+        /// write to the database. Defaults to <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// Setting this flag to <c>false</c> may be necessary in cases where a database has been setup to use authentication
+        /// but does not include an "AccessLog" or "ErrorLog" table.
+        /// </remarks>
+        public bool UseDatabaseLogging
+        {
+            get;
+            set;
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Loads saved security provider settings from the config file if the <see cref="SecurityProviderBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SecurityProviderBase.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+
+            // Make sure default settings exist
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+
+            settings.Add("ClientID", "", "Defines the ClientID as required per OpenID Connect Standard.");
+            settings.Add("Scope", "", "Defines the Scope as required per OpenID Connect Standard.");
+            settings.Add("AuthorizationEndpoint", "", "Defines the Endpoint to redirect the user for Authorization.");
+            settings.Add("RedirectURI", "", "Defines the URI the User get's redirected to after signing in.");
+            settings.Add("ClientSecret", "", "Defines the Client Secret as required per OpenID Connect Standard for decrypting User Information.");
+            settings.Add("TokenEndpoint", "", "Defines the Endpoint to use to grab the User Token.");
+            settings.Add("RolesClaim", "roles", "Defines the claim used to identify the users roles.");
+            
+
+            m_ClientID = settings["ClientID"].ValueAs(m_ClientID);
+            m_Scope = settings["Scope"].ValueAs(m_Scope);
+            m_AuthorizationEndpoint = settings["AuthorizationEndpoint"].ValueAs(m_AuthorizationEndpoint);
+            m_RedirectURI = settings["RedirectURI"].ValueAs(m_RedirectURI);
+            m_ClientSecret = settings["ClientSecret"].ValueAs(m_ClientSecret);
+            m_TokenEndpoint = settings["TokenEndpoint"].ValueAs(m_TokenEndpoint);
+            m_RolesClaim = settings["RolesClaim"].ValueAs(m_RolesClaim);
+        }
+
+        
+        /// <summary>
+        /// Refreshes the <see cref="UserData"/>.
+        /// </summary>
+        /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+        public override bool RefreshData()
+        {
+            if (string.IsNullOrEmpty(UserData.Username))
+                return false;
+
+            try
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                LastException = ex;
+                LogError(ex.Source, ex.ToString());
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Authenticates the user.
+        /// </summary>
+        /// <returns>true if the user is authenticated, otherwise false.</returns>
+        public override bool Authenticate()
+        {
+            IsUserAuthenticated = false;
+            TokenResponse token = null;
+            AuthenticationFailureReason = null;
+            Exception authenticationException = null;
+
+            // Test for pre - authentication failure modes such as invalid Tokens
+            if (String.IsNullOrEmpty(UserData.LoginID))
+            {
+                AuthenticationFailureReason = $"No User authorization code is defined.";
+                IsUserAuthenticated = false;
+            }
+
+            if (!String.IsNullOrEmpty(UserData.LoginID))
+                token = GetToken(UserData.LoginID);
+
+            if (token == null)
+            {
+                AuthenticationFailureReason = $"No Token is available.";
+                IsUserAuthenticated = false;
+            }
+
+            // Update the UserData object with new authentication state
+            if (token != null && DecodeToken(token))
+                IsUserAuthenticated = true;
+
+            try
+            {
+                // Log user authentication result
+                LogAuthenticationAttempt(IsUserAuthenticated);
+            }
+            catch (Exception ex)
+            {
+                // Writing data will fail for read-only databases;
+                // all we can do is track last exception in this case
+                LastException = ex;
+                Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "Authenticate", "Failed to log authentication attempt to database.", "Database or AccessLog table may be read-only or inaccessible.", ex);
+            }
+
+            // If an exception occurred during authentication, rethrow it after logging authentication attempt
+            if ((object)authenticationException != null)
+            {
+                LastException = authenticationException;
+                LogError(authenticationException.Source, authenticationException.ToString());
+                throw authenticationException;
+            }
+
+            return IsUserAuthenticated;
+        }
+
+        
+
+        /// <summary>
+        /// Logs user authentication attempt.
+        /// </summary>
+        /// <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
+        protected virtual void LogAuthenticationAttempt(bool loginSuccess)
+        {
+          
+            if ((object)UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
+            {
+                string message = $"User \"{UserData.Username}\" login attempt {(loginSuccess ? "succeeded using OpenID Connect" : "failed")}.";
+                EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
+
+                // Suffix authentication failure reason on failed logins if available
+                if (!loginSuccess && !string.IsNullOrWhiteSpace(AuthenticationFailureReason))
+                    message = string.Concat(message, " ", AuthenticationFailureReason);
+
+                // Attempt to write success or failure to the event log
+                try
+                {
+                    Log.Publish(MessageLevel.Info, MessageFlags.SecurityMessage, "AuthenticationAttempt", message);
+                    LogEvent(ApplicationName, message, entryType, 1);
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex.Source, ex.ToString());
+                }
+
+                // Attempt to write success or failure to the database - we allow caller to catch any possible exceptions here so that
+                // database exceptions can be tracked separately (via LastException property) from other login exceptions, e.g., when
+                // a read-only database is being used or current user only has read-only access to database.
+                if (!string.IsNullOrWhiteSpace(SettingsCategory) && UseDatabaseLogging)
+                {
+                    AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+
+                    using (IDbConnection connection = database.Connection)
+                    {
+                        connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Logs information about an encountered exception to the backend data store.
+        /// </summary>
+        /// <param name="source">Source of the exception.</param>
+        /// <param name="message">Detailed description of the exception.</param>
+        /// <returns>true if logging was successful, otherwise false.</returns>
+        protected virtual bool LogError(string source, string message)
+        {
+            if (!string.IsNullOrWhiteSpace(SettingsCategory) && !string.IsNullOrWhiteSpace(source) && !string.IsNullOrWhiteSpace(message))
+            {
+                Log.Publish(MessageLevel.Error, MessageFlags.SecurityMessage, source, message);
+
+                if (UseDatabaseLogging)
+                {
+                    try
+                    {
+                        AdoDataConnection database = new AdoDataConnection(SettingsCategory);
+
+                        using (IDbConnection connection = database.Connection)
+                        {
+                            connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message"), source, message);
+                        }
+
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Writing data will fail for read-only databases;
+                        // all we can do is track last exception in this case
+                        LastException = ex;
+                        Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "LogErrorToDatabase", "Failed to log error to database.", "Database or ErrorLog table may be read-only or inaccessible.", ex);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+       
+        /// <summary>
+        /// Exchange Authorization Code for a Token
+        /// </summary>
+        /// <param name="code"> The Authorization Code returned by the Auth Server</param>
+        private TokenResponse GetToken(string code)
+        {
+            
+            Dictionary<string, string> postParams = new Dictionary<string, string>() {
+                { "grant_type", "authorization_code" },
+                { "client_id", m_ClientID },
+                { "client_secret", m_ClientSecret },
+                { "code", code },
+                { "redirect_uri", m_RedirectURI }
+            };
+
+            void ConfigureRequest(HttpRequestMessage request)
+            {
+                request.RequestUri = new Uri($"{m_TokenEndpoint}");
+                request.Method = HttpMethod.Post;               
+                request.Content = new FormUrlEncodedContent(postParams);
+            }
+
+            TokenResponse r;
+            HttpResponseMessage response;
+            using (HttpRequestMessage request = new HttpRequestMessage())
+            {
+                ConfigureRequest(request);
+                using (HttpClient client = new HttpClient())
+                {
+                    response = client.SendAsync(request).Result;
+                    if (!response.IsSuccessStatusCode)
+                        return null;
+                    r = JsonConvert.DeserializeObject<TokenResponse>(response.Content.ReadAsStringAsync().Result);
+                }
+            }
+
+            return r;
+            
+        }
+
+        private bool DecodeToken(TokenResponse token)
+        {
+
+            try
+            {
+                IJsonSerializer serializer = new JsonNetSerializer();
+                var provider = new UtcDateTimeProvider();
+                IJwtValidator validator = new JwtValidator(serializer, provider);
+                IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
+                IJwtAlgorithm algorithm = new HMACSHA256Algorithm(); // symmetric
+                IJwtDecoder decoder = new JwtDecoder(serializer, validator, urlEncoder, algorithm);
+
+                // we do not actually validate the Signature of the Token
+                // That is necessary to allow self-signed Tokens from the openXDA
+                IDictionary<string, object> tokenContent = decoder.DecodeToObject<IDictionary<string, object>>(token.id_token , m_ClientSecret, verify: false);
+            
+                // Translate UserDetails according to Token
+                UserData userData = new UserData(tokenContent.GetOrDefault("sub").ToString());
+
+                // Initialize user data.
+                userData.Initialize();
+
+                userData.Username = tokenContent.GetOrDefault("name").ToString();
+                
+                if (tokenContent.ContainsKey("given_name"))
+                    userData.FirstName = tokenContent.GetOrDefault("given_name").ToString();
+
+                if (tokenContent.ContainsKey("family_name"))
+                    userData.LastName = tokenContent.GetOrDefault("family_name").ToString();
+
+                if (tokenContent.ContainsKey("phone_number"))
+                    userData.PhoneNumber = tokenContent.GetOrDefault("phone_number").ToString();
+
+                if (tokenContent.ContainsKey("email"))
+                    userData.EmailAddress = tokenContent.GetOrDefault("email").ToString();
+
+                try
+                {
+                    if (tokenContent.ContainsKey(m_RolesClaim))
+                        userData.Roles = (List<string>)(tokenContent.GetOrDefault(m_RolesClaim));
+                }
+                catch (Exception ex)
+                {
+                    LastException = ex;
+                    Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "DecodingTokenError", "Failed to decode Roles Claim.", "Failed to decode Claim for roles.", ex);
+                }
+
+                // Roles will need to be obtained from a Claim
+                userData.IsDefined = true;
+                userData.IsDisabled = false;
+                userData.IsLockedOut = false;
+                UserData = userData;
+                return true;
+            }
+            catch (TokenExpiredException)
+            {
+                AuthenticationFailureReason = $"Token Expired.";
+                return false;
+            }
+            catch (SignatureVerificationException ex)
+            {
+                AuthenticationFailureReason = "Token has invalid signature";
+                return false;
+            }
+
+
+        }
+        #endregion
+
+        #region [ Static ]
+
+        // Static Events
+
+        /// <summary>
+        /// Raised when the security context is refreshed.
+        /// </summary>
+        public static event EventHandler<EventArgs<Dictionary<string, string[]>>> SecurityContextRefreshed;
+
+        // Static Fields
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AdoSecurityProvider), MessageClass.Component);
+
+        private static MemoryCache s_nonceCache = new MemoryCache("OIDC-NonceCache");
+
+        /// <summary>
+        /// Gets current default Node ID for security.
+        /// </summary>
+        public static readonly Guid DefaultNodeID;
+
+        /// <summary>
+        /// Performs a translation of the default login page to a different endpoint.
+        /// </summary>
+        /// <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+        /// <param name="encodedPath"> The URI requested by the client </param>
+        /// <param name="referrer"> The Referrer as specified in the request header </param>
+        /// <returns> The URI to be redirected to</returns>
+        public override string TranslateRedirect(string loginUrl, string encodedPath, string referrer)
+        {
+            byte[] nonce = new byte[16];
+            new Random().NextBytes(nonce);
+
+            s_nonceCache.Add(BitConverter.ToString(nonce).Replace("-", ""), 0, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromSeconds(NonceSlidingExpiration) });
+
+            string redirect = $"{m_AuthorizationEndpoint}?";
+            redirect += $"response_type={ResponseType}&scope={m_Scope}&client_id={m_ClientID}&redirect_uri={m_RedirectURI}";
+            redirect += $"&nonce={BitConverter.ToString(nonce).Replace("-", "")}";
+
+            return redirect;
+        }
+        // Static Methods
+
+        public override bool ResetPassword(string securityAnswer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool ChangePassword(string oldPassword, string newPassword)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+}

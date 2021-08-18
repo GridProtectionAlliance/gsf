@@ -149,8 +149,12 @@ namespace GSF.Web.Security
             {
                 // Pick the appropriate authentication logic based
                 // on the authorization type in the HTTP headers
+                // or in the URI Parameters if it is using OIDC.
                 if (authorization?.Scheme == "Basic")
                     securityPrincipal = AuthenticateBasic(authorization.Parameter);
+                // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
+                else if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("code="))
+                    securityPrincipal = AuthenticateCode();
                 else
                     securityPrincipal = AuthenticatePassthrough();
 
@@ -184,6 +188,7 @@ namespace GSF.Web.Security
             //  (1) Access resource marked as anonymous - let pipeline continue
             //  (2) Access resource as authenticated user - let pipeline continue
             //  --- remaining use cases are unauthorized ---
+            //  (2a) Access resource as result of a redirect from the OIDC Auth Server
             //  (3) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
             //  (4) Access all other resources - respond with 401 and abort pipeline
             SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
@@ -207,6 +212,13 @@ namespace GSF.Web.Security
             // request to propagate through the Owin pipeline
             if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
                 return false; // Let pipeline continue
+
+            // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
+            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("code="))
+                return false;
+
+            
+
 
             // Abort pipeline with appropriate response
             if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
@@ -337,6 +349,7 @@ namespace GSF.Web.Security
         {
             string username = Request.User?.Identity.Name;
 
+            
             if ((object)username == null)
                 return null;
 
@@ -345,6 +358,24 @@ namespace GSF.Web.Security
 
             // Create the security provider that will verify the user's pass-through authentication
             ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal, false);
+            securityProvider.Authenticate();
+
+            // Return the security principal that will be used for role-based authorization
+            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            return new SecurityPrincipal(securityIdentity);
+        }
+
+        // Applies authentication for requests using OpenID Connect authentication.
+        private SecurityPrincipal AuthenticateCode()
+        {
+
+            string username = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value).Get("code");
+
+            if (String.IsNullOrEmpty(username))
+                return null;
+
+            // Create the security provider that will verify the user's pass-through authentication
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, null, false);
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
