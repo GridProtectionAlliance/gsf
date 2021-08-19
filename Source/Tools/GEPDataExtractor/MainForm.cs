@@ -37,6 +37,7 @@ using GSF.Console;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using GSF.Windows.Forms;
 
 // ReSharper disable AccessToModifiedClosure
@@ -69,6 +70,9 @@ namespace GEPDataExtractor
             // Save string format of select count label in its tag
             labelSelectCount.Tag = labelSelectCount.Text;
             labelSelectCount.Text = "";
+
+            labelMeasurementCount.Tag = labelMeasurementCount.Text;
+            labelMeasurementCount.Text = "";
 
             // Save string format of filter expression text box in its tag
             textBoxFilterExpression.Tag = textBoxFilterExpression.Text;
@@ -198,6 +202,7 @@ namespace GEPDataExtractor
 
         private void buttonExportCancel_Click(object sender, EventArgs e)
         {
+            tabControlOptions.SelectedTab = tabPageTimeRange;
             m_exporting = false;
         }
 
@@ -214,6 +219,8 @@ namespace GEPDataExtractor
                 ClearUpdateMessages();
                 UpdateProgressBar(0);
                 SetProgressBarMaximum(100);
+
+                tabControlOptions.SelectedTab = tabPageMessages;
 
                 // Kick off a thread to start archive read
                 new Thread(ExportData) {IsBackground = true}.Start();
@@ -281,6 +288,8 @@ namespace GEPDataExtractor
         {            
             if (!checkBoxExportFilePerDataType.Checked)
                 RefreshFilterExpression(-1);
+
+            RefreshSelectedCount();
         }
 
         private void checkBoxExportFilePerDataType_CheckedChanged(object sender, EventArgs e)
@@ -345,6 +354,25 @@ namespace GEPDataExtractor
 
                     RefreshFilterExpression(selectedCount);
 
+                    try
+                    {
+                        AdapterBase.ParseFilterExpression(textBoxFilterExpression.Text, out string _, out string filterExpression, out string _, out int _);
+
+                        filterExpression = filterExpression
+                            .Replace("Device", "DeviceAcronym")
+                            .Replace("SignalType", "SignalAcronym")
+                            .Replace("Company", "CompanyAcronym")
+                            .Replace("Protocol", "ProtocolAcronym");
+
+                        int measurementCount = m_metadata.MeasurementTable.Select(filterExpression).Length;
+                        labelMeasurementCount.Text = string.Format(labelMeasurementCount.Tag.ToString(), measurementCount);
+                    }
+                    catch (Exception ex)
+                    {
+                        labelMeasurementCount.Text = string.Format(labelMeasurementCount.Tag.ToString(), 0);
+                        Logger.SwallowException(ex);
+                    }
+
                     buttonPreFilter.Enabled = selectedCount > 0;
                 }
             }
@@ -367,6 +395,17 @@ namespace GEPDataExtractor
 
             if (m_settings.DeviceFilter?.Length > 0)
                 filterExpression.Append($" AND Device LIKE '{m_settings.DeviceFilter}'");
+
+            if (m_settings.PhaseFilter?.Length > 0)
+            {
+                string[] phaseValues = m_settings.PhaseFilter.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (phaseValues.Length > 0)
+                {
+                    string[] phases = phaseValues.Select(value => $"'{value.Trim()[0]}'").ToArray();
+                    filterExpression.Append($" AND (Phase IS NULL OR Phase IN ({string.Join(", ", phases)}))");
+                }
+            }
 
             if (signalTypes.Any())
             {
@@ -392,6 +431,18 @@ namespace GEPDataExtractor
 
             headerCell.SortGlyphDirection = SortOrder.Descending;
             return SortOrder.Descending;
+        }
+
+        private void textBoxDeviceFilter_TextChanged(object sender, EventArgs e)
+        {
+            FormElementChanged(sender, e);
+            RefreshSelectedCount();
+        }
+
+        private void textBoxPhaseFilter_TextChanged(object sender, EventArgs e)
+        {
+            FormElementChanged(sender, e);
+            RefreshSelectedCount();
         }
 
         // Form Element Accessors -- these functions allow access to form elements from non-UI threads
@@ -1087,14 +1138,16 @@ namespace GEPDataExtractor
             if (MessageBox.Show(this, "Are you sure you want to restore the default settings?", "Restore Defaults", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
 
-            MessageBox.Show(this, "Application will shutdown to clear user settings", "Restore Defaults", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-
-            string userSettingsFile = Path.Combine(FilePath.GetApplicationDataFolder(), "Settings.xml");
+            if (MessageBox.Show(this, "Application will shutdown to clear user settings", "Restore Defaults", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk) == DialogResult.Cancel)
+                return;
 
             ConfigurationFile.Current.Save(ConfigurationSaveMode.Full);
+            ConfigurationFile.Current.Configuration.Save(ConfigurationSaveMode.Full);
 
             Hide();
-            Thread.Sleep(2000);
+            Thread.Sleep(4000);
+
+            string userSettingsFile = Path.Combine(FilePath.GetApplicationDataFolder(), "Settings.xml");
 
             if (File.Exists(userSettingsFile))
                 File.Delete(userSettingsFile);

@@ -127,6 +127,10 @@ namespace GEPDataExtractor
 
     public class Metadata
     {
+        public DataTable MeasurementTable;
+        public DataTable DeviceTable;
+        public DataTable PhasorTable;
+
         public List<MeasurementDetail> Measurements;
         public List<DeviceDetail> Devices;
 
@@ -149,33 +153,46 @@ namespace GEPDataExtractor
             // SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail
             // SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail
 
-            DataTable measurementTable = null;
-            DataTable deviceTable = null;
+            MeasurementTable = null;
+            DeviceTable = null;
 
             try
             {
                 DataSet metadata = MetadataRetriever.GetMetadata($"server={settings.HostAddress}; port={settings.Port}; interface=0.0.0.0");
 
                 // Reference meta-data tables
-                measurementTable = metadata.Tables["MeasurementDetail"];
-                deviceTable = metadata.Tables["DeviceDetail"];
+                MeasurementTable = metadata.Tables["MeasurementDetail"];
+                DeviceTable = metadata.Tables["DeviceDetail"];
+                PhasorTable = metadata.Tables["PhasorDetail"];
+
+                MeasurementTable.Columns.Add("Phase", typeof(string));
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Exception retrieving meta-data: " + ex.Message);
             }
 
-            if ((object)measurementTable != null)
+            if ((object)MeasurementTable != null)
             {
                 // Load measurement records
-                foreach (DataRow row in measurementTable.Select("SignalAcronym <> 'STAT' and SignalAcronym <> 'DIGI'"))
+                foreach (DataRow row in MeasurementTable.Select("SignalAcronym <> 'STAT' and SignalAcronym <> 'DIGI'"))
+                {
+                    if (!(PhasorTable is null) && row["SignalAcronym"].ToString().Contains("PH"))
+                    {
+                        DataRow[] rows = PhasorTable.Select($"DeviceAcronym = '{row["DeviceAcronym"]}' AND SourceIndex = {row["PhasorSourceIndex"]}");
+
+                        if (rows.Length > 0)
+                            row["Phase"] = rows[0]["Phase"];
+                    }
+
                     Measurements.Add(new MeasurementDetail(row));
+                }
             }
 
-            if ((object)deviceTable != null)
+            if ((object)DeviceTable != null)
             {
                 // Load device records
-                foreach (DataRow row in deviceTable.Rows)
+                foreach (DataRow row in DeviceTable.Rows)
                     Devices.Add(new DeviceDetail(row));
             }
         }

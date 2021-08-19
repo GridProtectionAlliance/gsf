@@ -38,8 +38,6 @@
             this.maskedTextBoxHistorianPort = new System.Windows.Forms.MaskedTextBox();
             this.labelPort = new System.Windows.Forms.Label();
             this.buttonExport = new System.Windows.Forms.Button();
-            this.groupBoxMessages = new System.Windows.Forms.GroupBox();
-            this.textBoxMessageOutput = new System.Windows.Forms.TextBox();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.groupBoxOptions = new System.Windows.Forms.GroupBox();
             this.buttonCancelExport = new System.Windows.Forms.Button();
@@ -93,7 +91,7 @@
             this.tabPageAdvanced = new System.Windows.Forms.TabPage();
             this.labelFilterExpression = new System.Windows.Forms.Label();
             this.textBoxFilterExpression = new System.Windows.Forms.TextBox();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBoxExportOptions = new System.Windows.Forms.GroupBox();
             this.checkBoxExportFilePerDataType = new System.Windows.Forms.CheckBox();
             this.labelExportFileName = new System.Windows.Forms.Label();
             this.buttonSelectFile = new System.Windows.Forms.Button();
@@ -101,15 +99,20 @@
             this.radioButtonCOMTRADE = new System.Windows.Forms.RadioButton();
             this.radioButtonCSV = new System.Windows.Forms.RadioButton();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.tabPageMessages = new System.Windows.Forms.TabPage();
+            this.textBoxMessageOutput = new System.Windows.Forms.TextBox();
+            this.textBoxPhaseFilter = new System.Windows.Forms.TextBox();
+            this.labelPhaseFilter = new System.Windows.Forms.Label();
+            this.labelMeasurementCount = new System.Windows.Forms.Label();
             this.groupBoxServerConnection.SuspendLayout();
-            this.groupBoxMessages.SuspendLayout();
             this.groupBoxOptions.SuspendLayout();
             this.tabControlOptions.SuspendLayout();
             this.tabPageTimeRange.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewDevices)).BeginInit();
             this.tabPageSettings.SuspendLayout();
             this.tabPageAdvanced.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.groupBoxExportOptions.SuspendLayout();
+            this.tabPageMessages.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxServerConnection
@@ -131,7 +134,7 @@
             // buttonConnect
             // 
             this.buttonConnect.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonConnect.Location = new System.Drawing.Point(83, 103);
+            this.buttonConnect.Location = new System.Drawing.Point(108, 103);
             this.buttonConnect.Margin = new System.Windows.Forms.Padding(2);
             this.buttonConnect.Name = "buttonConnect";
             this.buttonConnect.Size = new System.Drawing.Size(88, 27);
@@ -207,10 +210,10 @@
             // 
             // buttonExport
             // 
-            this.buttonExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonExport.Enabled = false;
             this.buttonExport.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonExport.Location = new System.Drawing.Point(515, 8);
+            this.buttonExport.Location = new System.Drawing.Point(515, 7);
             this.buttonExport.Margin = new System.Windows.Forms.Padding(2);
             this.buttonExport.Name = "buttonExport";
             this.buttonExport.Size = new System.Drawing.Size(88, 27);
@@ -219,42 +222,11 @@
             this.buttonExport.UseVisualStyleBackColor = true;
             this.buttonExport.Click += new System.EventHandler(this.buttonExport_Click);
             // 
-            // groupBoxMessages
-            // 
-            this.groupBoxMessages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxMessages.Controls.Add(this.textBoxMessageOutput);
-            this.groupBoxMessages.Location = new System.Drawing.Point(10, 294);
-            this.groupBoxMessages.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBoxMessages.Name = "groupBoxMessages";
-            this.groupBoxMessages.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBoxMessages.Size = new System.Drawing.Size(821, 253);
-            this.groupBoxMessages.TabIndex = 3;
-            this.groupBoxMessages.TabStop = false;
-            this.groupBoxMessages.Text = "Messages";
-            // 
-            // textBoxMessageOutput
-            // 
-            this.textBoxMessageOutput.BackColor = System.Drawing.SystemColors.WindowText;
-            this.textBoxMessageOutput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxMessageOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxMessageOutput.ForeColor = System.Drawing.SystemColors.Window;
-            this.textBoxMessageOutput.Location = new System.Drawing.Point(2, 15);
-            this.textBoxMessageOutput.Margin = new System.Windows.Forms.Padding(2);
-            this.textBoxMessageOutput.Multiline = true;
-            this.textBoxMessageOutput.Name = "textBoxMessageOutput";
-            this.textBoxMessageOutput.ReadOnly = true;
-            this.textBoxMessageOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxMessageOutput.Size = new System.Drawing.Size(817, 236);
-            this.textBoxMessageOutput.TabIndex = 0;
-            this.textBoxMessageOutput.TabStop = false;
-            // 
             // progressBar
             // 
             this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(12, 551);
+            this.progressBar.Location = new System.Drawing.Point(12, 396);
             this.progressBar.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(819, 27);
@@ -262,24 +234,25 @@
             // 
             // groupBoxOptions
             // 
-            this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxOptions.Controls.Add(this.buttonExport);
             this.groupBoxOptions.Controls.Add(this.buttonCancelExport);
+            this.groupBoxOptions.Controls.Add(this.buttonExport);
             this.groupBoxOptions.Controls.Add(this.linkLabelOpenExportPage);
             this.groupBoxOptions.Controls.Add(this.tabControlOptions);
             this.groupBoxOptions.Location = new System.Drawing.Point(221, 8);
             this.groupBoxOptions.Margin = new System.Windows.Forms.Padding(2);
             this.groupBoxOptions.Name = "groupBoxOptions";
             this.groupBoxOptions.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBoxOptions.Size = new System.Drawing.Size(612, 281);
+            this.groupBoxOptions.Size = new System.Drawing.Size(612, 384);
             this.groupBoxOptions.TabIndex = 2;
             this.groupBoxOptions.TabStop = false;
             this.groupBoxOptions.Text = "&Options";
             // 
             // buttonCancelExport
             // 
-            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancelExport.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonCancelExport.Location = new System.Drawing.Point(515, 8);
             this.buttonCancelExport.Margin = new System.Windows.Forms.Padding(2);
@@ -294,7 +267,7 @@
             // linkLabelOpenExportPage
             // 
             this.linkLabelOpenExportPage.AutoSize = true;
-            this.linkLabelOpenExportPage.Location = new System.Drawing.Point(235, 19);
+            this.linkLabelOpenExportPage.Location = new System.Drawing.Point(296, 19);
             this.linkLabelOpenExportPage.Name = "linkLabelOpenExportPage";
             this.linkLabelOpenExportPage.Size = new System.Drawing.Size(153, 13);
             this.linkLabelOpenExportPage.TabIndex = 1;
@@ -308,16 +281,20 @@
             this.tabControlOptions.Controls.Add(this.tabPageTimeRange);
             this.tabControlOptions.Controls.Add(this.tabPageSettings);
             this.tabControlOptions.Controls.Add(this.tabPageAdvanced);
+            this.tabControlOptions.Controls.Add(this.tabPageMessages);
             this.tabControlOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlOptions.Location = new System.Drawing.Point(2, 15);
             this.tabControlOptions.Name = "tabControlOptions";
             this.tabControlOptions.SelectedIndex = 0;
-            this.tabControlOptions.Size = new System.Drawing.Size(608, 264);
+            this.tabControlOptions.Size = new System.Drawing.Size(608, 367);
             this.tabControlOptions.TabIndex = 0;
             // 
             // tabPageTimeRange
             // 
             this.tabPageTimeRange.BackColor = System.Drawing.Color.Transparent;
+            this.tabPageTimeRange.Controls.Add(this.labelMeasurementCount);
+            this.tabPageTimeRange.Controls.Add(this.textBoxPhaseFilter);
+            this.tabPageTimeRange.Controls.Add(this.labelPhaseFilter);
             this.tabPageTimeRange.Controls.Add(this.textBoxDeviceFilter);
             this.tabPageTimeRange.Controls.Add(this.labelDeviceFilter);
             this.tabPageTimeRange.Controls.Add(this.labelEndTimeUTC);
@@ -338,24 +315,26 @@
             this.tabPageTimeRange.Location = new System.Drawing.Point(4, 22);
             this.tabPageTimeRange.Name = "tabPageTimeRange";
             this.tabPageTimeRange.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageTimeRange.Size = new System.Drawing.Size(600, 238);
+            this.tabPageTimeRange.Size = new System.Drawing.Size(600, 341);
             this.tabPageTimeRange.TabIndex = 0;
             this.tabPageTimeRange.Text = "Time Range";
             // 
             // textBoxDeviceFilter
             // 
-            this.textBoxDeviceFilter.Location = new System.Drawing.Point(12, 210);
+            this.textBoxDeviceFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.textBoxDeviceFilter.Location = new System.Drawing.Point(12, 273);
             this.textBoxDeviceFilter.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxDeviceFilter.Name = "textBoxDeviceFilter";
             this.textBoxDeviceFilter.Size = new System.Drawing.Size(79, 20);
             this.textBoxDeviceFilter.TabIndex = 17;
             this.textBoxDeviceFilter.Text = "P_%";
-            this.textBoxDeviceFilter.TextChanged += new System.EventHandler(this.FormElementChanged);
+            this.textBoxDeviceFilter.TextChanged += new System.EventHandler(this.textBoxDeviceFilter_TextChanged);
             // 
             // labelDeviceFilter
             // 
+            this.labelDeviceFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelDeviceFilter.AutoSize = true;
-            this.labelDeviceFilter.Location = new System.Drawing.Point(9, 195);
+            this.labelDeviceFilter.Location = new System.Drawing.Point(9, 258);
             this.labelDeviceFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelDeviceFilter.Name = "labelDeviceFilter";
             this.labelDeviceFilter.Size = new System.Drawing.Size(69, 13);
@@ -411,6 +390,7 @@
             // 
             // buttonPreFilter
             // 
+            this.buttonPreFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonPreFilter.Enabled = false;
             this.buttonPreFilter.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonPreFilter.Location = new System.Drawing.Point(509, 10);
@@ -440,7 +420,7 @@
             this.dataGridViewDevices.Name = "dataGridViewDevices";
             this.dataGridViewDevices.RowHeadersVisible = false;
             this.dataGridViewDevices.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridViewDevices.Size = new System.Drawing.Size(489, 164);
+            this.dataGridViewDevices.Size = new System.Drawing.Size(489, 267);
             this.dataGridViewDevices.TabIndex = 11;
             this.dataGridViewDevices.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewDevices_CellContentClick);
             this.dataGridViewDevices.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewDevices_ColumnHeaderMouseClick);
@@ -477,7 +457,7 @@
             this.checkedListBoxDataTypes.FormattingEnabled = true;
             this.checkedListBoxDataTypes.Location = new System.Drawing.Point(12, 66);
             this.checkedListBoxDataTypes.Name = "checkedListBoxDataTypes";
-            this.checkedListBoxDataTypes.Size = new System.Drawing.Size(79, 124);
+            this.checkedListBoxDataTypes.Size = new System.Drawing.Size(79, 184);
             this.checkedListBoxDataTypes.TabIndex = 6;
             this.checkedListBoxDataTypes.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxDataTypes_SelectedIndexChanged);
             // 
@@ -542,13 +522,14 @@
             // labelSelectCount
             // 
             this.labelSelectCount.AutoSize = true;
-            this.labelSelectCount.Location = new System.Drawing.Point(252, 50);
+            this.labelSelectCount.Location = new System.Drawing.Point(224, 50);
             this.labelSelectCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelSelectCount.Name = "labelSelectCount";
-            this.labelSelectCount.Size = new System.Drawing.Size(104, 13);
+            this.labelSelectCount.Size = new System.Drawing.Size(121, 13);
             this.labelSelectCount.TabIndex = 10;
             this.labelSelectCount.Tag = "";
-            this.labelSelectCount.Text = "{0} devices selected";
+            this.labelSelectCount.Text = "{0:N0} devices selected";
+            this.labelSelectCount.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // tabPageSettings
             // 
@@ -581,13 +562,14 @@
             this.tabPageSettings.Controls.Add(this.labelBadTimePercent);
             this.tabPageSettings.Location = new System.Drawing.Point(4, 22);
             this.tabPageSettings.Name = "tabPageSettings";
-            this.tabPageSettings.Size = new System.Drawing.Size(600, 238);
+            this.tabPageSettings.Size = new System.Drawing.Size(600, 341);
             this.tabPageSettings.TabIndex = 2;
             this.tabPageSettings.Text = "Settings";
             // 
             // buttonRestoreDefaults
             // 
-            this.buttonRestoreDefaults.Location = new System.Drawing.Point(449, 168);
+            this.buttonRestoreDefaults.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRestoreDefaults.Location = new System.Drawing.Point(445, 261);
             this.buttonRestoreDefaults.Name = "buttonRestoreDefaults";
             this.buttonRestoreDefaults.Size = new System.Drawing.Size(100, 23);
             this.buttonRestoreDefaults.TabIndex = 25;
@@ -597,7 +579,7 @@
             // 
             // maskedTextBoxAcceptableMissingData
             // 
-            this.maskedTextBoxAcceptableMissingData.Location = new System.Drawing.Point(324, 171);
+            this.maskedTextBoxAcceptableMissingData.Location = new System.Drawing.Point(138, 264);
             this.maskedTextBoxAcceptableMissingData.Margin = new System.Windows.Forms.Padding(2);
             this.maskedTextBoxAcceptableMissingData.Mask = "000";
             this.maskedTextBoxAcceptableMissingData.Name = "maskedTextBoxAcceptableMissingData";
@@ -610,7 +592,7 @@
             // labelAcceptableMissingData
             // 
             this.labelAcceptableMissingData.AutoSize = true;
-            this.labelAcceptableMissingData.Location = new System.Drawing.Point(192, 174);
+            this.labelAcceptableMissingData.Location = new System.Drawing.Point(6, 267);
             this.labelAcceptableMissingData.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelAcceptableMissingData.Name = "labelAcceptableMissingData";
             this.labelAcceptableMissingData.Size = new System.Drawing.Size(128, 13);
@@ -620,7 +602,7 @@
             // 
             // maskedTextBoxAcceptableBadTime
             // 
-            this.maskedTextBoxAcceptableBadTime.Location = new System.Drawing.Point(324, 147);
+            this.maskedTextBoxAcceptableBadTime.Location = new System.Drawing.Point(138, 240);
             this.maskedTextBoxAcceptableBadTime.Margin = new System.Windows.Forms.Padding(2);
             this.maskedTextBoxAcceptableBadTime.Mask = "000";
             this.maskedTextBoxAcceptableBadTime.Name = "maskedTextBoxAcceptableBadTime";
@@ -633,7 +615,7 @@
             // labelAccetableBadTime
             // 
             this.labelAccetableBadTime.AutoSize = true;
-            this.labelAccetableBadTime.Location = new System.Drawing.Point(208, 150);
+            this.labelAccetableBadTime.Location = new System.Drawing.Point(22, 243);
             this.labelAccetableBadTime.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelAccetableBadTime.Name = "labelAccetableBadTime";
             this.labelAccetableBadTime.Size = new System.Drawing.Size(112, 13);
@@ -643,7 +625,7 @@
             // 
             // maskedTextBoxAcceptableBadData
             // 
-            this.maskedTextBoxAcceptableBadData.Location = new System.Drawing.Point(324, 123);
+            this.maskedTextBoxAcceptableBadData.Location = new System.Drawing.Point(138, 216);
             this.maskedTextBoxAcceptableBadData.Margin = new System.Windows.Forms.Padding(2);
             this.maskedTextBoxAcceptableBadData.Mask = "000";
             this.maskedTextBoxAcceptableBadData.Name = "maskedTextBoxAcceptableBadData";
@@ -656,7 +638,7 @@
             // labelAcceptableBadData
             // 
             this.labelAcceptableBadData.AutoSize = true;
-            this.labelAcceptableBadData.Location = new System.Drawing.Point(208, 126);
+            this.labelAcceptableBadData.Location = new System.Drawing.Point(22, 219);
             this.labelAcceptableBadData.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelAcceptableBadData.Name = "labelAcceptableBadData";
             this.labelAcceptableBadData.Size = new System.Drawing.Size(112, 13);
@@ -763,6 +745,7 @@
             // 
             // checkBoxEnableLogging
             // 
+            this.checkBoxEnableLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBoxEnableLogging.AutoSize = true;
             this.checkBoxEnableLogging.Checked = true;
             this.checkBoxEnableLogging.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -800,6 +783,7 @@
             // 
             // labelSecondsMetadataTimeout
             // 
+            this.labelSecondsMetadataTimeout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelSecondsMetadataTimeout.AutoSize = true;
             this.labelSecondsMetadataTimeout.Location = new System.Drawing.Point(498, 38);
             this.labelSecondsMetadataTimeout.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
@@ -820,6 +804,7 @@
             // 
             // maskedTextBoxMetadataTimeout
             // 
+            this.maskedTextBoxMetadataTimeout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.maskedTextBoxMetadataTimeout.Location = new System.Drawing.Point(466, 35);
             this.maskedTextBoxMetadataTimeout.Margin = new System.Windows.Forms.Padding(2);
             this.maskedTextBoxMetadataTimeout.Mask = "000";
@@ -843,6 +828,7 @@
             // 
             // labelMetaDataTimeout
             // 
+            this.labelMetaDataTimeout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelMetaDataTimeout.AutoSize = true;
             this.labelMetaDataTimeout.Location = new System.Drawing.Point(373, 38);
             this.labelMetaDataTimeout.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
@@ -856,7 +842,7 @@
             // 
             this.labelBadDataPercent.AutoSize = true;
             this.labelBadDataPercent.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelBadDataPercent.Location = new System.Drawing.Point(354, 127);
+            this.labelBadDataPercent.Location = new System.Drawing.Point(168, 220);
             this.labelBadDataPercent.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelBadDataPercent.Name = "labelBadDataPercent";
             this.labelBadDataPercent.Size = new System.Drawing.Size(15, 13);
@@ -867,7 +853,7 @@
             // 
             this.labelMissingDataPercent.AutoSize = true;
             this.labelMissingDataPercent.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelMissingDataPercent.Location = new System.Drawing.Point(354, 174);
+            this.labelMissingDataPercent.Location = new System.Drawing.Point(168, 267);
             this.labelMissingDataPercent.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelMissingDataPercent.Name = "labelMissingDataPercent";
             this.labelMissingDataPercent.Size = new System.Drawing.Size(15, 13);
@@ -878,7 +864,7 @@
             // 
             this.labelBadTimePercent.AutoSize = true;
             this.labelBadTimePercent.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelBadTimePercent.Location = new System.Drawing.Point(354, 151);
+            this.labelBadTimePercent.Location = new System.Drawing.Point(168, 244);
             this.labelBadTimePercent.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelBadTimePercent.Name = "labelBadTimePercent";
             this.labelBadTimePercent.Size = new System.Drawing.Size(15, 13);
@@ -893,7 +879,7 @@
             this.tabPageAdvanced.Location = new System.Drawing.Point(4, 22);
             this.tabPageAdvanced.Name = "tabPageAdvanced";
             this.tabPageAdvanced.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageAdvanced.Size = new System.Drawing.Size(600, 238);
+            this.tabPageAdvanced.Size = new System.Drawing.Size(600, 341);
             this.tabPageAdvanced.TabIndex = 1;
             this.tabPageAdvanced.Text = "Advanced Selection";
             // 
@@ -917,25 +903,26 @@
             this.textBoxFilterExpression.Multiline = true;
             this.textBoxFilterExpression.Name = "textBoxFilterExpression";
             this.textBoxFilterExpression.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxFilterExpression.Size = new System.Drawing.Size(587, 205);
+            this.textBoxFilterExpression.Size = new System.Drawing.Size(587, 308);
             this.textBoxFilterExpression.TabIndex = 1;
             this.textBoxFilterExpression.Text = "FILTER ActiveMeasurements WHERE {0}";
             this.textBoxFilterExpression.TextChanged += new System.EventHandler(this.FormElementChanged);
             // 
-            // groupBox1
+            // groupBoxExportOptions
             // 
-            this.groupBox1.Controls.Add(this.checkBoxExportFilePerDataType);
-            this.groupBox1.Controls.Add(this.labelExportFileName);
-            this.groupBox1.Controls.Add(this.buttonSelectFile);
-            this.groupBox1.Controls.Add(this.textBoxExportFileName);
-            this.groupBox1.Controls.Add(this.radioButtonCOMTRADE);
-            this.groupBox1.Controls.Add(this.radioButtonCSV);
-            this.groupBox1.Location = new System.Drawing.Point(12, 151);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(200, 138);
-            this.groupBox1.TabIndex = 1;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "E&xport Options";
+            this.groupBoxExportOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.groupBoxExportOptions.Controls.Add(this.checkBoxExportFilePerDataType);
+            this.groupBoxExportOptions.Controls.Add(this.labelExportFileName);
+            this.groupBoxExportOptions.Controls.Add(this.buttonSelectFile);
+            this.groupBoxExportOptions.Controls.Add(this.textBoxExportFileName);
+            this.groupBoxExportOptions.Controls.Add(this.radioButtonCOMTRADE);
+            this.groupBoxExportOptions.Controls.Add(this.radioButtonCSV);
+            this.groupBoxExportOptions.Location = new System.Drawing.Point(12, 252);
+            this.groupBoxExportOptions.Name = "groupBoxExportOptions";
+            this.groupBoxExportOptions.Size = new System.Drawing.Size(200, 138);
+            this.groupBoxExportOptions.TabIndex = 1;
+            this.groupBoxExportOptions.TabStop = false;
+            this.groupBoxExportOptions.Text = "E&xport Options";
             // 
             // checkBoxExportFilePerDataType
             // 
@@ -1011,14 +998,76 @@
             this.saveFileDialog.Filter = "CSV Files|*.csv|All Files|*.*";
             this.saveFileDialog.Title = "Select Export File Name";
             // 
+            // tabPageMessages
+            // 
+            this.tabPageMessages.Controls.Add(this.textBoxMessageOutput);
+            this.tabPageMessages.Location = new System.Drawing.Point(4, 22);
+            this.tabPageMessages.Name = "tabPageMessages";
+            this.tabPageMessages.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageMessages.Size = new System.Drawing.Size(600, 341);
+            this.tabPageMessages.TabIndex = 3;
+            this.tabPageMessages.Text = "Messages";
+            this.tabPageMessages.UseVisualStyleBackColor = true;
+            // 
+            // textBoxMessageOutput
+            // 
+            this.textBoxMessageOutput.BackColor = System.Drawing.SystemColors.WindowText;
+            this.textBoxMessageOutput.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxMessageOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxMessageOutput.ForeColor = System.Drawing.SystemColors.Window;
+            this.textBoxMessageOutput.Location = new System.Drawing.Point(3, 3);
+            this.textBoxMessageOutput.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxMessageOutput.Multiline = true;
+            this.textBoxMessageOutput.Name = "textBoxMessageOutput";
+            this.textBoxMessageOutput.ReadOnly = true;
+            this.textBoxMessageOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxMessageOutput.Size = new System.Drawing.Size(594, 335);
+            this.textBoxMessageOutput.TabIndex = 1;
+            this.textBoxMessageOutput.TabStop = false;
+            // 
+            // textBoxPhaseFilter
+            // 
+            this.textBoxPhaseFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.textBoxPhaseFilter.Location = new System.Drawing.Point(12, 313);
+            this.textBoxPhaseFilter.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxPhaseFilter.Name = "textBoxPhaseFilter";
+            this.textBoxPhaseFilter.Size = new System.Drawing.Size(79, 20);
+            this.textBoxPhaseFilter.TabIndex = 19;
+            this.textBoxPhaseFilter.Text = "A,B,C,+,-,0";
+            this.textBoxPhaseFilter.TextChanged += new System.EventHandler(this.textBoxPhaseFilter_TextChanged);
+            // 
+            // labelPhaseFilter
+            // 
+            this.labelPhaseFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelPhaseFilter.AutoSize = true;
+            this.labelPhaseFilter.Location = new System.Drawing.Point(9, 298);
+            this.labelPhaseFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelPhaseFilter.Name = "labelPhaseFilter";
+            this.labelPhaseFilter.Size = new System.Drawing.Size(65, 13);
+            this.labelPhaseFilter.TabIndex = 18;
+            this.labelPhaseFilter.Text = "Phase Filter:";
+            this.labelPhaseFilter.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // labelMeasurementCount
+            // 
+            this.labelMeasurementCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelMeasurementCount.AutoSize = true;
+            this.labelMeasurementCount.Location = new System.Drawing.Point(352, 50);
+            this.labelMeasurementCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelMeasurementCount.Name = "labelMeasurementCount";
+            this.labelMeasurementCount.Size = new System.Drawing.Size(152, 13);
+            this.labelMeasurementCount.TabIndex = 20;
+            this.labelMeasurementCount.Tag = "";
+            this.labelMeasurementCount.Text = "{0:N0} measurements selected";
+            this.labelMeasurementCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(844, 586);
-            this.Controls.Add(this.groupBox1);
+            this.ClientSize = new System.Drawing.Size(844, 431);
+            this.Controls.Add(this.groupBoxExportOptions);
             this.Controls.Add(this.groupBoxOptions);
-            this.Controls.Add(this.groupBoxMessages);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.groupBoxServerConnection);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -1031,8 +1080,6 @@
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.groupBoxServerConnection.ResumeLayout(false);
             this.groupBoxServerConnection.PerformLayout();
-            this.groupBoxMessages.ResumeLayout(false);
-            this.groupBoxMessages.PerformLayout();
             this.groupBoxOptions.ResumeLayout(false);
             this.groupBoxOptions.PerformLayout();
             this.tabControlOptions.ResumeLayout(false);
@@ -1043,8 +1090,10 @@
             this.tabPageSettings.PerformLayout();
             this.tabPageAdvanced.ResumeLayout(false);
             this.tabPageAdvanced.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.groupBoxExportOptions.ResumeLayout(false);
+            this.groupBoxExportOptions.PerformLayout();
+            this.tabPageMessages.ResumeLayout(false);
+            this.tabPageMessages.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1059,8 +1108,6 @@
         public System.Windows.Forms.MaskedTextBox maskedTextBoxHistorianPort;
         private System.Windows.Forms.Label labelPort;
         private System.Windows.Forms.Button buttonExport;
-        private System.Windows.Forms.GroupBox groupBoxMessages;
-        private System.Windows.Forms.TextBox textBoxMessageOutput;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.GroupBox groupBoxOptions;
         private System.Windows.Forms.Button buttonConnect;
@@ -1097,7 +1144,7 @@
         public System.Windows.Forms.CheckBox checkBoxSelectAllDevices;
         private System.Windows.Forms.Button buttonPreFilter;
         private System.Windows.Forms.Label labelSelectCount;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBoxExportOptions;
         public System.Windows.Forms.CheckBox checkBoxExportFilePerDataType;
         private System.Windows.Forms.Label labelExportFileName;
         private System.Windows.Forms.Button buttonSelectFile;
@@ -1123,6 +1170,11 @@
         private System.Windows.Forms.Button buttonRestoreDefaults;
         public System.Windows.Forms.TextBox textBoxDeviceFilter;
         private System.Windows.Forms.Label labelDeviceFilter;
+        private System.Windows.Forms.TabPage tabPageMessages;
+        private System.Windows.Forms.TextBox textBoxMessageOutput;
+        public System.Windows.Forms.TextBox textBoxPhaseFilter;
+        private System.Windows.Forms.Label labelPhaseFilter;
+        private System.Windows.Forms.Label labelMeasurementCount;
     }
 }
 

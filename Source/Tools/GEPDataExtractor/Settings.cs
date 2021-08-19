@@ -132,6 +132,14 @@ namespace GEPDataExtractor
         public string DeviceFilter { get; set; }
 
         /// <summary>
+        /// Gets or sets phase filter.
+        /// </summary>
+        [TypeConvertedValueExpression("Form.textBoxPhaseFilter.Text")]
+        [Description("Phase IN filter expression.")]
+        [UserScopedSetting]
+        public string PhaseFilter { get; set; }
+
+        /// <summary>
         /// Gets or sets filter expression used for historian read.
         /// </summary>
         [TypeConvertedValueExpression("Form.textBoxFilterExpression.Text")]
