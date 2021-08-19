@@ -229,7 +229,7 @@
             this.progressBar.Location = new System.Drawing.Point(12, 396);
             this.progressBar.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(819, 27);
+            this.progressBar.Size = new System.Drawing.Size(727, 27);
             this.progressBar.TabIndex = 4;
             // 
             // groupBoxOptions
@@ -237,7 +237,6 @@
             this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxOptions.Controls.Add(this.buttonCancelExport);
             this.groupBoxOptions.Controls.Add(this.buttonExport);
             this.groupBoxOptions.Controls.Add(this.linkLabelOpenExportPage);
             this.groupBoxOptions.Controls.Add(this.tabControlOptions);
@@ -252,9 +251,9 @@
             // 
             // buttonCancelExport
             // 
-            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancelExport.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancelExport.Location = new System.Drawing.Point(515, 8);
+            this.buttonCancelExport.Location = new System.Drawing.Point(743, 396);
             this.buttonCancelExport.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCancelExport.Name = "buttonCancelExport";
             this.buttonCancelExport.Size = new System.Drawing.Size(88, 27);
@@ -300,7 +299,6 @@
             this.tabPageTimeRange.Controls.Add(this.labelEndTimeUTC);
             this.tabPageTimeRange.Controls.Add(this.labelStartTimeUTC);
             this.tabPageTimeRange.Controls.Add(this.buttonShowGraph);
-            this.tabPageTimeRange.Controls.Add(this.buttonCancelPreFilter);
             this.tabPageTimeRange.Controls.Add(this.buttonPreFilter);
             this.tabPageTimeRange.Controls.Add(this.dataGridViewDevices);
             this.tabPageTimeRange.Controls.Add(this.labelDevices);
@@ -376,16 +374,16 @@
             // 
             // buttonCancelPreFilter
             // 
-            this.buttonCancelPreFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancelPreFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancelPreFilter.Enabled = false;
             this.buttonCancelPreFilter.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancelPreFilter.Location = new System.Drawing.Point(509, 10);
+            this.buttonCancelPreFilter.Location = new System.Drawing.Point(743, 396);
             this.buttonCancelPreFilter.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCancelPreFilter.Name = "buttonCancelPreFilter";
             this.buttonCancelPreFilter.Size = new System.Drawing.Size(88, 27);
             this.buttonCancelPreFilter.TabIndex = 12;
             this.buttonCancelPreFilter.Text = "Cancel...";
             this.buttonCancelPreFilter.UseVisualStyleBackColor = true;
-            this.buttonCancelPreFilter.Visible = false;
             this.buttonCancelPreFilter.Click += new System.EventHandler(this.buttonCancelPreFilter_Click);
             // 
             // buttonPreFilter
@@ -1066,10 +1064,12 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(844, 431);
+            this.Controls.Add(this.buttonCancelExport);
             this.Controls.Add(this.groupBoxExportOptions);
             this.Controls.Add(this.groupBoxOptions);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.groupBoxServerConnection);
+            this.Controls.Add(this.buttonCancelPreFilter);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(860, 470);
             this.Name = "MainForm";

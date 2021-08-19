@@ -88,7 +88,7 @@ namespace GEPDataExtractor
 
         #region [ Properties ]
 
-        private int SelectedDeviceCount => m_metadata.Devices.Count(device => device.Selected);
+        private int SelectedDeviceCount => m_metadata?.Devices.Count(device => device.Selected) ?? 0;
 
         #endregion
 
@@ -180,6 +180,7 @@ namespace GEPDataExtractor
 
         private void buttonCancelPreFilter_Click(object sender, EventArgs e)
         {
+            tabControlOptions.SelectedIndex = 0;
             m_prefiltering = false;
         }
 
@@ -190,6 +191,8 @@ namespace GEPDataExtractor
             ClearUpdateMessages();
             UpdateProgressBar(0);
             SetProgressBarMaximum(100);
+
+            tabControlOptions.SelectedTab = tabPageMessages;
 
             // Kick off a thread to start archive read
             new Thread(PreFilter) { IsBackground = true }.Start();
@@ -202,7 +205,7 @@ namespace GEPDataExtractor
 
         private void buttonExportCancel_Click(object sender, EventArgs e)
         {
-            tabControlOptions.SelectedTab = tabPageTimeRange;
+            tabControlOptions.SelectedIndex = 0;
             m_exporting = false;
         }
 
@@ -507,7 +510,7 @@ namespace GEPDataExtractor
             {
                 buttonConnect.Enabled = enabled;
                 buttonPreFilter.Enabled = enabled && SelectedDeviceCount > 0;
-                buttonCancelPreFilter.Visible = !enabled && m_prefiltering;
+                buttonCancelPreFilter.Enabled = !enabled && m_prefiltering;
                 buttonExport.Enabled = enabled && !string.IsNullOrEmpty(textBoxExportFileName.Text);
                 buttonCancelExport.Visible = !enabled && m_exporting;
                 buttonShowGraph.Visible = false; // m_graphData.HasData;
@@ -516,18 +519,18 @@ namespace GEPDataExtractor
                 maskedTextBoxHistorianPort.Enabled = enabled;
                 textBoxHistorianInstanceName.Enabled = enabled;
 
-                if (enabled)
-                {
-                    tabControlOptions.TabPages[1].Show();
-                    tabControlOptions.TabPages[2].Show();
-                }
-                else
-                {
-                    tabControlOptions.TabPages[1].Hide();
-                    tabControlOptions.TabPages[2].Hide();
-                }
+                //if (enabled)
+                //{
+                //    tabControlOptions.TabPages[1].Show();
+                //    tabControlOptions.TabPages[2].Show();
+                //}
+                //else
+                //{
+                //    tabControlOptions.TabPages[1].Hide();
+                //    tabControlOptions.TabPages[2].Hide();
+                //}
 
-                tabControlOptions.TabPages[0].Select();
+                tabControlOptions.SelectedIndex = 0;
             }
         }
 
