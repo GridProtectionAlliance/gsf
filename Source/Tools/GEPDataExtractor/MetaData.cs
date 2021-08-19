@@ -177,7 +177,7 @@ namespace GEPDataExtractor
                 // Load measurement records
                 foreach (DataRow row in MeasurementTable.Select("SignalAcronym <> 'STAT' and SignalAcronym <> 'DIGI'"))
                 {
-                    if (!(PhasorTable is null) && row["SignalAcronym"].ToString().Contains("PH"))
+                    if (!(PhasorTable is null) && row["SignalAcronym"].ToString().Contains("PH") && !string.IsNullOrWhiteSpace(row["DeviceAcronym"].ToString()) && !string.IsNullOrWhiteSpace(row["PhasorSourceIndex"].ToString()))
                     {
                         DataRow[] rows = PhasorTable.Select($"DeviceAcronym = '{row["DeviceAcronym"]}' AND SourceIndex = {row["PhasorSourceIndex"]}");
 

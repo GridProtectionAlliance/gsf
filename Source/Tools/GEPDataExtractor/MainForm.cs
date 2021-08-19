@@ -159,7 +159,9 @@ namespace GEPDataExtractor
                 tabControlOptions.TabIndex = 0;
 
                 ShowUpdateMessage("Metadata loaded, extracting data types from meta-data from...");
+
                 List<string> signals = m_metadata.Measurements.Select(row => row.SignalAcronym).Distinct().ToList();
+                
                 checkedListBoxDataTypes.Items.Clear();
                 checkedListBoxDataTypes.Items.AddRange(signals.OrderByDescending(s => s).Cast<object>().ToArray());
 
