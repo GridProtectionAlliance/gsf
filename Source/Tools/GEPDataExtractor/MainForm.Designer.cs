@@ -361,6 +361,7 @@
             // buttonShowGraph
             // 
             this.buttonShowGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonShowGraph.Enabled = false;
             this.buttonShowGraph.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonShowGraph.Location = new System.Drawing.Point(509, 36);
             this.buttonShowGraph.Margin = new System.Windows.Forms.Padding(2);

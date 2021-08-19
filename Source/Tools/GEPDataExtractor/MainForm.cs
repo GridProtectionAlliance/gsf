@@ -335,7 +335,22 @@ namespace GEPDataExtractor
             {
                 dataGridViewDevices.DataSource = null;
                 dataGridViewDevices.DataSource = m_metadata.Devices;
+
+                CenterColumn(nameof(DeviceDetail.Missing));
+                CenterColumn(nameof(DeviceDetail.BadData));
+                CenterColumn(nameof(DeviceDetail.BadTime));
             }
+        }
+
+        private void CenterColumn(string name)
+        {
+            DataGridViewColumn column = dataGridViewDevices.Columns[name];
+
+            if (column is null)
+                return;
+
+            //column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
         }
 
         private void RefreshSelectedCount()
@@ -692,6 +707,19 @@ namespace GEPDataExtractor
                         if (missingData < 0.0D)
                             missingData = 0.0D;
                     }
+
+                    if (missingData > 1.0D)
+                        missingData = 1.0D;
+
+                    if (badData > 1.0D)
+                        badData = 1.0D;
+                    
+                    if (badTime > 1.0D)
+                        badTime = 1.0D;
+
+                    stats.Device.Missing = $" {missingData:#0.00%} ";
+                    stats.Device.BadData = $" {badData:#0.00%} ";
+                    stats.Device.BadTime = $" {badTime:#0.00%} ";
 
                     if (stats.BadDataCount / (double)stats.Total * 100.0D > m_settings.AcceptableBadData)
                     {

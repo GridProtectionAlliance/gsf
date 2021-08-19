@@ -25,6 +25,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using GSF;
@@ -57,6 +58,9 @@ namespace GEPDataExtractor
     {
         public bool Selected { get; set; }
         public string Name { get; set; }
+        public string Missing { get; set; }
+        public string BadData { get; set; }
+        public string BadTime { get; set; }
         public string Description { get; set; }
         public bool Concentrator { get; set; }
         public string Company { get; set; }
@@ -70,6 +74,9 @@ namespace GEPDataExtractor
         {
             Selected = true;
             Name = row["Acronym"].ToString();
+            Missing = " -- % ";
+            BadData = " -- % ";
+            BadTime = " -- % ";
             Description = $"{row["Name"]} {row["ParentAcronym"]} {row["OriginalSource"]}";
             Concentrator = row["IsConcentrator"].ToString().ParseBoolean();
             Company = row["CompanyAcronym"].ToString();
