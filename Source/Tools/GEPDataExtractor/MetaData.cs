@@ -100,13 +100,13 @@ namespace GEPDataExtractor
         {
             m_property = typeof(DeviceDetail).GetProperty(propertyName);
 
-            if (m_property == null)
+            if (m_property is null)
                 throw new ArgumentException($"Property name {propertyName} not found", nameof(propertyName));
 
             Type comparerType = typeof(Comparer<>).MakeGenericType(m_property.PropertyType);
             PropertyInfo defaultComparer = comparerType.GetProperty("Default");
 
-            if (defaultComparer == null)
+            if (defaultComparer is null)
                 throw new InvalidOperationException($"Failed to find \"Default\" property for \"Comparer<{m_property.PropertyType.Name}>\"");
 
             m_comparer = defaultComparer.GetValue(null) as IComparer;            
@@ -172,7 +172,7 @@ namespace GEPDataExtractor
                 MessageBox.Show("Exception retrieving meta-data: " + ex.Message);
             }
 
-            if ((object)MeasurementTable != null)
+            if (!(MeasurementTable is null))
             {
                 // Load measurement records
                 foreach (DataRow row in MeasurementTable.Select("SignalAcronym <> 'STAT' and SignalAcronym <> 'DIGI'"))
@@ -189,7 +189,7 @@ namespace GEPDataExtractor
                 }
             }
 
-            if ((object)DeviceTable != null)
+            if (!(DeviceTable is null))
             {
                 // Load device records
                 foreach (DataRow row in DeviceTable.Rows)

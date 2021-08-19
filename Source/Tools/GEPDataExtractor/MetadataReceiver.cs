@@ -104,37 +104,37 @@ namespace GEPDataExtractor
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         private void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                // This will be done regardless of whether the object is finalized or disposed.
+
+                if (!disposing)
+                    return;
+                
+                if (!(m_subscriber is null))
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
+                    // Detach from subscriber events
+                    m_subscriber.ProcessException -= m_subscriber_ProcessException;
+                    m_subscriber.ConnectionEstablished -= m_subscriber_ConnectionEstablished;
+                    m_subscriber.MetaDataReceived -= m_subscriber_MetaDataReceived;
 
-                    if (disposing)
-                    {
-                        if ((object)m_subscriber != null)
-                        {
-                            // Detach from subscriber events
-                            m_subscriber.ProcessException -= m_subscriber_ProcessException;
-                            m_subscriber.ConnectionEstablished -= m_subscriber_ConnectionEstablished;
-                            m_subscriber.MetaDataReceived -= m_subscriber_MetaDataReceived;
-
-                            m_subscriber.Dispose();
-                            m_subscriber = null;
-                        }
-
-                        if ((object)m_waitHandle != null)
-                        {
-                            m_waitHandle.Set(); // Release any waiting threads
-                            m_waitHandle.Dispose();
-                            m_waitHandle = null;
-                        }
-                    }
+                    m_subscriber.Dispose();
+                    m_subscriber = null;
                 }
-                finally
+
+                if (!(m_waitHandle is null))
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_waitHandle.Set(); // Release any waiting threads
+                    m_waitHandle.Dispose();
+                    m_waitHandle = null;
                 }
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
@@ -150,11 +150,11 @@ namespace GEPDataExtractor
                 throw new TimeoutException($"Waited for {timeout / 1000.0D} seconds for meta-data, but none was received.");
 
             // If meta-data was received, return it
-            if ((object)m_metadata != null)
+            if (!(m_metadata is null))
                 return m_metadata;
 
             // If a processing exception occurred, re-throw it
-            if ((object)m_processException != null)
+            if (!(m_processException is null))
                 throw new InvalidOperationException(m_processException.Message, m_processException);
 
             // Otherwise return null (unlikely to ever get to this return)
