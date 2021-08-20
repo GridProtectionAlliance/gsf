@@ -848,20 +848,16 @@ namespace GSF.IO
                 {
                     StopEnumeration();
                     ClearTrackedDirectories();
+                    m_fileWatchTimer.Stop();
+                    m_fileWatchTimer.Dispose();
 
-                    if (!(m_fileWatchTimer is null))
-                        m_fileWatchTimer.Dispose();
+                    Interlocked.Increment(ref m_requeuedFileCount);
+                    m_requeueTokenSource.Cancel();
 
-                    if (!(m_requeueTokenSource is null))
-                    {
-                        Interlocked.Increment(ref m_requeuedFileCount);
-                        m_requeueTokenSource.Cancel();
+                    int requeuedFileCount = Interlocked.Decrement(ref m_requeuedFileCount);
 
-                        int requeuedFileCount = Interlocked.Decrement(ref m_requeuedFileCount);
-
-                        if (requeuedFileCount == 0)
-                            m_requeueTokenSource.Dispose();
-                    }
+                    if (requeuedFileCount == 0)
+                        m_requeueTokenSource.Dispose();
                 }
                 finally
                 {
