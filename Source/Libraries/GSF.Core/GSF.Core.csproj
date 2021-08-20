@@ -329,6 +329,7 @@
     <Compile Include="Text\Diff.cs" />
     <Compile Include="Text\DiffMatchPatch.cs" />
     <Compile Include="Text\Patch.cs" />
+    <Compile Include="Threading\ManagedCancellationTokenSource.cs" />
     <Compile Include="Threading\WaitHandleExtensions.cs" />
     <Compile Include="Trackable.cs" />
     <Compile Include="ReusableObjectPool.cs" />

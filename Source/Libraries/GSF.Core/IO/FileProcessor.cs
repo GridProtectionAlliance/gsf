@@ -455,7 +455,7 @@ namespace GSF.IO
         private readonly LogicalThread m_watcherThread;
         private readonly LogicalThread m_sequentialEnumerationThread;
         private readonly Timer m_fileWatchTimer;
-        private readonly CancellationTokenSource m_requeueTokenSource;
+        private readonly ManagedCancellationTokenSource m_requeueTokenSource;
 
         private readonly Dictionary<string, DateTime> m_touchedFiles;
 
@@ -491,7 +491,7 @@ namespace GSF.IO
             m_sequentialEnumerationThread = m_threadScheduler.CreateThread();
             m_fileWatchTimer = new Timer(15000);
             m_fileWatchTimer.Elapsed += FileWatchTimer_Elapsed;
-            m_requeueTokenSource = new CancellationTokenSource();
+            m_requeueTokenSource = new ManagedCancellationTokenSource();
 
             m_touchedFiles = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
         }
@@ -850,14 +850,7 @@ namespace GSF.IO
                     ClearTrackedDirectories();
                     m_fileWatchTimer.Stop();
                     m_fileWatchTimer.Dispose();
-
-                    Interlocked.Increment(ref m_requeuedFileCount);
-                    m_requeueTokenSource.Cancel();
-
-                    int requeuedFileCount = Interlocked.Decrement(ref m_requeuedFileCount);
-
-                    if (requeuedFileCount == 0)
-                        m_requeueTokenSource.Dispose();
+                    m_requeueTokenSource.Dispose();
                 }
                 finally
                 {
@@ -983,39 +976,35 @@ namespace GSF.IO
                 return SlowRetryDelay;
             }
 
-            var cancellationToken = m_requeueTokenSource.Token;
-
-            while (true)
+            using (m_requeueTokenSource.RetrieveToken(out var cancellationToken))
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                while (true)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
 
-                int priority = (retryCount < RelaxedRetryLimit) ? 2 : 1;
-                await m_processingThread.Join(priority);
+                    int priority = (retryCount < RelaxedRetryLimit) ? 2 : 1;
+                    await m_processingThread.Join(priority);
 
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
 
-                ProcessFile(args);
+                    ProcessFile(args);
 
-                if (!args.Requeue)
-                    break;
+                    if (!args.Requeue)
+                        break;
 
-                if (retryCount == 0)
-                    Interlocked.Increment(ref m_requeuedFileCount);
+                    if (retryCount == 0)
+                        Interlocked.Increment(ref m_requeuedFileCount);
 
-                retryCount++;
-                int delay = GetDelay();
-                try { await Task.Delay(delay, cancellationToken); }
-                catch (TaskCanceledException) { }
-            }
+                    retryCount++;
+                    int delay = GetDelay();
+                    try { await Task.Delay(delay, cancellationToken); }
+                    catch (TaskCanceledException) { break; }
+                }
 
-            if (retryCount > 0)
-            {
-                int requeuedFileCount = Interlocked.Decrement(ref m_requeuedFileCount);
-
-                if (requeuedFileCount == 0)
-                    m_requeueTokenSource.Dispose();
+                if (retryCount > 0)
+                    Interlocked.Decrement(ref m_requeuedFileCount);
             }
         }
 
