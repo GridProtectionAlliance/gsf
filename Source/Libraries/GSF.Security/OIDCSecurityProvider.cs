@@ -230,22 +230,22 @@ namespace GSF.Security
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
 
-            settings.Add("ClientID", "", "Defines the ClientID as required per OpenID Connect Standard.");
-            settings.Add("Scope", "", "Defines the Scope as required per OpenID Connect Standard.");
-            settings.Add("AuthorizationEndpoint", "", "Defines the Endpoint to redirect the user for Authorization.");
-            settings.Add("RedirectURI", "", "Defines the URI the User get's redirected to after signing in.");
-            settings.Add("ClientSecret", "", "Defines the Client Secret as required per OpenID Connect Standard for decrypting User Information.");
-            settings.Add("TokenEndpoint", "", "Defines the Endpoint to use to grab the User Token.");
-            settings.Add("RolesClaim", "roles", "Defines the claim used to identify the users roles.");
+            settings.Add(nameof(ClientID), "", "Defines the ClientID as required per OpenID Connect Standard.");
+            settings.Add(nameof(Scope), "", "Defines the Scope as required per OpenID Connect Standard.");
+            settings.Add(nameof(AuthorizationEndpoint), "", "Defines the Endpoint to redirect the user for Authorization.");
+            settings.Add(nameof(RedirectURI), "", "Defines the URI the User get's redirected to after signing in.");
+            settings.Add(nameof(ClientSecret), "", "Defines the Client Secret as required per OpenID Connect Standard for decrypting User Information.");
+            settings.Add(nameof(TokenEndpoint), "", "Defines the Endpoint to use to grab the User Token.");
+            settings.Add(nameof(RolesClaim), "roles", "Defines the claim used to identify the users roles.");
             
 
-            ClientID = settings["ClientID"].ValueAs(ClientID);
-            Scope = settings["Scope"].ValueAs(Scope);
-            AuthorizationEndpoint = settings["AuthorizationEndpoint"].ValueAs(AuthorizationEndpoint);
-            RedirectURI = settings["RedirectURI"].ValueAs(RedirectURI);
-            ClientSecret = settings["ClientSecret"].ValueAs(ClientSecret);
-            TokenEndpoint = settings["TokenEndpoint"].ValueAs(TokenEndpoint);
-            RolesClaim = settings["RolesClaim"].ValueAs(RolesClaim);
+            ClientID = settings[nameof(ClientID)].ValueAs(ClientID);
+            Scope = settings[nameof(Scope)].ValueAs(Scope);
+            AuthorizationEndpoint = settings[nameof(AuthorizationEndpoint)].ValueAs(AuthorizationEndpoint);
+            RedirectURI = settings[nameof(RedirectURI)].ValueAs(RedirectURI);
+            ClientSecret = settings[nameof(ClientSecret)].ValueAs(ClientSecret);
+            TokenEndpoint = settings[nameof(TokenEndpoint)].ValueAs(TokenEndpoint);
+            RolesClaim = settings[nameof(RolesClaim)].ValueAs(RolesClaim);
         }
 
         
@@ -425,7 +425,7 @@ namespace GSF.Security
 
             void ConfigureRequest(HttpRequestMessage request)
             {
-                request.RequestUri = new Uri($"{TokenEndpoint}");
+                request.RequestUri = new Uri(TokenEndpoint);
                 request.Method = HttpMethod.Post;               
                 request.Content = new FormUrlEncodedContent(postParams);
             }
