@@ -83,15 +83,15 @@ namespace GSF.Security
         // Constants
         private const string ResponseType = "code";                          // Response Type the SecurityProvider expects
         //private const string ResponseMode = "form_post";                     // The mode used to get ID Token for the end-user
-        private int NonceSlidingExpiration = 600;                            // Time in Seconds that a Nonce is valid for. This prevents replay attacks
+        private const int NonceSlidingExpiration = 600;                            // Time in Seconds that a Nonce is valid for. This prevents replay attacks
         // Fields
-        private string m_ClientID;
-        private string m_AuthorizationEndpoint;
-        private string m_TokenEndpoint;
-        private string m_Scope;
-        private string m_RedirectURI;
-        private string m_ClientSecret;
-        private string m_RolesClaim;
+        private string m_clientID;
+        private string m_authorizationEndpoint;
+        private string m_tokenEndpoint;
+        private string m_scope;
+        private string m_redirectURI;
+        private string m_clientSecret;
+        private string m_rolesClaim;
 
         /// <summary>
         /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
@@ -105,11 +105,11 @@ namespace GSF.Security
         {
             get
             {
-                return m_ClientID;
+                return m_clientID;
             }
             set
             {
-                m_ClientID = value;
+                m_clientID = value;
             }
         }
 
@@ -120,11 +120,11 @@ namespace GSF.Security
         {
             get
             {
-                return m_Scope;
+                return m_scope;
             }
             set
             {
-                m_Scope = value;
+                m_scope = value;
             }
         }
 
@@ -135,11 +135,11 @@ namespace GSF.Security
         {
             get
             {
-                return m_AuthorizationEndpoint;
+                return m_authorizationEndpoint;
             }
             set
             {
-                m_AuthorizationEndpoint = value;
+                m_authorizationEndpoint = value;
             }
         }
 
@@ -150,11 +150,11 @@ namespace GSF.Security
         {
             get
             {
-                return m_TokenEndpoint;
+                return m_tokenEndpoint;
             }
             set
             {
-                m_TokenEndpoint = value;
+                m_tokenEndpoint = value;
             }
         }
 
@@ -165,11 +165,11 @@ namespace GSF.Security
         {
             get
             {
-                return m_RedirectURI;
+                return m_redirectURI;
             }
             set
             {
-                m_RedirectURI = value;
+                m_redirectURI = value;
             }
         }
 
@@ -180,11 +180,11 @@ namespace GSF.Security
         {
             get
             {
-                return m_ClientSecret;
+                return m_clientSecret;
             }
             set
             {
-                m_ClientSecret = value;
+                m_clientSecret = value;
             }
         }
 
@@ -195,11 +195,11 @@ namespace GSF.Security
         {
             get
             {
-                return m_RolesClaim;
+                return m_rolesClaim;
             }
             set
             {
-                m_RolesClaim = value;
+                m_rolesClaim = value;
             }
         }
 
@@ -285,13 +285,13 @@ namespace GSF.Security
             settings.Add("RolesClaim", "roles", "Defines the claim used to identify the users roles.");
             
 
-            m_ClientID = settings["ClientID"].ValueAs(m_ClientID);
-            m_Scope = settings["Scope"].ValueAs(m_Scope);
-            m_AuthorizationEndpoint = settings["AuthorizationEndpoint"].ValueAs(m_AuthorizationEndpoint);
-            m_RedirectURI = settings["RedirectURI"].ValueAs(m_RedirectURI);
-            m_ClientSecret = settings["ClientSecret"].ValueAs(m_ClientSecret);
-            m_TokenEndpoint = settings["TokenEndpoint"].ValueAs(m_TokenEndpoint);
-            m_RolesClaim = settings["RolesClaim"].ValueAs(m_RolesClaim);
+            m_clientID = settings["ClientID"].ValueAs(m_clientID);
+            m_scope = settings["Scope"].ValueAs(m_scope);
+            m_authorizationEndpoint = settings["AuthorizationEndpoint"].ValueAs(m_authorizationEndpoint);
+            m_redirectURI = settings["RedirectURI"].ValueAs(m_redirectURI);
+            m_clientSecret = settings["ClientSecret"].ValueAs(m_clientSecret);
+            m_tokenEndpoint = settings["TokenEndpoint"].ValueAs(m_tokenEndpoint);
+            m_rolesClaim = settings["RolesClaim"].ValueAs(m_rolesClaim);
         }
 
         
@@ -463,15 +463,15 @@ namespace GSF.Security
             
             Dictionary<string, string> postParams = new Dictionary<string, string>() {
                 { "grant_type", "authorization_code" },
-                { "client_id", m_ClientID },
-                { "client_secret", m_ClientSecret },
+                { "client_id", m_clientID },
+                { "client_secret", m_clientSecret },
                 { "code", code },
-                { "redirect_uri", m_RedirectURI }
+                { "redirect_uri", m_redirectURI }
             };
 
             void ConfigureRequest(HttpRequestMessage request)
             {
-                request.RequestUri = new Uri($"{m_TokenEndpoint}");
+                request.RequestUri = new Uri($"{m_tokenEndpoint}");
                 request.Method = HttpMethod.Post;               
                 request.Content = new FormUrlEncodedContent(postParams);
             }
@@ -508,7 +508,7 @@ namespace GSF.Security
 
                 // we do not actually validate the Signature of the Token
                 // That is necessary to allow self-signed Tokens from the openXDA
-                IDictionary<string, object> tokenContent = decoder.DecodeToObject<IDictionary<string, object>>(token.id_token , m_ClientSecret, verify: false);
+                IDictionary<string, object> tokenContent = decoder.DecodeToObject<IDictionary<string, object>>(token.id_token , m_clientSecret, verify: false);
             
                 // Translate UserDetails according to Token
                 UserData userData = new UserData(tokenContent.GetOrDefault("sub").ToString());
@@ -532,8 +532,8 @@ namespace GSF.Security
 
                 try
                 {
-                    if (tokenContent.ContainsKey(m_RolesClaim))
-                        userData.Roles = (List<string>)(tokenContent.GetOrDefault(m_RolesClaim));
+                    if (tokenContent.ContainsKey(m_rolesClaim))
+                        userData.Roles = (List<string>)(tokenContent.GetOrDefault(m_rolesClaim));
                 }
                 catch (Exception ex)
                 {
@@ -596,8 +596,8 @@ namespace GSF.Security
 
             s_nonceCache.Add(BitConverter.ToString(nonce).Replace("-", ""), 0, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromSeconds(NonceSlidingExpiration) });
 
-            string redirect = $"{m_AuthorizationEndpoint}?";
-            redirect += $"response_type={ResponseType}&scope={m_Scope}&client_id={m_ClientID}&redirect_uri={m_RedirectURI}";
+            string redirect = $"{m_authorizationEndpoint}?";
+            redirect += $"response_type={ResponseType}&scope={m_scope}&client_id={m_clientID}&redirect_uri={m_redirectURI}";
             redirect += $"&nonce={BitConverter.ToString(nonce).Replace("-", "")}";
 
             return redirect;
