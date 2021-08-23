@@ -80,25 +80,22 @@ namespace GSF.Security
     {
         #region [ Members ]
 
-        // Constants
-        private const string ResponseType = "code";                          // Response Type the SecurityProvider expects
-        //private const string ResponseMode = "form_post";                   // The mode used to get ID Token for the end-user
-        private const int NonceSlidingExpiration = 600;                      // Time in Seconds that a Nonce is valid for. This prevents replay attacks
-        // Fields
-        
-
-        /// <summary>
-        /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
-        /// </summary>
-        public new const int ProviderID = 3;
-
-        
-
+        // Nested Types
         private class TokenResponse
         {
             public string access_token { get; set; }
             public string id_token { get; set; }
         }
+
+        // Constants
+        private const string ResponseType = "code";                          // Response Type the SecurityProvider expects
+        private const int NonceSlidingExpiration = 600;                      // Time in Seconds that a Nonce is valid for. This prevents replay attacks
+       
+        /// <summary>
+        /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
+        /// </summary>
+        public new const int ProviderID = 3;
+
         #endregion
 
         #region [ Constructor ]
@@ -238,7 +235,6 @@ namespace GSF.Security
             settings.Add(nameof(TokenEndpoint), "", "Defines the Endpoint to use to grab the User Token.");
             settings.Add(nameof(RolesClaim), "roles", "Defines the claim used to identify the users roles.");
             
-
             ClientID = settings[nameof(ClientID)].ValueAs(ClientID);
             Scope = settings[nameof(Scope)].ValueAs(Scope);
             AuthorizationEndpoint = settings[nameof(AuthorizationEndpoint)].ValueAs(AuthorizationEndpoint);
@@ -247,7 +243,6 @@ namespace GSF.Security
             TokenEndpoint = settings[nameof(TokenEndpoint)].ValueAs(TokenEndpoint);
             RolesClaim = settings[nameof(RolesClaim)].ValueAs(RolesClaim);
         }
-
         
         /// <summary>
         /// Refreshes the <see cref="UserData"/>.
@@ -325,15 +320,12 @@ namespace GSF.Security
             return IsUserAuthenticated;
         }
 
-        
-
         /// <summary>
         /// Logs user authentication attempt.
         /// </summary>
         /// <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
         protected virtual void LogAuthenticationAttempt(bool loginSuccess)
         {
-          
             if ((object)UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
             {
                 string message = $"User \"{UserData.Username}\" login attempt {(loginSuccess ? "succeeded using OpenID Connect" : "failed")}.";
@@ -403,18 +395,15 @@ namespace GSF.Security
                     }
                 }
             }
-
             return false;
         }
 
-       
         /// <summary>
         /// Exchange Authorization Code for a Token
         /// </summary>
         /// <param name="code"> The Authorization Code returned by the Auth Server</param>
         private TokenResponse GetToken(string code)
         {
-            
             Dictionary<string, string> postParams = new Dictionary<string, string>() {
                 { "grant_type", "authorization_code" },
                 { "client_id", ClientID },
@@ -443,14 +432,11 @@ namespace GSF.Security
                     r = JsonConvert.DeserializeObject<TokenResponse>(response.Content.ReadAsStringAsync().Result);
                 }
             }
-
             return r;
-            
         }
 
         private bool DecodeToken(TokenResponse token)
         {
-
             try
             {
                 IJsonSerializer serializer = new JsonNetSerializer();
@@ -512,9 +498,8 @@ namespace GSF.Security
                 AuthenticationFailureReason = "Token has invalid signature";
                 return false;
             }
-
-
         }
+
         #endregion
 
         #region [ Static ]
@@ -556,8 +541,8 @@ namespace GSF.Security
 
             return redirect;
         }
-        // Static Methods
 
+        // Static Methods
         public override bool ResetPassword(string securityAnswer)
         {
             throw new NotImplementedException();
