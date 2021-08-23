@@ -27,6 +27,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -147,13 +149,14 @@ namespace GSF.Web.Security
 
             if ((object)securityPrincipal == null)
             {
+                NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
                 // Pick the appropriate authentication logic based
                 // on the authorization type in the HTTP headers
                 // or in the URI Parameters if it is using OIDC.
                 if (authorization?.Scheme == "Basic")
                     securityPrincipal = AuthenticateBasic(authorization.Parameter);
                 // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
-                else if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("code="))
+                else if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
                     securityPrincipal = AuthenticateCode();
                 else
                     securityPrincipal = AuthenticatePassthrough();
@@ -208,13 +211,16 @@ namespace GSF.Web.Security
                 return true; // Abort pipeline
             }
 
+
             // If request is for an anonymous resource or user is properly authenticated, allow
             // request to propagate through the Owin pipeline
             if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
                 return false; // Let pipeline continue
 
             // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
-            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("code="))
+            NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
+
+            if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
                 return false;
 
             
@@ -242,7 +248,7 @@ namespace GSF.Web.Security
 
                 ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider("", autoRefresh: false);
 
-                Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage,encodedPath,referrer));
+                Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage, encodedPath, referrer));
             }
             else
             {
