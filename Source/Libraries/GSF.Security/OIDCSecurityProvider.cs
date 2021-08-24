@@ -30,6 +30,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.Caching;
 using System.Security;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Collections;
@@ -37,11 +38,8 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.Identity;
-using JWT;
-using JWT.Algorithms;
-using JWT.Exceptions;
-using JWT.Serializers;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 #pragma warning disable S2068
 
@@ -439,41 +437,21 @@ namespace GSF.Security
         {
             try
             {
-                IJsonSerializer serializer = new JsonNetSerializer();
-                var provider = new UtcDateTimeProvider();
-                IJwtValidator validator = new JwtValidator(serializer, provider);
-                IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-                IJwtAlgorithm algorithm = new HMACSHA256Algorithm(); // symmetric
-                IJwtDecoder decoder = new JwtDecoder(serializer, validator, urlEncoder, algorithm);
-
-                // we do not actually validate the Signature of the Token
-                // That is necessary to allow self-signed Tokens from the openXDA
-                IDictionary<string, object> tokenContent = decoder.DecodeToObject<IDictionary<string, object>>(token.id_token , ClientSecret, verify: false);
-            
+                JObject tokenContent = DecodeJWT(token.id_token);
+                
                 // Translate UserDetails according to Token
                 UserData userData = new UserData(tokenContent.GetOrDefault("sub").ToString());
 
-                // Initialize user data.
                 userData.Initialize();
-
                 userData.Username = tokenContent.GetOrDefault("name").ToString();
-                
-                if (tokenContent.ContainsKey("given_name"))
-                    userData.FirstName = tokenContent.GetOrDefault("given_name").ToString();
-
-                if (tokenContent.ContainsKey("family_name"))
-                    userData.LastName = tokenContent.GetOrDefault("family_name").ToString();
-
-                if (tokenContent.ContainsKey("phone_number"))
-                    userData.PhoneNumber = tokenContent.GetOrDefault("phone_number").ToString();
-
-                if (tokenContent.ContainsKey("email"))
-                    userData.EmailAddress = tokenContent.GetOrDefault("email").ToString();
+                userData.FirstName = tokenContent.GetOrDefault("given_name").ToString();
+                userData.LastName = tokenContent.GetOrDefault("family_name").ToString();
+                userData.PhoneNumber = tokenContent.GetOrDefault("phone_number").ToString();
+                userData.EmailAddress = tokenContent.GetOrDefault("email").ToString();
 
                 try
                 {
-                    if (tokenContent.ContainsKey(RolesClaim))
-                        userData.Roles = (List<string>)(tokenContent.GetOrDefault(RolesClaim));
+                        userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToObject<List<string>>();
                 }
                 catch (Exception ex)
                 {
@@ -488,16 +466,48 @@ namespace GSF.Security
                 UserData = userData;
                 return true;
             }
-            catch (TokenExpiredException)
+            catch (Exception ex)
             {
-                AuthenticationFailureReason = $"Token Expired.";
-                return false;
+                string message = $"Exception occurred while decoding the OpenID token: {ex.Message}";
+                throw new Exception(message, ex);
             }
-            catch (SignatureVerificationException ex)
+        }
+
+        private JObject DecodeJWT(string token)
+        {
+            if (!token.Contains("."))
+                throw new InvalidExpressionException("A valid JQT token requires at least one '.'");
+
+            string jsoeHeader = token.Substring(0, token.IndexOf("."));
+            byte[] headerData = Convert.FromBase64String(jsoeHeader);
+            jsoeHeader = Encoding.UTF8.GetString(headerData);
+            JObject header = JObject.Parse(jsoeHeader);
+
+            JToken cty;
+            if (header.TryGetValue("cty", out cty) && cty.ToString().ToLower() == "jwt")
+                return DecodeJWT(token);
+
+            JToken enc;
+            bool isJWE = header.TryGetValue("enc", out enc);
+            if (isJWE)
+                throw new FormatException("JWE Tokens are not supported");
+
+            token = token.Substring(token.IndexOf(".") + 1);
+            string payloadString = token.Substring(0, token.IndexOf("."));
+
+            string signatureString = "";
+            if (token.Contains("."))
             {
-                AuthenticationFailureReason = "Token has invalid signature";
-                return false;
+                token = token.Substring(token.IndexOf(".") + 1);
+                signatureString = token.Substring(0, token.IndexOf("."));
             }
+
+            // We are not validating signatures to allow openXDA to self-sign tokens
+            // #ToDO: Implement signature verifications based on config file setting
+
+            byte[] tokenBytes = System.Convert.FromBase64String(payloadString);
+            string tokenData = Encoding.UTF8.GetString(tokenBytes);
+            return JObject.Parse(tokenData);
         }
 
         #endregion
