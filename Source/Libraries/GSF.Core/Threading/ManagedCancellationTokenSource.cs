@@ -30,7 +30,7 @@ namespace GSF.Threading
     /// Implements a reference counter for <see cref="System.Threading.CancellationTokenSource"/> to
     /// provide thread safety around <see cref="CancellationTokenSource.Dispose()"/>.
     /// </summary>
-    public class ManagedCancellationTokenSource : IDisposable
+    public sealed class ManagedCancellationTokenSource : IDisposable
     {
         #region [ Members ]
 
