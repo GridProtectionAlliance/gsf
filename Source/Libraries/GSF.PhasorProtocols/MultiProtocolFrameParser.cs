@@ -2688,7 +2688,7 @@ namespace GSF.PhasorProtocols
             // Make sure data stream is disabled
             if (!SkipDisableRealTimeData && DisableRealTimeDataOnStop)
             {
-                WaitHandle commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);            
+                WaitHandle commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);  
                 commandWaitHandle?.WaitOne(1000);
             }
 
@@ -3211,12 +3211,12 @@ namespace GSF.PhasorProtocols
                 m_initiatingDataStream = true;
 
                 // Begin data parsing sequence to handle reception of configuration frame
-                Thread startDataParsingThread = new Thread(StartDataParsingSequence)
+                Thread startDataParsingSequenceThread = new Thread(StartDataParsingSequence)
                 {
                     IsBackground = true
                 };
 
-                startDataParsingThread.Start();
+                startDataParsingSequenceThread.Start();
             }
             catch (Exception ex)
             {
