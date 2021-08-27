@@ -1574,16 +1574,16 @@ namespace GSF.PhasorProtocols
                 // Parse connection string to see if a phasor or transport protocol was assigned
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
 
-                if (settings.TryGetValue("phasorProtocol", out string setting))
+                if (settings.TryGetValue(nameof(PhasorProtocol), out string setting))
                     PhasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), setting, true);
 
-                if (settings.TryGetValue("transportProtocol", out setting) || settings.TryGetValue("protocol", out setting))
+                if (settings.TryGetValue(nameof(TransportProtocol), out setting) || settings.TryGetValue("protocol", out setting))
                     TransportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), setting, true);
 
-                if (settings.TryGetValue("keepCommandChannelOpen", out setting))
+                if (settings.TryGetValue(nameof(KeepCommandChannelOpen), out setting))
                     KeepCommandChannelOpen = setting.ParseBoolean();
 
-                if (settings.TryGetValue("bufferSize", out setting) && int.TryParse(setting, out int bufferSize) && bufferSize >= 1)
+                if (settings.TryGetValue(nameof(BufferSize), out setting) && int.TryParse(setting, out int bufferSize) && bufferSize >= 1)
                     BufferSize = bufferSize;
 
                 if (settings.TryGetValue("checkSumValidationFrameTypes", out setting))
@@ -1592,10 +1592,12 @@ namespace GSF.PhasorProtocols
                         m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
                 }
 
-                if (settings.TryGetValue("trustHeaderLength", out setting))
+                if (settings.TryGetValue(nameof(TrustHeaderLength), out setting))
                     TrustHeaderLength = setting.ParseBoolean();
 
-                DeviceSupportsCommands = DeriveCommandSupport();
+                DeviceSupportsCommands = settings.TryGetValue(nameof(DeviceSupportsCommands), out setting) ? 
+                    setting.ParseBoolean() : 
+                    DeriveCommandSupport();
             }
         }
 
