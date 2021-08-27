@@ -1174,7 +1174,7 @@ namespace GSF.PhasorProtocols
                 if (!(m_multicastServerAddress is null))
                     m_udpClient.AddMulticastMembership(m_multicastServerAddress, m_multicastSourceAddress);
 
-                ConnectionEstablished?.Invoke(this, new EventArgs());
+                ConnectionEstablished?.Invoke(this, EventArgs.Empty);
             }
 
             // Shared client connection attempt handler.
@@ -2688,7 +2688,7 @@ namespace GSF.PhasorProtocols
             // Make sure data stream is disabled
             if (!SkipDisableRealTimeData && DisableRealTimeDataOnStop)
             {
-                WaitHandle commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);
+                WaitHandle commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);            
                 commandWaitHandle?.WaitOne(1000);
             }
 
