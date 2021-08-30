@@ -556,6 +556,23 @@
             return false;
         }
 
+        function phaseStartsWith(phaseLabel, phaseMatches, ignoreCase) {
+            if (ignoreCase)
+                phaseLabel = phaseLabel.toUpperCase();
+
+            for (let i = 0; i < phaseMatches.length; i++) {
+                let phaseMatch = phaseMatches[i];
+
+                if (ignoreCase)
+                    phaseMatch = phaseMatch.toUpperCase();
+
+                if (phaseLabel.startsWith(phaseMatch))
+                    return true;
+            }
+
+            return false;
+        }
+
         function phaseContains(phaseLabel, phaseMatches, ignoreCase) {
             if (ignoreCase)
                 phaseLabel = phaseLabel.toUpperCase();
@@ -575,6 +592,9 @@
 
         function phaseMatchHighConfidence(phaseLabel, containsMatches, endsWithMatches) {
             if (phaseEndsWith(phaseLabel, containsMatches, true))
+                return true;
+
+            if (phaseStartsWith(phaseLabel, containsMatches, true))
                 return true;
 
             const matches = containsMatches.concat(endsWithMatches);
@@ -616,10 +636,10 @@
 
             // Handle high confidence phase matches when no phase is defined or when phase is "+" - since positive sequence is often default value, it's treated with suspicion
             if (isEmpty(phase) || phase === "+") {
-                if (phaseMatchExact(phasorLabel, [ "V1PM", "I1PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V1", "I1" ], [ "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" ]) || phaseEndsWith(phasorLabel, [ "+SV", "+SI", "+V", "+I" ], true))
+                if (phaseMatchExact(phasorLabel, [ "V1PM", "I1PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V1", "VP", "I1", "IP", "VSEQ1", "ISEQ1" ], [ "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" ]) || phaseEndsWith(phasorLabel, [ "+SV", "+SI", "+V", "+I" ], true))
                     return "+";
 
-                if (phaseMatchExact(phasorLabel, [ "V0PM", "I0PM", "VZPM", "IZPM" ]) || phaseMatchHighConfidence(phasorLabel, ["V0", "I0"], [ "ZERO", "ZPV", "ZPI", "VSPM", "V0PM", "I0PM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" ]) || phaseEndsWith(phasorLabel, [ "0SV", "0SI" ], true))
+                if (phaseMatchExact(phasorLabel, [ "V0PM", "I0PM", "VZPM", "IZPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V0", "I0", "VSEQ0", "ISEQ0" ], [ "ZERO", "ZPV", "ZPI", "VSPM", "V0PM", "I0PM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" ]) || phaseEndsWith(phasorLabel, [ "0SV", "0SI" ], true))
                     return "0";
 
                 if (phaseMatchExact(phasorLabel, [ "VAPM", "IAPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "VA", "IA" ], [ "APV", "API", "VAPM", "IAPM", "AV", "AI" ]))
@@ -634,14 +654,14 @@
                 if (phaseMatchExact(phasorLabel, [ "VNPM", "INPM" ]) || phaseMatchHighConfidence(phasorLabel, [ "VN", "IN" ], [ "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" ]))
                     return "N";
 
-                if (phaseMatchExact(phasorLabel, [ "V2PM", "I2PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V2", "I2" ], [ "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]))
+                if (phaseMatchExact(phasorLabel, [ "V2PM", "I2PM" ]) || phaseMatchHighConfidence(phasorLabel, [ "V2", "I2", "VSEQ2", "ISEQ2" ], [ "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" ]))
                     return "-";
             }
 
             // Handle lower confidence phase matches only when phase is not defined
             if (isEmpty(phase)) {
                 // Since positive sequence is the default and always treated with accuracy suspicion, verify it's value first
-                if (phaseMatchLowConfidence(phasorLabel, [ "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" ]))
+                if (phaseMatchLowConfidence(phasorLabel, [ "V1", "VP", "I1", "IP", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" ]))
                     return "+?";
 
                 if (phaseMatchLowConfidence(phasorLabel, [ "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" ]))
