@@ -937,12 +937,18 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     bool phaseEndsWith(string phaseLabel, string[] phaseMatches, bool ignoreCase) => 
                         phaseMatches.Any(match => phaseLabel.EndsWith(match, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
 
+                    bool phaseStartsWith(string phaseLabel, string[] phaseMatches, bool ignoreCase) =>
+                        phaseMatches.Any(match => phaseLabel.StartsWith(match, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+
                     bool phaseContains(string phaseLabel, string[] phaseMatches, bool ignoreCase) =>
                         phaseMatches.Any(match => phaseLabel.IndexOf(match, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) > -1);
 
                     bool phaseMatchHighConfidence(string phaseLabel, string[] containsMatches, string[] endsWithMatches)
                     {
                         if (phaseEndsWith(phaseLabel, containsMatches, true))
+                            return true;
+
+                        if (phaseStartsWith(phaseLabel, containsMatches, true))
                             return true;
 
                         foreach (string match in containsMatches.Concat(endsWithMatches))
@@ -985,10 +991,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         // Handle high confidence phase matches when no phase is defined or when phase is "+" - since positive sequence is often default value, it's treated with suspicion
                         if (string.IsNullOrWhiteSpace(phase) || phase == "+")
                         {
-                            if (phaseMatchExact(phasorLabel, new[] { "V1PM", "I1PM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "V1", "I1" }, new[] { "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" }) || phaseEndsWith(phasorLabel, new[] { "+SV", "+SI", "+V", "+I" }, true))
+                            if (phaseMatchExact(phasorLabel, new[] { "V1PM", "I1PM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "V1", "VP", "I1", "IP", "VSEQ1", "ISEQ1" }, new[] { "POS", "V1PM", "I1PM", "PS", "PSV", "PSI" }) || phaseEndsWith(phasorLabel, new[] { "+SV", "+SI", "+V", "+I" }, true))
                                 return "+";
 
-                            if (phaseMatchExact(phasorLabel, new[] { "V0PM", "I0PM", "VZPM", "IZPM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "V0", "I0" }, new[] { "ZERO", "ZPV", "ZPI", "VSPM", "V0PM", "I0PM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" }) || phaseEndsWith(phasorLabel, new[] { "0SV", "0SI" }, true))
+                            if (phaseMatchExact(phasorLabel, new[] { "V0PM", "I0PM", "VZPM", "IZPM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "V0", "I0", "VSEQ0", "ISEQ0" }, new[] { "ZERO", "ZPV", "ZPI", "VSPM", "V0PM", "I0PM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI" }) || phaseEndsWith(phasorLabel, new[] { "0SV", "0SI" }, true))
                                 return "0";
 
                             if (phaseMatchExact(phasorLabel, new[] { "VAPM", "IAPM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "VA", "IA" }, new[] { "APV", "API", "VAPM", "IAPM", "AV", "AI" }))
@@ -1003,7 +1009,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             if (phaseMatchExact(phasorLabel, new[] { "VNPM", "INPM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "VN", "IN" }, new[] { "NEUT", "NPV", "NPI", "VNPM", "INPM", "NV", "NI" }))
                                 return "N";
 
-                            if (phaseMatchExact(phasorLabel, new[] { "V2PM", "I2PM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "V2", "I2" }, new[] { "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" }))
+                            if (phaseMatchExact(phasorLabel, new[] { "V2PM", "I2PM" }) || phaseMatchHighConfidence(phasorLabel, new[] { "V2", "I2", "VSEQ2", "ISEQ2" }, new[] { "NEG", "-SV", "-SI", "V2PM", "I2PM", "NS", "NSV", "NSI" }))
                                 return "-";
                         }
 
@@ -1011,7 +1017,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         if (string.IsNullOrWhiteSpace(phase))
                         {
                             // Since positive sequence is the default and always treated with accuracy suspicion, verify it's value first
-                            if (phaseMatchLowConfidence(phasorLabel, new[] { "V1", "I1", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" }))
+                            if (phaseMatchLowConfidence(phasorLabel, new[] { "V1", "VP", "I1", "IP", "POS", "V1PM", "I1PM", "PS", "PSV", "PSI", "+SV", "+SI", "+V", "+I" }))
                                 return "+?";
 
                             if (phaseMatchLowConfidence(phasorLabel, new[] { "V0", "I0", "ZERO", "ZPV", "ZPI", "VSPM", "VZPM", "IZPM", "ZS", "ZSV", "ZSI", "0SV", "0SI" }))
