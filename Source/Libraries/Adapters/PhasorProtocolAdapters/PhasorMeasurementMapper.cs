@@ -39,6 +39,8 @@ using System.Text;
 using System.Threading;
 using GSF;
 using GSF.Communication;
+using GSF.Data;
+using GSF.Data.Model;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
@@ -52,6 +54,8 @@ using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using GSF.Units.EE;
 using TcpClient = GSF.Communication.TcpClient;
+using DeviceRecord = GSF.TimeSeries.Model.Device;
+using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
 
 namespace PhasorProtocolAdapters
 {
@@ -297,7 +301,7 @@ namespace PhasorProtocolAdapters
         public Ticks LastReportTime { get; private set; }
 
         /// <summary>
-        /// Gets the the total number of frames that have been received by the current mapper connection.
+        /// Gets the total number of frames that have been received by the current mapper connection.
         /// </summary>
         public long TotalFrames => m_frameParser?.TotalFramesReceived ?? 0;
 
@@ -307,7 +311,7 @@ namespace PhasorProtocolAdapters
         public long MissingFrames => m_frameParser?.TotalMissingFrames ?? 0;
 
         /// <summary>
-        /// Gets the total number of CRC errors that have been encountered by the the current mapper connection.
+        /// Gets the total number of CRC errors that have been encountered by the current mapper connection.
         /// </summary>
         public long CRCErrors => m_frameParser?.TotalCrcExceptions ?? 0;
 
@@ -886,7 +890,7 @@ namespace PhasorProtocolAdapters
                 if (!disposing)
                     return;
 
-                // Detach from fowarding channel events and set any references to null
+                // Detach from forwarding channel events and set any references to null
                 TcpPublishChannel = null;
                 UdpPublishChannel = null;
                 TcpClientPublishChannel = null;
@@ -1121,6 +1125,10 @@ namespace PhasorProtocolAdapters
             if (!(settings.TryGetValue("timeResolution", out setting) && long.TryParse(setting, out m_timeResolution)))
                 m_timeResolution = 10000L;
 
+            // If user defines an internal flag, attempt to re-flag all measurements for this device and possible children
+            if (settings.TryGetValue("internal", out setting))
+                ReassignInternalFlags(setting.ParseBoolean());
+
             // Provide access ID to frame parser as this may be necessary to make a phasor connection
             frameParser.DeviceID = AccessID;
             frameParser.SourceName = Name;
@@ -1161,8 +1169,8 @@ namespace PhasorProtocolAdapters
 
             // Register with the statistics engine
             StatisticsEngine.Register(this, "InputStream", "IS");
-            StatisticsEngine.Calculated += (sender, args) => ResetLatencyCounters();
-            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
+            StatisticsEngine.Calculated += (_, _) => ResetLatencyCounters();
+            StatisticsEngine.Calculated += (_, _) => ResetMeasurementsPerSecondCounters();
         }
 
         // Load device list for this mapper connection
@@ -2389,6 +2397,45 @@ namespace PhasorProtocolAdapters
             return configurationChanged;
         }
 
+        private void ReassignInternalFlags(bool @internal)
+        {
+            try
+            {
+                using AdoDataConnection connection = new("systemSettings");
+                TableOperations<DeviceRecord> deviceTable = new(connection);
+                TableOperations<MeasurementRecord> measurementTable = new(connection);
+
+                DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", Name);
+                IEnumerable<DeviceRecord> childDevices = deviceTable.QueryRecordsWhere("ParentID = {0}", device.ID);
+
+                List<int> deviceIDs = new() { device.ID };
+                deviceIDs.AddRange(childDevices.Select(childDevice => childDevice.ID));
+
+                IEnumerable<MeasurementRecord> measurements = measurementTable.QueryRecordsWhere($"DeviceID IN ({string.Join(", ", deviceIDs)})");
+                int updateCount = 0;
+
+                foreach (MeasurementRecord measurement in measurements)
+                {
+                    if (measurement.Internal == @internal)
+                        continue;
+
+                    measurement.Internal = @internal;
+                    measurementTable.UpdateRecord(measurement);
+                    updateCount++;
+                }
+
+                if (updateCount > 0)
+                {
+                    OnStatusMessage(MessageLevel.Info, $"Reassigned \"Internal\" flag to \"{@internal}\" for {updateCount:N0} measurement records associated with device \"{Name}\".", nameof(ReassignInternalFlags));
+                    OnConfigurationChanged();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to reassign \"Internal\" flag to \"{@internal}\" for measurement records associated with device \"{Name}\": {ex.Message}", ex), nameof(ReassignInternalFlags), MessageFlags.UsageIssue);
+            }
+        }
+
         #region [ Frame Parser Event Handlers ]
 
         // Redistribute received data.
@@ -2564,7 +2611,7 @@ namespace PhasorProtocolAdapters
             // Reinitialize proxy connection if needed...
             if (Enabled && !(m_clientBasedPublishChannel is null) && m_clientBasedPublishChannel.CurrentState != ClientState.Connected)
             {
-                ThreadPool.QueueUserWorkItem(state =>
+                ThreadPool.QueueUserWorkItem(_ =>
                 {
                     m_clientBasedPublishChannel.Disconnect();
                     m_clientBasedPublishChannel.ConnectAsync();
