@@ -160,7 +160,7 @@ namespace APPPDCImporter
             // openFileDialogPDCConfig
             // 
             this.openFileDialogPDCConfig.DefaultExt = "3573";
-            this.openFileDialogPDCConfig.Filter = "APP PDC Config Files (*.ini)|*.ini|All Files (*.*)|*.*";
+            this.openFileDialogPDCConfig.Filter = "APP PDC Config Files (*.inf;*.ini)|*.inf;*.ini|All Files (*.*)|*.*";
             this.openFileDialogPDCConfig.Title = "Select APP PDC Configuration File to Import";
             // 
             // comboBoxIPAddresses
