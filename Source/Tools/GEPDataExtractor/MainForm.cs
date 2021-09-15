@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -167,6 +168,9 @@ namespace GEPDataExtractor
 
                 RefreshDevicesDataGrid();
                 RefreshSelectedCount();
+
+                if (!string.IsNullOrWhiteSpace(m_settings.DeviceFilter))
+                    textBoxDeviceFilter_TextChanged(sender, e);
 
                 ShowUpdateMessage("Ready for user data type selection.");
             }
@@ -435,10 +439,7 @@ namespace GEPDataExtractor
                 filterExpression.Append($"SignalType IN ({string.Join(", ", signalTypes.Select(item => $"'{item}'"))})");
             }
 
-            if (filterExpression.Length > 0)
-                return string.Format(textBoxFilterExpression.Tag.ToString(), filterExpression);
-
-            return "";
+            return filterExpression.Length > 0 ? string.Format(textBoxFilterExpression.Tag.ToString(), filterExpression) : "";
         }
 
         private SortOrder InvertSortOrder(DataGridViewColumnHeaderCell headerCell)
@@ -455,8 +456,49 @@ namespace GEPDataExtractor
 
         private void textBoxDeviceFilter_TextChanged(object sender, EventArgs e)
         {
-            FormElementChanged(sender, e);
-            RefreshSelectedCount();
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<object, EventArgs>(textBoxDeviceFilter_TextChanged), sender, e);
+            }
+            else
+            {
+                FormElementChanged(sender, e);
+                RefreshSelectedCount();
+
+                ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    try
+                    {
+                        string deviceFilter = textBoxDeviceFilter.Text;
+
+                        if (!string.IsNullOrWhiteSpace(deviceFilter))
+                        {
+                            foreach (DeviceDetail record in m_metadata.Devices)
+                                record.Selected = false;
+
+                            foreach (DataRow row in m_metadata.DeviceTable.Select($"Acronym LIKE '{deviceFilter}'"))
+                            {
+                                if (!Guid.TryParse(row["UniqueID"].ToString(), out Guid uniqueID))
+                                    continue;
+
+                                DeviceDetail record = m_metadata.Devices.FirstOrDefault(device => device.UniqueID == uniqueID);
+
+                                if (record is null)
+                                    continue;
+
+                                record.Selected = true;
+                            }
+
+                            RefreshDevicesDataGrid();
+                            RefreshSelectedCount();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.SwallowException(ex);
+                    }
+                });
+            }
         }
 
         private void textBoxPhaseFilter_TextChanged(object sender, EventArgs e)
