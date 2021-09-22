@@ -134,6 +134,7 @@
     <Compile Include="Data\DataInserter.cs" />
     <Compile Include="Data\DataUpdater.cs" />
     <Compile Include="Data\Model\AdditionalFieldSearchAttribute.cs" />
+    <Compile Include="Data\Model\ClaimAttribute.cs" />
     <Compile Include="Data\Model\EncryptDataAttribute.cs" />
     <Compile Include="Data\Model\CSVExcludeFieldAttribute.cs" />
     <Compile Include="Data\Model\DefaultSortOrderAttribute.cs" />
