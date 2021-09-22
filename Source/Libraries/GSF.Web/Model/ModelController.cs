@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
@@ -81,11 +82,37 @@ namespace GSF.Web.Model
             if (dsoa != null)
                 DefaultSort = $"{pi.Name} {(dsoa.Ascending ? "ASC" : "DESC")}";
 
-            PostRoles = typeof(T).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
-            GetRoles = typeof(T).GetCustomAttribute<GetRolesAttribute>()?.Roles ?? "";
-            PatchRoles = typeof(T).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
-            DeleteRoles = typeof(T).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
+            if (User.GetType() == typeof(ClaimsPrincipal))
+            {
+                SecurityType = "Claims";
 
+                IEnumerable<ClaimAttribute> claimAttributes = typeof(T).GetCustomAttributes<ClaimAttribute>();
+
+                foreach (ClaimAttribute claimAttribute in claimAttributes)
+                {
+                    if (Claims.ContainsKey(claimAttribute.Verb))
+                        Claims[claimAttribute.Verb].Add(claimAttribute.Claim);
+                    else
+                        Claims.Add(claimAttribute.Verb, new List<Claim>() { claimAttribute.Claim });
+                }
+
+                if (!Claims.ContainsKey("POST"))
+                    Claims.Add("POST", new List<Claim>() { new Claim("Role", "Administrator") });
+                if (!Claims.ContainsKey("PATCH"))
+                    Claims.Add("PATCH", new List<Claim>() { new Claim("Role", "Administrator") });
+                if (!Claims.ContainsKey("DELETE"))
+                    Claims.Add("DELETE", new List<Claim>() { new Claim("Role", "Administrator") });
+
+            }
+            else
+            {
+
+                SecurityType = "Roles";
+                PostRoles = typeof(T).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
+                GetRoles = typeof(T).GetCustomAttribute<GetRolesAttribute>()?.Roles ?? "";
+                PatchRoles = typeof(T).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
+                DeleteRoles = typeof(T).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
+            }
             CustomView = typeof(T).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "";
             ViewOnly = typeof(T).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false;
             AllowSearch = typeof(T).GetCustomAttribute<AllowSearchAttribute>()?.AllowSearch ?? false;
@@ -113,6 +140,9 @@ namespace GSF.Web.Model
         protected string PatchRoles { get; } = "Administrator";
         protected string DeleteRoles { get; } = "Administrator";
         private int? Take { get; } = null;
+        private string SecurityType = "";
+
+        protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
 
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
         #endregion
@@ -128,7 +158,7 @@ namespace GSF.Web.Model
             if (ViewOnly)
                 return Unauthorized();
 
-            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            if (GetAuthCheck())
             {
                 using (AdoDataConnection connection = new AdoDataConnection(Connection))
                 {
@@ -158,7 +188,7 @@ namespace GSF.Web.Model
         [HttpGet, Route("{parentID?}")]
         public virtual IHttpActionResult Get(string parentID = null)
         {
-            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            if (GetAuthCheck())
             {
 
                 try
@@ -200,7 +230,7 @@ namespace GSF.Web.Model
         [HttpGet, Route("One/{id}")]
         public virtual IHttpActionResult GetOne(string id)
         {
-            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            if (GetAuthCheck())
             {
 
                 try
@@ -244,7 +274,7 @@ namespace GSF.Web.Model
         [HttpGet, Route("{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string sort, int ascending)
         {
-            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            if (GetAuthCheck())
             {
 
                 try
@@ -276,7 +306,7 @@ namespace GSF.Web.Model
         [HttpGet, Route("{parentID}/{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string parentID, string sort, int ascending)
         {
-            if (GetRoles == string.Empty || User.IsInRole(GetRoles))
+            if (GetAuthCheck())
             {
 
 
@@ -322,7 +352,7 @@ namespace GSF.Web.Model
         {
             try
             {
-                if ((PostRoles == string.Empty || User.IsInRole(PostRoles)) && !ViewOnly)
+                if (PostAuthCheck() && !ViewOnly)
                 {
                     using (AdoDataConnection connection = new AdoDataConnection(Connection))
                     {
@@ -356,7 +386,7 @@ namespace GSF.Web.Model
         {
             try
             {
-                if (PatchRoles == string.Empty || User.IsInRole(PatchRoles) && !ViewOnly)
+                if (PatchAuthCheck() && !ViewOnly)
                 {
 
                     using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -402,7 +432,7 @@ namespace GSF.Web.Model
         {
             try
             {
-                if ((DeleteRoles == string.Empty || User.IsInRole(DeleteRoles)) && !ViewOnly)
+                if (DeleteAuthCheck() && !ViewOnly)
                 {
 
                     using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -459,7 +489,7 @@ namespace GSF.Web.Model
         [HttpPost, Route("SearchableList")]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData)
         {
-            if (!AllowSearch || (GetRoles != string.Empty && !User.IsInRole(GetRoles)))
+            if (GetAuthCheck() && !AllowSearch)
                 return Unauthorized();
 
             try
@@ -678,6 +708,55 @@ namespace GSF.Web.Model
                     return result.Take((int)Take);
             }
         }
+
+        private bool GetAuthCheck()
+        {
+            if (SecurityType == "Claims")
+            {
+                List<Claim> claims = Claims["GET"];
+                ClaimsPrincipal claimsPrincipal = (ClaimsPrincipal)User;
+                return claims.Count() == 0 || claimsPrincipal.HasClaim(claim => claims.Any(c => c.Type == claim.Type && c.Value == claim.Value));
+            }
+            else
+                return GetRoles == string.Empty || User.IsInRole(GetRoles);
+        }
+
+        private bool PostAuthCheck()
+        {
+            if (SecurityType == "Claims")
+            {
+                List<Claim> claims = Claims["POST"];
+                ClaimsPrincipal claimsPrincipal = (ClaimsPrincipal)User;
+                return claims.Count() == 0 || claimsPrincipal.HasClaim(claim => claims.Any(c => c.Type == claim.Type && c.Value == claim.Value));
+            }
+            else
+                return PostRoles == string.Empty || User.IsInRole(PostRoles);
+        }
+
+        private bool PatchAuthCheck()
+        {
+            if (SecurityType == "Claims")
+            {
+                List<Claim> claims = Claims["PATCH"];
+                ClaimsPrincipal claimsPrincipal = (ClaimsPrincipal)User;
+                return claims.Count() == 0 || claimsPrincipal.HasClaim(claim => claims.Any(c => c.Type == claim.Type && c.Value == claim.Value));
+            }
+            else
+                return PatchRoles == string.Empty || User.IsInRole(PatchRoles);
+        }
+
+        private bool DeleteAuthCheck()
+        {
+            if (SecurityType == "Claims")
+            {
+                List<Claim> claims = Claims["DELETE"];
+                ClaimsPrincipal claimsPrincipal = (ClaimsPrincipal)User;
+                return claims.Count() == 0 || claimsPrincipal.HasClaim(claim => claims.Any(c => c.Type == claim.Type && c.Value == claim.Value));
+            }
+            else
+                return DeleteRoles == string.Empty || User.IsInRole(DeleteRoles);
+        }
+
 
         #endregion
     }
