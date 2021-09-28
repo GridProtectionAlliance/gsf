@@ -87,7 +87,7 @@ namespace GSF.PQDS
         public DateTime Time;
 
         /// <summary>
-        /// Timestamp of the point.
+        /// Milliseconds from Inception.
         /// </summary>
         public double Milliseconds;
 
