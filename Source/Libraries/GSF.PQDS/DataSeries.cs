@@ -87,6 +87,11 @@ namespace GSF.PQDS
         public DateTime Time;
 
         /// <summary>
+        /// Timestamp of the point.
+        /// </summary>
+        public double Milliseconds;
+
+        /// <summary>
         /// Value of the point.
         /// </summary>
         public double Value;

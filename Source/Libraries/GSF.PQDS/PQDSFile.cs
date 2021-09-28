@@ -443,10 +443,12 @@ namespace GSF.PQDS
                     continue;
                 }
                 DateTime TS;
+                double milliseconds;
                 try
                 {
-                    double milliseconds = Convert.ToDouble(flds[0].Trim());
-                    TS = this.m_initialTS.AddMilliseconds(milliseconds);
+                    milliseconds = Convert.ToDouble(flds[0].Trim());
+                    double ticks = milliseconds * 10000;
+                    TS = this.m_initialTS.AddTicks((int)ticks);
                 }
                 catch
                 {
@@ -459,7 +461,7 @@ namespace GSF.PQDS
                     try
                     {
                         double value = Convert.ToDouble(flds[i + 1].Trim());
-                        data[i].Add(new DataPoint() { Time = TS, Value = value });
+                        data[i].Add(new DataPoint() { Time = TS, Value = value, Milliseconds = milliseconds });
                     }
                     catch
                     {
