@@ -782,7 +782,7 @@ namespace GSF.Security
                 {
                     using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
                     {
-                        connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess ? 1 : 0);
+                        connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess);
                     }
                 }
             }
