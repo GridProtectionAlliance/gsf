@@ -103,7 +103,7 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
         public OIDCSecurityProvider(string username)
-            : this(username, true, false, false)
+            : this(username, false, false, false)
         {
         }
 
