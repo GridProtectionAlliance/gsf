@@ -554,11 +554,15 @@ namespace GSF.Security
 
             s_nonceCache.Add(BitConverter.ToString(nonce).Replace("-", ""), 0, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromSeconds(NonceSlidingExpiration) });
 
-            string redirect = $"{AuthorizationEndpoint}?";
-            redirect += $"response_type={ResponseType}&scope={Scope}&client_id={ClientID}&redirect_uri={RedirectURI}";
-            redirect += $"&nonce={BitConverter.ToString(nonce).Replace("-", "")}";
+            StringBuilder redirect = new StringBuilder();
+            redirect.Append(AuthorizationEndpoint);
+            redirect.Append($"?response_type={ResponseType}");
+            redirect.Append($"&scope={Scope}");
+            redirect.Append($"&client_id={ClientID}");
+            redirect.Append($"&redirect_uri={RedirectURI}");
+            redirect.Append($"&nonce={BitConverter.ToString(nonce).Replace("-", "")}");
 
-            return redirect;
+            return redirect.ToString();
         }
 
         // Static Methods
