@@ -222,9 +222,6 @@ namespace GSF.Web.Security
             if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
                 return false;
 
-            
-
-
             // Abort pipeline with appropriate response
             if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
             {
