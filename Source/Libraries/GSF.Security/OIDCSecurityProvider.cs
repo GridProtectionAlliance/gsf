@@ -417,7 +417,6 @@ namespace GSF.Security
                 request.Content = new FormUrlEncodedContent(postParams);
             }
 
-            TokenResponse r;
             HttpResponseMessage response;
             using (HttpRequestMessage request = new HttpRequestMessage())
             {
@@ -427,10 +426,10 @@ namespace GSF.Security
                     response = client.SendAsync(request).Result;
                     if (!response.IsSuccessStatusCode)
                         return null;
-                    r = JsonConvert.DeserializeObject<TokenResponse>(response.Content.ReadAsStringAsync().Result);
+                    return JsonConvert.DeserializeObject<TokenResponse>(response.Content.ReadAsStringAsync().Result);
                 }
             }
-            return r;
+
         }
 
         private bool DecodeToken(TokenResponse token)
