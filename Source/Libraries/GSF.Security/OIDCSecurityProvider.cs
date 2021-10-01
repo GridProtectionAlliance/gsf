@@ -435,17 +435,27 @@ namespace GSF.Security
             try
             {
                 JObject tokenContent = DecodeJWT(token.id_token);
-                
+
                 // Translate UserDetails according to Token
-                UserData userData = new UserData(tokenContent.GetOrDefault("sub").ToString());
+                if (!tokenContent.TryGetValue("sub", out JToken sub))
+                    throw new Exception("Token data was not derived from valid JWT: missing 'sub'");
+                UserData userData = new UserData(sub.ToString());
 
                 userData.Initialize();
-                userData.Username = tokenContent.GetOrDefault("name").ToString();
-                userData.FirstName = tokenContent.GetOrDefault("given_name").ToString();
-                userData.LastName = tokenContent.GetOrDefault("family_name").ToString();
-                userData.PhoneNumber = tokenContent.GetOrDefault("phone_number").ToString();
-                userData.EmailAddress = tokenContent.GetOrDefault("email").ToString();
 
+                if (!tokenContent.TryGetValue("name", out JToken userName))
+                    throw new Exception("Token data was not derived from valid JWT: missing 'name'");
+                userData.Username = userName.ToString();
+
+                if (tokenContent.TryGetValue("given_name", out JToken firstName))
+                    userData.FirstName = firstName.ToString();
+                if (tokenContent.TryGetValue("family_name", out JToken lastName))
+                    userData.LastName = lastName.ToString();
+                if (tokenContent.TryGetValue("phone_number", out JToken phoneNumber))
+                    userData.PhoneNumber = phoneNumber.ToString();
+                if (tokenContent.TryGetValue("email", out JToken email))
+                    userData.EmailAddress = email.ToString();
+              
                 try
                 {
                         userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToObject<List<string>>();
