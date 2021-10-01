@@ -191,9 +191,9 @@ namespace GSF.Web.Security
             //  (1) Access resource marked as anonymous - let pipeline continue
             //  (2) Access resource as authenticated user - let pipeline continue
             //  --- remaining use cases are unauthorized ---
-            //  (2a) Access resource as result of a redirect from the OIDC Auth Server
-            //  (3) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
-            //  (4) Access all other resources - respond with 401 and abort pipeline
+            //  (3) Access resource as result of a redirect from the OIDC Auth Server
+            //  (4) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
+            //  (5) Access all other resources - respond with 401 and abort pipeline
             SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
             string urlPath = Request.Path.Value;
 
