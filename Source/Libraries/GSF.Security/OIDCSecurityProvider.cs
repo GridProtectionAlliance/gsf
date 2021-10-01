@@ -281,7 +281,7 @@ namespace GSF.Security
                 IsUserAuthenticated = false;
             }
 
-            if (!String.IsNullOrEmpty(UserData.LoginID))
+            if (!string.IsNullOrEmpty(UserData.LoginID))
                 token = GetToken(UserData.LoginID);
 
             if (token == null)
