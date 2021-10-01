@@ -211,7 +211,6 @@ namespace GSF.Web.Security
                 return true; // Abort pipeline
             }
 
-
             // If request is for an anonymous resource or user is properly authenticated, allow
             // request to propagate through the Owin pipeline
             if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
