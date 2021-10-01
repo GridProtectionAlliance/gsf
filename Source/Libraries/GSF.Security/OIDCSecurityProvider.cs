@@ -312,7 +312,8 @@ namespace GSF.Security
             {
                 LastException = authenticationException;
                 LogError(authenticationException.Source, authenticationException.ToString());
-                throw authenticationException;
+                string message = $"Exception occurred during authentication attempt: {authenticationException.Message}";
+                throw new Exception(message, authenticationException);
             }
 
             return IsUserAuthenticated;
