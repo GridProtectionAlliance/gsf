@@ -420,13 +420,12 @@ namespace GSF.Security
             using (HttpRequestMessage request = new HttpRequestMessage())
             {
                 ConfigureRequest(request);
-                using (HttpClient client = new HttpClient())
-                {
-                    response = client.SendAsync(request).Result;
-                    if (!response.IsSuccessStatusCode)
-                        return null;
-                    return JsonConvert.DeserializeObject<TokenResponse>(response.Content.ReadAsStringAsync().Result);
-                }
+               
+                response = Client.SendAsync(request).Result;
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                return JsonConvert.DeserializeObject<TokenResponse>(response.Content.ReadAsStringAsync().Result);
+                
             }
 
         }
@@ -524,6 +523,8 @@ namespace GSF.Security
 
         private static MemoryCache s_nonceCache = new MemoryCache("OIDC-NonceCache");
 
+        private static HttpClient Client = new HttpClient();
+
         /// <summary>
         /// Gets current default Node ID for security.
         /// </summary>
@@ -561,6 +562,7 @@ namespace GSF.Security
             throw new NotImplementedException();
         }
 
+       
         #endregion
     }
 }
