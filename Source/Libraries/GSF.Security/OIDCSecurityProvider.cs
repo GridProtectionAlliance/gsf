@@ -367,32 +367,33 @@ namespace GSF.Security
         /// <returns>true if logging was successful, otherwise false.</returns>
         protected virtual bool LogError(string source, string message)
         {
-            if (!string.IsNullOrWhiteSpace(SettingsCategory) && !string.IsNullOrWhiteSpace(source) && !string.IsNullOrWhiteSpace(message))
+            if (string.IsNullOrWhiteSpace(SettingsCategory) || string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(message))
+                return false;
+
+            Log.Publish(MessageLevel.Error, MessageFlags.SecurityMessage, source, message);
+
+            if (!UseDatabaseLogging)
+                return false;
+
+            try
             {
-                Log.Publish(MessageLevel.Error, MessageFlags.SecurityMessage, source, message);
+                AdoDataConnection database = new AdoDataConnection(SettingsCategory);
 
-                if (UseDatabaseLogging)
+                using (IDbConnection connection = database.Connection)
                 {
-                    try
-                    {
-                        AdoDataConnection database = new AdoDataConnection(SettingsCategory);
-
-                        using (IDbConnection connection = database.Connection)
-                        {
-                            connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message"), source, message);
-                        }
-
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Writing data will fail for read-only databases;
-                        // all we can do is track last exception in this case
-                        LastException = ex;
-                        Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "LogErrorToDatabase", "Failed to log error to database.", "Database or ErrorLog table may be read-only or inaccessible.", ex);
-                    }
+                    connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message"), source, message);
                 }
+
+                return true;
             }
+            catch (Exception ex)
+            {
+                // Writing data will fail for read-only databases;
+                // all we can do is track last exception in this case
+                LastException = ex;
+                Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "LogErrorToDatabase", "Failed to log error to database.", "Database or ErrorLog table may be read-only or inaccessible.", ex);
+            }
+            
             return false;
         }
 
