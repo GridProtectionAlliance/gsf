@@ -275,7 +275,7 @@ namespace GSF.Security
             Exception authenticationException = null;
 
             // Test for pre - authentication failure modes such as invalid Tokens
-            if (String.IsNullOrEmpty(UserData.LoginID))
+            if (string.IsNullOrEmpty(UserData.LoginID))
             {
                 AuthenticationFailureReason = $"No User authorization code is defined.";
                 IsUserAuthenticated = false;
