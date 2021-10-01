@@ -351,7 +351,6 @@ namespace GSF.Web.Security
         {
             string username = Request.User?.Identity.Name;
 
-            
             if ((object)username == null)
                 return null;
 
