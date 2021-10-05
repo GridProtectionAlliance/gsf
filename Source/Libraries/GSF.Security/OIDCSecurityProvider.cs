@@ -261,7 +261,10 @@ namespace GSF.Security
             }
 
             if (!string.IsNullOrEmpty(UserData.LoginID))
-                token = GetToken(UserData.LoginID);
+            {
+                try { token = GetToken(UserData.LoginID); }
+                catch (Exception ex) { authenticationException = ex; }
+            }
 
             if (token == null)
             {
@@ -269,9 +272,12 @@ namespace GSF.Security
                 IsUserAuthenticated = false;
             }
 
-            // Update the UserData object with new authentication state
-            if (token != null && DecodeToken(token))
-                IsUserAuthenticated = true;
+            if (token != null)
+            {
+                // Update the UserData object with new authentication state
+                try { IsUserAuthenticated = DecodeToken(token); }
+                catch (Exception ex) { authenticationException = ex; }
+            }
 
             try
             {
