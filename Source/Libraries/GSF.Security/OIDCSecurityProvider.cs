@@ -33,6 +33,7 @@ using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
@@ -262,7 +263,7 @@ namespace GSF.Security
 
             if (!string.IsNullOrEmpty(UserData.LoginID))
             {
-                try { token = GetToken(UserData.LoginID); }
+                try { token = GetTokenAsync(UserData.LoginID).GetAwaiter().GetResult(); }
                 catch (Exception ex) { authenticationException = ex; }
             }
 
@@ -383,7 +384,7 @@ namespace GSF.Security
         /// Exchange Authorization Code for a Token
         /// </summary>
         /// <param name="code"> The Authorization Code returned by the Auth Server</param>
-        private TokenResponse GetToken(string code)
+        private async Task<TokenResponse> GetTokenAsync(string code)
         {
             Dictionary<string, string> postParams = new Dictionary<string, string>() {
                 { "grant_type", "authorization_code" },
@@ -400,18 +401,17 @@ namespace GSF.Security
                 request.Content = new FormUrlEncodedContent(postParams);
             }
 
-            HttpResponseMessage response;
             using (HttpRequestMessage request = new HttpRequestMessage())
             {
                 ConfigureRequest(request);
-               
-                response = Client.SendAsync(request).Result;
-                if (!response.IsSuccessStatusCode)
-                    return null;
-                return JsonConvert.DeserializeObject<TokenResponse>(response.Content.ReadAsStringAsync().Result);
-                
-            }
 
+                using (HttpResponseMessage response = await Client.SendAsync(request))
+                {
+                    if (!response.IsSuccessStatusCode)
+                        return null;
+                    return JsonConvert.DeserializeObject<TokenResponse>(await response.Content.ReadAsStringAsync());
+                }
+            }
         }
 
         private bool DecodeToken(TokenResponse token)
