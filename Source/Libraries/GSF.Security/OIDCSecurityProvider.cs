@@ -335,7 +335,6 @@ namespace GSF.Security
                 // a read-only database is being used or current user only has read-only access to database.
                 if (!string.IsNullOrWhiteSpace(SettingsCategory) && UseDatabaseLogging)
                 {
-
                     using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
                     {
                         connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess ? 1 : 0);
