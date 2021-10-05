@@ -150,7 +150,9 @@ namespace GSF.Security
                     if ((object)provider == null)
                         return false;
 
-                    provider.RefreshData();
+                    if (provider.CanRefreshData)
+                        provider.RefreshData();
+
                     provider.Authenticate();
                     LastRefreshTime = DateTime.UtcNow;
 
