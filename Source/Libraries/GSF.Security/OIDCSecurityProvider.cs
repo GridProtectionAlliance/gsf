@@ -467,38 +467,41 @@ namespace GSF.Security
         private JObject DecodeJWT(string token)
         {
             if (!token.Contains("."))
-                throw new InvalidExpressionException("A valid JQT token requires at least one '.'");
+                throw new InvalidExpressionException("A valid JWT token requires at least one '.'");
 
-            string jsoeHeader = token.Substring(0, token.IndexOf("."));
-            byte[] headerData = Convert.FromBase64String(jsoeHeader);
-            jsoeHeader = Encoding.UTF8.GetString(headerData);
-            JObject header = JObject.Parse(jsoeHeader);
+            const int JOSEHeaderIndex = 0;
+            const int PayloadIndex = 1;
+            const int SignatureIndex = 2;
+            string[] splitToken = token.Split('.');
 
-            JToken cty;
-            if (header.TryGetValue("cty", out cty) && cty.ToString().ToLower() == "jwt")
-                return DecodeJWT(token);
+            if (splitToken.Length <= PayloadIndex)
+                throw new FormatException("JWT token has no payload");
 
-            JToken enc;
-            bool isJWE = header.TryGetValue("enc", out enc);
-            if (isJWE)
+            string joseHeader = splitToken[JOSEHeaderIndex];
+            byte[] headerData = Convert.FromBase64String(joseHeader);
+            joseHeader = Encoding.UTF8.GetString(headerData);
+            JObject header = JObject.Parse(joseHeader);
+
+            if (header.TryGetValue("enc", out _))
                 throw new FormatException("JWE Tokens are not supported");
 
-            token = token.Substring(token.IndexOf(".") + 1);
-            string payloadString = token.Substring(0, token.IndexOf("."));
-
-            string signatureString = "";
-            if (token.Contains("."))
+            if (SignatureIndex < splitToken.Length)
             {
-                token = token.Substring(token.IndexOf(".") + 1);
-                signatureString = token.Substring(0, token.IndexOf("."));
+                // We are not validating signatures to allow openXDA to self-sign tokens
+                // #ToDO: Implement signature verifications based on config file setting
+                void ValidateToken(string _) { }
+                string signature = splitToken[SignatureIndex];
+                ValidateToken(signature);
             }
 
-            // We are not validating signatures to allow openXDA to self-sign tokens
-            // #ToDO: Implement signature verifications based on config file setting
+            string payload = splitToken[PayloadIndex];
+            byte[] payloadData = Convert.FromBase64String(payload);
+            string payloadContent = Encoding.UTF8.GetString(payloadData);
 
-            byte[] tokenBytes = System.Convert.FromBase64String(payloadString);
-            string tokenData = Encoding.UTF8.GetString(tokenBytes);
-            return JObject.Parse(tokenData);
+            if (header.TryGetValue("cty", out JToken cty) && cty.ToString().ToLower() == "jwt")
+                return DecodeJWT(payloadContent);
+
+            return JObject.Parse(payloadContent);
         }
 
         /// <summary>
