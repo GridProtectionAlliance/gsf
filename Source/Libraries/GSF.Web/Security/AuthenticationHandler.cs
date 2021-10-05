@@ -369,7 +369,6 @@ namespace GSF.Web.Security
         // Applies authentication for requests using OpenID Connect authentication.
         private SecurityPrincipal AuthenticateCode()
         {
-
             string username = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value).Get("code");
 
             if (String.IsNullOrEmpty(username))
