@@ -203,6 +203,7 @@ namespace GSF.Security
         /// <param name="referrer"> The Referrer as specified in the request header </param>
         /// <returns> The URI to be redirected to</returns>
         string TranslateRedirect(string loginUrl, string encodedPath, string referrer);
+
         #endregion
     }
 }
