@@ -241,27 +241,6 @@ namespace GSF.Security
             TokenEndpoint = settings[nameof(TokenEndpoint)].ValueAs(TokenEndpoint);
             RolesClaim = settings[nameof(RolesClaim)].ValueAs(RolesClaim);
         }
-        
-        /// <summary>
-        /// Refreshes the <see cref="UserData"/>.
-        /// </summary>
-        /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
-        public override bool RefreshData()
-        {
-            if (string.IsNullOrEmpty(UserData.Username))
-                return false;
-
-            try
-            {
-                return false;
-            }
-            catch (Exception ex)
-            {
-                LastException = ex;
-                LogError(ex.Source, ex.ToString());
-                throw;
-            }
-        }
 
         /// <summary>
         /// Authenticates the user.
@@ -517,29 +496,6 @@ namespace GSF.Security
             return JObject.Parse(tokenData);
         }
 
-        #endregion
-
-        #region [ Static ]
-
-        // Static Events
-
-        /// <summary>
-        /// Raised when the security context is refreshed.
-        /// </summary>
-        public static event EventHandler<EventArgs<Dictionary<string, string[]>>> SecurityContextRefreshed;
-
-        // Static Fields
-        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AdoSecurityProvider), MessageClass.Component);
-
-        private static MemoryCache s_nonceCache = new MemoryCache("OIDC-NonceCache");
-
-        private static HttpClient Client = new HttpClient();
-
-        /// <summary>
-        /// Gets current default Node ID for security.
-        /// </summary>
-        public static readonly Guid DefaultNodeID;
-
         /// <summary>
         /// Performs a translation of the default login page to a different endpoint.
         /// </summary>
@@ -565,17 +521,52 @@ namespace GSF.Security
             return redirect.ToString();
         }
 
-        // Static Methods
+        /// <summary>
+        /// Not implemented
+        /// </summary>
+        public override bool RefreshData()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Not implemented
+        /// </summary>
         public override bool ResetPassword(string securityAnswer)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Not implemented
+        /// </summary>
         public override bool ChangePassword(string oldPassword, string newPassword)
         {
             throw new NotImplementedException();
         }
 
+        #endregion
+
+        #region [ Static ]
+
+        // Static Events
+
+        /// <summary>
+        /// Raised when the security context is refreshed.
+        /// </summary>
+        public static event EventHandler<EventArgs<Dictionary<string, string[]>>> SecurityContextRefreshed;
+
+        // Static Fields
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AdoSecurityProvider), MessageClass.Component);
+
+        private static MemoryCache s_nonceCache = new MemoryCache("OIDC-NonceCache");
+
+        private static HttpClient Client = new HttpClient();
+
+        /// <summary>
+        /// Gets current default Node ID for security.
+        /// </summary>
+        public static readonly Guid DefaultNodeID;
        
         #endregion
     }
