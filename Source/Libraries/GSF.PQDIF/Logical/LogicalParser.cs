@@ -33,6 +33,50 @@ namespace GSF.PQDIF.Logical
     /// <summary>
     /// Represents a parser which parses the logical structure of a PQDIF file.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This class makes the data from PQD files readily available to applications and defines several
+    /// redundant properties throughout the logical hierarchy of the PQDIF file to also facilitate
+    /// the association of definitions with instances within the logical structure. The following
+    /// list enumerates some of the more useful associations within the hierarchy.
+    /// </para>
+    ///
+    /// <list type="bullet">
+    /// <item><see cref="ObservationRecord.DataSource"/></item>
+    /// <item><see cref="ObservationRecord.Settings"/></item>
+    /// <item><see cref="SeriesDefinition.ChannelDefinition"/></item>
+    /// <item><see cref="ChannelInstance.Definition"/></item>
+    /// <item><see cref="SeriesInstance.Definition"/></item>
+    /// </list>
+    ///
+    /// <para>
+    /// Usage consists of iterating through observations (<see cref="ObservationRecord"/>) to
+    /// examine each of the the measurements recorded in the file. As was noted in the list above,
+    /// the data source (<see cref="DataSourceRecord"/>) and settings for the monitor
+    /// (<see cref="MonitorSettingsRecord"/>) associated with each observation is exposed as a
+    /// property on the observation record. Note that the same data source and monitor settings
+    /// records may be referenced by multiple observation records in the file.
+    /// </para>
+    ///
+    /// <para>
+    /// The following example demonstrates how to read all observation records from a PQDIF file
+    /// using the logical parser.
+    /// </para>
+    ///
+    /// <code><![CDATA[
+    /// ContainerRecord containerRecord;
+    /// List<ObservationRecord> observationRecords = new List<ObservationRecord>();
+    /// string fileName = args[0];
+    ///
+    /// using (LogicalParser parser = new LogicalParser(fileName))
+    /// {
+    ///     containerRecord = parser.ContainerRecord;
+    ///
+    ///     while (parser.HasNextObservationRecord())
+    ///         observationRecords.Add(parser.NextObservationRecord());
+    /// }
+    /// ]]></code>
+    /// </remarks>
     public class LogicalParser : IDisposable
     {
         #region [ Members ]

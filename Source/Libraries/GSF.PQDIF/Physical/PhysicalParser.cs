@@ -86,6 +86,34 @@ namespace GSF.PQDIF.Physical
     /// <summary>
     /// Represents a parser which parses the physical structure of a PQDIF file.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This class is used internally by the <see cref="Logical.LogicalParser"/> to read the
+    /// physical structure of the PQDIF file. If your goal is to read data from a PQD file into
+    /// an application, you probably do not want to instantiate the physical parser directly.
+    /// Instead, the logical parser will apply the rules governing the logical structure of the PQDIF
+    /// file to make the data more readily usable by an application that will be processing that data.
+    /// </para>
+    ///
+    /// <para>
+    /// The following example of usage was adapted from the PQDIFDump utility, which represents a
+    /// bare minimum level of effort to read an uncompressed PQDIF file and display its contents
+    /// in a console application.
+    /// </para>
+    ///
+    /// <code>
+    /// string fileName = args[0];
+    /// PhysicalParser parser = new PhysicalParser(fileName);
+    /// parser.Open();
+    ///
+    /// while (parser.HasNextRecord())
+    /// {
+    ///     Record record = parser.NextRecord();
+    ///     Console.WriteLine(record);
+    ///     Console.WriteLine();
+    /// }
+    /// </code>
+    /// </remarks>
     public class PhysicalParser : IDisposable
     {
         #region [ Members ]
