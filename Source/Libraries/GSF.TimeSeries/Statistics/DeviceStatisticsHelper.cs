@@ -27,9 +27,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Statistics
 {
@@ -42,10 +44,12 @@ namespace GSF.TimeSeries.Statistics
 
         private const double DefaultMedianTimestampDeviation = 30.0D;
 
-        private static readonly decimal s_medianTimestampDeviation;
+        private static readonly BigInteger s_medianTimestampDeviation;
         private static readonly ConcurrentDictionary<IDevice, LatestDeviceTime> s_latestDeviceTimes;
         private static Dictionary<IDevice, long> s_deviceTimesSnapshot;
         private static long s_snapshotTime;
+        private static readonly BigInteger s_bigTwo;
+        private static readonly BigInteger s_bigMaxLong;
 
         static GlobalDeviceStatistics()
         {
@@ -53,8 +57,10 @@ namespace GSF.TimeSeries.Statistics
 
             settings.Add("MedianTimestampDeviation", DefaultMedianTimestampDeviation, "Maximum allowed deviation from median timestamp, in seconds, for consideration in average timestamp calculation.");
 
-            s_medianTimestampDeviation = Ticks.FromSeconds(settings["MedianTimestampDeviation"].ValueAs(DefaultMedianTimestampDeviation)).Value;
+            s_medianTimestampDeviation = new BigInteger(Ticks.FromSeconds(settings["MedianTimestampDeviation"].ValueAs(DefaultMedianTimestampDeviation)).Value);
             s_latestDeviceTimes = new ConcurrentDictionary<IDevice, LatestDeviceTime>();
+            s_bigTwo = new BigInteger(2);
+            s_bigMaxLong = new BigInteger(long.MaxValue);
             
             StatisticsEngine.SourceRegistered += StatisticsEngine_SourceRegistered;
             StatisticsEngine.SourceUnregistered += StatisticsEngine_SourceUnregistered;
@@ -93,86 +99,96 @@ namespace GSF.TimeSeries.Statistics
 
         private static void StatisticsEngine_BeforeCalculate(object sender, EventArgs e)
         {
-            // ToArray on concurrent dictionary provides safe iteration of all values
-            s_deviceTimesSnapshot = s_latestDeviceTimes.ToArray().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Ticks);
-            s_snapshotTime = DateTime.UtcNow.Ticks;
-            
-            // Using decimal type to allow for very large long value totals, e.g., for mean
-            decimal[] deviceTimes = s_deviceTimesSnapshot.Select(kvp => (decimal)kvp.Value).Where(ticks => ticks > 0M).ToArray();
-            int sampleCount = deviceTimes.Length;
-
-            if (sampleCount > 0)
+            try
             {
-                if (sampleCount > 1)
+                // ToArray on concurrent dictionary provides safe iteration of all values
+                s_deviceTimesSnapshot = s_latestDeviceTimes.ToArray().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Ticks);
+                s_snapshotTime = DateTime.UtcNow.Ticks;
+
+                long[] deviceTimes = s_deviceTimesSnapshot.Select(kvp => kvp.Value).Where(ticks => ticks > 0L).ToArray();
+                int sampleCount = deviceTimes.Length;
+
+                if (sampleCount > 0)
                 {
-                    // Filter any timestamps that are outside configured max deviation from the median (defaults to 30 seconds)
-                    Array.Sort(deviceTimes);
-                    decimal median = deviceTimes.Median().Average();
-                    decimal lowerBound = median - s_medianTimestampDeviation;
-                    decimal upperBound = median + s_medianTimestampDeviation;
-
-                    deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
-
-                    #region [ Sigma Filter ]
-
-                    //decimal mean = deviceTimes.Average();
-                    //decimal variance = deviceTimes.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
-
-                    // Only use timestamps within five-sigma, i.e., within 5 standard deviations of the mean. Note
-                    // that use of five-sigma is because PMU-timestamps do not always follow a normal distribution:
-                    // https://ieeexplore.ieee.org/document/8494760
-                    //decimal sigma = (decimal)(5.0D * Math.Sqrt((double)(variance / sampleCount)));
-                    //lowerBound = mean - sigma;
-                    //upperBound = mean + sigma;
-
-                    //deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
-
-                    #endregion
-
-                    sampleCount = deviceTimes.Length;
-
                     if (sampleCount > 1)
                     {
-                        decimal weightedSum = 0M;
-                        decimal totalWeights = 0M;
-                        decimal min = long.MaxValue;
-                        decimal max = long.MinValue;
+                        // Filter any timestamps that are outside configured max deviation from the median (defaults to 30 seconds)
+                        Array.Sort(deviceTimes);
 
-                        for (int i = 0; i < sampleCount; i++)
+                        BigInteger[] medians = deviceTimes.Median().Select(value => new BigInteger(value)).ToArray();
+                        BigInteger median = medians.Length == 2 ? (medians[0] + medians[1]) / s_bigTwo : medians[0];
+                        BigInteger lowerBound = median - s_medianTimestampDeviation;
+                        BigInteger upperBound = median + s_medianTimestampDeviation;
+
+                        deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
+
+                        #region [ Sigma Filter ]
+
+                        //decimal mean = deviceTimes.Average();
+                        //decimal variance = deviceTimes.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
+
+                        // Only use timestamps within five-sigma, i.e., within 5 standard deviations of the mean. Note
+                        // that use of five-sigma is because PMU-timestamps do not always follow a normal distribution:
+                        // https://ieeexplore.ieee.org/document/8494760
+                        //decimal sigma = (decimal)(5.0D * Math.Sqrt((double)(variance / sampleCount)));
+                        //lowerBound = mean - sigma;
+                        //upperBound = mean + sigma;
+
+                        //deviceTimes = deviceTimes.Where(time => time >= lowerBound && time <= upperBound).ToArray();
+
+                        #endregion
+
+                        sampleCount = deviceTimes.Length;
+
+                        if (sampleCount > 1)
                         {
-                            decimal time = deviceTimes[i];
-                            decimal weight = Math.Abs(median - Math.Abs(time - median)) / median;
+                            BigInteger weightedSum = BigInteger.Zero;
+                            BigInteger totalWeights = BigInteger.Zero;
+                            long min = long.MaxValue;
+                            long max = long.MinValue;
 
-                            weightedSum += time * weight;
-                            totalWeights += weight;
+                            for (int i = 0; i < sampleCount; i++)
+                            {
+                                long time = deviceTimes[i];
+                                BigInteger weight = BigInteger.Abs(median - BigInteger.Abs(time - median)) / median;
 
-                            if (time > max)
-                                max = time;
+                                weightedSum += time * weight;
+                                totalWeights += weight;
 
-                            if (time < min)
-                                min = time;
+                                if (time > max)
+                                    max = time;
+
+                                if (time < min)
+                                    min = time;
+                            }
+
+                            BigInteger average = weightedSum / totalWeights;
+                            AverageTime = average > BigInteger.Zero && average < s_bigMaxLong ? (long)average : 0L;
+                            MinimumTime = min;
+                            MaximumTime = max;
                         }
-
-                        AverageTime = (long)(weightedSum / totalWeights);
-                        MinimumTime = (long)min;
-                        MaximumTime = (long)max;
+                        else
+                        {
+                            if (sampleCount > 0)
+                                AverageTime = MinimumTime = MaximumTime = deviceTimes[0];
+                            else
+                                AverageTime = MinimumTime = MaximumTime = 0L;
+                        }
                     }
                     else
                     {
-                        if (sampleCount > 0)
-                            AverageTime = MinimumTime = MaximumTime = (long)deviceTimes[0];
-                        else
-                            AverageTime = MinimumTime = MaximumTime = 0L;
+                        AverageTime = MinimumTime = MaximumTime = deviceTimes[0];
                     }
                 }
                 else
                 {
-                    AverageTime = MinimumTime = MaximumTime = (long)deviceTimes[0];
+                    AverageTime = MinimumTime = MaximumTime = 0L;
                 }
             }
-            else
+            catch (Exception ex)
             {
                 AverageTime = MinimumTime = MaximumTime = 0L;
+                Logger.SwallowException(ex);
             }
         }
     }
