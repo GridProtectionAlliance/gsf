@@ -195,12 +195,6 @@ namespace GSF.Security
         /// <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
         string TranslateRole(string role);
 
-        /// <summary>
-        /// Gets a list of Roles for this user for a specified ApplicationId.
-        /// </summary>
-        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
-        /// <returns>The roles that the specified user has.</returns>
-        List<string> GetUserRoles(string applicationId);
         #endregion
     }
 }
