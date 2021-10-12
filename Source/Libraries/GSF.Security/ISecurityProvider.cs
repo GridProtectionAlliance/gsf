@@ -28,6 +28,7 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security;
 using System.Security.Principal;
@@ -204,6 +205,11 @@ namespace GSF.Security
         /// <returns> The URI to be redirected to</returns>
         string TranslateRedirect(string loginUrl, string encodedPath, string referrer);
 
+        /// Gets a list of Roles for this user for a specified ApplicationId.
+        /// </summary>
+        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
+        /// <returns>The roles that the specified user has.</returns>
+        List<string> GetUserRoles(string applicationId);
         #endregion
     }
 }

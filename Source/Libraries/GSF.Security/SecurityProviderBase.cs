@@ -41,6 +41,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Security;
@@ -529,6 +530,15 @@ namespace GSF.Security
         public virtual string TranslateRedirect(string loginUrl, string encodedPath, string referrer)
         {
             return $"{loginUrl}?redir={encodedPath}{referrer}";
+        }
+
+        /// Gets a list of Roles for this user for a specified ApplicationId.
+        /// </summary>
+        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
+        /// <returns>The roles that the specified user has.</returns>
+        public virtual List<string> GetUserRoles(string applicationId)
+        {
+            return UserData?.Roles ?? new List<string>();
         }
 
         #endregion
