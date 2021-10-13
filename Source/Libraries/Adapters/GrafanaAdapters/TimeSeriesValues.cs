@@ -65,6 +65,11 @@ namespace GrafanaAdapters
         public float longitude;
 
         /// <summary>
+        /// Defines a Grafana time-series refId to reffernece a specific query.
+        /// </summary>
+        public string refId;
+        
+        /// <summary>
         /// Defines flag that determines if empty series are produced.
         /// </summary>
         [JsonIgnore]

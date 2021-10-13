@@ -162,7 +162,8 @@ namespace GrafanaAdapters
                     rootTarget = valueGroup.RootTarget,
                     latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
                     longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude"),
-                    dropEmptySeries = valueGroup.DropEmptySeries
+                    dropEmptySeries = valueGroup.DropEmptySeries,
+                    refId = valueGroup.RootTarget.refId
                 }).ToList();
 
                 // Apply any encountered ad-hoc filters
