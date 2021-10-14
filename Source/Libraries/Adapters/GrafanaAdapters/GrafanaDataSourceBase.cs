@@ -163,7 +163,7 @@ namespace GrafanaAdapters
                     latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
                     longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude"),
                     dropEmptySeries = valueGroup.DropEmptySeries,
-                    refId = valueGroup.RootTarget.refId
+                    refId = valueGroup.refId
                 }).ToList();
 
                 // Apply any encountered ad-hoc filters
@@ -330,7 +330,8 @@ namespace GrafanaAdapters
                         RootTarget = target.Value,
                         SourceTarget = sourceTarget,
                         Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value)),
-                        DropEmptySeries = dropEmptySeries
+                        DropEmptySeries = dropEmptySeries,
+                        refId = sourceTarget.refId
                     };
             }
         }

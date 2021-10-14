@@ -242,7 +242,8 @@ namespace GrafanaAdapters
                         RootTarget = valueGroups[i].RootTarget,
                         SourceTarget = sourceTarget,
                         Source = valueGroups[i].Source,
-                        DropEmptySeries = dropEmptySeries
+                        DropEmptySeries = dropEmptySeries,
+                        refId = sourceTarget.refId
                     };
                 }
             }
@@ -303,7 +304,8 @@ namespace GrafanaAdapters
                                 RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
                                 SourceTarget = sourceTarget,
                                 Source = ExecuteSeriesFunctionOverSource(valueGroup.Source, seriesFunction, parameters),
-                                DropEmptySeries = dropEmptySeries
+                                DropEmptySeries = dropEmptySeries,
+                                refId = sourceTarget.refId
                             };
                         }
 
