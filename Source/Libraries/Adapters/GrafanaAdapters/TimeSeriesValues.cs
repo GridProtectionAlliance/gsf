@@ -68,7 +68,11 @@ namespace GrafanaAdapters
         /// Defines a Grafana time-series refId to reffernece a specific query.
         /// </summary>
         public string refId;
-        
+
+        /// <summary>
+        /// Defines metaData attached to the <see cref="TimeSeriesValues"/>
+        /// </summary>
+        public MetaData meta;
         /// <summary>
         /// Defines flag that determines if empty series are produced.
         /// </summary>
@@ -86,4 +90,39 @@ namespace GrafanaAdapters
         /// </remarks>
         public List<double[]> datapoints;
     }
+
+    /// <summary>
+    /// This represents the MetaData Attached to a <see cref="TimeSeriesValues"/>
+    /// </summary>
+    /// <remarks>
+    /// This structure is serialized and returned to Grafana via JSON.
+    /// It needs to match QueryResultMeta in Grafana to avoid Grafana removing any MetaData
+    /// </remarks>
+    public class MetaData
+    {
+        public HistorianMetaData custom;
+    }
+
+    /// <summary>
+    /// Represents a custom MetaData Record created by the openHistorian
+    /// </summary>
+    public class HistorianMetaData
+    {
+        /// <summary>
+        /// The Longitude of the original Signal
+        /// </summary>
+        public double Longitude;
+
+        /// <summary>
+        /// The Latitude of the original Signal
+        /// </summary>
+        public double Latitude;
+
+        /// <summary>
+        /// The name of the PMU
+        /// </summary>
+        public string Device;
+
+    }
 }
+

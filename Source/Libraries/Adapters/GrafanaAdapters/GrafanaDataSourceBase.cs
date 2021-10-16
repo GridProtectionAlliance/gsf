@@ -160,6 +160,11 @@ namespace GrafanaAdapters
                 {
                     target = valueGroup.Target,
                     rootTarget = valueGroup.RootTarget,
+                    meta = new MetaData() { custom=new HistorianMetaData() {
+                        Latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
+                        Longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
+                        
+                    } },
                     latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
                     longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude"),
                     dropEmptySeries = valueGroup.DropEmptySeries,
