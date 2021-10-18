@@ -97,6 +97,8 @@ namespace GSF.Security
     ///         encrypted="false" />
     ///       <add name="PasswordRequirementsError" value="Invalid Password: Password must be at least 8 characters; must contain at least 1 number, 1 upper case letter, and 1 lower case letter" description="Error message to be displayed when new database user password fails regular expression test."
     ///         encrypted="false" />
+    ///       <add name="DefaultRoles" value="Viewer" description="If set this is a list of Roles assigned to a user that has no defined Roles."
+    ///         encrypted="false" />
     ///     </securityProvider>
     ///     <activeDirectory>
     ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -181,6 +183,11 @@ namespace GSF.Security
         private const string ApplicationRoleSecurityGroupTable = "ApplicationRoleSecurityGroup";    // Table name for application role assignments for security groups
 
         /// <summary>
+        /// Default Roles to be used if no Roles are supplied for a user.
+        /// </summary>
+        private const string DefaultDefaultRoles = "";
+
+        /// <summary>
         /// Default regular expression used to validate new database user passwords.
         /// </summary>
         public const string DefaultPasswordRequirementsRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
@@ -262,6 +269,18 @@ namespace GSF.Security
             set;
         }
 
+
+        /// <summary>
+        /// Gets or sets the Default Roles used when a user does not have a role defined.
+        /// The user still needs to exist but they won't require a Role and will be assigned the DefaultRoles.
+        /// It is a comma separate list for multiple Roles. If an empty String is supplied a Role is required for the user.
+        /// </summary>
+        public string DefaultRoles
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -283,7 +302,9 @@ namespace GSF.Security
             settings.Add("PasswordRequirementsRegex", DefaultPasswordRequirementsRegex, "Regular expression used to validate new passwords for database users.");
             settings.Add("PasswordRequirementsError", DefaultPasswordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
             settings.Add("UseDatabaseLogging", DefaultUseDatabaseLogging, "Flag that determines if provider should write logs to the database.");
+            settings.Add("DefaultRoles", DefaultDefaultRoles, "If set this is a list of Roles assigned to a user that has no defined Roles.");
 
+            DefaultRoles = settings["DefaultRoles"].ValueAs(DefaultRoles);
             m_passwordRequirementsRegex = settings["PasswordRequirementsRegex"].ValueAs(m_passwordRequirementsRegex);
             m_passwordRequirementsError = settings["PasswordRequirementsError"].ValueAs(m_passwordRequirementsError);
         }
@@ -551,6 +572,11 @@ namespace GSF.Security
                     if (!string.IsNullOrEmpty(roleName) && !userData.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
                         userData.Roles.Add(roleName);
                 }
+
+                // Add DefaultRoles if no Roles are present
+                if (!string.IsNullOrEmpty(DefaultRoles) && userData.Roles.Count() == 0)
+                    foreach(string role in DefaultRoles.Split(','))
+                        userData.Roles.Add(role);
 
                 UserData = userData;
 
