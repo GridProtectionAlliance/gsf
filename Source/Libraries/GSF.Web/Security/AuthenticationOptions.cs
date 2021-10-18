@@ -61,6 +61,11 @@ namespace GSF.Web.Security
         public const string DefaultAnonymousResourceExpression = "^/@|^/favicon.ico$";
 
         /// <summary>
+        /// Default value for <see cref="AlternateSecurityProviderResourceExpression"/>.
+        /// </summary>
+        public const string DefaultAlternateSecurityProviderResourceExpression = "";
+
+        /// <summary>
         /// Default value for <see cref="LoginPage"/>.
         /// </summary>
         public const string DefaultLoginPage = Resources.Root + "/Security/Views/Login.cshtml";
@@ -88,9 +93,12 @@ namespace GSF.Web.Security
         // Fields
         private readonly ConcurrentDictionary<string, bool> m_authFailureRedirectResourceCache;
         private readonly ConcurrentDictionary<string, bool> m_anonymousResourceCache;
+        private readonly ConcurrentDictionary<string, bool> m_alternateSecurityProviderResourceCache;
         private string m_authFailureRedirectResourceExpression;
         private string m_anonymousResourceExpression;
+        private string m_alternateSecurityProviderResourceExpression;
         private Regex m_authFailureRedirectResources;
+        private Regex m_alternateSecurityProviderResources;
         private Regex m_anonymousResources;
         private string m_realm;
 
@@ -105,6 +113,7 @@ namespace GSF.Web.Security
         {
             m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            m_alternateSecurityProviderResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -122,6 +131,20 @@ namespace GSF.Web.Security
             {
                 m_authFailureRedirectResourceExpression = value;
                 m_authFailureRedirectResources = new Regex(m_authFailureRedirectResourceExpression, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the expression that will match paths for the resources on the web server
+        /// that should user the Alternate SecurityProvider.
+        /// </summary>
+        public string AlternateSecurityProviderResourceExpression
+        {
+            get => m_alternateSecurityProviderResourceExpression;
+            set
+            {
+                m_alternateSecurityProviderResourceExpression = value;
+                m_alternateSecurityProviderResources = new Regex(m_alternateSecurityProviderResourceExpression, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
             }
         }
 
@@ -251,6 +274,21 @@ namespace GSF.Web.Security
         }
 
         /// <summary>
+        /// Determines whether the given resource is a alternate securtityProvider resource.
+        /// </summary>
+        /// <param name="urlPath">Path to check as an alternate securtityProvider resource.</param>
+        /// <returns><c>true</c> if path is an alternate securtityProvider resource; otherwise, <c>false</c>.</returns>
+        public bool IsAlternateSecurityProviderResource(string urlPath)
+        {
+            if (m_alternateSecurityProviderResources is null)
+                AlternateSecurityProviderResourceExpression = DefaultAlternateSecurityProviderResourceExpression ;
+
+            if (string.IsNullOrEmpty(m_alternateSecurityProviderResourceExpression))
+                return m_alternateSecurityProviderResourceCache.GetOrAdd(urlPath, false);
+            return m_alternateSecurityProviderResourceCache.GetOrAdd(urlPath, m_alternateSecurityProviderResources.IsMatch);
+        }
+
+        /// <summary>
         /// Determines whether the given resource is an anonymous resource.
         /// </summary>
         /// <param name="urlPath">Path to check as an anonymous resource.</param>
@@ -344,6 +382,13 @@ namespace GSF.Web.Security
         /// </summary>
         public string AnonymousResourceExpression => m_authenticationOptions.AnonymousResourceExpression;
 
+
+        /// <summary>
+        /// Gets the expression that will match paths for the resources on the web server
+        /// that should use the alternate SecurityProvider.
+        /// </summary>
+        public string AlternateSecurityProviderResourceExpression => m_authenticationOptions.AlternateSecurityProviderResourceExpression;
+
         /// <summary>
         /// Gets the token used for identifying the authentication token in cookie headers.
         /// </summary>
@@ -419,6 +464,14 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if path is an anonymous resource; otherwise, <c>false</c>.</returns>
         public bool IsAnonymousResource(string urlPath) =>
             m_authenticationOptions.IsAnonymousResource(urlPath);
+
+        /// <summary>
+        /// Determines whether the given resource is using the alternate SecuityProvider.
+        /// </summary>
+        /// <param name="urlPath">Path to check as an alternative SecurityProvider resource.</param>
+        /// <returns><c>true</c> if path is an alternate Security Provider resource; otherwise, <c>false</c>.</returns>
+        public bool IsAlternateSecurityProviderResource(string urlPath) =>
+            m_authenticationOptions.IsAlternateSecurityProviderResource(urlPath);
 
         #endregion
     }

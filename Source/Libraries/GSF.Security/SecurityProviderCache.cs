@@ -408,6 +408,11 @@ namespace GSF.Security
         private static CachedSecurityProvider s_primarySecurityProvider;
         private static CachedSecurityProvider s_alternateSecurityProvider;
 
+        /// <summary>
+        /// Specifies the default value for the SettingsCategory property for the AlternateSecurityProvider.
+        /// </summary>
+        public const string DefaultAlternateSettingsCategory = "AlternateSecurityProvider";
+
         // Static Constructor
         static SecurityProviderCache()
         {
@@ -415,7 +420,14 @@ namespace GSF.Security
             s_primarySecurityProvider = new CachedSecurityProvider(SecurityProviderBase.DefaultSettingsCategory);
 
             // Load Alternate Security Provider
-            s_alternateSecurityProvider = null;
+            try
+            {
+                s_alternateSecurityProvider = new CachedSecurityProvider(DefaultAlternateSettingsCategory);
+            }
+            catch
+            {
+                s_alternateSecurityProvider = null;
+            }    
             
         }
 

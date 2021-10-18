@@ -52,6 +52,7 @@
         redirectPage = "/";
     }
 
+
     string redirectPageLabel = redirectPage == "/" ? "main" : "target";
     ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
 
@@ -84,6 +85,13 @@
         loginHeader = options.LoginHeader;
     }
 
+    bool useAlternateSecurityProvider = false;
+    string p;
+    if (request.QueryParameters().TryGetValue("useAlternateSecurityProvider", out p))
+    {
+        useAlternateSecurityProvider = true;
+    }
+
     string constants = string.Format(@"
         const redirectPage = ""{0}"";
         const securePage = ""{1}"";
@@ -94,18 +102,20 @@
         const verificationValue = ""{7}"";
         const useAjaxVerfication = ""{8}"";
         const redirectPageLabel = ""{9}"";
+        const useAlternateSecurityProvider = {10};
     ",
-        /* 0 */ redirectPage.JavaScriptEncode(),
-        /* 1 */ authTestPage.JavaScriptEncode(),
-        /* 2 */ loginPage.JavaScriptEncode(),
-        /* 3 */ logoutPage.JavaScriptEncode(),
-        /* 4 */ clearCredentials.JavaScriptEncode(),
-        /* 5 */ unsecureConnection.ToString().ToLowerInvariant(),
-        /* 6 */ verificationHeader.JavaScriptEncode(),
-        /* 7 */ verificationValue.JavaScriptEncode(),
-        /* 8 */ useAjaxVerfication.JavaScriptEncode(),
-        /* 9 */ redirectPageLabel.JavaScriptEncode()
-    );
+/* 0 */ redirectPage.JavaScriptEncode(),
+/* 1 */ authTestPage.JavaScriptEncode(),
+/* 2 */ loginPage.JavaScriptEncode(),
+/* 3 */ logoutPage.JavaScriptEncode(),
+/* 4 */ clearCredentials.JavaScriptEncode(),
+/* 5 */ unsecureConnection.ToString().ToLowerInvariant(),
+/* 6 */ verificationHeader.JavaScriptEncode(),
+/* 7 */ verificationValue.JavaScriptEncode(),
+/* 8 */ useAjaxVerfication.JavaScriptEncode(),
+/* 9 */ redirectPageLabel.JavaScriptEncode(),
+/* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant()
+);
 }
 <!DOCTYPE html>
 <html>
