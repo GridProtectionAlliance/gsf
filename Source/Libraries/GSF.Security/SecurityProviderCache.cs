@@ -187,6 +187,7 @@ namespace GSF.Security
         private readonly int s_userCacheTimeout;
         private readonly Action s_cacheMonitorAction;
 
+        private string m_settingsCategory;
         #endregion
 
         #region [ Constructor ]
@@ -206,6 +207,8 @@ namespace GSF.Security
 
             s_cacheMonitorAction = new Action(ManageCachedCredentials);
             s_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
+
+            m_settingsCategory = settingsCategory;
         }
 
         #endregion
@@ -225,7 +228,7 @@ namespace GSF.Security
 
             lock (s_cache)
             {
-                cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal)));
+                cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal, m_settingsCategory)));
             }
 
             ISecurityProvider provider = SecurityProviderUtility.CreateProvider(cacheContext.Provider.UserData);
