@@ -978,6 +978,131 @@ namespace GSF.Security
             }
         }
 
+
+        /// Gets a list of Roles for this user for a specified ApplicationId.
+        /// </summary>
+        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
+        /// <returns>The roles that the specified user has.</returns>
+        public override List<string> GetUserRoles(string applicationId)
+        {
+            List<string> roles = new List<string>();
+
+            DataSet securityContext = new DataSet("AdoSecurityContext");
+
+           
+            try
+            {
+                Guid nodeId = new Guid(applicationId);
+                // Attempt to extract current security context from the database
+                using (AdoDataConnection database = new AdoDataConnection(SettingsCategory))
+                {
+                    // Read the security context tables from the database connection
+                    foreach (string securityTable in s_securityTables)
+                    {
+                        AddSecurityContextTable(database.Connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? nodeId : default(Guid));
+                    }
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Failed to open ADO connection, return empty roleset instead
+                return roles;
+            }
+
+            string userSID = UserInfo.UserNameToSID(UserData.Username);
+
+            // Filter user account data for the current user.
+            DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(userSID)}'");
+
+            // If SID based lookup failed, try lookup by user name.  Note that is critical that SID based lookup
+            // take precedence over name based lookup for proper cross-platform authentication.
+            if (userAccounts.Length == 0)
+                userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(UserData.Username)}'");
+
+            Guid userAccountID = new Guid();
+            if (userAccounts.Length > 0)
+                userAccountID = Guid.Parse(Convert.ToString(userAccounts[0]["ID"]));
+
+
+            // Filter explicitly assigned application roles for current user - this will return an empty set if no
+            // explicitly defined roles exist for the user -or- user doesn't exist in the database.
+            DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
+
+            // If no explicitly assigned application roles are found for the current user, we check for implicitly assigned
+            // application roles based on the role assignments of the groups the user is a member of.
+            if (userApplicationRoles.Length == 0)
+            {
+                List<DataRow> implicitRoles = new List<DataRow>();
+
+                // Filter implicitly assigned application roles for each of the user's database and NT/AD groups. Note that
+                // even if user is not defined in the database, an NT/AD group they are a member of may be associated with
+                // a role - this allows the user to get a role assignment based on this group.
+                foreach (string groupName in UserData.Groups)
+                {
+                    // Convert NT/AD group names back to SIDs for lookup in the database
+                    string groupSID = UserInfo.GroupNameToSID(groupName);
+
+                    // Locate associated security group record
+                    DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupSID)}'");
+
+                    // If SID based lookup failed, try lookup by group name.  Note that is critical that SID based lookup
+                    // take precedence over name based lookup for proper cross-platform authentication.
+                    if (securityGroups.Length == 0)
+                        securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupName)}'");
+
+                    if (securityGroups.Length > 0)
+                    {
+                        // Found security group by name, access group ID to lookup application roles defined for the group
+                        DataRow securityGroup = securityGroups[0];
+
+                        if (!Convert.IsDBNull(securityGroup["ID"]))
+                            implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select($"SecurityGroupID = '{EncodeEscapeSequences(securityGroup["ID"].ToString())}'"));
+                    }
+                }
+
+                userApplicationRoles = implicitRoles.ToArray();
+
+            }
+
+            // Populate user roles collection - both ApplicationRoleUserAccount and ApplicationRoleSecurityGroup tables contain ApplicationRoleID column
+            foreach (DataRow role in userApplicationRoles)
+            {
+                if (Convert.IsDBNull(role["ApplicationRoleID"]))
+                    continue;
+
+                // Locate associated application role record
+                DataRow applicationRole = null;
+
+                if (securityContext.Tables[ApplicationRoleTable].PrimaryKey.Length > 0)
+                {
+                    applicationRole = securityContext.Tables[ApplicationRoleTable].Rows.Find(role["ApplicationRoleID"]);
+                }
+                else
+                {
+                    DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select($"ID = '{EncodeEscapeSequences(role["ApplicationRoleID"].ToString())}'");
+
+                    if (applicationRoles.Length > 0)
+                        applicationRole = applicationRoles[0];
+                }
+
+                if ((object)applicationRole == null || Convert.IsDBNull(applicationRole["Name"]))
+                    continue;
+
+                // Found application role by ID, add role name to user roles if not already defined
+                string roleName = Convert.ToString(applicationRole["Name"]);
+
+                if (!string.IsNullOrEmpty(roleName) && !roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
+                    roles.Add(roleName);
+            }
+
+            // Add DefaultRoles if no Roles are present
+            if (!string.IsNullOrEmpty(DefaultRoles) && roles.Count() == 0)
+                foreach (string role in DefaultRoles.Split(','))
+                    roles.Add(role);
+
+            return roles;
+        }
+
         #endregion
 
         #region [ Static ]
