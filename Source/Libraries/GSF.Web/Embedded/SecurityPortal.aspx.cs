@@ -290,7 +290,7 @@ namespace GSF.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(LoginUsername.Text,"");
+                ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(LoginUsername.Text);
                 securityProvider.Password = LoginPassword.Text;
 
                 if (securityProvider.Authenticate())
@@ -408,7 +408,7 @@ namespace GSF.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(ChangePasswordUsername.Text,"");
+                ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(ChangePasswordUsername.Text);
 
                 if (securityProvider.CanChangePassword)
                 {
@@ -472,7 +472,7 @@ namespace GSF.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text,"");
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text);
 
                 if (provider.CanResetPassword)
                 {
@@ -522,7 +522,7 @@ namespace GSF.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text,"");
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text);
 
                 if (provider.CanResetPassword)
                 {

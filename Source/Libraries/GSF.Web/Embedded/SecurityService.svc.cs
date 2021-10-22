@@ -166,7 +166,7 @@ namespace GSF.Web.Embedded
         /// <returns>An <see cref="UserData"/> object of the user.</returns>
         public UserData Authenticate(string username, string password)
         {
-            ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(username,"");
+            ISecurityProvider securityProvider = SecurityProviderUtility.CreateProvider(username);
             securityProvider.Password = password;
 
             if (securityProvider.Authenticate())

@@ -112,8 +112,9 @@ namespace GSF.Security
         /// Creates a new <see cref="ISecurityProvider"/> based on the settings in the config file.
         /// </summary>
         /// <param name="username">Username of the user for whom the <see cref="ISecurityProvider"/> is to be created.</param>
+        /// <param name="settingsCategory">The category used to store configuration settings for the provider.</param>
         /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
-        public static ISecurityProvider CreateProvider(string username, string settingsCategory) =>
+        public static ISecurityProvider CreateProvider(string username, string settingsCategory = null) =>
             CreateProvider(username, null, settingsCategory);
 
         /// <summary>
@@ -121,8 +122,9 @@ namespace GSF.Security
         /// </summary>
         /// <param name="username">Username of the user for whom the <see cref="ISecurityProvider"/> is to be created.</param>
         /// <param name="passthroughPrincipal"><see cref="IPrincipal"/> obtained through alternative authentication mechanisms to provide authentication for the <see cref="ISecurityProvider"/>.</param>
+        /// <param name="settingsCategory">The category used to store configuration settings for the provider.</param>
         /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
-        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal, string settingsCategory)
+        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal, string settingsCategory = null)
         {
             // Initialize the username
             if (string.IsNullOrEmpty(username))
