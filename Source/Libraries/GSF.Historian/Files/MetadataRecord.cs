@@ -98,7 +98,6 @@ namespace GSF.Historian.Files
         public const int FixedLength = 2664;
 
         // Fields
-        private readonly int m_historianID;
         private string m_remarks;
         private string m_hardwareInfo;
         private string m_emailAddresses;
@@ -113,13 +112,9 @@ namespace GSF.Historian.Files
         private string m_plantCode;
         private string m_system;
         private string m_emailTime;
-        private float m_scanRate;
-        private int m_unitNumber;
         private MetadataRecordSecurityFlags m_securityFlags;
         private MetadataRecordGeneralFlags m_generalFlags;
         private MetadataRecordAlarmFlags m_alarmFlags;
-        private int m_compressionMinTime;
-        private int m_compressionMaxTime;
         private int m_sourceID;
         private MetadataRecordAnalogFields m_analogFields;
         private MetadataRecordDigitalFields m_digitalFields;
@@ -138,7 +133,10 @@ namespace GSF.Historian.Files
         /// <param name="legacyMode">Legacy mode of <see cref="MetadataFile"/>.</param>
         public MetadataRecord(int historianID, MetadataFileLegacyMode legacyMode)
         {
-            m_historianID = historianID;
+            if (historianID < 0)
+                throw new ArgumentOutOfRangeException(nameof(historianID));
+
+            HistorianID = historianID;
             m_remarks = string.Empty;
             m_hardwareInfo = string.Empty;
             m_emailAddresses = string.Empty;
@@ -179,7 +177,7 @@ namespace GSF.Historian.Files
 
         internal MetadataRecord(BinaryReader reader)
         {
-            m_historianID = reader.ReadInt32();
+            HistorianID = reader.ReadInt32();
             m_remarks = reader.ReadString();
             m_hardwareInfo = reader.ReadString();
             m_emailAddresses = reader.ReadString();
@@ -194,26 +192,15 @@ namespace GSF.Historian.Files
             m_plantCode = reader.ReadString();
             m_system = reader.ReadString();
             m_emailTime = reader.ReadString();
-            m_scanRate = reader.ReadSingle();
-            m_unitNumber = reader.ReadInt32();
+            ScanRate = reader.ReadSingle();
+            UnitNumber = reader.ReadInt32();
 
-            m_securityFlags = new MetadataRecordSecurityFlags
-            {
-                Value = reader.ReadInt32()
-            };
+            m_securityFlags = new MetadataRecordSecurityFlags { Value = reader.ReadInt32() };
+            m_generalFlags = new MetadataRecordGeneralFlags { Value = reader.ReadInt32() };
+            m_alarmFlags = new MetadataRecordAlarmFlags { Value = reader.ReadInt32() };
 
-            m_generalFlags = new MetadataRecordGeneralFlags
-            {
-                Value = reader.ReadInt32()
-            };
-
-            m_alarmFlags = new MetadataRecordAlarmFlags
-            {
-                Value = reader.ReadInt32()
-            };
-
-            m_compressionMinTime = reader.ReadInt32();
-            m_compressionMaxTime = reader.ReadInt32();
+            CompressionMinTime = reader.ReadInt32();
+            CompressionMaxTime = reader.ReadInt32();
             m_sourceID = reader.ReadInt32();
 
             switch (m_generalFlags.DataType)
@@ -260,19 +247,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Remarks
         {
-            get
-            {
-                return m_remarks;
-            }
+            get => m_remarks;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_remarks = value.TruncateRight(512);
-                else
-                    m_remarks = value;
+                m_remarks = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(512) : value;
             }
         }
 
@@ -285,19 +266,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string HardwareInfo
         {
-            get
-            {
-                return m_hardwareInfo;
-            }
+            get => m_hardwareInfo;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_hardwareInfo = value.TruncateRight(512);
-                else
-                    m_hardwareInfo = value;
+                m_hardwareInfo = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(512) : value;
             }
         }
 
@@ -311,19 +286,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string AlarmEmails
         {
-            get
-            {
-                return m_emailAddresses;
-            }
+            get => m_emailAddresses;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_emailAddresses = value.TruncateRight(512);
-                else
-                    m_emailAddresses = value;
+                m_emailAddresses = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(512) : value;
             }
         }
 
@@ -336,19 +305,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Description
         {
-            get
-            {
-                return m_description;
-            }
+            get => m_description;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_description = value.TruncateRight(80);
-                else
-                    m_description = value;
+                m_description = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(80) : value;
             }
         }
 
@@ -361,19 +324,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string CurrentData
         {
-            get
-            {
-                return m_currentData;
-            }
+            get => m_currentData;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_currentData = value.TruncateRight(80);
-                else
-                    m_currentData = value;
+                m_currentData = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(80) : value;
             }
         }
 
@@ -386,19 +343,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_name = value.TruncateRight(40);
-                else
-                    m_name = value;
+                m_name = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(40) : value;
             }
         }
 
@@ -411,19 +362,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Synonym1
         {
-            get
-            {
-                return m_synonym1;
-            }
+            get => m_synonym1;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_synonym1 = value.TruncateRight(40);
-                else
-                    m_synonym1 = value;
+                m_synonym1 = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(40) : value;
             }
         }
 
@@ -436,19 +381,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Synonym2
         {
-            get
-            {
-                return m_synonym2;
-            }
+            get => m_synonym2;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_synonym2 = value.TruncateRight(40);
-                else
-                    m_synonym2 = value;
+                m_synonym2 = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(40) : value;
             }
         }
 
@@ -461,19 +400,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Synonym3
         {
-            get
-            {
-                return m_synonym3;
-            }
+            get => m_synonym3;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_synonym3 = value.TruncateRight(40);
-                else
-                    m_synonym3 = value;
+                m_synonym3 = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(40) : value;
             }
         }
 
@@ -487,19 +420,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string AlarmPagers
         {
-            get
-            {
-                return m_pagerNumbers;
-            }
+            get => m_pagerNumbers;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_pagerNumbers = value.TruncateRight(40);
-                else
-                    m_pagerNumbers = value;
+                m_pagerNumbers = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(40) : value;
             }
         }
 
@@ -513,19 +440,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string AlarmPhones
         {
-            get
-            {
-                return m_phoneNumbers;
-            }
+            get => m_phoneNumbers;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_phoneNumbers = value.TruncateRight(40);
-                else
-                    m_pagerNumbers = value;
+                m_phoneNumbers = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(40) : value;
             }
         }
 
@@ -538,19 +459,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string PlantCode
         {
-            get
-            {
-                return m_plantCode;
-            }
+            get => m_plantCode;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_plantCode = value.TruncateRight(24);
-                else
-                    m_plantCode = value;
+                m_plantCode = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(24) : value;
             }
         }
 
@@ -563,19 +478,13 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string SystemName
         {
-            get
-            {
-                return m_system;
-            }
+            get => m_system;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_system = value.TruncateRight(24);
-                else
-                    m_system = value;
+                m_system = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(24) : value;
             }
         }
 
@@ -588,17 +497,8 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string EmailTime
         {
-            get
-            {
-                return m_emailTime;
-            }
-            set
-            {
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    m_emailTime = value.TruncateRight(40);
-                else
-                    m_emailTime = value;
-            }
+            get => m_emailTime;
+            set => m_emailTime = m_legacyMode == MetadataFileLegacyMode.Enabled ? value.TruncateRight(40) : value;
         }
 
         /// <summary>
@@ -607,32 +507,12 @@ namespace GSF.Historian.Files
         /// <remarks>
         /// <see cref="ScanRate"/> is used by data acquisition components for polling data from the actual device.
         /// </remarks>
-        public float ScanRate
-        {
-            get
-            {
-                return m_scanRate;
-            }
-            set
-            {
-                m_scanRate = value;
-            }
-        }
+        public float ScanRate { get; set; }
 
         /// <summary>
         /// Gets or sets the unit (i.e. generator) to which the <see cref="HistorianID"/> is associated.
         /// </summary>
-        public int UnitNumber
-        {
-            get
-            {
-                return m_unitNumber;
-            }
-            set
-            {
-                m_unitNumber = value;
-            }
-        }
+        public int UnitNumber { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordSecurityFlags"/> associated with the <see cref="HistorianID"/>.
@@ -640,17 +520,8 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordSecurityFlags SecurityFlags
         {
-            get
-            {
-                return m_securityFlags;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_securityFlags = value;
-            }
+            get => m_securityFlags;
+            set => m_securityFlags = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
@@ -659,17 +530,8 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordGeneralFlags GeneralFlags
         {
-            get
-            {
-                return m_generalFlags;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_generalFlags = value;
-            }
+            get => m_generalFlags;
+            set => m_generalFlags = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
@@ -678,17 +540,8 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordAlarmFlags AlarmFlags
         {
-            get
-            {
-                return m_alarmFlags;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_alarmFlags = value;
-            }
+            get => m_alarmFlags;
+            set => m_alarmFlags = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
@@ -697,17 +550,7 @@ namespace GSF.Historian.Files
         /// <remarks>
         /// <see cref="CompressionMinTime"/> is useful for limiting archived data for noisy <see cref="HistorianID"/>s.
         /// </remarks>
-        public int CompressionMinTime
-        {
-            get
-            {
-                return m_compressionMinTime;
-            }
-            set
-            {
-                m_compressionMinTime = value;
-            }
-        }
+        public int CompressionMinTime { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum time (in seconds) after which data is to be archived for the <see cref="HistorianID"/>.
@@ -716,17 +559,7 @@ namespace GSF.Historian.Files
         /// <see cref="CompressionMaxTime"/> ensures that archived data exist every "n" seconds for the <see cref="HistorianID"/>, 
         /// which would otherwise be omitted due to compression.
         /// </remarks>
-        public int CompressionMaxTime
-        {
-            get
-            {
-                return m_compressionMaxTime;
-            }
-            set
-            {
-                m_compressionMaxTime = value;
-            }
-        }
+        public int CompressionMaxTime { get; set; }
 
         /// <summary>
         /// Gets or sets the numeric identifier of the data source for the <see cref="HistorianID"/>.
@@ -739,10 +572,7 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public int SourceID
         {
-            get
-            {
-                return m_sourceID;
-            }
+            get => m_sourceID;
             set
             {
                 if (value < 0)
@@ -758,17 +588,8 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordAnalogFields AnalogFields
         {
-            get
-            {
-                return m_analogFields;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_analogFields = value;
-            }
+            get => m_analogFields;
+            set => m_analogFields = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
@@ -777,17 +598,8 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordDigitalFields DigitalFields
         {
-            get
-            {
-                return m_digitalFields;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_digitalFields = value;
-            }
+            get => m_digitalFields;
+            set => m_digitalFields = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
@@ -796,17 +608,8 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordComposedFields ComposedFields
         {
-            get
-            {
-                return m_composedFields;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_composedFields = value;
-            }
+            get => m_composedFields;
+            set => m_composedFields = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
@@ -815,51 +618,24 @@ namespace GSF.Historian.Files
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordConstantFields ConstantFields
         {
-            get
-            {
-                return m_constantFields;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_constantFields = value;
-            }
+            get => m_constantFields;
+            set => m_constantFields = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
         /// Gets the historian identifier of <see cref="MetadataRecord"/>.
         /// </summary>
-        public int HistorianID
-        {
-            get
-            {
-                return m_historianID;
-            }
-        }
+        public int HistorianID { get; }
 
         /// <summary>
         /// Gets the <see cref="MetadataRecordSummary"/> object for <see cref="MetadataRecord"/>.
         /// </summary>
-        public MetadataRecordSummary Summary
-        {
-            get
-            {
-                return new MetadataRecordSummary(this);
-            }
-        }
+        public MetadataRecordSummary Summary => new MetadataRecordSummary(this);
 
         /// <summary>
         /// Gets the length of the <see cref="MetadataRecord"/>.
         /// </summary>
-        public int BinaryLength
-        {
-            get
-            {
-                return FixedLength;
-            }
-        }
+        public int BinaryLength => FixedLength;
 
         #endregion
 
@@ -955,13 +731,13 @@ namespace GSF.Historian.Files
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_plantCode.PadRight(24).TruncateRight(24)), 0, buffer, startIndex + 1936, 24);
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_system.PadRight(24).TruncateRight(24)), 0, buffer, startIndex + 1960, 24);
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailTime.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1984, 40);
-            Buffer.BlockCopy(LittleEndian.GetBytes(m_scanRate), 0, buffer, startIndex + 2104, 4);
-            Buffer.BlockCopy(LittleEndian.GetBytes(m_unitNumber), 0, buffer, startIndex + 2108, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(ScanRate), 0, buffer, startIndex + 2104, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(UnitNumber), 0, buffer, startIndex + 2108, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_securityFlags.Value), 0, buffer, startIndex + 2112, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_generalFlags.Value), 0, buffer, startIndex + 2116, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_alarmFlags.Value), 0, buffer, startIndex + 2120, 4);
-            Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionMinTime), 0, buffer, startIndex + 2124, 4);
-            Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionMaxTime), 0, buffer, startIndex + 2128, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(CompressionMinTime), 0, buffer, startIndex + 2124, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(CompressionMaxTime), 0, buffer, startIndex + 2128, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_sourceID), 0, buffer, startIndex + 2132, 4);
 
             switch (m_generalFlags.DataType)
@@ -992,47 +768,34 @@ namespace GSF.Historian.Files
         /// Zero if the current <see cref="MetadataRecord"/> object is equal to <paramref name="obj"/>, 
         /// Positive value if the current <see cref="MetadataRecord"/> object is greater than <paramref name="obj"/>.
         /// </returns>
-        public virtual int CompareTo(object obj)
-        {
-            MetadataRecord other = obj as MetadataRecord;
-
-            if (other == null)
-                return 1;
-
-            return m_historianID.CompareTo(other.HistorianID);
-        }
+        public virtual int CompareTo(object obj) => 
+            !(obj is MetadataRecord other) ? 1 : HistorianID.CompareTo(other.HistorianID);
 
         /// <summary>
         /// Determines whether the current <see cref="MetadataRecord"/> object is equal to <paramref name="obj"/>.
         /// </summary>
         /// <param name="obj">Object against which the current <see cref="MetadataRecord"/> object is to be compared for equality.</param>
         /// <returns>true if the current <see cref="MetadataRecord"/> object is equal to <paramref name="obj"/>; otherwise false.</returns>
-        public override bool Equals(object obj)
-        {
-            return (CompareTo(obj) == 0);
-        }
+        public override bool Equals(object obj) => 
+            CompareTo(obj) == 0;
 
         /// <summary>
         /// Returns the text representation of <see cref="MetadataRecord"/> object.
         /// </summary>
         /// <returns>A <see cref="string"/> value.</returns>
-        public override string ToString()
-        {
-            return string.Format("ID={0}; Name={1}", m_historianID, m_name);
-        }
+        public override string ToString() => 
+            $"ID={HistorianID}; Name={m_name}";
 
         /// <summary>
         /// Returns the hash code for the current <see cref="MetadataRecord"/> object.
         /// </summary>
         /// <returns>A 32-bit signed integer value.</returns>
-        public override int GetHashCode()
-        {
-            return m_historianID.GetHashCode();
-        }
+        public override int GetHashCode() => 
+            HistorianID.GetHashCode();
 
         internal void WriteImage(BinaryWriter writer)
         {
-            writer.Write(m_historianID);
+            writer.Write(HistorianID);
             writer.Write(m_remarks);
             writer.Write(m_hardwareInfo);
             writer.Write(m_emailAddresses);
@@ -1047,13 +810,13 @@ namespace GSF.Historian.Files
             writer.Write(m_plantCode);
             writer.Write(m_system);
             writer.Write(m_emailTime);
-            writer.Write(m_scanRate);
-            writer.Write(m_unitNumber);
+            writer.Write(ScanRate);
+            writer.Write(UnitNumber);
             writer.Write(m_securityFlags.Value);
             writer.Write(m_generalFlags.Value);
             writer.Write(m_alarmFlags.Value);
-            writer.Write(m_compressionMinTime);
-            writer.Write(m_compressionMaxTime);
+            writer.Write(CompressionMinTime);
+            writer.Write(CompressionMaxTime);
             writer.Write(m_sourceID);
 
             switch (m_generalFlags.DataType)

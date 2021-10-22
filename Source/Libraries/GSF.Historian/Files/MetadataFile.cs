@@ -43,6 +43,7 @@ using System.Text;
 using GSF.Configuration;
 using GSF.IO;
 
+// ReSharper disable PossibleMultipleEnumeration
 namespace GSF.Historian.Files
 {
     /// <summary>
@@ -74,7 +75,7 @@ namespace GSF.Historian.Files
         #region [ Members ]
 
         // Nested Types
-        private class LegacyMetadataFile : IsamDataFileBase<MetadataRecord>
+        private sealed class LegacyMetadataFile : IsamDataFileBase<MetadataRecord>
         {
             #region [ Constructors ]
 
@@ -96,20 +97,16 @@ namespace GSF.Historian.Files
             /// Gets the binary size of a <see cref="MetadataRecord"/>.
             /// </summary>
             /// <returns>A 32-bit signed integer.</returns>
-            protected override int GetRecordSize()
-            {
-                return MetadataRecord.FixedLength;
-            }
+            protected override int GetRecordSize() => 
+                MetadataRecord.FixedLength;
 
             /// <summary>
             /// Creates a new <see cref="MetadataRecord"/> with the specified <paramref name="recordIndex"/>.
             /// </summary>
             /// <param name="recordIndex">1-based index of the <see cref="MetadataRecord"/>.</param>
             /// <returns>A <see cref="MetadataRecord"/> object.</returns>
-            protected override MetadataRecord CreateNewRecord(int recordIndex)
-            {
-                return new MetadataRecord(recordIndex, MetadataFileLegacyMode.Enabled);
-            }
+            protected override MetadataRecord CreateNewRecord(int recordIndex) => 
+                new MetadataRecord(recordIndex, MetadataFileLegacyMode.Enabled);
 
             #endregion
         }
@@ -142,19 +139,19 @@ namespace GSF.Historian.Files
         /// </summary>
         public MetadataFileLegacyMode LegacyMode
         {
-            get
-            {
-                return m_legacyMode;
-            }
+            get => m_legacyMode;
             set
             {
-                if (m_legacyMode != value)
-                {
-                    m_legacyMode = value;
+                if (m_legacyMode == value)
+                    return;
 
-                    if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                        m_records.Clear();
-                }
+                m_legacyMode = value;
+
+                if (m_legacyMode != MetadataFileLegacyMode.Enabled)
+                    return;
+
+                lock (m_records)
+                    m_records.Clear();
             }
         }
 
@@ -166,56 +163,29 @@ namespace GSF.Historian.Files
         /// </remarks>
         public override string FileName
         {
-            get
-            {
-                return base.FileName;
-            }
+            get => base.FileName;
             set
             {
                 base.FileName = value;
 
-                if ((object)value == null)
-                {
-                    m_baseFileName = null;
-                }
-                else
-                {
-                    if (value.EndsWith("2"))
-                        m_baseFileName = value.Substring(0, value.Length - 1);
-                    else
-                        m_baseFileName = value;
-                }
+                m_baseFileName = value is null ? null : value.EndsWith("2") ? 
+                    value.Substring(0, value.Length - 1) : value;
             }
         }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the file data on disk is corrupt.
         /// </summary>
-        public override bool IsCorrupt
-        {
-            get
-            {
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    return base.IsCorrupt;
-
-                return false;
-            }
-        }
+        public override bool IsCorrupt => 
+            m_legacyMode == MetadataFileLegacyMode.Enabled && base.IsCorrupt;
 
         /// <summary>
         /// Gets the number of file records on the disk.
         /// </summary>
-        public override int RecordsOnDisk
-        {
-            get
-            {
-                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
-                    return base.RecordsOnDisk;
-
-                // Difficult to calculate with variable length strings, so we just return count in memory
-                return RecordsInMemory;
-            }
-        }
+        public override int RecordsOnDisk =>
+            m_legacyMode == MetadataFileLegacyMode.Enabled ? 
+                base.RecordsOnDisk :
+                RecordsInMemory; // Difficult to calculate with variable length strings, so we just return count in memory
 
         /// <summary>
         /// Gets the number of file records loaded in memory.
@@ -227,7 +197,8 @@ namespace GSF.Historian.Files
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     return base.RecordsInMemory;
 
-                return m_records.Keys.DefaultIfEmpty(0).Max();
+                lock (m_records)
+                    return m_records.Keys.DefaultIfEmpty(0).Max();
             }
         }
 
@@ -241,8 +212,7 @@ namespace GSF.Historian.Files
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.AppendFormat("     Legacy operation mode: {0}", m_legacyMode);
-                status.AppendLine();
+                status.AppendLine($"     Legacy operation mode: {m_legacyMode}");
 
                 return status.ToString();
             }
@@ -258,16 +228,16 @@ namespace GSF.Historian.Files
         /// <exception cref="ConfigurationErrorsException"><see cref="IsamDataFileBase{T}.SettingsCategory"/> has a value of null or empty string.</exception>
         public override void SaveSettings()
         {
-            if (PersistSettings)
-            {
-                base.SaveSettings();
+            if (!PersistSettings)
+                return;
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["LegacyMode", true].Update(m_legacyMode);
-                config.Save();
-            }
+            base.SaveSettings();
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings["LegacyMode", true].Update(m_legacyMode);
+            config.Save();
         }
 
         /// <summary>
@@ -276,23 +246,23 @@ namespace GSF.Historian.Files
         /// <exception cref="ConfigurationErrorsException"><see cref="IsamDataFileBase{T}.SettingsCategory"/> has a value of null or empty string.</exception>
         public override void LoadSettings()
         {
-            if (PersistSettings)
-            {
-                base.LoadSettings();
+            if (!PersistSettings)
+                return;
 
-                // Load settings from the specified category.
-                CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
-                settings.Add("LegacyMode", m_legacyMode, "Metadata file legacy format mode. Value is one of \"Disabled\", \"Compatible\" or \"Enabled\" where \"Disabled\" means only use new format, \"Compatible\" means use new format and also write a legacy format file for compatibility and \"Enabled\" means only use the legacy format.");
-                LegacyMode = settings["LegacyMode"].ValueAs(m_legacyMode);
+            base.LoadSettings();
 
-                // Define new file name for non-legacy implementations
-                if (m_legacyMode != MetadataFileLegacyMode.Enabled && !FileName.EndsWith("2"))
-                    FileName += "2";
+            // Load settings from the specified category.
+            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
+            settings.Add("LegacyMode", m_legacyMode, "Metadata file legacy format mode. Value is one of \"Disabled\", \"Compatible\" or \"Enabled\" where \"Disabled\" means only use new format, \"Compatible\" means use new format and also write a legacy format file for compatibility and \"Enabled\" means only use the legacy format.");
+            LegacyMode = settings["LegacyMode"].ValueAs(m_legacyMode);
 
-                // By design of the new metadata file format, data is always loaded into memory - regardless of configuration setting
-                if (m_legacyMode != MetadataFileLegacyMode.Enabled)
-                    LoadOnOpen = true;
-            }
+            // Define new file name for non-legacy implementations
+            if (m_legacyMode != MetadataFileLegacyMode.Enabled && !FileName.EndsWith("2"))
+                FileName += "2";
+
+            // By design of the new metadata file format, data is always loaded into memory - regardless of configuration setting
+            if (m_legacyMode != MetadataFileLegacyMode.Enabled)
+                LoadOnOpen = true;
         }
 
         /// <summary>
@@ -302,11 +272,10 @@ namespace GSF.Historian.Files
         /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="MetadataRecord"/>.</returns>
         public IEnumerable<MetadataRecord> Read(string searchPattern)
         {
-            int id;
             foreach (string searchPart in searchPattern.Split(',', ';'))
             {
                 // Iterate through all parts.
-                if (int.TryParse(searchPattern, out id))
+                if (int.TryParse(searchPattern, out int id))
                 {
                     // Exact id is specified.
                     yield return Read(id);
@@ -367,7 +336,7 @@ namespace GSF.Historian.Files
             }
 
             if (!IsOpen)
-                throw new InvalidOperationException(string.Format("MetadataFile \"{0}\" is not open", FileName));
+                throw new InvalidOperationException($"MetadataFile \"{FileName}\" is not open");
 
             // Waits for any pending request to save records before completing.
             SaveWaitHandle.Wait();
@@ -391,7 +360,9 @@ namespace GSF.Historian.Files
                         for (int i = 0; i < count; i++)
                         {
                             MetadataRecord record = new MetadataRecord(reader);
-                            m_records[record.HistorianID] = record;
+
+                            lock (m_records)
+                                m_records[record.HistorianID] = record;
                         }
                     }
                 }
@@ -413,18 +384,19 @@ namespace GSF.Historian.Files
             if (m_legacyMode == MetadataFileLegacyMode.Enabled)
             {
                 foreach (MetadataRecord record in base.Read())
-                {
                     yield return record;
-                }
             }
 
             if (!IsOpen)
-                throw new InvalidOperationException(string.Format("MetadataFile \"{0}\" is not open", FileName));
+                throw new InvalidOperationException($"MetadataFile \"{FileName}\" is not open");
 
-            foreach (MetadataRecord record in m_records.Values)
-            {
+            MetadataRecord[] records;
+
+            lock (m_records)
+                records = m_records.Values.ToArray();
+
+            foreach (MetadataRecord record in records)
                 yield return record;
-            }
         }
 
         /// <summary>
@@ -438,16 +410,17 @@ namespace GSF.Historian.Files
                 return base.Read(recordIndex);
 
             if (!IsOpen)
-                throw new InvalidOperationException(string.Format("MetadataFile \"{0}\" is not open", FileName));
+                throw new InvalidOperationException($"MetadataFile \"{FileName}\" is not open");
 
-            MetadataRecord record;
+            lock (m_records)
+            {
+                if (m_records.TryGetValue(recordIndex, out MetadataRecord record))
+                    return record;
 
-            if (m_records.TryGetValue(recordIndex, out record))
-                return record;
-
-            // For compatibility with legacy mode, return a blank record if index is less than max
-            if (recordIndex < m_records.Keys.DefaultIfEmpty(0).Max())
-                return new MetadataRecord(recordIndex, m_legacyMode);
+                // For compatibility with legacy mode, return a blank record if index is less than max
+                if (recordIndex < m_records.Keys.DefaultIfEmpty(0).Max())
+                    return new MetadataRecord(recordIndex, m_legacyMode);
+            }
 
             return null;
         }
@@ -469,7 +442,7 @@ namespace GSF.Historian.Files
             if (m_legacyMode == MetadataFileLegacyMode.Disabled || m_legacyMode == MetadataFileLegacyMode.Compatible)
             {
                 if (!IsOpen)
-                    throw new InvalidOperationException(string.Format("MetadataFile \"{0}\" is not open", FileName));
+                    throw new InvalidOperationException($"MetadataFile \"{FileName}\" is not open");
 
                 // Waits for any pending request to save records before completing.
                 SaveWaitHandle.Wait();
@@ -482,16 +455,20 @@ namespace GSF.Historian.Files
                 {
                     OnDataSaving();
 
+                    MetadataRecord[] records;
+
+                    lock (m_records)
+                        records = m_records.Values.ToArray();
+
                     lock (FileDataLock)
                     {
                         FileData.SetLength(0);
                         BinaryWriter writer = new BinaryWriter(FileData);
-                        writer.Write(m_records.Count);
+                        
+                        writer.Write(records.Length);
 
-                        foreach (MetadataRecord record in m_records.Values)
-                        {
+                        foreach (MetadataRecord record in records)
                             record.WriteImage(writer);
-                        }
 
                         FileData.Flush();
                         File.SetLastWriteTime(FileName, DateTime.Now);
@@ -524,13 +501,14 @@ namespace GSF.Historian.Files
             if (m_legacyMode == MetadataFileLegacyMode.Disabled || m_legacyMode == MetadataFileLegacyMode.Compatible)
             {
                 if (!IsOpen)
-                    throw new InvalidOperationException(string.Format("MetadataFile \"{0}\" is not open", FileName));
+                    throw new InvalidOperationException($"MetadataFile \"{FileName}\" is not open");
 
-                m_records.Clear();
-
-                foreach (MetadataRecord record in records)
+                lock (m_records)
                 {
-                    m_records[record.HistorianID] = record;
+                    m_records.Clear();
+
+                    foreach (MetadataRecord record in records)
+                        m_records[record.HistorianID] = record;
                 }
             }
         }
@@ -542,7 +520,7 @@ namespace GSF.Historian.Files
         /// <param name="record">Record to be written.</param>
         public override void Write(int recordIndex, MetadataRecord record)
         {
-            if ((object)record == null)
+            if (record is null)
                 throw new ArgumentNullException(nameof(record));
 
             if (m_legacyMode == MetadataFileLegacyMode.Enabled || m_legacyMode == MetadataFileLegacyMode.Compatible)
@@ -550,7 +528,8 @@ namespace GSF.Historian.Files
 
             if (m_legacyMode == MetadataFileLegacyMode.Disabled || m_legacyMode == MetadataFileLegacyMode.Compatible)
             {
-                m_records[recordIndex] = record;
+                lock (m_records)
+                    m_records[recordIndex] = record;
             }
         }
 
@@ -558,9 +537,10 @@ namespace GSF.Historian.Files
         {
             using (LegacyMetadataFile metadataFile = new LegacyMetadataFile(m_baseFileName))
             {
-                foreach (KeyValuePair<int, MetadataRecord> record in m_records)
+                lock (m_records)
                 {
-                    metadataFile.Write(record.Key, record.Value);
+                    foreach (KeyValuePair<int, MetadataRecord> record in m_records)
+                        metadataFile.Write(record.Key, record.Value);
                 }
 
                 metadataFile.Save();
@@ -580,20 +560,16 @@ namespace GSF.Historian.Files
         /// Gets the binary size of a <see cref="MetadataRecord"/>.
         /// </summary>
         /// <returns>A 32-bit signed integer.</returns>
-        protected override int GetRecordSize()
-        {
-            return MetadataRecord.FixedLength;
-        }
+        protected override int GetRecordSize() => 
+            MetadataRecord.FixedLength;
 
         /// <summary>
         /// Creates a new <see cref="MetadataRecord"/> with the specified <paramref name="recordIndex"/>.
         /// </summary>
         /// <param name="recordIndex">1-based index of the <see cref="MetadataRecord"/>.</param>
         /// <returns>A <see cref="MetadataRecord"/> object.</returns>
-        protected override MetadataRecord CreateNewRecord(int recordIndex)
-        {
-            return new MetadataRecord(recordIndex, m_legacyMode);
-        }
+        protected override MetadataRecord CreateNewRecord(int recordIndex) => 
+            new MetadataRecord(recordIndex, m_legacyMode);
 
         #endregion
     }
