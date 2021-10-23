@@ -225,6 +225,14 @@ namespace PIAdapters
         public TagRemovalOperation AutoRemoveTags { get; set; } = TagRemovalOperation.DoNotRemove;
 
         /// <summary>
+        /// Gets or sets flag that determines if tag synchronization should only use alternate tag fields.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Determines if tag synchronization should only use alternate tag fields. Only relevant when RunMetadataSync is True.")]
+        [DefaultValue(true)]
+        public bool SyncAlternateTagOnly { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
         [ConnectionStringParameter]
@@ -294,6 +302,7 @@ namespace PIAdapters
                     status.AppendLine($"          Auto-create tags: {AutoCreateTags}");
                     status.AppendLine($"          Auto-update tags: {AutoUpdateTags}");
                     status.AppendLine($"          Auto-remove tags: {AutoRemoveTags}");
+                    status.AppendLine($"   Sync alternate tag only: {SyncAlternateTagOnly}");
                     status.AppendLine($"    Tag prefixes to remove: {TagNamePrefixRemoveCount}");
                     status.AppendLine($"       OSI-PI point source: {PIPointSource}");
                     status.AppendLine($"        OSI-PI point class: {PIPointClass}");
@@ -443,6 +452,9 @@ namespace PIAdapters
 
             if (settings.TryGetValue(nameof(AutoRemoveTags), out setting) && Enum.TryParse(setting, out TagRemovalOperation removalOperation))
                 AutoRemoveTags = removalOperation;
+
+            if (settings.TryGetValue(nameof(SyncAlternateTagOnly), out setting))
+                SyncAlternateTagOnly = setting.ParseBoolean();
 
             if (settings.TryGetValue(nameof(PIPointSource), out setting))
                 PIPointSource = setting;
@@ -695,7 +707,10 @@ namespace PIAdapters
                     if (rows.Length > 0)
                     {
                         DataRow measurementRow = rows[0];
-                        string tagName = measurementRow["PointTag"].ToNonNullString().Trim();
+                        string tagName = null;
+
+                        if (!SyncAlternateTagOnly)
+                            tagName = measurementRow["PointTag"].ToNonNullString().Trim();
 
                         // Use alternate tag if one is defined
                         if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
@@ -776,7 +791,7 @@ namespace PIAdapters
                         Guid signalID = key.SignalID;
                         DataRow[] rows = measurements.Select($"SignalID='{signalID}'");
 
-                        string tagName;
+                        string tagName = null;
                         bool createdNewTag = false;
                         bool refreshMetadata = false;
 
@@ -790,7 +805,8 @@ namespace PIAdapters
                         DataRow measurementRow = rows[0];
 
                         // Get tag-name as defined in meta-data, adjusting as needed
-                        tagName = GetPITagName(measurementRow["PointTag"].ToNonNullString().Trim());
+                        if (!SyncAlternateTagOnly)
+                            tagName = GetPITagName(measurementRow["PointTag"].ToNonNullString().Trim());
 
                         // Use alternate tag if one is defined - note that digitals are an exception since they use this field for special labeling
                         if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
@@ -1181,6 +1197,9 @@ namespace PIAdapters
 
         private static PIPoint GetPIPoint(PIServer server, string tagName)
         {
+            if (server is null || string.IsNullOrWhiteSpace(tagName))
+                return null;
+
             PIPoint.TryFindPIPoint(server, tagName, out PIPoint point);
             return point;
         }
