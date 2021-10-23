@@ -229,8 +229,8 @@ namespace PIAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Determines if tag synchronization should only use alternate tag fields. Only relevant when RunMetadataSync is True.")]
-        [DefaultValue(true)]
-        public bool SyncAlternateTagOnly { get; set; } = true;
+        [DefaultValue(false)]
+        public bool SyncAlternateTagOnly { get; set; } = false;
 
         /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
