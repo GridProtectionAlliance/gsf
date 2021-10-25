@@ -69,7 +69,10 @@ The following optional special command operations can be specifed as part of any
 * [Distinct](#distinct)
 * [AbsoluteValue](#absolutevalue)
 * [Add](#add)
+* [Subtract](#subtract)
 * [Multiply](#multiply)
+* [Divide](#divide)
+* [Modulo](#modulo)
 * [Round](#round)
 * [Floor](#floor)
 * [Ceiling](#ceiling)
@@ -221,6 +224,18 @@ N can either be a constant value or a named target available from the expression
 * Returns: Series of values
 * Example: `Divide(1.732, FILTER ActiveMeasurements WHERE SignalType='CALC')`
 * Variants: `Divide`
+* Execution: [Deferred enumeration](#execution-modes)
+
+## Modulo
+
+Returns a series of values that represent each of the values in the source series modulo by N.
+N is a floating point value representing a divisive factor to be applied to each value the source series.
+N can either be a constant value or a named target available from the expression.
+
+* Signature: `Modulo(N, expression)`
+* Returns: Series of values
+* Example: `Mod(2, FILTER ActiveMeasurements WHERE SignalType='CALC')`
+* Variants: `Modulo`, `Modulus`, `Mod`
 * Execution: [Deferred enumeration](#execution-modes)
 
 ## Round

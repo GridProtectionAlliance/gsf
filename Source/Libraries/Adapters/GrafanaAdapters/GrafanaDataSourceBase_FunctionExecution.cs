@@ -464,6 +464,13 @@ namespace GrafanaAdapters
                         yield return dataValue;
 
                     break;
+                case SeriesFunction.Modulo:
+                    value = ParseFloat(parameters[0], source, false, isSliceOperation);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value % value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
                 case SeriesFunction.Round:
                     count = parameters.Length == 0 ? 0 : ParseInt(parameters[0]);
 

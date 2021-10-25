@@ -176,6 +176,19 @@ namespace GrafanaAdapters
         /// </remarks>
         Divide,
         /// <summary>
+        /// Returns a series of values that represent each of the values in the source series modulo by N.
+        /// N is a floating point value representing a divisive factor to be applied to each value the source series.
+        /// N can either be constant value or a named target available from the expression.
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>Modulo(N, expression)</c><br/>
+        /// Returns: Series of values.<br/>
+        /// Example: <c>Mod(2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Variants: Modulo, Modulus, Mod<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Modulo,
+        /// <summary>
         /// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
         /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
         /// </summary>
@@ -545,6 +558,7 @@ namespace GrafanaAdapters
         private static readonly Regex s_subtractExpression;
         private static readonly Regex s_multiplyExpression;
         private static readonly Regex s_divideExpression;
+        private static readonly Regex s_moduloExpression;
         private static readonly Regex s_roundExpression;
         private static readonly Regex s_floorExpression;
         private static readonly Regex s_ceilingExpression;
@@ -596,6 +610,7 @@ namespace GrafanaAdapters
             s_subtractExpression = new Regex(string.Format(GetExpression, "Subtract"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_multiplyExpression = new Regex(string.Format(GetExpression, "Multiply"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_divideExpression = new Regex(string.Format(GetExpression, "Divide"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_moduloExpression = new Regex(string.Format(GetExpression, "(Modulo|Modulus|Mod)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_roundExpression = new Regex(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_floorExpression = new Regex(string.Format(GetExpression, "Floor"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_ceilingExpression = new Regex(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -636,6 +651,7 @@ namespace GrafanaAdapters
                 [SeriesFunction.Subtract] = 1,
                 [SeriesFunction.Multiply] = 1,
                 [SeriesFunction.Divide] = 1,
+                [SeriesFunction.Modulo] = 1,
                 [SeriesFunction.Round] = 0,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -677,6 +693,7 @@ namespace GrafanaAdapters
                 [SeriesFunction.Subtract] = 0,
                 [SeriesFunction.Multiply] = 0,
                 [SeriesFunction.Divide] = 0,
+                [SeriesFunction.Modulo] = 0,
                 [SeriesFunction.Round] = 1,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -798,6 +815,12 @@ namespace GrafanaAdapters
 
                 if (match.Success)
                     return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Divide, match.Result("${Expression}").Trim(), groupOperation);
+
+                // Look for modulo function
+                match = s_moduloExpression.Match(expression);
+
+                if (match.Success)
+                    return new Tuple<SeriesFunction, string, GroupOperation>(SeriesFunction.Modulo, match.Result("${Expression}").Trim(), groupOperation);
 
                 // Look for round function
                 match = s_roundExpression.Match(expression);
