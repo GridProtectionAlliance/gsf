@@ -131,8 +131,6 @@ namespace GSF.PQDIF.Physical
             public override ElementType TypeOfElement => m_typeOfElement;
         }
 
-        // Fields
-        private string m_fileName;
         private BinaryReader m_fileReader;
         private CompressionStyle m_compressionStyle;
         private CompressionAlgorithm m_compressionAlgorithm;
@@ -149,11 +147,11 @@ namespace GSF.PQDIF.Physical
         /// <summary>
         /// Creates a new instance of the <see cref="PhysicalParser"/> class.
         /// </summary>
-        /// <param name="fileName">Name of the PQDIF file to be parsed.</param>
-        public PhysicalParser(string fileName)
+        /// <param name="filePath">Path to the PQDIF file to be parsed.</param>
+        public PhysicalParser(string filePath)
             : this()
         {
-            FileName = fileName;
+            FilePath = filePath;
         }
 
         /// <summary>
@@ -180,19 +178,19 @@ namespace GSF.PQDIF.Physical
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the file name of the PQDIF file to be parsed.
+        /// Gets or sets the file path (not just the name) of the PQDIF file to be parsed.
+        /// Obsolete in favor of <see cref="FilePath"/>.
         /// </summary>
-        public string FileName
-        {
-            get
-            {
-                return m_fileName;
-            }
-            set
-            {
-                m_fileName = value;
-            }
+        [Obsolete("Property is deprecated. Please use FilePath instead.")]
+        public string FileName {
+            get { return FilePath; }
+            set { FilePath = value; }
         }
+
+        /// <summary>
+        /// Gets or sets the file path of the PQDIF file to be parsed.
+        /// </summary>
+        public string FilePath { get; set; }
 
         /// <summary>
         /// Gets all the exceptions encountered while parsing.
@@ -279,15 +277,15 @@ namespace GSF.PQDIF.Physical
         /// <summary>
         /// Opens the PQDIF file.
         /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="FileName"/> has not been defined.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="FilePath"/> has not been defined.</exception>
         public void Open()
         {
-            if ((object)m_fileName == null)
+            if ((object)FilePath == null)
                 throw new InvalidOperationException("Unable to open PQDIF file when no file name has been defined.");
 
             using (m_fileReader)
             {
-                m_fileReader = new BinaryReader(File.OpenRead(m_fileName));
+                m_fileReader = new BinaryReader(File.OpenRead(FilePath));
             }
 
             m_hasNextRecord = true;

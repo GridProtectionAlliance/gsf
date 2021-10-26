@@ -96,10 +96,10 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Creates a new instance of the <see cref="LogicalParser"/> class.
         /// </summary>
-        /// <param name="fileName">Name of the PQDIF file to be parsed.</param>
-        public LogicalParser(string fileName)
+        /// <param name="filePath">Path to the PQDIF file to be parsed.</param>
+        public LogicalParser(string filePath)
         {
-            m_physicalParser = new PhysicalParser(fileName);
+            m_physicalParser = new PhysicalParser(filePath);
             m_allDataSourceRecords = new List<DataSourceRecord>();
         }
 
@@ -122,17 +122,34 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the file name of the PQDIF file to be parsed.
+        /// Gets or sets the file path (not just the name) of the PQDIF file to be parsed.
+        /// Obsolete in favor of <see cref="FilePath"/>.
         /// </summary>
+        [Obsolete("Property is deprecated. Please use FilePath instead.")]
         public string FileName
         {
             get
             {
-                return m_physicalParser.FileName;
+                return m_physicalParser.FilePath;
             }
             set
             {
-                m_physicalParser.FileName = value;
+                m_physicalParser.FilePath = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the file path of the PQDIF file to be parsed.
+        /// </summary>
+        public string FilePath
+        {
+            get
+            {
+                return m_physicalParser.FilePath;
+            }
+            set
+            {
+                m_physicalParser.FilePath = value;
             }
         }
 
@@ -166,7 +183,7 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Opens the parser and parses the <see cref="ContainerRecord"/>.
         /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="FileName"/> has not been defined.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="FilePath"/> has not been defined.</exception>
         /// <exception cref="NotSupportedException">An unsupported compression mode was defined in the PQDIF file.</exception>
         public void Open()
         {

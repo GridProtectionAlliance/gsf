@@ -175,8 +175,21 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
-        /// Gets the starting time of the data in the observation record.
+        /// Gets the starting time of the data in the observation record. This time should
+        /// be used as the base time for all relative seconds recorded in the series instances.
         /// </summary>
+        /// <remarks>
+        /// The <see cref="ObservationRecord"/> contains two timestamp fields: <see cref="StartTime"/> and
+        /// <see cref="TimeTriggered"/>. The StartTime is a required part of any Observation, whereas the 
+        /// <see cref="TimeTriggered"/> is optional. 
+        /// 
+        /// The <see cref="StartTime"/> does not have to be the same as the trigger time and can therefore 
+        /// be chosen more or less arbitrarily. For instance, you can choose to record the 
+        /// <see cref="StartTime"/> as the timestamp of the first data point in the observation or the top 
+        /// of an interval in which the data was captured. The trigger time field is more well defined, 
+        /// essentially always representing the point in time at which the data source decided to capture 
+        /// some data in the PQDIF file.
+        /// </remarks>
         public DateTime StartTime
         {
             get
@@ -216,7 +229,8 @@ namespace GSF.PQDIF.Logical
 
 
         /// <summary>
-        /// Gets the time the observation was triggered.
+        /// Gets the time the observation was triggered. For more information regarding recording
+        /// time in PQD files, see <see cref="StartTime"/>.
         /// </summary>
         public DateTime TimeTriggered
         {
