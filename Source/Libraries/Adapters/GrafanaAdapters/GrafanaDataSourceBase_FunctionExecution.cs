@@ -25,14 +25,19 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
+using Ciloci.Flee;
 using GSF;
 using GSF.Collections;
 using GSF.NumericalAnalysis;
 using GSF.Units;
+using ParsedFunction = System.Tuple<GrafanaAdapters.SeriesFunction, string, GrafanaAdapters.GroupOperation, string>;
 
 // ReSharper disable PossibleMultipleEnumeration
 // ReSharper disable AccessToModifiedClosure
+// ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 namespace GrafanaAdapters
 {
     partial class GrafanaDataSourceBase
@@ -46,7 +51,7 @@ namespace GrafanaAdapters
             {
                 if (Enum.TryParse(value, out TimeUnit timeUnit))
                 {
-                    targetTimeUnit = new TargetTimeUnit
+                    targetTimeUnit = new()
                     {
                         Unit = timeUnit
                     };
@@ -57,7 +62,7 @@ namespace GrafanaAdapters
                 switch (value?.ToLowerInvariant())
                 {
                     case "milliseconds":
-                        targetTimeUnit = new TargetTimeUnit
+                        targetTimeUnit = new()
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Milli
@@ -65,7 +70,7 @@ namespace GrafanaAdapters
 
                         return true;
                     case "microseconds":
-                        targetTimeUnit = new TargetTimeUnit
+                        targetTimeUnit = new()
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Micro
@@ -73,7 +78,7 @@ namespace GrafanaAdapters
 
                         return true;
                     case "nanoseconds":
-                        targetTimeUnit = new TargetTimeUnit
+                        targetTimeUnit = new()
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Nano
@@ -87,76 +92,126 @@ namespace GrafanaAdapters
             }
         }
 
-        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Target sourceTarget, Tuple<SeriesFunction, string, GroupOperation> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Target sourceTarget, ParsedFunction parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, CancellationToken cancellationToken)
         {
             SeriesFunction seriesFunction = parsedFunction.Item1;
             string expression = parsedFunction.Item2;
             GroupOperation groupOperation = parsedFunction.Item3;
+            string imports = parsedFunction.Item4;
 
             // Parse out function parameters and target expression
             Tuple<string[], string> expressionParameters = TargetCache<Tuple<string[], string>>.GetOrAdd(expression, () =>
             {
-                List<string> parsedParameters = new List<string>();
+                List<string> parsedParameters = new();
 
-                // Extract any required function parameters
-                int requiredParameters = s_requiredParameters[seriesFunction]; // Safe: no lock needed since content doesn't change
-
-                // Any slice operation adds one required parameter for time tolerance
-                if (groupOperation == GroupOperation.Slice)
-                    requiredParameters++;
-
-                if (requiredParameters > 0)
+                if (seriesFunction == SeriesFunction.Evaluate)
                 {
-                    int index = 0;
+                    int lastIndex = 0;
 
-                    for (int i = 0; i < requiredParameters && index > -1; i++)
-                        index = expression.IndexOf(',', index + 1);
-
-                    if (index > -1)
-                        parsedParameters.AddRange(expression.Substring(0, index).Split(','));
-
-                    if (parsedParameters.Count == requiredParameters)
-                        expression = expression.Substring(index + 1).Trim();
-                    else
-                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {(groupOperation == GroupOperation.None ? "" : groupOperation.ToString())}{seriesFunction}({expression})");
-                }
-
-                // Extract any provided optional function parameters
-                int optionalParameters = s_optionalParameters[seriesFunction]; // Safe: no lock needed since content doesn't change
-
-                bool hasSubExpression(string target) => target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
-
-                if (optionalParameters > 0)
-                {
-                    int index = expression.IndexOf(',');
-                    int lastIndex;
-
-                    if (index > -1 && !hasSubExpression(expression.Substring(0, index)))
+                    for (int i = 0; i < 2; i++)
                     {
-                        lastIndex = index;
-
-                        for (int i = 1; i < optionalParameters && index > -1; i++)
+                        if (i == 1)
                         {
+                            // Eval expression required to be in braces, i.e., { expression }, to delineate sub-expression that may have its own functions and parameters.
+                            int startBrace = expression.IndexOf('{', lastIndex);
+
+                            if (startBrace < 0)
+                                break;
+
+                            startBrace++;
+
+                            int endBrace = expression.IndexOf('}', startBrace);
+
+                            if (endBrace < 0)
+                                break;
+
+                            parsedParameters.Add(expression.Substring(startBrace, endBrace - startBrace));
+
+                            lastIndex = expression.IndexOf(',', endBrace);
+
+                            if (lastIndex < 0)
+                                throw new FormatException($"Expected 3 parameters, received 2 in: Evaluate({expression})");
+
+                            lastIndex++;
+                        }
+                        else
+                        {
+                            int nextIndex = expression.IndexOf(',', lastIndex);
+
+                            if (nextIndex < 0)
+                                break;
+
+                            parsedParameters.Add(expression.Substring(lastIndex, nextIndex - lastIndex));
+                            lastIndex = nextIndex + 1;
+                        }
+                    }
+                    
+                    if (parsedParameters.Count == 2)
+                        expression = expression.Substring(lastIndex).Trim();
+                    else
+                        throw new FormatException($"Expected 3 parameters, received {parsedParameters.Count + 1} in: Evaluate({expression})");
+                }
+                else
+                {
+                    // Extract any required function parameters
+                    int requiredParameters = s_requiredParameters[seriesFunction]; // Safe: no lock needed since content doesn't change
+
+                    // Any slice operation adds one required parameter for time tolerance
+                    if (groupOperation == GroupOperation.Slice)
+                        requiredParameters++;
+
+                    if (requiredParameters > 0)
+                    {
+                        int index = 0;
+
+                        for (int i = 0; i < requiredParameters && index > -1; i++)
                             index = expression.IndexOf(',', index + 1);
 
-                            if (index > -1 && hasSubExpression(expression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
+                        if (index > -1)
+                            parsedParameters.AddRange(expression.Substring(0, index).Split(','));
+
+                        if (parsedParameters.Count == requiredParameters)
+                            expression = expression.Substring(index + 1).Trim();
+                        else
+                            throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {(groupOperation == GroupOperation.None ? "" : groupOperation.ToString())}{seriesFunction}({expression})");
+                    }
+
+                    // Extract any provided optional function parameters
+                    int optionalParameters = s_optionalParameters[seriesFunction]; // Safe: no lock needed since content doesn't change
+
+                    bool hasSubExpression(string target) => target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
+
+                    if (optionalParameters > 0)
+                    {
+                        int index = expression.IndexOf(',');
+
+                        if (index > -1 && !hasSubExpression(expression.Substring(0, index)))
+                        {
+                            int lastIndex = index;
+
+                            for (int i = 1; i < optionalParameters && index > -1; i++)
                             {
-                                index = lastIndex;
-                                break;
+                                index = expression.IndexOf(',', index + 1);
+
+                                if (index > -1 && hasSubExpression(expression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
+                                {
+                                    index = lastIndex;
+                                    break;
+                                }
+
+                                lastIndex = index;
                             }
 
-                            lastIndex = index;
-                        }
-
-                        if (index > -1)
-                        {
-                            parsedParameters.AddRange(expression.Substring(0, index).Split(','));
-                            expression = expression.Substring(index + 1).Trim();
+                            if (index > -1)
+                            {
+                                parsedParameters.AddRange(expression.Substring(0, index).Split(','));
+                                expression = expression.Substring(index + 1).Trim();
+                            }
                         }
                     }
                 }
 
-                return new Tuple<string[], string>(parsedParameters.ToArray(), expression);
+                return new(parsedParameters.ToArray(), expression);
             });
 
             string[] parameters = expressionParameters.Item1;
@@ -170,148 +225,176 @@ namespace GrafanaAdapters
             }
 
             // Query function expression to get series data
-            IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, includePeaks, dropEmptySeries, cancellationToken);
+            IEnumerable<DataSourceValueGroup> dataset = QueryTarget(sourceTarget, queryExpression, startTime, stopTime, interval, includePeaks, dropEmptySeries, imports, cancellationToken);
 
-            // Handle label function as a special edge case - group operations on label are ignored
-            if (seriesFunction == SeriesFunction.Label)
+            switch (seriesFunction)
             {
-                // Derive labels
-                string label = parameters[0];
-
-                if (label.StartsWith("\"") || label.StartsWith("'"))
-                    label = label.Substring(1, label.Length - 2);
-
-                DataSourceValueGroup[] valueGroups = dataset.ToArray();
-                string[] seriesLabels = new string[valueGroups.Length];
-
-                for (int i = 0; i < valueGroups.Length; i++)
+                // Handle label function as a special edge case - group operations on label are ignored
+                case SeriesFunction.Label:
                 {
-                    string target = valueGroups[i].RootTarget;
+                    // Derive labels
+                    string label = parameters[0];
 
-                    seriesLabels[i] = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
+                    if (label.StartsWith("\"") || label.StartsWith("'"))
+                        label = label.Substring(1, label.Length - 2);
+
+                    DataSourceValueGroup[] valueGroups = dataset.ToArray();
+                    string[] seriesLabels = new string[valueGroups.Length];
+
+                    for (int i = 0; i < valueGroups.Length; i++)
                     {
-                        string table, derivedLabel;
-                        string[] components = label.Split('.');
+                        string target = valueGroups[i].RootTarget;
 
-                        if (components.Length == 2)
+                        seriesLabels[i] = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
                         {
-                            table = components[0].Trim();
-                            derivedLabel = components[1].Trim();
-                        }
-                        else
-                        {
-                            table = "ActiveMeasurements";
-                            derivedLabel = label;
-                        }
+                            target = target.SplitAlias(out string alias);
+                            string table, derivedLabel;
+                            string[] components = label.Split('.');
 
-                        DataRow record = target.MetadataRecordFromTag(Metadata, table);
+                            if (components.Length == 2)
+                            {
+                                table = components[0].Trim();
+                                derivedLabel = components[1].Trim();
+                            }
+                            else
+                            {
+                                table = "ActiveMeasurements";
+                                derivedLabel = label;
+                            }
 
-                        if (record != null && derivedLabel.IndexOf('{') >= 0)
-                        {
-                            foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
-                                derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
-                        }
+                            DataRow record = target.MetadataRecordFromTag(Metadata, table);
 
-                        // ReSharper disable once AccessToModifiedClosure
-                        if (derivedLabel.Equals(label, StringComparison.Ordinal))
-                            derivedLabel = $"{label}{(valueGroups.Length > 1 ? $" {i + 1}" : "")}";
+                            if (record != null && derivedLabel.IndexOf('{') >= 0)
+                            {
+                                foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
+                                    derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
 
-                        return derivedLabel;
-                    });
-                }
+                                derivedLabel = derivedLabel.ReplaceCaseInsensitive("{alias}", alias ?? "");
+                            }
 
-                // Verify that all series labels are unique
-                if (seriesLabels.Length > 1)
-                {
-                    HashSet<string> uniqueLabelSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                            // ReSharper disable once AccessToModifiedClosure
+                            if (derivedLabel.Equals(label, StringComparison.Ordinal))
+                                derivedLabel = $"{label}{(valueGroups.Length > 1 ? $" {i + 1}" : "")}";
 
-                    for (int i = 0; i < seriesLabels.Length; i++)
-                    {
-                        while (uniqueLabelSet.Contains(seriesLabels[i]))
-                            seriesLabels[i] = $"{seriesLabels[i]}\u00A0"; // Suffixing with non-breaking space for label uniqueness
-
-                        uniqueLabelSet.Add(seriesLabels[i]);
+                            return derivedLabel;
+                        });
                     }
-                }
 
-                for (int i = 0; i < valueGroups.Length; i++)
-                {
-                    yield return new DataSourceValueGroup
+                    // Verify that all series labels are unique
+                    if (seriesLabels.Length > 1)
                     {
-                        Target = seriesLabels[i],
-                        RootTarget = valueGroups[i].RootTarget,
-                        SourceTarget = sourceTarget,
-                        Source = valueGroups[i].Source,
-                        DropEmptySeries = dropEmptySeries,
-                        refId = sourceTarget.refId
-                    };
-                }
-            }
-            else
-            {
-                switch (groupOperation)
-                {
-                    case GroupOperation.Set:
-                    {
-                        // Flatten all series into a single enumerable
-                        DataSourceValueGroup valueGroup = new DataSourceValueGroup
+                        HashSet<string> uniqueLabelSet = new(StringComparer.OrdinalIgnoreCase);
+
+                        for (int i = 0; i < seriesLabels.Length; i++)
                         {
-                            Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
-                            RootTarget = queryExpression,
+                            while (uniqueLabelSet.Contains(seriesLabels[i]))
+                                seriesLabels[i] = $"{seriesLabels[i]}\u00A0"; // Suffixing with non-breaking space for label uniqueness
+
+                            uniqueLabelSet.Add(seriesLabels[i]);
+                        }
+                    }
+
+                    for (int i = 0; i < valueGroups.Length; i++)
+                    {
+                        yield return new()
+                        {
+                            Target = seriesLabels[i],
+                            RootTarget = valueGroups[i].RootTarget,
                             SourceTarget = sourceTarget,
-                            Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters),
+                            Source = valueGroups[i].Source,
+                            DropEmptySeries = dropEmptySeries,
+                            refId = sourceTarget.refId
+                        };
+                    }
+
+                    break;
+                }
+                // Handle evaluate function as a special edge case - only slice-based group operation is supported
+                case SeriesFunction.Evaluate:
+                {
+                    TimeSliceScanner scanner = new(dataset, ParseFloat(parameters[0]) / SI.Milli);
+                    parameters = string.IsNullOrWhiteSpace(imports) ? new[] { parameters[1].Trim() } : new[] { parameters[1].Trim(), imports };
+
+                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, SeriesFunction.Evaluate, parameters, cancellationToken))
+                    {
+                        yield return new()
+                        {
+                            Target = $"Evaluate({{ {parameters[0]} }}, {valueGroup.Target})",
+                            RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
+                            SourceTarget = sourceTarget,
+                            Source = valueGroup.Source,
                             DropEmptySeries = dropEmptySeries
                         };
-
-                        // Handle edge-case set operations - for these functions there is data in the target series as well
-                        if (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum || seriesFunction == SeriesFunction.Median)
-                        {
-                            DataSourceValue dataValue = valueGroup.Source.First();
-                            valueGroup.Target = $"Set{seriesFunction} = {dataValue.Target}";
-                            valueGroup.RootTarget = dataValue.Target;
-                        }
-
-                        yield return valueGroup;
-                        
-                        break;
                     }
-                    case GroupOperation.Slice:
-                    {
-                        TimeSliceScanner scanner = new TimeSliceScanner(dataset, ParseFloat(parameters[0]) / SI.Milli);
-                        parameters = parameters.Skip(1).ToArray();
 
-                        foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters, cancellationToken))
+                    break;
+                }
+                default:
+                    switch (groupOperation)
+                    {
+                        case GroupOperation.Set:
                         {
-                            yield return new DataSourceValueGroup
+                            // Flatten all series into a single enumerable
+                            DataSourceValueGroup valueGroup = new()
                             {
-                                Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
-                                RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
+                                Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{queryExpression})",
+                                RootTarget = queryExpression,
                                 SourceTarget = sourceTarget,
-                                Source = valueGroup.Source,
+                                Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters),
                                 DropEmptySeries = dropEmptySeries
                             };
-                        }
 
-                        break;
-                    }
-                    default:
-                    {
-                        foreach (DataSourceValueGroup valueGroup in dataset)
-                        {
-                            yield return new DataSourceValueGroup
+                            // Handle edge-case set operations - for these functions there is data in the target series as well
+                            if (seriesFunction is SeriesFunction.Minimum or SeriesFunction.Maximum or SeriesFunction.Median)
                             {
-                                Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
-                                RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
-                                SourceTarget = sourceTarget,
-                                Source = ExecuteSeriesFunctionOverSource(valueGroup.Source, seriesFunction, parameters),
-                                DropEmptySeries = dropEmptySeries,
-                                refId = sourceTarget.refId
-                            };
-                        }
+                                DataSourceValue dataValue = valueGroup.Source.First();
+                                valueGroup.Target = $"Set{seriesFunction} = {dataValue.Target}";
+                                valueGroup.RootTarget = dataValue.Target;
+                            }
 
-                        break;
+                            yield return valueGroup;
+                        
+                            break;
+                        }
+                        case GroupOperation.Slice:
+                        {
+                            TimeSliceScanner scanner = new(dataset, ParseFloat(parameters[0]) / SI.Milli);
+                            parameters = parameters.Skip(1).ToArray();
+
+                            foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters, cancellationToken))
+                            {
+                                yield return new()
+                                {
+                                    Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                                    RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
+                                    SourceTarget = sourceTarget,
+                                    Source = valueGroup.Source,
+                                    DropEmptySeries = dropEmptySeries
+                                };
+                            }
+
+                            break;
+                        }
+                        default:
+                        {
+                            foreach (DataSourceValueGroup valueGroup in dataset)
+                            {
+                                yield return new()
+                                {
+                                    Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                                    RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
+                                    SourceTarget = sourceTarget,
+                                    Source = ExecuteSeriesFunctionOverSource(valueGroup.Source, seriesFunction, parameters),
+                                    DropEmptySeries = dropEmptySeries,
+                                    refId = sourceTarget.refId
+                                };
+                            }
+
+                            break;
+                        }
                     }
-                }
+
+                    break;
             }
         }
 
@@ -329,7 +412,7 @@ namespace GrafanaAdapters
 
             foreach (IGrouping<string, DataSourceValue> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target))
             {
-                yield return new DataSourceValueGroup
+                yield return new()
                 {
                     Target = valueGroup.Key,
                     RootTarget = valueGroup.Key,
@@ -342,7 +425,7 @@ namespace GrafanaAdapters
         private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters, bool isSliceOperation = false)
         {
             DataSourceValue[] values;
-            DataSourceValue result = new DataSourceValue();
+            DataSourceValue result = new();
             double lastValue = double.NaN;
             double lastTime = 0.0D;
             string lastTarget = null;
@@ -363,7 +446,7 @@ namespace GrafanaAdapters
             switch (seriesFunction)
             {
                 case SeriesFunction.Minimum:
-                    DataSourceValue minValue = new DataSourceValue { Value = double.MaxValue };
+                    DataSourceValue minValue = new() { Value = double.MaxValue };
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -376,7 +459,7 @@ namespace GrafanaAdapters
 
                     break;
                 case SeriesFunction.Maximum:
-                    DataSourceValue maxValue = new DataSourceValue { Value = double.MinValue };
+                    DataSourceValue maxValue = new() { Value = double.MinValue };
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -401,8 +484,8 @@ namespace GrafanaAdapters
                     yield return result;
                     break;
                 case SeriesFunction.Range:
-                    DataSourceValue rangeMin = new DataSourceValue { Value = double.MaxValue };
-                    DataSourceValue rangeMax = new DataSourceValue { Value = double.MinValue };
+                    DataSourceValue rangeMin = new() { Value = double.MaxValue };
+                    DataSourceValue rangeMax = new() { Value = double.MinValue };
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -570,7 +653,7 @@ namespace GrafanaAdapters
                     normalizeTime = parameters.Length == 1 || parameters[1].Trim().ParseBoolean();
                     baseTime = values[0].Time;
                     timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-                    List<int> indexes = new List<int>(Enumerable.Range(0, values.Length));
+                    List<int> indexes = new(Enumerable.Range(0, values.Length));
                     indexes.Scramble();
 
                     foreach (DataSourceValue dataValue in indexes.Take(count).Select((index, i) => new DataSourceValue { Value = values[index].Value, Time = normalizeTime ? baseTime + i * timeStep : values[index].Time, Target = values[index].Target }))
@@ -644,7 +727,7 @@ namespace GrafanaAdapters
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = dataValue.Value - lastValue, Time = dataValue.Time, Target = lastTarget };
+                            yield return new() { Value = dataValue.Value - lastValue, Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -653,12 +736,12 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.TimeDifference:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
+                        timeUnit = new() { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
+                            yield return new() { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
@@ -666,12 +749,12 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Derivative:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
+                        timeUnit = new() { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
+                            yield return new() { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -680,7 +763,7 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.TimeIntegration:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Hours };
+                        timeUnit = new() { Unit = TimeUnit.Hours };
 
                     result.Value = 0.0D;
 
@@ -702,7 +785,7 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Interval:
                     if (parameters.Length == 1 || !TargetTimeUnit.TryParse(parameters[1], out timeUnit))
-                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
+                        timeUnit = new() { Unit = TimeUnit.Seconds };
 
                     value = FromTimeUnits(ParseFloat(parameters[0], source, true, isSliceOperation), timeUnit) / SI.Milli;
 
@@ -768,6 +851,86 @@ namespace GrafanaAdapters
                         yield return dataValue;
 
                     break;
+                case SeriesFunction.Evaluate:
+                    string expression = parameters[0];
+
+                    // Get the cached expression context
+                    ExpressionContext context = TargetCache<ExpressionContext>.GetOrAdd(expression, () =>
+                    {
+                        ExpressionContext expressionContext = new();
+
+                        expressionContext.Imports.AddType(typeof(Math));
+                        expressionContext.Imports.AddType(typeof(DateTime));
+
+                        // Load any custom imports
+                        string imports = parameters.Length > 1 ? parameters[1] : null;
+
+                        if (!string.IsNullOrWhiteSpace(imports))
+                        {
+                            foreach (string typeDef in imports.Split(';'))
+                            {
+                                try
+                                {
+                                    Dictionary<string, string> parsedTypeDef = typeDef.ParseKeyValuePairs(',');
+                                    string assemblyName = parsedTypeDef["assemblyName"];
+                                    string typeName = parsedTypeDef["typeName"];
+                                    Assembly assembly = Assembly.Load(new AssemblyName(assemblyName));
+                                    Type type = assembly.GetType(typeName);
+                                    expressionContext.Imports.AddType(type);
+                                }
+                                catch (Exception ex)
+                                {
+                                    throw new TypeLoadException($"Unable to load import type from assembly for \"{typeDef}\": {ex.Message}", ex);
+                                }
+                            }
+                        }
+
+                        return expressionContext;
+                    });
+
+                    string getCleanIdentifier(string target) =>
+                        Regex.Replace(target, @"[^A-Z0-9_]", "", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+                    lock (context)
+                    {
+                        // Clear existing variables - missing values will be exposed as NaN
+                        foreach (string target in context.Variables.Keys)
+                            context.Variables[target] = double.NaN;
+
+                        List<string> targets = new();
+                        int index = 0;
+
+                        // Load each target as variable name with its current slice value
+                        foreach (DataSourceValue dataValue in source)
+                        {
+                            lastTime = dataValue.Time;
+
+                            // Get alias or clean target name for use as expression variable name
+                            string target = dataValue.Target.SplitAlias(out string alias);
+
+                            if (string.IsNullOrWhiteSpace(alias))
+                            {
+                                targets.Add(target);
+                                target = getCleanIdentifier(target);
+                            }
+                            else
+                            {
+                                targets.Add($"{alias}={target}");
+                                target = alias;
+                            }
+
+                            context.Variables[target] = dataValue.Value;
+                            context.Variables[$"_v{index++}"] = dataValue.Value;
+                        }
+
+                        // Compile the expression if it has not been compiled already
+                        IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () => context.CompileDynamic(expression));
+
+                        // Return evaluated expression
+                        yield return new() { Value = Convert.ToDouble(dynamicExpression.Evaluate()), Time = lastTime, Target = $"{string.Join(",", targets.Take(4))}{(targets.Count > 4 ? ", ..." : "")}" };
+                    }
+
+                    break;
             }
         }
 
@@ -821,7 +984,7 @@ namespace GrafanaAdapters
             Tuple<bool, double> cache = TargetCache<Tuple<bool, double>>.GetOrAdd(parameter, () =>
             {
                 bool success = double.TryParse(parameter, out double result);
-                return new Tuple<bool, double>(success, result);
+                return new(success, result);
             });
 
             if (cache.Item1)
@@ -907,7 +1070,7 @@ namespace GrafanaAdapters
                     success = int.TryParse(parameter, out result);
                 }
 
-                return new Tuple<bool, int>(success, result);
+                return new(success, result);
             });
 
             if (cache.Item1)
@@ -946,7 +1109,7 @@ namespace GrafanaAdapters
                 }
 
                 // Treat fractional numbers as a percentage of length
-                if (result.Value > 0.0D && result.Value < 1.0D)
+                if (result.Value is > 0.0D and < 1.0D)
                     count = (int)(length * result.Value);
                 else
                     count = (int)result.Value;
@@ -970,12 +1133,12 @@ namespace GrafanaAdapters
 
             if (includeZero)
             {
-                if (percent < 0.0D || percent > 100.0D)
+                if (percent is < 0.0D or > 100.0D)
                     throw new ArgumentOutOfRangeException($"Percentage '{parameter}' is outside range of 0 to 100, inclusive.");
             }
             else
             {
-                if (percent <= 0.0D || percent > 100.0D)
+                if (percent is <= 0.0D or > 100.0D)
                     throw new ArgumentOutOfRangeException($"Percentage '{parameter}' is outside range of greater than 0 and less than or equal to 100.");
             }
 

@@ -33,6 +33,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using ParsedFunction = System.Tuple<GrafanaAdapters.SeriesFunction, string, GrafanaAdapters.GroupOperation, string>;
 
 namespace GrafanaAdapters
 {
@@ -153,20 +154,21 @@ namespace GrafanaAdapters
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
-                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, cancellationToken)).SelectMany(groups => groups).ToArray();
+                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
                 {
                     target = valueGroup.Target,
                     rootTarget = valueGroup.RootTarget,
-                    meta = new MetaData() { custom=new HistorianMetaData() {
-                        Latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
-                        Longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
-                        
-                    } },
-                    latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
-                    longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude"),
+                    meta = new()
+                    {
+                        custom = new()
+                        {
+                            Latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
+                            Longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
+                        }
+                    },
                     dropEmptySeries = valueGroup.DropEmptySeries,
                     refId = valueGroup.refId
                 }).ToList();
@@ -179,7 +181,7 @@ namespace GrafanaAdapters
                 }
 
                 // Process series data in parallel
-                Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
+                Parallel.ForEach(result, new() { CancellationToken = cancellationToken }, series =>
                 {
                     // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
                     DataSourceValueGroup valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
@@ -216,8 +218,9 @@ namespace GrafanaAdapters
             cancellationToken);
         }
 
-        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, string imports, CancellationToken cancellationToken)
         {
+            // Handle query commands
             if (queryExpression.ToLowerInvariant().Contains(DropEmptySeriesCommand))
             {
                 dropEmptySeries = true;
@@ -228,6 +231,15 @@ namespace GrafanaAdapters
             {
                 includePeaks = true;
                 queryExpression = queryExpression.ReplaceCaseInsensitive(IncludePeaksCommand, "");
+            }
+
+            Match importsCommandMatch = s_importsCommand.Match(queryExpression);
+
+            if (importsCommandMatch.Success)
+            {
+                string result = importsCommandMatch.Result("${Expression}");
+                imports = result.Trim();
+                queryExpression = queryExpression.Replace(result, "");
             }
 
             // A single target might look like the following:
@@ -265,7 +277,7 @@ namespace GrafanaAdapters
             if (seriesFunctions.Count > 0)
             {
                 // Execute series functions
-                foreach (Tuple<SeriesFunction, string, GroupOperation> parsedFunction in seriesFunctions.Select(ParseSeriesFunction))
+                foreach (ParsedFunction parsedFunction in seriesFunctions.Select(match => ParseSeriesFunction(match, imports)))
                     foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(sourceTarget, parsedFunction, startTime, stopTime, interval, includePeaks, dropEmptySeries, cancellationToken))
                         yield return valueGroup;
 
@@ -279,11 +291,21 @@ namespace GrafanaAdapters
                 // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
                 string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
 
+                Dictionary<ulong, string> targetMap = new Dictionary<ulong, string>();
+
                 // Expand target set to include point tags for all parsed inputs
                 foreach (string target in allTargets)
-                    targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () => AdapterBase.ParseInputMeasurementKeys(Metadata, false, target).Select(key => key.TagFromKey(Metadata)).ToArray()));
+                {
+                    targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
+                    {
+                        MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
 
-                Dictionary<ulong, string> targetMap = new Dictionary<ulong, string>();
+                        if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
+                            return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
+
+                        return results.Select(key => key.TagFromKey(Metadata)).ToArray();
+                    }));
+                }
 
                 // Target set now contains both original expressions and newly parsed individual point tags - to create final point list we
                 // are only interested in the point tags, provided either by direct user entry or derived by parsing filter expressions
@@ -304,7 +326,7 @@ namespace GrafanaAdapters
                             result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"key@{target}", () =>
                             {
                                 MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
-                                return new Tuple<MeasurementKey, string>(parsedKey, parsedKey.TagFromKey(Metadata));
+                                return new(parsedKey, parsedKey.TagFromKey(Metadata));
                             });
 
                             key = result.Item1;
@@ -329,7 +351,7 @@ namespace GrafanaAdapters
                     .TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
 
                 foreach (KeyValuePair<ulong, string> target in targetMap)
-                    yield return new DataSourceValueGroup
+                    yield return new()
                     {
                         Target = target.Value,
                         RootTarget = target.Value,

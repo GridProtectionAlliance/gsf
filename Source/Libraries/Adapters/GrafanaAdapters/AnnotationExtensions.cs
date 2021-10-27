@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using GSF;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
@@ -40,6 +41,7 @@ namespace GrafanaAdapters
     public static class AnnotationExtensions
     {
         private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(AnnotationExtensions), MessageClass.Component);
+        private static readonly Regex s_aliasedTagExpression = new(@"^\s*(?<Identifier>[A-Z_][A-Z0-9_]*)\s*\=\s*(?<Expression>.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Gets table name for specified annotation <paramref name="type"/>.
@@ -96,7 +98,7 @@ namespace GrafanaAdapters
         /// <returns><c>true</c> if the data point is applicable for specified annotation <paramref name="type"/>; otherwise, <c>false</c>.</returns>
         public static bool IsApplicable(this AnnotationType type, double[] datapoint)
         {
-            if (datapoint == null)
+            if (datapoint is null)
                 throw new ArgumentNullException(nameof(datapoint));
 
             double value = datapoint[TimeSeriesValues.Value];
@@ -124,16 +126,16 @@ namespace GrafanaAdapters
         /// <returns>Populates an annotation response title, text and tags for specified annotation <paramref name="type"/>.</returns>
         public static void PopulateResponse(this AnnotationType type, AnnotationResponse response, string target, DataRow definition, double[] datapoint, DataSet source)
         {
-            if (response == null)
+            if (response is null)
                 throw new ArgumentNullException(nameof(response));
 
-            if ((object)target == null)
+            if (target is null)
                 throw new ArgumentNullException(nameof(target));
 
-            if (definition == null)
+            if (definition is null)
                 throw new ArgumentNullException(nameof(definition));
 
-            if (datapoint == null)
+            if (datapoint is null)
                 throw new ArgumentNullException(nameof(datapoint));
 
             switch (type)
@@ -159,12 +161,12 @@ namespace GrafanaAdapters
         /// <returns>Grafana query request object from an annotation <paramref name="request"/>.</returns>
         public static QueryRequest ExtractQueryRequest(this AnnotationRequest request, IEnumerable<string> targets, int maxDataPoints)
         {
-            if (targets == null)
+            if (targets is null)
                 throw new ArgumentNullException(nameof(targets));
 
             // Create annotation query request for full resolution data using "Interval(0, {target})"
             // function so that any encountered alarms not will not be down-sampled
-            return new QueryRequest
+            return new()
             {
                 range = request.range,
                 rangeRaw = request.rangeRaw,
@@ -183,7 +185,7 @@ namespace GrafanaAdapters
         /// <returns>Parsed annotation type for query expression from <paramref name="annotation"/>.</returns>
         public static AnnotationType ParseQueryType(this Annotation annotation, out bool useFilterExpression)
         {
-            if (annotation == null)
+            if (annotation is null)
                 throw new ArgumentNullException(nameof(annotation));
 
             string query = annotation.query ?? "";
@@ -221,7 +223,7 @@ namespace GrafanaAdapters
                 if (type == AnnotationType.Undefined)
                     throw new InvalidOperationException("Unrecognized type or syntax for annotation query expression.");
 
-                return new Tuple<AnnotationType, bool>(type, parsedFilterExpression);
+                return new(type, parsedFilterExpression);
             });
 
             useFilterExpression = result.Item2;
@@ -237,7 +239,7 @@ namespace GrafanaAdapters
         /// <returns>Parsed annotation type for query expression from annotation <paramref name="request"/>.</returns>
         public static AnnotationType ParseQueryType(this AnnotationRequest request, out bool useFilterExpression)
         {
-            if (request == null)
+            if (request is null)
                 throw new ArgumentNullException(nameof(request));
 
             return request.annotation.ParseQueryType(out useFilterExpression);
@@ -253,10 +255,10 @@ namespace GrafanaAdapters
         /// <returns>Parsed source definitions from <paramref name="annotation"/>.</returns>
         public static Dictionary<string, DataRow> ParseSourceDefinitions(this Annotation annotation, AnnotationType type, DataSet source, bool useFilterExpression)
         {
-            if (annotation == null)
+            if (annotation is null)
                 throw new ArgumentNullException(nameof(annotation));
 
-            if (source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source));
 
             if (type == AnnotationType.Undefined)
@@ -305,7 +307,7 @@ namespace GrafanaAdapters
         /// <returns>Parsed source definitions from annotation <paramref name="request"/>.</returns>
         public static Dictionary<string, DataRow> ParseSourceDefinitions(this AnnotationRequest request, AnnotationType type, DataSet source, bool useFilterExpression)
         {
-            if (request == null)
+            if (request is null)
                 throw new ArgumentNullException(nameof(request));
 
             return request.annotation.ParseSourceDefinitions(type, source, useFilterExpression);
@@ -325,7 +327,7 @@ namespace GrafanaAdapters
         internal static string TagFromKey(this MeasurementKey key, DataSet source)
         {
             DataRow record = GetMetaData(source, "ActiveMeasurements", $"ID = '{key}'");
-            return (object)record == null ? key.ToString() : record["PointTag"].ToNonNullString(key.ToString());
+            return record is null ? key.ToString() : record["PointTag"].ToNonNullString(key.ToString());
         }
 
         /// <summary>
@@ -344,7 +346,7 @@ namespace GrafanaAdapters
         {
             DataRow record = pointTag.MetadataRecordFromTag(source, table);
 
-            if (record == null)
+            if (record is null)
                 return MeasurementKey.Undefined;
 
             try
@@ -375,20 +377,40 @@ namespace GrafanaAdapters
             DataRow record = signalID.MetadataRecordFromSignalID(source, table);
             string pointTag = "Undefined";
 
-            if (record == null)
-                return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
+            if (record is null)
+                return new(MeasurementKey.Undefined, pointTag);
 
             try
             {
                 MeasurementKey key = MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
                 pointTag = record["PointTag"].ToNonNullString(key.ToString());
-                return new Tuple<MeasurementKey, string>(key, pointTag);
+                return new(key, pointTag);
             }
             catch (Exception ex)
             {
                 Logger.SwallowException(ex);
-                return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
+                return new(MeasurementKey.Undefined, pointTag);
             }
+        }
+
+        /// <summary>
+        /// Splits any defined alias from a point tag expression.
+        /// </summary>
+        /// <param name="tagExpression">Source point tag expression that can contain an alias.</param>
+        /// <param name="alias">Alias, if defined.</param>
+        /// <returns>Point tag name without any alias.</returns>
+        internal static string SplitAlias(this string tagExpression, out string alias)
+        {
+            Match match = s_aliasedTagExpression.Match(tagExpression);
+
+            if (match.Success)
+            {
+                alias = match.Result("${Identifier}");
+                return match.Result("${Expression}").Trim();
+            }
+
+            alias = null;
+            return tagExpression;
         }
 
         /// <summary>
@@ -408,10 +430,8 @@ namespace GrafanaAdapters
         /// for calls to this function be cached to improve performance.
         /// </para>
         /// </remarks>
-        internal static DataRow MetadataRecordFromTag(this string pointTag, DataSet source, string table)
-        {
-            return GetMetaData(source, table, $"PointTag = '{pointTag}'");
-        }
+        internal static DataRow MetadataRecordFromTag(this string pointTag, DataSet source, string table) => 
+            GetMetaData(source, table, $"PointTag = '{SplitAlias(pointTag, out string _)}'");
 
         /// <summary>
         /// Looks up metadata record from signal ID.
@@ -425,10 +445,8 @@ namespace GrafanaAdapters
         /// search algorithm that can be slow for large data sets, it is recommended that any results
         /// for calls to this function be cached to improve performance.
         /// </remarks>
-        internal static DataRow MetadataRecordFromSignalID(this string signalID, DataSet source, string table)
-        {
-            return GetMetaData(source, table, $"SignalID = '{signalID}'");
-        }
+        internal static DataRow MetadataRecordFromSignalID(this string signalID, DataSet source, string table) => 
+            GetMetaData(source, table, $"SignalID = '{signalID}'");
 
         private static DataRow GetMetaData(DataSet source, string table, string expression)
         {
@@ -448,7 +466,8 @@ namespace GrafanaAdapters
             }
         }
 
-        private static MeasurementKey GetTargetFromGuid(string guidID) => MeasurementKey.LookUpBySignalID(Guid.Parse(guidID));
+        private static MeasurementKey GetTargetFromGuid(string guidID) => 
+            MeasurementKey.LookUpBySignalID(Guid.Parse(guidID));
 
         private static DataRow GetTargetMetaData(DataSet source, object value)
         {
@@ -460,7 +479,7 @@ namespace GrafanaAdapters
         {
             StringBuilder description;
 
-            description = new StringBuilder("value");
+            description = new("value");
 
             if (!Enum.TryParse(defintion["Operation"].ToNonNullNorWhiteSpace(AlarmOperation.Equal.ToString()), out AlarmOperation operation))
                 operation = AlarmOperation.Equal;

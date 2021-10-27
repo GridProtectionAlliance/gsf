@@ -16,7 +16,7 @@ To better understand named targets, follow these example steps:
 
     [`UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH)`](#unwrapangle)
 
- 2. Values from one of the series can now be substracted from values in both of the series at every 1/30 of a second slice:
+ 2. Values from one of the series can now be subtracted from values in both of the series at every 1/30 of a second slice:
 
     [`SliceSubtract(0.0333, TVA_SHELBY-BUS1:VH, UnwrapAngle(DOM_GPLAINS-BUS1:VH; TVA_SHELBY-BUS1:VH))`](#subtract)
 
@@ -51,12 +51,13 @@ Series functions can operate over the set of defined series, producing a single 
 
 ## Special Commands
 
-The following optional special command operations can be specifed as part of any filter expression:
+The following optional special command operations can be specified as part of any filter expression:
 
 | Command | Description |
 | ------- | ----------- |
 | `; dropemptyseries` | Ensures any empty series are hidden from display |
 | `; includepeaks` | Ensures decimated data includes both min/max interval peaks, note this can reduce query performance |
+| `; imports={expr}` | Adds custom .NET type imports that can be used with the [`Evaluate`](#evaluate) function. `expr` defines assembly name (DLL filename without suffix) and full qualified type name to be imported, separate multiple imports with a semi-colon. For example:<br/>`; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}` |
 
 ## Available Functions
 
@@ -97,6 +98,7 @@ The following optional special command operations can be specifed as part of any
 * [UnwrapAngle](#unwrapangle)
 * [WrapAngle](#wrapangle)
 * [Label](#label)
+* [Evaluate](#evaluate)
 
 ## Average
 
@@ -494,10 +496,22 @@ Returns a series of values that represent an adjusted set of angles that are wra
 
 ## Label
 
-Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this function will be ignored. The label parameter also supports substitutions when root target metadata can be resolved. For series values that directly map to a point tag, metadata value substitutions for the tag can be used in the label value - for example: {ID}, {SignalID}, {PointTag}, {AlternateTag}, {SignalReference}, {Device}, {FramesPerSecond}, {Protocol}, {ProtocolType}, {SignalType}, {EngineeringUnits}, {PhasorType}, {Company}, {Description} - where applicable, these substitutions can be used in any combination.
+Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this function will be ignored. The label parameter also supports substitutions when root target metadata can be resolved. For series values that directly map to a point tag, metadata value substitutions for the tag can be used in the label value - for example: {Alias}, {ID}, {SignalID}, {PointTag}, {AlternateTag}, {SignalReference}, {Device}, {FramesPerSecond}, {Protocol}, {ProtocolType}, {SignalType}, {EngineeringUnits}, {PhasorType}, {Company}, {Description} - where applicable, these substitutions can be used in any combination.
 
 * Signature: `Label(value, expression)`
 * Returns: Series of values
 * Example: `Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))`
 * Variants: `Label`, `Name`
+* Execution: [Deferred enumeration](#execution-modes)
+
+## Evaluate
+
+Evaluates an expression over a slice of values in one or more series. The `sliceTolerance` parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice. The `evalExpression` parameter must always be expressed in braces, e.g., `{ expression }`; expression is strongly typed, but not case sensitive; expression is expected to return a value that can be evaluated as a floating-point number. Aliases of target tag names are used as variable names in the `evalExpression` when defined. If no alias is defined, all non-valid characters will be removed from target tag name, for example, variable name for tag `PMU.032-PZR_CI:ANG` would be `PMU032PZR_CIANG`. All targets are also available as index suffixed variables named `_v`, for example, first and second target values are available as `_v0` and `_v1`. The Evaluate function is always evaluated as a slice, any specified group operation prefix will be ignored. Default .NET system types available to expressions are `System.Math` and `System.DateTime`. See [details on valid expressions](https://www.codeproject.com/Articles/19768/Flee-Fast-Lightweight-Expression-Evaluator). Use the [`Imports`](#special-commands) command to define more types for `evalExpression`.
+
+* Signature: `Evaluate(sliceTolerance, evalExpression, filterExpression)`
+* Returns: Single value per slice
+* Example1: `Evaluate(0.0333, {A * Cos(B * PI / 180)}, A=GPA_SHELBY-PA1:VH; B=GPA_SHELBY-PM1:V)`
+* Example2: `Eval(0.0333, {(GPA_SHELBYPA1VH - GPA_SHELBYPA2VH) % 360}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)`
+* Example3: `eval(0.5, { (if(_v0 > 65, 0, _v0) + if(_v1 > 65, 0, _v1) + if(_v2 > 65, 0, _v2)) / 3 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')`
+* Variants: `Evaluate`, `Eval`
 * Execution: [Deferred enumeration](#execution-modes)

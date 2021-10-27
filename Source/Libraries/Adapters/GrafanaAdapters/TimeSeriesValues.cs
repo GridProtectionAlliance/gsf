@@ -100,6 +100,9 @@ namespace GrafanaAdapters
     /// </remarks>
     public class MetaData
     {
+        /// <summary>
+        /// Defines custom historian metadata.
+        /// </summary>
         public HistorianMetaData custom;
     }
 
