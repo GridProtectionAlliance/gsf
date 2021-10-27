@@ -55,9 +55,9 @@ The following optional special command operations can be specified as part of an
 
 | Command | Description |
 | ------- | ----------- |
-| `; dropemptyseries` | Ensures any empty series are hidden from display |
-| `; includepeaks` | Ensures decimated data includes both min/max interval peaks, note this can reduce query performance |
-| `; imports={expr}` | Adds custom .NET type imports that can be used with the [`Evaluate`](#evaluate) function. `expr` defines assembly name (DLL filename without suffix) and full qualified type name to be imported, separate multiple imports with a semi-colon. For example:<br/>`; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}` |
+| `DropEmptySeries` | Ensures any empty series are hidden from display. Example: `; dropemptyseries` |
+| `IncludePeaks` | Ensures decimated data includes both min/max interval peaks, note this can reduce query performance. Example: `; includepeaks` |
+| `Imports={expr}` | Adds custom .NET type imports that can be used with the [`Evaluate`](#evaluate) function. `expr` defines a key-value pair definition of assembly name, i.e., `AssemblyName` = DLL filename without suffix, and type name, i.e., `TypeName` = full qualified type name, to be imported. Key-value pairs are separated with commas and multiple imports are separated semi-colons. Example: `; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}` |
 
 ## Available Functions
 
@@ -510,8 +510,9 @@ Evaluates an expression over a slice of values in one or more series. The `slice
 
 * Signature: `Evaluate(sliceTolerance, evalExpression, filterExpression)`
 * Returns: Single value per slice
-* Example1: `Evaluate(0.0333, {R * Sin(T * PI / 180)}, T=GPA_SHELBY-PA1:VH; R=GPA_SHELBY-PM1:V)`
-* Example2: `Eval(0.0333, {(GPA_SHELBYPA2VH - GPA_SHELBYPA1VH) % 360 - 180}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)`
-* Example3: `eval(0.5, { (if(_v0 > 65, 0, _v0) + if(_v1 > 65, 0, _v1) + if(_v2 > 65, 0, _v2)) / 3 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')`
+* Example 1: `Evaluate(0.0333, {R * Sin(T * PI / 180)}, T=GPA_SHELBY-PA1:VH; R=GPA_SHELBY-PM1:V)`
+* Example 2: `Eval(0.0333, {(GPA_SHELBYPA2VH - GPA_SHELBYPA1VH) % 360 - 180}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)`
+* Example 3: `eval(0.5, { (if(_v0 > 62, 0, if(_v0 < 57, 0,  _v0)) + if(_v1 > 62, 0, if(_v1 < 57, 0,  _v1)) + if(_v2 > 62, 0, if(_v2 < 57, 0,  _v2))) / 3 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')`
+* Example 4: `evaluate(0.0333, { if(Abs(b-a) > 180, if(Sign(b-a) < 0, b-a + 360, b-a - 360), b-a) }, a=PMU.009-PZR.AV:ANG; b=PMU.008-PZR.AV:ANG)`
 * Variants: `Evaluate`, `Eval`
 * Execution: [Deferred enumeration](#execution-modes)
