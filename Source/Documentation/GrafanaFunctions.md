@@ -510,8 +510,8 @@ Evaluates an expression over a slice of values in one or more series. The `slice
 
 * Signature: `Evaluate(sliceTolerance, evalExpression, filterExpression)`
 * Returns: Single value per slice
-* Example1: `Evaluate(0.0333, {A * Cos(B * PI / 180)}, A=GPA_SHELBY-PA1:VH; B=GPA_SHELBY-PM1:V)`
-* Example2: `Eval(0.0333, {(GPA_SHELBYPA1VH - GPA_SHELBYPA2VH) % 360}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)`
+* Example1: `Evaluate(0.0333, {R * Sin(T * PI / 180)}, T=GPA_SHELBY-PA1:VH; R=GPA_SHELBY-PM1:V)`
+* Example2: `Eval(0.0333, {(GPA_SHELBYPA2VH - GPA_SHELBYPA1VH) % 360 - 180}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)`
 * Example3: `eval(0.5, { (if(_v0 > 65, 0, _v0) + if(_v1 > 65, 0, _v1) + if(_v2 > 65, 0, _v2)) / 3 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')`
 * Variants: `Evaluate`, `Eval`
 * Execution: [Deferred enumeration](#execution-modes)
