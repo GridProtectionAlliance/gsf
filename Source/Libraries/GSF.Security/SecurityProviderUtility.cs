@@ -286,7 +286,7 @@ namespace GSF.Security
             if ((object)providerType == null)
                 throw new InvalidOperationException("The default security provider type defined by the system does not exist.");
 
-            ConstructorInfo constructor = Type.GetType(providerTypeSetting).GetConstructor(new Type[] { typeof(string) });
+            ConstructorInfo constructor = providerType.GetConstructor(new Type[] { typeof(string) });
 
             if ((object)constructor == null)
                 throw new InvalidOperationException("The default security provider type does not define a constructor with the appropriate signature.");
