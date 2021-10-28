@@ -240,39 +240,84 @@ namespace GrafanaAdapters
 
                     DataSourceValueGroup[] valueGroups = dataset.ToArray();
                     string[] seriesLabels = new string[valueGroups.Length];
+                    string[] components = label.Split('.');
+                    string table;
+
+                    if (components.Length == 2)
+                    {
+                        table = components[0].Trim();
+                        label = components[1].Trim();
+                    }
+                    else
+                    {
+                        table = "ActiveMeasurements";
+                    }
+
+                    bool labelHasSubstitution = label.IndexOf('{') >= 0;
 
                     for (int i = 0; i < valueGroups.Length; i++)
                     {
-                        string target = valueGroups[i].RootTarget;
+                        string rootTarget = valueGroups[i].RootTarget;
 
-                        seriesLabels[i] = TargetCache<string>.GetOrAdd($"{label}@{target}", () =>
+                        seriesLabels[i] = TargetCache<string>.GetOrAdd($"{label}@{rootTarget}", () =>
                         {
-                            target = target.SplitAlias(out string alias);
-                            string table, derivedLabel;
-                            string[] components = label.Split('.');
+                            if (!labelHasSubstitution)
+                                return label;
 
-                            if (components.Length == 2)
+                            Dictionary<string, string> substitutions = new();
+
+                            foreach (string item in rootTarget.Split(';'))
                             {
-                                table = components[0].Trim();
-                                derivedLabel = components[1].Trim();
+                                string target = item.SplitAlias(out string alias);
+
+                                if (substitutions.TryGetValue("alias", out string substitution))
+                                {
+                                    if (!string.IsNullOrWhiteSpace(alias))
+                                        substitutions["alias"] = string.IsNullOrWhiteSpace(substitution) ? alias : $"{substitution}, {alias}";
+                                }
+                                else
+                                {
+                                    substitutions.Add("alias", alias ?? "");
+                                }
+
+                                DataRow record = target.MetadataRecordFromTag(Metadata, table);
+
+                                if (record is null)
+                                {
+                                    foreach (string fieldName in Metadata.Tables[table].Columns.Cast<DataColumn>().Select(column => column.ColumnName))
+                                    {
+                                        if (fieldName.Equals("PointTag", StringComparison.OrdinalIgnoreCase))
+                                            continue;
+
+                                        substitutions.Add(fieldName, "");
+                                    }
+
+                                    if (substitutions.TryGetValue("PointTag", out substitution))
+                                        substitutions["PointTag"] = $"{substitution}, {target}";
+                                    else
+                                        substitutions.Add("PointTag", target);
+                                }
+                                else
+                                {
+                                    foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
+                                    {
+                                        string columnValue = record[fieldName].ToString();
+
+                                        if (substitutions.TryGetValue(fieldName, out substitution))
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(columnValue))
+                                                substitutions[fieldName] = string.IsNullOrWhiteSpace(substitution) ? columnValue : $"{substitution}, {columnValue}";
+                                        }
+                                        else
+                                        {
+                                            substitutions.Add(fieldName, columnValue ?? "");
+                                        }
+                                    }
+                                }
                             }
-                            else
-                            {
-                                table = "ActiveMeasurements";
-                                derivedLabel = label;
-                            }
 
-                            DataRow record = target.MetadataRecordFromTag(Metadata, table);
+                            string derivedLabel = substitutions.Aggregate(label, (current, kvp) => current.ReplaceCaseInsensitive($"{{{kvp.Key}}}", kvp.Value));
 
-                            if (record != null && derivedLabel.IndexOf('{') >= 0)
-                            {
-                                foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
-                                    derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{fieldName}}}", record[fieldName].ToString());
-
-                                derivedLabel = derivedLabel.ReplaceCaseInsensitive("{alias}", alias ?? "");
-                            }
-
-                            // ReSharper disable once AccessToModifiedClosure
                             if (derivedLabel.Equals(label, StringComparison.Ordinal))
                                 derivedLabel = $"{label}{(valueGroups.Length > 1 ? $" {i + 1}" : "")}";
 
@@ -927,7 +972,7 @@ namespace GrafanaAdapters
                         IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () => context.CompileDynamic(expression));
 
                         // Return evaluated expression
-                        yield return new() { Value = Convert.ToDouble(dynamicExpression.Evaluate()), Time = lastTime, Target = $"{string.Join(",", targets.Take(4))}{(targets.Count > 4 ? ", ..." : "")}" };
+                        yield return new() { Value = Convert.ToDouble(dynamicExpression.Evaluate()), Time = lastTime, Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}" };
                     }
 
                     break;
