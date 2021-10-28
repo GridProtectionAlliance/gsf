@@ -257,7 +257,7 @@ namespace GSF.Web.Security
                 base64Path = Convert.ToBase64String(pathBytes);
                 encodedPath = WebUtility.UrlEncode(base64Path);
 
-                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider("", autoRefresh: false);
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider("", autoRefresh: false, useAlternate: useAlternateSecurityProvider);
 
 
                 Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage, encodedPath, referrer));
@@ -293,9 +293,9 @@ namespace GSF.Web.Security
         {
             // Flush any cached information that has been saved for this user including anything saved in the alternate SecurityProvider Cache
             if (TryGetPrincipal(sessionID, true, out SecurityPrincipal securityPrincipal))
-                SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name,true);
             if (TryGetPrincipal(sessionID, false, out securityPrincipal))
-                SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name, false);
 
             // Clear any cached session state for user (this also clears any cached authorizations)
             return SessionHandler.ClearSessionCache(sessionID);
