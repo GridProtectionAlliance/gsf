@@ -65,7 +65,7 @@ namespace GrafanaAdapters
 
                 // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
                 if (s_selectExpression is null)
-                    s_selectExpression = new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*(?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    s_selectExpression = new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
                 Match match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
 
@@ -125,7 +125,7 @@ namespace GrafanaAdapters
                                     results.AddRange(queryOperation.Take(takeCount).Select(row => string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
                                 }
 
-                                if (string.IsNullOrWhiteSpace(expression))
+                                if (string.IsNullOrWhiteSpace(expression) || expression.Trim().Equals("*"))
                                 {
                                     if (string.IsNullOrWhiteSpace(sortField))
                                     {
@@ -153,9 +153,6 @@ namespace GrafanaAdapters
                                 {
                                     executeSelect(table.Select(expression, sortField));
                                 }
-
-                                foreach (DataRow row in table.Select(expression, sortField).Take(takeCount))
-                                    results.Add(string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString())));
                             }
 
                             return results.ToArray();
