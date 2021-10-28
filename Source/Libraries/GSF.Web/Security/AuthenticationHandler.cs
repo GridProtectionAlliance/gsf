@@ -163,6 +163,8 @@ namespace GSF.Web.Security
                 // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
                 else if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
                     securityPrincipal = AuthenticateCode(useAlternateSecurityProvider);
+                
+                    
                 else
                     securityPrincipal = AuthenticatePassthrough(useAlternateSecurityProvider);
 
@@ -222,6 +224,13 @@ namespace GSF.Web.Security
                 return true; // Abort pipeline
             }
 
+            // If the user is properly Authenticated but a redirect is requested send that redirect
+            if (securityPrincipal?.Identity.IsAuthenticated == true && securityPrincipal?.Identity.Provider.IsRedirectRequested == true)
+            {
+                Response.Redirect(securityPrincipal?.Identity.Provider.RequestedRedirect ?? "/");
+                return true;
+            }
+
             // If request is for an anonymous resource or user is properly authenticated, allow
             // request to propagate through the Owin pipeline
             if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
@@ -229,8 +238,8 @@ namespace GSF.Web.Security
 
           
 
-            if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
-                return false;
+           
+                
 
             // Abort pipeline with appropriate response
             if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
@@ -384,7 +393,11 @@ namespace GSF.Web.Security
             return new SecurityPrincipal(securityIdentity);
         }
 
-        // Applies authentication for requests using OpenID Connect authentication.
+        /// <summary>
+        /// Applies authentication for requests using OpenID Connect authentication.
+        /// </summary>
+        /// <param name="useAlternateSecurityProvider"> Indicates whether the alternate <see cref="ISecurityProvider"/> should be used</param>
+        /// <returns> The <see cref="SecurityPrincipal"/>. </returns>
         private SecurityPrincipal AuthenticateCode(bool useAlternateSecurityProvider)
         {
             string username = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value).Get("code");

@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.Caching;
 using System.Text;
@@ -84,7 +85,7 @@ namespace GSF.Security
         // Constants
         private const string ResponseType = "code";                          // Response Type the SecurityProvider expects
         private const int NonceSlidingExpiration = 600;                      // Time in Seconds that a Nonce is valid for. This prevents replay attacks
-       
+
         /// <summary>
         /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
         /// </summary>
@@ -148,7 +149,7 @@ namespace GSF.Security
         public string ClientID
         {
             get;
-            set;            
+            set;
         }
 
         /// <summary>
@@ -205,6 +206,26 @@ namespace GSF.Security
             set;
         }
 
+        /// <summary>
+        /// Gets the flag that indicates whether the user 
+        /// needs to be redirected after the Authentication attempt. 
+        /// </summary>
+        public override bool IsRedirectRequested => !string.IsNullOrEmpty(m_clientRequestUri);
+
+        /// <summary>
+        /// Gets the URI that user will be redirected to if <see cref="IsRedirectRequested"/> is set.
+        /// </summary>
+        public override string RequestedRedirect 
+        {
+            get 
+            {
+                string val = m_clientRequestUri;
+                m_clientRequestUri = "";
+                return val;
+            }
+        }
+
+        private string m_clientRequestUri;
         #endregion
 
         #region [ Methods ]
@@ -245,6 +266,7 @@ namespace GSF.Security
         public override bool Authenticate()
         {
             IsUserAuthenticated = false;
+            m_clientRequestUri = "";
             TokenResponse token = null;
             AuthenticationFailureReason = null;
             Exception authenticationException = null;
@@ -420,6 +442,11 @@ namespace GSF.Security
                     throw new Exception("Token data was not derived from valid JWT: missing 'sub'");
                 UserData userData = new UserData(sub.ToString());
 
+                if (!tokenContent.TryGetValue("nonce", out JToken nonce))
+                    throw new Exception("Token data was not derived from valid JWT: missing 'nonce'");
+
+                // #ToDo validate Nonce matches nonce send for this user
+
                 userData.Initialize();
 
                 if (!tokenContent.TryGetValue("name", out JToken userName))
@@ -450,6 +477,15 @@ namespace GSF.Security
                 userData.IsDisabled = false;
                 userData.IsLockedOut = false;
                 UserData = userData;
+
+                if (s_nonceCache.Contains(nonce.ToString()))
+                {
+                    string base64Path = WebUtility.UrlDecode((string)s_nonceCache.Get(nonce.ToString()));
+                    byte[] pathBytes = Convert.FromBase64String(base64Path);
+                    m_clientRequestUri = Encoding.UTF8.GetString(pathBytes);
+                }
+                    
+
                 return true;
             }
             catch (Exception ex)
@@ -511,7 +547,7 @@ namespace GSF.Security
             byte[] nonce = new byte[16];
             new Random().NextBytes(nonce);
 
-            s_nonceCache.Add(BitConverter.ToString(nonce).Replace("-", ""), 0, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromSeconds(NonceSlidingExpiration) });
+            s_nonceCache.Add(BitConverter.ToString(nonce).Replace("-", ""), encodedPath, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromSeconds(NonceSlidingExpiration) });
 
             StringBuilder redirect = new StringBuilder();
             redirect.Append(AuthorizationEndpoint);

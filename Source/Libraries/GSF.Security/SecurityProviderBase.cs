@@ -429,6 +429,17 @@ namespace GSF.Security
             }
         }
 
+        /// <summary>
+        /// Gets the flag that indicates whether the user 
+        /// needs to be redirected after the Authentication attempt. 
+        /// </summary>
+        public virtual bool IsRedirectRequested => false;
+
+        /// <summary>
+        /// Gets the URI that user will be redirected to if <see cref="IsRedirectRequested"/> is set.
+        /// </summary>
+        public virtual string RequestedRedirect => "";
+
         #endregion
 
         #region [ Methods ]

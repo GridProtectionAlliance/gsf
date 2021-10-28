@@ -115,6 +115,23 @@ namespace GSF.Security
         }
 
         /// <summary>
+        /// Gets the flag that indicates whether the user 
+        /// needs to be redirected after the Authentication attempt. 
+        /// Could be used for asking Users to confirm Messages etc.
+        /// </summary>
+        bool IsRedirectRequested
+        {
+            get;
+        }
+        /// <summary>
+        /// Gets the URI that user will be redirected to if <see cref="IsRedirectRequested"/> is set.
+        /// </summary>
+        string RequestedRedirect
+        {
+            get;
+        }       
+        
+        /// <summary>
         /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
         /// </summary>
         bool CanRefreshData
@@ -210,6 +227,7 @@ namespace GSF.Security
         /// <param name="applicationId">The applicationId for the roles to be returned.</param>
         /// <returns>The roles that the specified user has.</returns>
         List<string> GetUserRoles(string applicationId);
+
         #endregion
     }
 }
