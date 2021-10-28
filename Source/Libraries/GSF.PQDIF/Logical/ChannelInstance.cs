@@ -32,9 +32,9 @@ using GSF.PQDIF.Physical;
 namespace GSF.PQDIF.Logical
 {
     /// <summary>
-    /// Represents a channel instance in a PQDIF file. A channel instance
-    /// resides in an <see cref="ObservationRecord"/>, and is defined by
-    /// a <see cref="ChannelDefinition"/> inside the observation record's
+    /// Represents a channel instance in a PQDIF file. See IEEE 11593-2019 section 5.4.3
+    /// for details. A channel instance resides in an <see cref="ObservationRecord"/>, and 
+    /// is defined by a <see cref="ChannelDefinition"/> inside the observation record's
     /// <see cref="DataSourceRecord"/>.
     /// </summary>
     public class ChannelInstance : IEquatable<ChannelInstance>
