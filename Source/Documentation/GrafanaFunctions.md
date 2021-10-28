@@ -55,9 +55,9 @@ The following optional special command operations can be specified as part of an
 
 | Command | Description |
 | ------- | ----------- |
-| `DropEmptySeries` | Ensures any empty series are hidden from display. Example: `; dropemptyseries` |
-| `IncludePeaks` | Ensures decimated data includes both min/max interval peaks, note this can reduce query performance. Example: `; includepeaks` |
-| `Imports={expr}` | Adds custom .NET type imports that can be used with the [`Evaluate`](#evaluate) function. `expr` defines a key-value pair definition of assembly name, i.e., `AssemblyName` = DLL filename without suffix, and type name, i.e., `TypeName` = fully qualified case-sensitive type name, to be imported. Key-value pairs are separated with commas and multiple imports are separated semi-colons. `expr` must be surrounded by braces. Example: `; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}` |
+| `DropEmptySeries` | Ensures any empty series are hidden from display. Example: `; dropemptyseries` |
+| `IncludePeaks` | Ensures decimated data includes both min/max interval peaks, note this can reduce query performance. Example: `; includepeaks` |
+| `Imports={expr}` | Adds custom .NET type imports that can be used with the [`Evaluate`](#evaluate) function. `expr` defines a key-value pair definition of assembly name, i.e., `AssemblyName` = DLL filename without suffix, and type name, i.e., `TypeName` = fully qualified case-sensitive type name, to be imported. Key-value pairs are separated with commas and multiple imports are separated semi-colons. `expr` must be surrounded by braces. Example: `; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}` |
 
 ## Available Functions
 
