@@ -117,8 +117,10 @@ namespace GSF.Web.Security
             if (!Guid.TryParse(sessionCookieValue, out sessionID))
                 return false;
 
-            // Flush any cached information that has been saved for this user
-            if (AuthenticationHandler.TryGetPrincipal(sessionID, out securityPrincipal))
+            // Flush any cached information that has been saved for this user including in the alternate SecurityProvider
+            if (AuthenticationHandler.TryGetPrincipal(sessionID, false, out securityPrincipal))
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
+            if (AuthenticationHandler.TryGetPrincipal(sessionID, true, out securityPrincipal))
                 SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
 
             // Clear any cached session state for user (this also clears any cached authorizations)

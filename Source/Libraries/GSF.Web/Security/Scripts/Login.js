@@ -24,6 +24,7 @@
 // The following constants need to be predefined before referencing this script
 //   string redirectPage: target page after successful authentication
 //   string securePage: secure page to hit to test authentication
+//   boolean useAlternateSecurityProvider: indicate whether the alternate securityProvider should be used
 //   string loginPage: location of login page
 //   string clearCredentialsPage: page used to clear current credentials
 //   boolean unsecureConnection: flag that indicates if connection is secure
@@ -54,7 +55,7 @@ function hashPassword(password) {
 function authenticateBasic(username, password) {
     $.ajax({
         cache: false,
-        url: securePage,
+        url: securePage + (useAlternateSecurityProvider ? "?useAlternate=1": ""),
         method: "post",
         complete: function (xhr) {
             switch (xhr.status) {
@@ -83,7 +84,7 @@ function authenticateNTLM(username, password) {
 
     Ntlm.setCredentials(parts[0], parts[1], password);
 
-    Ntlm.authenticate(securePage + "?scheme=NTLM", function (response) {
+    Ntlm.authenticate(securePage + "?scheme=NTLM" + (useAlternateSecurityProvider ? "&useAlternate=1" : ""), function (response) {
         if (response.status === 200)
             loginComplete(true);
         else
@@ -97,7 +98,7 @@ function authenticateNTLM(username, password) {
 function passthroughBasic() {
     $.ajax({
         cache: false,
-        url: securePage,
+        url: securePage + (useAlternateSecurityProvider ? "?useAlternate=1" : ""),
         method: "post",
         complete: function (xhr) {
             switch (xhr.status) {
@@ -121,7 +122,7 @@ function passthroughBasic() {
 function passthroughNTLM() {
     $.ajax({
         cache: false,
-        url: securePage + "?scheme=NTLM",
+        url: securePage + "?scheme=NTLM" + (useAlternateSecurityProvider ? "&useAlternate=1" : ""),
         method: "post",
         complete: function (xhr) {
             if (xhr.status === 200) {

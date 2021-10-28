@@ -97,6 +97,8 @@ namespace GSF.Security
     ///         encrypted="false" />
     ///       <add name="PasswordRequirementsError" value="Invalid Password: Password must be at least 8 characters; must contain at least 1 number, 1 upper case letter, and 1 lower case letter" description="Error message to be displayed when new database user password fails regular expression test."
     ///         encrypted="false" />
+    ///       <add name="DefaultRoles" value="Viewer" description="If set this is a list of Roles assigned to a user that has no defined Roles."
+    ///         encrypted="false" />
     ///     </securityProvider>
     ///     <activeDirectory>
     ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -181,6 +183,11 @@ namespace GSF.Security
         private const string ApplicationRoleSecurityGroupTable = "ApplicationRoleSecurityGroup";    // Table name for application role assignments for security groups
 
         /// <summary>
+        /// Default Roles to be used if no Roles are supplied for a user.
+        /// </summary>
+        private const string DefaultDefaultRoles = "";
+
+        /// <summary>
         /// Default regular expression used to validate new database user passwords.
         /// </summary>
         public const string DefaultPasswordRequirementsRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
@@ -262,6 +269,18 @@ namespace GSF.Security
             set;
         }
 
+
+        /// <summary>
+        /// Gets or sets the Default Roles used when a user does not have a role defined.
+        /// The user still needs to exist but they won't require a Role and will be assigned the DefaultRoles.
+        /// It is a comma separate list for multiple Roles. If an empty String is supplied a Role is required for the user.
+        /// </summary>
+        public string DefaultRoles
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -283,7 +302,9 @@ namespace GSF.Security
             settings.Add("PasswordRequirementsRegex", DefaultPasswordRequirementsRegex, "Regular expression used to validate new passwords for database users.");
             settings.Add("PasswordRequirementsError", DefaultPasswordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
             settings.Add("UseDatabaseLogging", DefaultUseDatabaseLogging, "Flag that determines if provider should write logs to the database.");
+            settings.Add("DefaultRoles", DefaultDefaultRoles, "If set this is a list of Roles assigned to a user that has no defined Roles.");
 
+            DefaultRoles = settings["DefaultRoles"].ValueAs(DefaultRoles);
             m_passwordRequirementsRegex = settings["PasswordRequirementsRegex"].ValueAs(m_passwordRequirementsRegex);
             m_passwordRequirementsError = settings["PasswordRequirementsError"].ValueAs(m_passwordRequirementsError);
         }
@@ -552,6 +573,11 @@ namespace GSF.Security
                         userData.Roles.Add(roleName);
                 }
 
+                // Add DefaultRoles if no Roles are present
+                if (!string.IsNullOrEmpty(DefaultRoles) && userData.Roles.Count() == 0)
+                    foreach(string role in DefaultRoles.Split(','))
+                        userData.Roles.Add(role);
+
                 UserData = userData;
 
                 // Cache last user roles
@@ -780,11 +806,9 @@ namespace GSF.Security
                 // a read-only database is being used or current user only has read-only access to database.
                 if (!string.IsNullOrWhiteSpace(SettingsCategory) && UseDatabaseLogging)
                 {
-                    AdoDataConnection database = new AdoDataConnection(SettingsCategory);
-
-                    using (IDbConnection connection = database.Connection)
+                    using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
                     {
-                        connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", "userName", "accessGranted"), UserData.Username, loginSuccess ? 1 : 0);
+                        connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess);
                     }
                 }
             }
@@ -808,11 +832,9 @@ namespace GSF.Security
                 {
                     try
                     {
-                        AdoDataConnection database = new AdoDataConnection(SettingsCategory);
-
-                        using (IDbConnection connection = database.Connection)
+                        using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
                         {
-                            connection.ExecuteNonQuery(database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", "source", "message"), source, message);
+                            connection.ExecuteNonQuery("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", source, message);
                         }
 
                         return true;
@@ -954,6 +976,131 @@ namespace GSF.Security
             {
                 LogError(ex.Source, ex.ToString());
             }
+        }
+
+
+        /// Gets a list of Roles for this user for a specified ApplicationId.
+        /// </summary>
+        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
+        /// <returns>The roles that the specified user has.</returns>
+        public override List<string> GetUserRoles(string applicationId)
+        {
+            List<string> roles = new List<string>();
+
+            DataSet securityContext = new DataSet("AdoSecurityContext");
+
+           
+            try
+            {
+                Guid nodeId = new Guid(applicationId);
+                // Attempt to extract current security context from the database
+                using (AdoDataConnection database = new AdoDataConnection(SettingsCategory))
+                {
+                    // Read the security context tables from the database connection
+                    foreach (string securityTable in s_securityTables)
+                    {
+                        AddSecurityContextTable(database.Connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? nodeId : default(Guid));
+                    }
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Failed to open ADO connection, return empty roleset instead
+                return roles;
+            }
+
+            string userSID = UserInfo.UserNameToSID(UserData.Username);
+
+            // Filter user account data for the current user.
+            DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(userSID)}'");
+
+            // If SID based lookup failed, try lookup by user name.  Note that is critical that SID based lookup
+            // take precedence over name based lookup for proper cross-platform authentication.
+            if (userAccounts.Length == 0)
+                userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(UserData.Username)}'");
+
+            Guid userAccountID = new Guid();
+            if (userAccounts.Length > 0)
+                userAccountID = Guid.Parse(Convert.ToString(userAccounts[0]["ID"]));
+
+
+            // Filter explicitly assigned application roles for current user - this will return an empty set if no
+            // explicitly defined roles exist for the user -or- user doesn't exist in the database.
+            DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
+
+            // If no explicitly assigned application roles are found for the current user, we check for implicitly assigned
+            // application roles based on the role assignments of the groups the user is a member of.
+            if (userApplicationRoles.Length == 0)
+            {
+                List<DataRow> implicitRoles = new List<DataRow>();
+
+                // Filter implicitly assigned application roles for each of the user's database and NT/AD groups. Note that
+                // even if user is not defined in the database, an NT/AD group they are a member of may be associated with
+                // a role - this allows the user to get a role assignment based on this group.
+                foreach (string groupName in UserData.Groups)
+                {
+                    // Convert NT/AD group names back to SIDs for lookup in the database
+                    string groupSID = UserInfo.GroupNameToSID(groupName);
+
+                    // Locate associated security group record
+                    DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupSID)}'");
+
+                    // If SID based lookup failed, try lookup by group name.  Note that is critical that SID based lookup
+                    // take precedence over name based lookup for proper cross-platform authentication.
+                    if (securityGroups.Length == 0)
+                        securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupName)}'");
+
+                    if (securityGroups.Length > 0)
+                    {
+                        // Found security group by name, access group ID to lookup application roles defined for the group
+                        DataRow securityGroup = securityGroups[0];
+
+                        if (!Convert.IsDBNull(securityGroup["ID"]))
+                            implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select($"SecurityGroupID = '{EncodeEscapeSequences(securityGroup["ID"].ToString())}'"));
+                    }
+                }
+
+                userApplicationRoles = implicitRoles.ToArray();
+
+            }
+
+            // Populate user roles collection - both ApplicationRoleUserAccount and ApplicationRoleSecurityGroup tables contain ApplicationRoleID column
+            foreach (DataRow role in userApplicationRoles)
+            {
+                if (Convert.IsDBNull(role["ApplicationRoleID"]))
+                    continue;
+
+                // Locate associated application role record
+                DataRow applicationRole = null;
+
+                if (securityContext.Tables[ApplicationRoleTable].PrimaryKey.Length > 0)
+                {
+                    applicationRole = securityContext.Tables[ApplicationRoleTable].Rows.Find(role["ApplicationRoleID"]);
+                }
+                else
+                {
+                    DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select($"ID = '{EncodeEscapeSequences(role["ApplicationRoleID"].ToString())}'");
+
+                    if (applicationRoles.Length > 0)
+                        applicationRole = applicationRoles[0];
+                }
+
+                if ((object)applicationRole == null || Convert.IsDBNull(applicationRole["Name"]))
+                    continue;
+
+                // Found application role by ID, add role name to user roles if not already defined
+                string roleName = Convert.ToString(applicationRole["Name"]);
+
+                if (!string.IsNullOrEmpty(roleName) && !roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
+                    roles.Add(roleName);
+            }
+
+            // Add DefaultRoles if no Roles are present
+            if (!string.IsNullOrEmpty(DefaultRoles) && roles.Count() == 0)
+                foreach (string role in DefaultRoles.Split(','))
+                    roles.Add(role);
+
+            return roles;
         }
 
         #endregion

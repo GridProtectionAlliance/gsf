@@ -42,7 +42,7 @@ namespace GSF.Security
     /// <summary>
     /// A helper class that manages the caching of <see cref="ISecurityProvider"/>s.
     /// </summary>
-    public static class SecurityProviderCache
+    public class SecurityProviderCache
     {
         #region [ Members ]
 
@@ -150,7 +150,9 @@ namespace GSF.Security
                     if ((object)provider == null)
                         return false;
 
-                    provider.RefreshData();
+                    if (provider.CanRefreshData)
+                        provider.RefreshData();
+
                     provider.Authenticate();
                     LastRefreshTime = DateTime.UtcNow;
 
@@ -178,22 +180,22 @@ namespace GSF.Security
         /// </summary>
         private const int CacheMonitorTimerInterval = 60000;
 
+        // Fields
+        private readonly Dictionary<string, CacheContext> s_cache;
+        private readonly List<CacheContext> s_autoRefreshProviders;
+        private readonly int s_userCacheTimeout;
+        private readonly Action s_cacheMonitorAction;
+
+        private string m_settingsCategory;
         #endregion
 
-        #region [ Static ]
+        #region [ Constructor ]
 
-        // Static Fields
-        private static readonly Dictionary<string, CacheContext> s_cache;
-        private static readonly List<CacheContext> s_autoRefreshProviders;
-        private static readonly int s_userCacheTimeout;
-        private static readonly Action s_cacheMonitorAction;
-
-        // Static Constructor
-        static SecurityProviderCache()
+        public SecurityProviderCache(string settingsCategory)
         {
             // Load settings from the specified category
             ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
+            CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
             settings.Add("UserCacheTimeout", DefaultUserCacheTimeout, "Defines the timeout, in whole minutes, for a user's provider cache. Any value less than 1 will cause cache reset every minute.");
 
             s_userCacheTimeout = settings["UserCacheTimeout"].ValueAs(DefaultUserCacheTimeout);
@@ -204,9 +206,13 @@ namespace GSF.Security
 
             s_cacheMonitorAction = new Action(ManageCachedCredentials);
             s_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
+
+            m_settingsCategory = settingsCategory;
         }
 
-        // Static Methods
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Creates a new provider from data cached by the <see cref="SecurityProviderCache"/>.
@@ -215,13 +221,13 @@ namespace GSF.Security
         /// <param name="passthroughPrincipal"><see cref="IPrincipal"/> obtained through alternative authentication mechanisms to provide authentication for the <see cref="ISecurityProvider"/>.</param>
         /// <param name="autoRefresh">Indicates whether the provider should be automatically refreshed on a timer.</param>
         /// <returns>A new provider initialized from cached data.</returns>
-        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal = null, bool autoRefresh = true)
+        public ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal = null, bool autoRefresh = true)
         {
             CacheContext cacheContext;
 
             lock (s_cache)
             {
-                cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal)));
+                cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal, m_settingsCategory)));
             }
 
             ISecurityProvider provider = SecurityProviderUtility.CreateProvider(cacheContext.Provider.UserData);
@@ -237,7 +243,7 @@ namespace GSF.Security
         /// Removes any cached information about the user with the given username.
         /// </summary>
         /// <param name="username">The username of the user to be flushed from the cache.</param>
-        public static void Flush(string username)
+        public void Flush(string username)
         {
             lock (s_cache)
             {
@@ -249,7 +255,7 @@ namespace GSF.Security
         /// Adds the given provider to the collection of providers being automatically refreshed on the user cache timeout interval.
         /// </summary>
         /// <param name="provider">The security provider to be cached.</param>
-        public static void AutoRefresh(ISecurityProvider provider)
+        public void AutoRefresh(ISecurityProvider provider)
         {
             lock (s_autoRefreshProviders)
             {
@@ -263,7 +269,7 @@ namespace GSF.Security
         /// Removes the given provider from the collection of providers being automatically refreshed.
         /// </summary>
         /// <param name="provider">The provider to be removed.</param>
-        public static void DisableAutoRefresh(ISecurityProvider provider)
+        public void DisableAutoRefresh(ISecurityProvider provider)
         {
             lock (s_autoRefreshProviders)
             {
@@ -274,7 +280,7 @@ namespace GSF.Security
         /// <summary>
         /// Forces all cached providers to refresh state.
         /// </summary>
-        public static void RefreshAll()
+        public void RefreshAll()
         {
             lock (s_cache)
             {
@@ -307,7 +313,7 @@ namespace GSF.Security
                 cacheContext.Refresh();
         }
 
-        private static void ManageCachedCredentials()
+        private void ManageCachedCredentials()
         {
             DateTime now = DateTime.UtcNow;
 
@@ -388,6 +394,106 @@ namespace GSF.Security
             // The refresh could take several minutes so we should
             // wait to kick off the timer until after we are finished
             s_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static SecurityProviderCache s_primarySecurityProvider;
+        private static SecurityProviderCache s_alternateSecurityProvider;
+
+        /// <summary>
+        /// Specifies the default value for the SettingsCategory property for the AlternateSecurityProvider.
+        /// </summary>
+        public const string DefaultAlternateSettingsCategory = "AlternateSecurityProvider";
+
+        // Static Constructor
+        static SecurityProviderCache()
+        {
+            // Load Primary SecurityProvider
+            s_primarySecurityProvider = new SecurityProviderCache(SecurityProviderBase.DefaultSettingsCategory);
+
+            // Load Alternate Security Provider
+            try
+            {
+                s_alternateSecurityProvider = new SecurityProviderCache(DefaultAlternateSettingsCategory);
+            }
+            catch
+            {
+                s_alternateSecurityProvider = null;
+            }    
+            
+        }
+
+        // Static Methods
+
+        /// <summary>
+        /// Creates a new provider from data cached by the <see cref="SecurityProviderCache"/>.
+        /// </summary>
+        /// <param name="username">The username of the user for which to create a new provider.</param>
+        /// <param name="passthroughPrincipal"><see cref="IPrincipal"/> obtained through alternative authentication mechanisms to provide authentication for the <see cref="ISecurityProvider"/>.</param>
+        /// <param name="autoRefresh">Indicates whether the provider should be automatically refreshed on a timer.</param>
+        /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
+        /// <returns>A new provider initialized from cached data.</returns>
+        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal = null, bool autoRefresh = true, bool useAlternate = false)
+        {
+            if (useAlternate && (object)s_alternateSecurityProvider != null)
+                return s_alternateSecurityProvider.CreateProvider(username, passthroughPrincipal, autoRefresh);
+
+            return s_primarySecurityProvider.CreateProvider(username, passthroughPrincipal, autoRefresh);
+        }
+
+        /// <summary>
+        /// Removes any cached information about the user with the given username.
+        /// </summary>
+        /// <param name="username">The username of the user to be flushed from the cache.</param>
+        /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
+        public static void Flush(string username, bool useAlternate = false)
+        {
+            if (useAlternate && (object)s_alternateSecurityProvider != null)
+                s_alternateSecurityProvider.Flush(username);
+            else
+                s_primarySecurityProvider.Flush(username);
+        }
+
+        /// <summary>
+        /// Adds the given provider to the collection of providers being automatically refreshed on the user cache timeout interval.
+        /// </summary>
+        /// <param name="provider">The security provider to be cached.</param>
+        /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
+        public static void AutoRefresh(ISecurityProvider provider, bool useAlternate = false)
+        {
+            if (useAlternate && (object)s_alternateSecurityProvider != null)
+                s_alternateSecurityProvider.AutoRefresh(provider);
+            else
+                s_primarySecurityProvider.AutoRefresh(provider);
+        }
+
+        /// <summary>
+        /// Removes the given provider from the collection of providers being automatically refreshed.
+        /// </summary>
+        /// <param name="provider">The provider to be removed.</param>
+        /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
+        public static void DisableAutoRefresh(ISecurityProvider provider, bool useAlternate = false)
+        {
+            if (useAlternate && (object)s_alternateSecurityProvider != null)
+                s_alternateSecurityProvider.DisableAutoRefresh(provider);
+            else
+                s_primarySecurityProvider.DisableAutoRefresh(provider);
+        }
+
+        /// <summary>
+        /// Forces all cached providers to refresh state.
+        /// </summary>
+        /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
+        public static void RefreshAll(bool useAlternate = false)
+        {
+            if (useAlternate && (object)s_alternateSecurityProvider != null)
+                s_alternateSecurityProvider.RefreshAll();
+            else
+                s_primarySecurityProvider.RefreshAll();              
         }
 
         #endregion

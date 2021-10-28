@@ -27,6 +27,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -97,6 +99,11 @@ namespace GSF.Web.Security
             if (Options.IsAnonymousResource(Request.Path.Value))
                 return Task.FromResult<AuthenticationTicket>(null);
 
+            NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
+
+            bool useAlternateSecurityProvider = Options.IsAlternateSecurityProviderResource(Request.Path.Value);
+            useAlternateSecurityProvider = useAlternateSecurityProvider || (Options.AuthTestPage == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
+            
             // Attempt to read the session ID from the HTTP cookies
             Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
 
@@ -112,7 +119,7 @@ namespace GSF.Web.Security
             AuthenticationHeaderValue authorization = AuthorizationHeader;
 
             // Attempt to retrieve the user's credentials that were cached to the user's session
-            if (TryGetPrincipal(sessionID, out securityPrincipal))
+            if (TryGetPrincipal(sessionID, useAlternateSecurityProvider, out securityPrincipal))
             {
                 bool useCachedCredentials =
                     (object)Request.User == null ||
@@ -133,7 +140,7 @@ namespace GSF.Web.Security
                 // Attempt to authenticate using cached credentials associated with the authentication token cookie
                 string authenticationToken = SessionHandler.GetAuthenticationTokenFromCookie(Request, Options.AuthenticationToken);
 
-                securityPrincipal = AuthenticateCachedCredentials(authenticationToken);
+                securityPrincipal = AuthenticateCachedCredentials(authenticationToken, useAlternateSecurityProvider);
 
                 // If authentication using cached credentials fails,
                 // fall back on the other authentication methods
@@ -142,21 +149,26 @@ namespace GSF.Web.Security
 
                 // Attempt to cache the security principal to the session
                 if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                    CachePrincipal(sessionID, securityPrincipal);
+                    CachePrincipal(sessionID, securityPrincipal, useAlternateSecurityProvider);
             }
 
             if ((object)securityPrincipal == null)
             {
+                
                 // Pick the appropriate authentication logic based
                 // on the authorization type in the HTTP headers
+                // or in the URI Parameters if it is using OIDC.
                 if (authorization?.Scheme == "Basic")
-                    securityPrincipal = AuthenticateBasic(authorization.Parameter);
+                    securityPrincipal = AuthenticateBasic(authorization.Parameter, useAlternateSecurityProvider);
+                // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
+                else if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
+                    securityPrincipal = AuthenticateCode(useAlternateSecurityProvider);
                 else
-                    securityPrincipal = AuthenticatePassthrough();
+                    securityPrincipal = AuthenticatePassthrough(useAlternateSecurityProvider);
 
                 // Attempt to cache the security principal to the session
                 if (sessionID != Guid.Empty && securityPrincipal?.Identity.IsAuthenticated == true)
-                    CachePrincipal(sessionID, securityPrincipal);
+                    CachePrincipal(sessionID, securityPrincipal, useAlternateSecurityProvider);
             }
 
             // Set the principal of the IOwinRequest so that it
@@ -184,10 +196,17 @@ namespace GSF.Web.Security
             //  (1) Access resource marked as anonymous - let pipeline continue
             //  (2) Access resource as authenticated user - let pipeline continue
             //  --- remaining use cases are unauthorized ---
-            //  (3) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
-            //  (4) Access all other resources - respond with 401 and abort pipeline
+            //  (3) Access resource as result of a redirect from the OIDC Auth Server
+            //  (4) Access resource marked for auth failure redirection - respond with 302 and abort pipeline
+            //  (5) Access all other resources - respond with 401 and abort pipeline
             SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
             string urlPath = Request.Path.Value;
+
+            // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
+            NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
+
+            bool useAlternateSecurityProvider = Options.IsAlternateSecurityProviderResource(Request.Path.Value);
+            useAlternateSecurityProvider = useAlternateSecurityProvider || (Options.AuthTestPage == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
 
             if (!(Request.User is null) && Request.User.IsInRole("logout"))
             {
@@ -208,6 +227,11 @@ namespace GSF.Web.Security
             if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
                 return false; // Let pipeline continue
 
+          
+
+            if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
+                return false;
+
             // Abort pipeline with appropriate response
             if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
             {
@@ -220,7 +244,12 @@ namespace GSF.Web.Security
                     base64Path = Convert.ToBase64String(pathBytes);
                     encodedPath = WebUtility.UrlEncode(base64Path);
                     referrer = $"&referrer={encodedPath}";
+                    if (useAlternateSecurityProvider)
+                        referrer = referrer + "&useAlternateSecurityProvider=1";
                 }
+                else if (useAlternateSecurityProvider)
+                    referrer = "&useAlternateSecurityProvider=1";
+                
 
                 string urlQueryString = Request.QueryString.HasValue ? "?" + Request.QueryString.Value : "";
 
@@ -228,7 +257,10 @@ namespace GSF.Web.Security
                 base64Path = Convert.ToBase64String(pathBytes);
                 encodedPath = WebUtility.UrlEncode(base64Path);
 
-                Response.Redirect($"{Options.LoginPage}?redir={encodedPath}{referrer}");
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider("", autoRefresh: false);
+
+
+                Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage, encodedPath, referrer));
             }
             else
             {
@@ -259,8 +291,10 @@ namespace GSF.Web.Security
 
         private bool LogOut(Guid sessionID)
         {
-            // Flush any cached information that has been saved for this user
-            if (TryGetPrincipal(sessionID, out SecurityPrincipal securityPrincipal))
+            // Flush any cached information that has been saved for this user including anything saved in the alternate SecurityProvider Cache
+            if (TryGetPrincipal(sessionID, true, out SecurityPrincipal securityPrincipal))
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
+            if (TryGetPrincipal(sessionID, false, out securityPrincipal))
                 SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
 
             // Clear any cached session state for user (this also clears any cached authorizations)
@@ -290,7 +324,7 @@ namespace GSF.Web.Security
         }
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
-        private SecurityPrincipal AuthenticateCachedCredentials(string authenticationToken)
+        private SecurityPrincipal AuthenticateCachedCredentials(string authenticationToken, bool useAlternateSecurityProvider)
         {
             string username, password;
 
@@ -302,7 +336,7 @@ namespace GSF.Web.Security
                 return null;
 
             // Create the security provider that will authenticate the user's credentials
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, autoRefresh: false);
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, autoRefresh: false,useAlternate: useAlternateSecurityProvider);
             securityProvider.Password = password;
             securityProvider.Authenticate();
 
@@ -312,7 +346,7 @@ namespace GSF.Web.Security
         }
 
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
-        private SecurityPrincipal AuthenticateBasic(string credentials)
+        private SecurityPrincipal AuthenticateBasic(string credentials, bool useAlternateSecurityProvider)
         {
             string username, password;
 
@@ -321,7 +355,7 @@ namespace GSF.Web.Security
                 return null;
 
             // Create the security provider that will authenticate the user's credentials
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, autoRefresh: false);
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, autoRefresh: false,useAlternate: useAlternateSecurityProvider);
             securityProvider.Password = password;
             securityProvider.Authenticate();
 
@@ -331,7 +365,7 @@ namespace GSF.Web.Security
         }
 
         // Applies authentication for requests using Windows pass-through authentication.
-        private SecurityPrincipal AuthenticatePassthrough()
+        private SecurityPrincipal AuthenticatePassthrough(bool useAlternateSecurityProvider)
         {
             string username = Request.User?.Identity.Name;
 
@@ -342,7 +376,24 @@ namespace GSF.Web.Security
             IPrincipal passthroughPrincipal = Request.User;
 
             // Create the security provider that will verify the user's pass-through authentication
-            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal, false);
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal, false, useAlternateSecurityProvider);
+            securityProvider.Authenticate();
+
+            // Return the security principal that will be used for role-based authorization
+            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            return new SecurityPrincipal(securityIdentity);
+        }
+
+        // Applies authentication for requests using OpenID Connect authentication.
+        private SecurityPrincipal AuthenticateCode(bool useAlternateSecurityProvider)
+        {
+            string username = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value).Get("code");
+
+            if (String.IsNullOrEmpty(username))
+                return null;
+
+            // Create the security provider that will verify the user's pass-through authentication
+            ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, null, false, useAlternateSecurityProvider);
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
@@ -357,11 +408,14 @@ namespace GSF.Web.Security
         // Static Fields
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AppBuilderExtensions), MessageClass.Framework);
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
+        private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_alternateAuthorizationCache;
+
 
         // Static Constructor
         static AuthenticationHandler()
         {
             s_authorizationCache = new ConcurrentDictionary<Guid, SecurityPrincipal>();
+            s_alternateAuthorizationCache = new ConcurrentDictionary<Guid, SecurityPrincipal>();
 
             // Attach to session expiration event so any cached authorizations can also be cleared
             SessionHandler.SessionExpired += (sender, e) => ClearAuthorizationCache(e.Argument1);
@@ -374,9 +428,12 @@ namespace GSF.Web.Security
         /// </summary>
         /// <param name="sessionID">Session ID to user.</param>
         /// <param name="securityPrincipal">Principal of user with specified <paramref name="sessionID"/>, if found.</param>
+        /// <param name="useAlternate">Indicate when to useSecurity Principles from alternate SecurityProvider</param>
         /// <returns><c>true</c> if principal was found for specified <paramref name="sessionID"/>; otherwise, <c>false</c>.</returns>
-        public static bool TryGetPrincipal(Guid sessionID, out SecurityPrincipal securityPrincipal)
+        public static bool TryGetPrincipal(Guid sessionID, bool useAlternate, out SecurityPrincipal securityPrincipal)
         {
+            if (useAlternate)
+                return s_alternateAuthorizationCache.TryGetValue(sessionID, out securityPrincipal);
             return s_authorizationCache.TryGetValue(sessionID, out securityPrincipal);
         }
 
@@ -389,17 +446,22 @@ namespace GSF.Web.Security
         {
             SecurityPrincipal securityPrincipal;
             bool removed = s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
+            bool removedAlternate = s_alternateAuthorizationCache.TryRemove(sessionID, out securityPrincipal);
 
+            if (removedAlternate)
+                SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider, true);
             if (removed)
-                SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider);
-
-            return removed;
+                SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider, false);
+            
+            return removed || removedAlternate;
         }
 
-        private static void CachePrincipal(Guid sessionID, SecurityPrincipal principal)
+        private static void CachePrincipal(Guid sessionID, SecurityPrincipal principal, bool useAlternateSecurityProvider)
         {
-            if (s_authorizationCache.TryAdd(sessionID, principal))
-                SecurityProviderCache.AutoRefresh(principal.Identity.Provider);
+            if (useAlternateSecurityProvider && s_alternateAuthorizationCache.TryAdd(sessionID, principal))
+                SecurityProviderCache.AutoRefresh(principal.Identity.Provider, useAlternateSecurityProvider);
+            if (!useAlternateSecurityProvider && s_authorizationCache.TryAdd(sessionID, principal))
+                SecurityProviderCache.AutoRefresh(principal.Identity.Provider, useAlternateSecurityProvider);
         }
 
         private static bool TryParseCredentials(string authorizationParameter, out string userName, out string password)

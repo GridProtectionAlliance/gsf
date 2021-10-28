@@ -590,6 +590,14 @@ namespace GSF.Security
             return null;
         }
 
+        /// Gets a list of Roles for this user for a specified ApplicationId.
+        /// </summary>
+        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
+        /// <returns>The roles that the specified user has.</returns>
+        public override List<string> GetUserRoles(string applicationId)
+        {
+            return UserData?.Roles ?? new List<string>();
+        }
         #endregion
     }
 }

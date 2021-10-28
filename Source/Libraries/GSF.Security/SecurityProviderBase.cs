@@ -41,6 +41,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Security;
@@ -516,6 +517,28 @@ namespace GSF.Security
         {
             // Most providers will not perform any kind of translation on role names.
             return role;
+        }
+
+
+        /// <summary>
+        /// Performs a translation of the default login page to a different endpoint.
+        /// </summary>
+        /// <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+        /// <param name="encodedPath"> The URI requested by the client </param>
+        /// <param name="referrer"> The Referrer as specified in the request header </param>
+        /// <returns> The URI to be redirected to</returns>
+        public virtual string TranslateRedirect(string loginUrl, string encodedPath, string referrer)
+        {
+            return $"{loginUrl}?redir={encodedPath}{referrer}";
+        }
+
+        /// Gets a list of Roles for this user for a specified ApplicationId.
+        /// </summary>
+        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
+        /// <returns>The roles that the specified user has.</returns>
+        public virtual List<string> GetUserRoles(string applicationId)
+        {
+            return UserData?.Roles ?? new List<string>();
         }
 
         #endregion
