@@ -277,7 +277,7 @@ namespace GSF.Security
         private static Func<string, ISecurityProvider> CreateSecurityProviderFactory(string settingsCategory)
         {
             ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
             settings.Add("ProviderType", DefaultProviderType, "The type to be used for enforcing security.");
             string providerTypeSetting = settings["ProviderType"].ValueAsString(DefaultProviderType);
 

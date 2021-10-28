@@ -230,7 +230,7 @@ namespace GSF.Security
                 cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal, m_settingsCategory)));
             }
 
-            ISecurityProvider provider = SecurityProviderUtility.CreateProvider(cacheContext.Provider.UserData);
+            ISecurityProvider provider = SecurityProviderUtility.CreateProvider(cacheContext.Provider.UserData, m_settingsCategory);
             provider.PassthroughPrincipal = passthroughPrincipal;
 
             if (autoRefresh)
