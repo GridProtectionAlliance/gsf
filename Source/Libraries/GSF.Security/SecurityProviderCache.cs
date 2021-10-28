@@ -40,10 +40,9 @@ using GSF.Threading;
 namespace GSF.Security
 {
     /// <summary>
-    /// A helper class that represents a set of cached <see cref="ISecurityProvider"/>s.
-    /// This is necessary to allow caching of an alternate <see cref="ISecurityProvider"/>
+    /// A helper class that manages the caching of <see cref="ISecurityProvider"/>s.
     /// </summary>
-    public class CachedSecurityProvider
+    public class SecurityProviderCache
     {
         #region [ Members ]
 
@@ -180,7 +179,7 @@ namespace GSF.Security
         /// Number of milliseconds between calls to monitor the cache.
         /// </summary>
         private const int CacheMonitorTimerInterval = 60000;
-        
+
         // Fields
         private readonly Dictionary<string, CacheContext> s_cache;
         private readonly List<CacheContext> s_autoRefreshProviders;
@@ -192,8 +191,8 @@ namespace GSF.Security
 
         #region [ Constructor ]
 
-        public CachedSecurityProvider(string settingsCategory)
-         {
+        public SecurityProviderCache(string settingsCategory)
+        {
             // Load settings from the specified category
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
@@ -398,18 +397,12 @@ namespace GSF.Security
         }
 
         #endregion
-    }
 
-    /// <summary>
-    /// A helper class that manages the caching of <see cref="ISecurityProvider"/>s.
-    /// </summary>
-    public static class SecurityProviderCache
-    {
         #region [ Static ]
 
         // Static Fields
-        private static CachedSecurityProvider s_primarySecurityProvider;
-        private static CachedSecurityProvider s_alternateSecurityProvider;
+        private static SecurityProviderCache s_primarySecurityProvider;
+        private static SecurityProviderCache s_alternateSecurityProvider;
 
         /// <summary>
         /// Specifies the default value for the SettingsCategory property for the AlternateSecurityProvider.
@@ -420,12 +413,12 @@ namespace GSF.Security
         static SecurityProviderCache()
         {
             // Load Primary SecurityProvider
-            s_primarySecurityProvider = new CachedSecurityProvider(SecurityProviderBase.DefaultSettingsCategory);
+            s_primarySecurityProvider = new SecurityProviderCache(SecurityProviderBase.DefaultSettingsCategory);
 
             // Load Alternate Security Provider
             try
             {
-                s_alternateSecurityProvider = new CachedSecurityProvider(DefaultAlternateSettingsCategory);
+                s_alternateSecurityProvider = new SecurityProviderCache(DefaultAlternateSettingsCategory);
             }
             catch
             {
