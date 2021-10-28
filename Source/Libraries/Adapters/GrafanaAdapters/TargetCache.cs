@@ -41,9 +41,9 @@ namespace GrafanaAdapters
 
         static TargetCaches()
         {
-            ResetCacheFunctions = new List<Action>();
+            ResetCacheFunctions = new();
 
-            s_resetAllCaches = new ShortSynchronizedOperation(() =>
+            s_resetAllCaches = new(() =>
             {
                 Action[] resetCacheFunctions;
 
@@ -58,10 +58,8 @@ namespace GrafanaAdapters
         /// <summary>
         /// Resets all sliding memory caches used by Grafana data sources.
         /// </summary>
-        public static void ResetAll()
-        {
+        public static void ResetAll() => 
             s_resetAllCaches.RunOnceAsync();
-        }                    
     }
 
     // Usage Note: Each type T should be unique unless cache can be safely shared
@@ -75,7 +73,7 @@ namespace GrafanaAdapters
         static TargetCache()
         {
             s_cacheName = $"GrafanaTargetCache-{typeof(T).Name}";
-            s_targetCache = new MemoryCache(s_cacheName);
+            s_targetCache = new(s_cacheName);
 
             lock (TargetCaches.ResetCacheFunctions)
                 TargetCaches.ResetCacheFunctions.Add(ResetCache);
@@ -83,7 +81,7 @@ namespace GrafanaAdapters
 
         internal static T GetOrAdd(string target, Func<T> valueFactory)
         {
-            Lazy<T> newValue = new Lazy<T>(valueFactory);
+            Lazy<T> newValue = new(valueFactory);
             Lazy<T> oldValue;
 
             try
@@ -108,9 +106,7 @@ namespace GrafanaAdapters
             }
         }
 
-        internal static void ResetCache()
-        {
-            Interlocked.Exchange(ref s_targetCache, new MemoryCache(s_cacheName)).Dispose();
-        }
+        internal static void ResetCache() => 
+            Interlocked.Exchange(ref s_targetCache, new(s_cacheName)).Dispose();
     }
 }

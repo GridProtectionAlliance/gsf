@@ -55,17 +55,7 @@ namespace GrafanaAdapters
         public string rootTarget;
 
         /// <summary>
-        /// Defines a Grafana time-series underlying point tag latitude.
-        /// </summary>
-        public float latitude;
-
-        /// <summary>
-        /// Defines a Grafana time-series underlying point tag longitude.
-        /// </summary>
-        public float longitude;
-
-        /// <summary>
-        /// Defines a Grafana time-series refId to reffernece a specific query.
+        /// Defines a Grafana time-series refId to reference a specific query.
         /// </summary>
         public string refId;
 
@@ -73,6 +63,7 @@ namespace GrafanaAdapters
         /// Defines metaData attached to the <see cref="TimeSeriesValues"/>
         /// </summary>
         public MetaData meta;
+
         /// <summary>
         /// Defines flag that determines if empty series are produced.
         /// </summary>
@@ -125,7 +116,6 @@ namespace GrafanaAdapters
         /// The name of the PMU
         /// </summary>
         public string Device;
-
     }
 }
 

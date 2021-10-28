@@ -60,7 +60,7 @@ namespace GrafanaAdapters
             return Task.Factory.StartNew(() =>
             {
                 // Get location data, sorted by longitude and latitude
-                DataTable targetMeasurements = GetLocationDataTable(request, true, cancellationToken);
+                DataTable targetMeasurements = GetLocationDataTable(request, true);
 
                 if (targetMeasurements.Rows.Count > 0)
                 {
@@ -72,8 +72,8 @@ namespace GrafanaAdapters
                     bool coordinateMatches(DataRow left, DataRow right, int column) => left[column] is decimal leftValue && right[column] is decimal rightValue && leftValue.Equals(rightValue);
                     bool coordinatesMatch(DataRow first, DataRow current) => coordinateMatches(first, current, longitude) && coordinateMatches(first, current, latitude);
 
-                    List<DataRow[]> groupedRows = new List<DataRow[]>();
-                    List<DataRow> matchingRows = new List<DataRow> { targetMeasurements.Rows[0] };
+                    List<DataRow[]> groupedRows = new();
+                    List<DataRow> matchingRows = new() { targetMeasurements.Rows[0] };
                     DataRow firstGroupRow = matchingRows.First();
                     bool firstGroupRowValid = coordinatesAreValid(firstGroupRow);
 
@@ -101,7 +101,7 @@ namespace GrafanaAdapters
                         groupedRows.Add(matchingRows.ToArray());
 
                     // Create radial distribution for overlapped coordinates, leaving one item at center
-                    EPSG3857 coordinateReference = new EPSG3857();
+                    EPSG3857 coordinateReference = new();
 
                     foreach (DataRow[] rows in groupedRows)
                     {
@@ -138,10 +138,10 @@ namespace GrafanaAdapters
         /// <returns>JSON serialized location metadata for specified targets.</returns>
         public Task<string> GetLocationData(List<Target> request, CancellationToken cancellationToken)
         {
-            return Task.Factory.StartNew(() => JsonConvert.SerializeObject(GetLocationDataTable(request, false, cancellationToken)), cancellationToken);
+            return Task.Factory.StartNew(() => JsonConvert.SerializeObject(GetLocationDataTable(request, false)), cancellationToken);
         }
 
-        private DataTable GetLocationDataTable(List<Target> request, bool orderByCoordinates, CancellationToken cancellationToken)
+        private DataTable GetLocationDataTable(List<Target> request, bool orderByCoordinates)
         {
             DataTable activeMeasurements = DataSource?.Metadata?.Tables["ActiveMeasurements"];
 
@@ -150,9 +150,9 @@ namespace GrafanaAdapters
 
             // Create a hash set of desired targets for quick contains-based lookup
             IEnumerable<string> targets = request.Select(target => target.target).Where(value => !string.IsNullOrEmpty(value));
-            HashSet<string> pointTags = new HashSet<string>(targets, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> pointTags = new(targets, StringComparer.OrdinalIgnoreCase);
 
-            DataTable targetMeasurements = new DataTable("LocationMetadata");
+            DataTable targetMeasurements = new("LocationMetadata");
 
             // Reduce metadata to return only needed fields
             targetMeasurements.Columns.Add(new DataColumn("PointTag", typeof(string)));
@@ -161,7 +161,7 @@ namespace GrafanaAdapters
             targetMeasurements.Columns.Add(new DataColumn("Longitude", typeof(decimal)));
             targetMeasurements.Columns.Add(new DataColumn("Latitude", typeof(decimal)));
 
-            Dictionary<int, int> columnMap = new Dictionary<int, int>();
+            Dictionary<int, int> columnMap = new();
 
             // Map ordinal indexes of target measurement columns to those in active measurements
             foreach (DataColumn targetColumn in targetMeasurements.Columns)
@@ -170,10 +170,8 @@ namespace GrafanaAdapters
                 columnMap.Add(targetColumn.Ordinal, sourceColumn.Ordinal);
             }
 
-            ConcurrentBag<DataRow> matchingRows = new ConcurrentBag<DataRow>();
-            ParallelOptions options = new ParallelOptions { CancellationToken = cancellationToken };
+            ConcurrentBag<DataRow> matchingRows = new();
 
-            // Optimizing search by making a single pass through metadata with parallel processing           
             foreach(DataRow row in activeMeasurements.AsEnumerable())
             {
                 if (!pointTags.Contains(row["PointTag"].ToString()))
@@ -185,8 +183,7 @@ namespace GrafanaAdapters
                     newRow[x] = row[columnMap[x]];
 
                 matchingRows.Add(newRow);
-            };
-            
+            }
             
             if (orderByCoordinates)
             {

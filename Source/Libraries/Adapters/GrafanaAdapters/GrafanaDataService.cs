@@ -83,8 +83,8 @@ namespace GrafanaAdapters
         /// </summary>
         public GrafanaDataService()
         {
-            m_dataSource = new HistorianDataSource(this);
-            m_cancellationSource = new CancellationTokenSource();
+            m_dataSource = new(this);
+            m_cancellationSource = new();
             Endpoints = "http.rest://localhost:6057/api/grafana/";
             ServiceEnabled = false;
 
@@ -108,7 +108,7 @@ namespace GrafanaAdapters
 
                 // Cancel any running queries if web service gets disabled
                 if (!value)
-                    Interlocked.Exchange(ref m_cancellationSource, new CancellationTokenSource()).Dispose();
+                    Interlocked.Exchange(ref m_cancellationSource, new()).Dispose();
             }
         }
 
@@ -137,7 +137,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Gets the <see cref="LocationData"/> used by the web service to get geographic information for Phasors.
         /// </summary>
-        private LocationData LocationData => m_locationData ?? (m_locationData = new LocationData { DataSource = m_dataSource });
+        private LocationData LocationData => m_locationData ??= new() { DataSource = m_dataSource };
 
         #endregion
 
@@ -189,6 +189,7 @@ namespace GrafanaAdapters
         public void TestDataSource()
         {
         }
+
         /// <summary>
         /// Queries openHistorian as a Grafana data source.
         /// </summary>
@@ -266,7 +267,7 @@ namespace GrafanaAdapters
                     return string.Empty;
 
                 DataTable table = new DataTable();
-                DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? new DataRow[0];
+                DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? Array.Empty<DataRow>();
 
                 if (rows.Length > 0)
                     table = rows.CopyToDataTable();

@@ -31,6 +31,8 @@ using System.Threading.Tasks;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Diagnostics;
+using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
 namespace GrafanaAdapters
@@ -87,18 +89,18 @@ namespace GrafanaAdapters
             {
                 return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
                 {
-                    if (!(request.target is null))
+                    if (request.target is not null)
                     {
                         // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
                         if (parseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                         {
                             DataTableCollection tables = Metadata.Tables;
-                            List<string> results = new List<string>();
+                            List<string> results = new();
 
                             if (tables.Contains(tableName))
                             {
                                 DataTable table = tables[tableName];
-                                List<string> validFieldNames = new List<string>();
+                                List<string> validFieldNames = new();
 
                                 for (int i = 0; i < fieldNames?.Length; i++)
                                 {
@@ -218,7 +220,7 @@ namespace GrafanaAdapters
             AnnotationType type = request.ParseQueryType(out bool useFilterExpression);
             Dictionary<string, DataRow> definitions = request.ParseSourceDefinitions(type, Metadata, useFilterExpression);
             List<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken);
-            List<AnnotationResponse> responses = new List<AnnotationResponse>();
+            List<AnnotationResponse> responses = new();
 
             foreach (TimeSeriesValues values in annotationData)
             {
@@ -242,7 +244,7 @@ namespace GrafanaAdapters
                     {
                         if (type.IsApplicable(datapoint))
                         {
-                            AnnotationResponse response = new AnnotationResponse
+                            AnnotationResponse response = new()
                             {
                                 annotation = request.annotation,
                                 time = datapoint[TimeSeriesValues.Time]
@@ -315,10 +317,8 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                {
-                    return new TableOperations<AlarmDeviceStateView>(connection).QueryRecords("Name");
-                }
+                using AdoDataConnection connection = new("systemSettings"); 
+                return new TableOperations<AlarmDeviceStateView>(connection).QueryRecords("Name");
             },
             cancellationToken);
         }
@@ -333,10 +333,8 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                {
-                    return new TableOperations<AlarmState>(connection).QueryRecords("ID");
-                }
+                using AdoDataConnection connection = new("systemSettings");
+                return new TableOperations<AlarmState>(connection).QueryRecords("ID");
             },
             cancellationToken);
         }
@@ -351,19 +349,17 @@ namespace GrafanaAdapters
         {
             return Task.Factory.StartNew(() =>
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using AdoDataConnection connection = new("systemSettings");
+
+                IEnumerable<GSF.TimeSeries.Model.Device> groups = (new TableOperations<GSF.TimeSeries.Model.Device>(connection)).QueryRecordsWhere("AccessID = -99999");
+
+                return groups.Select(item => new DeviceGroup
                 {
-                    IEnumerable<GSF.TimeSeries.Model.Device> groups = (new TableOperations<GSF.TimeSeries.Model.Device>(connection)).QueryRecordsWhere("AccessID = -99999");
+                    ID = item.ID,
+                    Name = item.Name,
+                    Devices = ProcessDeviceGroup(item.ConnectionString).ToList()
 
-                    return groups.Select(item => new DeviceGroup
-                    {
-                        ID = item.ID,
-                        Name = item.Name,
-                        Devices = ProcessDeviceGroup(item.ConnectionString).ToList()
-
-                    });
-
-                }
+                });
             },
             cancellationToken);
         }
@@ -373,10 +369,9 @@ namespace GrafanaAdapters
             // Parse the connection string into a dictionary of key-value pairs for easy lookups
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
-            if (!settings.ContainsKey("DeviceIDs"))
-                return new List<int>();
-
-            return settings["DeviceIDs"].Split(',').Select(item => ParseInt(item));
+            return !settings.ContainsKey("DeviceIDs") ? 
+                new List<int>() : 
+                settings["DeviceIDs"].Split(',').Select(item => ParseInt(item));
         }
 
         /// <summary>
@@ -389,8 +384,9 @@ namespace GrafanaAdapters
         {
             HashSet<string> removeSeriesFunctions(string queryExpression)
             {
-                HashSet<string> targetSet = new HashSet<string>(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
-                HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                // Targets include user provided input, so casing should be ignored
+                HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase);
+                HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
 
                 foreach (string target in targetSet)
                 {
@@ -420,28 +416,30 @@ namespace GrafanaAdapters
 
             return Task.Factory.StartNew(() =>
             {
-                const string SignalIDQuery = "SELECT TOP 1 SignalID FROM ActiveMeasurement WHERE PointTag = '{0}'";
-
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
-                if (request.targets.All(item => string.IsNullOrWhiteSpace(item.target)))
-                    return new List<GrafanaAlarm>();
+                List<string> signalIDs = removeSeriesFunctions(request.targets[0].target)
+                    .SelectMany(item => item.Split(';'))
+                    .SelectMany(targetQuery =>
+                    {
+                        try
+                        {
+                            return AdapterBase.ParseInputMeasurementKeys(Metadata, false, targetQuery);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.SwallowException(ex);
+                            return Array.Empty<MeasurementKey>();
+                        }
+                    })
+                    .Select(key => $"'{key.SignalID}'").ToList();
 
+                if (signalIDs.Count == 0)
+                    return new();
 
-                List<string> pointTags = removeSeriesFunctions(request.targets[0].target).SelectMany(item => item.Split(';'))
-                    .SelectMany(targetQuery => AdapterBase.ParseInputMeasurementKeys(Metadata, false, targetQuery))
-                    .Select(item => item.Metadata.TagName).ToList();
-
-                string query = string.Join("),(", pointTags.Select(item => string.Format(SignalIDQuery, item.Trim())));
-
-                query = "((" + query + "))";
-
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-                {
-                    query = $"SignalID in {query}";
-                    return new TableOperations<GrafanaAlarm>(connection).QueryRecordsWhere(query).ToList();
-                }
+                using AdoDataConnection connection = new("systemSettings");
+                return new TableOperations<GrafanaAlarm>(connection).QueryRecordsWhere($"SignalID IN ({string.Join(",", signalIDs)})").ToList();
             },
             cancellationToken);
         }

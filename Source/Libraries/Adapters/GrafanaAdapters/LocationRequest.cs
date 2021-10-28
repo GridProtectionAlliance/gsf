@@ -44,7 +44,5 @@ namespace GrafanaAdapters
         /// Query request.
         /// </summary>
         public List<Target> request { get; set; }
-
-        
     }
 }

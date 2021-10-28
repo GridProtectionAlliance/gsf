@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 using GSF.Data.Model;
 using System;
 
@@ -32,7 +34,6 @@ namespace GrafanaAdapters
 	[TableName("Alarm")]
 	public class GrafanaAlarm
 	{
-		#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		public Guid NodeID { get; set; }
 
 		[PrimaryKey]
@@ -51,17 +52,23 @@ namespace GrafanaAdapters
 		public int Operation { get; set; }
 
 		public double SetPoint { get; set; }
+
 		public double Tolerance { get; set; }
+
 		public double Delay { get; set; }
+
 		public double Hysteresis { get; set; }
+
 		public int LoadOrder { get; set; }
+
 		public bool Enabled { get; set; }
+
 		public DateTime CreatedOn { get; set; }
+
 		public string CreatedBy { get; set; }
+
 		public DateTime UpdatedOn { get; set; }
+
 		public string UpdatedBy { get; set; }
-
-		#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
 	}
 }

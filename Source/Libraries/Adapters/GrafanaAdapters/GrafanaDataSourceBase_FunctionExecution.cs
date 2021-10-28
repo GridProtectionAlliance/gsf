@@ -310,7 +310,7 @@ namespace GrafanaAdapters
                                         }
                                         else
                                         {
-                                            substitutions.Add(fieldName, columnValue ?? "");
+                                            substitutions.Add(fieldName, columnValue);
                                         }
                                     }
                                 }

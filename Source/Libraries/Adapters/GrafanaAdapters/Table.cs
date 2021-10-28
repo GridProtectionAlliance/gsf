@@ -25,7 +25,6 @@ using System.Collections.Generic;
 
 namespace GrafanaAdapters
 {
-
     /// <summary>
     /// Defines a Grafana table.
     /// </summary>
