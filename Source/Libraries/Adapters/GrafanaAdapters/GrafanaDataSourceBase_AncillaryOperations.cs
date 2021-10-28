@@ -125,7 +125,7 @@ namespace GrafanaAdapters
                                     results.AddRange(queryOperation.Take(takeCount).Select(row => string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
                                 }
 
-                                if (string.IsNullOrWhiteSpace(expression) || expression.Trim().Equals("*"))
+                                if (string.IsNullOrWhiteSpace(expression))
                                 {
                                     if (string.IsNullOrWhiteSpace(sortField))
                                     {
