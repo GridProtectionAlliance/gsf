@@ -58,7 +58,6 @@ namespace GSF.Security
 
         //Constants
         private const string SettingsCategory = "SecurityProvider";
-        private const string AlternateSettingsCategory = "AlternateSecurityProvider";
         private const string DefaultProviderType = "GSF.Security.LdapSecurityProvider, GSF.Security";
         private const string DefaultIncludedResources = "*=*";
         private const string DefaultExcludedResources = "";
@@ -75,7 +74,8 @@ namespace GSF.Security
         private static readonly string s_notificationSmtpServer;
         private static readonly string s_notificationSenderEmail;
 
-        private static Dictionary<string,Func<string, ISecurityProvider>> s_providerFactory;
+        private static Dictionary<string, Func<string, ISecurityProvider>> s_providerFactory;
+        private static readonly object s_providerFactoryLock = new object();
 
         // Static Constructor
         static SecurityProviderUtility()
@@ -87,7 +87,7 @@ namespace GSF.Security
             settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
             settings.Add("NotificationSmtpServer", DefaultNotificationSmtpServer, "SMTP server to be used for sending out email notification messages.");
             settings.Add("NotificationSenderEmail", DefaultNotificationSenderEmail, "Email address of the sender of email notification messages.");
-            
+
             s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
             s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
             s_notificationSmtpServer = settings["NotificationSmtpServer"].ValueAsString();
@@ -150,7 +150,7 @@ namespace GSF.Security
         /// </summary>
         /// <param name="userData">Object that contains data about the user to be used by the security provider.</param>
         /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
-        public static ISecurityProvider CreateProvider(UserData userData, string settingsCategory=null)
+        public static ISecurityProvider CreateProvider(UserData userData, string settingsCategory = null)
         {
             // Initialize the username
             string username = userData.Username;
@@ -304,14 +304,16 @@ namespace GSF.Security
             if (settingsCategory == null)
                 settingsCategory = SettingsCategory;
 
-            if (s_providerFactory is null)
-                s_providerFactory = new Dictionary<string, Func<string, ISecurityProvider>>() { };
+            lock (s_providerFactoryLock)
+            {
+                if (s_providerFactory is null)
+                    s_providerFactory = new Dictionary<string, Func<string, ISecurityProvider>>() { };
 
-            if (s_providerFactory.ContainsKey(settingsCategory))
+                if (s_providerFactory.ContainsKey(settingsCategory))
+                    return s_providerFactory[settingsCategory];
+                s_providerFactory.Add(settingsCategory, CreateSecurityProviderFactory(settingsCategory));
                 return s_providerFactory[settingsCategory];
-            s_providerFactory.Add(settingsCategory,CreateSecurityProviderFactory(settingsCategory));
-            return s_providerFactory[settingsCategory];
-           
+            }           
         }
         #endregion
     }
