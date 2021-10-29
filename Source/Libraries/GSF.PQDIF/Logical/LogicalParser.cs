@@ -24,9 +24,10 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using GSF.PQDIF.Physical;
-using System.Collections.Generic;
 
 namespace GSF.PQDIF.Logical
 {
@@ -127,6 +128,7 @@ namespace GSF.PQDIF.Logical
         /// Obsolete in favor of <see cref="FilePath"/>.
         /// </summary>
         [Obsolete("Property is deprecated. Please use FilePath instead.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public string FileName
         {
             get

@@ -24,11 +24,12 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Text;
 using GSF.IO.Checksums;
 using Ionic.Zlib;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GSF.PQDIF.Physical
 {
@@ -185,7 +186,9 @@ namespace GSF.PQDIF.Physical
         /// Obsolete in favor of <see cref="FilePath"/>.
         /// </summary>
         [Obsolete("Property is deprecated. Please use FilePath instead.")]
-        public string FileName {
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public string FileName
+        {
             get { return FilePath; }
             set { FilePath = value; }
         }
