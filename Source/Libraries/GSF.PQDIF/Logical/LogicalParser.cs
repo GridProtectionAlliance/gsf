@@ -70,6 +70,7 @@ namespace GSF.PQDIF.Logical
     ///
     /// using (LogicalParser parser = new LogicalParser(fileName))
     /// {
+    ///     parser.Open();
     ///     containerRecord = parser.ContainerRecord;
     ///
     ///     while (parser.HasNextObservationRecord())

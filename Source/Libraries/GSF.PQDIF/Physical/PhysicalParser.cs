@@ -103,14 +103,17 @@ namespace GSF.PQDIF.Physical
     ///
     /// <code>
     /// string fileName = args[0];
-    /// PhysicalParser parser = new PhysicalParser(fileName);
-    /// parser.Open();
     ///
-    /// while (parser.HasNextRecord())
+    /// using (PhysicalParser parser = new PhysicalParser(fileName))
     /// {
-    ///     Record record = parser.NextRecord();
-    ///     Console.WriteLine(record);
-    ///     Console.WriteLine();
+    ///     parser.Open();
+    ///
+    ///     while (parser.HasNextRecord())
+    ///     {
+    ///         Record record = parser.NextRecord();
+    ///         Console.WriteLine(record);
+    ///         Console.WriteLine();
+    ///     }
     /// }
     /// </code>
     /// </remarks>
