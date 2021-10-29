@@ -545,7 +545,7 @@ namespace GSF.Security
         public override string TranslateRedirect(string loginUrl, string encodedPath, string referrer)
         {
             byte[] nonce = new byte[16];
-            new Random().NextBytes(nonce);
+            Cryptography.Random.GetBytes(nonce);
 
             s_nonceCache.Add(BitConverter.ToString(nonce).Replace("-", ""), encodedPath, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromSeconds(NonceSlidingExpiration) });
 
