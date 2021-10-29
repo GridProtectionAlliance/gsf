@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="textBoxExpression.Text" xml:space="preserve">
-    <value>{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-eval{'{PhasorLabel}'.Trim().ToUpper().Replace(' ','_')}_eval{'{SignalType.Abbreviation}'.Substring(0,1)}eval{'{Phase}'=='+' ? '1' : ('{Phase}'=='-' ? '2' : '{Phase}')}[?{BaseKV}&gt;0[_{BaseKV}]][?{SignalType.Suffix}=PA[:ANG]][?{SignalType.Suffix}=PM[:MAG]]]][?{SignalType.Source}!=Phasor[:{SignalType.Acronym}[?{SignalIndex}!=-1[{SignalIndex}]]]]</value>
+    <value>{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[:eval{'{PhasorLabel}'.Trim().ToUpper().Replace(' ','_')}_eval{'{SignalType.Abbreviation}'.Substring(0,1)}eval{'{Phase}'=='+'?'1':('{Phase}'=='-'?'2':'{Phase}')}[?{BaseKV}&gt;0[_{BaseKV}]][?{SignalType.Suffix}=PA[.ANG]][?{SignalType.Suffix}=PM[.MAG]]]][?{SignalType.Acronym}=ALOG[:eval{('{Label}'.Trim().Length&gt;0?'{Label}'.Trim().ToUpper().Replace(' ','_'):'ALOG'+((int){SignalIndex}).ToString().PadLeft(2,(char)48))}]][?{SignalType.Source}!=Phasor[?{SignalType.Acronym}!=ALOG[:{SignalType.Acronym}[?{SignalIndex}!=-1[eval{((int){SignalIndex}).ToString().PadLeft(2,(char)48)}]]]]]</value>
   </data>
   <metadata name="openFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>

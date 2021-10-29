@@ -44,10 +44,9 @@
             // labelConfigFile
             // 
             this.labelConfigFile.AutoSize = true;
-            this.labelConfigFile.Location = new System.Drawing.Point(18, 31);
-            this.labelConfigFile.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelConfigFile.Location = new System.Drawing.Point(12, 20);
             this.labelConfigFile.Name = "labelConfigFile";
-            this.labelConfigFile.Size = new System.Drawing.Size(196, 20);
+            this.labelConfigFile.Size = new System.Drawing.Size(132, 13);
             this.labelConfigFile.TabIndex = 0;
             this.labelConfigFile.Text = "Source Application &Config:";
             // 
@@ -55,20 +54,18 @@
             // 
             this.textBoxConfigFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxConfigFile.Location = new System.Drawing.Point(222, 26);
-            this.textBoxConfigFile.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxConfigFile.Location = new System.Drawing.Point(148, 17);
             this.textBoxConfigFile.Name = "textBoxConfigFile";
-            this.textBoxConfigFile.Size = new System.Drawing.Size(570, 26);
+            this.textBoxConfigFile.Size = new System.Drawing.Size(381, 20);
             this.textBoxConfigFile.TabIndex = 1;
             this.textBoxConfigFile.TextChanged += new System.EventHandler(this.FormElementChanged);
             // 
             // buttonApply
             // 
             this.buttonApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonApply.Location = new System.Drawing.Point(699, 335);
-            this.buttonApply.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.buttonApply.Location = new System.Drawing.Point(466, 248);
             this.buttonApply.Name = "buttonApply";
-            this.buttonApply.Size = new System.Drawing.Size(136, 42);
+            this.buttonApply.Size = new System.Drawing.Size(91, 27);
             this.buttonApply.TabIndex = 7;
             this.buttonApply.Text = "&Apply";
             this.buttonApply.UseVisualStyleBackColor = true;
@@ -77,10 +74,9 @@
             // labelExpression
             // 
             this.labelExpression.AutoSize = true;
-            this.labelExpression.Location = new System.Drawing.Point(18, 80);
-            this.labelExpression.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelExpression.Location = new System.Drawing.Point(12, 52);
             this.labelExpression.Name = "labelExpression";
-            this.labelExpression.Size = new System.Drawing.Size(208, 20);
+            this.labelExpression.Size = new System.Drawing.Size(141, 13);
             this.labelExpression.TabIndex = 3;
             this.labelExpression.Text = "Point Tag Name &Expression:";
             // 
@@ -90,12 +86,11 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxExpression.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxExpression.Location = new System.Drawing.Point(22, 105);
-            this.textBoxExpression.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxExpression.Location = new System.Drawing.Point(15, 68);
             this.textBoxExpression.Multiline = true;
             this.textBoxExpression.Name = "textBoxExpression";
             this.textBoxExpression.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxExpression.Size = new System.Drawing.Size(811, 209);
+            this.textBoxExpression.Size = new System.Drawing.Size(542, 167);
             this.textBoxExpression.TabIndex = 4;
             this.textBoxExpression.Text = resources.GetString("textBoxExpression.Text");
             this.textBoxExpression.TextChanged += new System.EventHandler(this.FormElementChanged);
@@ -104,10 +99,9 @@
             // 
             this.buttonSelectConfigFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSelectConfigFile.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSelectConfigFile.Location = new System.Drawing.Point(786, 24);
-            this.buttonSelectConfigFile.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.buttonSelectConfigFile.Location = new System.Drawing.Point(524, 16);
             this.buttonSelectConfigFile.Name = "buttonSelectConfigFile";
-            this.buttonSelectConfigFile.Size = new System.Drawing.Size(50, 34);
+            this.buttonSelectConfigFile.Size = new System.Drawing.Size(33, 22);
             this.buttonSelectConfigFile.TabIndex = 2;
             this.buttonSelectConfigFile.Text = "...";
             this.buttonSelectConfigFile.UseVisualStyleBackColor = true;
@@ -124,10 +118,9 @@
             // 
             this.checkBoxSetPortNumber.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkBoxSetPortNumber.AutoSize = true;
-            this.checkBoxSetPortNumber.Location = new System.Drawing.Point(22, 342);
-            this.checkBoxSetPortNumber.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.checkBoxSetPortNumber.Location = new System.Drawing.Point(15, 251);
             this.checkBoxSetPortNumber.Name = "checkBoxSetPortNumber";
-            this.checkBoxSetPortNumber.Size = new System.Drawing.Size(223, 24);
+            this.checkBoxSetPortNumber.Size = new System.Drawing.Size(153, 17);
             this.checkBoxSetPortNumber.TabIndex = 5;
             this.checkBoxSetPortNumber.Text = "Assign STTP &Port Number:";
             this.checkBoxSetPortNumber.UseVisualStyleBackColor = true;
@@ -136,10 +129,11 @@
             // maskedTextBoxPortNumber
             // 
             this.maskedTextBoxPortNumber.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.maskedTextBoxPortNumber.Location = new System.Drawing.Point(260, 337);
+            this.maskedTextBoxPortNumber.Location = new System.Drawing.Point(173, 249);
+            this.maskedTextBoxPortNumber.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.maskedTextBoxPortNumber.Mask = "00000";
             this.maskedTextBoxPortNumber.Name = "maskedTextBoxPortNumber";
-            this.maskedTextBoxPortNumber.Size = new System.Drawing.Size(67, 26);
+            this.maskedTextBoxPortNumber.Size = new System.Drawing.Size(46, 20);
             this.maskedTextBoxPortNumber.TabIndex = 6;
             this.maskedTextBoxPortNumber.Text = "7175";
             this.maskedTextBoxPortNumber.ValidatingType = typeof(int);
@@ -149,17 +143,18 @@
             // 
             this.labelInternalPublisherNote.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelInternalPublisherNote.AutoSize = true;
-            this.labelInternalPublisherNote.Location = new System.Drawing.Point(333, 340);
+            this.labelInternalPublisherNote.Location = new System.Drawing.Point(222, 251);
+            this.labelInternalPublisherNote.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelInternalPublisherNote.Name = "labelInternalPublisherNote";
-            this.labelInternalPublisherNote.Size = new System.Drawing.Size(147, 20);
+            this.labelInternalPublisherNote.Size = new System.Drawing.Size(98, 13);
             this.labelInternalPublisherNote.TabIndex = 8;
             this.labelInternalPublisherNote.Text = "( internal publisher )";
             // 
             // Main
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(854, 402);
+            this.ClientSize = new System.Drawing.Size(569, 291);
             this.Controls.Add(this.labelInternalPublisherNote);
             this.Controls.Add(this.maskedTextBoxPortNumber);
             this.Controls.Add(this.checkBoxSetPortNumber);
@@ -170,8 +165,7 @@
             this.Controls.Add(this.textBoxConfigFile);
             this.Controls.Add(this.labelConfigFile);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.MinimumSize = new System.Drawing.Size(864, 422);
+            this.MinimumSize = new System.Drawing.Size(581, 288);
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Update Point Tag Name Expression";
