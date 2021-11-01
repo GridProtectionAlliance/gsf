@@ -709,7 +709,7 @@ namespace GSF.Web.Model
             }
         }
 
-        private bool GetAuthCheck()
+        protected bool GetAuthCheck()
         {
             if (SecurityType == "Claims")
             {
@@ -721,7 +721,7 @@ namespace GSF.Web.Model
                 return GetRoles == string.Empty || User.IsInRole(GetRoles);
         }
 
-        private bool PostAuthCheck()
+        protected bool PostAuthCheck()
         {
             if (SecurityType == "Claims")
             {
@@ -733,7 +733,7 @@ namespace GSF.Web.Model
                 return PostRoles == string.Empty || User.IsInRole(PostRoles);
         }
 
-        private bool PatchAuthCheck()
+        protected bool PatchAuthCheck()
         {
             if (SecurityType == "Claims")
             {
@@ -745,7 +745,7 @@ namespace GSF.Web.Model
                 return PatchRoles == string.Empty || User.IsInRole(PatchRoles);
         }
 
-        private bool DeleteAuthCheck()
+        protected bool DeleteAuthCheck()
         {
             if (SecurityType == "Claims")
             {
