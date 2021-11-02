@@ -1795,6 +1795,14 @@ namespace GSF.PhasorProtocols
         public bool AutoRepeatCapturedPlayback { get; set; }
 
         /// <summary>
+        /// Gets or sets flag that determines if client should disconnect when end of file has been reached.
+        /// </summary>
+        /// <remarks>
+        /// This is only applicable when connection is made to a file for replay purposes.
+        /// </remarks>
+        public bool DisconnectAtEOF { get; set; }
+
+        /// <summary>
         /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
         /// </summary>
         /// <remarks>
@@ -2130,6 +2138,8 @@ namespace GSF.PhasorProtocols
                 {
                     status.AppendLine($"  Defined input frame rate: {m_definedFrameRate:N0} frames/sec");
                     status.AppendLine($"     Precision input timer: {(UseHighResolutionInputTimer ? "Enabled" : "Offline")}");
+                    status.AppendLine($"      Auto-repeat playback: {AutoRepeatCapturedPlayback}");
+                    status.AppendLine($"         Disconnect at EOF: {DisconnectAtEOF}");
 
                     if (!(m_inputTimer is null))
                         status.AppendLine($"  Timer resynchronizations: {m_inputTimer.Resynchronizations:N0}");
@@ -2586,6 +2596,7 @@ namespace GSF.PhasorProtocols
                     fileClient.ReceiveOnDemand = true;
                     fileClient.ReceiveBufferSize = ushort.MaxValue;
                     fileClient.AutoRepeat = AutoRepeatCapturedPlayback;
+                    fileClient.DisconnectAtEOF = DisconnectAtEOF;
 
                     // Setup synchronized read operation for file client operations
                     m_readNextBuffer = new ShortSynchronizedOperation(ReadNextFileBuffer, ex => OnParsingException(new InvalidOperationException($"Encountered an exception while reading file data: {ex.Message}", ex)));
