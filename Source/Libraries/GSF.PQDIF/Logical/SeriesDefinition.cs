@@ -316,7 +316,7 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Engineering units
         /// </summary>
-        PreferENG,
+        PreferENG = 1,
         /// <summary>
         /// Percentage units.
         /// </summary>
