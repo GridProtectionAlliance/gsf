@@ -199,6 +199,11 @@ namespace GSF.Communication
         public const FileAccess DefaultFileAccessMode = FileAccess.ReadWrite;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="DisconnectAtEOF"/> property.
+        /// </summary>
+        public const bool DefaultDisconnectAtEOF = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "File=DataFile.txt";
@@ -366,6 +371,14 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if client should disconnect when end of file has been reached.
+        /// </summary>
+        [Category("File")]
+        [DefaultValue(DefaultDisconnectAtEOF)]
+        [Description("The flag that determines if client should disconnect when end of file has been reached.")]
+        public bool DisconnectAtEOF { get; set; } = DefaultDisconnectAtEOF;
+
+        /// <summary>
         /// Gets the <see cref="FileStream"/> object for the <see cref="FileClient"/>.
         /// </summary>
         [Browsable(false)]
@@ -488,13 +501,14 @@ namespace GSF.Communication
             // Save settings under the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-            settings["AutoRepeat", true].Update(m_autoRepeat);
-            settings["ReceiveOnDemand", true].Update(m_receiveOnDemand);
-            settings["ReceiveInterval", true].Update(m_receiveInterval);
-            settings["StartingOffset", true].Update(m_startingOffset);
-            settings["FileOpenMode", true].Update(FileOpenMode);
-            settings["FileShareMode", true].Update(FileShareMode);
-            settings["FileAccessMode", true].Update(m_fileAccessMode);
+            settings[nameof(AutoRepeat), true].Update(m_autoRepeat);
+            settings[nameof(ReceiveOnDemand), true].Update(m_receiveOnDemand);
+            settings[nameof(ReceiveInterval), true].Update(m_receiveInterval);
+            settings[nameof(StartingOffset), true].Update(m_startingOffset);
+            settings[nameof(FileOpenMode), true].Update(FileOpenMode);
+            settings[nameof(FileShareMode), true].Update(FileShareMode);
+            settings[nameof(FileAccessMode), true].Update(m_fileAccessMode);
+            settings[nameof(DisconnectAtEOF), true].Update(DisconnectAtEOF);
             
             config.Save();
         }
@@ -512,21 +526,23 @@ namespace GSF.Communication
             // Load settings from the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-            settings.Add("AutoRepeat", m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
-            settings.Add("ReceiveOnDemand", m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
-            settings.Add("ReceiveInterval", m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
-            settings.Add("StartingOffset", m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
-            settings.Add("FileOpenMode", FileOpenMode, "Open mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
-            settings.Add("FileShareMode", FileShareMode, "Share mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used when opening the file.");
-            settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
+            settings.Add(nameof(AutoRepeat), m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
+            settings.Add(nameof(ReceiveOnDemand), m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
+            settings.Add(nameof(ReceiveInterval), m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
+            settings.Add(nameof(StartingOffset), m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
+            settings.Add(nameof(FileOpenMode), FileOpenMode, "Open mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
+            settings.Add(nameof(FileShareMode), FileShareMode, "Share mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used when opening the file.");
+            settings.Add(nameof(FileAccessMode), m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
+            settings.Add(nameof(DisconnectAtEOF), DisconnectAtEOF, "True if client should disconnect when end of file has been reached, otherwise False.");
             
-            AutoRepeat = settings["AutoRepeat"].ValueAs(m_autoRepeat);
-            ReceiveOnDemand = settings["ReceiveOnDemand"].ValueAs(m_receiveOnDemand);
-            ReceiveInterval = settings["ReceiveInterval"].ValueAs(m_receiveInterval);
-            StartingOffset = settings["StartingOffset"].ValueAs(m_startingOffset);
-            FileOpenMode = settings["FileOpenMode"].ValueAs(FileOpenMode);
-            FileShareMode = settings["FileShareMode"].ValueAs(FileShareMode);
-            FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
+            AutoRepeat = settings[nameof(AutoRepeat)].ValueAs(m_autoRepeat);
+            ReceiveOnDemand = settings[nameof(ReceiveOnDemand)].ValueAs(m_receiveOnDemand);
+            ReceiveInterval = settings[nameof(ReceiveInterval)].ValueAs(m_receiveInterval);
+            StartingOffset = settings[nameof(StartingOffset)].ValueAs(m_startingOffset);
+            FileOpenMode = settings[nameof(FileOpenMode)].ValueAs(FileOpenMode);
+            FileShareMode = settings[nameof(FileShareMode)].ValueAs(FileShareMode);
+            FileAccessMode = settings[nameof(FileAccessMode)].ValueAs(m_fileAccessMode);
+            DisconnectAtEOF = settings[nameof(DisconnectAtEOF)].ValueAs(DisconnectAtEOF);
         }
 
         /// <summary>
@@ -682,8 +698,13 @@ namespace GSF.Communication
                     OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.BytesReceived);
 
                     // Re-read the file if the user wants to repeat when done reading the file.
-                    if (m_autoRepeat && m_fileClient.Provider.Position == m_fileClient.Provider.Length)
-                        m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
+                    if (m_fileClient.Provider.Position == m_fileClient.Provider.Length)
+                    {
+                        if (m_autoRepeat)
+                            m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
+                        else if (DisconnectAtEOF)
+                            Disconnect();
+                    }
 
                     // Stop processing the file if user has either opted to receive data on demand or receive data at a predefined interval.
                     if (m_receiveOnDemand || m_receiveInterval > 0)
