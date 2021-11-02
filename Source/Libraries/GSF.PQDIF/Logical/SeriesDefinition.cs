@@ -255,6 +255,114 @@ namespace GSF.PQDIF.Logical
         AmpsPerVolt = 39u
     }
 
+    /// <summary>
+    /// List of Greek prefixes to use for units when displaying series data. 
+    /// These do not affect how the values are stored -- they should not be applied
+    /// as scaling factors when reading data.
+    /// </summary>
+    public enum GreekPrefix : uint
+    {
+        /// <summary>
+        /// Indicates display may choose the prefix freely.
+        /// </summary>
+        DoNotCare = 0,
+        /// <summary>
+        /// f	10^-15 (quadrillionth)
+        /// </summary>
+        Femto,
+        /// <summary>
+        /// p	10^-12 (trillionth)
+        /// </summary>
+        Pico,
+        /// <summary>
+        /// n	10^-9 (billionth)
+        /// </summary>
+        Nano,
+        /// <summary>
+        /// μ	10^-6 (millionth)
+        /// </summary>
+        Micro,
+        /// <summary>
+        /// m	10^-3 (thousandth)
+        /// </summary>
+        Milli,
+        /// <summary>
+        /// ""	10^0 (unit)
+        /// </summary>
+        None,
+        /// <summary>
+        /// k	10^3 (thousand)
+        /// </summary>
+        Kilo,
+        /// <summary>
+        /// M	10^6 (million)
+        /// </summary>
+        Mega,
+        /// <summary>
+        /// G	10^9 (billion)
+        /// </summary>
+        Giga,
+        /// <summary>
+        /// T	10^12 (trillion)
+        /// </summary>
+        Tera
+    }
+
+    /// <summary>
+    /// List of styles of units to use when displaying series data.
+    /// </summary>
+    public enum PreferredUnit : uint
+    {
+        /// <summary>
+        /// Engineering units
+        /// </summary>
+        PreferENG,
+        /// <summary>
+        /// Percentage units.
+        /// </summary>
+        PreferPCT,
+        /// <summary>
+        /// Per unit. https://en.wikipedia.org/wiki/Per-unit_system
+        /// </summary>
+        /// <remarks>
+        /// In this display format, different types of quantities are labeled with the same 
+        /// symbol (pu). The display should be clear whether the quantity is a voltage, 
+        /// current, or other measured quanity.
+        /// </remarks>
+        PreferPU
+    }
+
+    /// <summary>
+    /// List of aspects of data to prioritize showing when displaying series data.
+    /// </summary>
+    public enum DefaultDisplay : uint
+    {
+        /// <summary>
+        /// Indicates display may choose the prefix freely.
+        /// </summary>
+        DoNotCare,
+        /// <summary>
+        /// Display the magnitude of the values.
+        /// </summary>
+        Magnitude,
+        /// <summary>
+        /// Display the angle of the values.
+        /// </summary>
+        Angle,
+        /// <summary>
+        /// Display the real portion of complex values.
+        /// </summary>
+        Real,
+        /// <summary>
+        /// Display the imaginary portion of complex values.
+        /// </summary>
+        Imaginary,
+        /// <summary>
+        /// Display the RX of the values.
+        /// </summary>
+        RX
+    }
+
     #endregion
 
     /// <summary>
@@ -430,6 +538,67 @@ namespace GSF.PQDIF.Logical
             }
         }
 
+        /// <summary>
+        /// Gets or sets the hint about which Greek prefix is most useful for displaying the data in the series.
+        /// This hint does not affect how the values are stored -- prefixes should not be applied
+        /// as scaling factors when reading data. Data is assumed to be stored in unprefixed units, but
+        /// you can use the <see cref="SeriesInstance.SeriesScale"/> property to change how the data
+        /// is actually saved. 
+        /// </summary>
+        public GreekPrefix HintGreekPrefix
+        {
+            get
+            {
+                return (GreekPrefix)m_physicalStructure
+                    .GetScalarByTag(HintGreekPrefixIDTag)
+                    .GetUInt4();
+            }
+            set
+            {
+                ScalarElement quantityUnitsIDElement = m_physicalStructure.GetOrAddScalar(HintGreekPrefixIDTag);
+                quantityUnitsIDElement.TypeOfValue = PhysicalType.UnsignedInteger4;
+                quantityUnitsIDElement.SetUInt4((uint)value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the hint about which unit style to use when displaying the data in the series.
+        /// </summary>
+        public PreferredUnit HintPreferredUnit
+        {
+            get
+            {
+                return (PreferredUnit)m_physicalStructure
+                    .GetScalarByTag(HintPreferredUnitsIDTag)
+                    .GetUInt4();
+            }
+            set
+            {
+                ScalarElement quantityUnitsIDElement = m_physicalStructure.GetOrAddScalar(HintPreferredUnitsIDTag);
+                quantityUnitsIDElement.TypeOfValue = PhysicalType.UnsignedInteger4;
+                quantityUnitsIDElement.SetUInt4((uint)value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the hint about which aspect of data to prioritize when displaying the data in the series.
+        /// </summary>
+        public DefaultDisplay HintDefaultDisplay
+        {
+            get
+            {
+                return (DefaultDisplay)m_physicalStructure
+                    .GetScalarByTag(HintDefaultDisplayIDTag)
+                    .GetUInt4();
+            }
+            set
+            {
+                ScalarElement quantityUnitsIDElement = m_physicalStructure.GetOrAddScalar(HintDefaultDisplayIDTag);
+                quantityUnitsIDElement.TypeOfValue = PhysicalType.UnsignedInteger4;
+                quantityUnitsIDElement.SetUInt4((uint)value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -514,6 +683,21 @@ namespace GSF.PQDIF.Logical
         /// Tag that identifies the nominal quantity of the series.
         /// </summary>
         public static readonly Guid SeriesNominalQuantityTag = new Guid("0fa118c8-cb4a-11d2-b30b-fe25cb9a1760");
+
+        /// <summary>
+        /// Tag that identifies the preferred scaling prefix to use when displaying the series.
+        /// </summary>
+        public static readonly Guid HintGreekPrefixIDTag = new Guid("b48d859e-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the preferred unit style to use when displaying the series.
+        /// </summary>
+        public static readonly Guid HintPreferredUnitsIDTag = new Guid("b48d859f-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the preferred format string to use when displaying the series.
+        /// </summary>
+        public static readonly Guid HintDefaultDisplayIDTag = new Guid("b48d85a0-f5f5-11cf-9d89-0080c72e70a3");
 
         #endregion
     }
