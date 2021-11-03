@@ -494,99 +494,8 @@ namespace GSF.Web.Model
 
             try
             {
-
-                string whereClause = BuildWhereClause(postData.Searches);
-
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
-                {
-                    string tableName = TableOperations<T>.GetTableName();
-
-                    string sql = "";
-
-                    if (SearchSettings == null && CustomView == String.Empty)
-                        sql = $@" SELECT * FROM {tableName} {whereClause}
-                            ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")} ";
-
-                    else if (SearchSettings == null)
-                        sql = $@" SELECT* FROM({CustomView}) T1 
-                         {whereClause}
-                        ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
-
-                    else
-                    {
-                        string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
-
-                        if (pivotCollums == "()")
-                            pivotCollums = "('')";
-
-                        string collumnCondition = SearchSettings.Condition;
-                        if (collumnCondition != String.Empty)
-                            collumnCondition = $"AF.{collumnCondition} AND ";
-                        collumnCondition = collumnCondition + $"{SearchSettings.FieldKeyField} IN {pivotCollums}";
-
-                        string joinCondition = $"af.FieldName IN {pivotCollums.Replace("'", "''")} AND ";
-                        joinCondition = joinCondition + SearchSettings.Condition.Replace("'", "''");
-                        if (SearchSettings.Condition != String.Empty)
-                            joinCondition = $"{joinCondition} AND ";
-                        joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
-
-                        if (CustomView == String.Empty)
-                            sql = $@"
-                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
-                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
-                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
-
-                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                                SELECT * INTO #Tbl FROM (
-                                SELECT 
-                                    SRC.*,
-                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-	                                AF.{SearchSettings.ValueField} AS AFValue
-                                FROM  {tableName} SRC LEFT JOIN 
-                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
-                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
-                                {whereClause.Replace("'", "''")};
-
-                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
-                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
-                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
-
-		                        exec sp_executesql @CleanSQL
-                            '
-                            exec sp_executesql @SQLStatement";
-                        else
-                            sql = $@"
-                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
-                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
-                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
-
-                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                                SELECT * INTO #Tbl FROM (
-                                SELECT 
-                                    SRC.*,
-                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-	                                AF.{SearchSettings.ValueField} AS AFValue
-                                FROM  ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
-                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
-                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
-                                {whereClause.Replace("'", "''")};
-
-                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
-                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
-                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
-
-		                        exec sp_executesql @CleanSQL
-                            '
-                            exec sp_executesql @SQLStatement";
-                    }
-                    DataTable table = connection.RetrieveData(sql, "");
-
-                    return Ok(JsonConvert.SerializeObject(table));
-                }
+                DataTable table = GetSearchResults(postData);
+                return Ok(JsonConvert.SerializeObject(table));
             }
             catch (Exception ex)
             {
@@ -655,7 +564,6 @@ namespace GSF.Web.Model
             }
         }
 
-
         private T QueryRecordWhere(string filterExpression, params object[] parameters)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -709,6 +617,10 @@ namespace GSF.Web.Model
             }
         }
 
+        /// <summary>
+        /// Check if current User is authorized for GET Requests
+        /// </summary>
+        /// <returns>True if User is authorized for GET requests</returns>
         protected bool GetAuthCheck()
         {
             if (SecurityType == "Claims")
@@ -721,6 +633,10 @@ namespace GSF.Web.Model
                 return GetRoles == string.Empty || User.IsInRole(GetRoles);
         }
 
+        /// <summary>
+        /// Check if current User is authorized for POST Requests
+        /// </summary>
+        /// <returns>True if User is authorized for POST requests</returns>
         protected bool PostAuthCheck()
         {
             if (SecurityType == "Claims")
@@ -733,6 +649,10 @@ namespace GSF.Web.Model
                 return PostRoles == string.Empty || User.IsInRole(PostRoles);
         }
 
+        /// <summary>
+        /// Check if current User is authorized for PATCH Requests
+        /// </summary>
+        /// <returns>True if User is authorized for PATCH requests</returns>
         protected bool PatchAuthCheck()
         {
             if (SecurityType == "Claims")
@@ -745,6 +665,10 @@ namespace GSF.Web.Model
                 return PatchRoles == string.Empty || User.IsInRole(PatchRoles);
         }
 
+        /// <summary>
+        /// Check if current User is authorized for DELETE Requests
+        /// </summary>
+        /// <returns>True if User is authorized for DELETE requests</returns>
         protected bool DeleteAuthCheck()
         {
             if (SecurityType == "Claims")
@@ -757,7 +681,104 @@ namespace GSF.Web.Model
                 return DeleteRoles == string.Empty || User.IsInRole(DeleteRoles);
         }
 
+        /// <summary>
+        /// Gets the <see cref="DataTable"/> with the SearchResults as specified in <see cref="PostData"/>. 
+        /// </summary>
+        /// <returns>A <see cref="DataTable"/>.</returns>
+        protected DataTable GetSearchResults(PostData postData) 
+        {
+            string whereClause = BuildWhereClause(postData.Searches);
 
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            {
+                string tableName = TableOperations<T>.GetTableName();
+
+                string sql = "";
+
+                if (SearchSettings == null && CustomView == String.Empty)
+                    sql = $@" SELECT * FROM {tableName} {whereClause}
+                            ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")} ";
+
+                else if (SearchSettings == null)
+                    sql = $@" SELECT* FROM({CustomView}) T1 
+                         {whereClause}
+                        ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
+
+                else
+                {
+                    string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
+
+                    if (pivotCollums == "()")
+                        pivotCollums = "('')";
+
+                    string collumnCondition = SearchSettings.Condition;
+                    if (collumnCondition != String.Empty)
+                        collumnCondition = $"AF.{collumnCondition} AND ";
+                    collumnCondition = collumnCondition + $"{SearchSettings.FieldKeyField} IN {pivotCollums}";
+
+                    string joinCondition = $"af.FieldName IN {pivotCollums.Replace("'", "''")} AND ";
+                    joinCondition = joinCondition + SearchSettings.Condition.Replace("'", "''");
+                    if (SearchSettings.Condition != String.Empty)
+                        joinCondition = $"{joinCondition} AND ";
+                    joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
+
+                    if (CustomView == String.Empty)
+                        sql = $@"
+                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
+                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
+                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
+
+                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
+                                SELECT * INTO #Tbl FROM (
+                                SELECT 
+                                    SRC.*,
+                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
+	                                AF.{SearchSettings.ValueField} AS AFValue
+                                FROM  {tableName} SRC LEFT JOIN 
+                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
+                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
+                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
+                                {whereClause.Replace("'", "''")};
+
+                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
+                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
+                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
+		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
+
+		                        exec sp_executesql @CleanSQL
+                            '
+                            exec sp_executesql @SQLStatement";
+                    else
+                        sql = $@"
+                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
+                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
+                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
+
+                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
+                                SELECT * INTO #Tbl FROM (
+                                SELECT 
+                                    SRC.*,
+                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
+	                                AF.{SearchSettings.ValueField} AS AFValue
+                                FROM  ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
+                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
+                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
+                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
+                                {whereClause.Replace("'", "''")};
+
+                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
+                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
+                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
+		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
+
+		                        exec sp_executesql @CleanSQL
+                            '
+                            exec sp_executesql @SQLStatement";
+                }
+                return connection.RetrieveData(sql, "");
+            }
+
+        }
         #endregion
     }
 }
