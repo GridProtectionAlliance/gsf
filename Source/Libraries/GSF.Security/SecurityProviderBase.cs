@@ -530,7 +530,6 @@ namespace GSF.Security
             return role;
         }
 
-
         /// <summary>
         /// Performs a translation of the default login page to a different endpoint.
         /// </summary>
@@ -543,6 +542,7 @@ namespace GSF.Security
             return $"{loginUrl}?redir={encodedPath}{referrer}";
         }
 
+        /// <summary>
         /// Gets a list of Roles for this user for a specified ApplicationId.
         /// </summary>
         /// <param name="applicationId">The applicationId for the roles to be returned.</param>

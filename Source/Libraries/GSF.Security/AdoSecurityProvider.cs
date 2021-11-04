@@ -978,7 +978,7 @@ namespace GSF.Security
             }
         }
 
-
+        /// <summary>
         /// Gets a list of Roles for this user for a specified ApplicationId.
         /// </summary>
         /// <param name="applicationId">The applicationId for the roles to be returned.</param>
