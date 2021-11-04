@@ -362,6 +362,20 @@ namespace APPPDCImporter
                 m_connectionStringManuallyEdited = true;
         }
 
+        private void comboBoxIPAddresses_TextChanged(object sender, EventArgs e)
+        {
+            string connectionString = m_importParams?.APPPDCConfigFrame?.ConnectionString;
+
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                if (m_connectionStringManuallyEdited && MessageBox.Show(this, "Manual changes to connection string are about to be overwritten, continue?", "Update Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+
+                textBoxConnectionString.Text = connectionString.Replace(APPPDCConfig.IPAddressToken, comboBoxIPAddresses.Text);
+                m_connectionStringManuallyEdited = false;
+            }
+        }
+
         private void comboBoxIPAddresses_SelectedIndexChanged(object sender, EventArgs e)
         {
             string connectionString = m_importParams?.APPPDCConfigFrame?.ConnectionString;
