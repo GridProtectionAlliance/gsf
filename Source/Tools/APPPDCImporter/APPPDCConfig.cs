@@ -155,7 +155,7 @@ namespace APPPDCImporter
                 {
                     [commandChannel ? "protocol" : nameof(TransportProtocol)] = nameof(TransportProtocol.Tcp),
                     ["server"] = IPAddressToken,
-                    ["port"] = commandChannel ? $"{port}" : $"{dataPort}",
+                    ["port"] = $"{port}",
                     ["isListener"] = "false",
                     ["interface"] = "0.0.0.0"
                 };
