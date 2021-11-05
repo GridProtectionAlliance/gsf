@@ -89,7 +89,7 @@ namespace GSF.Security
         /// <summary>
         /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
         /// </summary>
-        public new const int ProviderID = 3;
+        public const int ProviderID = 3;
 
         #endregion
 

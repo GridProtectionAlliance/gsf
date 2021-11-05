@@ -191,6 +191,10 @@ namespace GSF.Security
 
         #region [ Constructor ]
 
+        /// <summary>
+        /// Creates a new <see cref="SecurityProviderCache"/>.
+        /// </summary>
+        /// <param name="settingsCategory">Settings category.</param>
         public SecurityProviderCache(string settingsCategory)
         {
             // Load settings from the specified category

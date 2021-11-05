@@ -222,6 +222,7 @@ namespace GSF.Security
         /// <returns> The URI to be redirected to</returns>
         string TranslateRedirect(string loginUrl, string encodedPath, string referrer);
 
+        /// <summary>
         /// Gets a list of Roles for this user for a specified ApplicationId.
         /// </summary>
         /// <param name="applicationId">The applicationId for the roles to be returned.</param>
