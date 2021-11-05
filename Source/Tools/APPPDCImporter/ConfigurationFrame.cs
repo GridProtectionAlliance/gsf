@@ -161,11 +161,11 @@ namespace APPPDCImporter
             Acronym = acronym ?? name.GetCleanAcronym();
         }
 
-        public Dictionary<string, string> Settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> Settings = new(StringComparer.OrdinalIgnoreCase);
 
         public string ConnectionString => Settings.JoinKeyValuePairs();
 
-        public Dictionary<string, string> DeviceIPs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> DeviceIPs = new(StringComparer.OrdinalIgnoreCase);
 
         public string TargetDeviceIP;
 
@@ -187,7 +187,7 @@ namespace APPPDCImporter
 
         public string GeneratePDCDetails()
         {
-            StringBuilder pdcDetails = new StringBuilder();
+            StringBuilder pdcDetails = new();
 
             pdcDetails.AppendLine($"Acronym: {Acronym}");
             pdcDetails.AppendLine($"Name: {Name}");
@@ -253,7 +253,7 @@ namespace APPPDCImporter
 
         public static ConfigurationFrame Clone(ConfigurationFrame source, bool cloneCells)
         {
-            ConfigurationFrame clone = new ConfigurationFrame(source.IDCode, source.FrameRate, source.Name, source.Acronym)
+            ConfigurationFrame clone = new(source.IDCode, source.FrameRate, source.Name, source.Acronym)
             {
                 Settings = new Dictionary<string, string>(source.Settings, StringComparer.OrdinalIgnoreCase),
                 DeviceIPs = new Dictionary<string, string>(source.DeviceIPs, StringComparer.OrdinalIgnoreCase),

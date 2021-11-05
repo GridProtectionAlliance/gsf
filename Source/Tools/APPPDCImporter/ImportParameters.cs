@@ -56,8 +56,19 @@ namespace APPPDCImporter
         
         public string HostConfig { get; set; }
 
-        public string EditedConnectionString { get; set; }
+        public string EditedConnectionString
+        {
+            get => m_editedConnectionString;
+            set
+            { 
+                m_editedConnectionString = value;
+                IPAddress = m_editedConnectionString.ParseDeviceIPFromConnectionString();
+            }
+        }
 
+        public string IPAddress { get; set; }
+
+        private string m_editedConnectionString;
         private bool m_disposed;
 
         public void Dispose()
@@ -95,7 +106,7 @@ namespace APPPDCImporter
 
         public IEnumerable<SignalType> LoadSignalTypes(string source)
         {
-            TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(Connection);
+            TableOperations<SignalType> signalTypeTable = new(Connection);
             return signalTypeTable.QueryRecordsWhere("Source = {0}", source);
         }
 
@@ -225,7 +236,7 @@ namespace APPPDCImporter
         private Dictionary<string, DataRow> InitializeSignalTypes()
         {
             // It is expected that when a point tag is needing to be created that the database will be available
-            Dictionary<string, DataRow> signalTypes = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, DataRow> signalTypes = new(StringComparer.OrdinalIgnoreCase);
 
             foreach (DataRow row in Connection.RetrieveData("SELECT * FROM SignalType").AsEnumerable())
                 signalTypes.AddOrUpdate(row["Acronym"].ToString(), row);

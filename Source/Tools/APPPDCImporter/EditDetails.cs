@@ -37,8 +37,8 @@ namespace APPPDCImporter
     {
         private readonly Color m_matchedColor = Color.FromArgb(192, 255, 192);
         private readonly Color m_unmatchedColor = SystemColors.Control;
-        private readonly List<CheckBox> m_deleteCheckBoxes = new List<CheckBox>();
-        private readonly List<Control> m_validatedControls = new List<Control>();
+        private readonly List<CheckBox> m_deleteCheckBoxes = new();
+        private readonly List<Control> m_validatedControls = new();
 
         public EditDetails()
         {
@@ -65,7 +65,7 @@ namespace APPPDCImporter
             CategorizedSettingsElementCollection systemSettings = configurationFile.Settings["systemSettings"];
             string targetHistorianIDValue = systemSettings["TargetHistorianID"]?.Value ?? "0";
 
-            TableOperations<Historian> historianTable = new TableOperations<Historian>(ImportParams.Connection);
+            TableOperations<Historian> historianTable = new(ImportParams.Connection);
             Dictionary<int, string> historians = historianTable.QueryHistorians().ToDictionary(historian => historian.ID, historian => historian.Acronym);
             historians.Add(0, "None");
 
@@ -105,10 +105,10 @@ namespace APPPDCImporter
 
         private void EditDetails_Load(object sender, EventArgs e)
         {
-            ConfigurationFrame selPDCConfigFrame = ImportParams.APPPDCConfigFrame;
+            ConfigurationFrame appPDCConfigFrame = ImportParams.APPPDCConfigFrame;
             ConfigurationFrame gsfPDCConfigFrame = ImportParams.GSFPDCConfigFrame;
 
-            TargetConfigFrame = ConfigurationFrame.Clone(gsfPDCConfigFrame ?? selPDCConfigFrame, false);
+            TargetConfigFrame = ConfigurationFrame.Clone(gsfPDCConfigFrame ?? appPDCConfigFrame, false);
 
             checkBoxDeleteAll.CheckedChanged += (_, _) =>
             {
@@ -139,7 +139,7 @@ namespace APPPDCImporter
                 Close();
             };
 
-            textBoxACFConnectionName.Text = selPDCConfigFrame.Acronym;
+            textBoxACFConnectionName.Text = appPDCConfigFrame.Acronym;
             textBoxACFConnectionName.Click += ConnectionNameOnClick;
 
             textBoxGCFConnectionName.Text = gsfPDCConfigFrame?.Acronym;
@@ -168,15 +168,15 @@ namespace APPPDCImporter
             textBoxTCFConnectionName.Text = TargetConfigFrame.Acronym;
 
             TableLayoutPanel table = tableLayoutPanelConfigDetails;
-            List<ConfigurationCell> matchedCells = new List<ConfigurationCell>();
+            List<ConfigurationCell> matchedCells = new();
 
             table.SuspendLayout();
 
-            for (int i = 0; i < selPDCConfigFrame.Cells.Count; i++)
+            for (int i = 0; i < appPDCConfigFrame.Cells.Count; i++)
             {
-                ConfigurationCell selConfigCell = selPDCConfigFrame.Cells[i];
+                ConfigurationCell selConfigCell = appPDCConfigFrame.Cells[i];
                 ConfigurationCell gsfConfigCell = gsfPDCConfigFrame?.Cells.FirstOrDefault(cell => cell.IDCode == selConfigCell.IDCode) as ConfigurationCell;
-                ConfigurationCell targetConfigCell = new ConfigurationCell(
+                ConfigurationCell targetConfigCell = new(
                     TargetConfigFrame,
                     gsfConfigCell?.StationName ?? selConfigCell.StationName,
                     gsfConfigCell?.IDCode ?? selConfigCell.IDCode,
@@ -214,7 +214,7 @@ namespace APPPDCImporter
             // Add unmatched cells
             if (gsfPDCConfigFrame is not null && gsfPDCConfigFrame.Cells.Count > 0)
             {
-                HashSet<ConfigurationCell> unmatchedCells = new HashSet<ConfigurationCell>(gsfPDCConfigFrame.Cells.Select(cell => cell as ConfigurationCell));
+                HashSet<ConfigurationCell> unmatchedCells = new(gsfPDCConfigFrame.Cells.Select(cell => cell as ConfigurationCell));
                 unmatchedCells.ExceptWith(matchedCells);
                 int i = TargetConfigFrame.Cells.Count;
 
@@ -223,7 +223,7 @@ namespace APPPDCImporter
                     if (gsfConfigCell is null)
                         continue;
 
-                    ConfigurationCell targetConfigCell = new ConfigurationCell(
+                    ConfigurationCell targetConfigCell = new(
                         TargetConfigFrame,
                         gsfConfigCell.StationName,
                         gsfConfigCell.IDCode,
@@ -277,6 +277,14 @@ namespace APPPDCImporter
 
             // Perform initial validation
             ValidateChildren();
+
+            if (m_validatedControls.Count(control => !string.IsNullOrWhiteSpace(errorProvider.GetError(control))) > 0)
+            {
+                if ((gsfPDCConfigFrame?.ID ?? 0) == 0)
+                    labelWarning1.Visible = true;
+                else
+                    labelWarning2.Visible = true;
+            }
 
             textBoxTCFConnectionName.Focus();
 
@@ -384,7 +392,7 @@ namespace APPPDCImporter
 
         private Panel NewPanel(string labelText, bool deleted, out CheckBox checkBox)
         {
-            Panel panel = new Panel();
+            Panel panel = new();
             panel.SuspendLayout();
 
             checkBox = NewCheckBox(deleted);
@@ -402,7 +410,7 @@ namespace APPPDCImporter
 
         private CheckBox NewCheckBox(bool @checked)
         {
-            CheckBox checkBox = new CheckBox
+            CheckBox checkBox = new()
             {
                 AutoSize = true,
                 Dock = checkBoxDeleteAll.Dock,

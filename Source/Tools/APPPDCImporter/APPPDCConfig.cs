@@ -72,7 +72,7 @@ namespace APPPDCImporter
                 frameRate = DefaultFrameRate;
 
             // With an ID code, frame rate and server name, there's enough info to create a config frame
-            ConfigurationFrame configFrame = new ConfigurationFrame(idCode, frameRate, serverName);
+            ConfigurationFrame configFrame = new(idCode, frameRate, serverName);
 
             // Load all output PMUs
             int index = -1;
@@ -85,7 +85,7 @@ namespace APPPDCImporter
                     continue;
 
                 // With a name and an ID code, there's enough info to create a config cell representing the PMU
-                ConfigurationCell configCell = new ConfigurationCell(configFrame, name, idCode)
+                ConfigurationCell configCell = new(configFrame, name, idCode)
                 {
                     NominalFrequency = nominalFrequency,
                 };
@@ -142,8 +142,8 @@ namespace APPPDCImporter
             if (!ushort.TryParse(configSettings["PortTCP"], out ushort port))
                 port = DefaultPort;
 
-            if (!ushort.TryParse(configSettings["PortUDP"], out ushort dataPort))
-                dataPort = DefaultDataPort;
+            //if (!ushort.TryParse(configSettings["PortUDP"], out ushort dataPort))
+            //    dataPort = DefaultDataPort;
 
             // Setup MultiProtocolFrameParser style connection string
             Dictionary<string, string> getTcpSettings(bool commandChannel = false)
