@@ -38,7 +38,8 @@ using GSF.Diagnostics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-#pragma warning disable S2068
+#pragma warning disable 67
+#pragma warning disable 169
 
 namespace GSF.Security
 {
@@ -598,14 +599,14 @@ namespace GSF.Security
         // Static Fields
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AdoSecurityProvider), MessageClass.Component);
 
-        private static MemoryCache s_nonceCache = new MemoryCache("OIDC-NonceCache");
+        private static readonly MemoryCache s_nonceCache = new MemoryCache("OIDC-NonceCache");
 
-        private static HttpClient Client = new HttpClient();
+        private static readonly HttpClient Client = new HttpClient();
 
         /// <summary>
         /// Gets current default Node ID for security.
         /// </summary>
-        public static readonly Guid DefaultNodeID;
+        private static readonly Guid DefaultNodeID;
        
         #endregion
     }

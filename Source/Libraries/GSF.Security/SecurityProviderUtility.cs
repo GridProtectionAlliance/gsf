@@ -149,6 +149,7 @@ namespace GSF.Security
         /// Creates a new <see cref="ISecurityProvider"/> based on the settings in the config file.
         /// </summary>
         /// <param name="userData">Object that contains data about the user to be used by the security provider.</param>
+        /// <param name="settingsCategory">The category used to store configuration settings for the provider.</param>
         /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
         public static ISecurityProvider CreateProvider(UserData userData, string settingsCategory = null)
         {
@@ -286,7 +287,7 @@ namespace GSF.Security
             if ((object)providerType == null)
                 throw new InvalidOperationException("The default security provider type defined by the system does not exist.");
 
-            ConstructorInfo constructor = providerType.GetConstructor(new Type[] { typeof(string) });
+            ConstructorInfo constructor = providerType.GetConstructor(new[] { typeof(string) });
 
             if ((object)constructor == null)
                 throw new InvalidOperationException("The default security provider type does not define a constructor with the appropriate signature.");
@@ -307,7 +308,7 @@ namespace GSF.Security
             lock (s_providerFactoryLock)
             {
                 if (s_providerFactory is null)
-                    s_providerFactory = new Dictionary<string, Func<string, ISecurityProvider>>() { };
+                    s_providerFactory = new Dictionary<string, Func<string, ISecurityProvider>>();
 
                 if (s_providerFactory.ContainsKey(settingsCategory))
                     return s_providerFactory[settingsCategory];
