@@ -154,8 +154,23 @@ namespace APPPDCImporter
             if (settings is null)
                 return null;
 
-            if (!settings.TryGetValue("server", out string deviceIP))
+            string commandChannel = null;
+
+            if (!settings.TryGetValue("server", out string deviceIP) && !settings.TryGetValue("commandChannel", out commandChannel))
                 return null;
+
+            bool commandChannelEmpty = string.IsNullOrWhiteSpace(commandChannel);
+
+            if (string.IsNullOrWhiteSpace(deviceIP) && commandChannelEmpty)
+                return null;
+
+            if (!commandChannelEmpty)
+            {
+                settings = commandChannel.ParseKeyValuePairs();
+
+                if (!settings.TryGetValue("server", out deviceIP))
+                    return null;
+            }
 
             if (deviceIP.Contains(":"))
                 deviceIP = deviceIP.Split(':')[0];
