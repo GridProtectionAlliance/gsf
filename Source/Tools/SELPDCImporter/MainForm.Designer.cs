@@ -175,6 +175,7 @@ namespace SELPDCImporter
             this.comboBoxIPAddresses.TabIndex = 1;
             this.comboBoxIPAddresses.ValueMember = "Key";
             this.comboBoxIPAddresses.SelectedIndexChanged += new System.EventHandler(this.comboBoxIPAddresses_SelectedIndexChanged);
+            this.comboBoxIPAddresses.TextChanged += new System.EventHandler(this.comboBoxIPAddresses_TextChanged);
             // 
             // labelPDCDetails
             // 

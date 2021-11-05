@@ -37,8 +37,8 @@ namespace SELPDCImporter
     {
         private readonly Color m_matchedColor = Color.FromArgb(192, 255, 192);
         private readonly Color m_unmatchedColor = SystemColors.Control;
-        private readonly List<CheckBox> m_deleteCheckBoxes = new List<CheckBox>();
-        private readonly List<Control> m_validatedControls = new List<Control>();
+        private readonly List<CheckBox> m_deleteCheckBoxes = new();
+        private readonly List<Control> m_validatedControls = new();
 
         public EditDetails()
         {
@@ -65,7 +65,7 @@ namespace SELPDCImporter
             CategorizedSettingsElementCollection systemSettings = configurationFile.Settings["systemSettings"];
             string targetHistorianIDValue = systemSettings["TargetHistorianID"]?.Value ?? "0";
 
-            TableOperations<Historian> historianTable = new TableOperations<Historian>(ImportParams.Connection);
+            TableOperations<Historian> historianTable = new(ImportParams.Connection);
             Dictionary<int, string> historians = historianTable.QueryHistorians().ToDictionary(historian => historian.ID, historian => historian.Acronym);
             historians.Add(0, "None");
 
@@ -168,7 +168,7 @@ namespace SELPDCImporter
             textBoxTCFConnectionName.Text = TargetConfigFrame.Acronym;
 
             TableLayoutPanel table = tableLayoutPanelConfigDetails;
-            List<ConfigurationCell> matchedCells = new List<ConfigurationCell>();
+            List<ConfigurationCell> matchedCells = new();
 
             table.SuspendLayout();
 
@@ -176,7 +176,7 @@ namespace SELPDCImporter
             {
                 ConfigurationCell selConfigCell = selPDCConfigFrame.Cells[i];
                 ConfigurationCell gsfConfigCell = gsfPDCConfigFrame?.Cells.FirstOrDefault(cell => cell.IDCode == selConfigCell.IDCode) as ConfigurationCell;
-                ConfigurationCell targetConfigCell = new ConfigurationCell(
+                ConfigurationCell targetConfigCell = new(
                     TargetConfigFrame,
                     gsfConfigCell?.StationName ?? selConfigCell.StationName,
                     gsfConfigCell?.IDCode ?? selConfigCell.IDCode,
@@ -214,7 +214,7 @@ namespace SELPDCImporter
             // Add unmatched cells
             if (gsfPDCConfigFrame is not null && gsfPDCConfigFrame.Cells.Count > 0)
             {
-                HashSet<ConfigurationCell> unmatchedCells = new HashSet<ConfigurationCell>(gsfPDCConfigFrame.Cells.Select(cell => cell as ConfigurationCell));
+                HashSet<ConfigurationCell> unmatchedCells = new(gsfPDCConfigFrame.Cells.Select(cell => cell as ConfigurationCell));
                 unmatchedCells.ExceptWith(matchedCells);
                 int i = TargetConfigFrame.Cells.Count;
 
@@ -223,7 +223,7 @@ namespace SELPDCImporter
                     if (gsfConfigCell is null)
                         continue;
 
-                    ConfigurationCell targetConfigCell = new ConfigurationCell(
+                    ConfigurationCell targetConfigCell = new(
                         TargetConfigFrame,
                         gsfConfigCell.StationName,
                         gsfConfigCell.IDCode,
@@ -277,6 +277,13 @@ namespace SELPDCImporter
 
             // Perform initial validation
             ValidateChildren();
+            if (m_validatedControls.Count(control => !string.IsNullOrWhiteSpace(errorProvider.GetError(control))) > 0)
+            {
+                if ((gsfPDCConfigFrame?.ID ?? 0) == 0)
+                    labelWarning1.Visible = true;
+                else
+                    labelWarning2.Visible = true;
+            }
 
             textBoxTCFConnectionName.Focus();
 
@@ -384,7 +391,7 @@ namespace SELPDCImporter
 
         private Panel NewPanel(string labelText, bool deleted, out CheckBox checkBox)
         {
-            Panel panel = new Panel();
+            Panel panel = new();
             panel.SuspendLayout();
 
             checkBox = NewCheckBox(deleted);
@@ -402,7 +409,7 @@ namespace SELPDCImporter
 
         private CheckBox NewCheckBox(bool @checked)
         {
-            CheckBox checkBox = new CheckBox
+            CheckBox checkBox = new()
             {
                 AutoSize = true,
                 Dock = checkBoxDeleteAll.Dock,

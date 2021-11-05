@@ -132,7 +132,7 @@ namespace SELPDCImporter
                .GetValue(DefaultFrameRate);
 
             // With an ID code, frame rate and server name, there's enough info to create a config frame
-            ConfigurationFrame configFrame = new ConfigurationFrame(idCode, frameRate, serverName);
+            ConfigurationFrame configFrame = new(idCode, frameRate, serverName);
 
             // Load all output PMUs
             IEnumerable<XElement> pmus = serverGatewaySettings
@@ -150,7 +150,7 @@ namespace SELPDCImporter
                     continue;
 
                 // With a name and an ID code, there's enough info to create a config cell representing the PMU
-                ConfigurationCell configCell = new ConfigurationCell(configFrame, name, idCode)
+                ConfigurationCell configCell = new(configFrame, name, idCode)
                 {
                     NominalFrequency = nominalFrequency,
                 };

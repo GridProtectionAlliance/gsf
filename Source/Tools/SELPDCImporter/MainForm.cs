@@ -37,6 +37,7 @@ using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.Windows.Forms;
 
+// ReSharper disable LocalizableElement
 #pragma warning disable IDE1006 // Naming Styles
 
 namespace SELPDCImporter
@@ -176,9 +177,10 @@ namespace SELPDCImporter
             labelAnalyzeStatus.Text = $"{labelAnalyzeStatus.Tag}";
             textBoxPDCDetails.Text = "";
             textBoxConnectionString.Text = "";
+
+            m_connectionStringManuallyEdited = false;
             comboBoxIPAddresses.DataSource = null;
             comboBoxIPAddresses.Items.Clear();
-            m_connectionStringManuallyEdited = false;
         }
 
         private void buttonBrowseHostConfig_Click(object sender, EventArgs e)
@@ -258,16 +260,6 @@ namespace SELPDCImporter
                     return;
                 }
 
-                try
-                {
-                    m_importParams.GSFPDCConfigFrame = GSFPDCConfig.Extract(m_importParams.Connection, m_importParams.SELPDCConfigFrame.IDCode);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, $"Analyze failed: Failed while attempting to load existing GSF configuration from database connection as defined in host service configuration \"{Path.GetFileName(hostConfigFile)}\": {ex.Message}", "Load GSF Database Config Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
                 ConfigurationFrame configFrame = m_importParams.SELPDCConfigFrame;
 
                 // Show PDC hierarchy
@@ -300,23 +292,36 @@ namespace SELPDCImporter
 
         private void buttonReview_Click(object sender, EventArgs e)
         {
-            EditDetails editDetails = new EditDetails { ImportParams = m_importParams };
-
-            if (editDetails.ShowDialog(this) == DialogResult.Cancel)
-                return;
-
-            ConfigurationCell[] cells = m_importParams.TargetConfigFrame.Cells.Cast<ConfigurationCell>().ToArray();
-
-            if (cells.Length == 0)
-            {
-                MessageBox.Show(this, "Import Canceled: No PMU devices defined for import.", "Import Canceled", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
+                buttonReview.Enabled = false;
+                buttonReview.Refresh();
 
+                try
+                {
+                    m_importParams.GSFPDCConfigFrame = GSFPDCConfig.Extract(m_importParams.Connection, m_importParams.SELPDCConfigFrame.IDCode, textBoxConnectionString.Text.ParseDeviceIPFromConnectionString());
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Analyze failed: Failed while attempting to load existing GSF configuration from database connection as defined in host service configuration \"{Path.GetFileName(textBoxHostConfig.Text)}\": {ex.Message}", "Load GSF Database Config Issue", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                EditDetails editDetails = new() { ImportParams = m_importParams };
+
+                if (editDetails.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                ConfigurationCell[] cells = m_importParams.TargetConfigFrame.Cells.Cast<ConfigurationCell>().ToArray();
+
+                if (cells.Length == 0)
+                {
+                    MessageBox.Show(this, "Import Canceled: No PMU devices defined for import.", "Import Canceled", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                Cursor.Current = Cursors.WaitCursor;
                 m_importParams.HostConfig = textBoxHostConfig.Text;
                 m_importParams.EditedConnectionString = textBoxConnectionString.Text;
 
@@ -352,6 +357,7 @@ namespace SELPDCImporter
             }
             finally
             {
+                buttonReview.Enabled = true;
                 Cursor.Current = Cursors.Default;
             }
         }
@@ -360,6 +366,20 @@ namespace SELPDCImporter
         {
             if (!m_analyzeInProgress)
                 m_connectionStringManuallyEdited = true;
+        }
+
+        private void comboBoxIPAddresses_TextChanged(object sender, EventArgs e)
+        {
+            string connectionString = m_importParams?.SELPDCConfigFrame?.ConnectionString;
+
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                if (m_connectionStringManuallyEdited && MessageBox.Show(this, "Manual changes to connection string are about to be overwritten, continue?", "Update Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+
+                textBoxConnectionString.Text = connectionString.Replace(SELPDCConfig.IPAddressToken, comboBoxIPAddresses.Text);
+                m_connectionStringManuallyEdited = false;
+            }
         }
 
         private void comboBoxIPAddresses_SelectedIndexChanged(object sender, EventArgs e)
@@ -412,7 +432,7 @@ namespace SELPDCImporter
 
                 settings.Remove(nameof(TransportProtocol));
 
-                ConnectionSettings connectionSettings = new ConnectionSettings
+                ConnectionSettings connectionSettings = new()
                 {
                     PhasorProtocol = phasorProtocol,
                     TransportProtocol = transportProtocol,
@@ -424,7 +444,7 @@ namespace SELPDCImporter
                     ConnectionParameters = null
                 };
 
-                SoapFormatter formatter = new SoapFormatter
+                SoapFormatter formatter = new()
                 {
                     AssemblyFormat = FormatterAssemblyStyle.Simple,
                     TypeFormat = FormatterTypeStyle.TypesWhenNeeded

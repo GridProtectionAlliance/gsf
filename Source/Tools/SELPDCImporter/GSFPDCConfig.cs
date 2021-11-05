@@ -24,6 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using SELPDCImporter.Model;
 using GSF;
@@ -50,8 +52,23 @@ namespace SELPDCImporter
         public static Device QueryDeviceByID(this TableOperations<Device> deviceTable, int deviceID) =>
             deviceTable.QueryRecordWhere("ID = {0}", deviceID) ?? deviceTable.NewDevice();
 
-        public static Device QueryParentDeviceByIDCode(this TableOperations<Device> deviceTable, ushort idCode) =>
-            deviceTable.QueryRecordWhere("ParentID IS NULL AND AccessID = {0}", (int)idCode) ?? deviceTable.NewDevice();
+        public static Device QueryParentDeviceByIDCodeAndIPAddress(this TableOperations<Device> deviceTable, ushort idCode, string ipAddress)
+        {
+            IEnumerable<Device> devices = deviceTable.QueryRecordsWhere("ParentID IS NULL AND AccessID = {0}", (int)idCode);
+
+            foreach (Device device in devices)
+            {
+                string deviceIP = device.ConnectionString.ParseDeviceIPFromConnectionString();
+
+                if (string.IsNullOrWhiteSpace(deviceIP))
+                    continue;
+
+                if (ipAddress is null || ipAddress.Trim() == deviceIP)
+                    return device;
+            }
+
+            return deviceTable.NewDevice();
+        }
 
         public static IEnumerable<Device> QueryChildDevices(this TableOperations<Device> deviceTable, int parentID) =>
             deviceTable.QueryRecordsWhere("ParentID = {0}", parentID);
@@ -95,19 +112,87 @@ namespace SELPDCImporter
         public static IEnumerable<Historian> QueryHistorians(this TableOperations<Historian> historianTable) =>
             historianTable.QueryRecords();
 
-        public static Device FindDeviceByIDCode(this Device[] devices, ushort idCode, int? parentID = null) =>
+        public static Device FindChildDeviceByIDCode(this Device[] devices, int parentID, ushort idCode) =>
             devices.FirstOrDefault(device => device.ParentID == parentID && device.AccessID == idCode);
 
-        public static void DeleteDeviceByIDCode(this Device[] devices, TableOperations<Device> deviceTable, ushort idCode, int parentID)
+        public static Device FindDeviceByIDCodeAndIPAddress(this Device[] devices, ushort idCode, string ipAddress)
         {
-            Device device = devices.FindDeviceByIDCode(idCode, parentID);
+            foreach (Device device in devices.Where(device => device.ParentID is null && device.AccessID == idCode))
+            {
+                string deviceIP = device.ConnectionString.ParseDeviceIPFromConnectionString();
+
+                if (string.IsNullOrWhiteSpace(deviceIP))
+                    continue;
+
+                if (ipAddress is null || ipAddress.Trim() == deviceIP)
+                    return device;
+            }
+
+            return null;
+        }
+
+        public static void DeleteChildDeviceByIDCode(this Device[] devices, TableOperations<Device> deviceTable, int parentID, ushort idCode)
+        {
+            Device device = devices.FindChildDeviceByIDCode(parentID, idCode);
 
             if (device is not null)
                 deviceTable?.DeleteRecord(device);
         }
 
+        //public static void DeleteDeviceByIDCodeAndIPAddress(this Device[] devices, TableOperations<Device> deviceTable, ushort idCode, string ipAddress)
+        //{
+        //    Device device = devices.FindDeviceByIDCodeAndIPAddress(idCode, ipAddress);
+
+        //    if (device is not null)
+        //        deviceTable?.DeleteRecord(device);
+        //}
+
+        public static string ParseDeviceIPFromConnectionString(this string connectionString)
+        {
+            Dictionary<string, string> settings = connectionString?.ParseKeyValuePairs();
+
+            if (settings is null)
+                return null;
+
+            string commandChannel = null;
+
+            if (!settings.TryGetValue("server", out string deviceIP) && !settings.TryGetValue("commandChannel", out commandChannel))
+                return null;
+
+            bool deviceIPEmpty = string.IsNullOrWhiteSpace(deviceIP);
+            bool commandChannelEmpty = string.IsNullOrWhiteSpace(commandChannel);
+
+            if (deviceIPEmpty && commandChannelEmpty)
+                return null;
+
+            if (!commandChannelEmpty)
+            {
+                settings = commandChannel.ParseKeyValuePairs();
+
+                if (!settings.TryGetValue("server", out deviceIP))
+                    return null;
+            }
+
+            if (deviceIP.Contains(":"))
+                deviceIP = deviceIP.Split(':')[0];
+
+            deviceIP = deviceIP.Trim();
+
+            try
+            {
+                if (!IPAddress.TryParse(deviceIP, out _))
+                    return Dns.GetHostAddresses(deviceIP).FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+            }
+            catch
+            {
+                return null;
+            }
+
+            return deviceIP;
+        }
+        
         // Remove any invalid characters from acronym
-        public static string GetCleanAcronym(this string acronym) => 
+        public static string GetCleanAcronym(this string acronym) =>
             Regex.Replace(acronym.ToUpperInvariant().Replace(" ", "_"), @"[^A-Z0-9\-!_\.@#\$]", "", RegexOptions.IgnoreCase);
     }
 
@@ -125,7 +210,7 @@ namespace SELPDCImporter
             AdoDataConnection connection = importParams.Connection;
             ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
-            TableOperations<SignalType> signalTypeTable = new TableOperations<SignalType>(connection);
+            TableOperations<SignalType> signalTypeTable = new(connection);
             Guid nodeID = importParams.NodeID;
             string connectionString = importParams.EditedConnectionString;
 
@@ -141,7 +226,7 @@ namespace SELPDCImporter
             if (s_phasorSignalTypes is null)
                 s_phasorSignalTypes = signalTypeTable.LoadSignalTypes("Phasor").ToDictionary(key => key.Acronym, StringComparer.OrdinalIgnoreCase);
 
-            Device device = s_devices.FindDeviceByIDCode(configFrame.IDCode) ?? deviceTable.NewDevice();
+            Device device = s_devices.FindDeviceByIDCodeAndIPAddress(configFrame.IDCode, importParams.IPAddress) ?? deviceTable.NewDevice();
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             bool autoStartDataParsingSequence = true;
@@ -229,14 +314,14 @@ namespace SELPDCImporter
         }
 
         private static void DeletePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice) => 
-            s_devices.DeleteDeviceByIDCode(importParams.DeviceTable, configCell.IDCode, parentDevice.ID);
+            s_devices.DeleteChildDeviceByIDCode(importParams.DeviceTable, parentDevice.ID, configCell.IDCode);
 
         private static void SavePMUDevice(ImportParameters importParams, ConfigurationCell configCell, Device parentDevice)
         {
             ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             TableOperations<Device> deviceTable = importParams.DeviceTable;
             Guid nodeID = importParams.NodeID;
-            Device device = s_devices.FindDeviceByIDCode(configCell.IDCode, parentDevice.ID) ?? deviceTable.NewDevice();
+            Device device = s_devices.FindChildDeviceByIDCode(parentDevice.ID, configCell.IDCode) ?? deviceTable.NewDevice();
             string deviceAcronym = configCell.IDLabel;
             string deviceName = null;
 
@@ -292,7 +377,7 @@ namespace SELPDCImporter
         {
             ConfigurationFrame configFrame = importParams.TargetConfigFrame;
             AdoDataConnection connection = importParams.Connection;
-            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
+            TableOperations<Measurement> measurementTable = new(connection);
 
             // Add frequency
             SaveFixedMeasurement(importParams, s_deviceSignalTypes["FREQ"], device, measurementTable);
@@ -390,7 +475,7 @@ namespace SELPDCImporter
         private static void SaveDevicePhasors(ImportParameters importParams, ConfigurationCell configCell, Device device, TableOperations<Measurement> measurementTable)
         {
             AdoDataConnection connection = importParams.Connection;
-            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
+            TableOperations<Phasor> phasorTable = new(connection);
 
             // Get phasor signal types
             SignalType iphmSignalType = s_phasorSignalTypes["IPHM"];
@@ -455,7 +540,7 @@ namespace SELPDCImporter
                     phasor.Label = phasorDefinition.Label;
                     phasor.Type = isVoltage ? 'V' : 'I';
 
-                    phasorTable.AddNewPhasor(phasor);
+                    phasorTable.UpdateRecord(phasor);
                     SavePhasorMeasurement(importParams, isVoltage ? vphmSignalType : iphmSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable);
                     SavePhasorMeasurement(importParams, isVoltage ? vphaSignalType : iphaSignalType, device, phasorDefinition, phasor.SourceIndex, measurementTable);
                 }
@@ -494,19 +579,19 @@ namespace SELPDCImporter
             measurementTable.AddNewOrUpdateMeasurement(measurement);
         }
 
-        public static ConfigurationFrame Extract(AdoDataConnection connection, ushort idCode)
+        public static ConfigurationFrame Extract(AdoDataConnection connection, ushort idCode, string ipAddress)
         {
-            TableOperations<Device> deviceTable = new TableOperations<Device>(connection);
-            TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
-            TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
-            Device pdc = deviceTable.QueryParentDeviceByIDCode(idCode);
+            TableOperations<Device> deviceTable = new(connection);
+            TableOperations<Phasor> phasorTable = new(connection);
+            TableOperations<Measurement> measurementTable = new(connection);
+            Device pdc = deviceTable.QueryParentDeviceByIDCodeAndIPAddress(idCode, ipAddress);
 
             if (pdc.ID == 0)
                 return null;
 
             ushort frameRate = (ushort)pdc.FramesPerSecond.GetValueOrDefault();
 
-            ConfigurationFrame configFrame = new ConfigurationFrame(idCode, frameRate, pdc.Name, pdc.Acronym)
+            ConfigurationFrame configFrame = new(idCode, frameRate, pdc.Name, pdc.Acronym)
             {
                 Settings = pdc.ConnectionString.ParseKeyValuePairs(),
                 ID = pdc.ID
@@ -521,7 +606,7 @@ namespace SELPDCImporter
                     idCode = (ushort)pmu.AccessID;
 
                     // Create new configuration cell
-                    ConfigurationCell configCell = new ConfigurationCell(configFrame, pmu.Name, idCode, pmu.Acronym)
+                    ConfigurationCell configCell = new(configFrame, pmu.Name, idCode, pmu.Acronym)
                     {
                         ID = pmu.ID,
                         ParentID = pdc.ID,
@@ -558,7 +643,7 @@ namespace SELPDCImporter
                     // This is a directly connected device
                     configFrame.IsConcentrator = false;
 
-                    ConfigurationCell configCell = new ConfigurationCell(configFrame, pdc.Name, configFrame.IDCode, pdc.Acronym)
+                    ConfigurationCell configCell = new(configFrame, pdc.Name, configFrame.IDCode, pdc.Acronym)
                     {
                         ID = pdc.ID,
                         ParentID = null,
@@ -592,7 +677,7 @@ namespace SELPDCImporter
                 configFrame.IsConcentrator = true;
 
                 // Create new configuration cell
-                ConfigurationCell configCell = new ConfigurationCell(configFrame, pdc.Name, configFrame.IDCode, pdc.Acronym)
+                ConfigurationCell configCell = new(configFrame, pdc.Name, configFrame.IDCode, pdc.Acronym)
                 {
                     ID = pdc.ID,
                     ParentID = null,
