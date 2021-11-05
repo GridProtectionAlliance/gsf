@@ -159,10 +159,9 @@ namespace SELPDCImporter
             if (!settings.TryGetValue("server", out string deviceIP) && !settings.TryGetValue("commandChannel", out commandChannel))
                 return null;
 
-            bool deviceIPEmpty = string.IsNullOrWhiteSpace(deviceIP);
             bool commandChannelEmpty = string.IsNullOrWhiteSpace(commandChannel);
 
-            if (deviceIPEmpty && commandChannelEmpty)
+            if (string.IsNullOrWhiteSpace(deviceIP) && commandChannelEmpty)
                 return null;
 
             if (!commandChannelEmpty)

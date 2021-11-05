@@ -277,6 +277,7 @@ namespace SELPDCImporter
 
             // Perform initial validation
             ValidateChildren();
+
             if (m_validatedControls.Count(control => !string.IsNullOrWhiteSpace(errorProvider.GetError(control))) > 0)
             {
                 if ((gsfPDCConfigFrame?.ID ?? 0) == 0)
