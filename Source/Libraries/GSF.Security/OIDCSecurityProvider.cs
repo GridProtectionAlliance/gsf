@@ -64,6 +64,7 @@ namespace GSF.Security
     ///       <add name="AuthorizationEndpoint" value="user" description="Defines the Endpoint to redirect the user for Authorization." encrypted="false" />
     ///       <add name="RedirectURI" value="https://localhost:8986/" description="Defines the URI the User get's redirected to after signing in." encrypted="false" />
     ///       <add name="ClientSecret" value="sssss-ssssss-sssss" description="Defines the Client Secret to encrypt User Information." encrypted="false" />
+    ///       <add name="SelfVerifiedNonce="aefgdfhf" description="Defines the Client Secret to encrypt User Information." encrypted="false" />
     ///       <add name="TokenEndpoint" value="user" description="Defines the Endpoint to get the User Token from." encrypted="false" />
     ///     </securityProvider>
     ///   </categorizedSettings>
@@ -163,6 +164,14 @@ namespace GSF.Security
         }
 
         /// <summary>
+        /// A Nonce that has been verified manually and never expires. This is used for allowing Server-server logons.
+        /// </summary>
+        public string SelfVerifiedNonce
+        {
+            get;
+            set;
+        }
+        /// <summary>
         /// The Endpoint used to redirect the User
         /// </summary>
         public string AuthorizationEndpoint
@@ -250,7 +259,8 @@ namespace GSF.Security
             settings.Add(nameof(ClientSecret), "", "Defines the Client Secret as required per OpenID Connect Standard for decrypting User Information.");
             settings.Add(nameof(TokenEndpoint), "", "Defines the Endpoint to use to grab the User Token.");
             settings.Add(nameof(RolesClaim), "roles", "Defines the claim used to identify the users roles.");
-            
+            settings.Add(nameof(SelfVerifiedNonce), "", "Defines a nonce that is verified manually.");
+
             ClientID = settings[nameof(ClientID)].ValueAs(ClientID);
             Scope = settings[nameof(Scope)].ValueAs(Scope);
             AuthorizationEndpoint = settings[nameof(AuthorizationEndpoint)].ValueAs(AuthorizationEndpoint);
@@ -258,6 +268,7 @@ namespace GSF.Security
             ClientSecret = settings[nameof(ClientSecret)].ValueAs(ClientSecret);
             TokenEndpoint = settings[nameof(TokenEndpoint)].ValueAs(TokenEndpoint);
             RolesClaim = settings[nameof(RolesClaim)].ValueAs(RolesClaim);
+            SelfVerifiedNonce = settings[nameof(SelfVerifiedNonce)].ValueAs(SelfVerifiedNonce);
         }
 
         /// <summary>
@@ -485,7 +496,8 @@ namespace GSF.Security
                     byte[] pathBytes = Convert.FromBase64String(base64Path);
                     m_clientRequestUri = Encoding.UTF8.GetString(pathBytes);
                 }
-                    
+                else if (nonce.ToString().ToLower() != SelfVerifiedNonce.ToLower())
+                    throw new Exception("An Invalid Nonce was found.");                   
 
                 return true;
             }
