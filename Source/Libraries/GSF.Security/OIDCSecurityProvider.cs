@@ -496,8 +496,6 @@ namespace GSF.Security
                     byte[] pathBytes = Convert.FromBase64String(base64Path);
                     m_clientRequestUri = Encoding.UTF8.GetString(pathBytes);
                 }
-                else if (nonce.ToString().ToLower() != SelfVerifiedNonce.ToLower())
-                    throw new Exception("An Invalid Nonce was found.");                   
 
                 return true;
             }
