@@ -369,7 +369,7 @@ namespace GSF.Security
                         throw new SecurityException($"Failed to load a valid security context - missing table '{securityTable}'. Cannot proceed with user authentication.");
                 }
 
-                if (securityContext.Tables[ApplicationRoleTable].Rows.Count == 0)
+                if (securityContext.Tables[ApplicationRoleTable].Rows.Count == 0 && string.IsNullOrEmpty(DefaultRoles))
                     throw new SecurityException($"Failed to load a valid security context - no application roles were found for node ID '{DefaultNodeID}', verify the node ID in the config file '{ConfigurationFile.Current.Configuration.FilePath}'. Cannot proceed with user authentication.");
 
                 DataRow userAccount = null;
