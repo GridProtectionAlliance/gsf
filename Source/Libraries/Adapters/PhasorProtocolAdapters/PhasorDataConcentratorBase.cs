@@ -408,7 +408,7 @@ namespace PhasorProtocolAdapters
             get => m_dataChannel;
             set
             {
-                if (!(m_dataChannel is null))
+                if (m_dataChannel is not null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ClientConnectingException -= m_dataChannel_ClientConnectingException;
@@ -424,7 +424,7 @@ namespace PhasorProtocolAdapters
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if (!(m_dataChannel is null))
+                if (m_dataChannel is not null)
                 {
                     // Attach to events on new data channel reference
                     m_dataChannel.ClientConnectingException += m_dataChannel_ClientConnectingException;
@@ -444,7 +444,7 @@ namespace PhasorProtocolAdapters
             get => m_commandChannel;
             set
             {
-                if (!(m_commandChannel is null))
+                if (m_commandChannel is not null)
                 {
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
@@ -462,7 +462,7 @@ namespace PhasorProtocolAdapters
                 // Assign new command channel reference
                 m_commandChannel = value;
 
-                if (!(m_commandChannel is null))
+                if (m_commandChannel is not null)
                 {
                     // Attach to events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
@@ -499,17 +499,17 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
-                if (!(ConfigurationFrame is null))
+                if (ConfigurationFrame is not null)
                     status.AppendLine($"  Configuration frame size: {ConfigurationFrame.BinaryLength:N0} bytes");
 
-                if (!(BaseConfigurationFrame?.Cells is null))
+                if (BaseConfigurationFrame?.Cells is not null)
                     status.AppendLine($"  Total configured devices: {BaseConfigurationFrame.Cells.Count:N0}");
 
                 Dictionary<MeasurementKey, SignalReference[]> signalReferences = SignalReferences;
 
-                if (!(signalReferences is null))
+                if (signalReferences is not null)
                     status.AppendLine($" Total device measurements: {signalReferences.Count:N0}");
 
                 status.AppendLine($" Auto-publish config frame: {AutoPublishConfigurationFrame}");
@@ -533,7 +533,7 @@ namespace PhasorProtocolAdapters
                 status.AppendLine($"       Digital normal mask: {ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.LowWord()))} (big-endian)");
                 status.AppendLine($" Digital valid inputs mask: {ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.HighWord()))} (big-endian)");
 
-                if (!(m_dataChannel is null))
+                if (m_dataChannel is not null)
                 {
                     status.AppendLine();
                     status.AppendLine("Data Channel Status".CenterText(50));
@@ -541,7 +541,7 @@ namespace PhasorProtocolAdapters
                     status.Append(m_dataChannel.Status);
                 }
 
-                if (!(m_commandChannel is null))
+                if (m_commandChannel is not null)
                 {
                     status.AppendLine();
                     status.AppendLine("Command Channel Status".CenterText(50));
@@ -554,7 +554,7 @@ namespace PhasorProtocolAdapters
 
                 Guid[] clientIDs = m_commandChannel?.ClientIDs;
 
-                if (!(clientIDs is null) && clientIDs.Length > 0)
+                if (clientIDs is not null && clientIDs.Length > 0)
                 {
                     status.AppendLine();
                     status.AppendLine($"Command channel has {clientIDs.Length:N0} connected clients:");
@@ -631,7 +631,7 @@ namespace PhasorProtocolAdapters
                     return;
 
                 // Dispose command channel restart timer
-                if (!(m_commandChannelRestartTimer is null))
+                if (m_commandChannelRestartTimer is not null)
                 {
                     m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
                     m_commandChannelRestartTimer.Dispose();
@@ -662,10 +662,10 @@ namespace PhasorProtocolAdapters
             m_configurationFramePublished = false;
 
             // Start communications servers
-            if ((AutoStartDataChannel || m_commandChannel is null) && !(m_dataChannel is null) && m_dataChannel.CurrentState == ServerState.NotRunning)
+            if ((AutoStartDataChannel || m_commandChannel is null) && m_dataChannel is not null && m_dataChannel.CurrentState == ServerState.NotRunning)
                 m_dataChannel.Start();
 
-            if (!(m_commandChannel is null) && m_commandChannel.CurrentState == ServerState.NotRunning)
+            if (m_commandChannel is not null && m_commandChannel.CurrentState == ServerState.NotRunning)
                 m_commandChannel.Start();
 
             // Make sure publication channel is defined
@@ -735,7 +735,7 @@ namespace PhasorProtocolAdapters
         {
             // If data channel is not defined and command channel is defined system assumes
             // you want to make data available over TCP connection
-            m_publishChannel = m_dataChannel is null && !(m_commandChannel is null) ? (IServer)m_commandChannel : m_dataChannel;
+            m_publishChannel = m_dataChannel is null && m_commandChannel is not null ? (IServer)m_commandChannel : m_dataChannel;
         }
 
         /// <summary>
@@ -847,8 +847,8 @@ namespace PhasorProtocolAdapters
 
             // Register with the statistics engine
             StatisticsEngine.Register(this, "OutputStream", "OS");
-            StatisticsEngine.Calculated += (sender, args) => ResetLatencyCounters();
-            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
+            StatisticsEngine.Calculated += (_, _) => ResetLatencyCounters();
+            StatisticsEngine.Calculated += (_, _) => ResetMeasurementsPerSecondCounters();
         }
 
         /// <summary>
@@ -859,7 +859,7 @@ namespace PhasorProtocolAdapters
         {
             // Define a protocol independent configuration frame
             BaseConfigurationFrame = new ConfigurationFrame(IDCode, DateTime.UtcNow.Ticks, (ushort)FramesPerSecond) { Name = Name };
-            Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, int> signalCellIndexes = new(StringComparer.OrdinalIgnoreCase);
 
             // Define configuration cells (i.e., PMU's that will appear in outgoing data stream)
             foreach (DataRow deviceRow in DataSource.Tables["OutputStreamDevices"].Select($"ParentID={ID}", "LoadOrder"))
@@ -879,7 +879,7 @@ namespace PhasorProtocolAdapters
                         idCode = unchecked((ushort)deviceID);
 
                     // Create a new configuration cell
-                    ConfigurationCell cell = new ConfigurationCell(BaseConfigurationFrame, idCode);
+                    ConfigurationCell cell = new(BaseConfigurationFrame, idCode);
 
                     // Assign user selected data and coordinate formats, derived classes can change
                     string formatString = deviceRow["PhasorDataFormat"].ToNonNullString(DataFormat.ToString());
@@ -1003,9 +1003,9 @@ namespace PhasorProtocolAdapters
             OnStatusMessage(MessageLevel.Info, $"Defined {BaseConfigurationFrame.Cells.Count:N0} output stream devices...");
 
             // Create new lookup table for signal references
-            Dictionary<MeasurementKey, SignalReference[]> signalReferences = new Dictionary<MeasurementKey, SignalReference[]>();
+            Dictionary<MeasurementKey, SignalReference[]> signalReferences = new();
             SignalReference signal;
-            SignalReference lastSignal = new SignalReference("__-UNKNOWN");
+            SignalReference lastSignal = new("__-UNKNOWN");
             bool foundQualityFlagsMeasurement = false;
 
             IEnumerable<DataRow> measurementRows = DataSource.Tables["OutputStreamMeasurements"]
@@ -1076,27 +1076,36 @@ namespace PhasorProtocolAdapters
                         }
                         else
                         {
-                            DataTable activeMeasurements = DataSource.Tables["ActiveMeasurements"];
-                            DataRow[] activeMeasurementRows = new DataRow[0];
+                            // For measurements with out a historian defined, the device acronym is used for the ActiveMeasurements measurement key formatted ID field,
+                            // try looking this up first as an optimization as this will be accurate in most cases. This is safe, even in cases where the output name
+                            // might be renamed to another existing device, as point ID is always unique - so the worst case scenario here is that look up fails.
+                            measurementKey = MeasurementKey.LookUpOrCreate(signal.Acronym, uint.Parse(pointID));
 
-                            object activeMeasurementSignalID = null;
-                            object activeMeasurementID = null;
-
-                            // OPTIMIZE: This select query will be slow on very large ActiveMeasurement implementations, consider optimization.
-                            if (!(activeMeasurements is null))
-                                activeMeasurementRows = activeMeasurements.Select($"ID LIKE '*:{pointID}'");
-
-                            if (activeMeasurementRows.Length == 1)
+                            if (measurementKey == MeasurementKey.Undefined)
                             {
-                                activeMeasurementSignalID = activeMeasurementRows[0]["SignalID"];
-                                activeMeasurementID = activeMeasurementRows[0]["ID"];
+                                // If measurement key was still not found, then the output stream device name has been adjusted, so
+                                // we have no choice but to fall back on the slower metadata search for the for the point ID value.
+                                DataTable activeMeasurements = DataSource.Tables["ActiveMeasurements"];
+                                DataRow[] activeMeasurementRows = Array.Empty<DataRow>();
+
+                                object activeMeasurementSignalID = null;
+                                object activeMeasurementID = null;
+
+                                if (activeMeasurements is not null)
+                                    activeMeasurementRows = activeMeasurements.Select($"ID LIKE '*:{pointID}'");
+
+                                if (activeMeasurementRows.Length == 1)
+                                {
+                                    activeMeasurementSignalID = activeMeasurementRows[0]["SignalID"];
+                                    activeMeasurementID = activeMeasurementRows[0]["ID"];
+                                }
+
+                                // If we still can't find the measurement key, now is the time to give up
+                                if (activeMeasurementSignalID is null && activeMeasurementID is null)
+                                    throw new Exception($"Cannot find measurement key for measurement with pointID {pointID}");
+
+                                measurementKey = MeasurementKey.LookUpOrCreate(Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()), activeMeasurementID.ToString());
                             }
-
-                            // If we still can't find the measurement key, now is the time to give up
-                            if (activeMeasurementSignalID is null && activeMeasurementID is null)
-                                throw new Exception($"Cannot find measurement key for measurement with pointID {pointID}");
-
-                            measurementKey = MeasurementKey.LookUpOrCreate(Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()), activeMeasurementID.ToString());
                         }
 
                         // Re-index signal references for the output stream starting at one
@@ -1112,7 +1121,7 @@ namespace PhasorProtocolAdapters
 
                         // It is possible, but not as common, that a single measurement will have multiple destinations
                         // within an outgoing data stream frame, hence the following
-                        signalReferences.AddOrUpdate(measurementKey, key => new[] { signal }, (key, signals) =>
+                        signalReferences.AddOrUpdate(measurementKey, _ => new[] { signal }, (_, signals) =>
                         {
                             // Add a new signal to existing collection
                             Array.Resize(ref signals, signals.Length + 1);
@@ -1151,7 +1160,7 @@ namespace PhasorProtocolAdapters
         // Generate a more descriptive phasor label including line phase and phasor type
         private string GeneratePhasorLabel(string phasorLabel, char phase, PhasorType type)
         {
-            StringBuilder phaseSuffix = new StringBuilder();
+            StringBuilder phaseSuffix = new();
 
             if (string.IsNullOrWhiteSpace(phasorLabel))
                 phasorLabel = "Phasor";
@@ -1245,7 +1254,7 @@ namespace PhasorProtocolAdapters
             if (signalReferences is null)
                 return;
 
-            List<IMeasurement> inputMeasurements = new List<IMeasurement>();
+            List<IMeasurement> inputMeasurements = new();
 
             foreach (IMeasurement measurement in measurements)
             {
@@ -1288,7 +1297,7 @@ namespace PhasorProtocolAdapters
             if (signalMeasurement == null || dataFrame == null)
             {
                 // This is not expected to occur - but just in case
-                if (signalMeasurement is null && !(measurement is null))
+                if (signalMeasurement is null && measurement is not null)
                     OnProcessException(MessageLevel.Error, new InvalidCastException($"Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{measurement.GetType().Name}\""));
 
                 if (dataFrame is null)
@@ -1368,7 +1377,7 @@ namespace PhasorProtocolAdapters
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            if (!(frame is IDataFrame dataFrame) || m_publishChannel is null)
+            if (frame is not IDataFrame dataFrame || m_publishChannel is null)
                 return;
 
             // Send the configuration frame at the top of each minute if the class has been configured
@@ -1385,7 +1394,7 @@ namespace PhasorProtocolAdapters
                         m_configurationFramePublished = false;
                     }
 
-                    if (!m_configurationFramePublished && !(ConfigurationFrame is null))
+                    if (!m_configurationFramePublished && ConfigurationFrame is not null)
                     {
                         // Publish configuration frame binary image
                         m_configurationFramePublished = true;
@@ -1469,7 +1478,7 @@ namespace PhasorProtocolAdapters
 
                     string commandChannelConfig = null, dataChannelConfig = null;
 
-                    if (!(m_dataChannel is null))
+                    if (m_dataChannel is not null)
                     {
                         // Get current configuration string
                         dataChannelConfig = m_dataChannel.ConfigurationString;
@@ -1478,7 +1487,7 @@ namespace PhasorProtocolAdapters
                         DataChannel = null;
                     }
 
-                    if (!(m_commandChannel is null))
+                    if (m_commandChannel is not null)
                     {
                         // Get current configuration string
                         commandChannelConfig = m_commandChannel.ConfigurationString;
@@ -1578,7 +1587,7 @@ namespace PhasorProtocolAdapters
                         break;
                 }
 
-                if (!(remoteEndPoint is null))
+                if (remoteEndPoint is not null)
                 {
                     if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
                         connectionID = "[" + remoteEndPoint.Address + "]:" + remoteEndPoint.Port;
