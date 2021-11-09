@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.Caching;
@@ -476,12 +477,13 @@ namespace GSF.Security
               
                 try
                 {
-                        userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToObject<List<string>>();
+                        userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToString().Split(',').ToList();
                 }
                 catch (Exception ex)
                 {
                     LastException = ex;
                     Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "DecodingTokenError", "Failed to decode Roles Claim.", "Failed to decode Claim for roles.", ex);
+                    throw new Exception("Failed to Decode Roles Claim: " + ex.Message, ex);
                 }
 
                 // Roles will need to be obtained from a Claim
