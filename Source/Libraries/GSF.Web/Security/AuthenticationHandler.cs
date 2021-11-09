@@ -269,7 +269,7 @@ namespace GSF.Web.Security
                 ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider("", autoRefresh: false, useAlternate: useAlternateSecurityProvider);
 
 
-                Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage, encodedPath, referrer));
+                Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage, Request.Uri, encodedPath, referrer));
             }
             else
             {

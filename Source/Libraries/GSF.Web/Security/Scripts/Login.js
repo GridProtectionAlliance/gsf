@@ -32,6 +32,7 @@
 //   string verificationValue: server generated anti-forgery verification token value
 //   string useAjaxVerfication: HTTP header named use to indicate an AJAX post
 //   string redirectPageLabel: user label for redirect location, e.g., main or target
+//   string oidcError: error Message from OIDC provider if en error occured
 
 function loadSettings() {
     $("#username").val(persistentStorage.getItem("username")).trigger("input");
@@ -156,7 +157,11 @@ function loginComplete(success, response) {
         }, 500);
     }
     else {
-        $("#response").text("Enter Credentials:");
+        if (oidcError.length > 0)
+            $("#response").text("Single Sign On Failed");
+        else
+            $("#response").text("Enter Credentials:");
+
         $("#workingIcon").hide();
         $("#credentialsForm").show();
 
@@ -223,6 +228,9 @@ function loginFailed(response) {
         message = "Connection refused - check web server";
     else
         message = response.statusText + " (" + response.status + ")";
+
+    if (oidcError.length > 0)
+        message = oidcError;
 
     loginComplete(false, "Login attempt failed: " + message);
 }
@@ -361,6 +369,9 @@ $(function () {
 
     $(window).on("beforeunload", saveSettings);
     loadSettings();
+
+    if (oidcError.length > 0)
+        loginFailed({ status: 0 });
 
     if (persistentStorage.getItem("passthrough"))
         login();

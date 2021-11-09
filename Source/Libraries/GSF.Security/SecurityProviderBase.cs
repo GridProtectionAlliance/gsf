@@ -537,7 +537,7 @@ namespace GSF.Security
         /// <param name="encodedPath"> The URI requested by the client </param>
         /// <param name="referrer"> The Referrer as specified in the request header </param>
         /// <returns> The URI to be redirected to</returns>
-        public virtual string TranslateRedirect(string loginUrl, string encodedPath, string referrer)
+        public virtual string TranslateRedirect(string loginUrl, System.Uri uri, string encodedPath, string referrer)
         {
             return $"{loginUrl}?redir={encodedPath}{referrer}";
         }

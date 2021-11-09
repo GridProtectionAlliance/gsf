@@ -553,8 +553,20 @@ namespace GSF.Security
         /// <param name="encodedPath"> The URI requested by the client </param>
         /// <param name="referrer"> The Referrer as specified in the request header </param>
         /// <returns> The URI to be redirected to</returns>
-        public override string TranslateRedirect(string loginUrl, string encodedPath, string referrer)
+        public override string TranslateRedirect(string loginUrl, System.Uri uri, string encodedPath, string referrer)
         {
+            System.Uri redirectURi = new System.Uri(RedirectURI);
+
+            if (redirectURi.AbsolutePath == uri.AbsolutePath && (uri.Query.Contains("code=") || uri.Query.Contains("error=")))
+            {
+                if (LastException != null)
+                    return $"{loginUrl}?oidcError={WebUtility.UrlEncode(LastException.Message)}";
+                
+
+                //This is a redirect issue and needs to display error page
+                return $"{loginUrl}?oidcError={WebUtility.UrlEncode("A Server Error Occured.")}";
+            }
+
             byte[] nonce = new byte[16];
             Cryptography.Random.GetBytes(nonce);
 
