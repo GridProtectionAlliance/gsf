@@ -28,7 +28,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -50,9 +49,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
     internal class OutputStreams : PagedViewModelBase<OutputStream, int>
     {
         #region [ Members ]
-        
+
         private Dictionary<string, string> m_mirroringSourceLookupList;
-        
+
         private RelayCommand m_initializeCommand;
         private RelayCommand m_copyCommand;
         private RelayCommand m_updateConfigurationCommand;
@@ -61,7 +60,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private RelayCommand m_wizardCommand;
         private RelayCommand m_buildCommandChannelCommand;
         private RelayCommand m_buildDataChannelCommand;
-        
+
         private LongSynchronizedOperation m_configFrameSizeCalculation;
 
         private string m_runtimeID;
@@ -87,49 +86,49 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets <see cref="ICommand"/> object for update operation.
         /// </summary>
-        public ICommand UpdateConfigurationCommand => 
-            m_updateConfigurationCommand ?? (m_updateConfigurationCommand = new RelayCommand(UpdateConfiguration));
+        public ICommand UpdateConfigurationCommand =>
+            m_updateConfigurationCommand ??= new RelayCommand(UpdateConfiguration);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> object for copy operation.
         /// </summary>
-        public ICommand CopyCommand => 
-            m_copyCommand ?? (m_copyCommand = new RelayCommand(MakeCopy));
+        public ICommand CopyCommand =>
+            m_copyCommand ??= new RelayCommand(MakeCopy);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> object for Initialize operation.
         /// </summary>
-        public ICommand InitializeCommand => 
-            m_initializeCommand ?? (m_initializeCommand = new RelayCommand(InitializeOutputStream));
+        public ICommand InitializeCommand =>
+            m_initializeCommand ??= new RelayCommand(InitializeOutputStream);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> object to pop open connection string builder for command channel configuration.
         /// </summary>
-        public ICommand BuildCommandChannelCommand => 
-            m_buildCommandChannelCommand ?? (m_buildCommandChannelCommand = new RelayCommand(BuildCommandChannel, () => CanSave));
+        public ICommand BuildCommandChannelCommand =>
+            m_buildCommandChannelCommand ??= new RelayCommand(BuildCommandChannel, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> object to pop open connection string builder for data channel configuration.
         /// </summary>
-        public ICommand BuildDataChannelCommand => 
-            m_buildDataChannelCommand ?? (m_buildDataChannelCommand = new RelayCommand(BuildDataChannel, () => CanSave));
+        public ICommand BuildDataChannelCommand =>
+            m_buildDataChannelCommand ??= new RelayCommand(BuildDataChannel, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to go to Devices configuration.
         /// </summary>
-        public ICommand DeviceCommand => 
-            m_deviceCommand ?? (m_deviceCommand = new RelayCommand(GoToDevices));
+        public ICommand DeviceCommand =>
+            m_deviceCommand ??= new RelayCommand(GoToDevices);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to go to Measurements configuration.
         /// </summary>
-        public ICommand MeasurementCommand => 
-            m_measurementCommand ?? (m_measurementCommand = new RelayCommand(GoToMeasurements));
+        public ICommand MeasurementCommand =>
+            m_measurementCommand ??= new RelayCommand(GoToMeasurements);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to launch device wizard.
         /// </summary>
-        public ICommand WizardCommand => m_wizardCommand ?? (m_wizardCommand = new RelayCommand(LaunchDeviceWizard));
+        public ICommand WizardCommand => m_wizardCommand ??= new RelayCommand(LaunchDeviceWizard);
 
         /// <summary>
         /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Node"/> defined in the database.
@@ -170,7 +169,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets flag that determines if <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/> is a new record.
         /// </summary>
-        public override bool IsNewRecord => 
+        public override bool IsNewRecord =>
             CurrentItem.ID == 0;
 
         /// <summary>
@@ -247,10 +246,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         #region [ Methods ]
 
-        public override int GetCurrentItemKey() => 
+        public override int GetCurrentItemKey() =>
             CurrentItem.ID;
 
-        public override string GetCurrentItemName() => 
+        public override string GetCurrentItemName() =>
             CurrentItem.Name;
 
         public override void Clear()
@@ -278,23 +277,23 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             FrameSizeColor = new SolidColorBrush(Colors.Black);
             FrameSizeText = "Calculating...";
 
-            DownSamplingMethodLookupList = new Dictionary<string, string> 
+            DownSamplingMethodLookupList = new Dictionary<string, string>
             {
-                {"LastReceived", "LastReceived"}, 
-                {"Closest", "Closest"}, 
-                {"Filtered", "Filtered"}, 
+                {"LastReceived", "LastReceived"},
+                {"Closest", "Closest"},
+                {"Filtered", "Filtered"},
                 {"BestQuality", "BestQuality"}
             };
 
-            DataFormatLookupList = new Dictionary<string, string> 
+            DataFormatLookupList = new Dictionary<string, string>
             {
-                {"FloatingPoint", "FloatingPoint"}, 
+                {"FloatingPoint", "FloatingPoint"},
                 {"FixedInteger", "FixedInteger"}
             };
 
-            CoordinateFormatLookupList = new Dictionary<string, string> 
+            CoordinateFormatLookupList = new Dictionary<string, string>
             {
-                {"Polar", "Polar"}, 
+                {"Polar", "Polar"},
                 {"Rectangular", "Rectangular"}
             };
         }
@@ -312,10 +311,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 {
                     ItemsKeys = OutputStream.LoadKeys(null, false, SortMember, SortDirection);
 
-                    if (!(SortSelector is null))
+                    if (SortSelector is not null)
                     {
-                        ItemsKeys = SortDirection == "ASC" ? 
-                            ItemsKeys.OrderBy(SortSelector).ToList() : 
+                        ItemsKeys = SortDirection == "ASC" ?
+                            ItemsKeys.OrderBy(SortSelector).ToList() :
                             ItemsKeys.OrderByDescending(SortSelector).ToList();
                     }
                 }
@@ -413,7 +412,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 {
                     newOutputStream.Acronym = $"{originalAcronym}{i++}";
                 }
-                while (!(OutputStream.GetOutputStream(null, " WHERE Acronym = '" + newOutputStream.Acronym + "'") is null));
+                while (OutputStream.GetOutputStream(null, " WHERE Acronym = '" + newOutputStream.Acronym + "'") is not null);
 
                 CurrentItem = newOutputStream;
             }
@@ -488,7 +487,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             int frameSize = -1;
             int configSize = 0;
-            int configFrames = 0;
+            int spannedConfigSize = -1;
+            int spannedConfigFrames = -1;
 
             switch (CurrentItem.Type)
             {
@@ -500,11 +500,21 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         concentrator.ID = Convert.ToUInt32(RuntimeID);
                         concentrator.DataSource = dataSource;
                         concentrator.UpdateConfiguration();
-                        frameSize = C37Concentrator.CreateDataFrame(DateTime.UtcNow.Ticks, concentrator.ConfigurationFrame as IEEEC37_118.ConfigurationFrame1).BinaryLength;
 
-                        byte[][] images = concentrator.ConfigurationFrame3?.BinaryImageFrames.ToArray();
-                        configSize = images?.Sum(image => image.Length) ?? concentrator.ConfigurationFrame.BinaryLength;
-                        configFrames = images?.Length ?? 0;
+                        frameSize = C37Concentrator.CreateDataFrame(DateTime.UtcNow.Ticks, concentrator.ConfigurationFrame as IEEEC37_118.ConfigurationFrame1).BinaryLength;
+                        IEEEC37_118.ConfigurationFrame3 config3 = concentrator.ConfigurationFrame3;
+
+                        if (config3 is not null)
+                        {
+                            configSize = config3.BinaryLength;
+                            byte[][] images = config3.BinaryImageFrames.ToArray();
+                            spannedConfigSize = images.Sum(image => image.Length);
+                            spannedConfigFrames = images.Length;
+                        }
+                        else
+                        {
+                            configSize = concentrator.ConfigurationFrame.BinaryLength;
+                        }
                     }
                     break;
                 case OutputProtocol.IEEE_C37_118_2005:
@@ -520,7 +530,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     // BPA PDCstream config frames are based on an INI file, so all practical frame
                     // size limitations are bound to data frame instead of configuration frame
                     string iniFilePath = Path.GetTempFileName();
-                    
+
                     using (BPAConcentrator concentrator = new BPAConcentrator { IniFileName = iniFilePath, FramesPerSecond = CurrentItem.FramesPerSecond })
                     {
                         concentrator.ID = Convert.ToUInt32(RuntimeID);
@@ -568,9 +578,16 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 {
 
                     if (CurrentItem.Type == OutputProtocol.IEEE_C37_118_2011)
-                        FrameSizeText += $" - Config Frame Size: {configSize:N0} bytes, spanning {configFrames:N0} frames";
+                    {
+                        if (spannedConfigSize < 0 || spannedConfigFrames < 0)
+                            FrameSizeText += $" - Config Frame Size: {configSize:N0} bytes - failed to calculate spanned frame details";
+                        else
+                            FrameSizeText += $" - Config Frame Size: {configSize:N0} bytes (contiguous), {spannedConfigSize:N0} bytes spanning {spannedConfigFrames:N0} frames";
+                    }
                     else
+                    {
                         FrameSizeText += $" - {CurrentItem.OutputProtocolName} config frame has no practical limit";
+                    }
                 }
             });
         }
@@ -626,7 +643,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             csb.ShowDialog();
         }
 
-        private void GoToDevices(object parameter) => 
+        private void GoToDevices(object parameter) =>
             CommonFunctions.LoadUserControl("Manage Devices for " + CurrentItem.Acronym, typeof(OutputStreamDeviceUserControl), CurrentItem.ID, MirrorMode);
 
         private void LaunchDeviceWizard(object parameter)
@@ -638,7 +655,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 CommonFunctions.LoadUserControl("Current Devices for " + CurrentItem.Acronym, typeof(OutputStreamCurrentDeviceUserControl), CurrentItem.ID);
         }
 
-        private void GoToMeasurements(object parameter) => 
+        private void GoToMeasurements(object parameter) =>
             CommonFunctions.LoadUserControl("Manage Measurements for " + CurrentItem.Acronym, typeof(OutputStreamMeasurementUserControl), CurrentItem.ID);
 
         protected override void OnPropertyChanged(string propertyName)
@@ -656,7 +673,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             try
             {
-                bool dataFrameTarget = !(CurrentItem is null) && (CurrentItem.Type == OutputProtocol.IEEE_C37_118_2011 || CurrentItem.Type == OutputProtocol.BPA_PDCSTREAM);
+                bool dataFrameTarget = CurrentItem is not null && (CurrentItem.Type == OutputProtocol.IEEE_C37_118_2011 || CurrentItem.Type == OutputProtocol.BPA_PDCSTREAM);
 
                 RuntimeID = CurrentItem is null ? string.Empty : CommonFunctions.GetRuntimeID("OutputStream", CurrentItem.ID);
                 FrameSizeLabel = (dataFrameTarget ? "Data" : "Config") + " Frame Size";
