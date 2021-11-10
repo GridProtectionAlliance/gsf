@@ -154,7 +154,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 byte[] image = this.BinaryImage();
                 int imageLength = image.Length;
 
-                if (imageLength < MaxFrameLength)
+                if (imageLength <= MaxFrameLength)
                 {
                     // Full image fits within one frame, return current image as-is
                     yield return image;
@@ -202,14 +202,18 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                         if (firstFrame)
                         {
-                            byte[] frame = image.BlockCopy(0, frameSize);
+                            // Copy in FRAMESIZE for first frame (should always be 65535)
+                            BigEndian.CopyBytes((ushort)frameSize, image, 2);
 
                             // Initial frame already has full header, replace CONT_IDX with a value of 1
                             // that indicates this is the first frame in a series of frames that follow:
-                            Buffer.BlockCopy(BigEndian.GetBytes(continuationIndex), 0, frame, CommonFrameHeader.FixedLength, 2);
-                            
+                            Buffer.BlockCopy(BigEndian.GetBytes(continuationIndex), 0, image, CommonFrameHeader.FixedLength, 2);
+
+                            // Fix CRC of cumulative image with updated initial frame header
+                            BigEndian.CopyBytes(CalculateChecksum(image, 0, imageLength - 2), image, imageLength - 2);
+
                             // Return first frame
-                            yield return frame;
+                            yield return image.BlockCopy(0, frameSize);
                         }
                         else
                         {
@@ -217,7 +221,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                             // Copy fixed header bytes into frame
                             Buffer.BlockCopy(header, 0, frame, 0, CommonFrameHeader.FixedLength);
-                            
+
+                            // Copy FRAMESIZE into frame
+                            BigEndian.CopyBytes((ushort)frame.Length, frame, 2);
+
                             // Copy CONT_IDX into frame
                             Buffer.BlockCopy(BigEndian.GetBytes(continuationIndex), 0, frame, CommonFrameHeader.FixedLength, 2);
                             
@@ -267,6 +274,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     buffer = frameImages.BinaryImage;
                     length = frameImages.BinaryLength;
                     startIndex = 0;
+
+                    // Fix parsed binary length to be the cumulative frame image length
+                    State.ParsedBinaryLength = length;
 
                     // Base class will check CRC for entire image
                     return base.ParseBinaryImage(buffer, startIndex, length);
