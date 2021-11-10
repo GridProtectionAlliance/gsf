@@ -501,8 +501,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         concentrator.DataSource = dataSource;
                         concentrator.UpdateConfiguration();
                         frameSize = C37Concentrator.CreateDataFrame(DateTime.UtcNow.Ticks, concentrator.ConfigurationFrame as IEEEC37_118.ConfigurationFrame1).BinaryLength;
-                        configSize = concentrator.ConfigurationFrame.BinaryLength;
-                        configFrames = concentrator.ConfigurationFrame3?.BinaryImageFrames.Count() ?? 0;
+
+                        byte[][] images = concentrator.ConfigurationFrame3?.BinaryImageFrames.ToArray();
+                        configSize = images?.Sum(image => image.Length) ?? concentrator.ConfigurationFrame.BinaryLength;
+                        configFrames = images?.Length ?? 0;
                     }
                     break;
                 case OutputProtocol.IEEE_C37_118_2005:
