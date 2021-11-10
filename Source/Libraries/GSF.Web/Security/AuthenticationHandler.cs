@@ -236,11 +236,6 @@ namespace GSF.Web.Security
             if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
                 return false; // Let pipeline continue
 
-          
-
-           
-                
-
             // Abort pipeline with appropriate response
             if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall())
             {

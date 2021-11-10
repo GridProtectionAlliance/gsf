@@ -524,33 +524,27 @@ namespace GSF.Security
         /// </summary>
         /// <param name="role">The user role to be translated.</param>
         /// <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
-        public virtual string TranslateRole(string role)
-        {
-            // Most providers will not perform any kind of translation on role names.
-            return role;
-        }
+        public virtual string TranslateRole(string role) => 
+            role; // Most providers will not perform any kind of translation on role names.
 
         /// <summary>
         /// Performs a translation of the default login page to a different endpoint.
         /// </summary>
         /// <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+        /// <param name="uri"> The URI originally requested. </param>
         /// <param name="encodedPath"> The URI requested by the client </param>
         /// <param name="referrer"> The Referrer as specified in the request header </param>
         /// <returns> The URI to be redirected to</returns>
-        public virtual string TranslateRedirect(string loginUrl, System.Uri uri, string encodedPath, string referrer)
-        {
-            return $"{loginUrl}?redir={encodedPath}{referrer}";
-        }
+        public virtual string TranslateRedirect(string loginUrl, Uri uri, string encodedPath, string referrer) => 
+            $"{loginUrl}?redir={encodedPath}{referrer}";
 
         /// <summary>
         /// Gets a list of Roles for this user for a specified ApplicationId.
         /// </summary>
         /// <param name="applicationId">The applicationId for the roles to be returned.</param>
         /// <returns>The roles that the specified user has.</returns>
-        public virtual List<string> GetUserRoles(string applicationId)
-        {
-            return UserData?.Roles ?? new List<string>();
-        }
+        public virtual List<string> GetUserRoles(string applicationId) => 
+            UserData?.Roles ?? new List<string>();
 
         #endregion
     }

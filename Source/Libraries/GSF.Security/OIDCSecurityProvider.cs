@@ -39,6 +39,7 @@ using GSF.Diagnostics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 #pragma warning disable 67
 #pragma warning disable 169
 
@@ -287,7 +288,7 @@ namespace GSF.Security
             // Test for pre - authentication failure modes such as invalid Tokens
             if (string.IsNullOrEmpty(UserData.LoginID))
             {
-                AuthenticationFailureReason = $"No User authorization code is defined.";
+                AuthenticationFailureReason = "No User authorization code is defined.";
                 IsUserAuthenticated = false;
             }
 
@@ -299,7 +300,7 @@ namespace GSF.Security
 
             if (token == null)
             {
-                AuthenticationFailureReason = $"No Token is available.";
+                AuthenticationFailureReason = "No Token is available.";
                 IsUserAuthenticated = false;
             }
 
@@ -458,8 +459,7 @@ namespace GSF.Security
                 if (!tokenContent.TryGetValue("nonce", out JToken nonce))
                     throw new Exception("Token data was not derived from valid JWT: missing 'nonce'");
 
-                // #ToDo validate Nonce matches nonce send for this user
-
+                // TODO: validate Nonce matches nonce send for this user
                 userData.Initialize();
 
                 if (!tokenContent.TryGetValue("name", out JToken userName))
@@ -468,16 +468,19 @@ namespace GSF.Security
 
                 if (tokenContent.TryGetValue("given_name", out JToken firstName))
                     userData.FirstName = firstName.ToString();
+
                 if (tokenContent.TryGetValue("family_name", out JToken lastName))
                     userData.LastName = lastName.ToString();
+
                 if (tokenContent.TryGetValue("phone_number", out JToken phoneNumber))
                     userData.PhoneNumber = phoneNumber.ToString();
+
                 if (tokenContent.TryGetValue("email", out JToken email))
                     userData.EmailAddress = email.ToString();
               
                 try
                 {
-                        userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToString().Split(',').ToList();
+                        userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToObject<List<string>>();
                 }
                 catch (Exception ex)
                 {
@@ -515,7 +518,8 @@ namespace GSF.Security
 
             const int JOSEHeaderIndex = 0;
             const int PayloadIndex = 1;
-            const int SignatureIndex = 2;
+            //const int SignatureIndex = 2;
+
             string[] splitToken = token.Split('.');
 
             if (splitToken.Length <= PayloadIndex)
@@ -529,14 +533,14 @@ namespace GSF.Security
             if (header.TryGetValue("enc", out _))
                 throw new FormatException("JWE Tokens are not supported");
 
-            if (SignatureIndex < splitToken.Length)
-            {
-                // We are not validating signatures to allow openXDA to self-sign tokens
-                // #ToDO: Implement signature verifications based on config file setting
-                void ValidateToken(string _) { }
-                string signature = splitToken[SignatureIndex];
-                ValidateToken(signature);
-            }
+            // TODO: Implement signature verifications based on config file setting
+            //if (SignatureIndex < splitToken.Length)
+            //{
+            //    // We are not validating signatures to allow openXDA to self-sign tokens
+            //    void ValidateToken(string _) { }
+            //    string signature = splitToken[SignatureIndex];
+            //    ValidateToken(signature);
+            //}
 
             string payload = splitToken[PayloadIndex];
             byte[] payloadData = Convert.FromBase64String(payload);
@@ -552,12 +556,13 @@ namespace GSF.Security
         /// Performs a translation of the default login page to a different endpoint.
         /// </summary>
         /// <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+        /// <param name="uri"> The URI originally requested. </param>
         /// <param name="encodedPath"> The URI requested by the client </param>
         /// <param name="referrer"> The Referrer as specified in the request header </param>
         /// <returns> The URI to be redirected to</returns>
-        public override string TranslateRedirect(string loginUrl, System.Uri uri, string encodedPath, string referrer)
+        public override string TranslateRedirect(string loginUrl, Uri uri, string encodedPath, string referrer)
         {
-            System.Uri redirectURi = new System.Uri(RedirectURI);
+            Uri redirectURi = new Uri(RedirectURI);
 
             if (redirectURi.AbsolutePath == uri.AbsolutePath && (uri.Query.Contains("code=") || uri.Query.Contains("error=")))
             {

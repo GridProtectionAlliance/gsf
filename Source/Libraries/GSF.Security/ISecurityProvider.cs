@@ -28,6 +28,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security;
@@ -217,11 +218,11 @@ namespace GSF.Security
         /// Performs a translation of the default login page to a different endpoint.
         /// </summary>
         /// <param name="loginUrl"> The URI of the login page specified in the AppSettings </param>
+        /// <param name="uri"> The URI originally requested. </param>
         /// <param name="encodedPath"> The URI requested by the client </param>
         /// <param name="referrer"> The Referrer as specified in the request header </param>
-        /// <param name="uri"> The URI originally requested. </param>
         /// <returns> The URI to be redirected to</returns>
-        string TranslateRedirect(string loginUrl, System.Uri uri, string encodedPath, string referrer);
+        string TranslateRedirect(string loginUrl, Uri uri, string encodedPath, string referrer);
 
         /// <summary>
         /// Gets a list of Roles for this user for a specified ApplicationId.
