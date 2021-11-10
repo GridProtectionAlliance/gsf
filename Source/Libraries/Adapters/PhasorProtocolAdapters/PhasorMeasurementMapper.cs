@@ -288,7 +288,7 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                if (m_frameParser.RedundantFramesPerPacket > 0 && !(m_missingDataMonitor is null))
+                if (m_frameParser?.RedundantFramesPerPacket > 0 && m_missingDataMonitor is not null)
                     return m_missingDataMonitor.TotalMissingData;
 
                 return MissingFrames;
@@ -494,7 +494,7 @@ namespace PhasorProtocolAdapters
             {
                 string connectionInfo = m_frameParser?.ConnectionInfo;
 
-                if (!(connectionInfo is null) && connectionInfo.StartsWith("tcp://", StringComparison.Ordinal))
+                if (connectionInfo is not null && connectionInfo.StartsWith("tcp://", StringComparison.Ordinal))
                     return $"{connectionInfo}/{AccessID}";
                 
                 return connectionInfo;
@@ -509,7 +509,7 @@ namespace PhasorProtocolAdapters
             get => m_frameParser;
             set
             {
-                if (!(m_frameParser is null))
+                if (m_frameParser is not null)
                 {
                     // Detach from events on existing frame parser reference
                     m_frameParser.ConfigurationChanged -= m_frameParser_ConfigurationChanged;
@@ -533,7 +533,7 @@ namespace PhasorProtocolAdapters
                 // Assign new frame parser reference
                 m_frameParser = value;
 
-                if (!(m_frameParser is null))
+                if (m_frameParser is not null)
                 {
                     // Attach to events on new frame parser reference
                     m_frameParser.ConfigurationChanged += m_frameParser_ConfigurationChanged;
@@ -551,7 +551,7 @@ namespace PhasorProtocolAdapters
 
                     // Only attach to full frame buffer reception event if data forwarding is enabled as attaching
                     // to this event engages an async queue to guarantee ordered delivery of buffer images
-                    if (!(m_publishChannel is null) || !(m_clientBasedPublishChannel is null))
+                    if (m_publishChannel is not null || m_clientBasedPublishChannel is not null)
                         m_frameParser.ReceivedFrameBufferImage += m_frameParser_ReceivedFrameBufferImage;
                 }
             }
@@ -567,7 +567,7 @@ namespace PhasorProtocolAdapters
             {
                 UdpServer udpPublishChannel = m_publishChannel as UdpServer;
 
-                if (!(m_publishChannel is null) && udpPublishChannel is null)
+                if (m_publishChannel is not null && udpPublishChannel is null)
                 {
                     // Trying to dispose non-UDP publication channel - nothing to do...
                     if (value is null)
@@ -577,7 +577,7 @@ namespace PhasorProtocolAdapters
                     TcpPublishChannel = null;
                 }
 
-                if (!(udpPublishChannel is null))
+                if (udpPublishChannel is not null)
                 {
                     // Detach from events on existing data channel reference
                     udpPublishChannel.ClientConnectingException -= udpPublishChannel_ClientConnectingException;
@@ -593,7 +593,7 @@ namespace PhasorProtocolAdapters
                 // Assign new UDP publish channel reference
                 udpPublishChannel = value;
 
-                if (!(udpPublishChannel is null))
+                if (udpPublishChannel is not null)
                 {
                     // Detach any existing client based publish channels
                     TcpClientPublishChannel = null;
@@ -620,7 +620,7 @@ namespace PhasorProtocolAdapters
             {
                 TcpServer tcpPublishChannel = m_publishChannel as TcpServer;
 
-                if (!(m_publishChannel is null) && tcpPublishChannel is null)
+                if (m_publishChannel is not null && tcpPublishChannel is null)
                 {
                     // Trying to dispose non-TCP publication channel - nothing to do...
                     if (value is null)
@@ -630,7 +630,7 @@ namespace PhasorProtocolAdapters
                     UdpPublishChannel = null;
                 }
 
-                if (!(tcpPublishChannel is null))
+                if (tcpPublishChannel is not null)
                 {
                     // Detach from events on existing command channel reference
                     tcpPublishChannel.ClientConnected -= tcpPublishChannel_ClientConnected;
@@ -648,7 +648,7 @@ namespace PhasorProtocolAdapters
                 // Assign new TCP publish channel reference
                 tcpPublishChannel = value;
 
-                if (!(tcpPublishChannel is null))
+                if (tcpPublishChannel is not null)
                 {
                     // Detach any existing client based publish channels
                     TcpClientPublishChannel = null;
@@ -675,7 +675,7 @@ namespace PhasorProtocolAdapters
             get => m_clientBasedPublishChannel;
             set
             {
-                if (!(m_clientBasedPublishChannel is null))
+                if (m_clientBasedPublishChannel is not null)
                 {
                     // Detach from events on existing command channel reference
                     m_clientBasedPublishChannel.ConnectionEstablished -= tcpClientBasedPublishChannel_ConnectionEstablished;
@@ -691,7 +691,7 @@ namespace PhasorProtocolAdapters
                 // Assign new TCP client based publish channel reference
                 m_clientBasedPublishChannel = value;
 
-                if (!(m_clientBasedPublishChannel is null))
+                if (m_clientBasedPublishChannel is not null)
                 {
                     // Detach any existing server based publish channels
                     UdpPublishChannel = null;
@@ -763,16 +763,16 @@ namespace PhasorProtocolAdapters
                 status.AppendFormat("           Average latency: {0:N0}ms over {1} tests", AverageLatency, m_latencyFrames);
                 status.AppendLine();
 
-                if (!(m_configurationFrame is null))
+                if (m_configurationFrame is not null)
                 {
                     status.AppendFormat("  Configuration frame size: {0:N0} bytes", m_configurationFrame.BinaryLength);
                     status.AppendLine();
                 }
 
-                if (!(m_frameParser is null))
+                if (m_frameParser is not null)
                     status.Append(m_frameParser.Status);
 
-                if (!(m_publishChannel is null))
+                if (m_publishChannel is not null)
                 {
                     status.AppendLine();
                     status.AppendLine("Publication Channel Status".CenterText(50));
@@ -783,7 +783,7 @@ namespace PhasorProtocolAdapters
                     {
                         Guid[] clientIDs = tcpPublishChannel.ClientIDs;
 
-                        if (!(clientIDs is null) && clientIDs.Length > 0)
+                        if (clientIDs is not null && clientIDs.Length > 0)
                         {
                             status.AppendLine();
                             status.AppendFormat("TCP publish channel has {0} connected clients:\r\n\r\n", clientIDs.Length);
@@ -796,7 +796,7 @@ namespace PhasorProtocolAdapters
                     }
                 }
 
-                if (!(m_clientBasedPublishChannel is null))
+                if (m_clientBasedPublishChannel is not null)
                 {
                     status.AppendLine();
                     status.AppendLine("Publication Channel Status".CenterText(50));
@@ -827,10 +827,10 @@ namespace PhasorProtocolAdapters
                     stationName = null;
 
                     // Attempt to lookup station name in configuration frame of connected device
-                    if (!(m_frameParser?.ConfigurationFrame is null))
+                    if (m_frameParser?.ConfigurationFrame is not null)
                     {
                         // Attempt to lookup by label (if defined), then by ID code
-                        if (!(m_labelDefinedDevices is null) && !string.IsNullOrWhiteSpace(definedDevice.StationName) &&
+                        if (m_labelDefinedDevices is not null && !string.IsNullOrWhiteSpace(definedDevice.StationName) &&
                             m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice) ||
                             m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(definedDevice.IDCode, out parsedDevice))
                             stationName = parsedDevice.StationName;
@@ -898,28 +898,28 @@ namespace PhasorProtocolAdapters
                 // Detach from frame parser events and set reference to null
                 FrameParser = null;
 
-                if (!(m_dataStreamMonitor is null))
+                if (m_dataStreamMonitor is not null)
                 {
                     m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
                     m_dataStreamMonitor.Dispose();
                     m_dataStreamMonitor = null;
                 }
 
-                if (!(m_measurementCounter is null))
+                if (m_measurementCounter is not null)
                 {
                     m_measurementCounter.Elapsed -= m_measurementCounter_Elapsed;
                     m_measurementCounter.Dispose();
                     m_measurementCounter = null;
                 }
 
-                if (!(m_definedDevices is null))
+                if (m_definedDevices is not null)
                 {
                     // Unregister each existing device from the statistics engine
                     foreach (ConfigurationCell device in DefinedDevices)
                         StatisticsEngine.Unregister(device);
                 }
 
-                if (!(m_missingDataMonitor is null))
+                if (m_missingDataMonitor is not null)
                 {
                     m_missingDataMonitor.Dispose();
                     m_missingDataMonitor = null;
@@ -1141,7 +1141,7 @@ namespace PhasorProtocolAdapters
                     // Create a new client based publication channel (for reverse TCP connections)
                     TcpClientPublishChannel = ClientBase.Create(forwardingSettings) as TcpClient;
 
-                    if (!(m_clientBasedPublishChannel is null))
+                    if (m_clientBasedPublishChannel is not null)
                         m_clientBasedPublishChannel.MaxConnectionAttempts = -1;
                 }
                 else
@@ -1179,7 +1179,7 @@ namespace PhasorProtocolAdapters
             ConfigurationCell definedDevice;
             string deviceName;
 
-            if (!(m_definedDevices is null))
+            if (m_definedDevices is not null)
             {
                 // Unregister each existing device from the statistics engine
                 foreach (ConfigurationCell device in DefinedDevices)
@@ -1285,7 +1285,7 @@ namespace PhasorProtocolAdapters
 
                 OnStatusMessage(MessageLevel.Info, deviceStatus.ToString());
 
-                if (!(m_labelDefinedDevices is null))
+                if (m_labelDefinedDevices is not null)
                 {
                     if (m_forceLabelMapping)
                         OnStatusMessage(MessageLevel.Info, $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that are using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.", flags: MessageFlags.UsageIssue);
@@ -1410,7 +1410,7 @@ namespace PhasorProtocolAdapters
             }
             else
             {
-                if (!(m_frameParser.SendDeviceCommand(command) is null))
+                if (m_frameParser.SendDeviceCommand(command) is not null)
                     OnStatusMessage(MessageLevel.Info, $"Sent device command \"{command}\"...", "Command");
             }
         }
@@ -1634,7 +1634,7 @@ namespace PhasorProtocolAdapters
         {
             StringBuilder status = new StringBuilder();
 
-            if (!(m_frameParser is null) && m_frameParser.IsConnected)
+            if (m_frameParser is not null && m_frameParser.IsConnected)
             {
                 if (LastReportTime > 0L)
                 {
@@ -1812,7 +1812,7 @@ namespace PhasorProtocolAdapters
                         continue;
 
                     // Lookup device by its label (if needed), then by its ID code
-                    if (!(m_labelDefinedDevices is null) &&
+                    if (m_labelDefinedDevices is not null &&
                         m_labelDefinedDevices.TryGetValue(parsedDevice.StationName.ToNonNullString(), out DeviceStatisticsHelper<ConfigurationCell> statisticsHelper) ||
                         m_definedDevices.TryGetValue(parsedDevice.IDCode, out statisticsHelper))
                     {
@@ -2081,7 +2081,7 @@ namespace PhasorProtocolAdapters
                 // we'll use it to calculate expected measurements per second for each device
                 DataSet dataSource = DataSource;
 
-                if (!(dataSource is null) && dataSource.Tables.Contains("ActiveMeasurements"))
+                if (dataSource is not null && dataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     DataTable measurementTable = dataSource.Tables["ActiveMeasurements"];
                     IConfigurationFrame configurationFrame = m_frameParser.ConfigurationFrame;
@@ -2149,7 +2149,7 @@ namespace PhasorProtocolAdapters
         /// <returns>Connection ID (i.e., IP:Port) for specified <paramref name="clientID"/>.</returns>
         protected virtual string GetConnectionID(IServer server, Guid clientID)
         {
-            if ((server is null || clientID.Equals(Guid.Empty)) && !(m_clientBasedPublishChannel is null))
+            if ((server is null || clientID.Equals(Guid.Empty)) && m_clientBasedPublishChannel is not null)
                 return m_clientBasedPublishChannel.ServerUri;
 
             if (m_connectionIDCache.TryGetValue(clientID, out string connectionID))
@@ -2170,7 +2170,7 @@ namespace PhasorProtocolAdapters
                         break;
                 }
 
-                if (!(remoteEndPoint is null))
+                if (remoteEndPoint is not null)
                 {
                     connectionID = remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6 ? $"[{remoteEndPoint.Address}]:{remoteEndPoint.Port}" : $"{remoteEndPoint.Address}:{remoteEndPoint.Port}";
 
@@ -2249,7 +2249,7 @@ namespace PhasorProtocolAdapters
                         // Reset received configuration frame counter
                         m_receivedConfigurationFrames = 0;
 
-                        if (!(m_configurationFrame is null))
+                        if (m_configurationFrame is not null)
                         {
                             if (m_publishChannel is null)
                                 m_clientBasedPublishChannel?.SendAsync(m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
@@ -2451,7 +2451,7 @@ namespace PhasorProtocolAdapters
                 m_receivedConfigurationFrames++;
 
             // Send the configuration frame at the top of each minute if publication channel is UDP and source is not auto-sending configuration frames
-            if (m_receivedConfigurationFrames < 2 && m_publishChannel is UdpServer && !(m_configurationFrame is null))
+            if (m_receivedConfigurationFrames < 2 && m_publishChannel is UdpServer && m_configurationFrame is not null)
             {
                 DateTime currentTime = DateTime.UtcNow;
 
@@ -2492,7 +2492,7 @@ namespace PhasorProtocolAdapters
             int length = e.Argument4;
 
             // We republish exactly what we receive to the current destinations
-            if (!(m_publishChannel is null))
+            if (m_publishChannel is not null)
             {
                 try
                 {
@@ -2503,7 +2503,7 @@ namespace PhasorProtocolAdapters
                     OnProcessException(MessageLevel.Error, new InvalidOperationException($"Server based publication channel exception during data forwarding: {ex.Message}", ex));
                 }
             }
-            else if (!(m_clientBasedPublishChannel is null) && m_clientBasedPublishChannel.CurrentState == ClientState.Connected)
+            else if (m_clientBasedPublishChannel is not null && m_clientBasedPublishChannel.CurrentState == ClientState.Connected)
             {
                 try
                 {
@@ -2609,7 +2609,7 @@ namespace PhasorProtocolAdapters
             m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands || AllowUseOfCachedConfiguration;
 
             // Reinitialize proxy connection if needed...
-            if (Enabled && !(m_clientBasedPublishChannel is null) && m_clientBasedPublishChannel.CurrentState != ClientState.Connected)
+            if (Enabled && m_clientBasedPublishChannel is not null && m_clientBasedPublishChannel.CurrentState != ClientState.Connected)
             {
                 ThreadPool.QueueUserWorkItem(_ =>
                 {

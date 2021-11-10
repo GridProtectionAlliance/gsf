@@ -145,7 +145,7 @@ namespace PhasorProtocolAdapters
                     return;
 
                 // Detach from frame parser events and dispose
-                if (!(m_frameParser is null))
+                if (m_frameParser is not null)
                 {
                     m_frameParser.ConnectionAttempt -= m_frameParser_ConnectionAttempt;
                     m_frameParser.ConnectionEstablished -= m_frameParser_ConnectionEstablished;
@@ -280,7 +280,7 @@ namespace PhasorProtocolAdapters
                         m_frameParser.Stop();
 
                         // Exit connection test loop if config frame was received or cancellation is requested
-                        if (!(m_configurationFrame is null) || m_cancelConfigurationFrameRequest)
+                        if (m_configurationFrame is not null || m_cancelConfigurationFrameRequest)
                             break;
                     }
 
@@ -884,12 +884,12 @@ namespace PhasorProtocolAdapters
                 }
                 else
                 {
-                    trackedTables = new string[0];
+                    trackedTables = Array.Empty<string>();
                 }
             }
             catch
             {
-                trackedTables = new string[0];
+                trackedTables = Array.Empty<string>();
             }
 
             statusMessage("Validating device protocols...");
@@ -993,7 +993,7 @@ namespace PhasorProtocolAdapters
                     Dictionary<string, string> connectionSettings = device.Field<string>("ConnectionString")?.ParseKeyValuePairs();
 
                     // Do not automatically add quality measurement of device is configured to only forward data
-                    if (!(connectionSettings is null) && connectionSettings.TryGetValue("forwardOnly", out string setting) && setting.ParseBoolean())
+                    if (connectionSettings is not null && connectionSettings.TryGetValue("forwardOnly", out string setting) && setting.ParseBoolean())
                         continue;
 
                     deviceID = device.ConvertField<int>("ID");
@@ -1620,11 +1620,8 @@ namespace PhasorProtocolAdapters
         {
             double statistic = 0.0D;
 
-            if (source is PhasorMeasurementMapper inputStream)
-            {
-                if (inputStream.IsConnected)
-                    statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.ConnectionAttempts, "ConnectionAttempts") == 0.0D ? 1.0D : 0.0D;
-            }
+            if (source is PhasorMeasurementMapper { IsConnected: true } inputStream)
+                statistic = s_statisticValueCache.GetDifference(inputStream, inputStream.ConnectionAttempts, "ConnectionAttempts") == 0.0D ? 1.0D : 0.0D;
 
             return statistic;
         }
@@ -2048,11 +2045,8 @@ namespace PhasorProtocolAdapters
         {
             double statistic = 0.0D;
 
-            if (source is PhasorDataConcentratorBase outputStream)
-            {
-                if (outputStream.Enabled)
-                    statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ActiveConnections, "ActiveConnections") == 0.0D ? 1.0D : 0.0D;
-            }
+            if (source is PhasorDataConcentratorBase { Enabled: true } outputStream)
+                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ActiveConnections, "ActiveConnections") == 0.0D ? 1.0D : 0.0D;
 
             return statistic;
         }

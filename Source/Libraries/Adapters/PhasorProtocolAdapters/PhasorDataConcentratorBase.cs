@@ -161,7 +161,6 @@ namespace PhasorProtocolAdapters
         // Fields
         private UdpServer m_dataChannel;
         private TcpServer m_commandChannel;
-        private IServer m_publishChannel;
         private Dictionary<MeasurementKey, SignalReference[]> m_signalReferences;
         private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
         private Timer m_commandChannelRestartTimer;
@@ -169,7 +168,6 @@ namespace PhasorProtocolAdapters
         private int m_lastConfigurationPublishMinute;
         private bool m_configurationFramePublished;
         private bool m_addPhaseLabelSuffix;
-        private char m_replaceWithSpaceChar;
         private long m_totalLatency;
         private long m_minimumLatency;
         private long m_maximumLatency;
@@ -234,6 +232,11 @@ namespace PhasorProtocolAdapters
         /// is defined the flag will be <c>false</c>.
         /// </remarks>
         public bool AutoPublishConfigurationFrame { get; set; }
+
+        /// <summary>
+        /// Gets or sets character that will be replaced with a space in output labels.
+        /// </summary>
+        public char ReplaceWithSpaceChar { get; set; }
 
         /// <summary>
         /// Gets the total number of active socket connections.
@@ -398,7 +401,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets reference to current <see cref="IServer"/> publication channel.
         /// </summary>
-        protected IServer PublishChannel => m_publishChannel;
+        protected IServer PublishChannel { get; private set; }
 
         /// <summary>
         /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching and/or detaching to events as needed.
@@ -675,7 +678,7 @@ namespace PhasorProtocolAdapters
             // so that the system doesn't attempt to start frame publication without an operational output data channel
             // when m_autoStartDataChannel is set to false. Otherwise if data is being published on command channel,
             // we go ahead and start concentration engine...
-            if (m_publishChannel == m_commandChannel)
+            if (PublishChannel == m_commandChannel)
                 base.Start();
         }
 
@@ -709,15 +712,15 @@ namespace PhasorProtocolAdapters
             // Make sure publication channel is defined
             EstablishPublicationChannel();
 
-            if (m_publishChannel is null)
+            if (PublishChannel is null)
                 return;
 
             // Make sure publication channel has started
-            if (m_publishChannel.CurrentState == ServerState.NotRunning)
+            if (PublishChannel.CurrentState == ServerState.NotRunning)
             {
                 try
                 {
-                    m_publishChannel.Start();
+                    PublishChannel.Start();
                 }
                 catch (Exception ex)
                 {
@@ -735,7 +738,7 @@ namespace PhasorProtocolAdapters
         {
             // If data channel is not defined and command channel is defined system assumes
             // you want to make data available over TCP connection
-            m_publishChannel = m_dataChannel is null && m_commandChannel is not null ? (IServer)m_commandChannel : m_dataChannel;
+            PublishChannel = m_dataChannel is null && m_commandChannel is not null ? (IServer)m_commandChannel : m_dataChannel;
         }
 
         /// <summary>
@@ -746,7 +749,7 @@ namespace PhasorProtocolAdapters
         /// the real-time data stream. If command channel is defined, it will be unaffected.
         /// </remarks>
         [AdapterCommand("Manually stops the real-time data stream.", "Administrator", "Editor")]
-        public virtual void StopDataChannel() => m_publishChannel = null; // Undefine publication channel. This effectively halts socket based data publication.
+        public virtual void StopDataChannel() => PublishChannel = null; // Undefine publication channel. This effectively halts socket based data publication.
 
         /// <summary>
         /// Initializes <see cref="PhasorDataConcentratorBase"/>.
@@ -830,9 +833,9 @@ namespace PhasorProtocolAdapters
             m_addPhaseLabelSuffix = !settings.TryGetValue("addPhaseLabelSuffix", out setting) || setting.ParseBoolean();
 
             if (settings.TryGetValue("replaceWithSpaceChar", out setting))
-                m_replaceWithSpaceChar = !string.IsNullOrWhiteSpace(setting) ? setting[0] : char.MinValue;
+                ReplaceWithSpaceChar = !string.IsNullOrWhiteSpace(setting) ? setting[0] : char.MinValue;
             else
-                m_replaceWithSpaceChar = char.MinValue;
+                ReplaceWithSpaceChar = char.MinValue;
 
             m_useAdjustedValue = !settings.TryGetValue("useAdjustedValue", out setting) || setting.ParseBoolean();
 
@@ -910,8 +913,8 @@ namespace PhasorProtocolAdapters
                         char phase = phasorRow["Phase"].ToNonNullString("+").Trim().ToUpper()[0];
                         scale = phasorRow["ScalingValue"].ToNonNullString("0");
 
-                        if (m_replaceWithSpaceChar != char.MinValue)
-                            label = label.Replace(m_replaceWithSpaceChar, ' ');
+                        if (ReplaceWithSpaceChar != char.MinValue)
+                            label = label.Replace(ReplaceWithSpaceChar, ' ');
 
                         // Scale can be defined as a negative value in database, so check both formatting styles
                         if (!uint.TryParse(scale, out scalingValue))
@@ -949,8 +952,8 @@ namespace PhasorProtocolAdapters
                             AnalogType analogType = (AnalogType)int.Parse(analogRow["Type"].ToNonNullString("0"));
                             scale = analogRow["ScalingValue"].ToNonNullString("0");
 
-                            if (m_replaceWithSpaceChar != char.MinValue)
-                                label = label.Replace(m_replaceWithSpaceChar, ' ');
+                            if (ReplaceWithSpaceChar != char.MinValue)
+                                label = label.Replace(ReplaceWithSpaceChar, ' ');
 
                             // Scale can be defined as a negative value in database, so check both formatting styles
                             if (!uint.TryParse(scale, out scalingValue))
@@ -975,8 +978,8 @@ namespace PhasorProtocolAdapters
                             // IEEE C37.118 digital labels are defined with all 16-labels (one for each bit) in one large formatted string
                             label = digitalRow["Label"].ToNonNullString("Digital " + order).Trim().TruncateRight(MaximumLabelLength * 16);
 
-                            if (m_replaceWithSpaceChar != char.MinValue)
-                                label = label.Replace(m_replaceWithSpaceChar, ' ');
+                            if (ReplaceWithSpaceChar != char.MinValue)
+                                label = label.Replace(ReplaceWithSpaceChar, ' ');
 
                             // Mask can be defined as a negative value in database, so check both formatting styles
                             if (!uint.TryParse(scale, out scalingValue))
@@ -1144,10 +1147,10 @@ namespace PhasorProtocolAdapters
             InputMeasurementKeys = signalReferences.Keys.ToArray();
 
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
-            if (m_replaceWithSpaceChar != char.MinValue)
+            if (ReplaceWithSpaceChar != char.MinValue)
             {
                 foreach (IConfigurationCell cell in BaseConfigurationFrame.Cells)
-                    cell.StationName = cell.StationName.Replace(m_replaceWithSpaceChar, ' ');
+                    cell.StationName = cell.StationName.Replace(ReplaceWithSpaceChar, ' ');
             }
 
             // Create a new protocol specific configuration frame
@@ -1377,7 +1380,7 @@ namespace PhasorProtocolAdapters
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            if (frame is not IDataFrame dataFrame || m_publishChannel is null)
+            if (frame is not IDataFrame dataFrame || PublishChannel is null)
                 return;
 
             // Send the configuration frame at the top of each minute if the class has been configured
@@ -1415,7 +1418,7 @@ namespace PhasorProtocolAdapters
 
             // Publish data frame binary image
             byte[] image = dataFrame.BinaryImage();
-            m_publishChannel.MulticastAsync(image, 0, image.Length);
+            PublishChannel.MulticastAsync(image, 0, image.Length);
             TotalBytesSent += image.Length;
 
             // Track latency statistics against system time - in order for these statistics
@@ -1459,7 +1462,7 @@ namespace PhasorProtocolAdapters
         {
             ConfigurationFrame.Timestamp = timestamp;
             byte[] image = ConfigurationFrame.BinaryImage();
-            m_publishChannel.MulticastAsync(image, 0, image.Length);
+            PublishChannel.MulticastAsync(image, 0, image.Length);
             return image.Length;
         }
 

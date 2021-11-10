@@ -161,7 +161,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.AppendLine($"           Output Protocol: IEEE C37.118-{TargetConfigurationType.ToVersionString()}");
                 status.AppendLine($"      Configured Time Base: {TimeBase}");
@@ -235,7 +235,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
             bool configurationChanged = false;
 
-            if (!(m_configurationFrame2 is null))
+            if (m_configurationFrame2 is not null)
             {
                 // Get a clone of the current config frame and set its header match the cached config frame for a clean compare
                 ConfigurationFrame1 cacheMatch = configurationFrame2.Clone(m_configurationFrame2.CommonHeader);
@@ -353,7 +353,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             try
             {
                 // Interpret data received from a client as a command frame
-                CommandFrame commandFrame = new CommandFrame(commandBuffer, 0, length);
+                CommandFrame commandFrame = new(commandBuffer, 0, length);
                 IServer commandChannel = (IServer)CommandChannel ?? DataChannel;
 
                 // Validate incoming ID code if requested
@@ -366,7 +366,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                     switch (commandFrame.Command)
                     {
                         case DeviceCommand.SendConfigurationFrame1:
-                            if (!(commandChannel is null))
+                            if (commandChannel is not null)
                             {
                                 ConfigurationFrame1 configFrame1 = CastToConfigurationFrame1(m_configurationFrame2);
                                 commandChannel.SendToAsync(clientID, configFrame1.BinaryImage, 0, configFrame1.BinaryLength);
@@ -375,7 +375,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                             break;
                         case DeviceCommand.SendConfigurationFrame2:
-                            if (!(commandChannel is null))
+                            if (commandChannel is not null)
                             {
                                 commandChannel.SendToAsync(clientID, m_configurationFrame2.BinaryImage, 0, m_configurationFrame2.BinaryLength);
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - type 2 config frame was returned.");
@@ -383,7 +383,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                             break;
                         case DeviceCommand.SendConfigurationFrame3:
-                            if (!(commandChannel is null))
+                            if (commandChannel is not null)
                             {
                                 PublishConfigFrame3(frame => commandChannel.SendToAsync(clientID, frame, 0, frame.Length));
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - type 3 config frame was returned.");
@@ -391,9 +391,9 @@ namespace PhasorProtocolAdapters.IeeeC37_118
 
                             break;
                         case DeviceCommand.SendHeaderFrame:
-                            if (!(commandChannel is null))
+                            if (commandChannel is not null)
                             {
-                                StringBuilder status = new StringBuilder();
+                                StringBuilder status = new();
                                 status.AppendLine($"IEEE C37.118 Concentrator:{Environment.NewLine}");
                                 status.AppendLine($" Revision for config frame: {TargetConfigurationType}");
                                 status.AppendLine($" Auto-publish config frame: {AutoPublishConfigurationFrame}");
@@ -401,7 +401,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                 status.AppendLine($"       Data stream ID code: {IDCode:N0}");
                                 status.AppendLine($"       Derived system time: {RealTime:yyyy-MM-dd HH:mm:ss.fff} UTC");
 
-                                HeaderFrame headerFrame = new HeaderFrame(status.ToString());
+                                HeaderFrame headerFrame = new(status.ToString());
                                 commandChannel.SendToAsync(clientID, headerFrame.BinaryImage, 0, headerFrame.BinaryLength);
                                 OnStatusMessage(MessageLevel.Info, $"Received request for \"SendHeaderFrame\" from \"{connectionID}\" - frame was returned.");
                             }
@@ -489,12 +489,12 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         public static ConfigurationFrame2 CreateConfigurationFrame2(AnonymousConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
-            ConfigurationFrame2 configurationFrame = new ConfigurationFrame2(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
+            ConfigurationFrame2 configurationFrame = new(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
             foreach (AnonymousConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 configuration cell (i.e., a PMU configuration)
-                ConfigurationCell newCell = new ConfigurationCell(configurationFrame, baseCell.IDCode, nominalFrequency)
+                ConfigurationCell newCell = new(configurationFrame, baseCell.IDCode, nominalFrequency)
                 {
                     // Update other cell level attributes
                     PhasorDataFormat = baseCell.PhasorDataFormat,
@@ -556,13 +556,18 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// </remarks>
         public static ConfigurationFrame3 CreateConfigurationFrame3(AnonymousConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency, Concentrator parent = null)
         {
+            char replaceWithSpaceChar = parent?.ReplaceWithSpaceChar ?? char.MinValue;
+
+            string originalLabel(string label) => 
+                replaceWithSpaceChar == char.MinValue ? label : label.Replace(' ', replaceWithSpaceChar);
+
             // Create a new IEEE C37.118 configuration frame 3 using base configuration
-            ConfigurationFrame3 configurationFrame = new ConfigurationFrame3(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
+            ConfigurationFrame3 configurationFrame = new(timeBase, baseConfigurationFrame.IDCode, DateTime.UtcNow.Ticks, baseConfigurationFrame.FrameRate);
 
             foreach (AnonymousConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 configuration cell3 (i.e., a PMU configuration)
-                ConfigurationCell3 newCell = new ConfigurationCell3(configurationFrame, baseCell.IDCode, nominalFrequency)
+                ConfigurationCell3 newCell = new(configurationFrame, baseCell.IDCode, nominalFrequency)
                 {
                     // Update other cell level attributes
                     PhasorDataFormat = baseCell.PhasorDataFormat,
@@ -628,7 +633,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                     // as defined through the ConfigurationEntity table. As a result it is necessary to open a database connection to
                     // acquire the needed data. Although this data is considered ancillary, it may be important in some configurations,
                     // so failures to connect to database will fall-back on info the previously cached IEEE C37.118-2011 config frame.
-                    using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                    using (AdoDataConnection database = new("systemSettings"))
                     {
                         // Since output streams are completely virtualized, there is no guarantee that what is in an output stream will
                         // ever map back to a source device. They often do map back, but even the database makes no assumptions on device
@@ -639,9 +644,9 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                         // output stream will always have a single frequency measurement, this should be as good as any for finding our
                         // way back to the original associated source device, this assuming there was one. If no source device exists, we
                         // will fall back on default values.
-                        TableOperations<Device> deviceTable = new TableOperations<Device>(database);
-                        TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(database);
-                        TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(database);
+                        TableOperations<Device> deviceTable = new(database);
+                        TableOperations<Measurement> measurementTable = new(database);
+                        TableOperations<Phasor> phasorTable = new(database);
 
                         // Search signal reference map for frequencies
                         foreach (KeyValuePair<MeasurementKey, SignalReference[]> kvp in parent.SignalReferences)
@@ -653,9 +658,11 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                             {
                                 if (signal.Kind == SignalKind.Frequency)
                                 {
+                                    
                                     // Validate that signal reference has a matching device target, i.e., cell, in the configuration frame
-                                    if (!(configurationFrame.Cells.FirstOrDefault(searchCell => 
-                                        searchCell.StationName.Equals(signal.Acronym, StringComparison.OrdinalIgnoreCase)) is ConfigurationCell3 cell))
+                                    if (configurationFrame.Cells.FirstOrDefault(searchCell =>
+                                            originalLabel(searchCell.StationName).Equals(signal.Acronym, StringComparison.OrdinalIgnoreCase) ||
+                                            searchCell.IDLabel.Equals(signal.Acronym, StringComparison.OrdinalIgnoreCase)) is not ConfigurationCell3 cell)
                                         continue;
 
                                     bool foundSource = false;
@@ -665,12 +672,12 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                     int? deviceID = measurement?.DeviceID;
                                     int framesPerSecond = parent.FramesPerSecond;
 
-                                    if (!(deviceID is null))
+                                    if (deviceID is not null)
                                     {
                                         // Lookup frequency's parent device
                                         Device device = deviceTable.QueryRecordWhere("ID = {0}", deviceID);
 
-                                        if (!(device is null))
+                                        if (device is not null)
                                         {
                                             // Assign common time-series configuration values
                                             cell.GlobalID = device.UniqueID;
@@ -731,7 +738,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                         measurement = null;
 
                                         // Find the associated measurement key for the phasor angle
-                                        SignalReference angleSignal = new SignalReference
+                                        SignalReference angleSignal = new()
                                         {
                                             Acronym = cell.StationName,
                                             Kind = SignalKind.Angle,
@@ -750,7 +757,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                         }
 
                                         // Find the associated measurement key for the phasor magnitude
-                                        SignalReference magnitudeSignal = new SignalReference
+                                        SignalReference magnitudeSignal = new()
                                         {
                                             Acronym = cell.StationName,
                                             Kind = SignalKind.Magnitude,
@@ -766,11 +773,11 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                         }
 
                                         // Assign transmission voltage level to user flags, when defined
-                                        if (phasor.PhasorType == PhasorType.Voltage && !(deviceID is null) && !(measurement?.PhasorSourceIndex is null))
+                                        if (phasor.PhasorType == PhasorType.Voltage && deviceID is not null && measurement?.PhasorSourceIndex is not null)
                                         {
                                             Phasor phasorRecord = phasorTable.QueryRecordWhere("DeviceID = {0} AND SourceIndex = {1} AND Type = 'V'", deviceID, measurement.PhasorSourceIndex);
 
-                                            if (!(phasorRecord is null) && phasorRecord.BaseKV.TryGetVoltageLevel(out VoltageLevel level))
+                                            if (phasorRecord is not null && phasorRecord.BaseKV.TryGetVoltageLevel(out VoltageLevel level))
                                                 phasor.UserFlags = (byte)level;
                                         }
 
@@ -819,16 +826,18 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 try
                 {
                     // If database load did not succeed, fall back on trying to load ancillary data from a previously cached config 3 frame
-                    if (!(AnonymousConfigurationFrame.GetCachedConfiguration(string.Format(ConfigFrame3CacheName, baseConfigurationFrame.Name), true) is ConfigurationFrame3 cachedConfigFrame))
+                    if (AnonymousConfigurationFrame.GetCachedConfiguration(string.Format(ConfigFrame3CacheName, baseConfigurationFrame.Name), true) is not ConfigurationFrame3 cachedConfigFrame)
                         throw new NullReferenceException("Failed to load cached configuration frame.");
 
                     foreach (ConfigurationCell3 cell in configurationFrame.Cells)
                     {
                         // Try to match cached cell to target cell by ID code first
-                        if (!(cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.IDCode == cell.IDCode) is ConfigurationCell3 cachedCell))
+                        if (cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.IDCode == cell.IDCode) is not ConfigurationCell3 cachedCell)
                         {
-                            // If ID code match failed, try match by station name 
-                            cachedCell = cachedConfigFrame.Cells.FirstOrDefault(searchCell => searchCell.StationName.Equals(cell.StationName, StringComparison.OrdinalIgnoreCase)) as ConfigurationCell3;
+                            // If ID code match failed, try match by station name or ID label
+                            cachedCell = cachedConfigFrame.Cells.FirstOrDefault(searchCell =>
+                                searchCell.StationName.Equals(cell.StationName, StringComparison.OrdinalIgnoreCase) ||
+                                searchCell.IDLabel.Equals(cell.IDLabel, StringComparison.OrdinalIgnoreCase)) as ConfigurationCell3;
 
                             if (cachedCell is null)
                                 continue;
@@ -877,12 +886,12 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         public static DataFrame CreateDataFrame(Ticks timestamp, ConfigurationFrame1 configurationFrame)
         {
             // We create a new IEEE C37.118 data frame based on current configuration frame
-            DataFrame dataFrame = new DataFrame(timestamp, configurationFrame);
+            DataFrame dataFrame = new(timestamp, configurationFrame);
 
             foreach (ConfigurationCell configurationCell in configurationFrame.Cells)
             {
                 // Create a new IEEE C37.118 data cell (i.e., a PMU entry for this frame)
-                DataCell dataCell = new DataCell(dataFrame, configurationCell, true);
+                DataCell dataCell = new(dataFrame, configurationCell, true);
 
                 // Add data cell to the frame
                 dataFrame.Cells.Add(dataCell);
@@ -912,7 +921,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             foreach (ConfigurationCell sourceCell in sourceFrame.Cells)
             {
                 // Create new derived configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                ConfigurationCell derivedCell = new(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                 string stationName = sourceCell.StationName;
                 string idLabel = sourceCell.IDLabel;
