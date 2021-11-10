@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -61,7 +60,7 @@ namespace GSF.Web.Security
             {
                 string[] authorization = Request.Headers["Authorization"]?.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                if ((object)authorization == null || authorization.Length < 2)
+                if (authorization is null || authorization.Length < 2)
                     return null;
 
                 return new AuthenticationHeaderValue(authorization[0], authorization[1]);
@@ -74,7 +73,7 @@ namespace GSF.Web.Security
             get
             {
                 IIdentity anonymousIdentity = new GenericIdentity("anonymous");
-                return new GenericPrincipal(anonymousIdentity, new string[0]);
+                return new GenericPrincipal(anonymousIdentity, Array.Empty<string>());
             }
         }
 
@@ -89,8 +88,6 @@ namespace GSF.Web.Security
         /// <returns>The ticket data provided by the authentication logic</returns>
         protected override Task<AuthenticationTicket> AuthenticateCoreAsync()
         {
-            SecurityPrincipal securityPrincipal;
-
             // Track original principal
             Request.Environment["OriginalPrincipal"] = Request.User;
             Request.Environment["AuthenticationOptions"] = Options.Readonly;
@@ -119,10 +116,10 @@ namespace GSF.Web.Security
             AuthenticationHeaderValue authorization = AuthorizationHeader;
 
             // Attempt to retrieve the user's credentials that were cached to the user's session
-            if (TryGetPrincipal(sessionID, useAlternateSecurityProvider, out securityPrincipal))
+            if (TryGetPrincipal(sessionID, useAlternateSecurityProvider, out SecurityPrincipal securityPrincipal))
             {
                 bool useCachedCredentials =
-                    (object)Request.User == null ||
+                    Request.User is null ||
                     Request.User.Identity.Name.Equals(securityPrincipal.Identity.Name, StringComparison.OrdinalIgnoreCase) ||
                     authorization?.Scheme != "Basic";
 
@@ -135,7 +132,7 @@ namespace GSF.Web.Security
                 }
             }
 
-            if ((object)authorization == null && (object)securityPrincipal == null)
+            if (authorization is null && securityPrincipal is null)
             {
                 // Attempt to authenticate using cached credentials associated with the authentication token cookie
                 string authenticationToken = SessionHandler.GetAuthenticationTokenFromCookie(Request, Options.AuthenticationToken);
@@ -152,7 +149,7 @@ namespace GSF.Web.Security
                     CachePrincipal(sessionID, securityPrincipal, useAlternateSecurityProvider);
             }
 
-            if ((object)securityPrincipal == null)
+            if (securityPrincipal is null)
             {
                 
                 // Pick the appropriate authentication logic based
@@ -210,7 +207,7 @@ namespace GSF.Web.Security
             bool useAlternateSecurityProvider = Options.IsAlternateSecurityProviderResource(Request.Path.Value);
             useAlternateSecurityProvider = useAlternateSecurityProvider || (Options.AuthTestPage == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
 
-            if (!(Request.User is null) && Request.User.IsInRole("logout"))
+            if (Request.User is not null && Request.User.IsInRole("logout"))
             {
                 string identityName = Request.User.Identity.Name;
 
@@ -225,9 +222,9 @@ namespace GSF.Web.Security
             }
 
             // If the user is properly Authenticated but a redirect is requested send that redirect
-            if (securityPrincipal?.Identity.IsAuthenticated == true && securityPrincipal?.Identity.Provider.IsRedirectRequested == true)
+            if (securityPrincipal?.Identity.IsAuthenticated == true && securityPrincipal.Identity.Provider.IsRedirectRequested)
             {
-                Response.Redirect(securityPrincipal?.Identity.Provider.RequestedRedirect ?? "/");
+                Response.Redirect(securityPrincipal.Identity.Provider.RequestedRedirect ?? "/");
                 return true;
             }
 
@@ -273,13 +270,10 @@ namespace GSF.Web.Security
 
             // Add current identity to unauthorized response header
             string currentIdentity = securityPrincipal?.Identity.Name ?? "anonymous";
-            object value;
 
-            if (Request.Environment.TryGetValue("OriginalPrincipal", out value))
+            if (Request.Environment.TryGetValue("OriginalPrincipal", out object value))
             {
-                IPrincipal originalPrincpal = value as IPrincipal;
-
-                if ((object)originalPrincpal != null && (object)originalPrincpal.Identity != null)
+                if (value is IPrincipal originalPrincpal && originalPrincpal.Identity is not null)
                     currentIdentity = AdjustedUserName(originalPrincpal.Identity.Name);
             }
 
@@ -297,19 +291,18 @@ namespace GSF.Web.Security
         {
             // Flush any cached information that has been saved for this user including anything saved in the alternate SecurityProvider Cache
             if (TryGetPrincipal(sessionID, true, out SecurityPrincipal securityPrincipal))
-                SecurityProviderCache.Flush(securityPrincipal.Identity.Name,true);
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name, true);
+            
             if (TryGetPrincipal(sessionID, false, out securityPrincipal))
-                SecurityProviderCache.Flush(securityPrincipal.Identity.Name, false);
+                SecurityProviderCache.Flush(securityPrincipal.Identity.Name);
 
             // Clear any cached session state for user (this also clears any cached authorizations)
             return SessionHandler.ClearSessionCache(sessionID);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsAjaxCall()
-        {
-            return Request.Headers.TryGetValue("X-Requested-With", out string[] values) && values.Any(value => value.Equals("XMLHttpRequest"));
-        }
+        private bool IsAjaxCall() => 
+            Request.Headers.TryGetValue("X-Requested-With", out string[] values) && values.Any(value => value.Equals("XMLHttpRequest"));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string AdjustedUserName(string username)
@@ -330,13 +323,11 @@ namespace GSF.Web.Security
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
         private SecurityPrincipal AuthenticateCachedCredentials(string authenticationToken, bool useAlternateSecurityProvider)
         {
-            string username, password;
-
-            if ((object)authenticationToken == null)
+            if (authenticationToken is null)
                 return null;
 
             // Get the user's credentials from the credential cache
-            if (!SessionHandler.TryGetCachedCredentials(authenticationToken, out username, out password))
+            if (!SessionHandler.TryGetCachedCredentials(authenticationToken, out string username, out string password))
                 return null;
 
             // Create the security provider that will authenticate the user's credentials
@@ -352,10 +343,8 @@ namespace GSF.Web.Security
         // Applies authentication for requests where credentials are passed directly in the HTTP headers.
         private SecurityPrincipal AuthenticateBasic(string credentials, bool useAlternateSecurityProvider)
         {
-            string username, password;
-
             // Get the user's credentials from the HTTP headers
-            if (!TryParseCredentials(credentials, out username, out password))
+            if (!TryParseCredentials(credentials, out string username, out string password))
                 return null;
 
             // Create the security provider that will authenticate the user's credentials
@@ -373,7 +362,7 @@ namespace GSF.Web.Security
         {
             string username = Request.User?.Identity.Name;
 
-            if ((object)username == null)
+            if (username is null)
                 return null;
 
             // Get the principal used for verifying the user's pass-through authentication
@@ -397,7 +386,7 @@ namespace GSF.Web.Security
         {
             string username = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value).Get("code");
 
-            if (String.IsNullOrEmpty(username))
+            if (string.IsNullOrEmpty(username))
                 return null;
 
             // Create the security provider that will verify the user's pass-through authentication
@@ -426,7 +415,7 @@ namespace GSF.Web.Security
             s_alternateAuthorizationCache = new ConcurrentDictionary<Guid, SecurityPrincipal>();
 
             // Attach to session expiration event so any cached authorizations can also be cleared
-            SessionHandler.SessionExpired += (sender, e) => ClearAuthorizationCache(e.Argument1);
+            SessionHandler.SessionExpired += (_, e) => ClearAuthorizationCache(e.Argument1);
         }
 
         // Static Methods
@@ -438,12 +427,10 @@ namespace GSF.Web.Security
         /// <param name="securityPrincipal">Principal of user with specified <paramref name="sessionID"/>, if found.</param>
         /// <param name="useAlternate">Indicate when to useSecurity Principles from alternate SecurityProvider</param>
         /// <returns><c>true</c> if principal was found for specified <paramref name="sessionID"/>; otherwise, <c>false</c>.</returns>
-        public static bool TryGetPrincipal(Guid sessionID, bool useAlternate, out SecurityPrincipal securityPrincipal)
-        {
-            if (useAlternate)
-                return s_alternateAuthorizationCache.TryGetValue(sessionID, out securityPrincipal);
-            return s_authorizationCache.TryGetValue(sessionID, out securityPrincipal);
-        }
+        public static bool TryGetPrincipal(Guid sessionID, bool useAlternate, out SecurityPrincipal securityPrincipal) =>
+            useAlternate ? 
+                s_alternateAuthorizationCache.TryGetValue(sessionID, out securityPrincipal) : 
+                s_authorizationCache.TryGetValue(sessionID, out securityPrincipal);
 
         /// <summary>
         /// Clears any cached authorizations for the specified <paramref name="sessionID"/>.
@@ -452,14 +439,19 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if session authorization was found and cleared; otherwise, <c>false</c>.</returns>
         public static bool ClearAuthorizationCache(Guid sessionID)
         {
-            SecurityPrincipal securityPrincipal;
-            bool removed = s_authorizationCache.TryRemove(sessionID, out securityPrincipal);
-            bool removedAlternate = s_alternateAuthorizationCache.TryRemove(sessionID, out securityPrincipal);
+            bool removed = false, removedAlternate = false;
 
-            if (removedAlternate)
-                SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider, true);
-            if (removed)
-                SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider, false);
+            if (s_alternateAuthorizationCache.TryRemove(sessionID, out SecurityPrincipal ssecurityPrincipalAlternate))
+            {
+                SecurityProviderCache.DisableAutoRefresh(ssecurityPrincipalAlternate.Identity.Provider, true);
+                removedAlternate = true;
+            }
+
+            if (s_authorizationCache.TryRemove(sessionID, out SecurityPrincipal securityPrincipal))
+            {
+                SecurityProviderCache.DisableAutoRefresh(securityPrincipal.Identity.Provider);
+                removed = true;
+            }
             
             return removed || removedAlternate;
         }
@@ -467,9 +459,10 @@ namespace GSF.Web.Security
         private static void CachePrincipal(Guid sessionID, SecurityPrincipal principal, bool useAlternateSecurityProvider)
         {
             if (useAlternateSecurityProvider && s_alternateAuthorizationCache.TryAdd(sessionID, principal))
-                SecurityProviderCache.AutoRefresh(principal.Identity.Provider, useAlternateSecurityProvider);
+                SecurityProviderCache.AutoRefresh(principal.Identity.Provider, true);
+
             if (!useAlternateSecurityProvider && s_authorizationCache.TryAdd(sessionID, principal))
-                SecurityProviderCache.AutoRefresh(principal.Identity.Provider, useAlternateSecurityProvider);
+                SecurityProviderCache.AutoRefresh(principal.Identity.Provider);
         }
 
         private static bool TryParseCredentials(string authorizationParameter, out string userName, out string password)
@@ -493,9 +486,7 @@ namespace GSF.Web.Security
             // encoding is infrequently used in practice and defines behavior only for ASCII.
 
             // Make a writable copy of the ASCII encoding to enable setting the decoder fall-back
-            Encoding encoding = Encoding.ASCII.Clone() as Encoding;
-
-            if ((object)encoding == null)
+            if (Encoding.ASCII.Clone() is not Encoding encoding)
                 return false;
 
             // Fail on invalid bytes rather than silently replacing and continuing
