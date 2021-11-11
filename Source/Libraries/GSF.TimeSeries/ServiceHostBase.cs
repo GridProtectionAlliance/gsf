@@ -102,7 +102,7 @@ namespace GSF.TimeSeries
 
         // Constants
         private const int DefaultMinThreadPoolSize = 25;
-        private const int DefaultMaxThreadPoolSize = 2048;
+        private const int DefaultMaxThreadPoolSize = 100;
         private const int DefaultConfigurationBackups = 5;
         private const int DefaultMaxLogFiles = 300;
 
