@@ -2208,7 +2208,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Handles incoming commands from devices connected over the command channel.
+        /// Handles incoming commands from devices connected over the command channel. This is used by data-forwarding feature,
         /// </summary>
         /// <param name="clientID">Guid of client that sent the command.</param>
         /// <param name="connectionID">Remote client connection identification (i.e., IP:Port).</param>
@@ -2251,12 +2251,31 @@ namespace PhasorProtocolAdapters
 
                         if (m_configurationFrame is not null)
                         {
-                            if (m_publishChannel is null)
-                                m_clientBasedPublishChannel?.SendAsync(m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
-                            else
-                                m_publishChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
+                            if (m_configurationFrame is GSF.PhasorProtocols.IEEEC37_118.ConfigurationFrame3 configFrame3)
+                            {
+                                int frames = 0;
 
-                            OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
+                                foreach (byte[] frame in configFrame3.BinaryImageFrames)
+                                {
+                                    if (m_publishChannel is null)
+                                        m_clientBasedPublishChannel?.SendAsync(frame, 0, frame.Length);
+                                    else
+                                        m_publishChannel.SendToAsync(clientID, frame, 0, frame.Length);
+
+                                    frames++;
+                                }
+
+                                OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - {(frames > 1 ? $"{frames:N0} spanned frames were" : "frame was")} returned.");
+                            }
+                            else
+                            {
+                                if (m_publishChannel is null)
+                                    m_clientBasedPublishChannel?.SendAsync(m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
+                                else
+                                    m_publishChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage(), 0, m_configurationFrame.BinaryLength);
+
+                                OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
+                            }
                         }
 
                         break;
