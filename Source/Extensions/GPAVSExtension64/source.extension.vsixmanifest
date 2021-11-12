@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+    <Metadata>
+        <Identity Id="GPAVSExtension64.GPA.7e6af745-6e2d-43d0-b08b-f6395fe0749b" Version="1.0" Language="en-US" Publisher="GPA" />
+        <DisplayName>GPAVSExtension64</DisplayName>
+        <Description xml:space="preserve">Grid Protection Alliance 64-bit Visual Studio Extensions.</Description>
+        <MoreInfo>https://github.com/GridProtectionAlliance/gsf</MoreInfo>
+        <License>LICENSE.txt</License>
+        <Icon>Resources\GPAVSPackage.ico</Icon>
+    </Metadata>
+    <Installation>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+    </Installation>
+    <Dependencies>
+        <Dependency Id="Microsoft.VisualStudio.MPF.17.0" DisplayName="Visual Studio MPF 17.0" d:Source="Installed" Version="[17.0,18.0)" />
+    </Dependencies>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    </Assets>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.Net.ComponentGroup.DevelopmentPrerequisites" Version="[17.0.31804.368,18.0)" DisplayName=".NET Framework 4.7.2 development tools" />
+    </Prerequisites>
+</PackageManifest>
