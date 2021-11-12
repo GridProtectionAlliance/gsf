@@ -480,7 +480,7 @@ namespace GSF.Security
               
                 try
                 {
-                        userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToObject<List<string>>();
+                        userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToString().Split(',').ToList();
                 }
                 catch (Exception ex)
                 {
