@@ -116,12 +116,28 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.VSSDK.Vsixsigntool">
+      <Version>16.2.29116.78</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Design" />
     <Reference Include="System.DirectoryServices" />
   </ItemGroup>
+  <PropertyGroup>
+    <VsixSignTool>$(NuGetPackageRoot)Microsoft.VSSDK.Vsixsigntool\16.2.29116.78\tools\vssdk\vsixsigntool.exe</VsixSignTool>
+    <!-- Get /k $(VsixSignKeyContainerName) env value using: certutil -user -store my "{certSerial}" -->
+    <VsixSignCommand>$(VsixSignTool) sign /f $(VsixSignCert) /csp "Microsoft Platform Crypto Provider" /k $(VsixSignKeyContainerName) /tr http://timestamp.digicert.com /td sha256 /fd sha256</VsixSignCommand>
+  </PropertyGroup>
+  <Target Name="AfterBuild">
+    <CallTarget Targets="SignBuild" />
+  </Target>
+  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
+    <Exec Command="$(SIGNTOOL) $(TargetPath)" />
+    <Message Text="Signing $(TargetVsixContainer)" Condition="'$(Configuration)' == 'Release'" />
+    <Exec Command="$(VsixSignCommand) $(MSBuildProjectDirectory)\$(TargetVsixContainer)" Condition="'$(Configuration)' == 'Release'" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
