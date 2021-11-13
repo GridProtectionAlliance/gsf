@@ -127,7 +127,8 @@
   </ItemGroup>
   <PropertyGroup>
     <VsixSignTool>$(NuGetPackageRoot)Microsoft.VSSDK.Vsixsigntool\16.2.29116.78\tools\vssdk\vsixsigntool.exe</VsixSignTool>
-    <!-- Get /k $(VsixSignKeyContainerName) env value using: certutil -user -store my "{certSerial}" -->
+    <!-- Assign /f $(VsixSignCert) environmental variable as full path to .p7b formatted export of certificate -->
+    <!-- Assign /k $(VsixSignKeyContainerName) environmental variable from "Key Container" value found using: certutil -user -store my "cert Serial number hex values" -->
     <VsixSignCommand>$(VsixSignTool) sign /f $(VsixSignCert) /csp "Microsoft Platform Crypto Provider" /k $(VsixSignKeyContainerName) /tr http://timestamp.digicert.com /td sha256 /fd sha256</VsixSignCommand>
   </PropertyGroup>
   <Target Name="AfterBuild">
