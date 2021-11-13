@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31829.152
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
 EndProject
@@ -2456,9 +2456,7 @@ Global
 		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Mono|x86.Build.0 = Release|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Release|x64.ActiveCfg = Release|Any CPU
-		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Release|x64.Build.0 = Release|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Release|x86.ActiveCfg = Release|Any CPU
-		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Release|x86.Build.0 = Release|Any CPU
 		{A86F87D9-244A-4A01-8BE9-800257EE7BC2}.Analysis|Any CPU.ActiveCfg = Debug|Any CPU
 		{A86F87D9-244A-4A01-8BE9-800257EE7BC2}.Analysis|x64.ActiveCfg = Release|Any CPU
 		{A86F87D9-244A-4A01-8BE9-800257EE7BC2}.Analysis|x64.Build.0 = Release|Any CPU
@@ -3342,29 +3340,23 @@ Global
 		{508AC472-7239-446A-8C89-461163C75898}.Release|x86.ActiveCfg = Release|Any CPU
 		{508AC472-7239-446A-8C89-461163C75898}.Release|x86.Build.0 = Release|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Analysis|Any CPU.ActiveCfg = Debug|Any CPU
-		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Analysis|Any CPU.Build.0 = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Analysis|x64.ActiveCfg = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Analysis|x64.Build.0 = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Analysis|x86.ActiveCfg = Debug|x86
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Analysis|x86.Build.0 = Debug|x86
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Debug|x64.Build.0 = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Debug|x86.ActiveCfg = Debug|x86
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Debug|x86.Build.0 = Debug|x86
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Mono|Any CPU.ActiveCfg = Debug|Any CPU
-		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Mono|Any CPU.Build.0 = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Mono|x64.ActiveCfg = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Mono|x64.Build.0 = Debug|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Mono|x86.ActiveCfg = Debug|x86
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Mono|x86.Build.0 = Debug|x86
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Release|Any CPU.Build.0 = Release|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Release|x64.ActiveCfg = Release|Any CPU
-		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Release|x64.Build.0 = Release|Any CPU
 		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Release|x86.ActiveCfg = Release|x86
-		{018E3229-1D7C-430B-915C-BA6336E3FC05}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
