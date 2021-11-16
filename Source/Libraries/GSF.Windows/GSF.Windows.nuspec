@@ -37,11 +37,14 @@
     <description>$description$</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
     <license type="expression">MIT</license>
-    <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Windows Forms WPF Security User Interface Extensions About Dialog</tags>
+    <icon>images\GSF64x64.png</icon>
     <dependencies>
       <dependency id="GSF.Core" version="$version$" />
       <dependency id="GSF.Security" version="$version$" />
     </dependencies>
   </metadata>
+  <files>
+    <file src="..\..\Documentation\Images\GSF64x64.png" target="images\" />
+  </files>
 </package>

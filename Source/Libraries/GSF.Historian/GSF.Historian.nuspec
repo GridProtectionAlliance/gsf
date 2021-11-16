@@ -39,7 +39,6 @@
     <tags>Historian TimeSeries Data Archive Query Metadata Sorting</tags>
     <icon>images\GSF64x64.png</icon>
     <dependencies>
-      <group targetFramework=".NETFramework4.6" />
       <dependency id="GSF.Communication" version="$version$" />
       <dependency id="GSF.Core" version="$version$" />
       <dependency id="GSF.ServiceModel" version="$version$" />

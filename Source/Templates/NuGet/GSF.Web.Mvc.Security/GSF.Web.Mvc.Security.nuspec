@@ -39,7 +39,6 @@
     <tags>Web MVC Model View Controller Application Security</tags>
     <icon>images\GSF64x64.png</icon>
     <dependencies>
-      <group targetFramework=".NETFramework4.6" />
       <dependency id="WebActivator" />
       <dependency id="GSF.Web.Security" />
     </dependencies>

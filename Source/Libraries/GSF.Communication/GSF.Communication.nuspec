@@ -40,7 +40,6 @@
     <tags>Communications TCP UDP Multicast TLS SSL ZeroMQ Serial Client Server</tags>
     <icon>images\GSF64x64.png</icon>
     <dependencies>
-      <group targetFramework=".NETFramework4.6" />
       <dependency id="GSF.Core" version="$version$" />
     </dependencies>
   </metadata>

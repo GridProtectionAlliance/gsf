@@ -39,7 +39,6 @@
     <tags>Media Music WAV Wave Sound DTMF TouchTone RIFF Note Song Tempo Timbre</tags>
     <icon>images\GSF64x64.png</icon>
     <dependencies>
-      <group targetFramework=".NETFramework4.6" />
       <dependency id="GSF.Core" version="$version$" />
     </dependencies>
   </metadata>

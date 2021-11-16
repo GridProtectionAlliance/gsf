@@ -39,7 +39,6 @@
     <tags>Web WCF Services Self Hosting Secure Activation</tags>
     <icon>images\GSF64x64.png</icon>
     <dependencies>
-      <group targetFramework=".NETFramework4.6" />
       <dependency id="GSF.Core" version="$version$" />
       <dependency id="GSF.Security" version="$version$" />
     </dependencies>
