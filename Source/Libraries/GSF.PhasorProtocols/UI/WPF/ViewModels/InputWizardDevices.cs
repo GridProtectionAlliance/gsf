@@ -1678,7 +1678,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             device.ConnectionString = string.Empty;
 
                             // If device is connected to concentrator then do not send initialize command when device is saved.
-                            Device.SaveWithAnalogsDigitals(database, device, false, inputWizardDevice.DigitalCount, inputWizardDevice.AnalogCount, inputWizardDevice.DigitalLabels, inputWizardDevice.AnalogLabels);
+                            Device.SaveWithAnalogsDigitals(database, device, false, inputWizardDevice.DigitalCount, inputWizardDevice.AnalogCount, inputWizardDevice.DigitalLabels, inputWizardDevice.AnalogLabels, inputWizardDevice.AnalogScalars);
                         }
                         else
                         {
@@ -1686,7 +1686,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             device.ConnectionString = GenerateConnectionString();
 
                             //If device is direct connected then notify service about it and hence send initialize.
-                            Device.SaveWithAnalogsDigitals(database, device, true, inputWizardDevice.DigitalCount, inputWizardDevice.AnalogCount, inputWizardDevice.DigitalLabels, inputWizardDevice.AnalogLabels);
+                            Device.SaveWithAnalogsDigitals(database, device, true, inputWizardDevice.DigitalCount, inputWizardDevice.AnalogCount, inputWizardDevice.DigitalLabels, inputWizardDevice.AnalogLabels, inputWizardDevice.AnalogScalars);
                         }
 
                         if (device.ID == 0)
