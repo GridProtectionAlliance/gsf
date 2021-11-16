@@ -37,10 +37,14 @@
     <description>$description$</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
     <license type="expression">MIT</license>
-    <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Security Roles Groups Principal Identity User LDAP ActiveDirectory Providers</tags>
+    <icon>images\GSF64x64.png</icon>
     <dependencies>
+      <group targetFramework=".NETFramework4.6" />
       <dependency id="GSF.Core" version="$version$" />
     </dependencies>
   </metadata>
+  <files>
+    <file src="..\..\Documentation\Images\GSF64x64.png" target="images\" />
+  </files>	
 </package>

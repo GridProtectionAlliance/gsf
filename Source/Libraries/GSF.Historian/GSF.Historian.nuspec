@@ -36,13 +36,17 @@
     <description>$description$</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
     <license type="expression">MIT</license>
-    <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Historian TimeSeries Data Archive Query Metadata Sorting</tags>
+    <icon>images\GSF64x64.png</icon>
     <dependencies>
+      <group targetFramework=".NETFramework4.6" />
       <dependency id="GSF.Communication" version="$version$" />
       <dependency id="GSF.Core" version="$version$" />
       <dependency id="GSF.ServiceModel" version="$version$" />
       <dependency id="GSF.TimeSeries" version="$version$" />	
     </dependencies>
   </metadata>
+  <files>
+    <file src="..\..\Documentation\Images\GSF64x64.png" target="images\" />
+  </files>	
 </package>

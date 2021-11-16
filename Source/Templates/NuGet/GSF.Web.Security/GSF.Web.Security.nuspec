@@ -36,13 +36,15 @@
     <description>Enables role-based security using Grid Solutions Framework security layer in an ASP.NET application.</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
     <license type="expression">MIT</license>
-    <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Web Application Security</tags>
+    <icon>images\GSF64x64.png</icon>
     <dependencies>
-      <dependency id="GSF.Web" version="" />
+      <group targetFramework=".NETFramework4.6" />
+      <dependency id="GSF.Web" />
     </dependencies>
   </metadata>
   <files>
     <file src="Content\**\*.*" target="Content" />
+    <file src="..\..\..\Documentation\Images\GSF64x64.png" target="images\" />
   </files>
 </package>

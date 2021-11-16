@@ -36,9 +36,10 @@
     <description>$description$</description>
     <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
     <license type="expression">MIT</license>
-    <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>TimeSeries Data Framework Adapter Input Action Output Measurement Time Concentration Hosting Environment Publish Subscribe Metadata Serialization Schema Routing Event Messaging Complex Processing</tags>
+    <icon>images\GSF64x64.png</icon>
     <dependencies>
+      <group targetFramework=".NETFramework4.6" />
       <dependency id="GSF.Communication" version="$version$" />
       <dependency id="GSF.Core" version="$version$" />
       <dependency id="GSF.Security" version="$version$" />
@@ -46,6 +47,7 @@
     </dependencies>
   </metadata>
   <files>
+    <file src="..\..\Documentation\Images\GSF64x64.png" target="images\" />
     <file src="Data\**\*.sql" target="tools\dbscripts" />
     <file src="Data\**\*.db" target="tools\dbscripts" />
   </files>
