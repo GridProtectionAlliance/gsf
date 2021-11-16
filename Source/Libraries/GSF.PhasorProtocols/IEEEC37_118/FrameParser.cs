@@ -265,7 +265,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     break;
                 case FrameType.ConfigurationFrame3:
                     // Safe to parse next two bytes for continuation index here since we know all bytes of frame are available (per optimization above)
-                    parsedFrameHeader.ContinuationIndex = BigEndian.ToUInt16(buffer, CommonFrameHeader.FixedLength);
+                    parsedFrameHeader.ContinuationIndex = BigEndian.ToUInt16(buffer, offset + CommonFrameHeader.FixedLength);
                     parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell3.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
 
                     // Any non-zero continuation index represents a frame in a series of frame fragments
