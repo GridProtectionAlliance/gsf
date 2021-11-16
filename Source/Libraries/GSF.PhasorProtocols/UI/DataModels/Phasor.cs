@@ -99,7 +99,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_label;
             set
             {
-                if (!(value is null) && value.Length > 200)
+                if (value is not null && value.Length > 200)
                     m_label = value.Substring(0, 200);
                 else
                     m_label = value;
@@ -321,7 +321,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 Phasor[] phasorList = null;
 
-                if (!(keys is null) && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
                     query = $"SELECT ID, DeviceID, Label, Type, Phase, BaseKV, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE ID IN ({commaSeparatedKeys})";
@@ -370,7 +370,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> phasorList = new Dictionary<int, string>();
+                Dictionary<int, string> phasorList = new();
                 if (isOptional)
                     phasorList.Add(0, "Select Phasor");
 
@@ -538,7 +538,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Phasor WHERE ID = {0}", "phasorID"), DefaultTimeout, phasorID);
 
-                if (!(phasor is null))
+                if (phasor is not null)
                 {
                     try
                     {
@@ -579,16 +579,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     return null;
 
                 DataRow row = phasorTable.Rows[0];
-                Phasor phasor = new Phasor
-                    {
-                        ID = row.ConvertField<int>("ID"),
-                        DeviceID = row.ConvertField<int>("DeviceID"),
-                        Label = row.Field<string>("Label"),
-                        Type = row.Field<string>("Type"),
-                        Phase = row.Field<string>("Phase"),
-                        BaseKV = row.ConvertField<int>("BaseKV"),
-                        SourceIndex = row.ConvertField<int>("SourceIndex")
-                    };
+
+                Phasor phasor = new()
+                {
+                    ID = row.ConvertField<int>("ID"),
+                    DeviceID = row.ConvertField<int>("DeviceID"),
+                    Label = row.Field<string>("Label"),
+                    Type = row.Field<string>("Type"),
+                    Phase = row.Field<string>("Phase"),
+                    BaseKV = row.ConvertField<int>("BaseKV"),
+                    SourceIndex = row.ConvertField<int>("SourceIndex")
+                };
 
                 return phasor;
             }

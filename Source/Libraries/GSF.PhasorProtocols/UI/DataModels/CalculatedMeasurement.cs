@@ -699,7 +699,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> calculatedMeasurementList = new Dictionary<int, string>();
+                Dictionary<int, string> calculatedMeasurementList = new();
 
                 if (isOptional)
                     calculatedMeasurementList.Add(0, "Select CalculatedMeasurement");

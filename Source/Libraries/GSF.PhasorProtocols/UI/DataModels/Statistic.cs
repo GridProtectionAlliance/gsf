@@ -318,7 +318,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Statistic> statisticList = new ObservableCollection<Statistic>();
+                ObservableCollection<Statistic> statisticList = new();
+
                 DataTable statisticTable = database.Connection.RetrieveData(database.AdapterType, "SELECT Source, SignalIndex, Name, Description, DataType, DisplayFormat, " +
                     "IsConnectedState, LoadOrder FROM Statistic ORDER BY Source, SignalIndex");
 

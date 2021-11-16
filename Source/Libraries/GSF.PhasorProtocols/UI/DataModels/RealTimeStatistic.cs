@@ -115,9 +115,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                ObservableCollection<RealTimeStatistic> realTimeStatisticList = new ObservableCollection<RealTimeStatistic>();
+                ObservableCollection<RealTimeStatistic> realTimeStatisticList = new();
 
-                DataSet resultSet = new DataSet();
+                DataSet resultSet = new();
                 resultSet.EnforceConstraints = false;
 
                 // Get PDCs and directly connected devices.
@@ -156,7 +156,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     StatisticMeasurements.Add(statisticMeasurement.SignalID, statisticMeasurement);
 
                 // Create a system statistics list.
-                ObservableCollection<StreamStatistic> systemStatistics = new ObservableCollection<StreamStatistic>();
+                ObservableCollection<StreamStatistic> systemStatistics = new();
 
                 systemStatistics.Add(new StreamStatistic()
                 {
@@ -192,7 +192,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 // Create an input stream statistics list.
-                ObservableCollection<StreamStatistic> inputStreamStatistics = new ObservableCollection<StreamStatistic>
+                ObservableCollection<StreamStatistic> inputStreamStatistics = new                
                 (
                     from stream in resultSet.Tables["DirectDevices"].AsEnumerable()
                     select new StreamStatistic
@@ -267,7 +267,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 // Create an output stream statistics list.
-                ObservableCollection<StreamStatistic> outputStreamStatistics = new ObservableCollection<StreamStatistic>
+                ObservableCollection<StreamStatistic> outputStreamStatistics = new                
                 (
                     from outputStream in resultSet.Tables["OutputStreams"].AsEnumerable()
                     select new StreamStatistic()
@@ -313,26 +313,27 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 // Create a data publisher statistics list
-                ObservableCollection<StreamStatistic> dataPublisherStatistics = new ObservableCollection<StreamStatistic>(
-                        from publisher in resultSet.Tables["DataPublishers"].AsEnumerable()
-                        select new StreamStatistic()
-                        {
-                            ID = Convert.ToInt32(publisher.Field<object>("ID")),
-                            Acronym = publisher.Field<string>("AdapterName"),
-                            Name = "",
-                            StatusColor = "Gray",
-                            DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>(),
-                            Expanded = expanded,
-                            StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>
+                ObservableCollection<StreamStatistic> dataPublisherStatistics = new
+                (
+                    from publisher in resultSet.Tables["DataPublishers"].AsEnumerable()
+                    select new StreamStatistic()
+                    {
+                        ID = Convert.ToInt32(publisher.Field<object>("ID")),
+                        Acronym = publisher.Field<string>("AdapterName"),
+                        Name = "",
+                        StatusColor = "Gray",
+                        DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>(),
+                        Expanded = expanded,
+                        StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>
+                        (
                             (
-                                (
-                                    from statisticMeasurement in statisticMeasurements
-                                    where statisticMeasurement.SignalReference.StartsWith(publisher.Field<string>("AdapterName") + "!PUB-")
-                                    select statisticMeasurement
-                                ).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
-                            )
-                        }
-                    );
+                                from statisticMeasurement in statisticMeasurements
+                                where statisticMeasurement.SignalReference.StartsWith(publisher.Field<string>("AdapterName") + "!PUB-")
+                                select statisticMeasurement
+                            ).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
+                        )
+                    }
+                );
 
                 DataPublisherStatistics = new Dictionary<int, StreamStatistic>();
 

@@ -250,7 +250,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 OutputStreamDeviceAnalog[] outputStreamDeviceAnalogList = null;
 
-                if (!(keys is null) && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
                     string query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder FROM OutputStreamDeviceAnalog WHERE ID IN ({commaSeparatedKeys})");
@@ -299,7 +299,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> OutputStreamDeviceAnalogList = new Dictionary<int, string>();
+                Dictionary<int, string> OutputStreamDeviceAnalogList = new();
                 
                 if (isOptional)
                     OutputStreamDeviceAnalogList.Add(0, "Select OutputStreamDeviceAnalog");
@@ -453,7 +453,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string query = database.ParameterizedQueryString("SELECT * FROM OutputStreamMeasurement WHERE SignalReference = {0} AND AdapterID = {1}", "signalReference", "adapterID");
                 DataRow row = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, signalReference, adapterID).Rows[0];
 
-                OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
+                OutputStreamMeasurement outputStreamMeasurement = new()
                 {
                     NodeID = row.ConvertField<Guid>("NodeID"),
                     AdapterID = row.Field<int>("AdapterID"),

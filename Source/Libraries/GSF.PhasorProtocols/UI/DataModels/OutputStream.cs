@@ -95,10 +95,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
             if (parameter is null)
                 return null;
 
-            if (!(parameter is CollectionViewSource viewSource))
+            if (parameter is not CollectionViewSource viewSource)
                 return null;
 
-            if (!(viewSource.Source is Dictionary<OutputProtocol, string> typeList))
+            if (viewSource.Source is not Dictionary<OutputProtocol, string> typeList)
                 return null;
 
             string name = value.ToString();
@@ -123,7 +123,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets default instance of the <see cref="OutputProtocolValueConverter"/>.
         /// </summary>
-        public static readonly OutputProtocolValueConverter Default = new OutputProtocolValueConverter();
+        public static readonly OutputProtocolValueConverter Default = new();
     }
 
     /// <summary>
@@ -187,12 +187,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Set default lead/lag time settings to those used by manager screens
                 object lagTimeValue = IsolatedStorageManager.ReadFromIsolatedStorage("LagTime");
 
-                if (!(lagTimeValue is null) && double.TryParse(lagTimeValue.ToString(), out double lagTime) && lagTime > 0.0D)
+                if (lagTimeValue is not null && double.TryParse(lagTimeValue.ToString(), out double lagTime) && lagTime > 0.0D)
                     m_lagTime = lagTime;
 
                 object leadTimeValue = IsolatedStorageManager.ReadFromIsolatedStorage("LeadTime");
 
-                if (!(leadTimeValue is null) && double.TryParse(leadTimeValue.ToString(), out double leadTime) && leadTime > 0.0D)
+                if (leadTimeValue is not null && double.TryParse(leadTimeValue.ToString(), out double leadTime) && leadTime > 0.0D)
                     m_leadTime = leadTime;
             }
             catch (Exception ex)
@@ -854,9 +854,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<OutputStream> outputStreamList = new ObservableCollection<OutputStream>();
+                ObservableCollection<OutputStream> outputStreamList = new();
 
-                if (!(keys is null) && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
                     string query = $"SELECT * FROM OutputStreamDetail WHERE ID IN ({commaSeparatedKeys})";
@@ -1013,7 +1013,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         outputStream.CurrentScalingValue, outputStream.VoltageScalingValue, outputStream.AnalogScalingValue, outputStream.DigitalMaskValue, database.Bool(outputStream.PerformTimestampReasonabilityCheck),
                         CommonFunctions.CurrentUser, database.UtcNow, outputStream.ID);
 
-                    if (!(oldOutputStream is null) && oldOutputStream.Acronym != outputStream.Acronym.Replace(" ", "").ToUpper())
+                    if (oldOutputStream is not null && oldOutputStream.Acronym != outputStream.Acronym.Replace(" ", "").ToUpper())
                     {
                         ObservableCollection<Measurement> measurementList = Measurement.GetOutputStatisticMeasurements(database, oldOutputStream.Acronym);
 
@@ -1027,7 +1027,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         SignalType qualityType = SignalType.Load(database).FirstOrDefault(type => type.Acronym == "QUAL");
 
-                        if (!(qualityType is null))
+                        if (qualityType is not null)
                         {
                             IList<int> keys = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamMeasurement WHERE AdapterID = {outputStream.ID}")
                                 .Select().Select(row => row.ConvertField<int>("ID")).ToList();
@@ -1090,7 +1090,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> osList = new Dictionary<int, string>();
+                Dictionary<int, string> osList = new();
 
                 DataTable results = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, Name FROM OutputStream WHERE NodeID = {0} ORDER BY Name", "nodeID"), DefaultTimeout, database.CurrentNodeID());
 
@@ -1161,7 +1161,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataRow row = outputStreamTable.Rows[0];
                 OutputProtocol type = (OutputProtocol)Convert.ToInt32(row.Field<object>("Type"));
 
-                OutputStream outputStream = new OutputStream
+                OutputStream outputStream = new()
                 {
                     NodeID = database.Guid(row, "NodeID"),
                     ID = Convert.ToInt32(row.Field<object>("ID")),

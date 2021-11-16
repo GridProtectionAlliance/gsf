@@ -363,12 +363,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> OutputStreamDeviceDigitalList = new Dictionary<int, string>();
+                Dictionary<int, string> OutputStreamDeviceDigitalList = new();
+
                 if (isOptional)
                     OutputStreamDeviceDigitalList.Add(0, "Select OutputStreamDeviceDigital");
 
                 string query = database.ParameterizedQueryString("SELECT ID, Label FROM OutputStreamDeviceDigital " +
                     "WHERE OutputStreamDeviceID = {0} ORDER BY LoadOrder", "outputStreamDeviceID");
+                
                 DataTable OutputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, outputStreamDeviceID);
 
                 foreach (DataRow row in OutputStreamDeviceDigitalTable.Rows)
@@ -518,8 +520,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string query = database.ParameterizedQueryString("SELECT * FROM OutputStreamMeasurement WHERE SignalReference = {0} AND AdapterID = {1}", "signalReference", "adapterID");
                 DataRow row = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, signalReference, adapterID).Rows[0];
 
-                OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
-                    {
+                OutputStreamMeasurement outputStreamMeasurement = new()
+                {
                     NodeID = row.ConvertField<Guid>("NodeID"),
                     AdapterID = row.Field<int>("AdapterID"),
                     ID = row.Field<int>("ID"),

@@ -89,7 +89,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     m_acronym = m_acronym.Substring(0, 200);
 
                 OnPropertyChanged(nameof(Acronym));
-                Existing = !(Device.GetDevice(null, "WHERE Acronym = '" + m_acronym.ToUpper() + "'") is null);
+                Existing = Device.GetDevice(null, "WHERE Acronym = '" + m_acronym.ToUpper() + "'") is not null;
             }
         }
 
@@ -328,7 +328,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <returns>Collection of <see cref="InputWizardDevice"/>.</returns>
         public static ObservableCollection<InputWizardDevice> Load(AdoDataConnection database) => 
-            new ObservableCollection<InputWizardDevice>();
+            new();
 
         /// <summary>
         /// Saves <see cref="InputWizardDevice"/> information in to database.
@@ -346,7 +346,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection.</returns>
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false) => 
-            new Dictionary<int, string>();
+            new();
 
         /// <summary>
         /// Deletes specified record from database.

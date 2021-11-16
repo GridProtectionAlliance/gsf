@@ -355,7 +355,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 OutputStreamDevice[] outputStreamDeviceList = null;
 
-                if (!(keys is null) && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
 
@@ -421,7 +421,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> OutputStreamDeviceList = new Dictionary<int, string>();
+                Dictionary<int, string> OutputStreamDeviceList = new();
 
                 if (isOptional)
                     OutputStreamDeviceList.Add(0, "Select OutputStreamDevice");
@@ -486,7 +486,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         outputStreamDevice.LoadOrder, database.Bool(outputStreamDevice.Enabled), CommonFunctions.CurrentUser,
                         database.UtcNow, outputStreamDevice.ID);
 
-                    if (!(originalDevice is null) && originalDevice.Acronym != outputStreamDevice.Acronym)
+                    if (originalDevice is not null && originalDevice.Acronym != outputStreamDevice.Acronym)
                     {
 
                         IList<int> keys = OutputStreamMeasurement.LoadKeys(database, originalDevice.AdapterID);
@@ -566,7 +566,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 foreach (Device device in devices)
                 {
-                    OutputStreamDevice outputStreamDevice = new OutputStreamDevice();
+                    OutputStreamDevice outputStreamDevice = new();
                     outputStreamDevice.NodeID = device.NodeID;
                     outputStreamDevice.AdapterID = outputStreamID;
                     outputStreamDevice.Acronym = device.Acronym.Substring(device.Acronym.LastIndexOf("!", StringComparison.Ordinal) + 1);
@@ -579,7 +579,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     outputStreamDevice = GetOutputStreamDevice(database, "WHERE Acronym = '" + outputStreamDevice.Acronym + "' AND AdapterID = " + outputStreamID);
 
-                    if (!(outputStreamDevice is null))
+                    if (outputStreamDevice is not null)
                     {
                         IList<int> keys = Phasor.LoadKeys(database, device.ID, "SourceIndex");
                         ObservableCollection<Phasor> phasors = Phasor.Load(database, keys);
@@ -598,7 +598,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             if (!isPhaseMatch(phasor.Phase))
                                 continue;
 
-                            OutputStreamDevicePhasor outputStreamDevicePhasor = new OutputStreamDevicePhasor
+                            OutputStreamDevicePhasor outputStreamDevicePhasor = new()
                             {
                                 NodeID = device.NodeID,
                                 OutputStreamDeviceID = outputStreamDevice.ID,
@@ -622,7 +622,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                 if ((measurement.SignalAcronym != "ALOG" && measurement.SignalAcronym != "DIGI") || (measurement.SignalAcronym == "ALOG" && addAnalogs) || (measurement.SignalAcronym == "DIGI" && addDigitals))
                                 {
-                                    OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
+                                    OutputStreamMeasurement outputStreamMeasurement = new()
                                     {
                                         NodeID = device.NodeID,
                                         AdapterID = outputStreamID,
@@ -636,7 +636,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                 if (addAnalogs && measurement.SignalAcronym == "ALOG")
                                 {
-                                    OutputStreamDeviceAnalog outputStreamDeviceAnalog = new OutputStreamDeviceAnalog 
+                                    OutputStreamDeviceAnalog outputStreamDeviceAnalog = new()
                                     {
                                         NodeID = device.NodeID,
                                         OutputStreamDeviceID = outputStreamDevice.ID,
@@ -655,7 +655,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                 }
                                 else if (addDigitals && measurement.SignalAcronym == "DIGI")
                                 {
-                                    OutputStreamDeviceDigital outputStreamDeviceDigital = new OutputStreamDeviceDigital
+                                    OutputStreamDeviceDigital outputStreamDeviceDigital = new()
                                     {
                                         NodeID = device.NodeID, 
                                         OutputStreamDeviceID = outputStreamDevice.ID, 
@@ -711,7 +711,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 DataRow row = deviceTable.Rows[0];
 
-                OutputStreamDevice device = new OutputStreamDevice
+                OutputStreamDevice device = new()
                 {
                     NodeID = database.Guid(row, "NodeID"),
                     AdapterID = row.ConvertField<int>("AdapterID"),
@@ -753,7 +753,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<OutputStreamDevice> outputStreamDeviceList = new ObservableCollection<OutputStreamDevice>();
+                ObservableCollection<OutputStreamDevice> outputStreamDeviceList = new();
                 DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDetail " + whereClause);
 
                 foreach (DataRow row in outputStreamDeviceTable.Rows)

@@ -219,7 +219,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 ObservableCollection<RealTimeStream> realTimeStreamList = null;
                 createdConnection = CreateConnection(ref database);
 
-                DataSet resultSet = new DataSet();
+                DataSet resultSet = new();
                 resultSet.EnforceConstraints = false;
 
                 // Get PDCs list.
@@ -462,8 +462,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         internal static double GetTextWidth(string text)
         {
             // Just making some assumptions about font and size here for rough assertion on size - would be more accurate to pass in actual font info
-            Typeface tf = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-            FormattedText ft = new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, 14.0D, Brushes.Black, null, TextFormattingMode.Display);
+            Typeface tf = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+            FormattedText ft = new(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, 14.0D, Brushes.Black, null, TextFormattingMode.Display);
             return ft.WidthIncludingTrailingWhitespace;
 
             // Try this for Silverlight if prior doesn't work:

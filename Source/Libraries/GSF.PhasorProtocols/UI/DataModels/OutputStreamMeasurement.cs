@@ -366,11 +366,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> OutputStreamMeasurementList = new Dictionary<int, string>();
+                Dictionary<int, string> OutputStreamMeasurementList = new();
+
                 if (isOptional)
                     OutputStreamMeasurementList.Add(0, "Select OutputStreamMeasurement");
 
                 string query = database.ParameterizedQueryString("SELECT PointID, SignalReference FROM OutputStreamMeasurement WHERE AdapterID = {0} ORDER BY LoadOrder", "adapterID");
+                
                 DataTable OutputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, outputStreamID);
 
                 foreach (DataRow row in OutputStreamMeasurementTable.Rows)
@@ -476,7 +478,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 foreach (Measurement measurement in measurements)
                 {
-                    OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
+                    OutputStreamMeasurement outputStreamMeasurement = new()
                     {
                         NodeID = CommonFunctions.CurrentNodeID(),
                         AdapterID = outputStreamID,

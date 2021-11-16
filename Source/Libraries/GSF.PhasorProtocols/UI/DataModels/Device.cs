@@ -834,7 +834,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 Device[] deviceList = null;
 
-                if (!(keys is null) && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
                     string query = $"SELECT * FROM DeviceDetail WHERE ID IN ({commaSeparatedKeys})";
@@ -921,7 +921,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> deviceList = new Dictionary<int, string>();
+                Dictionary<int, string> deviceList = new();
                 DataTable deviceTable;
                 string query;
 
@@ -982,7 +982,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> deviceList = new Dictionary<int, string>();
+                Dictionary<int, string> deviceList = new();
 
                 if (isOptional)
                     deviceList.Add(0, "All Device");
@@ -1141,9 +1141,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                             Enabled = true
                                         };
 
-                                        if (!(analogScalars?[i -1] is null))
+                                        if (analogScalars?[i -1] is not null)
                                         {
-                                            Tuple<float, float> scalarSet = analogScalars?[i - 1];
+                                            Tuple<float, float> scalarSet = analogScalars[i - 1];
                                             measurement.Adder = scalarSet.Item1;
                                             measurement.Multiplier = scalarSet.Item2;
                                         }
@@ -1158,9 +1158,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         measurement.Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Analog Value {i}: {label}";
                                         measurement.SignalTypeID = signal.ID;
 
-                                        if (!(analogScalars?[i - 1] is null))
+                                        if (analogScalars?[i - 1] is not null)
                                         {
-                                            Tuple<float, float> scalarSet = analogScalars?[i - 1];
+                                            Tuple<float, float> scalarSet = analogScalars[i - 1];
                                             measurement.Adder = scalarSet.Item1;
                                             measurement.Multiplier = scalarSet.Item2;
                                         }
@@ -1191,7 +1191,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                             Enabled = true
                                         };
 
-                                        if (!(digitalLabels?[i - 1] is null))
+                                        if (digitalLabels?[i - 1] is not null)
                                             measurement.AlternateTag = digitalLabels[i - 1];
 
                                         Measurement.Save(database, measurement);
@@ -1203,7 +1203,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         measurement.SignalTypeID = signal.ID;
                                         measurement.Description = $"{savedDevice.Name}{(string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : $" {savedDevice.VendorDeviceName}")} Digital Value {i}";
 
-                                        if (!(digitalLabels?[i - 1] is null))
+                                        if (digitalLabels?[i - 1] is not null)
                                             measurement.AlternateTag = digitalLabels[i - 1];
 
                                         Measurement.Save(database, measurement);
@@ -1263,7 +1263,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
 
                     // Update existing device measurements to reflect possible device changes
-                    if (!(oldDevice is null))
+                    if (oldDevice is not null)
                     {
                         bool companyUpdated = deviceIsUsingPhasorProtocol && savedDevice.CompanyID != oldDevice.CompanyID;
                         bool deviceRenamed = deviceIsUsingPhasorProtocol && (string.CompareOrdinal(savedDevice.Acronym, oldDevice.Acronym) != 0 || string.CompareOrdinal(savedDevice.Name, oldDevice.Name) != 0);
@@ -1396,7 +1396,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     DataRow row = rowset[0];
 
-                    Device device = new Device
+                    Device device = new()
                     {
                         NodeID = database.Guid(row, "NodeID"),
                         ID = row.ConvertField<int>("ID"),
@@ -1470,7 +1470,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
                 DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DeviceDetail {whereClause}");
-                ObservableCollection<Device> deviceList = new ObservableCollection<Device>();
+                ObservableCollection<Device> deviceList = new();
 
                 if (deviceTable.Rows.Count == 0)
                     return deviceList;
@@ -1603,7 +1603,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Device> deviceList = new ObservableCollection<Device>();
+                ObservableCollection<Device> deviceList = new();
                 DataTable deviceTable;
                 string query;
 
@@ -1697,7 +1697,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<string, string> deviceList = new Dictionary<string, string>();
+                Dictionary<string, string> deviceList = new();
 
                 if (isOptional)
                     deviceList.Add("", "Select Mirroring Source");
