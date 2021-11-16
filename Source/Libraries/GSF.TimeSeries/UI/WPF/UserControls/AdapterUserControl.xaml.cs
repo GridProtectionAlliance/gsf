@@ -95,7 +95,7 @@ namespace GSF.TimeSeries.UI.UserControls
         private void DataGridEnabledCheckBox_Click(object sender, RoutedEventArgs e)
         {
             // Get a reference to the enabled checkbox that was clicked
-            if (!(sender is CheckBox enabledCheckBox))
+            if (sender is not CheckBox enabledCheckBox)
                 return;
 
             // Get the runtime ID of the currently selected adapter
@@ -143,7 +143,7 @@ namespace GSF.TimeSeries.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         private void Default_Click(object sender, RoutedEventArgs e)
         {
-            if (!(DataContext is ViewModels.Adapters dataContext) || dataContext.SelectedParameter is null)
+            if (DataContext is not ViewModels.Adapters dataContext || dataContext.SelectedParameter is null)
                 return;
 
             Dictionary<string, string> settings = dataContext.CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();

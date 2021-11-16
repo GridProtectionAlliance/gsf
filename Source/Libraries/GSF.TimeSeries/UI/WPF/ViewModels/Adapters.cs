@@ -244,12 +244,12 @@ namespace GSF.TimeSeries.UI.ViewModels
             get => m_selectedParameter;
             set
             {
-                if (!(m_selectedParameter is null))
+                if (m_selectedParameter is not null)
                     m_selectedParameter.PropertyChanged -= ConnectionStringParameter_PropertyChanged;
 
                 m_selectedParameter = value;
 
-                if (!(m_selectedParameter is null))
+                if (m_selectedParameter is not null)
                     m_selectedParameter.PropertyChanged += ConnectionStringParameter_PropertyChanged;
 
                 OnPropertyChanged("SelectedParameter");
@@ -310,7 +310,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 {
                     ItemsKeys = Adapter.LoadIDs(null, m_adapterType, SortMember, SortDirection);
 
-                    if (!(SortSelector is null))
+                    if (SortSelector is not null)
                     {
                         ItemsKeys = SortDirection == "ASC" ? 
                             ItemsKeys.OrderBy(SortSelector).ToList() : 
@@ -404,7 +404,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                                         .Select(tuple => tuple.Item1)
                                         .SingleOrDefault(type => type.FullName == CurrentItem.TypeName);
 
-                    if (!(selectedType is null))
+                    if (selectedType is not null)
                     {
                         string pattern = Regex.Escape(FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar));
                         CurrentItem.AssemblyName = Regex.Replace(selectedType.Assembly.Location, $"^{pattern}", "", RegexOptions.IgnoreCase);
@@ -441,7 +441,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <param name="e">Event arguments.</param>
         protected virtual void ConnectionStringParameter_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (m_suppressConnectionStringUpdates || !(sender is AdapterConnectionStringParameter parameter) || parameter.Value is null || e.PropertyName != "Value")
+            if (m_suppressConnectionStringUpdates || sender is not AdapterConnectionStringParameter parameter || parameter.Value is null || e.PropertyName != "Value")
                 return;
 
             try
@@ -624,7 +624,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </returns>
         private List<AdapterConnectionStringParameter> GetParameterList(string assemblyName, string typeName)
         {
-            if (!(assemblyName is null) && !(typeName is null))
+            if (assemblyName is not null && typeName is not null)
             {
                 // For convenience, start by searching the type
                 // list for a type matching the parameters.
@@ -637,7 +637,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if (adapterType is null && File.Exists(assemblyName))
                     adapterType = Assembly.LoadFrom(assemblyName).GetType(typeName);
 
-                if (!(adapterType is null))
+                if (adapterType is not null)
                 {
                     // Get the list of properties with ConnectionStringParameterAttribute annotations.
                     IEnumerable<PropertyInfo> infoList = adapterType.GetProperties()
@@ -686,7 +686,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             object defaultValue = null;
             string description = null;
 
-            if (!(m_parameterList is null))
+            if (m_parameterList is not null)
                 parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(info.Name, StringComparison.OrdinalIgnoreCase));
 
             // These are different cases, but we need to extract the description
@@ -733,7 +733,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             AdapterConnectionStringParameter parameter = null;
 
-            if (!(m_parameterList is null))
+            if (m_parameterList is not null)
                 parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
             return parameter ?? new AdapterConnectionStringParameter()

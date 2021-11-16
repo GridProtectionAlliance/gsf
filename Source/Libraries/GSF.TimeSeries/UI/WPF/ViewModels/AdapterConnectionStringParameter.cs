@@ -177,13 +177,15 @@ namespace GSF.TimeSeries.UI.ViewModels
                         ((Enum)Enum.Parse(m_info.PropertyType, Value.ToString(), true)).GetDescription(false) :
                         null;
                 }
+            #if DEBUG
                 catch (Exception ex)
                 {
-                #if DEBUG
                     return ex.Message;
-                #else
+            #else
+                catch
+                {
                     return null;
-                #endif
+            #endif
                 }
             }
             set { }
@@ -227,7 +229,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 try
                 {
-                    return !(m_info?.GetCustomAttribute<CustomConfigurationEditorAttribute>() is null);
+                    return m_info?.GetCustomAttribute<CustomConfigurationEditorAttribute>() is not null;
                 }
                 catch
                 {
