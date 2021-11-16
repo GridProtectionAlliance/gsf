@@ -32,9 +32,10 @@ using System.Security.Claims;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+#pragma warning disable CS1591 // TODO: Fix missing XML comments for publicly visible types and members
 
 namespace GSF.Web.Model
 {
@@ -45,6 +46,7 @@ namespace GSF.Web.Model
     public class ModelController<T> : ApiController where T : class, new()
     {
         #region [ Members ]
+
         /// <summary>
         /// Class Providing Search Parameters for the Search Endpoints
         /// </summary>
@@ -223,10 +225,10 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Gets record from associated table with a primary key matching the id provided
+        /// Gets record from associated table with a primary key matching the <paramref name="id"/> provided.
         /// </summary>
         /// <param name="id">ID to be used</param>
-        /// <returns><see cref="IHttpActionResult"/> containing <see cref="T"/> or <see cref="Exception"/></returns>
+        /// <returns><see cref="IHttpActionResult"/> containing <typeparamref name="T"/> or <see cref="Exception"/></returns>
         [HttpGet, Route("One/{id}")]
         public virtual IHttpActionResult GetOne(string id)
         {
@@ -266,7 +268,7 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Gets a sorted list of <see cref="T"/>.
+        /// Gets a sorted list of <typeparamref name="T"/>.
         /// </summary>
         /// <param name="sort"> the Field to be sorted by.</param>
         /// <param name="ascending"> parameter to indicate whether the list is in ascending order.</param>
@@ -345,7 +347,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Adds a new Record.
         /// </summary>
-        /// <param name="record"> The <see cref="T"/> record to be added.</param>
+        /// <param name="record"> The <typeparamref name="T"/> record to be added.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the added record or <see cref="Exception"/> </returns>
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
@@ -378,7 +380,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Updates an existing Record.
         /// </summary>
-        /// <param name="record"> The <see cref="T"/> record to be updated.</param>
+        /// <param name="record"> The <typeparamref name="T"/> record to be updated.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the updated record or <see cref="Exception"/> </returns>
 
         [HttpPatch, Route("Update")]
@@ -424,7 +426,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Deletes an existing Record.
         /// </summary>
-        /// <param name="record"> The <see cref="T"/> record to be deleted.</param>
+        /// <param name="record"> The <typeparamref name="T"/> record to be deleted.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the number of records deleted or <see cref="Exception"/> </returns>
 
         [HttpDelete, Route("Delete")]
@@ -481,7 +483,7 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Gets all records from associated table, filtered and sorted as defined in <see cref="postData"/>.
+        /// Gets all records from associated table, filtered and sorted as defined in <paramref name="postData"/>.
         /// </summary>
         /// <param name="postData"><see cref="PostData"/> containing the search and sort parameters</param>
        /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
@@ -733,7 +735,7 @@ namespace GSF.Web.Model
                                 SELECT 
                                     SRC.*,
                                     ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-	                                AF.{SearchSettings.ValueField} AS AFValue
+                                    AF.{SearchSettings.ValueField} AS AFValue
                                 FROM  {tableName} SRC LEFT JOIN 
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
@@ -743,9 +745,9 @@ namespace GSF.Web.Model
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
                                     SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
                                         FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
+                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
 
-		                        exec sp_executesql @CleanSQL
+                                exec sp_executesql @CleanSQL
                             '
                             exec sp_executesql @SQLStatement";
                     else
@@ -759,7 +761,7 @@ namespace GSF.Web.Model
                                 SELECT 
                                     SRC.*,
                                     ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-	                                AF.{SearchSettings.ValueField} AS AFValue
+                                    AF.{SearchSettings.ValueField} AS AFValue
                                 FROM  ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
@@ -769,9 +771,9 @@ namespace GSF.Web.Model
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
                                     SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
                                         FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-		                        DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
+                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
 
-		                        exec sp_executesql @CleanSQL
+                                exec sp_executesql @CleanSQL
                             '
                             exec sp_executesql @SQLStatement";
                 }
