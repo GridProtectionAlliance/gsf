@@ -39,7 +39,7 @@
     <tags>Web Application Security</tags>
     <icon>images\GSF64x64.png</icon>
     <dependencies>
-      <dependency id="GSF.Web" />
+      <dependency id="GSF.Web" version="1.0" />
     </dependencies>
   </metadata>
   <files>
