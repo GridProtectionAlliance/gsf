@@ -219,6 +219,14 @@
     <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'" ContinueOnError="true"/>
     <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'" ContinueOnError="true"/>
 
+    <!-- Signing NuGet packages. -->
+    <Message Text="Signing NuGet library packages..."/>
+    <ItemGroup>
+      <NuGetPackages Remove="@(NuGetPackages)"/>
+      <NuGetPackages Include="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg" Exclude="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.symbols.nupkg"/>
+    </ItemGroup>
+    <Exec Command="%22$(NuGet)%22 sign %22%(NuGetPackages.FullPath)%22 -CertificateFingerprint $(NuGetCertFingerprint) -Timestamper http://timestamp.digicert.com" Condition="'@(NuGetPackages)' != ''" ContinueOnError="true"/>
+
     <!-- Publish NuGet packages. -->
     <Message Text="Publishing NuGet packages to NuGet.org..."/>
     <ItemGroup>
