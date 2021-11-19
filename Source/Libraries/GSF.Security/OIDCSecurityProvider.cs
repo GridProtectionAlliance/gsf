@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
@@ -68,6 +69,7 @@ namespace GSF.Security
     ///       <add name="ClientSecret" value="sssss-ssssss-sssss" description="Defines the Client Secret to encrypt User Information." encrypted="false" />
     ///       <add name="SelfVerifiedNonce="aefgdfhf" description="Defines the Client Secret to encrypt User Information." encrypted="false" />
     ///       <add name="TokenEndpoint" value="user" description="Defines the Endpoint to get the User Token from." encrypted="false" />
+    ///       <add name="ShowDetailedError" value="true" description="Indicates if the Login Page should display detailed Debuging Information when OAuth Fails." encrypted="false" />
     ///     </securityProvider>
     ///   </categorizedSettings>
     /// </configuration>
@@ -237,6 +239,15 @@ namespace GSF.Security
             }
         }
 
+        /// <summary>
+        /// Indicates if the Login Page should display detailed Debugging Information when OAuth Fails.
+        /// </summary>
+        public bool ShowDetailedError
+        {
+            get;
+            set;
+        }
+
         private string m_clientRequestUri;
         #endregion
 
@@ -262,6 +273,7 @@ namespace GSF.Security
             settings.Add(nameof(TokenEndpoint), "", "Defines the Endpoint to use to grab the User Token.");
             settings.Add(nameof(RolesClaim), "roles", "Defines the claim used to identify the users roles.");
             settings.Add(nameof(SelfVerifiedNonce), "", "Defines a nonce that is verified manually.");
+            settings.Add(nameof(ShowDetailedError), "false", "Indicates if the Login Page should display detailed Debuging Information when OAuth Fails.");
 
             ClientID = settings[nameof(ClientID)].ValueAs(ClientID);
             Scope = settings[nameof(Scope)].ValueAs(Scope);
@@ -271,6 +283,7 @@ namespace GSF.Security
             TokenEndpoint = settings[nameof(TokenEndpoint)].ValueAs(TokenEndpoint);
             RolesClaim = settings[nameof(RolesClaim)].ValueAs(RolesClaim);
             SelfVerifiedNonce = settings[nameof(SelfVerifiedNonce)].ValueAs(SelfVerifiedNonce);
+            ShowDetailedError = settings[nameof(ShowDetailedError)].ValueAs(ShowDetailedError);
         }
 
         /// <summary>
@@ -568,9 +581,11 @@ namespace GSF.Security
             {
                 if (LastException != null)
                     return $"{loginUrl}?oidcError={WebUtility.UrlEncode(LastException.Message)}";
-                
 
                 //This is a redirect issue and needs to display error page
+                if (ShowDetailedError && uri.Query.Contains("error_description="))
+                    return $"{loginUrl}?oidcError={WebUtility.UrlEncode(System.Web.HttpUtility.ParseQueryString(uri.Query).Get("error_description"))}";
+                
                 return $"{loginUrl}?oidcError={WebUtility.UrlEncode("A Server Error Occured.")}";
             }
 
