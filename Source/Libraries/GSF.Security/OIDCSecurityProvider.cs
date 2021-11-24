@@ -255,94 +255,11 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Refreshes the <see cref="UserData"/>.
+        /// Not implemented by <see cref="OIDCSecurityProvider"/>; always returns <c>false</c>.
         /// </summary>
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
-        public override bool RefreshData()
-        {
-            if (string.IsNullOrEmpty(UserData.Username))
-                return false;
-
-            // Already have token for this user, do not re-initialize user data
-            if (UserData.Token is not null)
-                return true;
-
-            try
-            {
-                m_clientRequestUri = "";
-
-                // Get user token
-                TokenResponse token = GetTokenAsync(UserData.Username).GetAwaiter().GetResult();
-
-                JObject tokenContent = DecodeJWT(token.id_token);
-
-                // Translate UserDetails according to Token
-                if (!tokenContent.TryGetValue("sub", out JToken sub))
-                    throw new Exception("Token data was not derived from valid JWT: missing 'sub'");
-
-                if (!tokenContent.TryGetValue("nonce", out JToken nonce))
-                    throw new Exception("Token data was not derived from valid JWT: missing 'nonce'");
-
-                // TODO: validate Nonce matches nonce send for this user
-
-                if (!tokenContent.TryGetValue("name", out JToken userName))
-                    throw new Exception("Token data was not derived from valid JWT: missing 'name'");
-
-                OIDCUserData userData = new(sub.ToString())
-                {
-                    Username = userName.ToString(),
-                    Nonce = nonce.ToString(),
-                    Token = token
-                };
-
-                // Initialize user data.
-                userData.Initialize();
-
-                if (tokenContent.TryGetValue("given_name", out JToken firstName))
-                    userData.FirstName = firstName.ToString();
-
-                if (tokenContent.TryGetValue("family_name", out JToken lastName))
-                    userData.LastName = lastName.ToString();
-
-                if (tokenContent.TryGetValue("phone_number", out JToken phoneNumber))
-                    userData.PhoneNumber = phoneNumber.ToString();
-
-                if (tokenContent.TryGetValue("email", out JToken email))
-                    userData.EmailAddress = email.ToString();
-
-                try
-                {
-                    // Roles are obtained from a Claim
-                    userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToString().Split(',').ToList();
-                }
-                catch (Exception ex)
-                {
-                    LastException = ex;
-                    Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "DecodingTokenError", "Failed to decode Roles Claim.", "Failed to decode Claim for roles.", ex);
-                    throw new Exception("Failed to Decode Roles Claim: " + ex.Message, ex);
-                }
-
-                userData.IsDefined = true;
-                userData.IsDisabled = false;
-                userData.IsLockedOut = false;
-
-                UserData = userData;
-
-                if (s_nonceCache.Contains(nonce.ToString()))
-                {
-                    string base64Path = WebUtility.UrlDecode((string)s_nonceCache.Get(nonce.ToString()));
-                    byte[] pathBytes = Convert.FromBase64String(base64Path);
-                    m_clientRequestUri = Encoding.UTF8.GetString(pathBytes);
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                throw new SecurityException($"Exception occurred while decoding the OpenID token: {ex.Message}", ex);
-            }
-        }
-
+        public override bool RefreshData() => false;
+       
         /// <summary>
         /// Authenticates the user.
         /// </summary>
@@ -350,20 +267,24 @@ namespace GSF.Security
         public override bool Authenticate()
         {
             // Reset authenticated state and failure reason
-            AuthenticationFailureReason = null;           
-
-            if (UserData.Roles.Count == 0)
-            {
-                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
-                IsUserAuthenticated = false;
-            }
-            else
-            {
-                IsUserAuthenticated = !string.IsNullOrEmpty(UserData.Nonce);
-            }
+            AuthenticationFailureReason = null;
+            IsUserAuthenticated = false;
 
             try
             {
+                RequestToken(UserData.Username);
+
+                if (UserData.Roles.Count == 0)
+                {
+                    AuthenticationFailureReason = $"User \"{UserData.LoginID}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
+                    IsUserAuthenticated = false;
+                }
+                else
+                {
+                    IsUserAuthenticated = !string.IsNullOrEmpty(UserData.Nonce);
+                }
+
+
                 // Log user authentication result
                 LogAuthenticationAttempt(IsUserAuthenticated);
             }
@@ -581,6 +502,89 @@ namespace GSF.Security
         public override bool ChangePassword(string oldPassword, string newPassword) => 
             false;
 
+        /// <summary>
+        /// Not implemented by <see cref="OIDCSecurityProvider"/>; always returns <c>false</c>.
+        /// </summary>
+        public override bool CanRefreshData => false;
+
+        /// <summary>
+        /// Obtains the Token from the OIDC Server using a code.
+        /// </summary>
+        private void RequestToken(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return;
+
+            // Already have token for this user, do not re-initialize user data
+            if (UserData.Token is not null)
+                return;
+
+            m_clientRequestUri = "";
+
+            // Get user token
+            TokenResponse token = GetTokenAsync(code).GetAwaiter().GetResult();
+
+            JObject tokenContent = DecodeJWT(token.id_token);
+
+            // Translate UserDetails according to Token
+            if (!tokenContent.TryGetValue("sub", out JToken sub))
+                throw new Exception("Token data was not derived from valid JWT: missing 'sub'");
+
+            if (!tokenContent.TryGetValue("nonce", out JToken nonce))
+                throw new Exception("Token data was not derived from valid JWT: missing 'nonce'");
+
+            // TODO: validate Nonce matches nonce send for this user
+
+            if (!tokenContent.TryGetValue("name", out JToken userName))
+                throw new Exception("Token data was not derived from valid JWT: missing 'name'");
+
+            OIDCUserData userData = new(sub.ToString())
+            {
+                Username = userName.ToString(),
+                Nonce = nonce.ToString(),
+                Token = token
+            };
+
+            // Initialize user data.
+            userData.Initialize();
+
+            if (tokenContent.TryGetValue("given_name", out JToken firstName))
+                userData.FirstName = firstName.ToString();
+
+            if (tokenContent.TryGetValue("family_name", out JToken lastName))
+                userData.LastName = lastName.ToString();
+
+            if (tokenContent.TryGetValue("phone_number", out JToken phoneNumber))
+                userData.PhoneNumber = phoneNumber.ToString();
+
+            if (tokenContent.TryGetValue("email", out JToken email))
+                userData.EmailAddress = email.ToString();
+
+            try
+            {
+                // Roles are obtained from a Claim
+                userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToString().Split(',').ToList();
+            }
+            catch (Exception ex)
+            {
+                LastException = ex;
+                Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "DecodingTokenError", "Failed to decode Roles Claim.", "Failed to decode Claim for roles.", ex);
+                throw new Exception("Failed to Decode Roles Claim: " + ex.Message, ex);
+            }
+
+            userData.IsDefined = true;
+            userData.IsDisabled = false;
+            userData.IsLockedOut = false;
+
+            UserData = userData;
+
+            if (s_nonceCache.Contains(nonce.ToString()))
+            {
+                string base64Path = WebUtility.UrlDecode((string)s_nonceCache.Get(nonce.ToString()));
+                byte[] pathBytes = Convert.FromBase64String(base64Path);
+                m_clientRequestUri = Encoding.UTF8.GetString(pathBytes);
+            }          
+        }
         #endregion
 
         #region [ Static ]
