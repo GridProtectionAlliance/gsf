@@ -40,16 +40,17 @@
             this.buttonExport = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.groupBoxOptions = new System.Windows.Forms.GroupBox();
-            this.buttonCancelExport = new System.Windows.Forms.Button();
             this.linkLabelOpenExportPage = new System.Windows.Forms.LinkLabel();
             this.tabControlOptions = new System.Windows.Forms.TabControl();
             this.tabPageTimeRange = new System.Windows.Forms.TabPage();
+            this.labelMeasurementCount = new System.Windows.Forms.Label();
+            this.textBoxPhaseFilter = new System.Windows.Forms.TextBox();
+            this.labelPhaseFilter = new System.Windows.Forms.Label();
             this.textBoxDeviceFilter = new System.Windows.Forms.TextBox();
             this.labelDeviceFilter = new System.Windows.Forms.Label();
             this.labelEndTimeUTC = new System.Windows.Forms.Label();
             this.labelStartTimeUTC = new System.Windows.Forms.Label();
             this.buttonShowGraph = new System.Windows.Forms.Button();
-            this.buttonCancelPreFilter = new System.Windows.Forms.Button();
             this.buttonPreFilter = new System.Windows.Forms.Button();
             this.dataGridViewDevices = new System.Windows.Forms.DataGridView();
             this.labelDevices = new System.Windows.Forms.Label();
@@ -91,6 +92,10 @@
             this.tabPageAdvanced = new System.Windows.Forms.TabPage();
             this.labelFilterExpression = new System.Windows.Forms.Label();
             this.textBoxFilterExpression = new System.Windows.Forms.TextBox();
+            this.tabPageMessages = new System.Windows.Forms.TabPage();
+            this.textBoxMessageOutput = new System.Windows.Forms.TextBox();
+            this.buttonCancelExport = new System.Windows.Forms.Button();
+            this.buttonCancelPreFilter = new System.Windows.Forms.Button();
             this.groupBoxExportOptions = new System.Windows.Forms.GroupBox();
             this.checkBoxExportFilePerDataType = new System.Windows.Forms.CheckBox();
             this.labelExportFileName = new System.Windows.Forms.Label();
@@ -99,11 +104,7 @@
             this.radioButtonCOMTRADE = new System.Windows.Forms.RadioButton();
             this.radioButtonCSV = new System.Windows.Forms.RadioButton();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.tabPageMessages = new System.Windows.Forms.TabPage();
-            this.textBoxMessageOutput = new System.Windows.Forms.TextBox();
-            this.textBoxPhaseFilter = new System.Windows.Forms.TextBox();
-            this.labelPhaseFilter = new System.Windows.Forms.Label();
-            this.labelMeasurementCount = new System.Windows.Forms.Label();
+            this.checkBoxExportAsGZip = new System.Windows.Forms.CheckBox();
             this.groupBoxServerConnection.SuspendLayout();
             this.groupBoxOptions.SuspendLayout();
             this.tabControlOptions.SuspendLayout();
@@ -111,8 +112,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewDevices)).BeginInit();
             this.tabPageSettings.SuspendLayout();
             this.tabPageAdvanced.SuspendLayout();
-            this.groupBoxExportOptions.SuspendLayout();
             this.tabPageMessages.SuspendLayout();
+            this.groupBoxExportOptions.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxServerConnection
@@ -249,20 +250,6 @@
             this.groupBoxOptions.TabStop = false;
             this.groupBoxOptions.Text = "&Options";
             // 
-            // buttonCancelExport
-            // 
-            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancelExport.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancelExport.Location = new System.Drawing.Point(743, 396);
-            this.buttonCancelExport.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonCancelExport.Name = "buttonCancelExport";
-            this.buttonCancelExport.Size = new System.Drawing.Size(88, 27);
-            this.buttonCancelExport.TabIndex = 13;
-            this.buttonCancelExport.Text = "Cancel...";
-            this.buttonCancelExport.UseVisualStyleBackColor = true;
-            this.buttonCancelExport.Visible = false;
-            this.buttonCancelExport.Click += new System.EventHandler(this.buttonExportCancel_Click);
-            // 
             // linkLabelOpenExportPage
             // 
             this.linkLabelOpenExportPage.AutoSize = true;
@@ -316,6 +303,42 @@
             this.tabPageTimeRange.Size = new System.Drawing.Size(600, 341);
             this.tabPageTimeRange.TabIndex = 0;
             this.tabPageTimeRange.Text = "Time Range";
+            // 
+            // labelMeasurementCount
+            // 
+            this.labelMeasurementCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelMeasurementCount.AutoSize = true;
+            this.labelMeasurementCount.Location = new System.Drawing.Point(352, 50);
+            this.labelMeasurementCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelMeasurementCount.Name = "labelMeasurementCount";
+            this.labelMeasurementCount.Size = new System.Drawing.Size(152, 13);
+            this.labelMeasurementCount.TabIndex = 20;
+            this.labelMeasurementCount.Tag = "";
+            this.labelMeasurementCount.Text = "{0:N0} measurements selected";
+            this.labelMeasurementCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // textBoxPhaseFilter
+            // 
+            this.textBoxPhaseFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.textBoxPhaseFilter.Location = new System.Drawing.Point(12, 313);
+            this.textBoxPhaseFilter.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxPhaseFilter.Name = "textBoxPhaseFilter";
+            this.textBoxPhaseFilter.Size = new System.Drawing.Size(79, 20);
+            this.textBoxPhaseFilter.TabIndex = 19;
+            this.textBoxPhaseFilter.Text = "A,B,C,+,-,0";
+            this.textBoxPhaseFilter.TextChanged += new System.EventHandler(this.textBoxPhaseFilter_TextChanged);
+            // 
+            // labelPhaseFilter
+            // 
+            this.labelPhaseFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelPhaseFilter.AutoSize = true;
+            this.labelPhaseFilter.Location = new System.Drawing.Point(9, 298);
+            this.labelPhaseFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelPhaseFilter.Name = "labelPhaseFilter";
+            this.labelPhaseFilter.Size = new System.Drawing.Size(65, 13);
+            this.labelPhaseFilter.TabIndex = 18;
+            this.labelPhaseFilter.Text = "Phase Filter:";
+            this.labelPhaseFilter.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // textBoxDeviceFilter
             // 
@@ -372,20 +395,6 @@
             this.buttonShowGraph.UseVisualStyleBackColor = true;
             this.buttonShowGraph.Visible = false;
             this.buttonShowGraph.Click += new System.EventHandler(this.buttonShowGraph_Click);
-            // 
-            // buttonCancelPreFilter
-            // 
-            this.buttonCancelPreFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancelPreFilter.Enabled = false;
-            this.buttonCancelPreFilter.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonCancelPreFilter.Location = new System.Drawing.Point(743, 396);
-            this.buttonCancelPreFilter.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonCancelPreFilter.Name = "buttonCancelPreFilter";
-            this.buttonCancelPreFilter.Size = new System.Drawing.Size(88, 27);
-            this.buttonCancelPreFilter.TabIndex = 12;
-            this.buttonCancelPreFilter.Text = "Cancel...";
-            this.buttonCancelPreFilter.UseVisualStyleBackColor = true;
-            this.buttonCancelPreFilter.Click += new System.EventHandler(this.buttonCancelPreFilter_Click);
             // 
             // buttonPreFilter
             // 
@@ -907,18 +916,74 @@
             this.textBoxFilterExpression.Text = "FILTER ActiveMeasurements WHERE {0}";
             this.textBoxFilterExpression.TextChanged += new System.EventHandler(this.FormElementChanged);
             // 
+            // tabPageMessages
+            // 
+            this.tabPageMessages.Controls.Add(this.textBoxMessageOutput);
+            this.tabPageMessages.Location = new System.Drawing.Point(4, 22);
+            this.tabPageMessages.Name = "tabPageMessages";
+            this.tabPageMessages.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageMessages.Size = new System.Drawing.Size(600, 341);
+            this.tabPageMessages.TabIndex = 3;
+            this.tabPageMessages.Text = "Messages";
+            this.tabPageMessages.UseVisualStyleBackColor = true;
+            // 
+            // textBoxMessageOutput
+            // 
+            this.textBoxMessageOutput.BackColor = System.Drawing.SystemColors.WindowText;
+            this.textBoxMessageOutput.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxMessageOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxMessageOutput.ForeColor = System.Drawing.SystemColors.Window;
+            this.textBoxMessageOutput.Location = new System.Drawing.Point(3, 3);
+            this.textBoxMessageOutput.Margin = new System.Windows.Forms.Padding(2);
+            this.textBoxMessageOutput.Multiline = true;
+            this.textBoxMessageOutput.Name = "textBoxMessageOutput";
+            this.textBoxMessageOutput.ReadOnly = true;
+            this.textBoxMessageOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textBoxMessageOutput.Size = new System.Drawing.Size(594, 335);
+            this.textBoxMessageOutput.TabIndex = 1;
+            this.textBoxMessageOutput.TabStop = false;
+            // 
+            // buttonCancelExport
+            // 
+            this.buttonCancelExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancelExport.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonCancelExport.Location = new System.Drawing.Point(743, 396);
+            this.buttonCancelExport.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonCancelExport.Name = "buttonCancelExport";
+            this.buttonCancelExport.Size = new System.Drawing.Size(88, 27);
+            this.buttonCancelExport.TabIndex = 13;
+            this.buttonCancelExport.Text = "Cancel...";
+            this.buttonCancelExport.UseVisualStyleBackColor = true;
+            this.buttonCancelExport.Visible = false;
+            this.buttonCancelExport.Click += new System.EventHandler(this.buttonExportCancel_Click);
+            // 
+            // buttonCancelPreFilter
+            // 
+            this.buttonCancelPreFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCancelPreFilter.Enabled = false;
+            this.buttonCancelPreFilter.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonCancelPreFilter.Location = new System.Drawing.Point(743, 396);
+            this.buttonCancelPreFilter.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonCancelPreFilter.Name = "buttonCancelPreFilter";
+            this.buttonCancelPreFilter.Size = new System.Drawing.Size(88, 27);
+            this.buttonCancelPreFilter.TabIndex = 12;
+            this.buttonCancelPreFilter.Text = "Cancel...";
+            this.buttonCancelPreFilter.UseVisualStyleBackColor = true;
+            this.buttonCancelPreFilter.Click += new System.EventHandler(this.buttonCancelPreFilter_Click);
+            // 
             // groupBoxExportOptions
             // 
             this.groupBoxExportOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.groupBoxExportOptions.Controls.Add(this.checkBoxExportAsGZip);
             this.groupBoxExportOptions.Controls.Add(this.checkBoxExportFilePerDataType);
             this.groupBoxExportOptions.Controls.Add(this.labelExportFileName);
             this.groupBoxExportOptions.Controls.Add(this.buttonSelectFile);
             this.groupBoxExportOptions.Controls.Add(this.textBoxExportFileName);
             this.groupBoxExportOptions.Controls.Add(this.radioButtonCOMTRADE);
             this.groupBoxExportOptions.Controls.Add(this.radioButtonCSV);
-            this.groupBoxExportOptions.Location = new System.Drawing.Point(12, 252);
+            this.groupBoxExportOptions.Location = new System.Drawing.Point(12, 235);
             this.groupBoxExportOptions.Name = "groupBoxExportOptions";
-            this.groupBoxExportOptions.Size = new System.Drawing.Size(200, 138);
+            this.groupBoxExportOptions.Size = new System.Drawing.Size(200, 155);
             this.groupBoxExportOptions.TabIndex = 1;
             this.groupBoxExportOptions.TabStop = false;
             this.groupBoxExportOptions.Text = "E&xport Options";
@@ -997,68 +1062,18 @@
             this.saveFileDialog.Filter = "CSV Files|*.csv|All Files|*.*";
             this.saveFileDialog.Title = "Select Export File Name";
             // 
-            // tabPageMessages
+            // checkBoxExportAsGZip
             // 
-            this.tabPageMessages.Controls.Add(this.textBoxMessageOutput);
-            this.tabPageMessages.Location = new System.Drawing.Point(4, 22);
-            this.tabPageMessages.Name = "tabPageMessages";
-            this.tabPageMessages.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageMessages.Size = new System.Drawing.Size(600, 341);
-            this.tabPageMessages.TabIndex = 3;
-            this.tabPageMessages.Text = "Messages";
-            this.tabPageMessages.UseVisualStyleBackColor = true;
-            // 
-            // textBoxMessageOutput
-            // 
-            this.textBoxMessageOutput.BackColor = System.Drawing.SystemColors.WindowText;
-            this.textBoxMessageOutput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxMessageOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxMessageOutput.ForeColor = System.Drawing.SystemColors.Window;
-            this.textBoxMessageOutput.Location = new System.Drawing.Point(3, 3);
-            this.textBoxMessageOutput.Margin = new System.Windows.Forms.Padding(2);
-            this.textBoxMessageOutput.Multiline = true;
-            this.textBoxMessageOutput.Name = "textBoxMessageOutput";
-            this.textBoxMessageOutput.ReadOnly = true;
-            this.textBoxMessageOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxMessageOutput.Size = new System.Drawing.Size(594, 335);
-            this.textBoxMessageOutput.TabIndex = 1;
-            this.textBoxMessageOutput.TabStop = false;
-            // 
-            // textBoxPhaseFilter
-            // 
-            this.textBoxPhaseFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.textBoxPhaseFilter.Location = new System.Drawing.Point(12, 313);
-            this.textBoxPhaseFilter.Margin = new System.Windows.Forms.Padding(2);
-            this.textBoxPhaseFilter.Name = "textBoxPhaseFilter";
-            this.textBoxPhaseFilter.Size = new System.Drawing.Size(79, 20);
-            this.textBoxPhaseFilter.TabIndex = 19;
-            this.textBoxPhaseFilter.Text = "A,B,C,+,-,0";
-            this.textBoxPhaseFilter.TextChanged += new System.EventHandler(this.textBoxPhaseFilter_TextChanged);
-            // 
-            // labelPhaseFilter
-            // 
-            this.labelPhaseFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelPhaseFilter.AutoSize = true;
-            this.labelPhaseFilter.Location = new System.Drawing.Point(9, 298);
-            this.labelPhaseFilter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.labelPhaseFilter.Name = "labelPhaseFilter";
-            this.labelPhaseFilter.Size = new System.Drawing.Size(65, 13);
-            this.labelPhaseFilter.TabIndex = 18;
-            this.labelPhaseFilter.Text = "Phase Filter:";
-            this.labelPhaseFilter.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // labelMeasurementCount
-            // 
-            this.labelMeasurementCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelMeasurementCount.AutoSize = true;
-            this.labelMeasurementCount.Location = new System.Drawing.Point(352, 50);
-            this.labelMeasurementCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.labelMeasurementCount.Name = "labelMeasurementCount";
-            this.labelMeasurementCount.Size = new System.Drawing.Size(152, 13);
-            this.labelMeasurementCount.TabIndex = 20;
-            this.labelMeasurementCount.Tag = "";
-            this.labelMeasurementCount.Text = "{0:N0} measurements selected";
-            this.labelMeasurementCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.checkBoxExportAsGZip.AutoSize = true;
+            this.checkBoxExportAsGZip.Checked = true;
+            this.checkBoxExportAsGZip.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxExportAsGZip.Location = new System.Drawing.Point(8, 130);
+            this.checkBoxExportAsGZip.Margin = new System.Windows.Forms.Padding(2);
+            this.checkBoxExportAsGZip.Name = "checkBoxExportAsGZip";
+            this.checkBoxExportAsGZip.Size = new System.Drawing.Size(172, 17);
+            this.checkBoxExportAsGZip.TabIndex = 13;
+            this.checkBoxExportAsGZip.Text = "Export as GZip compressed file";
+            this.checkBoxExportAsGZip.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -1091,10 +1106,10 @@
             this.tabPageSettings.PerformLayout();
             this.tabPageAdvanced.ResumeLayout(false);
             this.tabPageAdvanced.PerformLayout();
-            this.groupBoxExportOptions.ResumeLayout(false);
-            this.groupBoxExportOptions.PerformLayout();
             this.tabPageMessages.ResumeLayout(false);
             this.tabPageMessages.PerformLayout();
+            this.groupBoxExportOptions.ResumeLayout(false);
+            this.groupBoxExportOptions.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1176,6 +1191,7 @@
         public System.Windows.Forms.TextBox textBoxPhaseFilter;
         private System.Windows.Forms.Label labelPhaseFilter;
         private System.Windows.Forms.Label labelMeasurementCount;
+        public System.Windows.Forms.CheckBox checkBoxExportAsGZip;
     }
 }
 

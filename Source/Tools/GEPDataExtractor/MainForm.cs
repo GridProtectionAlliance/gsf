@@ -858,6 +858,14 @@ namespace GEPDataExtractor
                 long timestamp = 0L;
                 bool pastFirstRow = false;
 
+                TextWriter createWriter(string fileName)
+                {
+                    if (checkBoxExportAsGZip.Checked)
+                        return GZipWriter.CreateBinary($"{fileName}.gzip");
+
+                    return File.CreateText(fileName);
+                }
+
                 void bufferValues()
                 {
                     // Write row values
@@ -1067,7 +1075,7 @@ namespace GEPDataExtractor
                     if (File.Exists(fileName))
                         File.Delete(fileName);
 
-                    using (writer = File.CreateText(fileName))
+                    using (writer = createWriter(fileName))
                     {
                         writer.Write(getHeaders(signalTypes));
                         writeComplete = false;
