@@ -13,6 +13,7 @@
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <LangVersion>9</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -95,6 +96,7 @@
     <Compile Include="Model\Node.cs" />
     <Compile Include="Model\SecurityGroup.cs" />
     <Compile Include="Model\UserAccount.cs" />
+    <Compile Include="OIDCUserData.cs" />
     <Compile Include="UserRoleCache.cs" />
     <Compile Include="LdapSecurityProvider.cs" />
     <Compile Include="RestrictAccessAttribute.cs" />

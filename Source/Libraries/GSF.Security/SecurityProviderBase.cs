@@ -222,14 +222,8 @@ namespace GSF.Security
         /// </summary>
         public string ApplicationName
         {
-            get
-            {
-                return m_applicationName;
-            }
-            set
-            {
-                m_applicationName = value;
-            }
+            get => m_applicationName;
+            set => m_applicationName = value;
         }
 
         /// <summary>
@@ -237,14 +231,8 @@ namespace GSF.Security
         /// </summary>
         public string ConnectionString
         {
-            get
-            {
-                return m_connectionString;
-            }
-            set
-            {
-                m_connectionString = value;
-            }
+            get => m_connectionString;
+            set => m_connectionString = value;
         }
 
         /// <summary>
@@ -252,14 +240,8 @@ namespace GSF.Security
         /// </summary>
         public IPrincipal PassthroughPrincipal
         {
-            get
-            {
-                return m_passthroughPrincipal;
-            }
-            set
-            {
-                m_passthroughPrincipal = value;
-            }
+            get => m_passthroughPrincipal;
+            set => m_passthroughPrincipal = value;
         }
 
         /// <summary>
@@ -267,13 +249,10 @@ namespace GSF.Security
         /// </summary>
         public virtual SecureString SecurePassword
         {
-            get
-            {
-                return m_securePassword;
-            }
+            get => m_securePassword;
             set
             {
-                if ((object)m_securePassword != null)
+                if (m_securePassword is not null)
                     m_securePassword.Dispose();
 
                 m_securePassword = value;
@@ -285,14 +264,8 @@ namespace GSF.Security
         /// </summary>
         public string Password
         {
-            get
-            {
-                return SecurePassword.ToUnsecureString();
-            }
-            set
-            {
-                SecurePassword = value.ToSecureString();
-            }
+            get => SecurePassword.ToUnsecureString();
+            set => SecurePassword = value.ToSecureString();
         }
 
         /// <summary>
@@ -303,17 +276,8 @@ namespace GSF.Security
         /// </remarks>
         public virtual LogEventFunctionSignature LogEvent
         {
-            get
-            {
-                return m_logEvent;
-            }
-            set
-            {
-                if ((object)value == null)
-                    m_logEvent = EventLog.WriteEntry;
-                else
-                    m_logEvent = value;
-            }
+            get => m_logEvent;
+            set => m_logEvent = value is null ? EventLog.WriteEntry : value;
         }
 
         /// <summary>
@@ -321,14 +285,8 @@ namespace GSF.Security
         /// </summary>
         public bool PersistSettings
         {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
+            get => m_persistSettings;
+            set => m_persistSettings = value;
         }
 
         /// <summary>
@@ -337,10 +295,7 @@ namespace GSF.Security
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string SettingsCategory
         {
-            get
-            {
-                return m_settingsCategory;
-            }
+            get => m_settingsCategory;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -355,14 +310,8 @@ namespace GSF.Security
         /// </summary>
         public virtual UserData UserData
         {
-            get
-            {
-                return m_userData;
-            }
-            protected set
-            {
-                m_userData = value;
-            }
+            get => m_userData;
+            protected set => m_userData = value;
         }
 
         /// <summary>
@@ -371,62 +320,32 @@ namespace GSF.Security
         /// </summary>
         public virtual bool IsUserAuthenticated
         {
-            get
-            {
-                return m_isUserAuthenticated;
-            }
-            protected set
-            {
-                m_isUserAuthenticated = value;
-            }
+            get => m_isUserAuthenticated;
+            protected set => m_isUserAuthenticated = value;
         }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
         /// </summary>
-        public virtual bool CanRefreshData
-        {
-            get
-            {
-                return m_canRefreshData;
-            }
-        }
+        public virtual bool CanRefreshData => m_canRefreshData;
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
         /// </summary>
-        public virtual bool CanResetPassword
-        {
-            get
-            {
-                return m_canResetPassword;
-            }
-        }
+        public virtual bool CanResetPassword => m_canResetPassword;
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ChangePassword"/> operation is supported.
         /// </summary>
-        public virtual bool CanChangePassword
-        {
-            get
-            {
-                return m_canChangePassword;
-            }
-        }
+        public virtual bool CanChangePassword => m_canChangePassword;
 
         /// <summary>
         /// Gets or allows derived classes to set an authentication failure reason.
         /// </summary>
         public virtual string AuthenticationFailureReason
         {
-            get
-            {
-                return m_authenticationFailureReason;
-            }
-            protected set
-            {
-                m_authenticationFailureReason = value;
-            }
+            get => m_authenticationFailureReason;
+            protected set => m_authenticationFailureReason = value;
         }
 
         /// <summary>
@@ -481,20 +400,20 @@ namespace GSF.Security
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!m_persistSettings)
+                return;
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["ApplicationName", true].Update(m_applicationName);
-                settings["ConnectionString", true].Update(m_connectionString);
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
-                config.Save();
-            }
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            settings["ApplicationName", true].Update(m_applicationName);
+            settings["ConnectionString", true].Update(m_connectionString);
+
+            config.Save();
         }
 
         /// <summary>
@@ -503,20 +422,20 @@ namespace GSF.Security
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!m_persistSettings)
+                return;
 
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("ApplicationName", m_applicationName, "Name of the application being secured as defined in the backend security data store.");
-                settings.Add("ConnectionString", m_connectionString, "Connection string to be used for connection to the backend security data store.");
-                ApplicationName = settings["ApplicationName"].ValueAs(m_applicationName);
-                ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            settings.Add("ApplicationName", m_applicationName, "Name of the application being secured as defined in the backend security data store.");
+            settings.Add("ConnectionString", m_connectionString, "Connection string to be used for connection to the backend security data store.");
+            ApplicationName = settings["ApplicationName"].ValueAs(m_applicationName);
+            ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
         }
 
         /// <summary>
