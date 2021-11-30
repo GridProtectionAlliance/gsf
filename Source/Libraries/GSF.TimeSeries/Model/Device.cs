@@ -64,7 +64,7 @@ namespace GSF.TimeSeries.Model
         public bool IsConcentrator { get; set; }
 
         [Required]
-        [Label("Company")]
+        [Label("Company")] // TODO: Dependency on "Global" should fail gracefully when type does not exist
         [DefaultValueExpression("Connection.ExecuteScalar(typeof(int), (object)null, 'SELECT ID FROM Company WHERE Acronym = {0}', Global.CompanyAcronym)", Cached = true)]
         public int? CompanyID { get; set; }
 
