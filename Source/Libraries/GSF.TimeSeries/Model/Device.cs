@@ -23,6 +23,7 @@
 
 #pragma warning disable 1591
 
+using ExpressionEvaluator;
 using GSF.ComponentModel;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
@@ -35,6 +36,7 @@ namespace GSF.TimeSeries.Model
     [PrimaryLabel("Acronym")]
     public class Device
     {
+        [DefaultValueExpression("Global.NodeID")]
         public Guid NodeID { get; set; }
 
         [Label("Local Device ID")]
@@ -64,7 +66,7 @@ namespace GSF.TimeSeries.Model
         public bool IsConcentrator { get; set; }
 
         [Required]
-        [Label("Company")] // TODO: Dependency on "Global" should fail gracefully when type does not exist
+        [Label("Company")]
         [DefaultValueExpression("Connection.ExecuteScalar(typeof(int), (object)null, 'SELECT ID FROM Company WHERE Acronym = {0}', Global.CompanyAcronym)", Cached = true)]
         public int? CompanyID { get; set; }
 
@@ -153,5 +155,17 @@ namespace GSF.TimeSeries.Model
         [DefaultValueExpression("this.CreatedBy", EvaluationOrder = 1)]
         [UpdateValueExpression("UserInfo.CurrentUserID")]
         public string UpdatedBy { get; set; }
+
+        static Device()
+        {
+            TypeRegistry registry = ValueExpressionParser.DefaultTypeRegistry;
+
+            // Use a proxy global settings reference, as required by Device model,
+            // if TSL host application has not already defined one. This is
+            // commonly only defined when host has a self-hosted web interface.
+            if (!registry.ContainsKey("Global"))
+                registry.RegisterSymbol("Global", new GlobalSettings());
+
+        }
     }
 }
