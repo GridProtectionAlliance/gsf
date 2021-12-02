@@ -590,7 +590,7 @@ namespace GSF.Security
         #region [ Static ]
 
         // Static Fields
-        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AdoSecurityProvider), MessageClass.Component);
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(OIDCSecurityProvider), MessageClass.Component);
 
         private static readonly MemoryCache s_nonceCache = new("OIDC-NonceCache");
 

@@ -403,7 +403,7 @@ namespace GSF.Web.Security
         #region [ Static ]
 
         // Static Fields
-        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AppBuilderExtensions), MessageClass.Framework);
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AuthenticationHandler), MessageClass.Framework);
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_alternateAuthorizationCache;
 
