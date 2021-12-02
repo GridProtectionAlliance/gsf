@@ -272,7 +272,7 @@ namespace GSF.Security
 
             try
             {
-                RequestToken(UserData.Username);
+                RequestToken(base.UserData.Username);
 
                 if (UserData.Roles.Count == 0)
                 {
@@ -516,7 +516,7 @@ namespace GSF.Security
                 return;
 
             // Already have token for this user, do not re-initialize user data
-            if (UserData.Token is not null)
+            if (UserData?.Token is not null)
                 return;
 
             m_clientRequestUri = "";
