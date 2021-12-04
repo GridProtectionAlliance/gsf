@@ -281,7 +281,7 @@ namespace GSF.PhasorProtocols
             private IPAddress m_remoteAddress;
             private Guid m_clientID;
 
-        #endregion
+            #endregion
 
             #region [ Properties ]
 
@@ -377,7 +377,7 @@ namespace GSF.PhasorProtocols
             /// </summary>
             public bool IsDisposed { get; private set; }
 
-        #endregion
+            #endregion
 
             #region [ Methods ]
 
@@ -694,11 +694,11 @@ namespace GSF.PhasorProtocols
                     SendClientDataException?.Invoke(this, e);
             }
 
-            // Shared server server started handler.
+            // Shared server started handler.
             // Forwards event to users attached to this server.
             private void SharedServer_ServerStarted(object sender, EventArgs e) => ServerStarted?.Invoke(this, e);
 
-            // Shared server server stopped handler.
+            // Shared server stopped handler.
             // Forwards event to users attached to this server.
             private void SharedServer_ServerStopped(object sender, EventArgs e) => ServerStopped?.Invoke(this, e);
 
@@ -754,7 +754,7 @@ namespace GSF.PhasorProtocols
             private IPAddress m_multicastSourceAddress;
             private bool m_receivePacketInfo;
 
-        #endregion
+            #endregion
 
             #region [ Properties ]
 
@@ -799,7 +799,7 @@ namespace GSF.PhasorProtocols
             /// Gets the server URI.
             /// </summary>
             public string ServerUri => m_udpClient?.ServerUri;
-            
+
             /// <summary>
             /// Gets the current server index, when multiple server end points are defined.
             /// </summary>
@@ -1438,6 +1438,7 @@ namespace GSF.PhasorProtocols
         private TransportProtocol m_transportProtocol;
         private string m_connectionString;
         private int m_maximumConnectionAttempts;
+        private bool m_autoRepeatCapturedPlayback;
         private int m_bufferSize;
         private IFrameParser m_frameParser;
         private IClient m_dataChannel;
@@ -1595,8 +1596,8 @@ namespace GSF.PhasorProtocols
                 if (settings.TryGetValue(nameof(TrustHeaderLength), out setting))
                     TrustHeaderLength = setting.ParseBoolean();
 
-                DeviceSupportsCommands = settings.TryGetValue(nameof(DeviceSupportsCommands), out setting) ? 
-                    setting.ParseBoolean() : 
+                DeviceSupportsCommands = settings.TryGetValue(nameof(DeviceSupportsCommands), out setting) ?
+                    setting.ParseBoolean() :
                     DeriveCommandSupport();
             }
         }
@@ -1792,7 +1793,22 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// This is only applicable when connection is made to a file for replay purposes.
         /// </remarks>
-        public bool AutoRepeatCapturedPlayback { get; set; }
+        public bool AutoRepeatCapturedPlayback
+        {
+            get => m_autoRepeatCapturedPlayback;
+            set
+            {
+                m_autoRepeatCapturedPlayback = value;
+
+                if (m_transportProtocol != TransportProtocol.File)
+                    return;
+
+                FileClient fileClient = m_dataChannel as FileClient;
+
+                if (fileClient is not null)
+                    fileClient.AutoRepeat = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if client should disconnect when end of file has been reached.
@@ -2699,7 +2715,7 @@ namespace GSF.PhasorProtocols
             // Make sure data stream is disabled
             if (!SkipDisableRealTimeData && DisableRealTimeDataOnStop)
             {
-                WaitHandle commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);  
+                WaitHandle commandWaitHandle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);
                 commandWaitHandle?.WaitOne(1000);
             }
 
@@ -2939,7 +2955,7 @@ namespace GSF.PhasorProtocols
 
             if (!DeviceSupportsCommands)
                 throw new InvalidOperationException("Device does not support commands");
-            
+
             if (m_dataChannel is null && m_serverBasedDataChannel is null && m_commandChannel is null)
                 throw new InvalidOperationException("No channel open for command publication");
 
@@ -3303,7 +3319,7 @@ namespace GSF.PhasorProtocols
             Parse(SourceChannel.Data, buffer, 0, length);
 
             // Keep reading file data
-            if (m_transportProtocol == TransportProtocol.File && QueuedOutputs < 2)
+            if (m_transportProtocol == TransportProtocol.File && QueuedBuffers < 2)
                 m_readNextBuffer?.RunOnceAsync();
         }
 
