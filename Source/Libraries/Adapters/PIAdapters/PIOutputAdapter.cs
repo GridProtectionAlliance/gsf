@@ -233,6 +233,14 @@ namespace PIAdapters
         public bool SyncAlternateTagOnly { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets flag that determines if tag synchronization should skip digitals when alternate tag field is being used.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Determines if tag synchronization should skip digitals when alternate tag field is being used. AlternateTag field is commonly used to hold IEEE C37.118 16-bit digital labels.")]
+        [DefaultValue(false)]
+        public bool SkipDigitalAlternateTagSync { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
         [ConnectionStringParameter]
@@ -303,6 +311,7 @@ namespace PIAdapters
                     status.AppendLine($"          Auto-update tags: {AutoUpdateTags}");
                     status.AppendLine($"          Auto-remove tags: {AutoRemoveTags}");
                     status.AppendLine($"   Sync alternate tag only: {SyncAlternateTagOnly}");
+                    status.AppendLine($" Skip digital alt-tag sync: {SkipDigitalAlternateTagSync}");
                     status.AppendLine($"    Tag prefixes to remove: {TagNamePrefixRemoveCount}");
                     status.AppendLine($"       OSI-PI point source: {PIPointSource}");
                     status.AppendLine($"        OSI-PI point class: {PIPointClass}");
@@ -455,6 +464,9 @@ namespace PIAdapters
 
             if (settings.TryGetValue(nameof(SyncAlternateTagOnly), out setting))
                 SyncAlternateTagOnly = setting.ParseBoolean();
+
+            if (settings.TryGetValue(nameof(SkipDigitalAlternateTagSync), out setting))
+                SkipDigitalAlternateTagSync = setting.ParseBoolean();
 
             if (settings.TryGetValue(nameof(PIPointSource), out setting))
                 PIPointSource = setting;
@@ -713,16 +725,19 @@ namespace PIAdapters
                             tagName = measurementRow["PointTag"].ToNonNullString().Trim();
 
                         // Use alternate tag if one is defined
-                        if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                        if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && (!measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase) || !SkipDigitalAlternateTagSync))
                             tagName = measurementRow["AlternateTag"].ToString().Trim();
 
-                        // Attempt lookup by tag name
-                        point = GetPIPoint(m_connection.Server, tagName);
-
-                        if (point is null)
+                        if (!string.IsNullOrWhiteSpace(tagName))
                         {
-                            if (!m_refreshingMetadata)
-                                OnStatusMessage(MessageLevel.Warning, $"No PI points found for tag '{tagName}'. Data will not be archived for '{key}'.");
+                            // Attempt lookup by tag name
+                            point = GetPIPoint(m_connection.Server, tagName);
+
+                            if (point is null)
+                            {
+                                if (!m_refreshingMetadata)
+                                    OnStatusMessage(MessageLevel.Warning, $"No PI points found for tag '{tagName}'. Data will not be archived for '{key}'.");
+                            }
                         }
                     }
                 }
