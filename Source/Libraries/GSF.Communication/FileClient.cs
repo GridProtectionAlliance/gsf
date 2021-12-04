@@ -208,6 +208,15 @@ namespace GSF.Communication
         /// </summary>
         public const string DefaultConnectionString = "File=DataFile.txt";
 
+        // Events
+
+        /// <summary>
+        /// Occurs when the end of a file has been reached.
+        /// </summary>
+        [Category("Data")]
+        [Description("Occurs when the end of a file has been reached.")]
+        public event EventHandler EndOfFile;
+
         // Fields
         private bool m_autoRepeat;
         private bool m_receiveOnDemand;
@@ -697,13 +706,16 @@ namespace GSF.Communication
                     // Notify of the retrieved data.
                     OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.BytesReceived);
 
-                    // Re-read the file if the user wants to repeat when done reading the file.
+                    // Handle end of file operations
                     if (m_fileClient.Provider.Position == m_fileClient.Provider.Length)
                     {
+                        // Re-read the file if the user wants to repeat when done reading the file.
                         if (m_autoRepeat)
                             m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
                         else if (DisconnectAtEOF)
                             Disconnect();
+
+                        OnEndOfFile();
                     }
 
                     // Stop processing the file if user has either opted to receive data on demand or receive data at a predefined interval.
@@ -729,6 +741,21 @@ namespace GSF.Communication
         {
             base.Disconnect();
             base.OnConnectionException(ex);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="EndOfFile"/> event.
+        /// </summary>
+        protected virtual void OnEndOfFile()
+        {
+            try
+            {
+                EndOfFile?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                OnUnhandledUserException(ex);
+            }
         }
 
         #endregion
