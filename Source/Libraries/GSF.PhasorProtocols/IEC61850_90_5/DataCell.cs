@@ -273,7 +273,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             IConfigurationCell configurationCell = null;
 
             // With or without an associated configuration, we'll parse the data cell
-            if (!(parsingState?.ConfigurationFrame is null))
+            if (parsingState?.ConfigurationFrame is not null)
                 configurationCell = parsingState.ConfigurationFrame.Cells[index];
 
             DataCell dataCell = new DataCell(parent as IDataFrame, configurationCell);

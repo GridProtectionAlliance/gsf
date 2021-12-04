@@ -174,7 +174,7 @@ namespace GSF.PhasorProtocols.FNET
             get => base.ConnectionParameters;
             set
             {
-                if (!(value is ConnectionParameters parameters))
+                if (value is not ConnectionParameters parameters)
                     return;
 
                 base.ConnectionParameters = parameters;

@@ -172,7 +172,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 status.Append(UsePhasorDataFileFormat);
                 status.AppendLine();
 
-                if (!(m_configurationFrame is null))
+                if (m_configurationFrame is not null)
                 {
                     status.Append("       BPA PDC stream type: ");
                     status.Append(m_configurationFrame.StreamType);
@@ -203,7 +203,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             get => base.ConnectionParameters;
             set
             {
-                if (!(value is ConnectionParameters parameters))
+                if (value is not ConnectionParameters parameters)
                     return;
 
                 base.ConnectionParameters = parameters;
@@ -235,7 +235,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 if (!disposing)
                     return;
 
-                if (!(m_configurationFileWatcher is null))
+                if (m_configurationFileWatcher is not null)
                 {
                     m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
                     m_configurationFileWatcher.Dispose();
@@ -330,7 +330,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Reset file watcher
         private void ResetFileWatcher()
         {
-            if (!(m_configurationFileWatcher is null))
+            if (m_configurationFileWatcher is not null)
             {
                 m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
                 m_configurationFileWatcher.Dispose();
@@ -429,7 +429,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 // Create equivalent derived frequency definition
                 IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
 
-                if (!(sourceFrequency is null))
+                if (sourceFrequency is not null)
                     derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                 // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)

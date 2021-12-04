@@ -331,7 +331,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    if (!(sourceFrequency is null))
+                    if (sourceFrequency is not null)
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                     // Add cell to frame

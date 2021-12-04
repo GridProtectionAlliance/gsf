@@ -46,12 +46,14 @@ namespace ProtocolTester
     {
         private static readonly bool WriteLogs = false;
         private static readonly bool TestConcentrator = false;
+        private static readonly bool BinaryCapture = false;
 
         private static Concentrator concentrator;
         private static MultiProtocolFrameParser parser;
         private static ConcurrentDictionary<string, MeasurementMetadata> m_definedMeasurements;
         private static ConcurrentDictionary<ushort, ConfigurationCell> m_definedDevices;
         private static StreamWriter m_exportFile;
+        private static FileStream m_capture;
         private static uint measurementID;
         private static long frameCount;
         private static long byteCount;
@@ -63,6 +65,9 @@ namespace ProtocolTester
 
             if (WriteLogs)
                 m_exportFile = new StreamWriter(FilePath.GetAbsolutePath("InputTimestamps.csv"));
+
+            if (BinaryCapture)
+                m_capture = File.OpenWrite(FilePath.GetAbsolutePath("Capture.PmuCapture"));
 
             if (TestConcentrator)
             {
@@ -94,7 +99,7 @@ namespace ProtocolTester
 
             // Define the connection string
             //parser.ConnectionString = @"phasorProtocol=IeeeC37_118V1; transportProtocol=UDP; localport=5000; server=233.123.123.123:5000; interface=0.0.0.0";
-            //parser.ConnectionString = @"phasorProtocol=Ieee1344; transportProtocol=File; file=D:\Projects\Applications\openPDC\Synchrophasor\Current Version\Build\Output\Debug\Applications\openPDC\Sample1344.PmuCapture";
+            parser.ConnectionString = @"phasorProtocol=Ieee1344; transportProtocol=File; file=D:\Projects\openPDC\Source\Applications\openPDC\openPDC\Sample1344.PmuCapture";
             //parser.ConnectionString = @"phasorProtocol=Macrodyne; accessID=1; transportProtocol=File; skipDisableRealTimeData = true; file=C:\Users\Ritchie\Desktop\Development\Macrodyne\ING.out; iniFileName=C:\Users\Ritchie\Desktop\Development\Macrodyne\BCH18Aug2011.ini; deviceLabel=ING1; protocolVersion=G";
             //parser.ConnectionString = @"phasorProtocol=Iec61850_90_5; accessID=1; transportProtocol=UDP; skipDisableRealTimeData = true; localPort=102; interface=0.0.0.0; commandChannel={transportProtocol=TCP; server=172.21.1.201:4712; interface=0.0.0.0}";
             //parser.ConnectionString = @"phasorProtocol=FNET; transportProtocol=TCP; server=172.21.4.100:4001; interface=0.0.0.0; isListener=false";
@@ -102,14 +107,15 @@ namespace ProtocolTester
             //parser.ConnectionString = @"phasorProtocol=SelFastMessage; transportProtocol=Serial; port=COM5; baudrate=57600; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";            
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118v1; transportProtocol=File; file=C:\Users\Ritchie\Desktop\MTI_Test_3phase.PmuCapture; checkSumValidationFrameTypes=DataFrame,HeaderFrame,CommandFrame";
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=tcp; accessID=105; server=172.31.105.135:4712; interface=0.0.0.0; isListener=false";
-            parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=Serial; port=COM6; baudRate=115200; dataBits=8; stopBits=One; parity=None; dtrEnable=false; rtsEnable=false; autoStartDataParsingSequence=false; disableRealTimeDataOnStop=false";
+            //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=Serial; port=COM6; baudRate=115200; dataBits=8; stopBits=One; parity=None; dtrEnable=false; rtsEnable=false; autoStartDataParsingSequence=false; disableRealTimeDataOnStop=false";
+            //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=tcp; accessID=1; server=localhost:4713; interface=0.0.0.0; isListener=false";
+            //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=File; file=D:\Projects\gsf\Build\Output\Debug\Tools\ProtocolTester\Capture.PmuCapture";
 
             Dictionary<string, string> settings = parser.ConnectionString.ParseKeyValuePairs();
-            string setting;
 
             // TODO: These should be optional picked up from connection string inside of MPFP
             // Apply other settings as needed
-            if (settings.TryGetValue("accessID", out setting))
+            if (settings.TryGetValue("accessID", out string setting))
                 parser.DeviceID = ushort.Parse(setting);
 
             if (settings.TryGetValue("simulateTimestamp", out setting))
@@ -130,8 +136,7 @@ namespace ProtocolTester
             if (settings.TryGetValue("disableRealTimeDataOnStop", out setting))
                 parser.DisableRealTimeDataOnStop = setting.ParseBoolean();
 
-            // When connecting to a file based resource you may want to loop the data
-            //parser.AutoRepeatCapturedPlayback = true;
+            parser.AutoRepeatCapturedPlayback = false;
 
             Console.WriteLine("ConnectionString: {0}", parser.ConnectionString);
 
@@ -141,6 +146,13 @@ namespace ProtocolTester
             Console.ReadLine();
 
             parser.Stop();
+
+            if (BinaryCapture)
+            {
+                m_capture.Flush();
+                m_capture.Close();
+
+            }
 
             // Stop concentrator
             if (TestConcentrator)
@@ -152,6 +164,9 @@ namespace ProtocolTester
 
         static void parser_ReceivedFrameBufferImage(object sender, EventArgs<FundamentalFrameType, byte[], int, int> e)
         {
+            if (BinaryCapture)
+                m_capture.Write(e.Argument2, e.Argument3, e.Argument4);
+
             const int interval = (int)SI.Kilo * 2;
 
             bool showMessage = byteCount + e.Argument4 >= (byteCount / interval + 1) * interval;
@@ -183,7 +198,7 @@ namespace ProtocolTester
             // Also check to assure the DataFrame has at least one Cell
             if (frameCount % 60 == 0)
             {
-                Console.WriteLine("Received {0} data frames so far - parsed timesatmp = \"{1}\"...", frameCount, dataFrame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                Console.WriteLine("Received {0} data frames so far - parsed timestamp = \"{1}\"...", frameCount, dataFrame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 if (dataFrame.Cells.Count > 0)
                 {

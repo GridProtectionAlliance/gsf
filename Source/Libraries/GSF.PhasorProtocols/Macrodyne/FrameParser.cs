@@ -229,7 +229,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 if (!disposing)
                     return;
 
-                if (!(m_configurationFileWatcher is null))
+                if (m_configurationFileWatcher is not null)
                 {
                     m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
                     m_configurationFileWatcher.Dispose();
@@ -401,7 +401,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             try
             {
-                if (!(m_configurationFrame is null))
+                if (m_configurationFrame is not null)
                     OnReceivedConfigurationFrame(m_configurationFrame);
             }
             catch (ThreadAbortException)
@@ -431,7 +431,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         // Reset file watcher
         private void ResetFileWatcher()
         {
-            if (!(m_configurationFileWatcher is null))
+            if (m_configurationFileWatcher is not null)
             {
                 m_configurationFileWatcher.Changed -= m_configurationFileWatcher_Changed;
                 m_configurationFileWatcher.Dispose();
@@ -573,7 +573,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
-                    if (!(sourceFrequency is null))
+                    if (sourceFrequency is not null)
                     {
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell)
                         {

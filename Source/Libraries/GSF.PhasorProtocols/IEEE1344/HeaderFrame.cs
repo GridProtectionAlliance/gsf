@@ -213,7 +213,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 FrameImageCollector frameImages = m_frameHeader.FrameImages;
 
-                if (!(frameImages is null))
+                if (frameImages is not null)
                 {
                     // Each individual frame will already have had a CRC check, so we implement standard parse to
                     // bypass ChannelBase CRC frame validation on cumulative frame image

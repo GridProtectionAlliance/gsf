@@ -114,7 +114,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Without timebase, the best timestamp you can get is down to the whole second
             m_timestamp = new UnixTimeTag((decimal)secondOfCentury).ToDateTime().Ticks;
 
-            if (!(configurationFrame is null))
+            if (configurationFrame is not null)
             {
                 // If config frame is available, frames have enough information for sub-second time resolution
                 m_timebase = configurationFrame.Timebase;

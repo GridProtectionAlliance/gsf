@@ -221,7 +221,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 m_qualityFlags = (uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode;
 
                 // Reference header MSVID in data frame if it's defined
-                if (!(m_frameHeader.MsvID is null))
+                if (m_frameHeader.MsvID is not null)
                     m_msvID = m_frameHeader.MsvID;
             }
         }
@@ -494,7 +494,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             IConfigurationFrame configurationFrame = state.ConfigurationFrame;
 
             // Make sure configuration frame gets assigned before parsing begins, if available...
-            if (!(configurationFrame is null))
+            if (configurationFrame is not null)
                 ConfigurationFrame = configurationFrame as ConfigurationFrame;
 
             int index = startIndex;
@@ -812,12 +812,12 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             // Attempt to read signal definition and label line
             string signalLabel = reader.ReadLine();
 
-            if (!(signalLabel is null))
+            if (signalLabel is not null)
             {
                 // Attempt to reader data type line
                 string dataType = reader.ReadLine();
 
-                if (!(dataType is null))
+                if (dataType is not null)
                 {
                     // Clean up data type
                     dataType = dataType.Trim().ToLower();
@@ -1024,7 +1024,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             bool trustHeaderLength = true;
             bool validateCheckSum = true;
 
-            if (!(State is null))
+            if (State is not null)
             {
                 trustHeaderLength = State.TrustHeaderLength;
                 validateCheckSum = State.ValidateCheckSum;

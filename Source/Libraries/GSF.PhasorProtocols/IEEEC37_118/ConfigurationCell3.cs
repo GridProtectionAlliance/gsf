@@ -95,7 +95,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             float getSingle(string name)
             {
-                return !(info.GetValue(name, typeof(string)) is string element) || element == "INF" ?
+                return info.GetValue(name, typeof(string)) is not string element || element == "INF" ?
                     float.PositiveInfinity :
                     float.Parse(element);
             }

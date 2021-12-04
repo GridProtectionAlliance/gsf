@@ -207,7 +207,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 switch (TypeID)
                 {
                     case Macrodyne.FrameType.DataFrame:
-                        if (!(m_configurationFrame is null))
+                        if (m_configurationFrame is not null)
                             return m_configurationFrame.DataFrameLength;
                         break;
                     case Macrodyne.FrameType.ConfigurationFrame:

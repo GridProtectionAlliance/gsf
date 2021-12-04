@@ -271,7 +271,7 @@ namespace GSF.PhasorProtocols.Anonymous
             // Look up synonym in dictionary based on signal type, if found return single element
             string[] references = m_generatedSignalReferenceCache[typeIndex];
 
-            if (!(references is null))
+            if (references is not null)
                 return references[0];
 
             // Create a new signal reference array (for single element)
@@ -304,7 +304,7 @@ namespace GSF.PhasorProtocols.Anonymous
             // Look up synonym in dictionary based on signal type
             string[] references = m_generatedSignalReferenceCache[typeIndex];
 
-            if (!(references is null))
+            if (references is not null)
             {
                 // Verify signal count has not changed (we may have received new configuration from device)
                 if (count == references.Length)

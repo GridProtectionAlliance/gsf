@@ -241,7 +241,7 @@ namespace GSF.PhasorProtocols
                 status.Append(ConfigurationFrame is null ? "No" : "Yes");
                 status.AppendLine();
 
-                if (!(ConfigurationFrame is null))
+                if (ConfigurationFrame is not null)
                 {
                     status.Append("   Devices in config frame: ");
                     status.Append(ConfigurationFrame.Cells.Count);

@@ -318,7 +318,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                 CommonHeader.AppendHeaderAttributes(baseAttributes);
 
-                if (!(m_iniFile is null))
+                if (m_iniFile is not null)
                     baseAttributes.Add("Configuration File Name", m_iniFile.FileName);
 
                 baseAttributes.Add("Stream Type", $"{(int)m_streamType}: {m_streamType}");
@@ -483,7 +483,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     }
 
                     // Associate parsed cells with cells defined in INI file
-                    if (ConfigurationFileCells.Count > 0 && !(Cells is null))
+                    if (ConfigurationFileCells.Count > 0 && Cells is not null)
                     {
                         if (refreshCausedByFrameParse)
                         {
@@ -519,12 +519,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                             ConfigurationFileCells.TryGetBySectionEntry($"{cell.IDLabel}pmu{index}", out configurationFileCell);
 
                                             // Add PDC block PMU configuration cell to the collection
-                                            if (!(configurationFileCell is null))
+                                            if (configurationFileCell is not null)
                                                 cellCollection.Add(configurationFileCell);
 
                                             index++;
                                         }
-                                        while (!(configurationFileCell is null));
+                                        while (configurationFileCell is not null);
                                     }
                                     else
                                     {

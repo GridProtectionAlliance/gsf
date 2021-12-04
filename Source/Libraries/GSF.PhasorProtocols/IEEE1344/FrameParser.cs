@@ -210,10 +210,10 @@ namespace GSF.PhasorProtocols.IEEE1344
         protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
         {
             // IEEE 1344 configuration frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
-            if (!(frame is ISupportFrameImage<FrameType> frameImage))
+            if (frame is not ISupportFrameImage<FrameType> frameImage)
                 return;
 
-            if (!(frameImage.CommonHeader is CommonFrameHeader commonHeader) || !commonHeader.IsLastFrame)
+            if (frameImage.CommonHeader is not CommonFrameHeader commonHeader || !commonHeader.IsLastFrame)
                 return;
 
             base.OnReceivedConfigurationFrame(frame);
@@ -230,7 +230,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         protected override void OnReceivedHeaderFrame(IHeaderFrame frame)
         {
             // IEEE 1344 header frames can span multiple frame images, so we don't allow base class to raise this event until all frames have been assembled...
-            if (!(frame is ISupportFrameImage<FrameType> frameImage))
+            if (frame is not ISupportFrameImage<FrameType> frameImage)
                 return;
 
             if (frameImage.CommonHeader is CommonFrameHeader commonHeader && commonHeader.IsLastFrame)
@@ -257,7 +257,7 @@ namespace GSF.PhasorProtocols.IEEE1344
 
                 // Calculate subsecond time information based on sample count,
                 // then add this fraction of time to current seconds value
-                if (!(dataFrame.ConfigurationFrame is null))
+                if (dataFrame.ConfigurationFrame is not null)
                 {
                     int frameIndex = sampleCount / m_samplesPerFrame;
                     long subsecondTicks = frameIndex * Ticks.PerSecond / dataFrame.ConfigurationFrame.FrameRate;
@@ -363,7 +363,7 @@ namespace GSF.PhasorProtocols.IEEE1344
                 // Create equivalent derived frequency definition
                 IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
 
-                if (!(sourceFrequency is null))
+                if (sourceFrequency is not null)
                     derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                 // IEEE 1344 does not define analog values...

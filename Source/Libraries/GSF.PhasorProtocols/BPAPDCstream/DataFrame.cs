@@ -259,7 +259,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 CommonHeader.AppendHeaderAttributes(baseAttributes);
                 baseAttributes.Add("Sample Number", m_sampleNumber.ToString());
 
-                if (!(LegacyLabels is null))
+                if (LegacyLabels is not null)
                 {
                     baseAttributes.Add("Legacy Label Count", LegacyLabels.Length.ToString());
 
@@ -308,7 +308,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             IDataFrameParsingState state = State;
 
             // Check for unlikely occurrence of unexpected configuration frame type
-            if (!(state.ConfigurationFrame is ConfigurationFrame configurationFrame))
+            if (state.ConfigurationFrame is not ConfigurationFrame configurationFrame)
                 throw new InvalidOperationException("Unexpected configuration frame encountered - BPA PDCstream configuration frame expected, cannot parse data frame.");
 
             if (UsePhasorDataFileFormat)

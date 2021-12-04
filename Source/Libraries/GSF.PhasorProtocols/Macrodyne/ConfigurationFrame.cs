@@ -375,7 +375,7 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                 baseAttributes.Add("ON-LINE Data Format Flags", $"{(byte)OnlineDataFormatFlags}: {OnlineDataFormatFlags}");
 
-                if (!(m_iniFile is null))
+                if (m_iniFile is not null)
                     baseAttributes.Add("Configuration File Name", m_iniFile.FileName);
 
                 return baseAttributes;
@@ -479,7 +479,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                     }
 
                     // Associate single Macrodyne cell with its associated cell hopefully defined in INI file
-                    if (m_configurationFileCells.Count > 0 && !(Cells is null) && Cells.Count > 0)
+                    if (m_configurationFileCells.Count > 0 && Cells is not null && Cells.Count > 0)
                     {
                         ConfigurationCell configurationFileCell = null;
 

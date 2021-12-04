@@ -475,7 +475,7 @@ namespace GSF.PhasorProtocols
         /// </returns>
         public bool Equals(IConfigurationCell other)
         {
-            return !(other is null) && CompareTo(other) == 0;
+            return other is not null && CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -490,7 +490,7 @@ namespace GSF.PhasorProtocols
         /// <exception cref="ArgumentException">value is not an <see cref="IConfigurationCell"/>.</exception>
         public virtual int CompareTo(object obj)
         {
-            if (!(obj is IConfigurationCell other))
+            if (obj is not IConfigurationCell other)
                 throw new ArgumentException("ConfigurationCell can only be compared to other IConfigurationCells");
 
             return CompareTo(other);

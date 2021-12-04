@@ -431,7 +431,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 // Create equivalent derived frequency definition
                 IFrequencyDefinition sourceFrequency = sourceCell.FrequencyDefinition;
 
-                if (!(sourceFrequency is null))
+                if (sourceFrequency is not null)
                     derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
                 // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)

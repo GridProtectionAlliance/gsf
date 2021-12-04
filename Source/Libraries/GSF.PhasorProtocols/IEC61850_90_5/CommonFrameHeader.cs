@@ -205,7 +205,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 long ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
                 m_timestamp += (ticksBeyondSecond + m_timebase / 2L) / m_timebase;
 
-                if (!(configurationFrame is null))
+                if (configurationFrame is not null)
                 {
                     // Hang on to configured frame rate and ticks per frame
                     m_framesPerSecond = configurationFrame.FrameRate;

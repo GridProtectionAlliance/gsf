@@ -110,7 +110,7 @@ namespace GSF.PhasorProtocols
                 {
                     byte[] headerImage = HeaderImage;
 
-                    if (!(headerImage is null))
+                    if (headerImage is not null)
                     {
                         Buffer.BlockCopy(headerImage, 0, buffer, index, headerLength);
                         index += headerLength;
@@ -123,7 +123,7 @@ namespace GSF.PhasorProtocols
                 {
                     byte[] bodyImage = BodyImage;
 
-                    if (!(bodyImage is null))
+                    if (bodyImage is not null)
                     {
                         Buffer.BlockCopy(bodyImage, 0, buffer, index, bodyLength);
                         index += bodyLength;
@@ -136,7 +136,7 @@ namespace GSF.PhasorProtocols
                 {
                     byte[] footerImage = FooterImage;
 
-                    if (!(footerImage is null))
+                    if (footerImage is not null)
                         Buffer.BlockCopy(footerImage, 0, buffer, index, footerLength);
                 }
 

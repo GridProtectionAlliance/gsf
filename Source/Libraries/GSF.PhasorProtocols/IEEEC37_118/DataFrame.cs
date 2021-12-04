@@ -74,7 +74,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             : base(new DataCellCollection(), timestamp, configurationFrame)
         {
             // Pass time-base along to DataFrame's common header
-            if (!(configurationFrame is null))
+            if (configurationFrame is not null)
                 CommonHeader.Timebase = configurationFrame.Timebase;
         }
 

@@ -130,7 +130,7 @@ namespace GSF.PhasorProtocols.FNET
             {
                 m_frameHeader = value;
 
-                if (!(m_frameHeader is null))
+                if (m_frameHeader is not null)
                     State = m_frameHeader.State as IDataFrameParsingState;
             }
         }

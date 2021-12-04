@@ -90,7 +90,7 @@ namespace GSF.PhasorProtocols
             }
 
             configurationCell = this.FirstOrDefault(cell => stationName.TruncateRight(cell.MaximumStationNameLength).Equals(cell.StationName, StringComparison.OrdinalIgnoreCase));
-            return !(configurationCell is null);
+            return configurationCell is not null;
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace GSF.PhasorProtocols
             }
 
             configurationCell = this.FirstOrDefault(cell => label.Equals(cell.IDLabel.TruncateRight(cell.IDLabelLength), StringComparison.OrdinalIgnoreCase));
-            return !(configurationCell is null);
+            return configurationCell is not null;
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace GSF.PhasorProtocols
         public virtual bool TryGetByIDCode(ushort idCode, out IConfigurationCell configurationCell)
         {
             configurationCell = this.FirstOrDefault(cell => cell.IDCode == idCode);
-            return !(configurationCell is null);
+            return configurationCell is not null;
         }
 
         /// <summary>
