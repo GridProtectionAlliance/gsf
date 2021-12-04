@@ -3271,10 +3271,6 @@ namespace GSF.PhasorProtocols
             // If injecting a simulated timestamp, use the last received time
             if (InjectSimulatedTimestamp)
                 sourceFrame.Timestamp = simulatedTimestamp;
-
-            // Read next buffer if output frames are almost all processed
-            if (QueuedOutputs < 2)
-                m_readNextBuffer?.RunOnceAsync();
         }
 
         #region [ Data Channel Event Handlers ]
@@ -3305,6 +3301,10 @@ namespace GSF.PhasorProtocols
             byte[] buffer = new byte[length];
             length = m_dataChannel.Read(buffer, 0, length);
             Parse(SourceChannel.Data, buffer, 0, length);
+
+            // Keep reading file data
+            if (m_transportProtocol == TransportProtocol.File && QueuedOutputs < 2)
+                m_readNextBuffer?.RunOnceAsync();
         }
 
         private void m_dataChannel_ConnectionEstablished(object sender, EventArgs e)
@@ -3570,17 +3570,9 @@ namespace GSF.PhasorProtocols
                     DateTime timestamp = dataFrame.Timestamp;
 
                     if (timestamp >= ReplayStartTime && timestamp < ReplayStopTime)
-                    {
                         MaintainCapturedFrameReplayTiming(dataFrame);
-                    }
                     else
-                    {
                         publishFrame = false;
-
-                        // Read next buffer if output frames are almost all processed
-                        if (QueuedBuffers < 2)
-                            m_readNextBuffer?.RunOnceAsync();
-                    }
                 }
                 else if (InjectSimulatedTimestamp)
                 {
