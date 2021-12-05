@@ -95,6 +95,15 @@ namespace GSF.PhasorProtocols
     public interface IFrameParser : IProvideStatus, IDisposable
     {
         /// <summary>
+        /// Occurs when any <see cref="IChannelFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="IChannelFrame"/> that was received.
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the flag to determine if frame publication should continue.
+        /// </remarks>
+        event EventHandler<EventArgs<IChannelFrame, bool>> ReceivedChannelFrame;
+
+        /// <summary>
         /// Occurs when a <see cref="ICommandFrame"/> has been received.
         /// </summary>
         /// <remarks>
@@ -180,18 +189,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the total number of buffers that are currently queued for processing, if any.
         /// </summary>
-        int QueuedBuffers
-        {
-            get;
-        }
+        int QueuedBuffers { get; }
 
         /// <summary>
         /// Gets the total number of frames that are currently queued for publication, if any.
         /// </summary>
-        int QueuedOutputs
-        {
-            get;
-        }
+        int QueuedOutputs { get; }
 
         /// <summary>
         /// Gets the number of redundant frames in each packet.
@@ -201,10 +204,7 @@ namespace GSF.PhasorProtocols
         /// frame that is received, that frame will be included in the next <c>n</c>
         /// packets, where <c>n</c> is the number of redundant frames per packet.
         /// </remarks>
-        int RedundantFramesPerPacket
-        {
-            get;
-        }
+        int RedundantFramesPerPacket { get; }
 
         /// <summary>
         /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
@@ -213,20 +213,12 @@ namespace GSF.PhasorProtocols
         /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame.  Consumer can manually assign a
         /// <see cref="IConfigurationFrame"/> to start parsing data if one has not been encountered in the stream.
         /// </remarks>
-        IConfigurationFrame ConfigurationFrame
-        {
-            get;
-            set;
-        }
+        IConfigurationFrame ConfigurationFrame { get; set; }
 
         /// <summary>
         /// Gets or sets any connection specific <see cref="IConnectionParameters"/> that may be needed for parsing.
         /// </summary>
-        IConnectionParameters ConnectionParameters
-        {
-            get;
-            set;
-        }
+        IConnectionParameters ConnectionParameters { get; set; }
 
         /// <summary>
         /// Gets or sets flags that determine if check-sums for specified frames should be validated.
@@ -234,11 +226,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// It is expected that this will normally be set to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
         /// </remarks>
-        CheckSumValidationFrameTypes CheckSumValidationFrameTypes
-        {
-            get;
-            set;
-        }
+        CheckSumValidationFrameTypes CheckSumValidationFrameTypes { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
@@ -246,20 +234,12 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// It is expected that this will normally be left as <c>true</c>.
         /// </remarks>
-        bool TrustHeaderLength
-        {
-            get;
-            set;
-        }
+        bool TrustHeaderLength { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the data parser is currently enabled.
         /// </summary>
-        bool Enabled
-        {
-            get;
-            set;
-        }
+        bool Enabled { get; set; }
 
         /// <summary>
         /// Start the streaming data parser.

@@ -55,6 +55,15 @@ namespace GSF.PhasorProtocols
 
         // Events
 
+        /// <summary>
+        /// Occurs when any <see cref="IChannelFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="IChannelFrame"/> that was received.
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the flag to determine if frame publication should continue.
+        /// </remarks>
+        public event EventHandler<EventArgs<IChannelFrame, bool>> ReceivedChannelFrame;
+
         // Derived classes will typically also expose events to provide instances to the protocol specific final derived channel frames
 
         /// <summary>
@@ -180,11 +189,7 @@ namespace GSF.PhasorProtocols
         /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame. Consumer can manually assign a
         /// <see cref="IConfigurationFrame"/> to start parsing data if one has not been encountered in the stream.
         /// </remarks>
-        public abstract IConfigurationFrame ConfigurationFrame
-        {
-            get;
-            set;
-        }
+        public abstract IConfigurationFrame ConfigurationFrame { get; set; }
 
         /// <summary>
         /// Gets or sets any connection specific <see cref="IConnectionParameters"/> that may be needed for parsing.
@@ -237,33 +242,21 @@ namespace GSF.PhasorProtocols
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.Append("     Received config frame: ");
-                status.Append(ConfigurationFrame is null ? "No" : "Yes");
-                status.AppendLine();
+                status.AppendLine($"     Received config frame: {(ConfigurationFrame is null ? "No" : "Yes")}");
 
                 if (ConfigurationFrame is not null)
                 {
-                    status.Append("   Devices in config frame: ");
-                    status.Append(ConfigurationFrame.Cells.Count);
-                    status.Append(" total - ");
-                    status.AppendLine();
+                    status.AppendLine($"   Devices in config frame: {ConfigurationFrame.Cells.Count:N0} total - ");
 
                     foreach (IConfigurationCell cell in ConfigurationFrame.Cells)
-                    {
-                        status.AppendFormat("               ({0:00000}) {1}{2}\r\n", cell.IDCode, cell.StationName.PadRight(16), string.IsNullOrEmpty(cell.IDLabel) ? "" : $" [{cell.IDLabel}]");
-                    }
+                        status.AppendLine($"               ({cell.IDCode:00000}) {cell.StationName.PadRight(16)}{(string.IsNullOrEmpty(cell.IDLabel) ? "" : $" [{ cell.IDLabel}]")}");
 
-                    status.Append("     Configured frame rate: ");
-                    status.Append(ConfigurationFrame.FrameRate);
-                    status.AppendLine();
+                    status.AppendLine($"     Configured frame rate: {ConfigurationFrame.FrameRate}");
                 }
 
-                status.Append("    Trusting header length: ");
-                status.Append(TrustHeaderLength);
-                status.AppendLine();
-                status.Append("Check-sum validation types: ");
-                status.Append(CheckSumValidationFrameTypes);
-                status.AppendLine();
+                status.AppendLine($"    Trusting header length: {TrustHeaderLength}");
+                status.AppendLine($"Check-sum validation types: {CheckSumValidationFrameTypes}");
+                status.AppendLine($"       Queued frame images: {m_frameImageQueue?.Count ?? 0:N0}");
 
                 return status.ToString();
             }
@@ -303,46 +296,36 @@ namespace GSF.PhasorProtocols
         /// Raises the <see cref="ReceivedConfigurationFrame"/> event.
         /// </summary>
         /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="ReceivedConfigurationFrame"/> event.</param>
-        protected virtual void OnReceivedConfigurationFrame(IConfigurationFrame frame)
-        {
+        protected virtual void OnReceivedConfigurationFrame(IConfigurationFrame frame) => 
             ReceivedConfigurationFrame?.Invoke(this, new EventArgs<IConfigurationFrame>(frame));
-        }
 
         /// <summary>
         /// Raises the <see cref="ReceivedDataFrame"/> event.
         /// </summary>
         /// <param name="frame"><see cref="IDataFrame"/> to send to <see cref="ReceivedDataFrame"/> event.</param>
-        protected virtual void OnReceivedDataFrame(IDataFrame frame)
-        {
+        protected virtual void OnReceivedDataFrame(IDataFrame frame) => 
             ReceivedDataFrame?.Invoke(this, new EventArgs<IDataFrame>(frame));
-        }
 
         /// <summary>
         /// Raises the <see cref="ReceivedHeaderFrame"/> event.
         /// </summary>
         /// <param name="frame"><see cref="IHeaderFrame"/> to send to <see cref="ReceivedHeaderFrame"/> event.</param>
-        protected virtual void OnReceivedHeaderFrame(IHeaderFrame frame)
-        {
+        protected virtual void OnReceivedHeaderFrame(IHeaderFrame frame) => 
             ReceivedHeaderFrame?.Invoke(this, new EventArgs<IHeaderFrame>(frame));
-        }
 
         /// <summary>
         /// Raises the <see cref="ReceivedCommandFrame"/> event.
         /// </summary>
         /// <param name="frame"><see cref="ICommandFrame"/> to send to <see cref="ReceivedCommandFrame"/> event.</param>
-        protected virtual void OnReceivedCommandFrame(ICommandFrame frame)
-        {
+        protected virtual void OnReceivedCommandFrame(ICommandFrame frame) => 
             ReceivedCommandFrame?.Invoke(this, new EventArgs<ICommandFrame>(frame));
-        }
 
         /// <summary>
         /// Raises the <see cref="ReceivedUndeterminedFrame"/> event.
         /// </summary>
         /// <param name="frame"><see cref="IChannelFrame"/> to send to <see cref="ReceivedUndeterminedFrame"/> event.</param>
-        protected virtual void OnReceivedUndeterminedFrame(IChannelFrame frame)
-        {
+        protected virtual void OnReceivedUndeterminedFrame(IChannelFrame frame) => 
             ReceivedUndeterminedFrame?.Invoke(this, new EventArgs<IChannelFrame>(frame));
-        }
 
         /// <summary>
         /// Raises the <see cref="ReceivedFrameImage"/> and <see cref="ReceivedFrameBufferImage"/> event.
@@ -396,10 +379,8 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Raises the <see cref="ConfigurationChanged"/> event.
         /// </summary>
-        protected virtual void OnConfigurationChanged()
-        {
+        protected virtual void OnConfigurationChanged() => 
             ConfigurationChanged?.Invoke(this, EventArgs.Empty);
-        }
 
         /// <summary>
         /// Casts the parsed <see cref="IChannelFrame"/> to its specific implementation (i.e., <see cref="IDataFrame"/>, <see cref="IConfigurationFrame"/>, <see cref="ICommandFrame"/> or <see cref="IHeaderFrame"/>).
@@ -407,6 +388,16 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="IChannelFrame"/> that was parsed by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> that implements protocol specific common frame header interface.</param>
         protected virtual void OnReceivedChannelFrame(IChannelFrame frame)
         {
+            if (ReceivedChannelFrame is not null)
+            {
+                EventArgs<IChannelFrame, bool> args = new(frame, true);
+                
+                ReceivedChannelFrame(this, args);
+
+                if (!args.Argument2)
+                    return;
+            }
+
             switch (frame)
             {
                 // Process frame types in order of likely occurrence
@@ -437,20 +428,24 @@ namespace GSF.PhasorProtocols
         /// Handles unknown frame types.
         /// </summary>
         /// <param name="frameType">Unknown frame ID.</param>
-        protected virtual void OnUnknownFrameTypeEncountered(TFrameIdentifier frameType) => OnParsingException(new InvalidOperationException($"WARNING: Encountered an undefined frame type identifier \"{frameType}\". Output was not parsed."));
+        protected virtual void OnUnknownFrameTypeEncountered(TFrameIdentifier frameType) => 
+            OnParsingException(new InvalidOperationException($"WARNING: Encountered an undefined frame type identifier \"{frameType}\". Output was not parsed."));
 
         // Handle reception of data from base class event "DataParsed". Note that by attaching to base class event instead of overriding
         // OnDataParsed event raiser we allow frame implementations to control whether or not publication happens from a new thread pool
         // thread or from existing parsing thread by simply overriding the AllowQueuedPublication boolean property. Normally configuration
         // frames are published as soon as they are parsed to make sure needed parsing information is available as quickly as possible.
         // All other frames are queued for processing by default to allow for better processor distribution of mapping/routing work load.
-        private void base_DataParsed(object sender, EventArgs<ISupportSourceIdentifiableFrameImage<SourceChannel, TFrameIdentifier>> e) => OnReceivedChannelFrame(e.Argument as IChannelFrame);
+        private void base_DataParsed(object sender, EventArgs<ISupportSourceIdentifiableFrameImage<SourceChannel, TFrameIdentifier>> e) => 
+            OnReceivedChannelFrame(e.Argument as IChannelFrame);
 
         // Handles output type not found error from base class event "OutputTypeNotFound"
-        private void base_OutputTypeNotFound(object sender, EventArgs<TFrameIdentifier> e) => OnUnknownFrameTypeEncountered(e.Argument);
+        private void base_OutputTypeNotFound(object sender, EventArgs<TFrameIdentifier> e) => 
+            OnUnknownFrameTypeEncountered(e.Argument);
 
         // Handles duplicate type handler encountered warning from base class event "DuplicateTypeHandlerEncountered"
-        private void base_DuplicateTypeHandlerEncountered(object sender, EventArgs<Type, TFrameIdentifier> e) => OnParsingException(new InvalidOperationException($"WARNING: Duplicate frame type identifier \"{e.Argument2}\" encountered for parsing type {e.Argument1.FullName} during initialization. Only the first defined type for this identifier will ever be parsed."));
+        private void base_DuplicateTypeHandlerEncountered(object sender, EventArgs<Type, TFrameIdentifier> e) => 
+            OnParsingException(new InvalidOperationException($"WARNING: Duplicate frame type identifier \"{e.Argument2}\" encountered for parsing type {e.Argument1.FullName} during initialization. Only the first defined type for this identifier will ever be parsed."));
 
         #endregion
     }

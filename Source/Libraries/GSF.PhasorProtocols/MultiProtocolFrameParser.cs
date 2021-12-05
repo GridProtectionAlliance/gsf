@@ -1299,6 +1299,15 @@ namespace GSF.PhasorProtocols
         // Events
 
         /// <summary>
+        /// Occurs when any <see cref="IChannelFrame"/> has been received.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="IChannelFrame"/> that was received.
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the flag to determine if frame publication should continue.
+        /// </remarks>
+        public event EventHandler<EventArgs<IChannelFrame, bool>> ReceivedChannelFrame;
+
+        /// <summary>
         /// Occurs when a <see cref="ICommandFrame"/> has been received.
         /// </summary>
         /// <remarks>
@@ -1518,27 +1527,15 @@ namespace GSF.PhasorProtocols
                 DeviceSupportsCommands = DeriveCommandSupport();
 
                 // Setup protocol specific connection parameters, for those protocols that have them...
-                switch (value)
+                m_connectionParameters = value switch
                 {
-                    case PhasorProtocol.BPAPDCstream:
-                        m_connectionParameters = new BPAPDCstream.ConnectionParameters();
-                        break;
-                    case PhasorProtocol.FNET:
-                        m_connectionParameters = new FNET.ConnectionParameters();
-                        break;
-                    case PhasorProtocol.SelFastMessage:
-                        m_connectionParameters = new SelFastMessage.ConnectionParameters();
-                        break;
-                    case PhasorProtocol.IEC61850_90_5:
-                        m_connectionParameters = new IEC61850_90_5.ConnectionParameters();
-                        break;
-                    case PhasorProtocol.Macrodyne:
-                        m_connectionParameters = new Macrodyne.ConnectionParameters();
-                        break;
-                    default:
-                        m_connectionParameters = null;
-                        break;
-                }
+                    PhasorProtocol.BPAPDCstream => new BPAPDCstream.ConnectionParameters(),
+                    PhasorProtocol.FNET => new FNET.ConnectionParameters(),
+                    PhasorProtocol.SelFastMessage => new SelFastMessage.ConnectionParameters(),
+                    PhasorProtocol.IEC61850_90_5 => new IEC61850_90_5.ConnectionParameters(),
+                    PhasorProtocol.Macrodyne => new Macrodyne.ConnectionParameters(),
+                    _ => null,
+                };
             }
         }
 
@@ -2496,6 +2493,7 @@ namespace GSF.PhasorProtocols
             m_frameParser.ConnectionParameters = m_connectionParameters;
 
             // Setup event handlers
+            m_frameParser.ReceivedChannelFrame += m_frameParser_ReceivedChannelFrame;
             m_frameParser.ReceivedCommandFrame += m_frameParser_ReceivedCommandFrame;
             m_frameParser.ReceivedConfigurationFrame += m_frameParser_ReceivedConfigurationFrame;
             m_frameParser.ReceivedDataFrame += m_frameParser_ReceivedDataFrame;
@@ -2812,6 +2810,7 @@ namespace GSF.PhasorProtocols
                 }
                 finally
                 {
+                    m_frameParser.ReceivedChannelFrame -= m_frameParser_ReceivedChannelFrame;
                     m_frameParser.ReceivedCommandFrame -= m_frameParser_ReceivedCommandFrame;
                     m_frameParser.ReceivedConfigurationFrame -= m_frameParser_ReceivedConfigurationFrame;
                     m_frameParser.ReceivedDataFrame -= m_frameParser_ReceivedDataFrame;
@@ -2994,7 +2993,8 @@ namespace GSF.PhasorProtocols
         /// <param name="buffer">Buffer containing data to be parsed.</param>
         /// <param name="offset">Offset into buffer where data begins.</param>
         /// <param name="count">Length of data in buffer to be parsed.</param>
-        public void Write(byte[] buffer, int offset, int count) => Parse(SourceChannel.Other, buffer, offset, count);
+        public void Write(byte[] buffer, int offset, int count) => 
+            Parse(SourceChannel.Other, buffer, offset, count);
 
         /// <summary>
         /// Writes a sequence of bytes onto the <see cref="IBinaryImageParser"/> stream for parsing.
@@ -3014,7 +3014,8 @@ namespace GSF.PhasorProtocols
                 m_initialBytesReceived += count;
         }
 
-        void IFrameParser.Parse(SourceChannel source, byte[] buffer, int offset, int count) => Parse(source, buffer, offset, count);
+        void IFrameParser.Parse(SourceChannel source, byte[] buffer, int offset, int count) => 
+            Parse(source, buffer, offset, count);
 
         /// <summary>
         /// Resets the value for the <see cref="TotalBytesReceived"/> statistic.
@@ -3251,44 +3252,6 @@ namespace GSF.PhasorProtocols
             }
         }
 
-        private void MaintainCapturedFrameReplayTiming(IFrame sourceFrame)
-        {
-            long simulatedTimestamp = 0L;
-
-            if (m_inputTimer is null)
-            {
-                if (m_lastFrameReceivedTime > 0L)
-                {
-                    // To maintain timing on "frames per second", we wait for defined frame rate interval
-                    double sleepTime = 1.0D / m_definedFrameRate - (DateTime.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond;
-
-                    // Thread sleep time is a minimum suggested sleep time depending on system activity, when not using high-resolution
-                    // input timer we assume getting close is good enough
-                    if (sleepTime > 0.0D)
-                        Thread.Sleep((int)(sleepTime * 1000.0D));
-                }
-
-                m_lastFrameReceivedTime = DateTime.UtcNow.Ticks;
-
-                if (InjectSimulatedTimestamp)
-                    simulatedTimestamp = Ticks.AlignToMillisecondDistribution(m_lastFrameReceivedTime, m_definedFrameRate);
-            }
-            else
-            {
-                // When high resolution input timing is requested, we only need to wait for the next signal...
-                m_inputTimer.FrameWaitHandle.Wait();
-
-                // Input timer can be disabled while thread is waiting, so we make sure it is not null
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                if (m_inputTimer is not null)
-                    simulatedTimestamp = m_inputTimer.LastFrameTime;
-            }
-
-            // If injecting a simulated timestamp, use the last received time
-            if (InjectSimulatedTimestamp)
-                sourceFrame.Timestamp = simulatedTimestamp;
-        }
-
         #region [ Data Channel Event Handlers ]
 
         private void m_dataChannel_ReceiveDataFrom(object sender, EventArgs<EndPoint, IPPacketInformation, int> e)
@@ -3317,10 +3280,6 @@ namespace GSF.PhasorProtocols
             byte[] buffer = new byte[length];
             length = m_dataChannel.Read(buffer, 0, length);
             Parse(SourceChannel.Data, buffer, 0, length);
-
-            // Keep reading file data
-            if (m_transportProtocol == TransportProtocol.File && QueuedBuffers < 2)
-                m_readNextBuffer?.RunOnceAsync();
         }
 
         private void m_dataChannel_ConnectionEstablished(object sender, EventArgs e)
@@ -3525,14 +3484,90 @@ namespace GSF.PhasorProtocols
 
         #region [ Frame Parser Event Handlers ]
 
+        private void MaintainCapturedFrameReplayTiming(IChannelFrame sourceFrame)
+        {
+            long simulatedTimestamp = 0L;
+
+            if (m_inputTimer is null)
+            {
+                if (m_lastFrameReceivedTime > 0L)
+                {
+                    // To maintain timing on "frames per second", we wait for defined frame rate interval
+                    double sleepTime = 1.0D / m_definedFrameRate - (DateTime.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond;
+
+                    // Thread sleep time is a minimum suggested sleep time depending on system activity, when not using high-resolution
+                    // input timer we assume getting close is good enough
+                    if (sleepTime > 0.0D)
+                        Thread.Sleep((int)(sleepTime * 1000.0D));
+                }
+
+                m_lastFrameReceivedTime = DateTime.UtcNow.Ticks;
+
+                if (InjectSimulatedTimestamp)
+                    simulatedTimestamp = Ticks.AlignToMillisecondDistribution(m_lastFrameReceivedTime, m_definedFrameRate);
+            }
+            else
+            {
+                // When high resolution input timing is requested, we only need to wait for the next signal...
+                m_inputTimer.FrameWaitHandle.Wait();
+
+                // Input timer can be disabled while thread is waiting, so we make sure it is not null
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                if (m_inputTimer is not null)
+                    simulatedTimestamp = m_inputTimer.LastFrameTime;
+            }
+
+            // If injecting a simulated timestamp, use the last received time
+            if (InjectSimulatedTimestamp)
+                sourceFrame.Timestamp = simulatedTimestamp;
+        }
+
+        private void m_frameParser_ReceivedChannelFrame(object sender, EventArgs<IChannelFrame, bool> e)
+        {
+            m_frameRateTotal++;
+
+            // We don't stop parsing for exceptions thrown in consumer event handlers
+            try
+            {
+                if (ReceivedChannelFrame is not null)
+                {
+                    ReceivedChannelFrame(this, e);
+
+                    if (!e.Argument2)
+                        return;
+                }
+
+                IChannelFrame sourceFrame = e.Argument1;
+
+                if (m_transportProtocol == TransportProtocol.File)
+                {
+                    DateTime timestamp = sourceFrame.Timestamp;
+
+                    if (timestamp >= ReplayStartTime && timestamp < ReplayStopTime)
+                        MaintainCapturedFrameReplayTiming(sourceFrame);
+                    else
+                        e.Argument2 = false; // Do not publish frame
+
+                    // Keep reading file data
+                    if (QueuedOutputs < 2 && QueuedBuffers < 10)
+                        m_readNextBuffer?.RunOnceAsync();
+                }
+                else if (InjectSimulatedTimestamp)
+                {
+                    sourceFrame.Timestamp = DateTime.UtcNow.Ticks;
+                }
+            }
+            catch (Exception ex)
+            {
+                OnParsingException(ex, "MultiProtocolFrameParser \"ReceivedChannelFrame\" consumer event handler exception: {0}", ex.Message);
+            }
+        }
+
         private void m_frameParser_ReceivedCommandFrame(object sender, EventArgs<ICommandFrame> e)
         {
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (InjectSimulatedTimestamp)
-                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
-
                 ReceivedCommandFrame?.Invoke(this, e);
             }
             catch (Exception ex)
@@ -3553,9 +3588,6 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (InjectSimulatedTimestamp)
-                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
-
                 ReceivedConfigurationFrame?.Invoke(this, e);
 
                 if (m_configurationFrame is not null)
@@ -3573,30 +3605,10 @@ namespace GSF.PhasorProtocols
 
         private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
         {
-            m_frameRateTotal++;
-
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                bool publishFrame = true;
-                IDataFrame dataFrame = e.Argument;
-
-                if (m_transportProtocol == TransportProtocol.File)
-                {
-                    DateTime timestamp = dataFrame.Timestamp;
-
-                    if (timestamp >= ReplayStartTime && timestamp < ReplayStopTime)
-                        MaintainCapturedFrameReplayTiming(dataFrame);
-                    else
-                        publishFrame = false;
-                }
-                else if (InjectSimulatedTimestamp)
-                {
-                    dataFrame.Timestamp = DateTime.UtcNow.Ticks;
-                }
-
-                if (publishFrame)
-                    ReceivedDataFrame?.Invoke(this, e);
+                ReceivedDataFrame?.Invoke(this, e);
             }
             catch (Exception ex)
             {
@@ -3613,9 +3625,6 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (InjectSimulatedTimestamp)
-                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
-
                 ReceivedHeaderFrame?.Invoke(this, e);
             }
             catch (Exception ex)
@@ -3629,9 +3638,6 @@ namespace GSF.PhasorProtocols
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (InjectSimulatedTimestamp)
-                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
-
                 ReceivedUndeterminedFrame?.Invoke(this, e);
             }
             catch (Exception ex)
