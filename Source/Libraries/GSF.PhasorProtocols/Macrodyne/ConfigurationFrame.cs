@@ -110,7 +110,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             m_onlineDataFormatFlags = onlineDataFormatFlags;
             StationName = unitID;
 
-            ConfigurationCell configCell = new ConfigurationCell(this, deviceLabel);
+            ConfigurationCell configCell = new(this, deviceLabel);
 
             // Macrodyne protocol sends data for one device
             Cells.Add(configCell);
@@ -163,7 +163,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         public CommonFrameHeader CommonHeader
         {
             // Make sure frame header exists
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader());
+            get => m_frameHeader ??= new CommonFrameHeader();
             set
             {
                 m_frameHeader = value;
@@ -455,13 +455,14 @@ namespace GSF.PhasorProtocols.Macrodyne
                                     for (x = 0; x < pmuCount; x++)
                                     {
                                         // Create a new PMU cell for each PDC entry that exists
-                                        pmuCell = new ConfigurationCell(this);
-
-                                        // For BPA INI files, PMUs tradionally have an ID number indexed starting at zero or one - so we multiply
-                                        // ID by 1000 and add index to attempt to create a fairly unique ID to help optimize downstream parsing
-                                        pmuCell.IDCode = unchecked((ushort)(pdcID * 1000 + x));
-                                        pmuCell.SectionEntry = $"{section}pmu{x}"; // This will automatically assign ID label as first 4 digits of section
-                                        pmuCell.StationName = $"{m_iniFile[section, "Name", section]} - Device {x + 1}";
+                                        pmuCell = new ConfigurationCell(this)
+                                        {
+                                            // For BPA INI files, PMUs traditionally have an ID number indexed starting at zero or one - so we multiply
+                                            // ID by 1000 and add index to attempt to create a fairly unique ID to help optimize downstream parsing
+                                            IDCode = unchecked((ushort)(pdcID * 1000 + x)),
+                                            SectionEntry = $"{section}pmu{x}", // This will automatically assign ID label as first 4 digits of section
+                                            StationName = $"{m_iniFile[section, "Name", section]} - Device {x + 1}"
+                                        };
 
                                         pmuCell.PhasorDefinitions.Clear();
 
@@ -564,7 +565,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <param name="buffer">Buffer image on which to append checksum.</param>
         /// <param name="startIndex">Index into <paramref name="buffer"/> where checksum should be appended.</param>
         /// <remarks>
-        /// Default implementation encodes checksum in big-endian order and expects buffer size large enough to accomodate
+        /// Default implementation encodes checksum in big-endian order and expects buffer size large enough to accommodate
         /// 2-byte checksum representation. We override this method since checksum in Macrodyne is a single byte.
         /// </remarks>
         protected override void AppendChecksum(byte[] buffer, int startIndex)
@@ -581,7 +582,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
-            // Macrodyne uses 8-bit Xor checksum for frames
+            // Macrodyne uses 8-bit XOR checksum for frames
             return buffer.Xor8Checksum(offset, length);
         }
 
@@ -597,7 +598,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             // Serialize configuration frame
             info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
             info.AddValue("onlineDataFormatFlags", m_onlineDataFormatFlags, typeof(OnlineDataFormatFlags));
-            info.AddValue("configurationFileName", m_iniFile is null ? null : m_iniFile.FileName);
+            info.AddValue("configurationFileName", m_iniFile?.FileName);
         }
 
         #endregion
@@ -611,7 +612,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         public static string GetIniFileImage(IConfigurationFrame configFrame)
         {
-            StringBuilder fileImage = new StringBuilder();
+            StringBuilder fileImage = new();
 
             fileImage.AppendLine($"; BPA PDCstream Style IniFile for Macrodyne Configuration {configFrame.IDCode}");
             fileImage.AppendLine($"; Auto-generated on {DateTime.Now}");
@@ -637,7 +638,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             fileImage.AppendLine(";    Ratio:      PT/CT ratio N:1 where N is a floating point number");
             fileImage.AppendLine(";    Cal Factor: Conversion factor between integer in file and secondary volts, floating point");
             fileImage.AppendLine(";    Offset:     Phase Offset to correct for phase angle measurement errors or differences, floating point");
-            fileImage.AppendLine(";    Shunt:      Current- shunt resistence in ohms, or the equivalent ratio for aux CTs, floating point");
+            fileImage.AppendLine(";    Shunt:      Current- shunt resistance in ohms, or the equivalent ratio for aux CTs, floating point");
             fileImage.AppendLine(";                Voltage- empty, not used");
             fileImage.AppendLine(";    VoltageRef: Current- phasor number (1-10) of voltage phasor to use for power calculation, integer");
             fileImage.AppendLine(";                Voltage- voltage class, standard l-l voltages, 500, 230, 115, etc, integer");

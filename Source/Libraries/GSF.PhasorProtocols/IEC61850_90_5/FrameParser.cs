@@ -148,7 +148,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("         Current time base: ");
                 status.Append(Timebase);
@@ -254,7 +254,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 return null;
 
             // Parse common frame header
-            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame, m_useETRConfiguration, m_guessConfiguration, m_parseRedundantASDUs, m_ignoreSignatureValidationFailures, m_ignoreSampleSizeValidationFailures, m_phasorAngleFormat, buffer, offset, length)
+            CommonFrameHeader parsedFrameHeader = new(m_configurationFrame, m_useETRConfiguration, m_guessConfiguration, m_parseRedundantASDUs, m_ignoreSignatureValidationFailures, m_ignoreSampleSizeValidationFailures, m_phasorAngleFormat, buffer, offset, length)
             {
                 PublishFrame = OnReceivedChannelFrame
             };
@@ -271,7 +271,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 {
                     case FrameType.DataFrame:
                         // Assign data frame parsing state                            
-                        DataFrameParsingState parsingState = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
+                        DataFrameParsingState parsingState = new(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
                         // Assume one device if no configuration frame is available
                         if (m_configurationFrame is null)
@@ -413,7 +413,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
                 // Create new derived configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                ConfigurationCell derivedCell = new(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                 string stationName = sourceCell.StationName;
                 string idLabel = sourceCell.IDLabel;

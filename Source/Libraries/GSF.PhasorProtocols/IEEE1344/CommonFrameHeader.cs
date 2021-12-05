@@ -85,14 +85,14 @@ namespace GSF.PhasorProtocols.IEEE1344
             uint secondOfCentury = BigEndian.ToUInt32(buffer, startIndex);
             m_sampleCount = BigEndian.ToUInt16(buffer, startIndex + 4);
 
-            // We go ahead and pre-grab cell's status flags so we can determine framelength - we
-            // leave startindex at 6 so that cell will be able to parse flags as needed - note
+            // We go ahead and pre-grab cell's status flags so we can determine frame length - we
+            // leave start index at 6 so that cell will be able to parse flags as needed - note
             // this increases needed common frame header size by 2 (i.e., BinaryLength + 2)
             m_statusFlags = BigEndian.ToUInt16(buffer, startIndex + FixedLength);
 
             // NTP timestamps based on NtpTimeTag class are designed to work for dates between
             // 1968-01-20 and 2104-02-26 based on recommended bit interpretation in RFC-2030.
-            NtpTimeTag timetag = new NtpTimeTag(secondOfCentury, 0);
+            NtpTimeTag timetag = new(secondOfCentury, 0);
 
             // Cache timestamp value
             m_timestamp = timetag.ToDateTime().Ticks;
@@ -117,7 +117,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public NtpTimeTag TimeTag => new NtpTimeTag(m_timestamp);
+        public NtpTimeTag TimeTag => new(m_timestamp);
 
         /// <summary>
         /// Gets or sets timestamp of this <see cref="CommonFrameHeader"/>.
@@ -199,7 +199,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             set => m_state = value;
         }
 
-        // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
+        // Gets or sets any additional state information - satisfies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
             get => m_state;
@@ -217,17 +217,13 @@ namespace GSF.PhasorProtocols.IEEE1344
             get
             {
                 // Translate IEEE 1344 specific frame type to fundamental frame type
-                switch (TypeID)
+                return TypeID switch
                 {
-                    case IEEE1344.FrameType.DataFrame:
-                        return FundamentalFrameType.DataFrame;
-                    case IEEE1344.FrameType.ConfigurationFrame:
-                        return FundamentalFrameType.ConfigurationFrame;
-                    case IEEE1344.FrameType.HeaderFrame:
-                        return FundamentalFrameType.HeaderFrame;
-                    default:
-                        return FundamentalFrameType.Undetermined;
-                }
+                    IEEE1344.FrameType.DataFrame => FundamentalFrameType.DataFrame,
+                    IEEE1344.FrameType.ConfigurationFrame => FundamentalFrameType.ConfigurationFrame,
+                    IEEE1344.FrameType.HeaderFrame => FundamentalFrameType.HeaderFrame,
+                    _ => FundamentalFrameType.Undetermined,
+                };
             }
         }
 

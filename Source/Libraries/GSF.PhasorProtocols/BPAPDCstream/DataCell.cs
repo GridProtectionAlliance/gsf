@@ -570,7 +570,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
             // Addendum: After running this with several protocol implementations I noticed that if a device wasn't
             // reporting, the phasor count dropped to zero even if there were phasors defined in the configuration
-            // file, so the only time an exception is thrown is if there are more phasors defined in the the stream
+            // file, so the only time an exception is thrown is if there are more phasors defined in the stream
             // than there are defined in the INI file...
 
             // At least this number of phasors should be already defined in BPA PDCstream configuration file
@@ -578,7 +578,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 throw new InvalidOperationException($"Stream/Config File Mismatch: Phasor value count in stream ({phasors}) does not match defined count in configuration file ({ConfigurationCell.PhasorDefinitions.Count}) for {ConfigurationCell.IDLabel}");
 
             // If analog values get a clear definition in INI file at some point, we can validate the number in the
-            // stream to the number in the config file, in the mean time we dyanmically add analog definitions to
+            // stream to the number in the config file, in the mean time we dynamically add analog definitions to
             // configuration cell as needed (they are only defined in data frame of BPA PDCstream)
             if (analogs > ConfigurationCell.AnalogDefinitions.Count)
             {
@@ -587,7 +587,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             }
 
             // If digital values get a clear definition in INI file at some point, we can validate the number in the
-            // stream to the number in the config file, in the mean time we dyanmically add digital definitions to
+            // stream to the number in the config file, in the mean time we dynamically add digital definitions to
             // configuration cell as needed (they are only defined in data frame of BPA PDCstream)
             if (digitals > ConfigurationCell.DigitalDefinitions.Count)
             {
@@ -631,7 +631,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Delegate handler to create a new BPA PDCstream data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
+            DataCell dataCell = new(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

@@ -711,8 +711,8 @@ namespace GSF.PhasorProtocols
             #region [ Static ]
 
             // Static Fields
-            private static readonly Dictionary<EndPoint, TcpServer> s_sharedServers = new Dictionary<EndPoint, TcpServer>();
-            private static readonly Dictionary<EndPoint, int> s_sharedReferenceCount = new Dictionary<EndPoint, int>();
+            private static readonly Dictionary<EndPoint, TcpServer> s_sharedServers = new();
+            private static readonly Dictionary<EndPoint, int> s_sharedReferenceCount = new();
 
             #endregion
         }
@@ -1238,8 +1238,8 @@ namespace GSF.PhasorProtocols
             #region [ Static ]
 
             // Static Fields
-            private static readonly Dictionary<EndPoint, UdpClient> s_sharedClients = new Dictionary<EndPoint, UdpClient>();
-            private static readonly Dictionary<EndPoint, int> s_sharedReferenceCount = new Dictionary<EndPoint, int>();
+            private static readonly Dictionary<EndPoint, UdpClient> s_sharedClients = new();
+            private static readonly Dictionary<EndPoint, int> s_sharedReferenceCount = new();
 
             #endregion
         }
@@ -2131,7 +2131,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.AppendLine($"      Device Connection ID: {DeviceID}");
                 status.AppendLine($"           Phasor protocol: {m_phasorProtocol.GetFormattedProtocolName()}");
@@ -2187,17 +2187,12 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                switch (m_transportProtocol)
+                return m_transportProtocol switch
                 {
-                    case TransportProtocol.Tcp:
-                    case TransportProtocol.Serial:
-                        return "Active";
-                    case TransportProtocol.Udp:
-                    case TransportProtocol.File:
-                        return m_commandChannel is null ? "Passive" : "Hybrid";
-                    default:
-                        return "Undetermined";
-                }
+                    TransportProtocol.Tcp or TransportProtocol.Serial => "Active",
+                    TransportProtocol.Udp or TransportProtocol.File => m_commandChannel is null ? "Passive" : "Hybrid",
+                    _ => "Undetermined",
+                };
             }
         }
 
@@ -2681,7 +2676,7 @@ namespace GSF.PhasorProtocols
                 m_receiveFromAddress = Transport.CreateEndPoint(receiveFromSetting, 0, ipStack).Address;
 
                 // Set up data channel
-                SharedUdpClientReference udpRef = new SharedUdpClientReference();
+                SharedUdpClientReference udpRef = new();
                 udpRef.ReceiveDataFrom += m_dataChannel_ReceiveDataFrom;
                 m_dataChannel = udpRef;
 
@@ -3239,7 +3234,7 @@ namespace GSF.PhasorProtocols
                 m_initiatingDataStream = true;
 
                 // Begin data parsing sequence to handle reception of configuration frame
-                Thread startDataParsingSequenceThread = new Thread(StartDataParsingSequence)
+                Thread startDataParsingSequenceThread = new(StartDataParsingSequence)
                 {
                     IsBackground = true
                 };

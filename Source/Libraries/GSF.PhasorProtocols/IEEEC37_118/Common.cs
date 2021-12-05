@@ -576,17 +576,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>Version number for the specified <paramref name="revision"/>.</returns>
         public static string ToVersionString(this DraftRevision revision)
         {
-            switch (revision)
+            return revision switch
             {
-                case DraftRevision.Draft6:
-                    return "Draft 6";
-                case DraftRevision.Std2005:
-                    return "2005";
-                case DraftRevision.Std2011:
-                    return "2011";
-                default:
-                    return "Unknown";
-            }
+                DraftRevision.Draft6 => "Draft 6",
+                DraftRevision.Std2005 => "2005",
+                DraftRevision.Std2011 => "2011",
+                _ => "Unknown",
+            };
         }
     }
 }

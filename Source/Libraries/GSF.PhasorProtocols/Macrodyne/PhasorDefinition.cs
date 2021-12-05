@@ -163,7 +163,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override double ConversionFactor
         {
-            // Macordyne uses a custom conversion factor (see shared overload below)
+            // Macrodyne uses a custom conversion factor (see shared overload below)
             get => 1.0D;
             set
             {
@@ -268,16 +268,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         // Creates phasor information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IPhasorDefinition definition)
         {
-            if (definition is PhasorDefinition phasor)
-                return $"{(phasor.PhasorType == PhasorType.Voltage ? "V" : "I")},{phasor.Ratio},{phasor.CalFactor},{phasor.Offset},{phasor.Shunt},{phasor.VoltageReferenceIndex},{phasor.Label}";
-
-            if (definition is null)
-                return "";
-
-            if (definition.PhasorType == PhasorType.Voltage)
-                return $"V,4500.0,0.0060573,0,0,500,{definition.Label.ToNonNullString("Default 500kV")}";
-            
-            return $"I,600.00,0.000040382,0,1,1,{definition.Label.ToNonNullString("Default Current")}";
+            return definition switch
+            {
+                PhasorDefinition phasor => $"{(phasor.PhasorType == PhasorType.Voltage ? "V" : "I")},{phasor.Ratio},{phasor.CalFactor},{phasor.Offset},{phasor.Shunt},{phasor.VoltageReferenceIndex},{phasor.Label}",
+                null => "",
+                _ => definition.PhasorType == PhasorType.Voltage ?
+                    $"V,4500.0,0.0060573,0,0,500,{definition.Label.ToNonNullString("Default 500kV")}" :
+                    $"I,600.00,0.000040382,0,1,1,{definition.Label.ToNonNullString("Default Current")}",
+            };
         }
 
         #endregion

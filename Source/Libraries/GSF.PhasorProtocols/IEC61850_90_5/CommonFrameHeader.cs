@@ -646,7 +646,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets time as a <see cref="UnixTimeTag"/> representing seconds of current <see cref="Timestamp"/>.
         /// </summary>
-        public UnixTimeTag TimeTag => new UnixTimeTag(m_timestamp);
+        public UnixTimeTag TimeTag => new(m_timestamp);
 
         /// <summary>
         /// Gets or sets flag that determines if system should find associated ETR file using MSVID with same name for configuration.
@@ -714,7 +714,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             set => m_state = value;
         }
 
-        // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
+        // Gets or sets any additional state information - satisfies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
             get => m_state;
@@ -768,17 +768,13 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             get
             {
                 // Translate IEC 61850-90-5 specific frame type to fundamental frame type
-                switch (m_frameType)
+                return m_frameType switch
                 {
-                    case IEC61850_90_5.FrameType.DataFrame:
-                        return FundamentalFrameType.DataFrame;
-                    case IEC61850_90_5.FrameType.ConfigurationFrame:
-                        return FundamentalFrameType.ConfigurationFrame;
-                    case IEC61850_90_5.FrameType.CommandFrame:
-                        return FundamentalFrameType.CommandFrame;
-                    default:
-                        return FundamentalFrameType.Undetermined;
-                }
+                    IEC61850_90_5.FrameType.DataFrame => FundamentalFrameType.DataFrame,
+                    IEC61850_90_5.FrameType.ConfigurationFrame => FundamentalFrameType.ConfigurationFrame,
+                    IEC61850_90_5.FrameType.CommandFrame => FundamentalFrameType.CommandFrame,
+                    _ => FundamentalFrameType.Undetermined,
+                };
             }
         }
 
@@ -829,7 +825,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     index += BigEndian.CopyBytes((ushort)1, buffer, index);
 
                     // Encode time of current key
-                    UnixTimeTag time = new UnixTimeTag(DateTime.UtcNow.Ticks);
+                    UnixTimeTag time = new(DateTime.UtcNow.Ticks);
                     index += BigEndian.CopyBytes((uint)time.Value, buffer, index);
 
                     // Encode time to next key (again, TBD once security is actually defined)

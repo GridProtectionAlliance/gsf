@@ -285,17 +285,14 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         // Creates phasor information for an INI based BPA PDCstream configuration file
         internal static string ConfigFileFormat(IPhasorDefinition definition)
         {
-            switch (definition)
+            return definition switch
             {
-                case PhasorDefinition phasor:
-                    return $"{(phasor.PhasorType == PhasorType.Voltage ? "V" : "I")},{phasor.Ratio},{phasor.CalFactor},{phasor.Offset},{phasor.Shunt},{phasor.VoltageReferenceIndex},{phasor.Label}";
-                case null:
-                    return "";
-            }
-
-            return definition.PhasorType == PhasorType.Voltage ? 
-                $"V,4500.0,0.0060573,0,0,500,{definition.Label.ToNonNullString("Default 500kV")}" : 
-                $"I,600.00,0.000040382,0,1,1,{definition.Label.ToNonNullString("Default Current")}";
+                PhasorDefinition phasor => $"{(phasor.PhasorType == PhasorType.Voltage ? "V" : "I")},{phasor.Ratio},{phasor.CalFactor},{phasor.Offset},{phasor.Shunt},{phasor.VoltageReferenceIndex},{phasor.Label}",
+                null => "",
+                _ => definition.PhasorType == PhasorType.Voltage ?
+                    $"V,4500.0,0.0060573,0,0,500,{definition.Label.ToNonNullString("Default 500kV")}" :
+                    $"I,600.00,0.000040382,0,1,1,{definition.Label.ToNonNullString("Default Current")}",
+            };
         }
 
         // Delegate handler to create a new BPA PDCstream phasor definition

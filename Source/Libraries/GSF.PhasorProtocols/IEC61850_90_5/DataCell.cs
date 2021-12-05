@@ -276,7 +276,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             if (parsingState?.ConfigurationFrame is not null)
                 configurationCell = parsingState.ConfigurationFrame.Cells[index];
 
-            DataCell dataCell = new DataCell(parent as IDataFrame, configurationCell);
+            DataCell dataCell = new(parent as IDataFrame, configurationCell);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

@@ -142,8 +142,10 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                 if (m_configurationFrame is null && !string.IsNullOrEmpty(m_configurationFileName) && File.Exists(m_configurationFileName))
                 {
-                    m_configurationFrame = new ConfigurationFrame(OnlineDataFormatFlags.TimestampEnabled, "1690", m_configurationFileName, DeviceLabel);
-                    m_configurationFrame.CommonHeader = new CommonFrameHeader(m_protocolVersion, FrameType.ConfigurationFrame);
+                    m_configurationFrame = new ConfigurationFrame(OnlineDataFormatFlags.TimestampEnabled, "1690", m_configurationFileName, DeviceLabel)
+                    {
+                        CommonHeader = new CommonFrameHeader(m_protocolVersion, FrameType.ConfigurationFrame)
+                    };
                 }
             }
         }
@@ -173,7 +175,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.AppendFormat("Macrodyne protocol version: {0}", m_protocolVersion);
                 status.AppendLine();
@@ -293,7 +295,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             if (length >= CommonFrameHeader.FixedLength)
             {
                 // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset, m_protocolVersion, m_configurationFrame);
+                CommonFrameHeader parsedFrameHeader = new(buffer, offset, m_protocolVersion, m_configurationFrame);
 
                 // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
                 // we eliminate the need to validate length on all subsequent data elements that comprise the frame
@@ -345,7 +347,7 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                 while (syncBytePosition > -1)
                 {
-                    using (BlockAllocatedMemoryStream newBuffer = new BlockAllocatedMemoryStream())
+                    using (BlockAllocatedMemoryStream newBuffer = new())
                     {
                         // Write buffer before repeated byte
                         newBuffer.Write(buffer, offset, syncBytePosition - offset + 1);
@@ -414,7 +416,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             }
         }
 
-        // Handler for file watcher - we notify consumer when changes have occured to configuration file
+        // Handler for file watcher - we notify consumer when changes have occurred to configuration file
         private void m_configurationFileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
             // We synchronize change actions - don't want more than one refresh happening at a time...
@@ -557,11 +559,14 @@ namespace GSF.PhasorProtocols.Macrodyne
                         stationName = $"Unit {sourceCell.IDCode}";
 
                     stationName = stationName.TruncateLeft(8);
-                    derivedFrame = new ConfigurationFrame(Common.GetFormatFlagsFromPhasorCount(sourceFrame.Cells[0].PhasorDefinitions.Count), stationName, configurationFileName, deviceLabel);
-                    derivedFrame.IDCode = sourceFrame.IDCode;
+
+                    derivedFrame = new ConfigurationFrame(Common.GetFormatFlagsFromPhasorCount(sourceFrame.Cells[0].PhasorDefinitions.Count), stationName, configurationFileName, deviceLabel)
+                    {
+                        IDCode = sourceFrame.IDCode
+                    };
 
                     // Create new derived configuration cell
-                    ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame);
+                    ConfigurationCell derivedCell = new(derivedFrame);
                     IFrequencyDefinition sourceFrequency;
 
                     // Create equivalent derived phasor definitions

@@ -94,9 +94,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         public CommonFrameHeader CommonHeader
         {
             get =>
-                // Make sure frame header exists - using base class timestamp to
-                // prevent recursion (m_frameHeader doesn't exist yet)
-                m_frameHeader ?? (m_frameHeader = new CommonFrameHeader());
+m_frameHeader ??= new CommonFrameHeader();
             set
             {
                 m_frameHeader = value;
@@ -185,7 +183,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <param name="buffer">Buffer image on which to append checksum.</param>
         /// <param name="startIndex">Index into <paramref name="buffer"/> where checksum should be appended.</param>
         /// <remarks>
-        /// Default implementation encodes checksum in big-endian order and expects buffer size large enough to accomodate
+        /// Default implementation encodes checksum in big-endian order and expects buffer size large enough to accommodate
         /// 2-byte checksum representation. We override this method since checksum in Macrodyne is a single byte.
         /// </remarks>
         protected override void AppendChecksum(byte[] buffer, int startIndex)
@@ -202,7 +200,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
-            // Macrodyne uses 8-bit Xor checksum for frames
+            // Macrodyne uses 8-bit XOR checksum for frames
             return buffer.Xor8Checksum(offset, length);
         }
 

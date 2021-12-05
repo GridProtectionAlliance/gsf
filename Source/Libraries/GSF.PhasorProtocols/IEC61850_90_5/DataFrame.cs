@@ -205,10 +205,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             // Make sure frame header exists - using base class timestamp to
             // prevent recursion (m_frameHeader doesn't exist yet)
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(ConfigurationFrame, TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
+            get => m_frameHeader ??= new CommonFrameHeader(ConfigurationFrame, TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
             {
                 ConfigurationFrame = ConfigurationFrame
-            });
+            };
             set
             {
                 m_frameHeader = value;
@@ -514,7 +514,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     if (header.ParseRedundantASDUs)
                     {
                         // Create a new data frame to hold redundant ASDU data
-                        DataFrame dataFrame = new DataFrame
+                        DataFrame dataFrame = new()
                         {
                             ConfigurationFrame = m_configurationFrame,
                             CommonHeader = header
@@ -690,20 +690,20 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             try
             {
-                StreamReader reader = new StreamReader(etrFilePath);
+                StreamReader reader = new(etrFilePath);
                 SignalType lastSignalType = SignalType.NONE;
                 bool statusDefined = false;
                 bool endOfFile;
                 int magnitudeSignals = 0;
                 int angleSignals = 0;
 
-                ConfigurationFrame configFrame = new ConfigurationFrame(Common.Timebase, 1, DateTime.UtcNow.Ticks, m_sampleRate);
+                ConfigurationFrame configFrame = new(Common.Timebase, 1, DateTime.UtcNow.Ticks, m_sampleRate);
 
                 do
                 {
                     bool badOrder = false;
 
-                    ConfigurationCell configCell = new ConfigurationCell(configFrame, (ushort)(m_idCode + configFrame.Cells.Count), LineFrequency.Hz60)
+                    ConfigurationCell configCell = new(configFrame, (ushort)(m_idCode + configFrame.Cells.Count), LineFrequency.Hz60)
                     {
                         StationName = m_stationName + (configFrame.Cells.Count + 1)
                     };
@@ -731,7 +731,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             case SignalType.VPHM:
                             case SignalType.IPHM:
                                 badOrder = lastSignalType != SignalType.FLAG && lastSignalType != SignalType.VPHA && lastSignalType != SignalType.IPHA;
-                                PhasorDefinition phasor = new PhasorDefinition(configCell, label, 1, 0.0D, signalType == SignalType.VPHM ? PhasorType.Voltage : PhasorType.Current, null);
+                                PhasorDefinition phasor = new(configCell, label, 1, 0.0D, signalType == SignalType.VPHM ? PhasorType.Voltage : PhasorType.Current, null);
                                 configCell.PhasorDefinitions.Add(phasor);
                                 magnitudeSignals++;
                                 break;
@@ -752,12 +752,12 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 break;
                             case SignalType.ALOG:
                                 badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG;
-                                AnalogDefinition analog = new AnalogDefinition(configCell, label, 1, 0.0D, AnalogType.SinglePointOnWave);
+                                AnalogDefinition analog = new(configCell, label, 1, 0.0D, AnalogType.SinglePointOnWave);
                                 configCell.AnalogDefinitions.Add(analog);
                                 break;
                             case SignalType.DIGI:
                                 badOrder = lastSignalType != SignalType.DFDT && lastSignalType != SignalType.ALOG && lastSignalType != SignalType.DIGI;
-                                DigitalDefinition digital = new DigitalDefinition(configCell, label, 0, 1);
+                                DigitalDefinition digital = new(configCell, label, 0, 1);
                                 configCell.DigitalDefinitions.Add(digital);
                                 break;
                             default:
@@ -982,8 +982,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             if (test == 0)
             {
                 // Just assume some details for a configuration frame
-                ConfigurationFrame configFrame = new ConfigurationFrame(Common.Timebase, 1, DateTime.UtcNow.Ticks, m_sampleRate);
-                ConfigurationCell configCell = new ConfigurationCell(configFrame, m_idCode, LineFrequency.Hz60)
+                ConfigurationFrame configFrame = new(Common.Timebase, 1, DateTime.UtcNow.Ticks, m_sampleRate);
+                ConfigurationCell configCell = new(configFrame, m_idCode, LineFrequency.Hz60)
                 {
                     StationName = m_stationName
                 };
@@ -992,7 +992,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 for (int i = 0; i < phasors; i++)
                 {
                     PhasorType type = i < phasors / 2 ? PhasorType.Voltage : PhasorType.Current;
-                    PhasorDefinition phasor = new PhasorDefinition(configCell, $"Phasor {(i + 1)}", 1, 0.0D, type, null);
+                    PhasorDefinition phasor = new(configCell, $"Phasor {(i + 1)}", 1, 0.0D, type, null);
                     configCell.PhasorDefinitions.Add(phasor);
                 }
 
@@ -1002,7 +1002,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 // Add digitals
                 for (int i = 0; i < digitals; i++)
                 {
-                    DigitalDefinition digital = new DigitalDefinition(configCell, $"Digital {(i + 1)}", 0, 1);
+                    DigitalDefinition digital = new(configCell, $"Digital {(i + 1)}", 0, 1);
                     configCell.DigitalDefinitions.Add(digital);
                 }
 
@@ -1030,7 +1030,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 validateCheckSum = State.ValidateCheckSum;
             }
 
-            DataFrameParsingState parsingState = new DataFrameParsingState(CommonHeader.FrameLength, configFrame, DataCell.CreateNewCell, trustHeaderLength, validateCheckSum);
+            DataFrameParsingState parsingState = new(CommonHeader.FrameLength, configFrame, DataCell.CreateNewCell, trustHeaderLength, validateCheckSum);
             CommonHeader.State = parsingState;
             State = parsingState;
 

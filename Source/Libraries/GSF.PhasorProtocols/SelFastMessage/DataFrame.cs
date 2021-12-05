@@ -169,7 +169,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             // Make sure frame header exists - using base class timestamp to
             // prevent recursion (m_frameHeader doesn't exist yet)
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(FrameSize.A, base.Timestamp));
+            get => m_frameHeader ??= new CommonFrameHeader(FrameSize.A, base.Timestamp);
             set
             {
                 m_frameHeader = value;

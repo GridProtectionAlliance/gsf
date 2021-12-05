@@ -172,7 +172,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             // Make sure frame header exists - using base class timestamp to
             // prevent recursion (m_frameHeader doesn't exist yet)
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(TypeID, base.Timestamp));
+            get => m_frameHeader ??= new CommonFrameHeader(TypeID, base.Timestamp);
             set
             {
                 m_frameHeader = value;

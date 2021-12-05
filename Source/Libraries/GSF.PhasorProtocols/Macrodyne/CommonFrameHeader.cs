@@ -99,17 +99,12 @@ namespace GSF.PhasorProtocols.Macrodyne
             }
             else
             {
-                switch (BigEndian.ToUInt16(buffer, startIndex))
+                TypeID = BigEndian.ToUInt16(buffer, startIndex) switch
                 {
-                    case (ushort)DeviceCommand.RequestOnlineDataFormat:
-                        TypeID = Macrodyne.FrameType.ConfigurationFrame;
-                        break;
-                    case (ushort)DeviceCommand.RequestUnitIDBufferValue:
-                        TypeID = Macrodyne.FrameType.HeaderFrame;
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Bad data stream, expected 0xBB24 or 0xBB48 in response to Macrodyne device command, got 0xBB{buffer[startIndex + 1].ToString("X").PadLeft(2, '0')}");
-                }
+                    (ushort)DeviceCommand.RequestOnlineDataFormat => Macrodyne.FrameType.ConfigurationFrame,
+                    (ushort)DeviceCommand.RequestUnitIDBufferValue => Macrodyne.FrameType.HeaderFrame,
+                    _ => throw new InvalidOperationException($"Bad data stream, expected 0xBB24 or 0xBB48 in response to Macrodyne device command, got 0xBB{buffer[startIndex + 1].ToString("X").PadLeft(2, '0')}"),
+                };
             }
 
             // Cache config frame, if defined, for future use
@@ -178,17 +173,13 @@ namespace GSF.PhasorProtocols.Macrodyne
             get
             {
                 // Translate Macrodyne specific frame type to fundamental frame type
-                switch (TypeID)
+                return TypeID switch
                 {
-                    case Macrodyne.FrameType.DataFrame:
-                        return FundamentalFrameType.DataFrame;
-                    case Macrodyne.FrameType.ConfigurationFrame:
-                        return FundamentalFrameType.ConfigurationFrame;
-                    case Macrodyne.FrameType.HeaderFrame:
-                        return FundamentalFrameType.HeaderFrame;
-                }
-
-                return FundamentalFrameType.Undetermined;
+                    Macrodyne.FrameType.DataFrame => FundamentalFrameType.DataFrame,
+                    Macrodyne.FrameType.ConfigurationFrame => FundamentalFrameType.ConfigurationFrame,
+                    Macrodyne.FrameType.HeaderFrame => FundamentalFrameType.HeaderFrame,
+                    _ => FundamentalFrameType.Undetermined,
+                };
             }
         }
 

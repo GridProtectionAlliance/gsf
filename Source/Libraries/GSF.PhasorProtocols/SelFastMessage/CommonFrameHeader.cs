@@ -121,7 +121,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets the timestamp of this frame in NTP format.
         /// </summary>
-        public NtpTimeTag TimeTag => new NtpTimeTag(m_timestamp);
+        public NtpTimeTag TimeTag => new(m_timestamp);
 
         /// <summary>
         /// Gets or sets timestamp of this <see cref="CommonFrameHeader"/>.

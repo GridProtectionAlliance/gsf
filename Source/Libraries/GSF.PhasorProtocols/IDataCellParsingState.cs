@@ -31,7 +31,7 @@ namespace GSF.PhasorProtocols
     /// Defines function signature for creating new <see cref="IChannelValue{T}"/> objects.
     /// </summary>
     /// <param name="parent">Reference to parent <see cref="IDataCell"/>.</param>
-    /// <param name="definition">Refrence to associated <see cref="IChannelDefinition"/> object.</param>
+    /// <param name="definition">Reference to associated <see cref="IChannelDefinition"/> object.</param>
     /// <param name="buffer">Binary image to parse <see cref="IChannelValue{T}"/> from.</param>
     /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
     /// <param name="parsedLength">Returns the total number of bytes parsed from <paramref name="buffer"/>.</param>
@@ -50,41 +50,26 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to the <see cref="IConfigurationCell"/> associated with the <see cref="IDataCell"/> being parsed.
         /// </summary>
-        IConfigurationCell ConfigurationCell
-        {
-            get;
-        }
+        IConfigurationCell ConfigurationCell { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IPhasorValue"/> objects.
         /// </summary>
-        CreateNewValueFunction<IPhasorDefinition, IPhasorValue> CreateNewPhasorValue
-        {
-            get;
-        }
+        CreateNewValueFunction<IPhasorDefinition, IPhasorValue> CreateNewPhasorValue { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IFrequencyValue"/> objects.
         /// </summary>
-        CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> CreateNewFrequencyValue
-        {
-            get;
-        }
+        CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> CreateNewFrequencyValue { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IAnalogValue"/> objects.
         /// </summary>
-        CreateNewValueFunction<IAnalogDefinition, IAnalogValue> CreateNewAnalogValue
-        {
-            get;
-        }
+        CreateNewValueFunction<IAnalogDefinition, IAnalogValue> CreateNewAnalogValue { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewValueFunction{TDefinition,TValue}"/> delegate used to create new <see cref="IDigitalValue"/> objects.
         /// </summary>
-        CreateNewValueFunction<IDigitalDefinition, IDigitalValue> CreateNewDigitalValue
-        {
-            get;
-        }
+        CreateNewValueFunction<IDigitalDefinition, IDigitalValue> CreateNewDigitalValue { get; }
     }
 }

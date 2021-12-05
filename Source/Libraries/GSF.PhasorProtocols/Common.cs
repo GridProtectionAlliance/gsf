@@ -113,7 +113,7 @@ namespace GSF.PhasorProtocols
         public static IConfigurationFrame DeserializeConfigurationFrame(Stream configStream)
         {
             IConfigurationFrame configFrame;
-            SoapFormatter xmlSerializer = new SoapFormatter();
+            SoapFormatter xmlSerializer = new();
 
             xmlSerializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
             xmlSerializer.TypeFormat = FormatterTypeStyle.TypesWhenNeeded;
@@ -145,29 +145,19 @@ namespace GSF.PhasorProtocols
         /// <returns>Friendly protocol display name for specified phasor <paramref name="protocol"/>.</returns>
         public static string GetFormattedProtocolName(this PhasorProtocol protocol)
         {
-            switch (protocol)
+            return protocol switch
             {
-                case PhasorProtocol.IEEEC37_118V2:
-                    return "IEEE C37.118.2-2011";
-                case PhasorProtocol.IEEEC37_118V1:
-                    return "IEEE C37.118-2005";
-                case PhasorProtocol.IEEEC37_118D6:
-                    return "IEEE C37.118 Draft 6";
-                case PhasorProtocol.IEEE1344:
-                    return "IEEE 1344-1995";
-                case PhasorProtocol.BPAPDCstream:
-                    return "BPA PDCstream";
-                case PhasorProtocol.FNET:
-                    return "UTK F-NET";
-                case PhasorProtocol.SelFastMessage:
-                    return "SEL Fast Message";
-                case PhasorProtocol.Macrodyne:
-                    return "Macrodyne";
-                case PhasorProtocol.IEC61850_90_5:
-                    return "IEC 61850-90-5";
-                default:
-                    return protocol.ToString().Replace('_', '.').ToUpper();
-            }
+                PhasorProtocol.IEEEC37_118V2 => "IEEE C37.118.2-2011",
+                PhasorProtocol.IEEEC37_118V1 => "IEEE C37.118-2005",
+                PhasorProtocol.IEEEC37_118D6 => "IEEE C37.118 Draft 6",
+                PhasorProtocol.IEEE1344 => "IEEE 1344-1995",
+                PhasorProtocol.BPAPDCstream => "BPA PDCstream",
+                PhasorProtocol.FNET => "UTK F-NET",
+                PhasorProtocol.SelFastMessage => "SEL Fast Message",
+                PhasorProtocol.Macrodyne => "Macrodyne",
+                PhasorProtocol.IEC61850_90_5 => "IEC 61850-90-5",
+                _ => protocol.ToString().Replace('_', '.').ToUpper(),
+            };
         }
     }
 }

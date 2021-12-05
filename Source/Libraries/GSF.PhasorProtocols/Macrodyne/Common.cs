@@ -358,22 +358,22 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Send reference phasor.
         /// </summary>
-        /// <remarks>Command must be followed by phasor and xor checksum <see cref="byte"/>.</remarks>
+        /// <remarks>Command must be followed by phasor and XOR checksum <see cref="byte"/>.</remarks>
         SendReferencePhasor = 0xA0,
         /// <summary>
         /// Send word data.
         /// </summary>
-        /// <remarks>Command must be followed by big-endian <see cref="ushort"/> and xor checksum <see cref="byte"/></remarks>
+        /// <remarks>Command must be followed by big-endian <see cref="ushort"/> and XOR checksum <see cref="byte"/></remarks>
         SendWordData = 0xA2,
         /// <summary>
         /// Send unit ID data.
         /// </summary>
-        /// <remarks>Command must be followed by 8 ASCII bytes of data and xor checksum <see cref="byte"/></remarks>
+        /// <remarks>Command must be followed by 8 ASCII bytes of data and XOR checksum <see cref="byte"/></remarks>
         SendUnitIDData = 0xA4,
         /// <summary>
         /// Send byte data.
         /// </summary>
-        /// <remarks>Command must be followed by <see cref="byte"/> data and xor checksum <see cref="byte"/>.</remarks>
+        /// <remarks>Command must be followed by <see cref="byte"/> data and XOR checksum <see cref="byte"/>.</remarks>
         SendByteData = 0xA6
     }
 
@@ -689,7 +689,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         SetDigitalsTo32 = 0xCCA2,
         /// <summary>
-        /// Set Raw data pretrigger to the value in the word buffer.
+        /// Set raw data pre-trigger to the value in the word buffer.
         /// </summary>
         SetRawPreTriggerValue = 0xCCA4,
         /// <summary>
@@ -843,7 +843,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// </summary>
         RequestRawTableInformation = 0xBB64,
         /// <summary>
-        /// Request current raw table pretrigger (22 response bytes).
+        /// Request current raw table pre-trigger (22 response bytes).
         /// </summary>
         RequestCurrentRawTablePreTrigger = 0xBB66,
         /// <summary>

@@ -134,7 +134,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             // Make sure frame header exists - using base class timestamp to
             // prevent recursion (m_frameHeader doesn't exist yet)
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(1));
+            get => m_frameHeader ??= new CommonFrameHeader(1);
             set
             {
                 m_frameHeader = value;
@@ -176,7 +176,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets the timestamp of this <see cref="DataFrame"/> formatted as NTP.
         /// </summary>
-        public NtpTimeTag NtpTimeTag => new NtpTimeTag(Timestamp);
+        public NtpTimeTag NtpTimeTag => new(Timestamp);
 
         /// <summary>
         /// Gets the legacy labels parsed from the <see cref="DataFrame"/>, if any.

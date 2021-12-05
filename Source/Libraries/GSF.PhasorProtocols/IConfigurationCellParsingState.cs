@@ -47,96 +47,21 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IPhasorDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunction<IPhasorDefinition> CreateNewPhasorDefinition
-        {
-            get;
-        }
+        CreateNewDefinitionFunction<IPhasorDefinition> CreateNewPhasorDefinition { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IFrequencyDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunction<IFrequencyDefinition> CreateNewFrequencyDefinition
-        {
-            get;
-        }
+        CreateNewDefinitionFunction<IFrequencyDefinition> CreateNewFrequencyDefinition { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IAnalogDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunction<IAnalogDefinition> CreateNewAnalogDefinition
-        {
-            get;
-        }
+        CreateNewDefinitionFunction<IAnalogDefinition> CreateNewAnalogDefinition { get; }
 
         /// <summary>
         /// Gets reference to <see cref="CreateNewDefinitionFunction{T}"/> delegate used to create new <see cref="IDigitalDefinition"/> objects.
         /// </summary>
-        CreateNewDefinitionFunction<IDigitalDefinition> CreateNewDigitalDefinition
-        {
-            get;
-        }
-
-        // below here; new items needed for ConfigFrame3 
-        /*
-        /// <summary>
-        /// Gets or sets the GUID of the PMU associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        System.Guid G_PMU_ID { get; set; }
-
-        /// <summary>
-        /// Gets or sets the phasor and channel names (CHNAM) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        string ChannelName { get; set; }
-
-        string[] PhasorName { get; set; }
-        string[] AnalogName { get; set; }
-        string[] DigitalName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the conversions factor for phasor channels (PHSCALE) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        byte[][] PhasorScale { get; set; }
-
-        /// <summary>
-        /// Gets or sets the latitude of the device (PMU_LAT) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        float DeviceLatitude { get; set; }
-
-        /// <summary>
-        /// Gets or sets the longitude of the device (PMU_LON) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        float DeviceLongitude { get; set; }
-
-        /// <summary>
-        /// Gets or sets the elevation of the divice (PMU_ELEV) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        float DeviceElevation { get; set; }
-
-        /// <summary>
-        /// Gets or sets the service class (SVC_CLASS) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        char ServiceClass { get; set; }
-
-        /// <summary>
-        /// Gets or sets the phasor measurement window (WINDOW) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        int MeasurementWindow { get; set; }
-        
-        /// <summary>
-        /// Gets or sets the phasor measurement group delay (GRP_DLY) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        int GroupDelay { get; set; }
-
-        /// <summary>
-        /// Gets or sets the nominal line frequency code and flags (FNOM) associated with the <see cref="IConfigurationCell"/> being parsed.
-        /// </summary>
-        ushort FNOM { get; set; }
-
-        ushort CFGCNT { get; set; }
-
-        byte[][] ANSCALE { get; set; }
-
-        byte[][] DigitalStatus { get; set; }
-        */
+        CreateNewDefinitionFunction<IDigitalDefinition> CreateNewDigitalDefinition { get; }
     }
 }

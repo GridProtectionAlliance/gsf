@@ -122,19 +122,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         uint headerLength = BigEndian.ToUInt32(buffer, startIndex + 8);
                         secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 12);
 
-                        switch (m_fileType)
+                        RoughTimestamp = m_fileType switch
                         {
-                            case FileType.PdcNtp:
-                                RoughTimestamp = new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks;
-                                break;
-                            case FileType.PdcUnix:
-                                RoughTimestamp = new UnixTimeTag(secondOfCentury).ToDateTime().Ticks;
-                                break;
-                            default:
-                                RoughTimestamp = 0;
-                                break;
-                        }
-
+                            FileType.PdcNtp => new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks,
+                            FileType.PdcUnix => new UnixTimeTag(secondOfCentury).ToDateTime().Ticks,
+                            _ => 0,
+                        };
                         m_startSample = BigEndian.ToUInt32(buffer, startIndex + 16);
                         m_sampleInterval = BigEndian.ToUInt16(buffer, startIndex + 20);
                         m_sampleRate = BigEndian.ToUInt16(buffer, startIndex + 22);
@@ -142,19 +135,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         m_totalRows = BigEndian.ToUInt32(buffer, startIndex + 28);
                         secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 32);
 
-                        switch (m_fileType)
+                        m_triggerTime = m_fileType switch
                         {
-                            case FileType.PdcNtp:
-                                m_triggerTime = new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks;
-                                break;
-                            case FileType.PdcUnix:
-                                m_triggerTime = new UnixTimeTag(secondOfCentury).ToDateTime().Ticks;
-                                break;
-                            default:
-                                m_triggerTime = 0;
-                                break;
-                        }
-
+                            FileType.PdcNtp => new NtpTimeTag(secondOfCentury, 0).ToDateTime().Ticks,
+                            FileType.PdcUnix => new UnixTimeTag(secondOfCentury).ToDateTime().Ticks,
+                            _ => 0,
+                        };
                         m_triggerSample = BigEndian.ToUInt32(buffer, startIndex + 36);
                         m_preTriggerRows = BigEndian.ToUInt32(buffer, startIndex + 40);
                         m_triggerPMU = BigEndian.ToUInt16(buffer, startIndex + 44);
@@ -330,7 +316,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         }
 
         /// <summary>
-        /// Gets rough timestamp, accuarate to the second, that can be used until configuration frame arrives.
+        /// Gets rough timestamp, accurate to the second, that can be used until configuration frame arrives.
         /// </summary>
         public Ticks RoughTimestamp { get; }
 
@@ -508,7 +494,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             set => m_state = value;
         }
 
-        // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
+        // Gets or sets any additional state information - satisfies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
             get => m_state;
@@ -526,15 +512,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             get
             {
                 // Translate BPA PDCstream specific frame type to fundamental frame type
-                switch (TypeID)
+                return TypeID switch
                 {
-                    case BPAPDCstream.FrameType.DataFrame:
-                        return FundamentalFrameType.DataFrame;
-                    case BPAPDCstream.FrameType.ConfigurationFrame:
-                        return FundamentalFrameType.ConfigurationFrame;
-                    default:
-                        return FundamentalFrameType.Undetermined;
-                }
+                    BPAPDCstream.FrameType.DataFrame => FundamentalFrameType.DataFrame,
+                    BPAPDCstream.FrameType.ConfigurationFrame => FundamentalFrameType.ConfigurationFrame,
+                    _ => FundamentalFrameType.Undetermined,
+                };
             }
         }
 

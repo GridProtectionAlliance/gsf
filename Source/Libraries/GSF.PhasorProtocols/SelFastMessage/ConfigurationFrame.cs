@@ -64,7 +64,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             FrameSize = frameSize;
             MessagePeriod = messagePeriod;
             IDCode = idCode;
-            ConfigurationCell configCell = new ConfigurationCell(this);
+            ConfigurationCell configCell = new(this);
 
             // Assign station name
             configCell.StationName = $"SEL Unit - {idCode}";
@@ -103,31 +103,16 @@ namespace GSF.PhasorProtocols.SelFastMessage
             Cells.Add(configCell);
 
             // Define message rate (best-fit)
-            switch (messagePeriod)
+            FrameRate = messagePeriod switch
             {
-                case MessagePeriod.DefaultRate:
-                case MessagePeriod.TwentyPerSecond:
-                    FrameRate = 20;
-                    break;
-                case MessagePeriod.TenPerSecond:
-                    FrameRate = 10;
-                    break;
-                case MessagePeriod.FivePerSecond:
-                    FrameRate = 5;
-                    break;
-                case MessagePeriod.FourPerSecond:
-                    FrameRate = 4;
-                    break;
-                case MessagePeriod.TwoPerSecond:
-                    FrameRate = 2;
-                    break;
-                case MessagePeriod.OnePerSecond:
-                    FrameRate = 1;
-                    break;
-                default:
-                    FrameRate = 0;
-                    break;
-            }
+                MessagePeriod.DefaultRate or MessagePeriod.TwentyPerSecond => 20,
+                MessagePeriod.TenPerSecond => 10,
+                MessagePeriod.FivePerSecond => 5,
+                MessagePeriod.FourPerSecond => 4,
+                MessagePeriod.TwoPerSecond => 2,
+                MessagePeriod.OnePerSecond => 1,
+                _ => 0,
+            };
         }
 
         /// <summary>

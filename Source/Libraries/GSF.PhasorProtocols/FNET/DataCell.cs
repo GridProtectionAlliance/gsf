@@ -115,7 +115,7 @@ namespace GSF.PhasorProtocols.FNET
         /// </summary>
         /// <remarks>
         /// F-NET defines synchronization validity as a derived value based on the number of available satellites, i.e.,
-        /// synchronization is valid if number of visible sattellites is greater than zero.
+        /// synchronization is valid if number of visible satellites is greater than zero.
         /// </remarks>
         public override bool SynchronizationIsValid
         {
@@ -178,7 +178,7 @@ namespace GSF.PhasorProtocols.FNET
         {
             get
             {
-                StringBuilder dataRow = new StringBuilder();
+                StringBuilder dataRow = new();
 
                 dataRow.Append(Common.StartByte);
                 dataRow.Append(IDCode);
@@ -331,7 +331,7 @@ namespace GSF.PhasorProtocols.FNET
             fnetDate = fnetDate.PadLeft(6, '0');
             fnetTime = fnetTime.PadLeft(6, '0');
 
-            DateTime timestamp = new DateTime(
+            DateTime timestamp = new(
                 /*  year */ 2000 + int.Parse(fnetDate.Substring(4, 2)), 
                 /* month */ int.Parse(fnetDate.Substring(0, 2).Trim()), 
                 /*  day  */ int.Parse(fnetDate.Substring(2, 2)), 
@@ -347,7 +347,7 @@ namespace GSF.PhasorProtocols.FNET
         // Delegate handler to create a new F-NET data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
+            DataCell dataCell = new(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

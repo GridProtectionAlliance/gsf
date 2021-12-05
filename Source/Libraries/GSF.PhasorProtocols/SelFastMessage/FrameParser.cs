@@ -116,7 +116,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("    Defined message period: ");
                 status.Append(MessagePeriod);
@@ -185,7 +185,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             if (length > CommonFrameHeader.FixedLength)
             {
                 // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
+                CommonFrameHeader parsedFrameHeader = new(buffer, offset);
 
                 // Derive frame length from common frame header
                 int frameLength = (int)parsedFrameHeader.FrameSize;
@@ -235,7 +235,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
 
             while (doubleFFPosition > -1)
             {
-                using (BlockAllocatedMemoryStream newBuffer = new BlockAllocatedMemoryStream())
+                using (BlockAllocatedMemoryStream newBuffer = new())
                 {
                     // Write buffer before repeated byte
                     newBuffer.Write(buffer, offset, doubleFFPosition - offset + 1);
@@ -305,28 +305,20 @@ namespace GSF.PhasorProtocols.SelFastMessage
                 {
                     IConfigurationCell sourceCell = sourceFrame.Cells[0];
 
-                    switch (sourceCell.PhasorDefinitions.Count)
+                    derivedFrame = sourceCell.PhasorDefinitions.Count switch
                     {
-                        case 8:
-                            derivedFrame = new ConfigurationFrame(FrameSize.A, messagePeriod, sourceFrame.IDCode);
-                            break;
-                        case 4:
-                            derivedFrame = new ConfigurationFrame(FrameSize.V, messagePeriod, sourceFrame.IDCode);
-                            break;
-                        default:
-                            derivedFrame = new ConfigurationFrame(FrameSize.V1, messagePeriod, sourceFrame.IDCode);
-                            break;
-                    }
+                        8 => new ConfigurationFrame(FrameSize.A, messagePeriod, sourceFrame.IDCode),
+                        4 => new ConfigurationFrame(FrameSize.V, messagePeriod, sourceFrame.IDCode),
+                        _ => new ConfigurationFrame(FrameSize.V1, messagePeriod, sourceFrame.IDCode),
+                    };
 
                     // Create new derived configuration cell
-                    ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame);
+                    ConfigurationCell derivedCell = new(derivedFrame);
                     IFrequencyDefinition sourceFrequency;
 
                     // Create equivalent derived phasor definitions
                     foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                    {
                         derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.PhasorType, null));
-                    }
 
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;

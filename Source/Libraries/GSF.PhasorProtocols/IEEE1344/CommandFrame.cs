@@ -152,7 +152,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets NTP based time representation of the ticks of this <see cref="CommandFrame"/>.
         /// </summary>
-        public new NtpTimeTag TimeTag => new NtpTimeTag(Timestamp);
+        public new NtpTimeTag TimeTag => new(Timestamp);
 
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.

@@ -185,7 +185,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         public CommonFrameHeader CommonHeader
         {
             // Make sure frame header exists
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(Common.DescriptorPacketFlag));
+            get => m_frameHeader ??= new CommonFrameHeader(Common.DescriptorPacketFlag);
             set
             {
                 m_frameHeader = value;
@@ -352,7 +352,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             // Skip past header that was already parsed...
             startIndex += CommonFrameHeader.FixedLength;
 
-            // Only need to parse what wan't already parsed in common frame header
+            // Only need to parse what wasn't already parsed in common frame header
             m_streamType = (StreamType)buffer[startIndex];
             m_revisionNumber = (RevisionNumber)buffer[startIndex + 1];
             FrameRate = BigEndian.ToUInt16(buffer, startIndex + 2);
@@ -441,7 +441,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         if (pdcID == -1)
                         {
                             // No PDC entry exists, assume this is a PMU
-                            ConfigurationCell pmuCell = new ConfigurationCell(this, 0)
+                            ConfigurationCell pmuCell = new(this, 0)
                             {
                                 IDCode = ushort.Parse(m_iniFile[section, "PMU", Cells.Count.ToString()]),
                                 SectionEntry = section,
@@ -463,9 +463,9 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                             for (int x = 0; x < pmuCount; x++)
                             {
                                 // Create a new PMU cell for each PDC entry that exists
-                                // For BPA INI files, PMUs tradionally have an ID number indexed starting at zero or one - so we multiply
+                                // For BPA INI files, PMUs traditionally have an ID number indexed starting at zero or one - so we multiply
                                 // ID by 1000 and add index to attempt to create a fairly unique ID to help optimize downstream parsing
-                                ConfigurationCell pmuCell = new ConfigurationCell(this, 0)
+                                ConfigurationCell pmuCell = new(this, 0)
                                 {
                                     IDCode = unchecked((ushort)(pdcID * 1000 + x)),
                                     SectionEntry = $"{section}pmu{x}",
@@ -488,7 +488,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         if (refreshCausedByFrameParse)
                         {
                             // Create a new configuration cell collection that will account for PDC block cells
-                            ConfigurationCellCollection cellCollection = new ConfigurationCellCollection();
+                            ConfigurationCellCollection cellCollection = new();
 
                             // For freshly parsed configuration frames we'll have no PMU's in configuration
                             // frame for PDCxchng blocks - so we'll need to dynamically create them
@@ -662,7 +662,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// </summary>
         public static string GetIniFileImage(IConfigurationFrame configFrame)
         {
-            StringBuilder fileImage = new StringBuilder();
+            StringBuilder fileImage = new();
 
             fileImage.AppendLine($"; BPA PDCstream IniFile for Configuration {configFrame.IDCode}");
             fileImage.AppendLine($"; Auto-generated on {DateTime.Now}");
@@ -688,7 +688,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             fileImage.AppendLine(";    Ratio:      PT/CT ratio N:1 where N is a floating point number");
             fileImage.AppendLine(";    Cal Factor: Conversion factor between integer in file and secondary volts, floating point");
             fileImage.AppendLine(";    Offset:     Phase Offset to correct for phase angle measurement errors or differences, floating point");
-            fileImage.AppendLine(";    Shunt:      Current- shunt resistence in ohms, or the equivalent ratio for aux CTs, floating point");
+            fileImage.AppendLine(";    Shunt:      Current- shunt resistance in ohms, or the equivalent ratio for aux CTs, floating point");
             fileImage.AppendLine(";                Voltage- empty, not used");
             fileImage.AppendLine(";    VoltageRef: Current- phasor number (1-10) of voltage phasor to use for power calculation, integer");
             fileImage.AppendLine(";                Voltage- voltage class, standard l-l voltages, 500, 230, 115, etc, integer");

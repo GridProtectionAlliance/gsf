@@ -239,7 +239,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine($"     Received config frame: {(ConfigurationFrame is null ? "No" : "Yes")}");

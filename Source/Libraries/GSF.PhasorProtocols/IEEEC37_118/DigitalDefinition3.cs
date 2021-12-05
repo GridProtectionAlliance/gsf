@@ -150,7 +150,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 for (int i = 0; i < BitLabelCount; i++)
                     Labels[i] = i < labels.Length ? labels[i].Trim() : "";
 
-                using (MemoryStream stream = new MemoryStream())
+                using (MemoryStream stream = new())
                 {
                     for (int i = 0; i < BitLabelCount; i++)
                     {

@@ -538,10 +538,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Static Methods
 
         // Delegate handler to create a new IEEE C37.118 configuration cell
-        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "This must match delegate signature")]
         internal static IConfigurationCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IConfigurationCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            ConfigurationCell3 configCell = new ConfigurationCell3(parent as IConfigurationFrame);
+            ConfigurationCell3 configCell = new(parent as IConfigurationFrame);
 
             parsedLength = configCell.ParseBinaryImage(buffer, startIndex, 0);
 

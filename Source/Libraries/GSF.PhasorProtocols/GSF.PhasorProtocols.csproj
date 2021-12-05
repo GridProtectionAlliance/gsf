@@ -113,6 +113,7 @@
     <Compile Include="FrequencyDefinitionCollection.cs" />
     <Compile Include="FrequencyValueBase.cs" />
     <Compile Include="FrequencyValueCollection.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="HeaderCell.cs" />
     <Compile Include="HeaderCellCollection.cs" />
     <Compile Include="HeaderFrameBase.cs" />

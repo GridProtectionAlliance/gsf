@@ -252,7 +252,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         // Delegate handler to create a new SEL Fast Message data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
+            DataCell dataCell = new(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
 
             parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

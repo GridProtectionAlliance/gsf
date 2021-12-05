@@ -79,41 +79,25 @@ namespace GSF.PhasorProtocols.Macrodyne
             // Interpret Macrodyne specific device command
             get
             {
-                switch (base.Command)
+                return base.Command switch
                 {
-                    case PhasorProtocols.DeviceCommand.EnableRealTimeData:
-                        return DeviceCommand.StartOnlineData;
-                    case PhasorProtocols.DeviceCommand.DisableRealTimeData:
-                        return DeviceCommand.StopOnlineData;
-                    case PhasorProtocols.DeviceCommand.SendConfigurationFrame1:
-                    case PhasorProtocols.DeviceCommand.SendConfigurationFrame2:
-                        return DeviceCommand.RequestOnlineDataFormat;
-                    case PhasorProtocols.DeviceCommand.SendHeaderFrame:
-                        return DeviceCommand.RequestUnitIDBufferValue;
-                    default:
-                        return DeviceCommand.Undefined;
-                }
+                    PhasorProtocols.DeviceCommand.EnableRealTimeData => DeviceCommand.StartOnlineData,
+                    PhasorProtocols.DeviceCommand.DisableRealTimeData => DeviceCommand.StopOnlineData,
+                    PhasorProtocols.DeviceCommand.SendConfigurationFrame1 or PhasorProtocols.DeviceCommand.SendConfigurationFrame2 => DeviceCommand.RequestOnlineDataFormat,
+                    PhasorProtocols.DeviceCommand.SendHeaderFrame => DeviceCommand.RequestUnitIDBufferValue,
+                    _ => DeviceCommand.Undefined,
+                };
             }
             set
             {
-                switch (value)
+                base.Command = value switch
                 {
-                    case DeviceCommand.StartOnlineData:
-                        base.Command = PhasorProtocols.DeviceCommand.EnableRealTimeData;
-                        break;
-                    case DeviceCommand.StopOnlineData:
-                        base.Command = PhasorProtocols.DeviceCommand.DisableRealTimeData;
-                        break;
-                    case DeviceCommand.RequestOnlineDataFormat:
-                        base.Command = PhasorProtocols.DeviceCommand.SendConfigurationFrame2;
-                        break;
-                    case DeviceCommand.RequestUnitIDBufferValue:
-                        base.Command = PhasorProtocols.DeviceCommand.SendHeaderFrame;
-                        break;
-                    default:
-                        base.Command = PhasorProtocols.DeviceCommand.ReservedBits;
-                        break;
-                }
+                    DeviceCommand.StartOnlineData => PhasorProtocols.DeviceCommand.EnableRealTimeData,
+                    DeviceCommand.StopOnlineData => PhasorProtocols.DeviceCommand.DisableRealTimeData,
+                    DeviceCommand.RequestOnlineDataFormat => PhasorProtocols.DeviceCommand.SendConfigurationFrame2,
+                    DeviceCommand.RequestUnitIDBufferValue => PhasorProtocols.DeviceCommand.SendHeaderFrame,
+                    _ => PhasorProtocols.DeviceCommand.ReservedBits,
+                };
             }
         }
 

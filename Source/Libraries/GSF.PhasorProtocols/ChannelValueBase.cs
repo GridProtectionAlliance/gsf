@@ -186,7 +186,7 @@ namespace GSF.PhasorProtocols
         /// <returns>New <see cref="IMeasurement"/> value for specified composite value for this <see cref="ChannelValueBase{T}"/>.</returns>
         protected virtual IMeasurement CreateMeasurement(int valueIndex)
         {
-            Measurement measurement = new Measurement
+            Measurement measurement = new()
             {
                 Timestamp = Parent.Parent.Timestamp,
                 Value = GetCompositeValue(valueIndex)

@@ -167,7 +167,7 @@ namespace GSF.PhasorProtocols.IEEE1344
                 return null;
 
             // Parse common frame header
-            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
+            CommonFrameHeader parsedFrameHeader = new(buffer, offset);
 
             // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
             // we eliminate the need to validate length on all subsequent data elements that comprise the frame
@@ -354,7 +354,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
                 // Create new derived configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                ConfigurationCell derivedCell = new(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                 // Create equivalent derived phasor definitions
                 foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)

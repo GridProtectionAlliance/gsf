@@ -283,15 +283,12 @@ namespace GSF.PhasorProtocols
         /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public override double GetCompositeValue(int index)
         {
-            switch (index)
+            return index switch
             {
-                case (int)CompositeFrequencyValue.Frequency:
-                    return m_frequency;
-                case (int)CompositeFrequencyValue.DfDt:
-                    return m_dfdt;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
-            }
+                (int)CompositeFrequencyValue.Frequency => m_frequency,
+                (int)CompositeFrequencyValue.DfDt => m_dfdt,
+                _ => throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested"),
+            };
         }
 
         /// <summary>

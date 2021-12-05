@@ -312,7 +312,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets time as a <see cref="UnixTimeTag"/> representing seconds of current <see cref="Timestamp"/>.
         /// </summary>
-        public UnixTimeTag TimeTag => new UnixTimeTag(m_timestamp);
+        public UnixTimeTag TimeTag => new(m_timestamp);
 
         /// <summary>
         /// Gets or sets the parsing state for the <see cref="CommonFrameHeader"/> object.
@@ -341,21 +341,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             get
             {
                 // Translate IEEE C37.118 specific frame type to fundamental frame type
-                switch (m_frameType)
+                return m_frameType switch
                 {
-                    case IEEEC37_118.FrameType.DataFrame:
-                        return FundamentalFrameType.DataFrame;
-                    case IEEEC37_118.FrameType.ConfigurationFrame1:
-                    case IEEEC37_118.FrameType.ConfigurationFrame2:
-                    case IEEEC37_118.FrameType.ConfigurationFrame3:
-                        return FundamentalFrameType.ConfigurationFrame;
-                    case IEEEC37_118.FrameType.HeaderFrame:
-                        return FundamentalFrameType.HeaderFrame;
-                    case IEEEC37_118.FrameType.CommandFrame:
-                        return FundamentalFrameType.CommandFrame;
-                    default:
-                        return FundamentalFrameType.Undetermined;
-                }
+                    IEEEC37_118.FrameType.DataFrame => FundamentalFrameType.DataFrame,
+                    IEEEC37_118.FrameType.ConfigurationFrame1 or IEEEC37_118.FrameType.ConfigurationFrame2 or IEEEC37_118.FrameType.ConfigurationFrame3 => FundamentalFrameType.ConfigurationFrame,
+                    IEEEC37_118.FrameType.HeaderFrame => FundamentalFrameType.HeaderFrame,
+                    IEEEC37_118.FrameType.CommandFrame => FundamentalFrameType.CommandFrame,
+                    _ => FundamentalFrameType.Undetermined,
+                };
             }
         }
 

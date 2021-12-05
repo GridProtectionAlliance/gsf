@@ -61,7 +61,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
     public enum SessionType : byte
     {
         /// <summary>
-        /// Tunnelled values.
+        /// Tunneled values.
         /// </summary>
         Tunnelled = 0xA0,
         /// <summary>
@@ -226,7 +226,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// </summary>
         Coordinates = (ushort)Bits.Bit00,
         /// <summary>
-        /// Unsed format bits mask.
+        /// Unused format bits mask.
         /// </summary>
         UnusedMask = unchecked(ushort.MaxValue & (ushort)~(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03)),
         /// <summary>
@@ -722,7 +722,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             // Not sure if booleans would be encoded correctly here (due to Marshal sizeof) - also not sure
             // how IEC 61850 deals with booleans - as a result, booleans should likely be avoided.
-            // I wonder if compiler is smart enough to exclude this expression in imlementations since this
+            // I wonder if compiler is smart enough to exclude this expression in implementations since this
             // is always false for non boolean types - where is my WHERE expression like "~bool"...
             if (typeof(T) == typeof(bool))
                 throw new ArgumentOutOfRangeException(nameof(value), "Boolean encoding is currently not supported");
@@ -790,15 +790,12 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 // Odd attempt at 7-bit encoding? Seems like a waste of bits for the
                 // benefit of allowing variable length encoded 56-bit integers...
-                switch (buffer[index++] & 0x7F)
+                return (buffer[index++] & 0x7F) switch
                 {
-                    case 1:
-                        return buffer[index++];
-                    case 2:
-                        return ((buffer[index++] & 0xFF) << 8) | (buffer[index++] & 0xFF);
-                    default:
-                        return 0;
-                }
+                    1 => buffer[index++],
+                    2 => ((buffer[index++] & 0xFF) << 8) | (buffer[index++] & 0xFF),
+                    _ => 0,
+                };
             }
 
             return buffer[index++];

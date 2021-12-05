@@ -56,7 +56,7 @@ namespace GSF.PhasorProtocols.FNET
         public ConfigurationFrame(ushort idCode, Ticks timestamp, ushort frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
             : base(idCode, new ConfigurationCellCollection(), timestamp, frameRate)
         {
-            ConfigurationCell configCell = new ConfigurationCell(this, nominalFrequency, timeOffset);
+            ConfigurationCell configCell = new(this, nominalFrequency, timeOffset);
 
             // FNet protocol sends data for one device
             Cells.Add(configCell);
@@ -105,7 +105,7 @@ namespace GSF.PhasorProtocols.FNET
         /// Gets or sets the time offset of F-NET device in <see cref="Ticks"/>.
         /// </summary>
         /// <remarks>
-        /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this this artificial delay.
+        /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this artificial delay.
         /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10,000,000 ticks.
         /// </remarks>
         public Ticks TimeOffset

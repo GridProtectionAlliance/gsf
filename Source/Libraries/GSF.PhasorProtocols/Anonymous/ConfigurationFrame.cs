@@ -185,7 +185,7 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <param name="configurationName"><see cref="string"/> representing the configuration name.</param>
         public static void Cache(IConfigurationFrame configurationFrame, Action<Exception> exceptionHandler, string configurationName)
         {
-            Tuple<IConfigurationFrame, Action<Exception>, string> cacheState = new Tuple<IConfigurationFrame, Action<Exception>, string>(configurationFrame, exceptionHandler, configurationName);
+            Tuple<IConfigurationFrame, Action<Exception>, string> cacheState = new(configurationFrame, exceptionHandler, configurationName);
             s_configurationCacheQueue.Add(cacheState);
         }
 
@@ -248,7 +248,7 @@ namespace GSF.PhasorProtocols.Anonymous
             try
             {
                 // Serialize configuration frame to a file
-                SoapFormatter xmlSerializer = new SoapFormatter
+                SoapFormatter xmlSerializer = new()
                 {
                     AssemblyFormat = FormatterAssemblyStyle.Simple,
                     TypeFormat = FormatterTypeStyle.TypesWhenNeeded

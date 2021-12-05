@@ -357,7 +357,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Delegate handler to create a new IEEE C37.118 configuration cell
         internal static IConfigurationCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IConfigurationCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            ConfigurationCell configCell = new ConfigurationCell(parent as IConfigurationFrame);
+            ConfigurationCell configCell = new(parent as IConfigurationFrame);
 
             parsedLength = configCell.ParseBinaryImage(buffer, startIndex, 0);
 

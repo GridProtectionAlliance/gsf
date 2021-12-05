@@ -165,7 +165,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("IEEE C37.118 revision: ");
                 status.Append(DraftRevision);
@@ -237,7 +237,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 return null;
 
             // Parse common frame header
-            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ConfigurationFrame as ConfigurationFrame1, buffer, offset);
+            CommonFrameHeader parsedFrameHeader = new(ConfigurationFrame as ConfigurationFrame1, buffer, offset);
 
             // Look for probable misaligned bad frame header parse
             if (parsedFrameHeader.FrameType == FundamentalFrameType.Undetermined || parsedFrameHeader.Version > (byte)DraftRevision.LatestVersion)
@@ -458,12 +458,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             if (draftRevision == DraftRevision.Std2011)
             {
                 // Handle configuration 3 frame as a special case:
-                ConfigurationFrame3 derivedFrame3 = new ConfigurationFrame3(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
+                ConfigurationFrame3 derivedFrame3 = new(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
 
                 foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
                 {
                     // Create new derived configuration cell
-                    ConfigurationCell3 derivedCell = new ConfigurationCell3(derivedFrame3, sourceCell.IDCode, sourceCell.NominalFrequency);
+                    ConfigurationCell3 derivedCell = new(derivedFrame3, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                     string stationName = sourceCell.StationName;
                     string idLabel = sourceCell.IDLabel;
@@ -505,27 +505,18 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 return derivedFrame3;
             }
 
-            // Create a new IEEE C37.118 configuration frame converted from equivalent configuration information
-            ConfigurationFrame1 derivedFrame;
-
-            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-            switch (draftRevision)
+            ConfigurationFrame1 derivedFrame = draftRevision switch
             {
                 // Assuming configuration frame 2 and timebase = 100000
-                case DraftRevision.Draft6:
-                    derivedFrame = new ConfigurationFrame2Draft6(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
-                    break;
-                case DraftRevision.Std2005:
-                    derivedFrame = new ConfigurationFrame2(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(draftRevision), draftRevision, null);
-            }
+                DraftRevision.Draft6 => new ConfigurationFrame2Draft6(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate),
+                DraftRevision.Std2005 => new ConfigurationFrame2(100000, sourceFrame.IDCode, sourceFrame.Timestamp, sourceFrame.FrameRate),
+                _ => throw new ArgumentOutOfRangeException(nameof(draftRevision), draftRevision, null),
+            };
 
             foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
                 // Create new derived configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                ConfigurationCell derivedCell = new(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                 string stationName = sourceCell.StationName;
                 string idLabel = sourceCell.IDLabel;

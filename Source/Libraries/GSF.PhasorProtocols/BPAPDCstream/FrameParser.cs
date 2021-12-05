@@ -163,7 +163,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("    INI configuration file: ");
                 status.Append(FilePath.TrimFileName(m_configurationFileName, 51));
@@ -287,7 +287,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 return null;
 
             // Parse common frame header
-            CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(ParseWordCountFromByte, UsePhasorDataFileFormat, m_configurationFrame, buffer, offset, length);
+            CommonFrameHeader parsedFrameHeader = new(ParseWordCountFromByte, UsePhasorDataFileFormat, m_configurationFrame, buffer, offset, length);
 
             // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
             // we eliminate the need to validate length on all subsequent data elements that comprise the frame
@@ -313,7 +313,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             return parsedFrameHeader;
         }
 
-        // Handler for file watcher - we notify consumer when changes have occured to configuration file
+        // Handler for file watcher - we notify consumer when changes have occurred to configuration file
         private void m_configurationFileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
             // We synchronize change actions - don't want more than one refresh happening at a time...
@@ -420,7 +420,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
                 // Create new derived configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
+                ConfigurationCell derivedCell = new(derivedFrame, sourceCell.IDCode, sourceCell.NominalFrequency);
 
                 // Create equivalent derived phasor definitions
                 foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)

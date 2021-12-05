@@ -345,7 +345,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         // Delegate handler to create a new IEC 61850-90-5 configuration cell
         internal static IConfigurationCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IConfigurationCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
         {
-            ConfigurationCell configCell = new ConfigurationCell(parent as IConfigurationFrame);
+            ConfigurationCell configCell = new(parent as IConfigurationFrame);
 
             parsedLength = configCell.ParseBinaryImage(buffer, startIndex, 0);
 

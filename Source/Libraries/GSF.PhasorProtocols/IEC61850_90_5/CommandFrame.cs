@@ -128,7 +128,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public CommonFrameHeader CommonHeader
         {
             // Make sure frame header exists
-            get => m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(null, IEC61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp));
+            get => m_frameHeader ??= new CommonFrameHeader(null, IEC61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp);
             set
             {
                 m_frameHeader = value;

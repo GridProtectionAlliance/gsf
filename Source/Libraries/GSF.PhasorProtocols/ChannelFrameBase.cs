@@ -185,7 +185,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets UNIX based time representation of the ticks of this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
-        public virtual UnixTimeTag TimeTag => new UnixTimeTag(Timestamp);
+        public virtual UnixTimeTag TimeTag => new(Timestamp);
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ChannelFrameBase{T}"/>.

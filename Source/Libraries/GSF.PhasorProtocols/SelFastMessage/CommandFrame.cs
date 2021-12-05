@@ -132,30 +132,21 @@ namespace GSF.PhasorProtocols.SelFastMessage
             // Interpret SEL specific device command
             get
             {
-                switch (base.Command)
+                return base.Command switch
                 {
-                    case PhasorProtocols.DeviceCommand.EnableRealTimeData:
-                        return DeviceCommand.EnableUnsolicitedMessages;
-                    case PhasorProtocols.DeviceCommand.DisableRealTimeData:
-                        return DeviceCommand.DisableUnsolicitedMessages;
-                    default:
-                        return DeviceCommand.Undefined;
-                }
+                    PhasorProtocols.DeviceCommand.EnableRealTimeData => DeviceCommand.EnableUnsolicitedMessages,
+                    PhasorProtocols.DeviceCommand.DisableRealTimeData => DeviceCommand.DisableUnsolicitedMessages,
+                    _ => DeviceCommand.Undefined,
+                };
             }
             set
             {
-                switch (value)
+                base.Command = value switch
                 {
-                    case DeviceCommand.EnableUnsolicitedMessages:
-                        base.Command = PhasorProtocols.DeviceCommand.EnableRealTimeData;
-                        break;
-                    case DeviceCommand.DisableUnsolicitedMessages:
-                        base.Command = PhasorProtocols.DeviceCommand.DisableRealTimeData;
-                        break;
-                    default:
-                        base.Command = PhasorProtocols.DeviceCommand.ReservedBits;
-                        break;
-                }
+                    DeviceCommand.EnableUnsolicitedMessages => PhasorProtocols.DeviceCommand.EnableRealTimeData,
+                    DeviceCommand.DisableUnsolicitedMessages => PhasorProtocols.DeviceCommand.DisableRealTimeData,
+                    _ => PhasorProtocols.DeviceCommand.ReservedBits,
+                };
             }
         }
 
@@ -198,9 +189,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
         /// </summary>
-        protected override int BodyLength =>
-            // Total frame size - header length - crc value length
-            FrameSize - HeaderLength - 2;
+        protected override int BodyLength =>            
+            FrameSize - HeaderLength - 2; // Total frame size - header length - CRC value length
 
         /// <summary>
         /// Gets the binary body image of this <see cref="CommandFrame"/>.

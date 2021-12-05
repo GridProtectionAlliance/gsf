@@ -74,31 +74,16 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             PhasorType = type;
             m_voltageReference = type == PhasorType.Voltage ? this : voltageReference;
 
-            switch (phase)
+            PhasorComponent = phase switch
             {
-                case 'A':
-                    PhasorComponent = PhasorComponent.PhaseA;
-                    break;
-                case 'B':
-                    PhasorComponent = PhasorComponent.PhaseB;
-                    break;
-                case 'C':
-                    PhasorComponent = PhasorComponent.PhaseC;
-                    break;
-                case '+':
-                    PhasorComponent = PhasorComponent.PositiveSequence;
-                    break;
-                case '-':
-                    PhasorComponent = PhasorComponent.NegativeSequence;
-                    break;
-                case '0':
-                    PhasorComponent = PhasorComponent.ZeroSequence;
-                    break;
-                default:
-                    // If phase is not a value IEEE C37.118-2011 supports, default to positive sequence 
-                    PhasorComponent = PhasorComponent.PositiveSequence;
-                    break;
-            }
+                'A' => PhasorComponent.PhaseA,
+                'B' => PhasorComponent.PhaseB,
+                'C' => PhasorComponent.PhaseC,
+                '+' => PhasorComponent.PositiveSequence,
+                '-' => PhasorComponent.NegativeSequence,
+                '0' => PhasorComponent.ZeroSequence,
+                _ => PhasorComponent.PositiveSequence,// If phase is not a value IEEE C37.118-2011 supports, default to positive sequence 
+            };
         }
 
         /// <summary>

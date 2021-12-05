@@ -139,7 +139,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets <see cref="GSF.Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
         /// </summary>
-        public Phasor Phasor => new Phasor(Type, m_phasor);
+        public Phasor Phasor => new(Type, m_phasor);
 
         /// <summary>
         /// Gets or sets the <see cref="GSF.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
@@ -327,15 +327,12 @@ namespace GSF.PhasorProtocols
         /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public override double GetCompositeValue(int index)
         {
-            switch (index)
+            return index switch
             {
-                case (int)CompositePhasorValue.Angle:
-                    return Angle.ToDegrees();
-                case (int)CompositePhasorValue.Magnitude:
-                    return Magnitude;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
-            }
+                (int)CompositePhasorValue.Angle => Angle.ToDegrees(),
+                (int)CompositePhasorValue.Magnitude => Magnitude,
+                _ => throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested"),
+            };
         }
 
         /// <summary>

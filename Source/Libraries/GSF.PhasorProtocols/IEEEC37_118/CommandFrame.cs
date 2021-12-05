@@ -130,7 +130,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public CommonFrameHeader CommonHeader
         {
             // Make sure frame header exists
-            get =>m_frameHeader ?? (m_frameHeader = new CommonFrameHeader(null, IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp, DraftRevision.Std2005));
+            get =>m_frameHeader ??= new CommonFrameHeader(null, IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp, DraftRevision.Std2005);
             set
             {
                 m_frameHeader = value;

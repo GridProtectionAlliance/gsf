@@ -114,7 +114,7 @@ namespace GSF.PhasorProtocols.FNET
         /// Gets or sets time offset of F-NET device in <see cref="Ticks"/>.
         /// </summary>
         /// <remarks>
-        /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this this artificial delay.
+        /// F-NET devices normally report time in 11 seconds past real-time, this property defines the offset for this artificial delay.
         /// Note that the parameter value is in ticks to allow a very high-resolution offset;  1 second = 10000000 ticks.
         /// </remarks>
         public Ticks TimeOffset { get; set; }
@@ -147,7 +147,7 @@ namespace GSF.PhasorProtocols.FNET
                 if (m_configurationFrame is null)
                     return base.Status;
 
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("        Reported longitude: ");
                 status.Append(m_configurationFrame.Longitude);
@@ -230,7 +230,7 @@ namespace GSF.PhasorProtocols.FNET
             if (scanLength > 0 && Array.IndexOf(buffer, Common.EndByte, offset, scanLength) >= 0)
             {
                 // Pre-parse F-NET data row...
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset, length);
+                CommonFrameHeader parsedFrameHeader = new(buffer, offset, length);
 
                 int parsedLength = parsedFrameHeader.ParsedLength;
 
