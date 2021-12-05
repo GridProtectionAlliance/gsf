@@ -54,7 +54,7 @@ namespace GSF.PhasorProtocols
         T Definition { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="IChannelValue{T}"/> typically derived from <see cref="IChannelDefinition.DataFormat"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="IChannelValue{T}"/> typically derived from <see cref="IChannelDefinition.DataFormat"/>.
         /// </summary>
         DataFormat DataFormat { get; }
 

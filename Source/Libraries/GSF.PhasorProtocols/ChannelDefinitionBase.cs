@@ -107,12 +107,9 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="ChannelDefinitionBase"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        public abstract DataFormat DataFormat
-        {
-            get;
-        }
+        public abstract DataFormat DataFormat { get; }
 
         /// <summary>
         /// Gets or sets the index of this <see cref="ChannelDefinitionBase"/>.

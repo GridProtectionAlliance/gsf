@@ -95,7 +95,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValueBase"/>.</param>
         /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValueBase"/>.</param>
-        /// <param name="angle">The <see cref="GSF.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.</param>
+        /// <param name="angle">The <see cref="Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.</param>
         /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValueBase"/>.</param>
         protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, Angle angle, double magnitude)
             : base(parent, phasorDefinition)
@@ -122,12 +122,12 @@ namespace GSF.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorValueBase"/>.
+        /// Gets the <see cref="PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorValueBase"/>.
         /// </summary>
         public virtual CoordinateFormat CoordinateFormat => Definition.CoordinateFormat;
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.AngleFormat"/> of this <see cref="PhasorValueBase"/>.
+        /// Gets the <see cref="PhasorProtocols.AngleFormat"/> of this <see cref="PhasorValueBase"/>.
         /// </summary>
         public virtual AngleFormat AngleFormat => Definition.AngleFormat;
 
@@ -137,12 +137,12 @@ namespace GSF.PhasorProtocols
         public virtual PhasorType Type => Definition.PhasorType;
 
         /// <summary>
-        /// Gets <see cref="GSF.Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
+        /// Gets <see cref="Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
         /// </summary>
         public Phasor Phasor => new(Type, m_phasor);
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
+        /// Gets or sets the <see cref="Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
         /// </summary>
         public virtual Angle Angle
         {

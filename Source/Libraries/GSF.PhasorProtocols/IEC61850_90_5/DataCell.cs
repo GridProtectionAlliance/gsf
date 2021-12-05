@@ -183,7 +183,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         }
 
         /// <summary>
-        /// Gets or sets <see cref="GSF.PhasorProtocols.DataSortingType"/> of this <see cref="DataCell"/>.
+        /// Gets or sets <see cref="PhasorProtocols.DataSortingType"/> of this <see cref="DataCell"/>.
         /// </summary>
         public override DataSortingType DataSortingType
         {

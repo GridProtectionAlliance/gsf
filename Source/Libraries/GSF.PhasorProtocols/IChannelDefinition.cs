@@ -67,9 +67,9 @@ namespace GSF.PhasorProtocols
         /// Gets the <see cref="IConfigurationCell"/> parent of this <see cref="IChannelDefinition"/>.
         /// </summary>
         IConfigurationCell Parent { get; set; }
-        
+
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="IChannelDefinition"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="IChannelDefinition"/>.
         /// </summary>
         DataFormat DataFormat { get; }
 

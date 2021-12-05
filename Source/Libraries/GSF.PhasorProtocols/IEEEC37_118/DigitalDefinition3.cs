@@ -187,10 +187,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public DraftRevision DraftRevision => DraftRevision.Std2011;
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="DigitalDefinitionBase"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="DigitalDefinitionBase"/>.
         /// </summary>
         /// <remarks>
-        /// Data format for digital values will always be <see cref="GSF.PhasorProtocols.DataFormat.FixedInteger"/>.
+        /// Data format for digital values will always be <see cref="DataFormat.FixedInteger"/>.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override DataFormat DataFormat => DataFormat.FixedInteger;

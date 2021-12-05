@@ -483,12 +483,12 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Start sending the reference down port1.
         /// </summary>
-        /// <remarks>Disable the reference before enabling reference on the other port using the command <see cref="DeviceCommand.StopSendingReference"/>.</remarks>
+        /// <remarks>Disable the reference before enabling reference on the other port using the command <see cref="StopSendingReference"/>.</remarks>
         StartSendingReferencePort1 = 0xCC3E,
         /// <summary>
         /// Start sending the reference down port2.
         /// </summary>
-        /// <remarks>Disable the reference before enabling reference on the other port using the command <see cref="DeviceCommand.StopSendingReference"/>.</remarks>
+        /// <remarks>Disable the reference before enabling reference on the other port using the command <see cref="StopSendingReference"/>.</remarks>
         StartSendingReferencePort2 = 0xCC40,
         /// <summary>
         /// Stop sending the reference down either port.

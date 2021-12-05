@@ -93,7 +93,7 @@ namespace GSF.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="FrequencyDefinitionBase"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="FrequencyDefinitionBase"/>.
         /// </summary>
         public override DataFormat DataFormat => Parent.FrequencyDataFormat;
 

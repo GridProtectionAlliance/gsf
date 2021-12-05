@@ -69,29 +69,19 @@ namespace GSF.PhasorProtocols
     public interface IPhasorDefinition : IChannelDefinition
     {
         /// <summary>
-        /// Gets or sets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> of this <see cref="IPhasorDefinition"/>.
+        /// Gets or sets the <see cref="PhasorProtocols.CoordinateFormat"/> of this <see cref="IPhasorDefinition"/>.
         /// </summary>
-        CoordinateFormat CoordinateFormat
-        {
-            get;
-        }
+        CoordinateFormat CoordinateFormat { get; }
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.PhasorProtocols.AngleFormat"/> of this <see cref="IPhasorDefinition"/>.
+        /// Gets or sets the <see cref="PhasorProtocols.AngleFormat"/> of this <see cref="IPhasorDefinition"/>.
         /// </summary>
-        AngleFormat AngleFormat
-        {
-            get;
-        }
+        AngleFormat AngleFormat { get; }
 
         /// <summary>
         /// Gets or sets the <see cref="PhasorType"/> of this <see cref="IPhasorDefinition"/>.
         /// </summary>
-        PhasorType PhasorType
-        {
-            get;
-            set;
-        }
+        PhasorType PhasorType { get; set; }
 
         /// <summary>
         /// Gets or sets the associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).
@@ -99,10 +89,6 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// This only applies to current phasors.
         /// </remarks>
-        IPhasorDefinition VoltageReference
-        {
-            get;
-            set;
-        }
+        IPhasorDefinition VoltageReference { get; set; }
     }
 }

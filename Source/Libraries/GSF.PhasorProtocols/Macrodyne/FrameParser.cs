@@ -87,7 +87,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
-        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="CheckSumValidationFrameTypes.AllFrames"/></param>
         /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="protocolVersion">The protocol version that the parser should use.</param>
         /// <param name="configurationFileName">The optional external Macrodyne configuration in BPA PDCstream INI file based format.</param>

@@ -80,7 +80,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Creates a new <see cref="FrameParser"/>.
         /// </summary>
-        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="CheckSumValidationFrameTypes.AllFrames"/></param>
         /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
         public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, string configurationFileName = null)

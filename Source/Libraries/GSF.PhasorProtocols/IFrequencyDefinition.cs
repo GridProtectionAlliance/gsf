@@ -37,27 +37,16 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the nominal <see cref="LineFrequency"/> of this <see cref="IFrequencyDefinition"/>.
         /// </summary>
-        LineFrequency NominalFrequency
-        {
-            get;
-        }
+        LineFrequency NominalFrequency { get; }
 
         /// <summary>
         /// Gets or sets the df/dt offset of this <see cref="IFrequencyDefinition"/>.
         /// </summary>
-        double DfDtOffset
-        {
-            get;
-            set;
-        }
+        double DfDtOffset { get; set; }
 
         /// <summary>
         /// Gets or sets the df/dt scaling value of this <see cref="IFrequencyDefinition"/>.
         /// </summary>
-        uint DfDtScalingValue
-        {
-            get;
-            set;
-        }
+        uint DfDtScalingValue { get; set; }
     }
 }

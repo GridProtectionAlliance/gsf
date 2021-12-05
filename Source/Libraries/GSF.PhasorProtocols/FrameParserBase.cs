@@ -150,7 +150,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="FrameParserBase{TypeIndentifier}"/>.
         /// </summary>
-        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="CheckSumValidationFrameTypes.AllFrames"/></param>
         /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         protected FrameParserBase(CheckSumValidationFrameTypes checkSumValidationFrameTypes, bool trustHeaderLength)
         {
@@ -200,7 +200,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets flags that determine if check-sums for specified frames should be validated.
         /// </summary>
         /// <remarks>
-        /// It is expected that this will normally be set to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
+        /// It is expected that this will normally be set to <see cref="CheckSumValidationFrameTypes.AllFrames"/>.
         /// </remarks>
         public CheckSumValidationFrameTypes CheckSumValidationFrameTypes { get; set; }
 

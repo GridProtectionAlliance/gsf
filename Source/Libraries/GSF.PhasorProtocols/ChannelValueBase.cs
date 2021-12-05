@@ -100,7 +100,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="ChannelValueBase{T}"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="ChannelValueBase{T}"/>.
         /// </summary>
         public virtual DataFormat DataFormat => m_definition.DataFormat;
 

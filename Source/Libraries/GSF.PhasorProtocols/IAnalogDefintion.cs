@@ -63,10 +63,6 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets <see cref="AnalogType"/> of this <see cref="IAnalogDefinition"/>.
         /// </summary>
-        AnalogType AnalogType
-        {
-            get;
-            set;
-        }
+        AnalogType AnalogType { get; set; }
     }
 }

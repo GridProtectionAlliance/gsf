@@ -107,11 +107,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets protocol specific quality flags for this <see cref="DataFrameBase"/>.
         /// </summary>
-        public virtual uint QualityFlags
-        {
-            get;
-            set;
-        }
+        public virtual uint QualityFlags { get; set; }
 
         /// <summary>
         /// Gets the numeric ID code for this <see cref="DataFrameBase"/>.

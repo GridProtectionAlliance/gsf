@@ -93,17 +93,17 @@ namespace GSF.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
         public override DataFormat DataFormat => Parent.PhasorDataFormat;
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets or sets the <see cref="PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
         public virtual CoordinateFormat CoordinateFormat => Parent.PhasorCoordinateFormat;
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.PhasorProtocols.AngleFormat"/> of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets or sets the <see cref="PhasorProtocols.AngleFormat"/> of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
         public virtual AngleFormat AngleFormat => Parent.PhasorAngleFormat;
 

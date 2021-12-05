@@ -34,89 +34,53 @@ namespace GSF.PhasorProtocols
     public interface IPhasorValue : IChannelValue<IPhasorDefinition>
     {
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> of this <see cref="IPhasorValue"/>.
+        /// Gets the <see cref="PhasorProtocols.CoordinateFormat"/> of this <see cref="IPhasorValue"/>.
         /// </summary>
-        CoordinateFormat CoordinateFormat
-        {
-            get;
-        }
+        CoordinateFormat CoordinateFormat { get; }
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.AngleFormat"/> of this <see cref="IPhasorValue"/>.
+        /// Gets the <see cref="PhasorProtocols.AngleFormat"/> of this <see cref="IPhasorValue"/>.
         /// </summary>
-        AngleFormat AngleFormat
-        {
-            get;
-        }
+        AngleFormat AngleFormat { get; }
 
         /// <summary>
         /// Gets the <see cref="PhasorType"/> of this <see cref="IPhasorValue"/>.
         /// </summary>
-        PhasorType Type
-        {
-            get;
-        }
+        PhasorType Type { get; }
 
         /// <summary>
-        /// Gets <see cref="GSF.Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
+        /// Gets <see cref="Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
         /// </summary>
-        Phasor Phasor
-        {
-            get;
-        }
+        Phasor Phasor { get; }
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.Units.Angle"/> value (a.k.a., the argument) of this <see cref="IPhasorValue"/>, in radians.
+        /// Gets or sets the <see cref="Units.Angle"/> value (a.k.a., the argument) of this <see cref="IPhasorValue"/>, in radians.
         /// </summary>
-        Angle Angle
-        {
-            get;
-            set;
-        }
+        Angle Angle { get; set; }
 
         /// <summary>
         /// Gets or sets the magnitude value (a.k.a., the absolute value or modulus) of this <see cref="IPhasorValue"/>.
         /// </summary>
-        double Magnitude
-        {
-            get;
-            set;
-        }
+        double Magnitude { get; set; }
 
         /// <summary>
         /// Gets or sets the real floating point value of this <see cref="IPhasorValue"/>.
         /// </summary>
-        double Real
-        {
-            get;
-            set;
-        }
+        double Real { get; set; }
 
         /// <summary>
         /// Gets or sets the imaginary floating point value of this <see cref="IPhasorValue"/>.
         /// </summary>
-        double Imaginary
-        {
-            get;
-            set;
-        }
+        double Imaginary { get; set; }
 
         /// <summary>
         /// Gets or sets the unscaled integer representation of the real value of this <see cref="IPhasorValue"/>.
         /// </summary>
-        int UnscaledReal
-        {
-            get;
-            set;
-        }
+        int UnscaledReal { get; set; }
 
         /// <summary>
         /// Gets or sets the unscaled integer representation of the imaginary value of this <see cref="IPhasorValue"/>.
         /// </summary>
-        int UnscaledImaginary
-        {
-            get;
-            set;
-        }
+        int UnscaledImaginary { get; set; }
     }
 }

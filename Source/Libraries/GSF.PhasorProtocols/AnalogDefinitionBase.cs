@@ -88,7 +88,7 @@ namespace GSF.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> for the <see cref="AnalogDefinitionBase"/>.
+        /// Gets the <see cref="PhasorProtocols.DataFormat"/> for the <see cref="AnalogDefinitionBase"/>.
         /// </summary>
         public override DataFormat DataFormat => Parent.AnalogDataFormat;
 

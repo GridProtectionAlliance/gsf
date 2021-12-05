@@ -39,37 +39,22 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets <see cref="IConfigurationFrame"/> associated with this <see cref="IDataFrame"/>.
         /// </summary>
-        IConfigurationFrame ConfigurationFrame
-        {
-            get;
-            set;
-        }
+        IConfigurationFrame ConfigurationFrame { get; set; }
 
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="IDataFrame"/>.
         /// </summary>
-        new DataCellCollection Cells
-        {
-            get;
-        }
+        new DataCellCollection Cells { get; }
 
         /// <summary>
         /// Gets or sets the parsing state for this <see cref="IDataFrame"/>.
         /// </summary>
-        new IDataFrameParsingState State
-        {
-            get;
-            set;
-        }
+        new IDataFrameParsingState State { get; set; }
 
         /// <summary>
         /// Gets or sets protocol specific quality flags for this <see cref="IDataFrame"/>.
         /// </summary>
-        uint QualityFlags
-        {
-            get;
-            set;
-        }
+        uint QualityFlags { get; set; }
 
         /// <summary>
         /// Gets the quality flags of the <see cref="IDataFrame"/> as a measurement value.

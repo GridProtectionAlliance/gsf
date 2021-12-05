@@ -44,20 +44,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets a reference to the parent <see cref="IChannelFrame"/> for this <see cref="IChannelCell"/>.
         /// </summary>
-        IChannelFrame Parent
-        {
-            get;
-            set;
-        }
+        IChannelFrame Parent { get; set; }
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ChannelCellBase"/>.
         /// </summary>
-        new IChannelCellParsingState State
-        {
-            get;
-            set;
-        }
+        new IChannelCellParsingState State { get; set; }
 
         /// <summary>
         /// Gets the numeric ID code for this <see cref="IChannelCell"/>.
@@ -66,10 +58,6 @@ namespace GSF.PhasorProtocols
         /// Most phasor measurement devices define some kind of numeric identifier (e.g., a hardware identifier coded into the device ROM); this is the
         /// abstract representation of this identifier.
         /// </remarks>
-        ushort IDCode
-        {
-            get;
-            set;
-        }
+        ushort IDCode { get; set; }
     }
 }

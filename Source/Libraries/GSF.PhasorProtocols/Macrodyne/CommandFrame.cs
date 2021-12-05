@@ -46,7 +46,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Creates a new <see cref="CommandFrame"/> from specified parameters.
         /// </summary>
-        /// <param name="command">The <see cref="GSF.PhasorProtocols.DeviceCommand"/> for this <see cref="CommandFrame"/>.</param>
+        /// <param name="command">The <see cref="PhasorProtocols.DeviceCommand"/> for this <see cref="CommandFrame"/>.</param>
         /// <remarks>
         /// This constructor is used by a consumer to generate an Macrodyne command frame.
         /// </remarks>

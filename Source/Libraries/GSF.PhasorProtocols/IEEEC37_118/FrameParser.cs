@@ -109,7 +109,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Creates a new <see cref="FrameParser"/>.
         /// </summary>
-        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="CheckSumValidationFrameTypes.AllFrames"/></param>
         /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="draftRevision">The <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.</param>
         public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, DraftRevision draftRevision = DraftRevision.Std2005)

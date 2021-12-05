@@ -63,14 +63,14 @@ namespace GSF.PhasorProtocols.SelFastMessage
         // Fields
         private ConfigurationFrame m_configurationFrame;
 
-    #endregion
+        #endregion
 
         #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
-        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="CheckSumValidationFrameTypes.AllFrames"/></param>
         /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="messagePeriod">The desired <see cref="SelFastMessage.MessagePeriod"/> for SEL device connection.</param>
         public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, MessagePeriod messagePeriod = MessagePeriod.DefaultRate)

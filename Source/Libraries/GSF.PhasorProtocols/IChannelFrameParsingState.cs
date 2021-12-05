@@ -49,19 +49,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to delegate used to create a new <see cref="IChannelCell"/> object.
         /// </summary>
-        CreateNewCellFunction<T> CreateNewCell
-        {
-            get;
-        }
+        CreateNewCellFunction<T> CreateNewCell { get; }
 
         /// <summary>
         /// Gets or sets number of cells that are expected in associated <see cref="IChannelFrame"/> being parsed.
         /// </summary>
-        int CellCount
-        {
-            get;
-            set;
-        }
+        int CellCount { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
@@ -69,11 +62,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// It is expected that this will normally be left as <c>true</c>.
         /// </remarks>
-        bool TrustHeaderLength
-        {
-            get;
-            set;
-        }
+        bool TrustHeaderLength { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if frame's check-sum should be validated.
@@ -81,10 +70,6 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// It is expected that this will normally be left as <c>true</c>.
         /// </remarks>
-        bool ValidateCheckSum
-        {
-            get;
-            set;
-        }
+        bool ValidateCheckSum { get; set; }
     }
 }

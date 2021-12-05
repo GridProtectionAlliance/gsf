@@ -224,7 +224,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets flags that determine if check-sums for specified frames should be validated.
         /// </summary>
         /// <remarks>
-        /// It is expected that this will normally be set to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
+        /// It is expected that this will normally be set to <see cref="CheckSumValidationFrameTypes.AllFrames"/>.
         /// </remarks>
         CheckSumValidationFrameTypes CheckSumValidationFrameTypes { get; set; }
 
