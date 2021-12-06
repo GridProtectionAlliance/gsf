@@ -167,15 +167,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 StringBuilder status = new();
 
-                status.Append("IEEE C37.118 revision: ");
-                status.Append(DraftRevision);
-                status.AppendLine();
-                status.Append("         Current time base: ");
-                status.Append(Timebase);
-                status.AppendLine();
-                status.Append(" Unexpected command frames: ");
-                status.Append(m_unexpectedCommandFrames);
-                status.AppendLine();
+                status.AppendLine($"     IEEE C37.118 revision: {DraftRevision}");
+                status.AppendLine($"         Current time base: {Timebase}");
+                status.AppendLine($" Unexpected command frames: {m_unexpectedCommandFrames:N0}");
                 status.Append(base.Status);
 
                 return status.ToString();
