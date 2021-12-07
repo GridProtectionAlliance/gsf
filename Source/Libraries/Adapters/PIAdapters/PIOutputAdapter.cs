@@ -103,6 +103,23 @@ namespace PIAdapters
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Defines the default value for <see cref="EnableTimeReasonabilityCheck"/>.
+        /// </summary>
+        public const bool DefaultEnableTimeReasonabilityCheck = false;
+
+        /// <summary>
+        /// Defines the default value for <see cref="PastTimeReasonabilityLimit"/>.
+        /// </summary>
+        public const double DefaultPastTimeReasonabilityLimit = 43200.0D;
+
+        /// <summary>
+        /// Defines the default value for <see cref="FutureTimeReasonabilityLimit"/>.
+        /// </summary>
+        public const double DefaultFutureTimeReasonabilityLimit = 43200.0D;
+
         // Fields
 
         // Define cached mapping between GSFSchema measurements and PI points
@@ -116,6 +133,8 @@ namespace PIAdapters
         private readonly LongSynchronizedOperation m_handleTagRemoval;      // Tag removal operation, if any
         private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
         private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
+        private long m_pastTimeReasonabilityLimit;                          // Past-timestamp reasonability limit
+        private long m_futureTimeReasonabilityLimit;                        // Future-timestamp reasonability limit
         private DateTime m_lastMetadataRefresh;                             // Tracks time of last meta-data refresh
         private long m_processedMappings;                                   // Total number of mappings processed so far
         private long m_processedMeasurements;                               // Total number of measurements processed so far
@@ -289,6 +308,38 @@ namespace PIAdapters
         public double MaximumPointResolution { get; set; }
 
         /// <summary>
+        /// Gets or sets flag that indicates if incoming timestamps to the historian should be validated for reasonability.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the flag that indicates if incoming timestamps to the historian should be validated for reasonability.")]
+        [DefaultValue(DefaultEnableTimeReasonabilityCheck)]
+        public bool EnableTimeReasonabilityCheck { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of seconds that a past timestamp, as compared to local clock, will be considered valid.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the maximum number of seconds that a past timestamp, as compared to local clock, will be considered valid.")]
+        [DefaultValue(DefaultPastTimeReasonabilityLimit)]
+        public double PastTimeReasonabilityLimit
+        {
+            get => new Ticks(m_pastTimeReasonabilityLimit).ToSeconds();
+            set => m_pastTimeReasonabilityLimit = Ticks.FromSeconds(Math.Abs(value));
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of seconds that a future timestamp, as compared to local clock, will be considered valid.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define the maximum number of seconds that a future timestamp, as compared to local clock, will be considered valid.")]
+        [DefaultValue(DefaultFutureTimeReasonabilityLimit)]
+        public double FutureTimeReasonabilityLimit
+        {
+            get => new Ticks(m_futureTimeReasonabilityLimit).ToSeconds();
+            set => m_futureTimeReasonabilityLimit = Ticks.FromSeconds(Math.Abs(value));
+        }
+
+        /// <summary>
         /// Returns the detailed status of the data output source.
         /// </summary>
         public override string Status
@@ -303,6 +354,14 @@ namespace PIAdapters
                 status.AppendLine($"       Connected to server: {(m_connection?.Connected ?? false ? "Yes" : "No")}");
                 status.AppendLine($"         Using compression: {UseCompression}");
                 status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
+                status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
+
+                if (EnableTimeReasonabilityCheck)
+                {
+                    status.AppendLine($"   Maximum past time limit: {PastTimeReasonabilityLimit:N4}s, i.e., {new Ticks(m_pastTimeReasonabilityLimit).ToElapsedTimeString(4)}");
+                    status.AppendLine($" Maximum future time limit: {FutureTimeReasonabilityLimit:N4}s, i.e., {new Ticks(m_futureTimeReasonabilityLimit).ToElapsedTimeString(4)}");
+                }
+
                 status.AppendLine($"    Meta-data sync enabled: {RunMetadataSync}");
 
                 if (RunMetadataSync)
@@ -561,6 +620,15 @@ namespace PIAdapters
                 // If adapter gets disabled while executing this thread - go ahead and exit
                 if (!Enabled)
                     return;
+
+                // Validate timestamp reasonability as compared to local clock, when enabled
+                if (EnableTimeReasonabilityCheck)
+                {
+                    long deviation = DateTime.UtcNow.Ticks - measurement.Timestamp.Value;
+
+                    if (deviation < -m_futureTimeReasonabilityLimit || deviation > m_pastTimeReasonabilityLimit)
+                        continue;
+                }
 
                 // Lookup connection point mapping for this measurement, if it wasn't found - go ahead and exit
                 if (!m_mappedPIPoints.TryGetValue(measurement.Key, out PIPoint point))
