@@ -543,6 +543,18 @@ namespace PIAdapters
 
             if (MaximumPointResolution > 0.0D)
                 m_lastArchiveTimes = new Dictionary<Guid, Ticks>();
+
+            EnableTimeReasonabilityCheck = settings.TryGetValue(nameof(EnableTimeReasonabilityCheck), out setting) && setting.ParseBoolean();
+
+            if (settings.TryGetValue(nameof(PastTimeReasonabilityLimit), out setting) && double.TryParse(setting, out double value))
+                PastTimeReasonabilityLimit = value;
+            else
+                PastTimeReasonabilityLimit = DefaultPastTimeReasonabilityLimit;
+
+            if (settings.TryGetValue(nameof(FutureTimeReasonabilityLimit), out setting) && double.TryParse(setting, out value))
+                FutureTimeReasonabilityLimit = value;
+            else
+                FutureTimeReasonabilityLimit = DefaultFutureTimeReasonabilityLimit;
         }
 
         /// <summary>
