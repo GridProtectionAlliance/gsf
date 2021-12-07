@@ -346,7 +346,7 @@ namespace PIAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine();
@@ -376,7 +376,7 @@ namespace PIAdapters
                     status.AppendLine($"        OSI-PI point class: {PIPointClass}");
                 }
 
-                if (!(m_mapRequestQueue is null))
+                if (m_mapRequestQueue is not null)
                 {
                     status.AppendLine();
                     status.AppendLine(">> Mapping Request Queue Status");
@@ -392,7 +392,7 @@ namespace PIAdapters
                 if (RunMetadataSync)
                     status.AppendLine($"    Meta-data sync process: {(m_refreshingMetadata ? "Active" : "Idle")}, {m_metadataRefreshProgress:0.00%} complete");
 
-                if (!(m_archiveQueues is null) && m_archiveQueues.Length > 0)
+                if (m_archiveQueues is not null && m_archiveQueues.Length > 0)
                 {
                     status.AppendLine();
                     status.AppendLine($">> Archive Queue Status (1 of {m_archiveQueues.Length:N0})");
@@ -427,13 +427,13 @@ namespace PIAdapters
 
                 m_mapRequestQueue?.Dispose();
 
-                if (!(m_archiveQueues is null))
+                if (m_archiveQueues is not null)
                 {
                     foreach (ProcessQueue<AFValue> archiveQueue in m_archiveQueues)
                         archiveQueue.Dispose();
                 }
 
-                if (!(m_connection is null))
+                if (m_connection is not null)
                 {
                     m_connection.Disconnected -= Connection_Disconnected;
                     m_connection.Dispose();
@@ -458,7 +458,7 @@ namespace PIAdapters
             if (m_archiveQueues is null)
                 return;
 
-            StringBuilder status = new StringBuilder();
+            StringBuilder status = new();
 
             for (int i = 0; i < m_archiveQueues.Length; i++)
             {
@@ -568,10 +568,10 @@ namespace PIAdapters
 
             m_connection = new PIConnection
             {
-                ServerName = this.ServerName,
-                UserName = this.UserName,
-                Password = this.Password,
-                ConnectTimeout = this.ConnectTimeout
+                ServerName = ServerName,
+                UserName = UserName,
+                Password = Password,
+                ConnectTimeout = ConnectTimeout
             };
 
             m_connection.Disconnected += Connection_Disconnected;
@@ -610,7 +610,7 @@ namespace PIAdapters
             lock (m_pendingMappings)
                 m_pendingMappings.Clear();
 
-            if (!(m_connection is null))
+            if (m_connection is not null)
             {
                 m_connection.Disconnected -= Connection_Disconnected;
                 m_connection.Dispose();
@@ -680,7 +680,7 @@ namespace PIAdapters
                     try
                     {
                         // Verify maximum per point archive resolution
-                        if (!(m_lastArchiveTimes is null) && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(measurement.Key.SignalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
+                        if (m_lastArchiveTimes is not null && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(measurement.Key.SignalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
                             continue;
 
                         // Queue up insert operations for parallel processing
@@ -693,7 +693,7 @@ namespace PIAdapters
                         );
 
                         // Track last point archive time, for downsampling when enabled
-                        if (!(m_lastArchiveTimes is null))
+                        if (m_lastArchiveTimes is not null)
                             m_lastArchiveTimes[measurement.Key.SignalID] = measurement.Timestamp;
                     }
                     catch (Exception ex)
@@ -737,7 +737,7 @@ namespace PIAdapters
                             // Create new connection point
                             point = CreateMappedPIPoint(key);
 
-                            if (!(point is null))
+                            if (point is not null)
                             {
                                 m_mappedPIPoints[key] = point;
                                 mappingEstablished = true;
@@ -788,7 +788,7 @@ namespace PIAdapters
                 {
                     // Attempt lookup by EXDESC signal ID                           
                     point = GetPIPointBySignalID(m_connection.Server, signalID);
-                    foundPoint = !(point is null);
+                    foundPoint = point is not null;
                 }
 
                 if (!foundPoint)
@@ -870,7 +870,7 @@ namespace PIAdapters
             {
                 OnStatusMessage(MessageLevel.Info, "Beginning metadata refresh...");
 
-                if (!(inputMeasurements is null) && inputMeasurements.Length > 0)
+                if (inputMeasurements is not null && inputMeasurements.Length > 0)
                 {
                     PIServer server = m_connection.Server;
                     int processed = 0, total = inputMeasurements.Length;
@@ -922,7 +922,7 @@ namespace PIAdapters
                             try
                             {
                                 // Attempt to add point if it doesn't exist
-                                Dictionary<string, object> attributes = new Dictionary<string, object>
+                                Dictionary<string, object> attributes = new()
                                 {
                                     [PICommonPointAttributes.PointClassName] = PIPointClass,
                                     [PICommonPointAttributes.PointType] = PIPointType.Float32
@@ -939,7 +939,7 @@ namespace PIAdapters
                             }
                         }
 
-                        if (!(point is null))
+                        if (point is not null)
                         {
                             // Update tag-map for faster future loads
                             m_tagMap[signalID] = tagName;
@@ -1005,11 +1005,11 @@ namespace PIAdapters
                         if (updateTime > latestUpdateTime)
                             latestUpdateTime = updateTime;
 
-                        if ((refreshMetadata || updateTime > m_lastMetadataRefresh) && !(point is null))
+                        if ((refreshMetadata || updateTime > m_lastMetadataRefresh) && point is not null)
                         {
                             try
                             {
-                                List<string> updatedAttributes = new List<string>();
+                                List<string> updatedAttributes = new();
 
                                 void updateAttribute(string attribute, object newValue)
                                 {
@@ -1136,8 +1136,7 @@ namespace PIAdapters
                 return;
 
             // Create hash set of all local measurement Guids for quick lookup
-            HashSet<Guid> activeMeasurements = new HashSet<Guid>
-            (
+            HashSet<Guid> activeMeasurements = new            (
                 DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                     .Select(row => Guid.TryParse(row["SignalID"].ToString(), out Guid signalID) ? signalID : Guid.Empty)
                     .Where(guid => guid != Guid.Empty)
@@ -1146,7 +1145,7 @@ namespace PIAdapters
             PIServer server = m_connection.Server;
             string sourceFilter = AutoRemoveTags == TagRemovalOperation.LocalOnly ? PIPointSource : null;
             IEnumerable<PIPoint> points = PIPoint.FindPIPoints(server, "*", sourceFilter, new[] { PICommonPointAttributes.Tag, PICommonPointAttributes.ExtendedDescriptor });
-            List<string> pointsToDelete = new List<string>();
+            List<string> pointsToDelete = new();
             double total = server.GetPointCount();
             long processed = 0L;
             long descriptorIssues = 0L;
@@ -1220,9 +1219,9 @@ namespace PIAdapters
         {
             OnStatusMessage(MessageLevel.Info, "Establishing connection points for mapping...");
 
-            List<MeasurementKey> newTags = new List<MeasurementKey>();
+            List<MeasurementKey> newTags = new();
 
-            if (!(inputMeasurements is null) && inputMeasurements.Length > 0)
+            if (inputMeasurements is not null && inputMeasurements.Length > 0)
             {
                 foreach (MeasurementKey key in inputMeasurements)
                 {
@@ -1237,7 +1236,7 @@ namespace PIAdapters
             if (newTags.Count > 0)
             {
                 // Determine which tags no longer exist
-                HashSet<MeasurementKey> tagsToRemove = new HashSet<MeasurementKey>(m_mappedPIPoints.Keys);
+                HashSet<MeasurementKey> tagsToRemove = new(m_mappedPIPoints.Keys);
 
                 // If there are existing tags that are not part of new updates, these need to be removed
                 tagsToRemove.ExceptWith(newTags);
@@ -1273,16 +1272,14 @@ namespace PIAdapters
             try
             {
                 // Attempt to load tag-map from existing cache file
-                using (FileStream tagMapCache = File.Open(TagMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    m_tagMap.Merge(true, Serialization.Deserialize<Dictionary<Guid, string>>(tagMapCache, GSF.SerializationFormat.Binary));
+                using FileStream tagMapCache = File.Open(TagMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                m_tagMap.Merge(true, Serialization.Deserialize<Dictionary<Guid, string>>(tagMapCache, GSF.SerializationFormat.Binary));
 
-                    OnStatusMessage(MessageLevel.Info, $"Loaded {m_tagMap.Count:N0} mappings from tag-map cache.");
+                OnStatusMessage(MessageLevel.Info, $"Loaded {m_tagMap.Count:N0} mappings from tag-map cache.");
 
-                    // Use last write time of file as the last meta-data refresh time - rough value is OK
-                    if (m_lastMetadataRefresh == DateTime.MinValue)
-                        m_lastMetadataRefresh = File.GetLastWriteTimeUtc(TagMapCacheFileName);
-                }
+                // Use last write time of file as the last meta-data refresh time - rough value is OK
+                if (m_lastMetadataRefresh == DateTime.MinValue)
+                    m_lastMetadataRefresh = File.GetLastWriteTimeUtc(TagMapCacheFileName);
             }
             catch (Exception ex)
             {
@@ -1328,7 +1325,7 @@ namespace PIAdapters
 
                 point = points.FirstOrDefault();
 
-                if (!(point is null))
+                if (point is not null)
                     cachedTagName = point.Name;
             }
 
@@ -1364,7 +1361,7 @@ namespace PIAdapters
         /// <summary>
         /// Accesses local output adapter instances (normally only one).
         /// </summary>
-        public static readonly ConcurrentDictionary<string, PIOutputAdapter> Instances = new ConcurrentDictionary<string, PIOutputAdapter>(StringComparer.OrdinalIgnoreCase);
+        public static readonly ConcurrentDictionary<string, PIOutputAdapter> Instances = new(StringComparer.OrdinalIgnoreCase);
 
         #endregion
     }

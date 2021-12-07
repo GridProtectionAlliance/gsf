@@ -86,14 +86,9 @@ namespace PIAdapters
         private PIConnection m_connection;                                      // PI server connection
         private PIDataPipe m_dataPipe;                                          // PI data pipe
         private List<PIPoint> m_dataPoints;                                     // Last list of subscribed data points
-        private string m_serverName;                                            // Server name for PI connection string
-        private string m_userName;                                              // Username for PI connection string
-        private string m_password;                                              // Password for PI connection string
         private readonly DataUpdateObserver m_dataUpdateObserver;               // Custom observer class for handling point updates
-        private int m_connectTimeout;                                           // PI connection timeout
         private Ticks m_lastReceivedTimestamp;                                  // Last received timestamp from PI event pipe
         private double m_lastReceivedValue;
-        //private List<IMeasurement> m_measurements;                              // Queried measurements that are prepared to be published
         private bool m_disposed;
 
         #endregion
@@ -136,15 +131,12 @@ namespace PIAdapters
         /// </summary>
         public override MeasurementKey[] RequestedOutputMeasurementKeys
         {
-            get
-            {
-                return base.RequestedOutputMeasurementKeys;
-            }
+            get => base.RequestedOutputMeasurementKeys;
             set
             {
                 base.RequestedOutputMeasurementKeys = value;
 
-                if ((object)value != null && value.Any())
+                if (value is not null && value.Any())
                     SubscribeToPointUpdates(value);
             }
         }
@@ -154,65 +146,25 @@ namespace PIAdapters
         /// Gets or sets the name of the PI server for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the name of the PI server for the adapter's PI connection.")]
-        public string ServerName
-        {
-            get
-            {
-                return m_serverName;
-            }
-            set
-            {
-                m_serverName = value;
-            }
-        }
+        public string ServerName { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the PI user ID for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection."), DefaultValue("")]
-        public string UserName
-        {
-            get
-            {
-                return m_userName;
-            }
-            set
-            {
-                m_userName = value;
-            }
-        }
+        public string UserName { get; set; }
 
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection."), DefaultValue("")]
-        public string Password
-        {
-            get
-            {
-                return m_password;
-            }
-            set
-            {
-                m_password = value;
-            }
-        }
+        public string Password { get; set; }
 
         /// <summary>
         /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
         /// </summary>
         [ConnectionStringParameter, Description("Defines the timeout interval (in milliseconds) for the adapter's connection"), DefaultValue(PIConnection.DefaultConnectTimeout)]
-        public int ConnectTimeout
-        {
-            get
-            {
-                return m_connectTimeout;
-            }
-            set
-            {
-                m_connectTimeout = value;
-            }
-        }
+        public int ConnectTimeout { get; set; }
 
         /// <summary>
         /// Last timestamp received from PI
@@ -226,7 +178,7 @@ namespace PIAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
 
@@ -237,7 +189,7 @@ namespace PIAdapters
                 status.AppendFormat("  Latency of Last Received: {0}", (DateTime.UtcNow.Ticks - m_lastReceivedTimestamp).ToElapsedTimeString(3));
                 status.AppendLine();
 
-                if ((object)m_dataPoints != null)
+                if (m_dataPoints is not null)
                 {
                     status.AppendFormat("       PI Data Point Count: {0:N0}: {1}...", m_dataPoints.Count, m_dataPoints.Select(p => p.ID.ToString()).Take(5).ToDelimitedString(", "));
                     status.AppendLine();
@@ -255,36 +207,35 @@ namespace PIAdapters
         /// Releases the unmanaged resources used by the <see cref="PIRTInputAdapter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed")]
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_connection != null)
-                        {
-                            m_connection.Disconnected -= m_connection_Disconnected;
-                            m_connection.Dispose();
-                            m_connection = null;
-                        }
+                if (!disposing)
+                    return;
 
-                        m_dataPipe?.Dispose();
-
-                        if ((object)m_eventTimer != null)
-                        {
-                            m_eventTimer.Elapsed -= m_eventTimer_Elapsed;
-                            m_eventTimer.Dispose();
-                        }
-                    }
-                }
-                finally
+                if (m_connection is not null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_connection.Disconnected -= m_connection_Disconnected;
+                    m_connection.Dispose();
+                    m_connection = null;
                 }
+
+                m_dataPipe?.Dispose();
+
+                if (m_eventTimer is not null)
+                {
+                    m_eventTimer.Elapsed -= m_eventTimer_Elapsed;
+                    m_eventTimer.Dispose();
+                }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -299,23 +250,25 @@ namespace PIAdapters
 
             Dictionary<string, string> settings = Settings;
 
-            if (!settings.TryGetValue("ServerName", out m_serverName))
+            if (!settings.TryGetValue(nameof(ServerName), out string setting))
                 throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format servername=myservername to the connection string.");
 
-            if (settings.TryGetValue("UserName", out string setting))
-                m_userName = setting;
-            else
-                m_userName = null;
+            ServerName = setting;
 
-            if (settings.TryGetValue("Password", out setting))
-                m_password = setting;
+            if (settings.TryGetValue(nameof(UserName), out setting))
+                UserName = setting;
             else
-                m_password = null;
+                UserName = null;
 
-            if (settings.TryGetValue("ConnectTimeout", out setting))
-                m_connectTimeout = Convert.ToInt32(setting);
+            if (settings.TryGetValue(nameof(Password), out setting))
+                Password = setting;
             else
-                m_connectTimeout = PIConnection.DefaultConnectTimeout;            
+                Password = null;
+
+            if (settings.TryGetValue(nameof(ConnectTimeout), out setting) && int.TryParse(setting, out int value))
+                ConnectTimeout = value;
+            else
+                ConnectTimeout = PIConnection.DefaultConnectTimeout;            
         }
 
         /// <summary>
@@ -325,10 +278,10 @@ namespace PIAdapters
         {
             m_connection = new PIConnection
             {
-                ServerName = this.ServerName,
-                UserName = this.UserName,
-                Password = this.Password,
-                ConnectTimeout = this.ConnectTimeout
+                ServerName = ServerName,
+                UserName = UserName,
+                Password = Password,
+                ConnectTimeout = ConnectTimeout
             };
 
             m_connection.Disconnected += m_connection_Disconnected;
@@ -337,7 +290,7 @@ namespace PIAdapters
             m_dataPipe = new PIDataPipe(AFDataPipeType.Snapshot);
             m_dataPipe.Subscribe(m_dataUpdateObserver);
 
-            if (AutoStart && (object)OutputMeasurements != null && OutputMeasurements.Any())
+            if (AutoStart && OutputMeasurements is not null && OutputMeasurements.Any())
                 SubscribeToPointUpdates(this.OutputMeasurementKeys());
         }
 
@@ -348,19 +301,19 @@ namespace PIAdapters
         {
             m_eventTimer.Enabled = false;
 
-            if ((object)m_dataPoints != null)
+            if (m_dataPoints is not null)
             {
                 m_dataPoints.Clear();
                 m_dataPoints = null;
             }
 
-            if ((object)m_dataPipe != null)
+            if (m_dataPipe is not null)
             {
                 m_dataPipe.Dispose();
                 m_dataPipe = null;
             }
 
-            if ((object)m_connection != null)
+            if (m_connection is not null)
             {
                 m_connection.Dispose();
                 m_connection = null;
@@ -388,7 +341,7 @@ namespace PIAdapters
                             PointTag = row["PointTag"].ToString()
                         };
 
-            List<PIPoint> dataPoints = new List<PIPoint>();
+            List<PIPoint> dataPoints = new();
 
             foreach (var row in query)
             {
@@ -403,7 +356,7 @@ namespace PIAdapters
 
                 PIPoint point = GetPIPoint(m_connection.Server, tagName);
 
-                if ((object)point != null)
+                if (point is not null)
                 {
                     #if DEBUG
                     OnStatusMessage(MessageLevel.Debug, $"DEBUG: Found point tag '{tagName}'...");
@@ -420,7 +373,7 @@ namespace PIAdapters
             }
 
             // Remove sign-ups for any existing point list
-            if ((object)m_dataPoints != null)
+            if (m_dataPoints is not null)
                 m_dataPipe.RemoveSignups(m_dataPoints);
 
             // Sign up for updates on selected points
@@ -461,7 +414,7 @@ namespace PIAdapters
 
         private void ReadEvents()
         {
-            if ((object)m_dataPipe == null)
+            if (m_dataPipe is null)
                 return;
 
             #if DEBUG
@@ -498,13 +451,13 @@ namespace PIAdapters
             OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler looking up point ID {value?.PIPoint.ID:N0} in table...");
             #endif
 
-            if ((object)value != null && m_tagKeyMap.TryGetValue(value.PIPoint.ID, out MeasurementKey key))
+            if (value is not null && m_tagKeyMap.TryGetValue(value.PIPoint.ID, out MeasurementKey key))
             {
                 #if DEBUG
                 OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler found point ID {value.PIPoint.ID:N0} in table: {key}...");
                 #endif
 
-                Measurement measurement = new Measurement();
+                Measurement measurement = new();
 
                 measurement.Metadata = key.Metadata;
                 measurement.Value = Convert.ToDouble(value.Value);
@@ -523,11 +476,9 @@ namespace PIAdapters
             #endif
         }
 
-        private void m_connection_Disconnected(object sender, EventArgs e)
-        {
-            // Since we may get a plethora of these requests, we use a synchronized operation to restart once
+        // Since we may get a plethora of these requests, we use a synchronized operation to restart once
+        private void m_connection_Disconnected(object sender, EventArgs e) => 
             m_restartConnection.RunOnceAsync();
-        }
 
         #endregion
     }

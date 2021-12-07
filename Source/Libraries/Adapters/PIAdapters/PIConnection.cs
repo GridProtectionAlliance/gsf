@@ -52,12 +52,6 @@ namespace PIAdapters
         /// </summary>
         public event EventHandler Disconnected;
 
-        // Fields
-        private PIServer m_server;                                  // PI server connection
-        private string m_serverName;                                // Server name for PI connection
-        private string m_userName;                                  // Username for PI connection
-        private string m_password;                                  // Password for PI connection
-        private int m_connectTimeout;                               // PI connection timeout
         private volatile bool m_connected;                          // Flag that determines connectivity
         private readonly Guid m_instanceID;                         // Unique instance ID for this connection
         private bool m_disposed;
@@ -74,7 +68,7 @@ namespace PIAdapters
         /// </summary>
         public PIConnection()
         {
-            m_connectTimeout = DefaultConnectTimeout;
+            ConnectTimeout = DefaultConnectTimeout;
             m_instanceID = Guid.NewGuid();
         }
 
@@ -85,84 +79,32 @@ namespace PIAdapters
         /// <summary>
         /// Gets PI server object for this PI connection.
         /// </summary>
-        public PIServer Server
-        {
-            get
-            {
-                return m_server;
-            }
-        }
+        public PIServer Server { get; private set; }
 
         /// <summary>
         /// Gets or sets the name of the PI server for the adapter's PI connection.
         /// </summary>
-        public string ServerName
-        {
-            get
-            {
-                return m_serverName;
-            }
-            set
-            {
-                m_serverName = value;
-            }
-        }
+        public string ServerName { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the PI user ID for the adapter's PI connection.
         /// </summary>
-        public string UserName
-        {
-            get
-            {
-                return m_userName;
-            }
-            set
-            {
-                m_userName = value;
-            }
-        }
+        public string UserName { get; set; }
 
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
-        public string Password
-        {
-            get
-            {
-                return m_password;
-            }
-            set
-            {
-                m_password = value;
-            }
-        }
+        public string Password { get; set; }
 
         /// <summary>
         /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection.
         /// </summary>
-        public int ConnectTimeout
-        {
-            get
-            {
-                return m_connectTimeout;
-            }
-            set
-            {
-                m_connectTimeout = value;
-            }
-        }
+        public int ConnectTimeout { get; set; }
 
         /// <summary>
         /// Gets flag that determines if <see cref="PIConnection"/> is currently connected to <see cref="ServerName"/>.
         /// </summary>
-        public bool Connected
-        {
-            get
-            {
-                return m_connected;
-            }
-        }
+        public bool Connected => m_connected;
 
         #endregion
 
@@ -183,16 +125,16 @@ namespace PIAdapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    Close();
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                Close();
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -201,10 +143,10 @@ namespace PIAdapters
         /// </summary>
         public void Open()
         {
-            if (m_connected || ((object)m_server != null && m_server.ConnectionInfo.IsConnected))
+            if (m_connected || (Server is not null && Server.ConnectionInfo.IsConnected))
                 throw new InvalidOperationException("OSI-PI server connection is already open.");
 
-            if (string.IsNullOrWhiteSpace(m_serverName))
+            if (string.IsNullOrWhiteSpace(ServerName))
                 throw new InvalidOperationException("Cannot open OSI-PI server connection without a defined server name.");
 
             m_connected = false;
@@ -212,26 +154,26 @@ namespace PIAdapters
             try
             {
                 // Locate configured PI server
-                PIServers servers = new PIServers();
-                m_server = servers[m_serverName];
+                PIServers servers = new();
+                Server = servers[ServerName];
 
-                if ((object)m_server == null)
+                if (Server is null)
                     throw new InvalidOperationException("Server not found in the PI servers collection.");
 
-                m_server.ConnectChanged += PIConnection_ConnectChanged;
+                Server.ConnectChanged += PIConnection_ConnectChanged;
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException(string.Format("Failed to connect to PI server \"{0}\": {1}", m_serverName, ex.Message));
+                throw new InvalidOperationException(string.Format("Failed to connect to PI server \"{0}\": {1}", ServerName, ex.Message));
             }
 
-            if (!m_server.ConnectionInfo.IsConnected)
+            if (!Server.ConnectionInfo.IsConnected)
             {
                 // Attempt to open OSI-PI connection
-                if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
-                    m_server.Connect(new NetworkCredential(m_userName, m_password));
+                if (!string.IsNullOrEmpty(UserName) && !string.IsNullOrEmpty(Password))
+                    Server.Connect(new NetworkCredential(UserName, Password));
                 else
-                    m_server.Connect(true);
+                    Server.Connect(true);
             }
 
             m_connected = true;
@@ -245,23 +187,22 @@ namespace PIAdapters
             m_connected = false;
 
             // Attempt to close OSI-PI connection
-            if ((object)m_server != null)
+            if (Server is not null)
             {
-                if (m_server.ConnectionInfo.IsConnected)
-                    m_server.Disconnect();
+                if (Server.ConnectionInfo.IsConnected)
+                    Server.Disconnect();
 
                 // Detach from server disconnected event
-                m_server.ConnectChanged -= PIConnection_ConnectChanged;
+                Server.ConnectChanged -= PIConnection_ConnectChanged;
             }
         }
 
         private void PIConnection_ConnectChanged(object sender, EventArgs e)
         {
-            if ((object)m_server == null || !m_connected)
+            if (Server is null || !m_connected)
                 return;
 
-            if ((object)Disconnected != null)
-                Disconnected(this, EventArgs.Empty);
+            Disconnected?.Invoke(this, EventArgs.Empty);
 
             Close();
         }
@@ -278,7 +219,7 @@ namespace PIAdapters
         /// <param name="other">An object to compare with this object.</param>
         public int CompareTo(PIConnection other)
         {
-            if ((object)other == null)
+            if (other is null)
                 return 1;
 
             return Comparer<Guid>.Default.Compare(m_instanceID, other.m_instanceID);
@@ -288,7 +229,7 @@ namespace PIAdapters
         {
             PIConnection other = obj as PIConnection;
 
-            if ((object)other != null)
+            if (other is not null)
                 return CompareTo(other);
 
             throw new ArgumentException();

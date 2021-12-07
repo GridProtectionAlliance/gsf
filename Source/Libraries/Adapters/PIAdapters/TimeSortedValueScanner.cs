@@ -40,38 +40,22 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the source points that this scanner is reading from.
         /// </summary>
-        public PIPointList Points
-        {
-            get;
-            set;
-        }
+        public PIPointList Points { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum value of the timestamps of the data points returned by the scanner.
         /// </summary>
-        public AFTime StartTime
-        {
-            get;
-            set;
-        }
+        public AFTime StartTime { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum value of the timestamps of the data points returned by the scanner.
         /// </summary>
-        public AFTime EndTime
-        {
-            get;
-            set;
-        }
+        public AFTime EndTime { get; set; }
 
         /// <summary>
         /// Gets or sets the handler used to manage any exceptions that may occur while reading data.
         /// </summary>
-        public Action<Exception> DataReadExceptionHandler
-        {
-            get;
-            set;
-        }
+        public Action<Exception> DataReadExceptionHandler { get; set; }
 
         #endregion
 
@@ -84,8 +68,8 @@ namespace PIAdapters
         /// <returns>Each recorded <see cref="AFValue"/> in time-sorted order for the specified <see cref="Points"/> and time-range.</returns>
         public IEnumerable<AFValue> Read(int pageFactor = 1)
         {
-            PIPagingConfiguration config = new PIPagingConfiguration(PIPageType.TagCount, Points.Count * pageFactor < 1 ? 1 : pageFactor);
-            List<IEnumerator<AFValue>> enumerators = new List<IEnumerator<AFValue>>();
+            PIPagingConfiguration config = new(PIPageType.TagCount, Points.Count * pageFactor < 1 ? 1 : pageFactor);
+            List<IEnumerator<AFValue>> enumerators = new();
 
             try
             {
@@ -112,7 +96,7 @@ namespace PIAdapters
             if (enumerators.Count == 0)
                 yield break;
 
-            List<int> completed = new List<int>();
+            List<int> completed = new();
             AFValue dataPoint;
 
             // Start publishing data points in time-sorted order

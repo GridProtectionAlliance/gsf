@@ -196,7 +196,7 @@ namespace PIAdapters
                 // the SetTemporalConstraint function.
                 Dictionary<string, string> settings = Settings;
 
-                if ((object)settings != null && settings.Count > 0)
+                if (settings is not null && settings.Count > 0)
                     return !(settings.ContainsKey("startTimeConstraint") || settings.ContainsKey("stopTimeConstraint"));
 
                 return false;
@@ -245,11 +245,11 @@ namespace PIAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
                 status.Append(base.Status);
 
                 status.AppendFormat("        OSI-PI server name: {0}\r\n", ServerName);
-                status.AppendFormat("       Connected to server: {0}\r\n", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
+                status.AppendFormat("       Connected to server: {0}\r\n", m_connection is null ? "No" : m_connection.Connected ? "Yes" : "No");
                 status.AppendFormat("             Instance name: {0}\r\n", InstanceName);
                 status.AppendFormat("      Publication interval: {0:#,##0}\r\n", PublicationInterval);
                 status.AppendFormat("             Paging factor: {0:#,##0}\r\n", PageFactor);
@@ -277,14 +277,14 @@ namespace PIAdapters
                 {
                     if (disposing)
                     {
-                        if ((object)m_readTimer != null)
+                        if (m_readTimer is not null)
                         {
                             m_readTimer.Elapsed -= m_readTimer_Elapsed;
                             m_readTimer.Dispose();
                             m_readTimer = null;
                         }
 
-                        if ((object)m_connection != null)
+                        if (m_connection is not null)
                         {
                             m_connection.Dispose();
                             m_connection = null;
@@ -314,7 +314,7 @@ namespace PIAdapters
             // Validate settings.
             settings.TryGetValue(nameof(InstanceName), out m_instanceName);
 
-            if (((object)OutputSourceIDs == null || OutputSourceIDs.Length == 0) && string.IsNullOrEmpty(m_instanceName))
+            if ((OutputSourceIDs is null || OutputSourceIDs.Length == 0) && string.IsNullOrEmpty(m_instanceName))
                 throw new ArgumentException(string.Format(errorMessage, "instanceName"));
 
             if (!settings.TryGetValue(nameof(ServerName), out string setting))
@@ -356,7 +356,7 @@ namespace PIAdapters
             // Define output measurements this input adapter can support based on the instance name (if not already defined)
             if (string.IsNullOrEmpty(m_instanceName))
             {
-                if ((object)OutputSourceIDs != null && OutputSourceIDs.Length > 0)
+                if (OutputSourceIDs is not null && OutputSourceIDs.Length > 0)
                     m_instanceName = OutputSourceIDs[0];
             }
             else
@@ -414,7 +414,7 @@ namespace PIAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if ((object)m_readTimer != null)
+            if (m_readTimer is not null)
             {
                 m_readTimer.Enabled = false;
 
@@ -424,7 +424,7 @@ namespace PIAdapters
                 }
             }
 
-            if ((object)m_connection != null)
+            if (m_connection is not null)
             {
                 m_connection.Dispose();
                 m_connection = null;
@@ -450,7 +450,7 @@ namespace PIAdapters
             {
                 if (SupportsTemporalProcessing)
                 {
-                    if ((object)RequestedOutputMeasurementKeys != null)
+                    if (RequestedOutputMeasurementKeys is not null)
                         OnStatusMessage(MessageLevel.Info, $"Replaying for requested output keys: {RequestedOutputMeasurementKeys.Length:N0} defined measurements");
                     else
                         OnStatusMessage(MessageLevel.Warning, "No measurements have been requested for playback - make sure \"; connectOnDemand=true\" is defined in the connection string for the reader.");
@@ -458,9 +458,9 @@ namespace PIAdapters
 
                 MeasurementKey[] requestedKeys = SupportsTemporalProcessing ? RequestedOutputMeasurementKeys : OutputMeasurements.MeasurementKeys().ToArray();
 
-                if (Enabled && (object)m_connection != null && (object)requestedKeys != null && requestedKeys.Length > 0)
+                if (Enabled && m_connection is not null && requestedKeys is not null && requestedKeys.Length > 0)
                 {
-                    HashSet<string> tagList = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> tagList = new(StringComparer.OrdinalIgnoreCase);
 
                     var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                                 from key in requestedKeys
@@ -536,7 +536,7 @@ namespace PIAdapters
         // Process next data read
         private void m_readTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            List<IMeasurement> measurements = new List<IMeasurement>();
+            List<IMeasurement> measurements = new();
 
             if (Monitor.TryEnter(m_readTimer))
             {
@@ -544,7 +544,7 @@ namespace PIAdapters
                 {
                     AFValue currentPoint = m_dataReader.Current;
 
-                    if ((object)currentPoint == null)
+                    if (currentPoint is null)
                         throw new NullReferenceException("PI data read returned a null value.");
 
                     long timestamp = currentPoint.Timestamp.UtcTime.Ticks;
@@ -580,7 +580,7 @@ namespace PIAdapters
                             // Read record value
                             currentPoint = m_dataReader.Current;
 
-                            if ((object)currentPoint == null)
+                            if (currentPoint is null)
                                 throw new NullReferenceException("PI data read returned a null value.");
 
                             timestamp = currentPoint.Timestamp.UtcTime.Ticks;

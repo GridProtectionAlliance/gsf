@@ -57,8 +57,6 @@ namespace PIAdapters
 
         // Fields
         private readonly List<PIConnection> m_connectionPool;
-        private readonly int m_minimumPoolSize;
-
         private int m_accessCountPerConnection;
         private bool m_disposed;
 
@@ -84,7 +82,7 @@ namespace PIAdapters
                 throw new ArgumentOutOfRangeException(nameof(minimumPoolSize));
 
             m_connectionPool = new List<PIConnection>();
-            m_minimumPoolSize = minimumPoolSize;
+            MinimumPoolSize = minimumPoolSize;
             m_accessCountPerConnection = DefaultAccessCountPerConnection;
         }
 
@@ -103,23 +101,14 @@ namespace PIAdapters
         /// <summary>
         /// Gets minimum pool size for the <see cref="PIConnectionPool"/>.
         /// </summary>
-        public int MinimumPoolSize
-        {
-            get
-            {
-                return m_minimumPoolSize;
-            }
-        }
+        public int MinimumPoolSize { get; }
 
         /// <summary>
         /// Gets or sets maximum accessibility count for each <see cref="PIConnection"/>.
         /// </summary>
         public int AccessCountPerConnection
         {
-            get
-            {
-                return m_accessCountPerConnection;
-            }
+            get => m_accessCountPerConnection;
             set
             {
                 if (value < 1)
@@ -132,13 +121,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets current size of connection pool.
         /// </summary>
-        public int Size
-        {
-            get
-            {
-                return m_connectionPool.Count;
-            }
-        }
+        public int Size => m_connectionPool.Count;
 
         #endregion
 
@@ -159,28 +142,28 @@ namespace PIAdapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_connectionPool != null)
-                        {
-                            foreach (PIConnection connection in m_connectionPool)
-                            {
-                                connection.Disconnected -= connection_Disconnected;
-                                connection.Dispose();
-                            }
+            if (m_disposed)
+                return;
 
-                            m_connectionPool.Clear();
-                        }
-                    }
-                }
-                finally
+            try
+            {
+                if (!disposing)
+                    return;
+
+                if (m_connectionPool is not null)
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    foreach (PIConnection connection in m_connectionPool)
+                    {
+                        connection.Disconnected -= connection_Disconnected;
+                        connection.Dispose();
+                    }
+
+                    m_connectionPool.Clear();
                 }
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -204,7 +187,7 @@ namespace PIAdapters
             {
                 lock (m_connectionPool)
                 {
-                    while ((object)connection == null)
+                    while (connection is null)
                     {
                         // Get next connection from the pool with lowest accessibility count
                         if (m_connectionPool.Count > 0)
@@ -212,13 +195,13 @@ namespace PIAdapters
                             PIConnection[] availableConnections = m_connectionPool.Where(c => c.AccessCount < m_accessCountPerConnection).ToArray();
 
                             if (availableConnections.Length > 0)
-                                connection = availableConnections.Aggregate((currentMin, nextItem) => (object)nextItem != null && currentMin.AccessCount < nextItem.AccessCount ? currentMin : nextItem);
+                                connection = availableConnections.Aggregate((currentMin, nextItem) => nextItem is not null && currentMin.AccessCount < nextItem.AccessCount ? currentMin : nextItem);
                         }
 
-                        if ((object)connection == null)
+                        if (connection is null)
                         {
                             // Add pooled connections in groups for better distribution
-                            for (int i = 0; i < m_minimumPoolSize; i++)
+                            for (int i = 0; i < MinimumPoolSize; i++)
                             {
                                 // Create a new connection
                                 connection = new PIConnection
@@ -259,7 +242,7 @@ namespace PIAdapters
         /// <exception cref="InvalidOperationException">Provided PIConnection does not belong to this connection pool.</exception>
         public void ReturnPooledConnection(PIConnection connection)
         {
-            if ((object)connection == null)
+            if (connection is null)
                 return;
 
             lock (m_connectionPool)
@@ -272,7 +255,7 @@ namespace PIAdapters
 
                 if (connection.AccessCount < 1)
                 {
-                    if (m_connectionPool.Count > m_minimumPoolSize && m_connectionPool.Remove(connection))
+                    if (m_connectionPool.Count > MinimumPoolSize && m_connectionPool.Remove(connection))
                     {
                         connection.Disconnected -= connection_Disconnected;
                         connection.Dispose();
@@ -281,11 +264,8 @@ namespace PIAdapters
             }
         }
 
-        private void connection_Disconnected(object sender, EventArgs e)
-        {
-            if ((object)Disconnected != null)
-                Disconnected(this, new EventArgs<PIConnection>(sender as PIConnection));
-        }
+        private void connection_Disconnected(object sender, EventArgs e) => 
+            Disconnected?.Invoke(this, new EventArgs<PIConnection>(sender as PIConnection));
 
         #endregion
     }
