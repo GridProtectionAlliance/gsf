@@ -104,21 +104,23 @@ namespace PIAdapters
         #region [ Members ]
 
         // Constants
-
-        /// <summary>
-        /// Defines the default value for <see cref="EnableTimeReasonabilityCheck"/>.
-        /// </summary>
-        public const bool DefaultEnableTimeReasonabilityCheck = false;
-
-        /// <summary>
-        /// Defines the default value for <see cref="PastTimeReasonabilityLimit"/>.
-        /// </summary>
-        public const double DefaultPastTimeReasonabilityLimit = 43200.0D;
-
-        /// <summary>
-        /// Defines the default value for <see cref="FutureTimeReasonabilityLimit"/>.
-        /// </summary>
-        public const double DefaultFutureTimeReasonabilityLimit = 43200.0D;
+        private const string DefaultUserName = "";
+        private const string DefaultPassword = "";
+        private const bool DefaultRunMetadataSync = true;
+        private const bool DefaultAutoCreateTags = true;
+        private const bool DefaultAutoUpdateTags = true;
+        private const string DefaultAutoRemoveTags = nameof(TagRemovalOperation.DoNotRemove);
+        private const bool DefaultSyncAlternateTagOnly = false;
+        private const bool DefaultSkipDigitalAlternateTagSync = true;
+        private const int DefaultTagNamePrefixRemoveCount = 0;
+        private const string DefaultPIPointSource = nameof(GSF);
+        private const string DefaultPIPointClass = "classic";
+        private const bool DefaultUseCompression = true;
+        private const string DefaultTagMapCacheFileName = "";
+        private const double DefaultMaximumPointResolution = 0.0D;
+        private const bool DefaultEnableTimeReasonabilityCheck = false;
+        private const double DefaultPastTimeReasonabilityLimit = 43200.0D;
+        private const double DefaultFutureTimeReasonabilityLimit = 43200.0D;
 
         // Fields
 
@@ -192,16 +194,16 @@ namespace PIAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the name of the PI user ID for the adapter's PI connection.")]
-        [DefaultValue("")]
-        public string UserName { get; set; }
+        [DefaultValue(DefaultUserName)]
+        public string UserName { get; set; } = DefaultUserName;
 
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the password used for the adapter's PI connection.")]
-        [DefaultValue("")]
-        public string Password { get; set; }
+        [DefaultValue(DefaultPassword)]
+        public string Password { get; set; } = DefaultPassword;
 
         /// <summary>
         /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
@@ -216,96 +218,96 @@ namespace PIAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Determines if this adapter should automatically manage metadata for PI points (recommended).")]
-        [DefaultValue(true)]
-        public bool RunMetadataSync { get; set; } = true;
+        [DefaultValue(DefaultRunMetadataSync)]
+        public bool RunMetadataSync { get; set; } = DefaultRunMetadataSync;
 
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically create new tags when managing metadata for PI points.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended). Value will only be considered when RunMetadataSync is True.")]
-        [DefaultValue(true)]
-        public bool AutoCreateTags { get; set; } = true;
+        [DefaultValue(DefaultAutoCreateTags)]
+        public bool AutoCreateTags { get; set; } = DefaultAutoCreateTags;
 
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically update existing tags when managing metadata for PI points.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the controller for maintaining PI tag metadata (like the tag name) for local metadata; otherwise, when False, PI tools will be required to maintain points, including local tag name updates. Value will only be considered when RunMetadataSync is True.")]
-        [DefaultValue(true)]
-        public bool AutoUpdateTags { get; set; } = true;
+        [DefaultValue(DefaultAutoUpdateTags)]
+        public bool AutoUpdateTags { get; set; } = DefaultAutoUpdateTags;
 
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically remove PI tags that no longer exist locally in metadata.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Determines if this adapter should automatically remove PI tags that no longer exist locally in metadata (use with caution). This will make openPDC the controller - even for deletes - when maintaining PI tag metadata; otherwise, when value is set to DoNotRemove, PI tags will persist even when they no longer exist in local metadata. Value will only be considered when RunMetadataSync is True.")]
-        [DefaultValue(typeof(TagRemovalOperation), "DoNotRemove")]
-        public TagRemovalOperation AutoRemoveTags { get; set; } = TagRemovalOperation.DoNotRemove;
+        [DefaultValue(typeof(TagRemovalOperation), DefaultAutoRemoveTags)]
+        public TagRemovalOperation AutoRemoveTags { get; set; } = (TagRemovalOperation)Enum.Parse(typeof(TagRemovalOperation), DefaultAutoRemoveTags);
 
         /// <summary>
         /// Gets or sets flag that determines if tag synchronization should only use alternate tag fields.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Determines if tag synchronization should only use alternate tag fields. Only relevant when RunMetadataSync is True.")]
-        [DefaultValue(false)]
-        public bool SyncAlternateTagOnly { get; set; } = false;
+        [DefaultValue(DefaultSyncAlternateTagOnly)]
+        public bool SyncAlternateTagOnly { get; set; } = DefaultSyncAlternateTagOnly;
 
         /// <summary>
         /// Gets or sets flag that determines if tag synchronization should skip digitals when alternate tag field is being used.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Determines if tag synchronization should skip digitals when alternate tag field is being used. AlternateTag field is commonly used to hold IEEE C37.118 16-bit digital labels.")]
-        [DefaultValue(false)]
-        public bool SkipDigitalAlternateTagSync { get; set; } = true;
+        [DefaultValue(DefaultSkipDigitalAlternateTagSync)]
+        public bool SkipDigitalAlternateTagSync { get; set; } = DefaultSkipDigitalAlternateTagSync;
 
         /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True.")]
-        [DefaultValue(0)]
-        public int TagNamePrefixRemoveCount { get; set; }
+        [DefaultValue(DefaultTagNamePrefixRemoveCount)]
+        public int TagNamePrefixRemoveCount { get; set; } = DefaultTagNamePrefixRemoveCount;
 
         /// <summary>
         /// Gets or sets the point source string used when automatically creating new PI points during the metadata update
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the point source string used when automatically creating new PI points during the metadata update. Value will only be considered when RunMetadataSync is True.")]
-        [DefaultValue(nameof(GSF))]
-        public string PIPointSource { get; set; } = nameof(GSF);
+        [DefaultValue(DefaultPIPointSource)]
+        public string PIPointSource { get; set; } = DefaultPIPointSource;
 
         /// <summary>
         /// Gets or sets the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic. Value will only be considered when RunMetadataSync is True.")]
-        [DefaultValue("classic")]
-        public string PIPointClass { get; set; } = "classic";
+        [DefaultValue(DefaultPIPointClass)]
+        public string PIPointClass { get; set; } = DefaultPIPointClass;
 
         /// <summary>
         /// Gets or sets flag that determines if defined point compression will be used during archiving.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the flag that determines if defined point compression will be used during archiving.")]
-        [DefaultValue(true)]
-        public bool UseCompression { get; set; } = true;
+        [DefaultValue(DefaultUseCompression)]
+        public bool UseCompression { get; set; } = DefaultUseCompression;
 
         /// <summary>
         /// Gets or sets the filename to be used for tag map cache.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the filename to be used for tag map cache file name. Leave blank for cache name to be same as adapter name with a \".cache\" extension.")]
-        [DefaultValue("")]
-        public string TagMapCacheFileName { get; set; }
+        [DefaultValue(DefaultTagMapCacheFileName)]
+        public string TagMapCacheFileName { get; set; } = DefaultTagMapCacheFileName;
 
         /// <summary>
         /// Gets or sets the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived.
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no more than once per second. A zero value indicates that all data should be archived.")]
-        [DefaultValue(0.0D)]
-        public double MaximumPointResolution { get; set; }
+        [DefaultValue(DefaultMaximumPointResolution)]
+        public double MaximumPointResolution { get; set; } = DefaultMaximumPointResolution;
 
         /// <summary>
         /// Gets or sets flag that indicates if incoming timestamps to the historian should be validated for reasonability.
@@ -313,7 +315,7 @@ namespace PIAdapters
         [ConnectionStringParameter]
         [Description("Define the flag that indicates if incoming timestamps to the historian should be validated for reasonability.")]
         [DefaultValue(DefaultEnableTimeReasonabilityCheck)]
-        public bool EnableTimeReasonabilityCheck { get; set; }
+        public bool EnableTimeReasonabilityCheck { get; set; } = DefaultEnableTimeReasonabilityCheck;
 
         /// <summary>
         /// Gets or sets the maximum number of seconds that a past timestamp, as compared to local clock, will be considered valid.
@@ -497,8 +499,11 @@ namespace PIAdapters
             // Track instance in static dictionary
             Instances[ServerName] = this;
 
-            UserName = settings.TryGetValue(nameof(UserName), out setting) ? setting : null;
-            Password = settings.TryGetValue(nameof(Password), out setting) ? setting : null;
+            if (settings.TryGetValue(nameof(UserName), out setting))
+                UserName =  setting;
+
+            if (settings.TryGetValue(nameof(Password), out setting))
+                Password = setting;
 
             if (settings.TryGetValue(nameof(ConnectTimeout), out setting) && int.TryParse(setting, out int intVal))
                 ConnectTimeout = intVal;
@@ -544,7 +549,8 @@ namespace PIAdapters
             if (MaximumPointResolution > 0.0D)
                 m_lastArchiveTimes = new Dictionary<Guid, Ticks>();
 
-            EnableTimeReasonabilityCheck = settings.TryGetValue(nameof(EnableTimeReasonabilityCheck), out setting) && setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(EnableTimeReasonabilityCheck), out setting))
+                EnableTimeReasonabilityCheck = setting.ParseBoolean();
 
             if (settings.TryGetValue(nameof(PastTimeReasonabilityLimit), out setting) && double.TryParse(setting, out double value))
                 PastTimeReasonabilityLimit = value;
@@ -904,7 +910,7 @@ namespace PIAdapters
                             tagName = GetPITagName(measurementRow["PointTag"].ToNonNullString().Trim());
 
                         // Use alternate tag if one is defined - note that digitals are an exception since they use this field for special labeling
-                        if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                        if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && (!measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase) || !SkipDigitalAlternateTagSync))
                             tagName = measurementRow["AlternateTag"].ToString().Trim();
 
                         // If no tag name is defined in measurements there is no need to continue processing
