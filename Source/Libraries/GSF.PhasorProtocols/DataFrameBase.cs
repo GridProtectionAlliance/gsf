@@ -116,11 +116,11 @@ namespace GSF.PhasorProtocols
         /// This value is read-only for <see cref="DataFrameBase"/>; assigning a value will throw an exception. Value returned
         /// is the <see cref="IChannelFrame.IDCode"/> of the associated <see cref="ConfigurationFrame"/>.
         /// </remarks>
-        /// <exception cref="NotSupportedException">IDCode of a data frame is read-only, change IDCode is associated configuration frame instead.</exception>
+        /// <exception cref="NotSupportedException">IDCode of a data frame is read-only, change IDCode in associated configuration frame instead.</exception>
         public override ushort IDCode
         {
             get => m_configurationFrame?.IDCode ?? 0;
-            set => throw new NotSupportedException("IDCode of a data frame is read-only, change IDCode is associated configuration frame instead");
+            set => throw new NotSupportedException("IDCode of a data frame is read-only, change IDCode in associated configuration frame instead");
         }
 
         #endregion
