@@ -524,8 +524,10 @@ namespace GSF.Web.Model
                     things = things.Select(t => $"'{t}'").ToList();
                     search.SearchText = $"({string.Join(",", things)})";
                 }
-
-                return $"[{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}] {search.Operator} {search.SearchText}";
+                string escape = "ESCAPE '$'";
+                if(search.Operator != "LIKE")
+                    escape = "";
+                return $"[{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}] {search.Operator} {search.SearchText} {escape}";
             }));
 
             if (searches.Any())
