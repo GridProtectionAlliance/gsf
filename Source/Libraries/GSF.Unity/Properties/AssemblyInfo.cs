@@ -4,8 +4,8 @@ using System.Resources;
 using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.13.0")]
-[assembly: AssemblyInformationalVersion("2.4.13-beta")]
+[assembly: AssemblyVersion("2.4.14.0")]
+[assembly: AssemblyInformationalVersion("2.4.14-beta")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
