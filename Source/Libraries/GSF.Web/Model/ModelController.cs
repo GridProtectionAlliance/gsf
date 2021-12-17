@@ -504,11 +504,48 @@ namespace GSF.Web.Model
                 return InternalServerError(ex);
             }
         }
-        #endregion
 
-        #region [Helper Methods]
+        /// <summary>
+        /// Gets all records from associated table, filtered and sorted as defined in <paramref name="postData"/>.
+        /// </summary>
+        /// <param name="parentID">Parent ID to be used if Table has a set Parent Key</param>
+        /// <param name="postData"><see cref="PostData"/> containing the search and sort parameters</param>
+        /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
 
-        protected string BuildWhereClause(IEnumerable<Search> searches)
+        [HttpPost, Route("{parentID?}/SearchableList")]
+        public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData, string parentID = null)
+        {
+            if (GetAuthCheck() && !AllowSearch)
+                return Unauthorized();
+
+            try
+            {
+                if (ParentKey != string.Empty && parentID != null)
+                {
+                    List<Search> searches = postData.Searches.ToList();
+                    PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
+                    if (parentKey.PropertyType == typeof(int))
+                        searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                    else 
+                        searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+
+                    postData.Searches = searches;
+                }
+
+                DataTable table = GetSearchResults(postData);
+                return Ok(JsonConvert.SerializeObject(table));
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
+            }
+        }
+
+    #endregion
+
+    #region [Helper Methods]
+
+    protected string BuildWhereClause(IEnumerable<Search> searches)
         {
 
             string whereClause = string.Join(" AND ", searches.Select(search => {
