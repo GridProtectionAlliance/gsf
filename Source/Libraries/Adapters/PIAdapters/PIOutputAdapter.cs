@@ -116,6 +116,7 @@ namespace PIAdapters
         private const string DefaultPIPointSource = nameof(GSF);
         private const string DefaultPIPointClass = "classic";
         private const bool DefaultUseCompression = true;
+        private const bool DefaultUpdateExistingTagCompressionState = false;
         private const string DefaultTagMapCacheFileName = "";
         private const double DefaultMaximumPointResolution = 0.0D;
         private const bool DefaultEnableTimeReasonabilityCheck = false;
@@ -294,6 +295,14 @@ namespace PIAdapters
         public bool UseCompression { get; set; } = DefaultUseCompression;
 
         /// <summary>
+        /// Gets or sets the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags.")]
+        [DefaultValue(DefaultUpdateExistingTagCompressionState)]
+        public bool UpdateExistingTagCompressionState { get; set; } = DefaultUpdateExistingTagCompressionState;
+
+        /// <summary>
         /// Gets or sets the filename to be used for tag map cache.
         /// </summary>
         [ConnectionStringParameter]
@@ -355,6 +364,7 @@ namespace PIAdapters
                 status.AppendLine($"        OSI-PI server name: {ServerName}");
                 status.AppendLine($"       Connected to server: {(m_connection?.Connected ?? false ? "Yes" : "No")}");
                 status.AppendLine($"         Using compression: {UseCompression}");
+                status.AppendLine($"  Update compression state: {UpdateExistingTagCompressionState}");
                 status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
                 status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
 
@@ -510,6 +520,9 @@ namespace PIAdapters
             
             if (settings.TryGetValue(nameof(UseCompression), out setting))
                 UseCompression  = setting.ParseBoolean();
+
+            if (settings.TryGetValue(nameof(UpdateExistingTagCompressionState), out setting))
+                UpdateExistingTagCompressionState = setting.ParseBoolean();
 
             if (settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) && int.TryParse(setting, out intVal))
                 TagNamePrefixRemoveCount = intVal;
@@ -996,13 +1009,12 @@ namespace PIAdapters
                             else
                             {
                                 // Attempt to lookup last update time for record
-                                if (database is null)
-                                    database = new AdoDataConnection("systemSettings");
+                                database ??= new AdoDataConnection("systemSettings");
 
                                 updateTime = Convert.ToDateTime(database.Connection.ExecuteScalar($"SELECT UpdatedOn FROM Measurement WHERE SignalID = '{signalID}'"));
                             }
                         }
-                        catch (Exception)
+                        catch
                         {
                             updateTime = DateTime.UtcNow;
                         }
@@ -1044,7 +1056,9 @@ namespace PIAdapters
                                     updateAttribute(PICommonPointAttributes.Descriptor, measurementRow["Description"].ToString());
                                     updateAttribute(PICommonPointAttributes.ExtendedDescriptor, measurementRow["SignalID"].ToString());
                                     updateAttribute(PICommonPointAttributes.Tag, tagName);
-                                    updateAttribute(PICommonPointAttributes.Compressing, UseCompression ? 1 : 0);
+
+                                    if (createdNewTag || UpdateExistingTagCompressionState)
+                                        updateAttribute(PICommonPointAttributes.Compressing, UseCompression ? 1 : 0);
 
                                     // Engineering units is a new field for this view -- handle the case that it's not there
                                     if (measurements.Columns.Contains("EngineeringUnits"))
