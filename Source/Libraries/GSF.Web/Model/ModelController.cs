@@ -726,7 +726,7 @@ namespace GSF.Web.Model
         /// Gets the <see cref="DataTable"/> with the SearchResults as specified in <see cref="PostData"/>. 
         /// </summary>
         /// <returns>A <see cref="DataTable"/>.</returns>
-        protected DataTable GetSearchResults(PostData postData) 
+        protected virtual DataTable GetSearchResults(PostData postData) 
         {
             string whereClause = BuildWhereClause(postData.Searches);
 
