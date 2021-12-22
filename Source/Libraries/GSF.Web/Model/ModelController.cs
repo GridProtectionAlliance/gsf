@@ -549,22 +549,26 @@ namespace GSF.Web.Model
         {
 
             string whereClause = string.Join(" AND ", searches.Select(search => {
+                bool isQuery = false;
                 if (search.SearchText == string.Empty) search.SearchText = "%";
                 else search.SearchText = search.SearchText.Replace("*", "%");
 
                 if (search.Type == "string" || search.Type == "datetime")
                     search.SearchText = $"'{search.SearchText}'";
-                else if (Array.IndexOf(new[] { "integer", "number", "boolean" }, search.Type) < 0)
+                else if (Array.IndexOf(new[] { "integer", "number", "boolean", "query" }, search.Type) < 0)
                 {
                     string text = search.SearchText.Replace("(", "").Replace(")", "");
                     List<string> things = text.Split(',').ToList();
                     things = things.Select(t => $"'{t}'").ToList();
                     search.SearchText = $"({string.Join(",", things)})";
                 }
+                else if (search.Type == "query")
+                    isQuery = true;
+                    
                 string escape = "ESCAPE '$'";
                 if(search.Operator != "LIKE")
                     escape = "";
-                return $"[{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}] {search.Operator} {search.SearchText} {escape}";
+                return $"{(!isQuery ? "[" : "")}{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}{(!isQuery ? "]" : "")} {search.Operator} {search.SearchText} {escape}";
             }));
 
             if (searches.Any())
@@ -587,7 +591,7 @@ namespace GSF.Web.Model
                 }
                 string sql = $@"
                     SELECT * FROM 
-                    ({CustomView}) T1 
+                    ({CustomView}) FullTbl 
                     WHERE {filterExpression}
                     {(DefaultSort != null ? " ORDER BY " +DefaultSort : "")}";
                 DataTable dataTbl = connection.RetrieveData(sql, parameters);
@@ -613,7 +617,7 @@ namespace GSF.Web.Model
                     return new TableOperations<T>(connection).QueryRecordWhere(filterExpression, parameters);
 
                 string whereClause = " WHERE " + filterExpression;
-                string sql = "SELECT * FROM (" + CustomView + ") T1";
+                string sql = "SELECT * FROM (" + CustomView + ") FullTbl";
                 DataTable dataTbl = connection.RetrieveData(sql + whereClause, parameters);
 
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -640,7 +644,7 @@ namespace GSF.Web.Model
 
                 string sql = $@"
                     SELECT * FROM 
-                    ({CustomView}) T1 
+                    ({CustomView}) FullTbl 
                     {(DefaultSort != null ? " ORDER BY " + DefaultSort : "")}";
 
                 DataTable dataTbl = connection.RetrieveData(sql);
@@ -737,11 +741,11 @@ namespace GSF.Web.Model
                 string sql = "";
 
                 if (SearchSettings == null && CustomView == String.Empty)
-                    sql = $@" SELECT * FROM {tableName} {whereClause}
+                    sql = $@" SELECT * FROM {tableName} FullTbl {whereClause}
                             ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")} ";
 
                 else if (SearchSettings == null)
-                    sql = $@" SELECT* FROM({CustomView}) T1 
+                    sql = $@" SELECT* FROM({CustomView}) FullTbl 
                          {whereClause}
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
 
@@ -754,11 +758,15 @@ namespace GSF.Web.Model
 
                     string collumnCondition = SearchSettings.Condition;
                     if (collumnCondition != String.Empty)
-                        collumnCondition = $"AF.{collumnCondition} AND ";
+                        collumnCondition = $"({collumnCondition}) AND ";
                     collumnCondition = collumnCondition + $"{SearchSettings.FieldKeyField} IN {pivotCollums}";
 
+                    string searchSettingConditions = SearchSettings.Condition;
+                    if (searchSettingConditions != String.Empty)
+                        searchSettingConditions = "(" + searchSettingConditions + ")";
+
                     string joinCondition = $"af.FieldName IN {pivotCollums.Replace("'", "''")} AND ";
-                    joinCondition = joinCondition + SearchSettings.Condition.Replace("'", "''");
+                    joinCondition = joinCondition + searchSettingConditions.Replace("'", "''");
                     if (SearchSettings.Condition != String.Empty)
                         joinCondition = $"{joinCondition} AND ";
                     joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
@@ -778,7 +786,7 @@ namespace GSF.Web.Model
                                 FROM  {tableName} SRC LEFT JOIN 
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
+                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS FullTbl' ELSE '' END) + ' 
                                 {whereClause.Replace("'", "''")};
 
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
@@ -804,7 +812,7 @@ namespace GSF.Web.Model
                                 FROM  ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
                                     {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                                 ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS PVT' ELSE '' END) + ' 
+                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS FullTbl' ELSE '' END) + ' 
                                 {whereClause.Replace("'", "''")};
 
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
