@@ -74,6 +74,12 @@ namespace DeviceStatAdapters
         /// </summary>
         public const string DefaultDatabaseCommand = "";
 
+
+        /// <summary>
+        /// Defines the default value for <see cref="DatabaseCommandTimeout"/>.
+        /// </summary>
+        public const int DefaultDatabaseCommandTimeout = 240;
+
         /// <summary>
         /// Defines the default value for <see cref="DatabaseCommandParameters"/>.
         /// </summary>
@@ -83,6 +89,11 @@ namespace DeviceStatAdapters
         /// Defines the default value for <see cref="DatabaseCommandSchedule"/>.
         /// </summary>
         public const string DefaultDatabaseCommandSchedule = "0 0 * * *";
+
+        /// <summary>
+        /// Defines the default value for <see cref="MinuteStatsInsertTimeout"/>.
+        /// </summary>
+        public const int DefaultMinuteStatsInsertTimeout = DataExtensions.DefaultTimeoutDuration;
 
         /// <summary>
         /// Defines the default value for <see cref="EnableTimeReasonabilityCheck"/>.
@@ -172,6 +183,14 @@ namespace DeviceStatAdapters
         public string DatabaseCommand { get; set; }
 
         /// <summary>
+        /// Gets or sets the time, in seconds, to wait for the defined database operation to complete.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the time, in seconds, to wait for the defined database operation to complete.")]
+        [DefaultValue(DefaultDatabaseCommandTimeout)]
+        public int DatabaseCommandTimeout { get; set; }
+
+        /// <summary>
         /// Gets or sets the parameters for the command that includes any desired value substitutions used for database operation. Available substitutions: {Acronym} and {Timestamp}.
         /// </summary>
         [ConnectionStringParameter]
@@ -186,6 +205,14 @@ namespace DeviceStatAdapters
         [Description("Defines the CRON schedule on which to execute the defined database command. Defaults to once per day.")]
         [DefaultValue(DefaultDatabaseCommandSchedule)]
         public string DatabaseCommandSchedule { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time, in seconds, to wait for a minute stats database insert operation to complete.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the time, in seconds, to wait for a minute stats database insert operation to complete.")]
+        [DefaultValue(DefaultMinuteStatsInsertTimeout)]
+        public int MinuteStatsInsertTimeout {  get; set; }
 
         /// <summary>
         /// Gets or sets flag that indicates if incoming timestamps to the historian should be validated for reasonability.
@@ -304,6 +331,7 @@ namespace DeviceStatAdapters
                 {
                     status.AppendLine($"Scheduled Database Command: {DatabaseCommand}");
                     status.AppendLine($"Command Parameters, if any: {DatabaseCommandParameters}");
+                    status.AppendLine($"  Database Command Timeout: {DatabaseCommandTimeout:N0} seconds");
                     status.AppendLine($"  Total Command Operations: {m_totalDatabaseOperations:N0}");
                     status.AppendLine($"       Last Command Result: {m_lastDatabaseOperationResult}");
                     
@@ -470,7 +498,7 @@ namespace DeviceStatAdapters
 
                     try
                     {
-                        m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommand, parameters.ToArray());
+                        m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommandTimeout, DatabaseCommand, parameters.ToArray());
                         m_totalDatabaseOperations++;
                     }
                     catch (Exception ex)
@@ -579,7 +607,7 @@ namespace DeviceStatAdapters
         {
             try
             {
-                using (AdoDataConnection connection = GetDatabaseConnection())
+                using (AdoDataConnection connection = GetDatabaseConnection(MinuteStatsInsertTimeout))
                 {
                     TableOperations<MinuteStats> minuteStatsTable = new TableOperations<MinuteStats>(connection);
 
@@ -607,9 +635,9 @@ namespace DeviceStatAdapters
             }
         }
 
-        private AdoDataConnection GetDatabaseConnection() => string.IsNullOrWhiteSpace(DatabaseConnnectionString) ?
-            new AdoDataConnection("systemSettings") :
-            new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString);
+        private AdoDataConnection GetDatabaseConnection(int? timeout = null) => string.IsNullOrWhiteSpace(DatabaseConnnectionString) ?
+            new AdoDataConnection("systemSettings") { DefaultTimeout = timeout ?? DataExtensions.DefaultTimeoutDuration } :
+            new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString) { DefaultTimeout = timeout ?? DataExtensions.DefaultTimeoutDuration };
 
         #endregion
 
