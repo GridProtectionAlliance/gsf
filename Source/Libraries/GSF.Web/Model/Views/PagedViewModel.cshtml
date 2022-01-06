@@ -255,7 +255,7 @@
                 </h4>
             </div>
             <div class="modal-body auto-height" data-bind="with: currentRecord, validationOptions: {messageTemplate: 'validationMessageTemplate'}, css: {'modal-readonly': recordMode()===RecordMode.View}">
-                <form role="form">
+                <form role="form" @((ViewBag.AddNewEditAutocomplete ?? false) ? "" : "autocomplete=\"off\"")>
                     @Raw(ViewBag.AddNewEditDialog)
                 </form>
             </div>
