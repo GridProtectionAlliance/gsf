@@ -143,7 +143,7 @@ namespace ValidateAssemblyBindings
                     if (!(keyTokenBytes is null))
                     {
                         foreach (byte keyToken in keyTokenBytes)
-                            keyTokenImage.Append($"{keyToken:x}");
+                            keyTokenImage.Append($"{keyToken:x2}");
                     }
 
                     XmlElement dependentAssembly = assemblyBindingsXml.CreateElement("dependentAssembly", xmlns);
