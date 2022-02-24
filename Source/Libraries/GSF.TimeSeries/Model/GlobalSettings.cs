@@ -30,11 +30,11 @@ namespace GSF.TimeSeries.Model
 {
     internal class GlobalSettings
     {
-        public Guid NodeID { get; } = AdoSecurityProvider.DefaultNodeID;
+        public Guid NodeID => AdoSecurityProvider.DefaultNodeID;
 
-        public string CompanyAcronym { get; } = s_companyAcronym;
+        public string CompanyAcronym => s_companyAcronym;
 
-        private readonly static string s_companyAcronym;
+        private static readonly string s_companyAcronym;
 
         static GlobalSettings()
         {
