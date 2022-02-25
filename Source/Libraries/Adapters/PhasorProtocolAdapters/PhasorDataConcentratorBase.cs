@@ -1082,7 +1082,7 @@ namespace PhasorProtocolAdapters
                             // For measurements with out a historian defined, the device acronym is used for the ActiveMeasurements measurement key formatted ID field,
                             // try looking this up first as an optimization as this will be accurate in most cases. This is safe, even in cases where the output name
                             // might be renamed to another existing device, as point ID is always unique - so the worst case scenario here is that look up fails.
-                            measurementKey = MeasurementKey.LookUpOrCreate(signal.Acronym, uint.Parse(pointID));
+                            measurementKey = MeasurementKey.LookUpBySource(signal.Acronym, uint.Parse(pointID));
 
                             if (measurementKey == MeasurementKey.Undefined)
                             {
