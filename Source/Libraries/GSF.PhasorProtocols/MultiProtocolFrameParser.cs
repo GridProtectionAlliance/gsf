@@ -1800,9 +1800,7 @@ namespace GSF.PhasorProtocols
                 if (m_transportProtocol != TransportProtocol.File)
                     return;
 
-                FileClient fileClient = m_dataChannel as FileClient;
-
-                if (fileClient is not null)
+                if (m_dataChannel is FileClient fileClient)
                     fileClient.AutoRepeat = value;
             }
         }
@@ -1839,7 +1837,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets flags that determine if check-sums for specified frames should be validated.
         /// </summary>
         /// <remarks>
-        /// It is expected that this will normally be set to <see cref="CheckSumValidationFrameTypes.AllFrames"/>.
+        /// It is expected that this will normally be set to <see cref="PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
         /// </remarks>
         public CheckSumValidationFrameTypes CheckSumValidationFrameTypes
         {
@@ -1982,8 +1980,6 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                Dictionary<string, string> settings;
-
                 // Listener setting is only valid for TCP data channels
                 if (m_transportProtocol != TransportProtocol.Tcp)
                     return false;
@@ -1991,7 +1987,7 @@ namespace GSF.PhasorProtocols
                 if (string.IsNullOrWhiteSpace(m_connectionString))
                     return false;
 
-                settings = m_connectionString.ParseKeyValuePairs();
+                Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
 
                 return settings.TryGetValue("isListener", out string setting) && setting.ParseBoolean();
             }
@@ -3328,7 +3324,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             // For some serially connected devices, a frame exception on initial connection is very common - so we ignore this during startup
-            if (m_initiatingSerialConnection && ex is SerialException serialEx && serialEx.SerialError == SerialError.Frame)
+            if (m_initiatingSerialConnection && ex is SerialException { SerialError: SerialError.Frame })
             {
                 m_initiatingSerialConnection = false;
                 return;

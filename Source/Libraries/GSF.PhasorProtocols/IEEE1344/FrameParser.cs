@@ -233,7 +233,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             if (frame is not ISupportFrameImage<FrameType> frameImage)
                 return;
 
-            if (frameImage.CommonHeader is CommonFrameHeader commonHeader && commonHeader.IsLastFrame)
+            if (frameImage.CommonHeader is CommonFrameHeader { IsLastFrame: true })
                 base.OnReceivedHeaderFrame(frame);
         }
 
