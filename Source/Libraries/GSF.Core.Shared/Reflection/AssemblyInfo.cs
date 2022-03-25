@@ -531,18 +531,10 @@ namespace GSF.Reflection
         /// </summary>
         /// <param name="attributeType">Type of the attribute to get.</param>
         /// <returns>The requested assembly attribute if it exists; otherwise null.</returns>
-        /// <remarks>
-        /// This method always returns <c>null</c> under Mono deployments.
-        /// </remarks>
         public CustomAttributeData GetCustomAttribute(Type attributeType)
         {
-#if MONO
-            // TODO: Validate that these functions still do not work under Mono - they make actually return expected results with new Mono updates
-            return null;
-#else
             //Returns the requested assembly attribute.
             return m_assemblyInstance.GetCustomAttributesData().FirstOrDefault(assemblyAttribute => assemblyAttribute.Constructor.DeclaringType == attributeType);
-#endif
         }
 
         /// <summary>
@@ -580,15 +572,13 @@ namespace GSF.Reflection
         {
             lock (s_typeCache)
             {
-                Type result;
-
                 if (s_typeLookup.HasChanged)
                 {
                     foreach (Type type in s_typeLookup.FindTypes())
-                        s_typeCache[type.FullName] = type;
+                        s_typeCache[type.FullName!] = type;
                 }
 
-                s_typeCache.TryGetValue(typeName, out result);
+                s_typeCache.TryGetValue(typeName, out Type result);
 
                 return result;
             }

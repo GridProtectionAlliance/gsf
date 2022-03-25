@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable AccessToModifiedClosure
+// ReSharper disable PossibleNullReferenceException
 
 using System;
 using System.Threading;
@@ -132,10 +134,10 @@ namespace GSF.Threading
         /// <exception cref="ArgumentNullException"><paramref name="action"/> or <paramref name="exceptionHandler"/> is null</exception>
         public static bool TryExecute(this Action action, Action<Exception> exceptionHandler)
         {
-            if ((object)action == null)
+            if (action is null)
                 throw new ArgumentNullException(nameof(action));
 
-            if ((object)exceptionHandler == null)
+            if (exceptionHandler is null)
                 throw new ArgumentNullException(nameof(exceptionHandler));
 
             try
@@ -158,27 +160,23 @@ namespace GSF.Threading
         /// <param name="delay">The amount of time to wait before execution, in milliseconds.</param>
         public static void DelayAndExecute(this Action action, WaitHandle waitObj, int delay)
         {
-            object waitHandleLock = new object();
+            object waitHandleLock = new();
             RegisteredWaitHandle waitHandle = null;
 
-            WaitOrTimerCallback callback = (state, timeout) =>
+            void callback(object state, bool timeout)
             {
-                if (Interlocked.Exchange(ref waitHandleLock, null) == null)
+                if (Interlocked.Exchange(ref waitHandleLock, null) is null)
                     waitHandle.Unregister(null);
-
-#if MONO
-                timeout = !waitObj.WaitOne(0);
-#endif
 
                 if (!timeout)
                     return;
 
                 action();
-            };
+            }
 
             waitHandle = ThreadPool.RegisterWaitForSingleObject(waitObj, callback, null, delay, true);
 
-            if (Interlocked.Exchange(ref waitHandleLock, null) == null)
+            if (Interlocked.Exchange(ref waitHandleLock, null) is null)
                 waitHandle.Unregister(null);
         }
 
@@ -190,26 +188,22 @@ namespace GSF.Threading
         /// <returns>A cancellation token that can be used to cancel the operation.</returns>
         public static ICancellationToken DelayAndExecute(this Action action, int delay)
         {
-            object waitHandleLock = new object();
-            ManualResetEvent waitObj = new ManualResetEvent(false);
-            DelayCancellationToken cancellationToken = new DelayCancellationToken(waitObj);
+            object waitHandleLock = new();
+            ManualResetEvent waitObj = new(false);
+            DelayCancellationToken cancellationToken = new(waitObj);
             RegisteredWaitHandle waitHandle = null;
 
-            WaitOrTimerCallback callback = (state, timeout) =>
+            void callback(object state, bool timeout)
             {
                 // Even if the callback timed out, another thread may cancel
                 // the cancellation token before we are able to dispose of it
                 // so we explicitly cancel the token in order to be sure
-#if !MONO
                 timeout = timeout && cancellationToken.Cancel();
-#else
-                timeout = !waitObj.WaitOne(0) && cancellationToken.Cancel();
-#endif
 
                 // Both the callback thread and the caller thread will
                 // attempt to set the wait handle lock to null, and the
-                // last one to to do so has to unregister and dispose
-                if (Interlocked.Exchange(ref waitHandleLock, null) == null)
+                // last one to do so has to unregister and dispose
+                if (Interlocked.Exchange(ref waitHandleLock, null) is null)
                 {
                     waitHandle.Unregister(null);
                     cancellationToken.Dispose();
@@ -219,16 +213,16 @@ namespace GSF.Threading
                 // was cancelled by another thread
                 if (!timeout)
                     return;
-                
+
                 action();
-            };
+            }
 
             waitHandle = ThreadPool.RegisterWaitForSingleObject(waitObj, callback, null, delay, true);
 
             // Both the callback thread and the caller thread will
             // attempt to set the wait handle lock to null, and the
-            // last one to to do so has to unregister and dispose
-            if (Interlocked.Exchange(ref waitHandleLock, null) == null)
+            // last one to do so has to unregister and dispose
+            if (Interlocked.Exchange(ref waitHandleLock, null) is null)
             {
                 waitHandle.Unregister(null);
                 cancellationToken.Dispose();

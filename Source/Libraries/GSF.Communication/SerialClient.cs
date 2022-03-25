@@ -177,9 +177,6 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the needed number of bytes in the internal input buffer before a <see cref="ClientBase.OnReceiveDataComplete"/> event occurs.
         /// </summary>
-        /// <remarks>
-        /// This option is ignored under Mono deployments.
-        /// </remarks>
         [DefaultValue(DefaultReceivedBytesThreshold)]
         public int ReceivedBytesThreshold { get; set; } = DefaultReceivedBytesThreshold;
 
@@ -294,9 +291,7 @@ namespace GSF.Communication
 
             m_serialClient.Provider = new SerialPort
             {
-            #if !MONO
                 ReceivedBytesThreshold = int.Parse(m_connectData["receivedBytesThreshold"]),
-            #endif
                 PortName = m_connectData["port"],
                 BaudRate = int.Parse(m_connectData["baudRate"]),
                 DataBits = int.Parse(m_connectData["dataBits"]),

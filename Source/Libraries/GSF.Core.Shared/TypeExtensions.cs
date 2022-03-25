@@ -53,7 +53,22 @@ namespace GSF
     public static partial class TypeExtensions
     {
         // Native data types that represent numbers
-        private static readonly Type[] s_numericTypes = { typeof(SByte), typeof(Byte), typeof(Int16), typeof(UInt16), typeof(Int24), typeof(UInt24), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) };
+        private static readonly Type[] s_numericTypes = 
+        { 
+            typeof(sbyte), 
+            typeof(byte), 
+            typeof(short), 
+            typeof(ushort), 
+            typeof(Int24), 
+            typeof(UInt24), 
+            typeof(int), 
+            typeof(uint), 
+            typeof(long), 
+            typeof(ulong), 
+            typeof(float), 
+            typeof(double), 
+            typeof(decimal)
+        };
 
         /// <summary>
         /// Determines if the specified type is a native structure that represents a numeric value.
@@ -65,10 +80,8 @@ namespace GSF
         /// This expression returns <c>true</c> if the type is one of the following:<br/><br/>
         ///     SByte, Byte, Int16, UInt16, Int24, UInt24, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
         /// </remarks>
-        public static bool IsNumeric(this Type type)
-        {
-            return s_numericTypes.Contains(type);
-        }
+        public static bool IsNumeric(this Type type) => 
+            s_numericTypes.Contains(type);
 
         /// <summary>
         /// Gets the friendly class name of the provided type, trimming generic parameters.
@@ -108,16 +121,14 @@ namespace GSF
         /// </remarks>
         public static Type GetRootType(this Type type)
         {
-            // Recurse through types until you reach a base type of "System.Object" or "System.MarshalByRef".
-#if MONO
-            // TODO: Test with Mono to see if type comparison now works as expected
-            if ((object)type.BaseType == null || type.BaseType.FullName.Equals("System.Object", StringComparison.Ordinal) || type.BaseType.FullName.Equals("System.MarshalByRefObject", StringComparison.Ordinal))
-#else
-            if ((object)type.BaseType == null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
-#endif
-                return type;
+            while (true)
+            {
+                // Recurse through types until you reach a base type of "System.Object" or "System.MarshalByRef".
+                if (type.BaseType is null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
+                    return type;
 
-            return GetRootType(type.BaseType);
+                type = type.BaseType;
+            }
         }
     }
 }

@@ -524,8 +524,8 @@ namespace GSF.Communication
                 IntegratedSecurity = integratedSecuritySetting.ParseBoolean();
 
         #if MONO
-                // Force integrated security to be False under Mono since it's not supported
-                m_integratedSecurity = false;
+            // Force integrated security to be False under Mono since it's not supported
+            IntegratedSecurity = false;
         #endif
 
             // Overwrite config file if max client connections exists in connection string.

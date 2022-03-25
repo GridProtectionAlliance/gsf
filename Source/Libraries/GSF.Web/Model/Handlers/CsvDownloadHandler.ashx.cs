@@ -171,11 +171,7 @@ namespace GSF.Web.Model.Handlers
                 FileName = GetExportFileName(requestParameters)
             };
 
-        #if MONO
-            return Task.FromResult(false);
-        #else
             return Task.CompletedTask;
-        #endif
         }
 
         private static void CopyModelAsCsvToStream(SecurityPrincipal securityPrincipal, NameValueCollection requestParameters, Stream responseStream, Action flushResponse, CompatibleCancellationToken cancellationToken)

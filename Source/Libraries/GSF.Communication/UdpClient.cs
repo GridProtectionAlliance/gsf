@@ -385,22 +385,11 @@ namespace GSF.Communication
         /// </summary>
         public bool ReceivePacketInfo
         {
-            get
-            {
-                return m_receivePacketInfo;
-            }
+            get => m_receivePacketInfo;
             set
             {
-            #if MONO
-                if (value)
-                    throw new NotImplementedException("Not supported under Mono.");
-
-                m_receivePacketInfo = false;
-            #else
                 m_receivePacketInfo = value;
-
                 m_udpClient?.Provider?.SetSocketOption(m_udpClient.Provider.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, value);
-            #endif
             }
         }
 
@@ -718,12 +707,10 @@ namespace GSF.Communication
                         m_udpClient.MulticastMembershipAddresses = multicastMembershipAddresses;
                     }
 
-                #if !MONO
                     // If the client requires packet info when
                     // receiving data, set the socket option now.
                     if (m_receivePacketInfo)
                         m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
-                #endif
 
                     // Listen for data to send.
                     using (SocketAsyncEventArgs sendArgs = m_sendArgs)

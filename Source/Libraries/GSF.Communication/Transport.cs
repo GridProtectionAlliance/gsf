@@ -128,10 +128,9 @@ namespace GSF.Communication
             // Make sure system can support specified stack
             if (stack == IPStack.IPv6 && !Socket.OSSupportsIPv6)
                 throw new NotSupportedException($"IPv6 stack is not available for socket creation on {hostNameOrAddress.ToNonNullNorWhiteSpace("localhost")}:{port}");
-        #if !MONO
+
             if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
                 throw new NotSupportedException($"IPv4 stack is not available for socket creation on {hostNameOrAddress.ToNonNullNorWhiteSpace("localhost")}:{port}");
-        #endif
 
             // No host name or IP address was specified, use local IPs
             if (string.IsNullOrWhiteSpace(hostNameOrAddress))
@@ -209,12 +208,12 @@ namespace GSF.Communication
                 case ProtocolType.Tcp:
                     endpoint = CreateEndPoint(address, port, stack);
                     socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                #if !MONO
+                
                     // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                     // by setting the IPv6Only socket option to false
-                    if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
+                    if (!Common.IsPosixEnvironment && allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                         socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-                #endif
+                
                     // Associate the socket with the local endpoint
                     socket.Bind(endpoint);
 
@@ -225,12 +224,12 @@ namespace GSF.Communication
                     {
                         endpoint = CreateEndPoint(address, port, stack);
                         socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                    #if !MONO
+
                         // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                         // by setting the IPv6Only socket option to false
-                        if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
+                        if (!Common.IsPosixEnvironment && allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-                    #endif
+
                         socket.Bind(endpoint);
                     }
                     else

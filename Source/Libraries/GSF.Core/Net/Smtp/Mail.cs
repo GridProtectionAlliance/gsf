@@ -268,11 +268,9 @@ namespace GSF.Net.Smtp
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException(nameof(value));
 
-#if !MONO
                 // Dispose existing client.
                 if ((object)m_smtpClient != null)
                     m_smtpClient.Dispose();
-#endif
 
                 // Instantiate new client.
                 split = value.Split(':');
