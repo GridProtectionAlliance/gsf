@@ -246,8 +246,8 @@ namespace GSF.Communication
             PersistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             Statistics = new TransportStatistics();
-            m_updateBytesSent = TrackStatistics ? UpdateBytesSent : new Action<int>(bytes => { });
-            m_updateBytesReceived = TrackStatistics ? UpdateBytesReceived : new Action<int>(bytes => { });
+            m_updateBytesSent = TrackStatistics ? UpdateBytesSent : new Action<int>(_ => { });
+            m_updateBytesReceived = TrackStatistics ? UpdateBytesReceived : new Action<int>(_ => { });
         }
 
         /// <summary>
@@ -1063,29 +1063,16 @@ namespace GSF.Communication
                 }
 
                 // Create a client instance for the specified protocol.
-                switch (protocol.Trim().ToLower())
+                client = protocol.Trim().ToLower() switch
                 {
-                    case "tls":
-                        client = new TlsClient(protocolSettings.ToString());
-                        break;
-                    case "tcp":
-                        client = new TcpClient(protocolSettings.ToString());
-                        break;
-                    case "udp":
-                        client = new UdpClient(protocolSettings.ToString());
-                        break;
-                    case "file":
-                        client = new FileClient(protocolSettings.ToString());
-                        break;
-                    case "serial":
-                        client = new SerialClient(protocolSettings.ToString());
-                        break;
-                    case "zeromq":
-                        client = new ZeroMQClient(protocolSettings.ToString());
-                        break;
-                    default:
-                        throw new ArgumentException($"{protocol} is not a valid transport protocol");
-                }
+                    "tls" => new TlsClient(protocolSettings.ToString()),
+                    "tcp" => new TcpClient(protocolSettings.ToString()),
+                    "udp" => new UdpClient(protocolSettings.ToString()),
+                    "file" => new FileClient(protocolSettings.ToString()),
+                    "serial" => new SerialClient(protocolSettings.ToString()),
+                    "zeromq" => new ZeroMQClient(protocolSettings.ToString()),
+                    _ => throw new ArgumentException($"{protocol} is not a valid transport protocol"),
+                };
 
                 // Apply client settings from the connection string to the client.
                 foreach (KeyValuePair<string, string> setting in settings)

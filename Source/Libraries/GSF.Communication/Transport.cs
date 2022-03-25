@@ -335,7 +335,7 @@ namespace GSF.Communication
         /// <returns>true if the <paramref name="ipAddress"/> is multicast IP; otherwise false.</returns>
         public static bool IsMulticastIP(IPAddress ipAddress)
         {
-            if (ipAddress == null)
+            if (ipAddress is null)
                 throw new ArgumentNullException(nameof(ipAddress));
 
             // Check for IPv6
@@ -346,7 +346,7 @@ namespace GSF.Communication
             int firstOctet = int.Parse(ipAddress.ToString().Split('.')[0]);
 
             // Check first octet to see if IP is a Class D multicast IP
-            return firstOctet >= 224 && firstOctet <= 247;
+            return firstOctet is >= 224 and <= 247;
         }
 
         /// <summary>
@@ -361,7 +361,7 @@ namespace GSF.Communication
                 throw new ArgumentException("Specified port is not a valid number");
 
             // Check to see if the port number is within the valid range
-            return portNumber >= PortRangeLow && portNumber <= PortRangeHigh;
+            return portNumber is >= PortRangeLow and <= PortRangeHigh;
         }
 
         /// <summary>

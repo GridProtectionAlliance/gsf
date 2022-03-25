@@ -177,14 +177,11 @@ namespace GSF.Communication
         {
             get
             {
-                switch (m_zeroMQTransportProtocol)
+                return m_zeroMQTransportProtocol switch
                 {
-                    case ZeroMQTransportProtocol.Tcp:
-                    case ZeroMQTransportProtocol.InProc:
-                        return TransportProtocol.Tcp;
-                    default:
-                        return TransportProtocol.Udp;
-                }
+                    ZeroMQTransportProtocol.Tcp or ZeroMQTransportProtocol.InProc => TransportProtocol.Tcp,
+                    _ => TransportProtocol.Udp,
+                };
             }
         }
 
@@ -215,7 +212,7 @@ namespace GSF.Communication
             {
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
 
-                if (Server != null)
+                if (Server is not null)
                 {
                     try
                     {
@@ -262,7 +259,7 @@ namespace GSF.Communication
                 if (!disposing)
                     return;
 
-                if (m_completedHandle != null)
+                if (m_completedHandle is not null)
                 {
                     m_completedHandle.Set();
                     m_completedHandle.Dispose();
@@ -307,7 +304,7 @@ namespace GSF.Communication
             if (!m_clientInfoLookup.TryGetValue(clientID, out TransportProvider<DateTime> clientInfo))
                 throw new InvalidOperationException("Specified client ID does not exist, cannot read buffer.");
 
-            if (clientInfo.ReceiveBuffer == null)
+            if (clientInfo.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int readIndex = ReadIndicies[clientID];
@@ -380,13 +377,13 @@ namespace GSF.Communication
             if (CurrentState != ServerState.Running)
                 return;
 
-            if (m_receiveDataThread != null)
+            if (m_receiveDataThread is not null)
             {
                 m_receiveDataThread.Abort();
                 m_receiveDataThread = null;
             }
 
-            if (Server != null)
+            if (Server is not null)
             {
                 Server.Dispose();
                 Server = null;
@@ -488,7 +485,7 @@ namespace GSF.Communication
                     }
 
                     // Notify consumer of received data
-                    if (clientInfo != null)
+                    if (clientInfo is not null)
                         OnReceiveClientDataComplete(clientID, clientInfo.ReceiveBuffer, clientInfo.BytesReceived);
                 }
                 catch (Exception ex)
@@ -627,7 +624,7 @@ namespace GSF.Communication
 
             try
             {
-                if (Server != null)
+                if (Server is not null)
                 {
                     // Lookup client info, adding it if it doesn't exist
                     TransportProvider<DateTime> clientInfo = GetClient(clientID);
@@ -673,7 +670,7 @@ namespace GSF.Communication
             if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
             {
                 if (ex is ZException zmqex && (zmqex.Error.Number == ZError.EAGAIN.Number || zmqex.Error.Number == ZError.ETERM.Number))
-                    ThreadPool.QueueUserWorkItem(state => DisconnectOne(clientID));
+                    ThreadPool.QueueUserWorkItem(_ => DisconnectOne(clientID));
                 else
                     base.OnSendClientDataException(clientID, ex);
             }
@@ -719,7 +716,7 @@ namespace GSF.Communication
 
         private void MonitorActiveClients(object state)
         {
-            if (m_clientInfoLookup == null)
+            if (m_clientInfoLookup is null)
                 return;
 
             List<Guid> oldClients = new List<Guid>();
@@ -746,7 +743,7 @@ namespace GSF.Communication
 
         internal static bool IsThreadAbortException(Exception ex)
         {
-            while (ex != null)
+            while (ex is not null)
             {
                 if (ex is ThreadAbortException)
                     return true;

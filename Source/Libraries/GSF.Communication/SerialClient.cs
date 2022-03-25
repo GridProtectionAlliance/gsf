@@ -187,7 +187,7 @@ namespace GSF.Communication
         {
             get
             {
-                if (m_connectData == null)
+                if (m_connectData is null)
                     return base.Status;
 
                 StringBuilder status = new StringBuilder();
@@ -241,7 +241,7 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_serialClient.ReceiveBuffer == null)
+            if (m_serialClient.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int sourceLength = m_serialClient.BytesReceived - ReadIndex;
@@ -265,7 +265,7 @@ namespace GSF.Communication
             if (CurrentState == ClientState.Disconnected)
                 return;
 
-            if (m_serialClient.Provider != null)
+            if (m_serialClient.Provider is not null)
             {
                 m_serialClient.Provider.DataReceived -= SerialPort_DataReceived;
                 m_serialClient.Provider.ErrorReceived -= SerialPort_ErrorReceived;
@@ -332,6 +332,8 @@ namespace GSF.Communication
                 // This will be done regardless of whether the object is finalized or disposed.
                 if (!disposing)
                     return;
+
+                Disconnect();
 
                 // This will be done only when the object is disposed by calling Dispose().
                 m_connectionHandle?.Dispose();
@@ -409,7 +411,7 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Send operation failed to complete - don't raised exceptions for a closed port
-                if (!m_disposed && m_serialClient.Provider != null && m_serialClient.Provider.IsOpen)
+                if (!m_disposed && m_serialClient.Provider is not null && m_serialClient.Provider.IsOpen)
                     OnSendDataException(ex);
             }
         }
@@ -467,7 +469,7 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Don't raised exceptions for a closed port
-                if (!m_disposed && m_serialClient.Provider != null && m_serialClient.Provider.IsOpen)
+                if (!m_disposed && m_serialClient.Provider is not null && m_serialClient.Provider.IsOpen)
                     OnReceiveDataException(ex);
             }
         }

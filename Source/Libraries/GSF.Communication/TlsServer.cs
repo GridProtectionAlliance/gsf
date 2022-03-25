@@ -208,7 +208,7 @@ namespace GSF.Communication
             NoDelay = DefaultNoDelay;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TlsClientInfo>();
 
-            m_acceptHandler = (sender, args) => ProcessAccept(args);
+            m_acceptHandler = (_, args) => ProcessAccept(args);
         }
 
         /// <summary>
@@ -529,7 +529,7 @@ namespace GSF.Communication
 
             TransportProvider<TlsSocket> tlsClient = clientInfo.Client;
 
-            if (tlsClient.ReceiveBuffer == null)
+            if (tlsClient.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int readIndex = ReadIndicies[clientID];
@@ -709,7 +709,7 @@ namespace GSF.Communication
 
             try
             {
-                if (tlsClient.Provider != null && tlsClient.Provider.Socket.Connected)
+                if (tlsClient.Provider is not null && tlsClient.Provider.Socket.Connected)
                     tlsClient.Provider.Socket.Disconnect(false);
 
                 OnClientDisconnected(clientID);
@@ -853,7 +853,7 @@ namespace GSF.Communication
                     // Error is unrecoverable.
                     // We need to make sure to restart the
                     // server before we throw the error.
-                    ThreadPool.QueueUserWorkItem(state => ReStart());
+                    ThreadPool.QueueUserWorkItem(_ => ReStart());
                     throw new SocketException((int)error);
                 }
 
@@ -924,7 +924,7 @@ namespace GSF.Communication
 
                     if (!Server.AcceptAsync(acceptArgs))
                     {
-                        ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
+                        ThreadPool.QueueUserWorkItem(_ => ProcessAccept(acceptArgs));
                     }
                 }
             }
@@ -1076,10 +1076,10 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                if (client != null)
+                if (client is not null)
                     OnSendClientDataException(client.ID, ex);
 
-                if (clientInfo != null)
+                if (clientInfo is not null)
                 {
                     // Assume process send was not able
                     // to continue the asynchronous loop.
@@ -1118,12 +1118,12 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                if (client != null)
+                if (client is not null)
                     OnSendClientDataException(client.ID, ex);
             }
             finally
             {
-                if (payload != null && sendQueue != null)
+                if (payload is not null && sendQueue is not null)
                 {
                     try
                     {
@@ -1135,7 +1135,7 @@ namespace GSF.Communication
                         {
                             ThreadPool.QueueUserWorkItem(state => SendPayload((TlsServerPayload)state), payload);
                         }
-                        else if (clientInfo != null)
+                        else if (clientInfo is not null)
                         {
                             lock (clientInfo.SendLock)
                             {
@@ -1150,10 +1150,10 @@ namespace GSF.Communication
                     {
                         string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
-                        if (client != null)
+                        if (client is not null)
                             OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
 
-                        if (clientInfo != null)
+                        if (clientInfo is not null)
                             Interlocked.Exchange(ref clientInfo.Sending, 0);
                     }
                 }
@@ -1208,7 +1208,7 @@ namespace GSF.Communication
 
             try
             {
-                if (client.Provider?.SslStream is null)
+                if (client.Provider is null || client.Provider.SslStream is null)
                     return;
 
                 // Update statistics and pointers.
@@ -1373,7 +1373,7 @@ namespace GSF.Communication
         /// </summary>
         private void LoadTrustedCertificates()
         {
-            if (RemoteCertificateValidationCallback != null || m_certificateChecker != null)
+            if (RemoteCertificateValidationCallback is not null || m_certificateChecker is not null)
                 return;
 
             m_defaultCertificateChecker.TrustedCertificates.Clear();

@@ -160,7 +160,7 @@ namespace GSF.Communication.Radius
             {
                 CheckDisposed();
 
-                if (value >= 0 && value <= 65535)
+                if (value is >= 0 and <= 65535)
                 {
                     Dictionary<string, string> parts = m_udpClient.ConnectionString.ParseKeyValuePairs();
                     parts["remotePort"] = value.ToString();
@@ -185,7 +185,7 @@ namespace GSF.Communication.Radius
             {
                 CheckDisposed();
 
-                if (value >= 1 && value <= 10)
+                if (value is >= 1 and <= 10)
                     m_requestAttempts = value;
                 else
                     throw new ArgumentOutOfRangeException(nameof(value), "Value must be between 1 and 10.");
@@ -204,7 +204,7 @@ namespace GSF.Communication.Radius
             {
                 CheckDisposed();
 
-                if (value >= 1000 && value <= 60000)
+                if (value is >= 1000 and <= 60000)
                     m_reponseTimeout = value;
                 else
                     throw new ArgumentOutOfRangeException(nameof(value), "Value must be between 1000 and 60000.");
@@ -348,11 +348,11 @@ namespace GSF.Communication.Radius
                     // Stay in the loop until:
                     // 1) We receive a response OR
                     // 2) We exceed the response timeout duration
-                    if (m_responseBytes != null || DateTime.UtcNow > stopTime)
+                    if (m_responseBytes is not null || DateTime.UtcNow > stopTime)
                         break;
                 }
 
-                if (m_responseBytes != null)
+                if (m_responseBytes is not null)
                 {
                     // The server sent a response.
                     response = new RadiusPacket(m_responseBytes, 0, m_responseBytes.Length);
@@ -472,7 +472,7 @@ namespace GSF.Communication.Radius
             request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserPassword, RadiusPacket.EncryptPassword(password, m_sharedSecret, authenticator)));
 
             // State attribute is used when responding to a AccessChallenge response.
-            if (state != null)
+            if (state is not null)
                 request.Attributes.Add(new RadiusPacketAttribute(AttributeType.State, state));
 
             return ProcessRequest(request);
@@ -491,12 +491,12 @@ namespace GSF.Communication.Radius
         {
             CheckDisposed();
 
-            if (response == null)
+            if (response is null)
                 throw new ArgumentNullException(nameof(response));
 
             byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
 
-            if (messageBytes == null)
+            if (messageBytes is null)
                 throw new ArgumentException("ReplyMessage attribute is not present", nameof(response));
 
             // Unfortunately, the only way of determining whether or not a user account is in the
@@ -523,12 +523,12 @@ namespace GSF.Communication.Radius
         {
             CheckDisposed();
 
-            if (response == null)
+            if (response is null)
                 throw new ArgumentNullException(nameof(response));
 
             byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
 
-            if (messageBytes == null)
+            if (messageBytes is null)
                 throw new ArgumentException("ReplyMessage attribute is not present", nameof(response));
 
             // Unfortunately, the only way of determining whether or not a user account is in the
@@ -566,7 +566,7 @@ namespace GSF.Communication.Radius
             {
                 if (disposing)
                 {
-                    if (m_udpClient != null)
+                    if (m_udpClient is not null)
                     {
                         m_udpClient.ReceiveDataComplete -= m_udpClient_ReceivedData;
                         m_udpClient.Dispose();

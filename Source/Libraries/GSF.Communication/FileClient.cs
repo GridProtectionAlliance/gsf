@@ -424,7 +424,7 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_fileClient.ReceiveBuffer == null)
+            if (m_fileClient.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
             
             int sourceLength = m_fileClient.BytesReceived - ReadIndex;
@@ -572,7 +572,7 @@ namespace GSF.Communication
                 // This will be done only when the object is disposed by calling Dispose().
                 m_connectionHandle?.Dispose();
 
-                if (m_receiveDataTimer != null)
+                if (m_receiveDataTimer is not null)
                 {
                     m_receiveDataTimer.Elapsed -= m_receiveDataTimer_Elapsed;
                     m_receiveDataTimer.Dispose();

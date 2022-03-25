@@ -54,7 +54,7 @@ namespace GSF.Communication
         /// <exception cref="ArgumentNullException"> <paramref name="info"/> is <see langword="null"/>.</exception>
         protected SerialException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
-            if (info == null)
+            if (info is null)
                 throw new ArgumentNullException(nameof(info));
             
             SerialError = (SerialError)info.GetValue(nameof(SerialError), typeof(SerialError));
@@ -92,21 +92,15 @@ namespace GSF.Communication
         // Static Methods
         private static string GetMessage(SerialError serialError)
         {
-            switch (serialError)
+            return serialError switch
             {
-                case SerialError.Frame:
-                    return "The hardware detected a framing error.";
-                case SerialError.Overrun:
-                    return "A character-buffer overrun has occurred. The next character is lost.";
-                case SerialError.RXOver:
-                    return "An input buffer overflow has occurred. There is either no room in the input buffer, or a character was received after the end-of-file (EOF) character.";
-                case SerialError.RXParity:
-                    return "The hardware detected a parity error.";
-                case SerialError.TXFull:
-                    return "The application tried to transmit a character, but the output buffer was full.";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(serialError), serialError, $"Unexpected serial error encountered: {serialError}");
-            }
+                SerialError.Frame => "The hardware detected a framing error.",
+                SerialError.Overrun => "A character-buffer overrun has occurred. The next character is lost.",
+                SerialError.RXOver => "An input buffer overflow has occurred. There is either no room in the input buffer, or a character was received after the end-of-file (EOF) character.",
+                SerialError.RXParity => "The hardware detected a parity error.",
+                SerialError.TXFull => "The application tried to transmit a character, but the output buffer was full.",
+                _ => throw new ArgumentOutOfRangeException(nameof(serialError), serialError, $"Unexpected serial error encountered: {serialError}"),
+            };
         }
 
         #endregion

@@ -205,7 +205,7 @@ namespace GSF.Communication
                 if (!disposing)
                     return;
 
-                if (m_connectWaitHandle != null)
+                if (m_connectWaitHandle is not null)
                 {
                     m_connectWaitHandle.Set();
                     m_connectWaitHandle.Dispose();
@@ -295,7 +295,7 @@ namespace GSF.Communication
             try
             {
                 // If we do not already have a wait handle to use for connections, get one from the base class
-                if (m_connectWaitHandle == null)
+                if (m_connectWaitHandle is null)
                     m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                 m_tcpClient.SetReceiveBuffer(ReceiveBufferSize);
@@ -317,7 +317,7 @@ namespace GSF.Communication
                 Match endpoint = Regex.Match(ServerList[ServerIndex], Transport.EndpointFormatRegex);
 
                 // Initiate the asynchronous connection loop
-                tcpClient.ConnectAsync(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)).ContinueWith(task =>
+                tcpClient.ConnectAsync(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)).ContinueWith(_ =>
                 {
                     try
                     {
@@ -410,7 +410,7 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_tcpClient.ReceiveBuffer == null)
+            if (m_tcpClient.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int sourceLength = m_tcpClient.PayloadLength - ReadIndex;
@@ -456,7 +456,7 @@ namespace GSF.Communication
             {
                 NetworkStream stream = m_tcpClient.Provider?.GetStream();
 
-                if (stream == null)
+                if (stream is null)
                     throw new InvalidOperationException("Failed to get network stream.");
 
                 while (!cancellationToken.IsCancellationRequested)
@@ -545,7 +545,7 @@ namespace GSF.Communication
 
             NetworkStream stream = m_tcpClient.Provider?.GetStream();
 
-            if (stream == null)
+            if (stream is null)
                 throw new InvalidOperationException("Failed to get network stream.");
 
             Task result = stream.WriteAsync(data, offset, length);
@@ -570,7 +570,7 @@ namespace GSF.Communication
 
                 if (!s_onReadThread)
                 {
-                    if (!readTask?.Wait(TimeSpan.FromSeconds(15.0D)) ?? false)
+                    if (readTask is not null && !readTask.Wait(TimeSpan.FromSeconds(15.0D)))
                         throw new TimeoutException("Timeout waiting for read cancellation.");
                 }
             }

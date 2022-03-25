@@ -271,8 +271,8 @@ namespace GSF.Communication
             MaxSendQueueSize = DefaultMaxSendQueueSize;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, UdpClientInfo>();
 
-            m_sendHandler = (sender, args) => ProcessSend(args);
-            m_receiveHandler = (sender, args) => ProcessReceive(args);
+            m_sendHandler = (_, args) => ProcessSend(args);
+            m_receiveHandler = (_, args) => ProcessReceive(args);
         }
 
         /// <summary>
@@ -386,7 +386,7 @@ namespace GSF.Communication
 
             TransportProvider<EndPoint> udpClient = clientInfo.Client;
 
-            if (udpClient.ReceiveBuffer == null)
+            if (udpClient.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int readIndex = ReadIndicies[clientID];
@@ -467,7 +467,7 @@ namespace GSF.Communication
             }
             finally
             {
-                if (m_receiveArgs != null)
+                if (m_receiveArgs is not null)
                 {
                     m_receiveArgs.Dispose();
                     m_receiveArgs = null;
@@ -520,7 +520,7 @@ namespace GSF.Communication
             // Notify that the server has been started successfully
             OnServerStarted();
 
-            if (m_udpServer.Provider.LocalEndPoint != null)
+            if (m_udpServer.Provider.LocalEndPoint is not null)
             {
                 m_receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                 m_receiveArgs.SocketFlags = SocketFlags.None;
@@ -577,14 +577,14 @@ namespace GSF.Communication
 
                 client = clientInfo.Client;
 
-                if (client.Provider != null)
+                if (client.Provider is not null)
                 {
                     // If the IP specified for the client is a multicast IP, unsubscribe from the specified multicast group.
                     IPEndPoint clientEndpoint = (IPEndPoint)client.Provider;
 
                     if (Transport.IsMulticastIP(clientEndpoint.Address))
                     {
-                        if (client.MulticastMembershipAddresses != null)
+                        if (client.MulticastMembershipAddresses is not null)
                         {
                             // Execute multicast unsubscribe for specific source
                             m_udpServer.Provider.SetSocketOption(clientEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropSourceMembership, client.MulticastMembershipAddresses);
@@ -599,7 +599,7 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                if (client != null)
+                if (client is not null)
                     OnSendClientDataException(client.ID, new InvalidOperationException($"Failed to drop multicast membership: {ex.Message}", ex));
                 else
                     Logger.SwallowException(ex, "UdpServer.cs: The client state was null while attempting to drop multicast membership");
@@ -747,7 +747,7 @@ namespace GSF.Communication
             udpClient.Provider = udpClientIPEndPoint;
 
             // If the IP specified for the client is a multicast IP, subscribe to the specified multicast group.
-            if (udpClientIPEndPoint != null && Transport.IsMulticastIP(udpClientIPEndPoint.Address))
+            if (udpClientIPEndPoint is not null && Transport.IsMulticastIP(udpClientIPEndPoint.Address))
             {
                 SocketOptionLevel level = udpClientIPEndPoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
 
@@ -862,12 +862,12 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                if (client != null)
+                if (client is not null)
                     OnSendClientDataException(client.ID, ex);
                 else
                     Logger.SwallowException(ex, "UdpServer.cs: The client state was null while attempting send payload data async");
 
-                if (clientInfo != null)
+                if (clientInfo is not null)
                 {
                     // Assume process send was not able
                     // to continue the asynchronous loop.
@@ -913,14 +913,14 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Send operation failed to complete.
-                if (client != null)
+                if (client is not null)
                     OnSendClientDataException(client.ID, ex);
                 else
                     Logger.SwallowException(ex, "UdpServer.cs: The client state was null during post process handling of sent payload data");
             }
             finally
             {
-                if (payload != null)
+                if (payload is not null)
                 {
                     try
                     {
@@ -929,7 +929,7 @@ namespace GSF.Communication
                             // Still more to send for this payload.
                             ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
                         }
-                        else if (sendQueue != null)
+                        else if (sendQueue is not null)
                         {
                             payload.WaitHandle = null;
                             payload.ClientInfo = null;
@@ -939,7 +939,7 @@ namespace GSF.Communication
                             {
                                 ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
                             }
-                            else if (clientInfo != null)
+                            else if (clientInfo is not null)
                             {
                                 lock (clientInfo.SendLock)
                                 {
@@ -955,12 +955,12 @@ namespace GSF.Communication
                     {
                         string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
-                        if (client != null)
+                        if (client is not null)
                             OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
                         else
                             Logger.SwallowException(ex, "UdpServer.cs: The client state was null during post process handling of sent payload data");
 
-                        if (clientInfo != null)
+                        if (clientInfo is not null)
                             Interlocked.Exchange(ref clientInfo.Sending, 0);
                     }
                 }
@@ -1003,7 +1003,7 @@ namespace GSF.Communication
                 TransportProvider<EndPoint> client = IdentifyClient(args.RemoteEndPoint);
 
                 // If the client's endpoint has changed, update the lookup list
-                if (m_dynamicClientEndPoints && client != null && !client.Provider.Equals(args.RemoteEndPoint))
+                if (m_dynamicClientEndPoints && client is not null && !client.Provider.Equals(args.RemoteEndPoint))
                 {
                     client.Provider = args.RemoteEndPoint;
 
@@ -1013,10 +1013,10 @@ namespace GSF.Communication
 
                 // If we do not have a static clients list, and if the client could not be found
                 // or if the client's endpoint has changed, update the clients list dynamically.
-                if (m_dynamicClientList && client == null)
+                if (m_dynamicClientList && client is null)
                     client = AddUdpClient(args.RemoteEndPoint);
 
-                if (client != null)
+                if (client is not null)
                 {
                     // Notify client of data.
                     clientID = client.ID;
@@ -1044,7 +1044,7 @@ namespace GSF.Communication
                 switch (ClientIdentificationMode)
                 {
                     case ClientIdentificationMode.IP:
-                        if (remoteIPEndPoint != null && clientIPEndPoint != null)
+                        if (remoteIPEndPoint is not null && clientIPEndPoint is not null)
                         {
                             if (remoteIPEndPoint.Address.Equals(clientIPEndPoint.Address))
                                 return client;
@@ -1053,7 +1053,7 @@ namespace GSF.Communication
                         break;
 
                     case ClientIdentificationMode.Port:
-                        if (remoteIPEndPoint != null && clientIPEndPoint != null)
+                        if (remoteIPEndPoint is not null && clientIPEndPoint is not null)
                         {
                             if (remoteIPEndPoint.Port == clientIPEndPoint.Port)
                                 return client;

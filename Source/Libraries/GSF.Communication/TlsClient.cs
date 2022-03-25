@@ -557,7 +557,7 @@ namespace GSF.Communication
                 SendState sendState = m_sendState;
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
 
-                if (sendState != null)
+                if (sendState is not null)
                 {
                     statusBuilder.AppendFormat("           Queued payloads: {0}", sendState.SendQueue?.Count ?? 0);
                     statusBuilder.AppendLine();
@@ -667,7 +667,7 @@ namespace GSF.Communication
             {
                 // If we do not already have a wait handle to use
                 // for connections, get one from the base class
-                if (m_connectWaitHandle == null)
+                if (m_connectWaitHandle is null)
                     m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                 // Create state object for the asynchronous connection loop
@@ -699,7 +699,7 @@ namespace GSF.Communication
                 connectState.ConnectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
                 connectState.ConnectArgs.SocketFlags = SocketFlags.None;
                 connectState.ConnectArgs.UserToken = connectState;
-                connectState.ConnectArgs.Completed += (sender, args) => ProcessConnect((ConnectState)args.UserToken);
+                connectState.ConnectArgs.Completed += (_, args) => ProcessConnect((ConnectState)args.UserToken);
 
                 // Create client socket
                 connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, AllowDualStackSocket);
@@ -714,7 +714,7 @@ namespace GSF.Communication
                 OnConnectionException(ex);
 
                 // Terminate the connection
-                if (connectState != null)
+                if (connectState is not null)
                     TerminateConnection(connectState.Token);
 
                 // Ensure that the wait handle is set so that operations waiting
@@ -725,7 +725,7 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of erroneously allocated resources
-                if (connectState != null && connectState.Token.Cancelled)
+                if (connectState is not null && connectState.Token.Cancelled)
                     connectState.Dispose();
             }
 
@@ -743,7 +743,7 @@ namespace GSF.Communication
                 return;
 
             if (!connectState.Socket.ConnectAsync(connectState.ConnectArgs))
-                ThreadPool.QueueUserWorkItem(state => ProcessConnect(connectState));
+                ThreadPool.QueueUserWorkItem(_ => ProcessConnect(connectState));
         }
 
         private void ProcessConnect(ConnectState connectState)
@@ -960,7 +960,7 @@ namespace GSF.Communication
                 OnConnectionException(ex);
 
                 // If connectState is null, we cannot proceed
-                if (connectState == null)
+                if (connectState is null)
                     return;
 
                 // If the connection is refused by the server,
@@ -991,20 +991,20 @@ namespace GSF.Communication
                 OnConnectionException(new Exception(errorMessage, ex));
 
                 // Terminate the connection
-                if (connectState != null)
+                if (connectState is not null)
                     TerminateConnection(connectState.Token);
             }
             finally
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of erroneously allocated resources
-                if (connectState != null && connectState.Token.Cancelled)
+                if (connectState is not null && connectState.Token.Cancelled)
                     connectState.Dispose();
 
-                if (receiveState != null && receiveState.Token.Cancelled)
+                if (receiveState is not null && receiveState.Token.Cancelled)
                     receiveState.Dispose();
 
-                if (sendState != null && sendState.Token.Cancelled)
+                if (sendState is not null && sendState.Token.Cancelled)
                     sendState.Dispose();
             }
         }
@@ -1093,7 +1093,7 @@ namespace GSF.Communication
                 OnConnectionException(ex);
 
                 // If connectState is null, we cannot proceed
-                if (connectState == null)
+                if (connectState is null)
                     return;
 
                 // If the connection is refused by the server,
@@ -1123,12 +1123,12 @@ namespace GSF.Communication
                 OnConnectionException(new Exception(errorMessage, ex));
 
                 // Terminate the connection
-                if (connectState != null)
+                if (connectState is not null)
                     TerminateConnection(connectState.Token);
             }
             finally
             {
-                if (connectState != null)
+                if (connectState is not null)
                 {
                     // If the operation was cancelled during execution,
                     // make sure to dispose of erroneously allocated resources;
@@ -1139,10 +1139,10 @@ namespace GSF.Communication
                         connectState.NegotiateStream.Dispose();
                 }
 
-                if (receiveState != null && receiveState.Token.Cancelled)
+                if (receiveState is not null && receiveState.Token.Cancelled)
                     receiveState.Dispose();
 
-                if (sendState != null && sendState.Token.Cancelled)
+                if (sendState is not null && sendState.Token.Cancelled)
                     sendState.Dispose();
             }
         }
@@ -1223,7 +1223,7 @@ namespace GSF.Communication
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed
-                if (receiveState != null)
+                if (receiveState is not null)
                     TerminateConnection(receiveState.Token);
             }
             catch (SocketException ex)
@@ -1232,7 +1232,7 @@ namespace GSF.Communication
                 OnReceiveDataException(ex);
 
                 // Terminate connection when socket exception is encountered
-                if (receiveState != null)
+                if (receiveState is not null)
                     TerminateConnection(receiveState.Token);
             }
             catch (Exception ex)
@@ -1246,7 +1246,7 @@ namespace GSF.Communication
                 catch
                 {
                     // Terminate connection if resume fails
-                    if (receiveState != null)
+                    if (receiveState is not null)
                         TerminateConnection(receiveState.Token);
                 }
             }
@@ -1254,7 +1254,7 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of allocated resources
-                if (receiveState != null && receiveState.Token.Cancelled)
+                if (receiveState is not null && receiveState.Token.Cancelled)
                     receiveState.Dispose();
             }
         }
@@ -1310,7 +1310,7 @@ namespace GSF.Communication
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed
-                if (receiveState != null)
+                if (receiveState is not null)
                     TerminateConnection(receiveState.Token);
             }
             catch (SocketException ex)
@@ -1319,7 +1319,7 @@ namespace GSF.Communication
                 OnReceiveDataException(ex);
 
                 // Terminate connection when socket exception is encountered
-                if (receiveState != null)
+                if (receiveState is not null)
                     TerminateConnection(receiveState.Token);
             }
             catch (Exception ex)
@@ -1333,7 +1333,7 @@ namespace GSF.Communication
                 catch
                 {
                     // Terminate connection if resume fails
-                    if (receiveState != null)
+                    if (receiveState is not null)
                         TerminateConnection(receiveState.Token);
                 }
             }
@@ -1341,7 +1341,7 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of allocated resources
-                if (receiveState != null && receiveState.Token.Cancelled)
+                if (receiveState is not null && receiveState.Token.Cancelled)
                     receiveState.Dispose();
             }
         }
@@ -1361,12 +1361,12 @@ namespace GSF.Communication
         {
             ReceiveState receiveState = m_receiveState;
 
-            if (receiveState == null || receiveState.Token.Cancelled)
+            if (receiveState is null || receiveState.Token.Cancelled)
                 return 0;
 
             buffer.ValidateParameters(startIndex, length);
 
-            if (receiveState.Buffer == null)
+            if (receiveState.Buffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int sourceLength = receiveState.PayloadLength - ReadIndex;
@@ -1467,7 +1467,7 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of allocated resources
-                if (sendState != null && sendState.Token.Cancelled)
+                if (sendState is not null && sendState.Token.Cancelled)
                     sendState.Dispose();
             }
 
@@ -1572,7 +1572,7 @@ namespace GSF.Communication
             catch (ObjectDisposedException)
             {
                 // Make sure connection is terminated when client is disposed
-                if (sendState != null)
+                if (sendState is not null)
                     TerminateConnection(sendState.Token);
             }
             catch (SocketException ex)
@@ -1581,7 +1581,7 @@ namespace GSF.Communication
                 OnSendDataException(ex);
 
                 // Terminate connection when socket exception is encountered
-                if (sendState != null)
+                if (sendState is not null)
                     TerminateConnection(sendState.Token);
             }
             catch (Exception ex)
@@ -1593,7 +1593,7 @@ namespace GSF.Communication
             {
                 // If the operation was cancelled during execution,
                 // make sure to dispose of allocated resources
-                if (sendState != null && sendState.Token.Cancelled)
+                if (sendState is not null && sendState.Token.Cancelled)
                     sendState.Dispose();
 
                 try
@@ -1627,7 +1627,7 @@ namespace GSF.Communication
                 ReceiveState receiveState = m_receiveState;
                 SendState sendState = m_sendState;
 
-                if (connectState != null)
+                if (connectState is not null)
                 {
                     TerminateConnection(connectState.Token);
                     connectState.Socket.Disconnect(false);
@@ -1662,26 +1662,26 @@ namespace GSF.Communication
                 if (!disposing)
                     return;
 
-                if (m_connectState != null)
+                if (m_connectState is not null)
                 {
                     TerminateConnection(m_connectState.Token);
                     m_connectState.Dispose();
                     m_connectState = null;
                 }
 
-                if (m_receiveState != null)
+                if (m_receiveState is not null)
                 {
                     m_receiveState.Dispose();
                     m_receiveState = null;
                 }
 
-                if (m_sendState != null)
+                if (m_sendState is not null)
                 {
                     m_sendState.Dispose();
                     m_sendState = null;
                 }
 
-                if (m_connectWaitHandle != null)
+                if (m_connectWaitHandle is not null)
                 {
                     m_connectWaitHandle.Set();
                     m_connectWaitHandle.Dispose();
@@ -1775,7 +1775,7 @@ namespace GSF.Communication
             SendState sendState = m_sendState;
 
             // Quit if this send loop has been cancelled
-            if (sendState == null || sendState.Token.Cancelled)
+            if (sendState is null || sendState.Token.Cancelled)
                 return;
 
             // Check to see if the client has reached the maximum send queue size.
@@ -1834,7 +1834,7 @@ namespace GSF.Communication
         /// </summary>
         private void LoadTrustedCertificates()
         {
-            if (RemoteCertificateValidationCallback != null || m_certificateChecker != null)
+            if (RemoteCertificateValidationCallback is not null || m_certificateChecker is not null)
                 return;
 
             m_defaultCertificateChecker.TrustedCertificates.Clear();

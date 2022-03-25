@@ -159,14 +159,11 @@ namespace GSF.Communication
         {
             get
             {
-                switch (m_zeroMQTransportProtocol)
+                return m_zeroMQTransportProtocol switch
                 {
-                    case ZeroMQTransportProtocol.Tcp:
-                    case ZeroMQTransportProtocol.InProc:
-                        return TransportProtocol.Tcp;
-                    default:
-                        return TransportProtocol.Udp;
-                }
+                    ZeroMQTransportProtocol.Tcp or ZeroMQTransportProtocol.InProc => TransportProtocol.Tcp,
+                    _ => TransportProtocol.Udp,
+                };
             }
         }
 
@@ -205,7 +202,7 @@ namespace GSF.Communication
 
                 ZSocket client = Client;
 
-                if (client != null)
+                if (client is not null)
                 {
                     try
                     {
@@ -311,7 +308,7 @@ namespace GSF.Communication
 
             while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
             {
-                if (m_zeroMQClient.Provider != null)
+                if (m_zeroMQClient.Provider is not null)
                 {
                     // Disconnect any existing ZeroMQ socket
                     try
@@ -435,7 +432,7 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_zeroMQClient.ReceiveBuffer == null)
+            if (m_zeroMQClient.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int sourceLength = m_zeroMQClient.BytesReceived - ReadIndex;
@@ -465,7 +462,7 @@ namespace GSF.Communication
 
             try
             {
-                if (m_zeroMQClient.Provider != null)
+                if (m_zeroMQClient.Provider is not null)
                 {
                     using (ZMessage message = new ZMessage())
                     {
@@ -500,13 +497,13 @@ namespace GSF.Communication
                 if (CurrentState == ClientState.Disconnected)
                     return;
 
-                if (m_connectionThread != null)
+                if (m_connectionThread is not null)
                 {
                     m_connectionThread.Abort();
                     m_connectionThread = null;
                 }
 
-                if (m_zeroMQClient.Provider != null)
+                if (m_zeroMQClient.Provider is not null)
                 {
                     m_zeroMQClient.Provider.Disconnect(ServerUri);
                     m_zeroMQClient.Reset();
@@ -534,7 +531,7 @@ namespace GSF.Communication
                 if (!disposing)
                     return;
 
-                if (m_completedHandle != null)
+                if (m_completedHandle is not null)
                 {
                     m_completedHandle.Set();
                     m_completedHandle.Dispose();
@@ -632,7 +629,7 @@ namespace GSF.Communication
                 return;
 
             if (ex is ZException zmqex && (zmqex.Error.Number == ZError.EAGAIN.Number || zmqex.Error.Number == ZError.ETERM.Number))
-                ThreadPool.QueueUserWorkItem(state => Disconnect());
+                ThreadPool.QueueUserWorkItem(_ => Disconnect());
             else
                 base.OnSendDataException(ex);
         }

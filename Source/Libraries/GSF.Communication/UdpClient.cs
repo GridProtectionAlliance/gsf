@@ -285,8 +285,8 @@ namespace GSF.Communication
             m_sendLock = new object();
             m_sendQueue = new ConcurrentQueue<UdpClientPayload>();
             m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
-            m_sendHandler += (sender, args) => ProcessSend();
-            m_receiveHandler += (sender, args) => ProcessReceive();
+            m_sendHandler += (_, _) => ProcessSend();
+            m_receiveHandler += (_, _) => ProcessReceive();
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace GSF.Communication
             {
                 base.ReceiveBufferSize = value;
 
-                if (m_udpClient?.Provider != null)
+                if (m_udpClient?.Provider is not null)
                     m_udpClient.Provider.ReceiveBufferSize = value;
             }
         }
@@ -407,7 +407,7 @@ namespace GSF.Communication
             {
                 StringBuilder statusBuilder = new StringBuilder(base.Status);
 
-                if (m_sendQueue != null)
+                if (m_sendQueue is not null)
                 {
                     statusBuilder.AppendFormat("           Queued payloads: {0}", m_sendQueue.Count);
                     statusBuilder.AppendLine();
@@ -442,7 +442,7 @@ namespace GSF.Communication
         {
             buffer.ValidateParameters(startIndex, length);
 
-            if (m_udpClient.ReceiveBuffer == null)
+            if (m_udpClient.ReceiveBuffer is null)
                 throw new InvalidOperationException("No received data buffer has been defined to read.");
 
             int sourceLength = m_udpClient.BytesReceived - ReadIndex;
@@ -511,7 +511,7 @@ namespace GSF.Communication
             {
                 base.Disconnect();
 
-                if (m_udpServer != null && m_udpClient.Provider != null)
+                if (m_udpServer is not null && m_udpClient.Provider is not null)
                 {
                     // If the IP specified for the server is a multicast IP, unsubscribe from the specified multicast group.
                     IPEndPoint serverEndpoint = m_udpServer;
@@ -602,19 +602,19 @@ namespace GSF.Communication
                 if (!disposing)
                     return;
 
-                if (m_connectionHandle != null)
+                if (m_connectionHandle is not null)
                 {
                     m_connectionHandle.Dispose();
                     m_connectionHandle = null;
                 }
 
-                if (m_sendArgs != null)
+                if (m_sendArgs is not null)
                 {
                     m_sendArgs.Dispose();
                     m_sendArgs = null;
                 }
 
-                if (m_receiveArgs != null)
+                if (m_receiveArgs is not null)
                 {
                     m_receiveArgs.Dispose();
                     m_receiveArgs = null;
@@ -724,7 +724,7 @@ namespace GSF.Communication
                     OnConnectionEstablished();
 
                     // Listen for incoming data only if endpoint is bound to a local interface.
-                    if (m_udpClient.Provider.LocalEndPoint != null)
+                    if (m_udpClient.Provider.LocalEndPoint is not null)
                     {
                         using (SocketAsyncEventArgs receiveArgs = m_receiveArgs)
                         {
@@ -931,7 +931,7 @@ namespace GSF.Communication
             }
             finally
             {
-                if (payload != null)
+                if (payload is not null)
                 {
                     try
                     {
@@ -987,12 +987,12 @@ namespace GSF.Communication
             if (!m_receivePacketInfo)
             {
                 if (!m_udpClient.Provider.ReceiveFromAsync(m_receiveArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessReceive());
+                    ThreadPool.QueueUserWorkItem(_ => ProcessReceive());
             }
             else
             {
                 if (!m_udpClient.Provider.ReceiveMessageFromAsync(m_receiveArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessReceive());
+                    ThreadPool.QueueUserWorkItem(_ => ProcessReceive());
             }
         }
 
@@ -1064,7 +1064,7 @@ namespace GSF.Communication
 
                 SocketOptionLevel level = serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
 
-                if (sourceAddress == null)
+                if (sourceAddress is null)
                 {
                     // Execute multicast subscribe for any source
                     m_udpClient.Provider.SetSocketOption(level, SocketOptionName.AddMembership, new MulticastOption(serverAddress));
@@ -1113,14 +1113,14 @@ namespace GSF.Communication
                 if (!Transport.IsMulticastIP(serverAddress))
                     throw new InvalidOperationException("Cannot drop multicast membership if server address is not a multicast IP.");
 
-                if (sourceAddress == null && multicastMembershipAddresses == null)
+                if (sourceAddress is null && multicastMembershipAddresses is null)
                 {
                     // Execute multicast unsubscribe for any source
                     m_udpClient.Provider.SetSocketOption(serverAddress.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropMembership, new MulticastOption(serverAddress));
                 }
                 else
                 {
-                    if (multicastMembershipAddresses == null)
+                    if (multicastMembershipAddresses is null)
                     {
                         IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
 
