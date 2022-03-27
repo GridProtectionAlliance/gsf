@@ -1208,7 +1208,7 @@ namespace GSF.Communication
 
             try
             {
-                if (client.Provider is null || client.Provider.SslStream is null)
+                if (client.Provider?.SslStream is null)
                     return;
 
                 // Update statistics and pointers.
