@@ -134,7 +134,7 @@ namespace GSF.Communication
 
             // No host name or IP address was specified, use local IPs
             if (string.IsNullOrWhiteSpace(hostNameOrAddress))
-                return stack == IPStack.IPv6 ? new IPEndPoint(IPAddress.IPv6Any, port) : new IPEndPoint(IPAddress.Any, port);
+                return stack == IPStack.IPv6 ? new(IPAddress.IPv6Any, port) : new IPEndPoint(IPAddress.Any, port);
 
             bool ipStackMismatch = false;
 
@@ -144,7 +144,7 @@ namespace GSF.Communication
                 // As long as desired IP stack matches format of specified IP address, return end point for address
                 if (stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6 ||
                     stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork)
-                    return new IPEndPoint(address, port);
+                    return new(address, port);
 
                 // User specified an IP address that is mismatch with the desired IP stack. If the DNS server
                 // responds to this IP, we can attempt to see if an IP is defined for the desired IP stack, 
@@ -156,7 +156,7 @@ namespace GSF.Communication
             {
                 // Handle "localhost" as a special case, returning proper loopback address for the desired IP stack
                 if (string.Compare(hostNameOrAddress, "localhost", StringComparison.OrdinalIgnoreCase) == 0)
-                    return new IPEndPoint(stack == IPStack.IPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, port);
+                    return new(stack == IPStack.IPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, port);
 
                 // Failed to parse an IP address for the desired stack - this may simply be that a host name was provided
                 // so we attempt a DNS lookup. Note that exceptions will occur if DNS lookup fails.
@@ -169,7 +169,7 @@ namespace GSF.Communication
                     {
                         if (stack == IPStack.IPv6 && dnsAddress.AddressFamily == AddressFamily.InterNetworkV6 ||
                             stack == IPStack.IPv4 && dnsAddress.AddressFamily == AddressFamily.InterNetwork)
-                            return new IPEndPoint(dnsAddress, port);
+                            return new(dnsAddress, port);
                     }
 
                     // If no available matching address was found for desired IP stack, this is an IP stack mismatch
@@ -207,7 +207,7 @@ namespace GSF.Communication
             {
                 case ProtocolType.Tcp:
                     endpoint = CreateEndPoint(address, port, stack);
-                    socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    socket = new(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 
                     // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                     // by setting the IPv6Only socket option to false
@@ -223,7 +223,7 @@ namespace GSF.Communication
                     if (port >= 0)
                     {
                         endpoint = CreateEndPoint(address, port, stack);
-                        socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                        socket = new(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
                         // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                         // by setting the IPv6Only socket option to false
@@ -236,7 +236,7 @@ namespace GSF.Communication
                     {
                         // Create a socket with no binding when -1 is used for port number
                         endpoint = CreateEndPoint(address, 0, stack);
-                        socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                        socket = new(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                     }
                     break;
                 default:
@@ -377,7 +377,7 @@ namespace GSF.Communication
                 // if the endpoint doesn't exist then we'll receive a ConnectionReset socket exception
                 EndPoint targetEndPoint = targetIPEndPoint;
 
-                using (Socket targetChecker = new Socket(targetIPEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp))
+                using (Socket targetChecker = new(targetIPEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp))
                 {
                     targetChecker.ReceiveTimeout = 1;
                     targetChecker.SendTo(Array.Empty<byte>(), targetEndPoint);

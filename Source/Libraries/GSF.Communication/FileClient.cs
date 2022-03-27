@@ -254,7 +254,7 @@ namespace GSF.Communication
             FileOpenMode = DefaultFileOpenMode;
             FileShareMode = DefaultFileShareMode;
             m_fileAccessMode = DefaultFileAccessMode;
-            m_fileClient = new TransportProvider<FileStream>();
+            m_fileClient = new();
             m_receiveDataTimer = s_timerScheduler.CreateTimer();
             m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
         }
@@ -487,7 +487,7 @@ namespace GSF.Communication
 
             m_fileClient.SetReceiveBuffer(ReceiveBufferSize);
 
-            m_connectionThread = new Thread(OpenFile)
+            m_connectionThread = new(OpenFile)
             {
                 IsBackground = true
             };
@@ -650,7 +650,7 @@ namespace GSF.Communication
                     OnConnectionAttempt();
 
                     // Open the file.
-                    m_fileClient.Provider = new FileStream(FilePath.GetAbsolutePath(m_connectData["file"]), FileOpenMode, m_fileAccessMode, FileShareMode);
+                    m_fileClient.Provider = new(FilePath.GetAbsolutePath(m_connectData["file"]), FileOpenMode, m_fileAccessMode, FileShareMode);
 
                     // Move to the specified offset.
                     m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
@@ -771,7 +771,7 @@ namespace GSF.Communication
         static FileClient()
         {
             using (Logger.AppendStackMessages("Owner", "FileClient"))
-                s_timerScheduler = new SharedTimerScheduler();
+                s_timerScheduler = new();
         }
 
         #endregion

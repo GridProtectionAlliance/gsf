@@ -79,7 +79,7 @@ namespace GSF.Communication
         public TransportProvider()
         {
             ID = Guid.NewGuid();
-            Statistics = new TransportStatistics();
+            Statistics = new();
         }
 
         #endregion

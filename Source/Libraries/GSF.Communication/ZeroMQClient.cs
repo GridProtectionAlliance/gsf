@@ -112,12 +112,12 @@ namespace GSF.Communication
         /// <param name="connectString">Connect string of the <see cref="ZeroMQClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
         public ZeroMQClient(string connectString) : base(TransportProtocol.Tcp, connectString)
         {
-            m_zeroMQClient = new TransportProvider<ZSocket>();
+            m_zeroMQClient = new();
             m_zeroMQTransportProtocol = ZeroMQTransportProtocol.Tcp;
-            m_completedHandle = new ManualResetEventSlim(true);
+            m_completedHandle = new(true);
             MaxSendQueueSize = DefaultMaxSendQueueSize;
             MaxReceiveQueueSize = DefaultMaxReceiveQueueSize;
-            m_sendLock = new object();
+            m_sendLock = new();
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
 
                 ZSocket client = Client;
 
@@ -292,7 +292,7 @@ namespace GSF.Communication
 
             m_zeroMQClient.SetReceiveBuffer(ReceiveBufferSize);
 
-            m_connectionThread = new Thread(OpenSocket)
+            m_connectionThread = new(OpenSocket)
             {
                 IsBackground = true
             };
@@ -328,7 +328,7 @@ namespace GSF.Communication
                     OnConnectionAttempt();
 
                     // Create ZeroMQ Dealer socket - closest match to IClient implementation
-                    m_zeroMQClient.Provider = new ZSocket(ZContext.Create(), ZSocketType.DEALER)
+                    m_zeroMQClient.Provider = new(ZContext.Create(), ZSocketType.DEALER)
                     {
                         Identity = m_zeroMQClient.ID.ToByteArray(), 
                         SendHighWatermark = MaxSendQueueSize, 
@@ -464,11 +464,11 @@ namespace GSF.Communication
             {
                 if (m_zeroMQClient.Provider is not null)
                 {
-                    using (ZMessage message = new ZMessage())
+                    using (ZMessage message = new())
                     {
                         // Dealer socket will auto-add identity, just add delimiter and data payload frames
-                        message.Add(new ZFrame());
-                        message.Add(new ZFrame(data, offset, length));
+                        message.Add(new());
+                        message.Add(new(data, offset, length));
 
                         // ZeroMQ send is asynchronous, but API call is not thread-safe
                         lock (m_sendLock)

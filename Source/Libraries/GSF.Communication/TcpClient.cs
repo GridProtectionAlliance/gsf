@@ -163,12 +163,12 @@ namespace GSF.Communication
             public NegotiateStream NegotiateStream;
         #endif
 
-            public readonly SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
+            public readonly SocketAsyncEventArgs ConnectArgs = new();
             public SocketAsyncEventArgs ReceiveArgs;
             public SocketAsyncEventArgs SendArgs;
             public int ConnectionAttempts;
 
-            public readonly CancellationToken Token = new CancellationToken();
+            public readonly CancellationToken Token = new();
             public ICancellationToken TimeoutToken;
 
             public void Dispose()
@@ -212,7 +212,7 @@ namespace GSF.Communication
             public SocketAsyncEventArgs ReceiveArgs;
             public SocketAsyncEventArgs SendArgs;
 
-            public readonly ConcurrentQueue<TcpClientPayload> SendQueue = new ConcurrentQueue<TcpClientPayload>();
+            public readonly ConcurrentQueue<TcpClientPayload> SendQueue = new();
             public TcpClientPayload Payload;
             public int Sending;
 
@@ -325,7 +325,7 @@ namespace GSF.Communication
             AllowDualStackSocket = DefaultAllowDualStackSocket;
             MaxSendQueueSize = DefaultMaxSendQueueSize;
             NoDelay = DefaultNoDelay;
-            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
+            m_dumpPayloadsOperation = new(DumpPayloads, OnSendDataException);
         }
 
         /// <summary>
@@ -468,7 +468,7 @@ namespace GSF.Communication
             get
             {
                 SendState sendState = m_sendState;
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
 
                 if (sendState is not null)
                 {
@@ -556,7 +556,7 @@ namespace GSF.Communication
                     m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                 // Create state object for the asynchronous connection loop
-                connectState = new ConnectState();
+                connectState = new();
 
                 // Store connectState in m_connectState so that calls to Disconnect
                 // and Dispose can dispose resources and cancel asynchronous loops
@@ -708,7 +708,7 @@ namespace GSF.Communication
                     connectState.SendArgs.Completed += (_, args) => ProcessSend((SendState)args.UserToken);
 
                     // Initialize state object for the asynchronous send loop
-                    sendState = new SendState
+                    sendState = new()
                     {
                         Token = connectState.Token,
                         Socket = connectState.Socket,
@@ -735,7 +735,7 @@ namespace GSF.Communication
                     OnConnectionEstablished();
 
                     // Initialize state object for the asynchronous receive loop
-                    receiveState = new ReceiveState
+                    receiveState = new()
                     {
                         Token = connectState.Token,
                         Socket = connectState.Socket,
@@ -1247,7 +1247,7 @@ namespace GSF.Communication
 
                 // Create payload and wait handle.
                 TcpClientPayload payload = FastObjectFactory<TcpClientPayload>.CreateObjectFunction();
-                ManualResetEvent handle = new ManualResetEvent(false);
+                ManualResetEvent handle = new(false);
 
                 payload.Data = data;
                 payload.Offset = offset;

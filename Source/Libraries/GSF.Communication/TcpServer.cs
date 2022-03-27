@@ -249,7 +249,7 @@ namespace GSF.Communication
             AllowDualStackSocket = DefaultAllowDualStackSocket;
             MaxSendQueueSize = DefaultMaxSendQueueSize;
             NoDelay = DefaultNoDelay;
-            m_clientInfoLookup = new ConcurrentDictionary<Guid, TcpClientInfo>();
+            m_clientInfoLookup = new();
 
             m_acceptHandler = (_, args) => ProcessAccept(args);
             m_sendHandler = (_, args) => ProcessSend(args);
@@ -371,7 +371,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
                 int count = 0;
 
                 foreach (ConcurrentQueue<TcpServerPayload> sendQueue in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.SendQueue))
@@ -728,7 +728,7 @@ namespace GSF.Communication
         [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         private void ProcessAccept(SocketAsyncEventArgs acceptArgs)
         {
-            TransportProvider<Socket> client = new TransportProvider<Socket>();
+            TransportProvider<Socket> client = new();
             SocketAsyncEventArgs receiveArgs = null;
             WindowsPrincipal clientPrincipal = null;
             IPEndPoint remoteEndPoint = null;
@@ -818,17 +818,17 @@ namespace GSF.Communication
                 else
                 {
                     // We can proceed further with receiving data from the client.
-                    clientInfo = new TcpClientInfo
+                    clientInfo = new()
                     {
                         Client = client,
                         SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
-                        SendLock = new object(),
-                        SendQueue = new ConcurrentQueue<TcpServerPayload>(),
+                        SendLock = new(),
+                        SendQueue = new(),
                         ClientPrincipal = clientPrincipal
                     };
 
                     // Create operation to dump send queue payloads when the queue grows too large.
-                    clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
+                    clientInfo.DumpPayloadsOperation = new(() =>
                     {
                         // Check to see if the client has reached the maximum send queue size.
                         if (MaxSendQueueSize <= 0 || clientInfo.SendQueue.Count < MaxSendQueueSize)
@@ -879,7 +879,7 @@ namespace GSF.Communication
                 // Notify of the exception.
                 string clientAddress = remoteEndPoint?.Address.ToString() ?? "UNKNOWN";
                 string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
-                OnClientConnectingException(new Exception(errorMessage, ex));
+                OnClientConnectingException(new(errorMessage, ex));
 
                 if (receiveArgs is not null)
                     TerminateConnection(client, receiveArgs, false);
@@ -1010,7 +1010,7 @@ namespace GSF.Communication
                         string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
                         if (client is not null)
-                            OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
+                            OnSendClientDataException(client.ID, new(errorMessage, ex));
 
                         if (clientInfo is not null)
                             Interlocked.Exchange(ref clientInfo.Sending, 0);

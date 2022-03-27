@@ -282,9 +282,9 @@ namespace GSF.Communication
             AllowDualStackSocket = DefaultAllowDualStackSocket;
             MaxSendQueueSize = DefaultMaxSendQueueSize;
 
-            m_sendLock = new object();
-            m_sendQueue = new ConcurrentQueue<UdpClientPayload>();
-            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
+            m_sendLock = new();
+            m_sendQueue = new();
+            m_dumpPayloadsOperation = new(DumpPayloads, OnSendDataException);
             m_sendHandler += (_, _) => ProcessSend();
             m_receiveHandler += (_, _) => ProcessReceive();
         }
@@ -405,7 +405,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
 
                 if (m_sendQueue is not null)
                 {
@@ -544,7 +544,7 @@ namespace GSF.Communication
 
             m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
-            m_udpClient = new TransportProvider<Socket>();
+            m_udpClient = new();
             m_udpClient.SetReceiveBuffer(m_maxPacketSize);
 
             // Create a server endpoint.
@@ -564,7 +564,7 @@ namespace GSF.Communication
                 m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
             }
 
-            m_connectionThread = new Thread(OpenPort)
+            m_connectionThread = new(OpenPort)
             {
                 IsBackground = true
             };
@@ -964,7 +964,7 @@ namespace GSF.Communication
                     catch (Exception ex)
                     {
                         string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
-                        OnSendDataException(new Exception(errorMessage, ex));
+                        OnSendDataException(new(errorMessage, ex));
                         Interlocked.Exchange(ref m_sending, 0);
                     }
                 }
@@ -1080,7 +1080,7 @@ namespace GSF.Communication
                     if (localAddress.AddressFamily != serverAddress.AddressFamily)
                         throw new InvalidOperationException($"Local address \"{localAddress}\" is not in the same IP format as server address \"{serverAddress}\"");
 
-                    using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
+                    using (BlockAllocatedMemoryStream membershipAddresses = new())
                     {
                         byte[] serverAddressBytes = serverAddress.GetAddressBytes();
                         byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
@@ -1130,7 +1130,7 @@ namespace GSF.Communication
                         if (localAddress.AddressFamily != serverAddress.AddressFamily)
                             throw new InvalidOperationException($"Local address \"{localAddress}\" is not in the same IP format as server address \"{serverAddress}\"");
 
-                        using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
+                        using (BlockAllocatedMemoryStream membershipAddresses = new())
                         {
                             byte[] serverAddressBytes = serverAddress.GetAddressBytes();
                             byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
@@ -1211,7 +1211,7 @@ namespace GSF.Communication
         {
             try
             {
-                ReceiveDataFrom?.Invoke(this, new EventArgs<EndPoint, IPPacketInformation, int>(remoteEndPoint, packetInformation, size));
+                ReceiveDataFrom?.Invoke(this, new(remoteEndPoint, packetInformation, size));
             }
             catch (Exception ex)
             {
@@ -1230,7 +1230,7 @@ namespace GSF.Communication
         {
             try
             {
-                ReceiveDataFromComplete?.Invoke(this, new EventArgs<EndPoint, IPPacketInformation, byte[], int>(remoteEndPoint, packetInformation, data, size));
+                ReceiveDataFromComplete?.Invoke(this, new(remoteEndPoint, packetInformation, data, size));
             }
             catch (Exception ex)
             {

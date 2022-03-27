@@ -245,9 +245,9 @@ namespace GSF.Communication
             m_receiveBufferSize = DefaultReceiveBufferSize;
             PersistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
-            Statistics = new TransportStatistics();
-            m_updateBytesSent = TrackStatistics ? UpdateBytesSent : new Action<int>(_ => { });
-            m_updateBytesReceived = TrackStatistics ? UpdateBytesReceived : new Action<int>(_ => { });
+            Statistics = new();
+            m_updateBytesSent = TrackStatistics ? UpdateBytesSent : new(_ => { });
+            m_updateBytesReceived = TrackStatistics ? UpdateBytesReceived : new(_ => { });
         }
 
         /// <summary>
@@ -480,7 +480,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("              Client state: ");
                 status.Append(m_currentState);
@@ -680,7 +680,7 @@ namespace GSF.Communication
                 Initialize();
 
             // Set up connection event wait handle
-            m_connectHandle = new ManualResetEvent(false);
+            m_connectHandle = new(false);
             return m_connectHandle;
         }
 
@@ -849,7 +849,7 @@ namespace GSF.Communication
                 RequestNextServerIndex();
 
                 if (ex is not ObjectDisposedException)
-                    ConnectionException?.Invoke(this, new EventArgs<Exception>(ex));
+                    ConnectionException?.Invoke(this, new(ex));
             }
             catch (Exception userEx)
             {
@@ -896,7 +896,7 @@ namespace GSF.Communication
             try
             {
                 if (ex is not ObjectDisposedException)
-                    SendDataException?.Invoke(this, new EventArgs<Exception>(ex));
+                    SendDataException?.Invoke(this, new(ex));
             }
             catch (Exception userEx)
             {
@@ -917,7 +917,7 @@ namespace GSF.Communication
         {
             try
             {
-                ReceiveData?.Invoke(this, new EventArgs<int>(size));
+                ReceiveData?.Invoke(this, new(size));
             }
             catch (Exception ex)
             {
@@ -941,12 +941,12 @@ namespace GSF.Communication
                 ReadIndex = 0;
 
                 // Notify users of data ready
-                ReceiveData?.Invoke(this, new EventArgs<int>(size));
+                ReceiveData?.Invoke(this, new(size));
 
                 // Most inheritors of this class "reuse" an existing buffer, as such you cannot assume what the user is going to do
                 // with the buffer provided, so we pass in a "copy" of the buffer for the user since they may assume control of and
                 // possibly even cache the provided buffer (e.g., passing the buffer to a process queue)
-                ReceiveDataComplete?.Invoke(this, new EventArgs<byte[], int>(data.BlockCopy(0, size), size));
+                ReceiveDataComplete?.Invoke(this, new(data.BlockCopy(0, size), size));
             }
             catch (Exception ex)
             {
@@ -963,7 +963,7 @@ namespace GSF.Communication
             try
             {
                 if (ex is not ObjectDisposedException)
-                    ReceiveDataException?.Invoke(this, new EventArgs<Exception>(ex));
+                    ReceiveDataException?.Invoke(this, new(ex));
             }
             catch (Exception userEx)
             {
@@ -979,7 +979,7 @@ namespace GSF.Communication
         {
             try
             {
-                UnhandledUserException?.Invoke(this, new EventArgs<Exception>(ex));
+                UnhandledUserException?.Invoke(this, new(ex));
             }
             catch (Exception userEx)
             {
@@ -1052,7 +1052,7 @@ namespace GSF.Communication
             if (settings.TryGetValue("protocol", out string protocol))
             {
                 settings.Remove("protocol");
-                StringBuilder protocolSettings = new StringBuilder();
+                StringBuilder protocolSettings = new();
 
                 foreach (string key in settings.Keys)
                 {

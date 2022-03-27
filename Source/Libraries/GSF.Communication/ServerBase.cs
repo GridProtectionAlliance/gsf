@@ -258,7 +258,7 @@ namespace GSF.Communication
         protected ServerBase()
         {
             ServerID = Guid.NewGuid();
-            m_clientIDs = new ConcurrentDictionary<Guid, int>();
+            m_clientIDs = new();
             m_textEncoding = Encoding.ASCII;
             CurrentState = ServerState.NotRunning;
             m_maxClientConnections = DefaultMaxClientConnections;
@@ -489,7 +489,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("              Server state: ");
                 status.Append(CurrentState);
@@ -874,7 +874,7 @@ namespace GSF.Communication
             try
             {
                 if (m_clientIDs.TryAdd(clientID, 0))
-                    ClientConnected?.Invoke(this, new EventArgs<Guid>(clientID));
+                    ClientConnected?.Invoke(this, new(clientID));
             }
             catch (Exception ex)
             {
@@ -891,7 +891,7 @@ namespace GSF.Communication
             try
             {
                 if (m_clientIDs.TryRemove(clientID, out int _))
-                    ClientDisconnected?.Invoke(this, new EventArgs<Guid>(clientID));
+                    ClientDisconnected?.Invoke(this, new(clientID));
             }
             catch (Exception ex)
             {
@@ -907,7 +907,7 @@ namespace GSF.Communication
         {
             try
             {
-                ClientConnectingException?.Invoke(this, new EventArgs<Exception>(ex));
+                ClientConnectingException?.Invoke(this, new(ex));
             }
             catch (Exception userEx)
             {
@@ -923,7 +923,7 @@ namespace GSF.Communication
         {
             try
             {
-                SendClientDataStart?.Invoke(this, new EventArgs<Guid>(clientID));
+                SendClientDataStart?.Invoke(this, new(clientID));
             }
             catch (Exception ex)
             {
@@ -939,7 +939,7 @@ namespace GSF.Communication
         {
             try
             {
-                SendClientDataComplete?.Invoke(this, new EventArgs<Guid>(clientID));
+                SendClientDataComplete?.Invoke(this, new(clientID));
             }
             catch (Exception ex)
             {
@@ -957,7 +957,7 @@ namespace GSF.Communication
             try
             {
                 if (ex is not ObjectDisposedException)
-                    SendClientDataException?.Invoke(this, new EventArgs<Guid, Exception>(clientID, ex));
+                    SendClientDataException?.Invoke(this, new(clientID, ex));
             }
             catch (Exception userEx)
             {
@@ -979,7 +979,7 @@ namespace GSF.Communication
         {
             try
             {
-                ReceiveClientData?.Invoke(this, new EventArgs<Guid, int>(clientID, size));
+                ReceiveClientData?.Invoke(this, new(clientID, size));
             }
             catch (Exception ex)
             {
@@ -1001,12 +1001,12 @@ namespace GSF.Communication
                 m_clientIDs[clientID] = 0;
 
                 // Notify users of data ready
-                ReceiveClientData?.Invoke(this, new EventArgs<Guid, int>(clientID, size));
+                ReceiveClientData?.Invoke(this, new(clientID, size));
 
                 // Most inheritors of this class "reuse" an existing buffer, as such you cannot assume what the user is going to do
                 // with the buffer provided, so we pass in a "copy" of the buffer for the user since they may assume control of and
                 // possibly even cache the provided buffer (e.g., passing the buffer to a process queue)
-                ReceiveClientDataComplete?.Invoke(this, new EventArgs<Guid, byte[], int>(clientID, data.BlockCopy(0, size), size));
+                ReceiveClientDataComplete?.Invoke(this, new(clientID, data.BlockCopy(0, size), size));
             }
             catch (Exception ex)
             {
@@ -1024,7 +1024,7 @@ namespace GSF.Communication
             try
             {
                 if (ex is not ObjectDisposedException)
-                    ReceiveClientDataException?.Invoke(this, new EventArgs<Guid, Exception>(clientID, ex));
+                    ReceiveClientDataException?.Invoke(this, new(clientID, ex));
             }
             catch (Exception userEx)
             {
@@ -1040,7 +1040,7 @@ namespace GSF.Communication
         {
             try
             {
-                UnhandledUserException?.Invoke(this, new EventArgs<Exception>(ex));
+                UnhandledUserException?.Invoke(this, new(ex));
             }
             catch (Exception userEx)
             {
@@ -1112,7 +1112,7 @@ namespace GSF.Communication
             if (settings.TryGetValue("protocol", out string protocol))
             {
                 settings.Remove("protocol");
-                StringBuilder protocolSettings = new StringBuilder();
+                StringBuilder protocolSettings = new();
 
                 foreach (string key in settings.Keys)
                 {

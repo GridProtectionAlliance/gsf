@@ -65,10 +65,10 @@ namespace GSF.Communication
             public SslStream SslStream;
             public NegotiateStream NegotiateStream;
 
-            public readonly SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
+            public readonly SocketAsyncEventArgs ConnectArgs = new();
             public int ConnectionAttempts;
 
-            public readonly CancellationToken Token = new CancellationToken();
+            public readonly CancellationToken Token = new();
             public ICancellationToken TimeoutToken;
 
             public void Dispose()
@@ -109,7 +109,7 @@ namespace GSF.Communication
             public NetworkStream NetworkStream;
             public SslStream SslStream;
 
-            public readonly ConcurrentQueue<TlsClientPayload> SendQueue = new ConcurrentQueue<TlsClientPayload>();
+            public readonly ConcurrentQueue<TlsClientPayload> SendQueue = new();
             public TlsClientPayload Payload;
             public int Sending;
 
@@ -225,9 +225,9 @@ namespace GSF.Communication
         /// <param name="connectString">Connect string of the <see cref="TlsClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
         public TlsClient(string connectString) : base(TransportProtocol.Tcp, connectString)
         {
-            m_defaultCertificateChecker = new SimpleCertificateChecker();
+            m_defaultCertificateChecker = new();
             LocalCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
-            m_clientCertificates = new X509Certificate2Collection();
+            m_clientCertificates = new();
             m_enabledSslProtocols = SslProtocols.Tls12;
             CheckCertificateRevocation = true;
 
@@ -240,7 +240,7 @@ namespace GSF.Communication
             AllowDualStackSocket = DefaultAllowDualStackSocket;
             MaxSendQueueSize = DefaultMaxSendQueueSize;
             NoDelay = DefaultNoDelay;
-            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
+            m_dumpPayloadsOperation = new(DumpPayloads, OnSendDataException);
         }
 
         /// <summary>
@@ -555,7 +555,7 @@ namespace GSF.Communication
             get
             {
                 SendState sendState = m_sendState;
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
 
                 if (sendState is not null)
                 {
@@ -671,7 +671,7 @@ namespace GSF.Communication
                     m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                 // Create state object for the asynchronous connection loop
-                connectState = new ConnectState();
+                connectState = new();
 
                 // Store connectState in m_connectState so that calls to Disconnect
                 // and Dispose can dispose resources and cancel asynchronous loops
@@ -767,8 +767,8 @@ namespace GSF.Communication
 
                 // Create the SslStream object used to perform
                 // send and receive operations on the socket
-                connectState.NetworkStream = new NetworkStream(connectState.Socket, true);
-                connectState.SslStream = new SslStream(connectState.NetworkStream, false, RemoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, LocalCertificateSelectionCallback);
+                connectState.NetworkStream = new(connectState.Socket, true);
+                connectState.SslStream = new(connectState.NetworkStream, false, RemoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, LocalCertificateSelectionCallback);
 
                 // Load trusted certificates from
                 // the trusted certificates directory
@@ -781,7 +781,7 @@ namespace GSF.Communication
                 {
                     connectState.TimeoutToken = new Action(() =>
                     {
-                        SocketException ex = new SocketException((int)SocketError.TimedOut);
+                        SocketException ex = new((int)SocketError.TimedOut);
                         OnConnectionException(ex);
                         TerminateConnection(connectState.Token);
                         connectState.Dispose();
@@ -908,7 +908,7 @@ namespace GSF.Communication
                 else
                 {
                     // Initialize state object for the asynchronous send loop
-                    sendState = new SendState
+                    sendState = new()
                     {
                         Socket = connectState.Socket,
                         NetworkStream = connectState.NetworkStream,
@@ -930,7 +930,7 @@ namespace GSF.Communication
                     OnConnectionEstablished();
 
                     // Initialize state object for the asynchronous receive loop
-                    receiveState = new ReceiveState
+                    receiveState = new()
                     {
                         Socket = connectState.Socket,
                         NetworkStream = connectState.NetworkStream,
@@ -988,7 +988,7 @@ namespace GSF.Communication
             {
                 // Log exception during connection attempt
                 string errorMessage = $"Unable to authenticate connection to server: {CertificateChecker.ReasonForFailure ?? ex.Message}";
-                OnConnectionException(new Exception(errorMessage, ex));
+                OnConnectionException(new(errorMessage, ex));
 
                 // Terminate the connection
                 if (connectState is not null)
@@ -1431,7 +1431,7 @@ namespace GSF.Communication
 
                 // Create payload and wait handle.
                 TlsClientPayload payload = FastObjectFactory<TlsClientPayload>.CreateObjectFunction();
-                ManualResetEvent handle = new ManualResetEvent(false);
+                ManualResetEvent handle = new(false);
 
                 payload.Data = data;
                 payload.Offset = offset;

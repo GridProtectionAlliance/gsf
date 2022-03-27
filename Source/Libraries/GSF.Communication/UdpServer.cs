@@ -269,7 +269,7 @@ namespace GSF.Communication
             ClientIdentificationMode = DefaultClientIdentificationMode;
             AllowDualStackSocket = DefaultAllowDualStackSocket;
             MaxSendQueueSize = DefaultMaxSendQueueSize;
-            m_clientInfoLookup = new ConcurrentDictionary<Guid, UdpClientInfo>();
+            m_clientInfoLookup = new();
 
             m_sendHandler = (_, args) => ProcessSend(args);
             m_receiveHandler = (_, args) => ProcessReceive(args);
@@ -339,7 +339,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
                 int count = 0;
 
                 foreach (ConcurrentQueue<UdpServerPayload> sendQueue in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.SendQueue))
@@ -501,7 +501,7 @@ namespace GSF.Communication
                 MaxSendQueueSize = maxSendQueueSize;
 
             // Bind server socket to local end-point
-            m_udpServer = new TransportProvider<Socket>();
+            m_udpServer = new();
             m_udpServer.SetReceiveBuffer(ReceiveBufferSize);
             m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp, m_ipStack, AllowDualStackSocket);
             m_udpServer.Provider.ReceiveBufferSize = ReceiveBufferSize;
@@ -554,7 +554,7 @@ namespace GSF.Communication
                     catch (Exception ex)
                     {
                         string errorMessage = $"Unable to connect to client {clientString}: {ex.Message}";
-                        OnClientConnectingException(new Exception(errorMessage, ex));
+                        OnClientConnectingException(new(errorMessage, ex));
                     }
                 }
             }
@@ -738,7 +738,7 @@ namespace GSF.Communication
 
         private TransportProvider<EndPoint> AddUdpClient(EndPoint udpClientEndPoint)
         {
-            TransportProvider<EndPoint> udpClient = new TransportProvider<EndPoint>();
+            TransportProvider<EndPoint> udpClient = new();
             IPEndPoint udpClientIPEndPoint = udpClientEndPoint as IPEndPoint;
 
             // Set up client
@@ -762,7 +762,7 @@ namespace GSF.Communication
                     if (localAddress.AddressFamily != udpClientIPEndPoint.AddressFamily)
                         throw new InvalidOperationException($"Local address \"{localAddress}\" is not in the same IP format as server address \"{udpClientIPEndPoint.Address}\"");
 
-                    using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
+                    using (BlockAllocatedMemoryStream membershipAddresses = new())
                     {
                         byte[] serverAddressBytes = udpClientIPEndPoint.Address.GetAddressBytes();
                         byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
@@ -788,15 +788,15 @@ namespace GSF.Communication
             }
 
             // Create client info object
-            UdpClientInfo udpClientInfo = new UdpClientInfo
+            UdpClientInfo udpClientInfo = new()
             {
                 Client = udpClient,
                 SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
-                SendLock = new object(),
-                SendQueue = new ConcurrentQueue<UdpServerPayload>()
+                SendLock = new(),
+                SendQueue = new()
             };
 
-            udpClientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
+            udpClientInfo.DumpPayloadsOperation = new(() =>
             {
                 // Check to see if the client has reached the maximum send queue size.
                 if (MaxSendQueueSize > 0 && udpClientInfo.SendQueue.Count >= MaxSendQueueSize)
@@ -956,7 +956,7 @@ namespace GSF.Communication
                         string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
                         if (client is not null)
-                            OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
+                            OnSendClientDataException(client.ID, new(errorMessage, ex));
                         else
                             Logger.SwallowException(ex, "UdpServer.cs: The client state was null during post process handling of sent payload data");
 

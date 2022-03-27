@@ -114,7 +114,7 @@ namespace GSF.Communication.Radius
             NewPinModeMessage2 = DefaultNewPinModeMessage2;
             NewPinModeMessage3 = DefaultNewPinModeMessage3;
             NextTokenModeMessage = DefaultNextTokenModeMessage;
-            m_udpClient = new UdpClient($"Server={serverName}; RemotePort={serverPort}; LocalPort=0");
+            m_udpClient = new($"Server={serverName}; RemotePort={serverPort}; LocalPort=0");
             m_udpClient.ReceiveDataComplete += m_udpClient_ReceivedData;
             m_udpClient.Connect(); // Start the connection cycle.
         }
@@ -355,7 +355,7 @@ namespace GSF.Communication.Radius
                 if (m_responseBytes is not null)
                 {
                     // The server sent a response.
-                    response = new RadiusPacket(m_responseBytes, 0, m_responseBytes.Length);
+                    response = new(m_responseBytes, 0, m_responseBytes.Length);
 
                     if (response.Identifier == request.Identifier && response.Authenticator.CompareTo(RadiusPacket.CreateResponseAuthenticator(m_sharedSecret, request, response)) == 0)
                         break;
@@ -464,16 +464,16 @@ namespace GSF.Communication.Radius
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 throw new ArgumentException("Username and Password cannot be null.");
 
-            RadiusPacket request = new RadiusPacket(PacketType.AccessRequest);
+            RadiusPacket request = new(PacketType.AccessRequest);
             byte[] authenticator = RadiusPacket.CreateRequestAuthenticator(m_sharedSecret);
 
             request.Authenticator = authenticator;
-            request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserName, username));
-            request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserPassword, RadiusPacket.EncryptPassword(password, m_sharedSecret, authenticator)));
+            request.Attributes.Add(new(AttributeType.UserName, username));
+            request.Attributes.Add(new(AttributeType.UserPassword, RadiusPacket.EncryptPassword(password, m_sharedSecret, authenticator)));
 
             // State attribute is used when responding to a AccessChallenge response.
             if (state is not null)
-                request.Attributes.Add(new RadiusPacketAttribute(AttributeType.State, state));
+                request.Attributes.Add(new(AttributeType.State, state));
 
             return ProcessRequest(request);
         }

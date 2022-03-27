@@ -94,7 +94,7 @@ namespace GSF.Communication
         /// <param name="connectString">Connect string of the <see cref="TcpSimpleClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
         public TcpSimpleClient(string connectString) : base(TransportProtocol.Tcp, connectString)
         {
-            m_tcpClient = new TcpClientProvider();
+            m_tcpClient = new();
             PayloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_payloadEndianOrder = EndianOrder.LittleEndian;
@@ -300,7 +300,7 @@ namespace GSF.Communication
 
                 m_tcpClient.SetReceiveBuffer(ReceiveBufferSize);
 
-                tcpClient = new TcpClientSocket(Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack));
+                tcpClient = new(Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack));
 
                 using (m_tcpClient.Provider)
                     m_tcpClient.Provider = tcpClient;
@@ -326,8 +326,8 @@ namespace GSF.Communication
                         OnConnectionEstablished();
 
                         // Set up read cancellation before starting the read loop
-                        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-                        TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
+                        CancellationTokenSource cancellationTokenSource = new();
+                        TaskCompletionSource<object> taskCompletionSource = new();
                         CancellationToken cancellationToken = cancellationTokenSource.Token;
                         int isCancelled = 0;
 

@@ -150,7 +150,7 @@ namespace GSF.Communication
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
         /// </summary>
         /// <param name="connectString">Connect string of the <see cref="SerialClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
-        public SerialClient(string connectString) : base(TransportProtocol.Serial, connectString) => m_serialClient = new TransportProvider<SerialPort>();
+        public SerialClient(string connectString) : base(TransportProtocol.Serial, connectString) => m_serialClient = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerialClient"/> class.
@@ -190,7 +190,7 @@ namespace GSF.Communication
                 if (m_connectData is null)
                     return base.Status;
 
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
 
@@ -289,7 +289,7 @@ namespace GSF.Communication
 
             m_serialClient.SetReceiveBuffer(ReceiveBufferSize);
 
-            m_serialClient.Provider = new SerialPort
+            m_serialClient.Provider = new()
             {
                 ReceivedBytesThreshold = int.Parse(m_connectData["receivedBytesThreshold"]),
                 PortName = m_connectData["port"],
@@ -308,7 +308,7 @@ namespace GSF.Communication
             if (m_connectData.ContainsKey("rtsEnable"))
                 m_serialClient.Provider.RtsEnable = m_connectData["rtsEnable"].ParseBoolean();
 
-            m_connectionThread = new Thread(OpenPort)
+            m_connectionThread = new(OpenPort)
             {
                 IsBackground = true
             };

@@ -130,12 +130,12 @@ namespace GSF.Communication
         public ZeroMQServer(string configString) : base(TransportProtocol.Tcp, configString)
         {
             m_zeroMQTransportProtocol = ZeroMQTransportProtocol.Tcp;
-            m_completedHandle = new ManualResetEventSlim(true);
+            m_completedHandle = new(true);
             MaxSendQueueSize = DefaultMaxSendQueueSize;
             MaxReceiveQueueSize = DefaultMaxReceiveQueueSize;
-            m_clientInfoLookup = new ConcurrentDictionary<Guid, TransportProvider<DateTime>>();
-            m_activeClientTimer = new Timer(MonitorActiveClients, null, TimeSpan.FromMinutes(1.0D), TimeSpan.FromMinutes(1.0D));
-            m_sendLock = new object();
+            m_clientInfoLookup = new();
+            m_activeClientTimer = new(MonitorActiveClients, null, TimeSpan.FromMinutes(1.0D), TimeSpan.FromMinutes(1.0D));
+            m_sendLock = new();
         }
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
 
                 if (Server is not null)
                 {
@@ -419,7 +419,7 @@ namespace GSF.Communication
                 MaxReceiveQueueSize = maxQueueSize;
 
             // Create ZeroMQ Router socket - closest match to IServer implementation
-            Server = new ZSocket(ZContext.Create(), ZSocketType.ROUTER)
+            Server = new(ZContext.Create(), ZSocketType.ROUTER)
             {
                 Identity = ServerID.ToByteArray(),
                 SendHighWatermark = MaxSendQueueSize,
@@ -438,7 +438,7 @@ namespace GSF.Communication
             // Notify that the server has been started successfully.
             OnServerStarted();
 
-            m_receiveDataThread = new Thread(ReceiveDataHandler)
+            m_receiveDataThread = new(ReceiveDataHandler)
             {
                 IsBackground = true
             };
@@ -462,7 +462,7 @@ namespace GSF.Communication
                         if (message.Count == 3)
                         {
                             // Extract client identity
-                            clientID = new Guid(message[0].ReadStream());
+                            clientID = new(message[0].ReadStream());
 
                             // Lookup client info, adding it if it doesn't exist
                             clientInfo = GetClient(clientID);
@@ -531,7 +531,7 @@ namespace GSF.Communication
             {
                 OnClientConnected(id);
 
-                return new TransportProvider<DateTime>
+                return new()
                 {
                     Provider = DateTime.UtcNow,
                     ID = id
@@ -630,12 +630,12 @@ namespace GSF.Communication
                     TransportProvider<DateTime> clientInfo = GetClient(clientID);
 
                     // Router socket should provide identity, delimiter and data payload frames
-                    using (ZMessage message = new ZMessage())
+                    using (ZMessage message = new())
                     {
                         // Add identity, delimiter and data payload frames
-                        message.Add(new ZFrame(clientID.ToByteArray()));
-                        message.Add(new ZFrame());
-                        message.Add(new ZFrame(data, offset, length));
+                        message.Add(new(clientID.ToByteArray()));
+                        message.Add(new());
+                        message.Add(new(data, offset, length));
 
                         // ZeroMQ send is asynchronous, but API call is not thread-safe
                         lock (m_sendLock)
@@ -719,7 +719,7 @@ namespace GSF.Communication
             if (m_clientInfoLookup is null)
                 return;
 
-            List<Guid> oldClients = new List<Guid>();
+            List<Guid> oldClients = new();
 
             // Maintain client info lookup table size by removing clients that haven't been active in the last minute
             foreach (TransportProvider<DateTime> clientInfo in m_clientInfoLookup.Values)

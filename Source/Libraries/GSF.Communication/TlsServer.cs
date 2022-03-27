@@ -192,7 +192,7 @@ namespace GSF.Communication
         /// <param name="configString">Config string of the <see cref="TcpServer"/>. See <see cref="DefaultConfigurationString"/> for format.</param>
         public TlsServer(string configString) : base(TransportProtocol.Tcp, configString)
         {
-            m_defaultCertificateChecker = new SimpleCertificateChecker();
+            m_defaultCertificateChecker = new();
             LocalCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
             m_enabledSslProtocols = SslProtocols.Tls12;
             CheckCertificateRevocation = true;
@@ -206,7 +206,7 @@ namespace GSF.Communication
             AllowDualStackSocket = DefaultAllowDualStackSocket;
             MaxSendQueueSize = DefaultMaxSendQueueSize;
             NoDelay = DefaultNoDelay;
-            m_clientInfoLookup = new ConcurrentDictionary<Guid, TlsClientInfo>();
+            m_clientInfoLookup = new();
 
             m_acceptHandler = (_, args) => ProcessAccept(args);
         }
@@ -482,7 +482,7 @@ namespace GSF.Communication
         {
             get
             {
-                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                StringBuilder statusBuilder = new(base.Status);
                 int count = 0;
 
                 foreach (ConcurrentQueue<TlsServerPayload> sendQueue in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.SendQueue))
@@ -832,7 +832,7 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessAccept(SocketAsyncEventArgs acceptArgs)
         {
-            TransportProvider<TlsSocket> client = new TransportProvider<TlsSocket>();
+            TransportProvider<TlsSocket> client = new();
             TlsClientInfo clientInfo = null;
 
             try
@@ -875,26 +875,26 @@ namespace GSF.Communication
                     {
                         // Process the newly connected client.
                         LoadTrustedCertificates();
-                        NetworkStream netStream = new NetworkStream(acceptArgs.AcceptSocket, true);
+                        NetworkStream netStream = new(acceptArgs.AcceptSocket, true);
 
-                        client.Provider = new TlsSocket
+                        client.Provider = new()
                         {
                             Socket = acceptArgs.AcceptSocket,
-                            SslStream = new SslStream(netStream, false, RemoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, LocalCertificateSelectionCallback),
+                            SslStream = new(netStream, false, RemoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, LocalCertificateSelectionCallback),
                             RemoteEndPoint = acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint
                         };
 
                         client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
 
-                        clientInfo = new TlsClientInfo
+                        clientInfo = new()
                         {
                             Client = client,
-                            SendLock = new object(),
-                            SendQueue = new ConcurrentQueue<TlsServerPayload>()
+                            SendLock = new(),
+                            SendQueue = new()
                         };
 
                         // Create operation to dump send queue payloads when the queue grows too large.
-                        clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
+                        clientInfo.DumpPayloadsOperation = new(() =>
                         {
                             // Check to see if the client has reached the maximum send queue size.
                             if (MaxSendQueueSize > 0 && clientInfo.SendQueue.Count >= MaxSendQueueSize)
@@ -941,7 +941,7 @@ namespace GSF.Communication
                 IPEndPoint remoteEndPoint = client.Provider?.RemoteEndPoint;
                 string clientAddress = remoteEndPoint?.Address.ToString() ?? "UNKNOWN";
                 string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
-                OnClientConnectingException(new Exception(errorMessage, ex));
+                OnClientConnectingException(new(errorMessage, ex));
                 TerminateConnection(client, false);
             }
         }
@@ -997,7 +997,7 @@ namespace GSF.Communication
                 IPEndPoint remoteEndPoint = client.Provider.RemoteEndPoint;
                 string clientAddress = remoteEndPoint.Address.ToString();
                 string errorMessage = $"Unable to authenticate connection to client [{clientAddress}]: {CertificateChecker.ReasonForFailure ?? ex.Message}";
-                OnClientConnectingException(new Exception(errorMessage, ex));
+                OnClientConnectingException(new(errorMessage, ex));
                 TerminateConnection(client, false);
             }
         }
@@ -1151,7 +1151,7 @@ namespace GSF.Communication
                         string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
                         if (client is not null)
-                            OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
+                            OnSendClientDataException(client.ID, new(errorMessage, ex));
 
                         if (clientInfo is not null)
                             Interlocked.Exchange(ref clientInfo.Sending, 0);
