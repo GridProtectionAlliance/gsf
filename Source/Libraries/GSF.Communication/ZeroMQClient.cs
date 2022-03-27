@@ -386,27 +386,27 @@ namespace GSF.Communication
             while (Enabled)
             {
                 // Receive data from the socket
-                using (ZMessage message = m_zeroMQClient.Provider.ReceiveMessage())
+                using ZMessage message = m_zeroMQClient.Provider.ReceiveMessage();
+
+                // Dealer socket should have removed identity frame already, should be left
+                // with delimiter and data payload frames
+                if (message.Count == 2)
                 {
-                    // Dealer socket should have removed identity frame already, should be left
-                    // with delimiter and data payload frames
-                    if (message.Count == 2)
-                    {
-                        // Get the data payload frame
-                        ZFrame frame = message[1];
+                    // Get the data payload frame
+                    ZFrame frame = message[1];
 
-                        m_zeroMQClient.BytesReceived = (int)frame.Length;
+                    m_zeroMQClient.BytesReceived = (int)frame.Length;
 
-                        if (m_zeroMQClient.ReceiveBufferSize < m_zeroMQClient.BytesReceived)
-                            m_zeroMQClient.SetReceiveBuffer(m_zeroMQClient.BytesReceived);
+                    if (m_zeroMQClient.ReceiveBufferSize < m_zeroMQClient.BytesReceived)
+                        m_zeroMQClient.SetReceiveBuffer(m_zeroMQClient.BytesReceived);
 
-                        frame.Read(m_zeroMQClient.ReceiveBuffer, 0, m_zeroMQClient.BytesReceived);
+                    // ReSharper disable once MustUseReturnValue
+                    frame.Read(m_zeroMQClient.ReceiveBuffer, 0, m_zeroMQClient.BytesReceived);
 
-                        m_zeroMQClient.Statistics.UpdateBytesReceived(m_zeroMQClient.BytesReceived);
+                    m_zeroMQClient.Statistics.UpdateBytesReceived(m_zeroMQClient.BytesReceived);
 
-                        // Notify consumer of received data
-                        OnReceiveDataComplete(m_zeroMQClient.ReceiveBuffer, m_zeroMQClient.BytesReceived);
-                    }
+                    // Notify consumer of received data
+                    OnReceiveDataComplete(m_zeroMQClient.ReceiveBuffer, m_zeroMQClient.BytesReceived);
                 }
             }
         }

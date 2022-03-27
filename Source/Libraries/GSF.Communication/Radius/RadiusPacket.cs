@@ -33,8 +33,6 @@ using System.Text;
 using GSF.Parsing;
 using Random = GSF.Security.Cryptography.Random;
 
-#pragma warning disable SCS0006 // Weak hashing function
-
 namespace GSF.Communication.Radius
 {
     #region [ Enumerations ]
@@ -316,8 +314,8 @@ namespace GSF.Communication.Radius
             byte[] secretBuffer = Encoding.GetBytes(sharedSecret);
             Random.GetBytes(randomBuffer);
 
-            using (MD5CryptoServiceProvider md5Provider = new())
-                return md5Provider.ComputeHash(randomBuffer.Combine(secretBuffer));
+            using MD5CryptoServiceProvider md5Provider = new();
+            return md5Provider.ComputeHash(randomBuffer.Combine(secretBuffer));
         }
 
         /// <summary>
@@ -343,8 +341,8 @@ namespace GSF.Communication.Radius
             Buffer.BlockCopy(requestPacket.BinaryImage(), 4, buffer, 4, 16);
             Buffer.BlockCopy(sharedSecretBytes, 0, buffer, length, sharedSecretBytes.Length);
 
-            using (MD5CryptoServiceProvider md5Provider = new())
-                return md5Provider.ComputeHash(buffer);
+            using MD5CryptoServiceProvider md5Provider = new();
+            return md5Provider.ComputeHash(buffer);
         }
 
         /// <summary>

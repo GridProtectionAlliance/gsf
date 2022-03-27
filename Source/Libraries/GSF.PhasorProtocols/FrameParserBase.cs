@@ -150,7 +150,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="FrameParserBase{TypeIndentifier}"/>.
         /// </summary>
-        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
         /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         protected FrameParserBase(CheckSumValidationFrameTypes checkSumValidationFrameTypes, bool trustHeaderLength)
         {
@@ -200,7 +200,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets flags that determine if check-sums for specified frames should be validated.
         /// </summary>
         /// <remarks>
-        /// It is expected that this will normally be set to <see cref="CheckSumValidationFrameTypes.AllFrames"/>.
+        /// It is expected that this will normally be set to <see cref="PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
         /// </remarks>
         public CheckSumValidationFrameTypes CheckSumValidationFrameTypes { get; set; }
 
@@ -249,7 +249,7 @@ namespace GSF.PhasorProtocols
                     status.AppendLine($"   Devices in config frame: {ConfigurationFrame.Cells.Count:N0} total - ");
 
                     foreach (IConfigurationCell cell in ConfigurationFrame.Cells)
-                        status.AppendLine($"               ({cell.IDCode:00000}) {cell.StationName.PadRight(16)}{(string.IsNullOrEmpty(cell.IDLabel) ? "" : $" [{ cell.IDLabel}]")}");
+                        status.AppendLine($"               ({cell.IDCode:00000}) {cell.StationName,-16}{(string.IsNullOrEmpty(cell.IDLabel) ? "" : $" [{ cell.IDLabel}]")}");
 
                     status.AppendLine($"     Configured frame rate: {ConfigurationFrame.FrameRate}");
                 }
@@ -352,7 +352,7 @@ namespace GSF.PhasorProtocols
                     ProcessItemFunction = frameImage => ReceivedFrameBufferImage(this, frameImage)
                 };
 
-                m_frameImageQueue.ProcessException += (sender, e) => OnParsingException(e.Argument);
+                m_frameImageQueue.ProcessException += (_, e) => OnParsingException(e.Argument);
             }
 
             // We don't own the provided buffer and don't know what the consumer will do with it, so we create

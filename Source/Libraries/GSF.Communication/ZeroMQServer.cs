@@ -47,7 +47,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -248,7 +247,6 @@ namespace GSF.Communication
         /// Releases the unmanaged resources used by the <see cref="ZeroMQServer"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_activeClientTimer", Justification = "Field is properly disposed")]
         protected override void Dispose(bool disposing)
         {
             if (m_disposed)
@@ -475,6 +473,7 @@ namespace GSF.Communication
                             if (clientInfo.ReceiveBufferSize < clientInfo.BytesReceived)
                                 clientInfo.SetReceiveBuffer(clientInfo.BytesReceived);
 
+                            // ReSharper disable once MustUseReturnValue
                             frame.Read(clientInfo.ReceiveBuffer, 0, clientInfo.BytesReceived);
 
                             clientInfo.Statistics.UpdateBytesReceived(clientInfo.BytesReceived);

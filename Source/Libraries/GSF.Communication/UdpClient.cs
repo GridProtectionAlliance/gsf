@@ -1130,18 +1130,17 @@ namespace GSF.Communication
                         if (localAddress.AddressFamily != serverAddress.AddressFamily)
                             throw new InvalidOperationException($"Local address \"{localAddress}\" is not in the same IP format as server address \"{serverAddress}\"");
 
-                        using (BlockAllocatedMemoryStream membershipAddresses = new())
-                        {
-                            byte[] serverAddressBytes = serverAddress.GetAddressBytes();
-                            byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
-                            byte[] localAddressBytes = localAddress.GetAddressBytes();
+                        using BlockAllocatedMemoryStream membershipAddresses = new();
 
-                            membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
-                            membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
-                            membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
+                        byte[] serverAddressBytes = serverAddress.GetAddressBytes();
+                        byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                        byte[] localAddressBytes = localAddress.GetAddressBytes();
 
-                            multicastMembershipAddresses = membershipAddresses.ToArray();
-                        }
+                        membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                        membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                        membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
+
+                        multicastMembershipAddresses = membershipAddresses.ToArray();
                     }
 
                     // Execute multicast unsubscribe for specific source

@@ -377,13 +377,11 @@ namespace GSF.Communication
                 // if the endpoint doesn't exist then we'll receive a ConnectionReset socket exception
                 EndPoint targetEndPoint = targetIPEndPoint;
 
-                using (Socket targetChecker = new(targetIPEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp))
-                {
-                    targetChecker.ReceiveTimeout = 1;
-                    targetChecker.SendTo(Array.Empty<byte>(), targetEndPoint);
-                    targetChecker.ReceiveFrom(Array.Empty<byte>(), ref targetEndPoint);
-                }
+                using Socket targetChecker = new(targetIPEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
+                targetChecker.ReceiveTimeout = 1;
+                targetChecker.SendTo(Array.Empty<byte>(), targetEndPoint);
+                targetChecker.ReceiveFrom(Array.Empty<byte>(), ref targetEndPoint);
             }
             catch (SocketException ex)
             {

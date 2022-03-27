@@ -63,7 +63,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Reflection;
 using System.Text;
@@ -993,7 +992,6 @@ namespace GSF.Communication
         /// Releases the unmanaged resources used by the client and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_connectHandle", Justification = "Field is properly disposed")]
         protected override void Dispose(bool disposing)
         {
             if (IsDisposed)
