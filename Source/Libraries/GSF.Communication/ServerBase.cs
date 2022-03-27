@@ -956,7 +956,7 @@ namespace GSF.Communication
         {
             try
             {
-                if (!(ex is ObjectDisposedException))
+                if (ex is not ObjectDisposedException)
                     SendClientDataException?.Invoke(this, new EventArgs<Guid, Exception>(clientID, ex));
             }
             catch (Exception userEx)
@@ -1023,7 +1023,7 @@ namespace GSF.Communication
         {
             try
             {
-                if (!(ex is ObjectDisposedException))
+                if (ex is not ObjectDisposedException)
                     ReceiveClientDataException?.Invoke(this, new EventArgs<Guid, Exception>(clientID, ex));
             }
             catch (Exception userEx)

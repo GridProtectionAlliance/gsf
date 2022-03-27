@@ -450,7 +450,7 @@ namespace GSF.Communication
         {
             get
             {
-                if (!(m_serverList is null))
+                if (m_serverList is not null)
                     return m_serverList;
 
                 if (m_connectData is null || !m_connectData.TryGetValue("server", out string serverList) || string.IsNullOrWhiteSpace(serverList))

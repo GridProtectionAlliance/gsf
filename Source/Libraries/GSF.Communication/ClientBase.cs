@@ -848,7 +848,7 @@ namespace GSF.Communication
                 // Move to next server connection, when multiple server end points are defined
                 RequestNextServerIndex();
 
-                if (!(ex is ObjectDisposedException))
+                if (ex is not ObjectDisposedException)
                     ConnectionException?.Invoke(this, new EventArgs<Exception>(ex));
             }
             catch (Exception userEx)
@@ -895,7 +895,7 @@ namespace GSF.Communication
         {
             try
             {
-                if (!(ex is ObjectDisposedException))
+                if (ex is not ObjectDisposedException)
                     SendDataException?.Invoke(this, new EventArgs<Exception>(ex));
             }
             catch (Exception userEx)
@@ -962,7 +962,7 @@ namespace GSF.Communication
         {
             try
             {
-                if (!(ex is ObjectDisposedException))
+                if (ex is not ObjectDisposedException)
                     ReceiveDataException?.Invoke(this, new EventArgs<Exception>(ex));
             }
             catch (Exception userEx)
