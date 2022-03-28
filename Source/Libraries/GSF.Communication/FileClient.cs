@@ -390,7 +390,7 @@ namespace GSF.Communication
         /// <summary>
         /// Gets flags that determines if <see cref="FileClient"/> is positioned at the end of file.
         /// </summary>
-        public bool AtEOF { get; private set; }
+        public bool AtEOF => m_fileClient.Provider is null || m_fileClient.Provider.Position == m_fileClient.Provider.Length;
 
         /// <summary>
         /// Gets the <see cref="FileStream"/> object for the <see cref="FileClient"/>.
@@ -701,6 +701,9 @@ namespace GSF.Communication
         {
             try
             {
+                if (m_autoRepeat && AtEOF)
+                    m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
+
                 // Process the entire file content
                 while (m_fileClient.Provider.Position < m_fileClient.Provider.Length)
                 {
@@ -712,8 +715,6 @@ namespace GSF.Communication
                     OnReceiveDataComplete(m_fileClient.ReceiveBuffer, m_fileClient.BytesReceived);
 
                     // Handle end of file operations
-                    AtEOF = m_fileClient.Provider.Position == m_fileClient.Provider.Length;
-
                     if (AtEOF)
                     {
                         // Re-read the file if the user wants to repeat when done reading the file.
