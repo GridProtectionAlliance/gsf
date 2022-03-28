@@ -73,6 +73,7 @@ using System.IO;
 using System.IO.Ports;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -1720,11 +1721,16 @@ namespace GSF.PhasorProtocols
             get => m_inputTimer is not null;
             set
             {
-                // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
-                if (value && m_inputTimer is null && !Debugger.IsAttached)
-                    m_inputTimer = PrecisionInputTimer.Attach(m_definedFrameRate, OnParsingException);
-                else if (!value && m_inputTimer is not null)
-                    PrecisionInputTimer.Detach(ref m_inputTimer);
+                switch (value)
+                {
+                    // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
+                    case true when m_inputTimer is null && !Debugger.IsAttached:
+                        m_inputTimer = PrecisionInputTimer.Attach(m_definedFrameRate, OnParsingException);
+                        break;
+                    case false when m_inputTimer is not null:
+                        PrecisionInputTimer.Detach(ref m_inputTimer);
+                        break;
+                }
             }
         }
 
@@ -1801,7 +1807,13 @@ namespace GSF.PhasorProtocols
                     return;
 
                 if (m_dataChannel is FileClient fileClient)
+                {
                     fileClient.AutoRepeat = value;
+
+                    // May be sitting at end of file even while parsing data from queued buffers
+                    if (fileClient.CurrentState == ClientState.Connected && fileClient.AtEOF)
+                        m_readNextBuffer.RunOnceAsync();
+                }
             }
         }
 
@@ -3475,10 +3487,10 @@ namespace GSF.PhasorProtocols
 
         #region [ Frame Parser Event Handlers ]
 
-        private void MaintainCapturedFrameReplayTiming(IChannelFrame sourceFrame)
+        // ReSharper disable once SuggestBaseTypeForParameter
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private long MaintainCapturedFrameReplayTiming()
         {
-            long simulatedTimestamp = 0L;
-
             if (m_inputTimer is null)
             {
                 if (m_lastFrameReceivedTime > 0L)
@@ -3493,60 +3505,33 @@ namespace GSF.PhasorProtocols
                 }
 
                 m_lastFrameReceivedTime = DateTime.UtcNow.Ticks;
-
-                if (InjectSimulatedTimestamp)
-                    simulatedTimestamp = Ticks.AlignToMillisecondDistribution(m_lastFrameReceivedTime, m_definedFrameRate);
-            }
-            else
-            {
-                // When high resolution input timing is requested, we only need to wait for the next signal...
-                m_inputTimer.FrameWaitHandle.Wait();
-
-                // Input timer can be disabled while thread is waiting, so we make sure it is not null
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                if (m_inputTimer is not null)
-                    simulatedTimestamp = m_inputTimer.LastFrameTime;
+                return Ticks.AlignToMillisecondDistribution(m_lastFrameReceivedTime, m_definedFrameRate).Value;
             }
 
-            // If injecting a simulated timestamp, use the last received time
-            if (InjectSimulatedTimestamp)
-                sourceFrame.Timestamp = simulatedTimestamp;
+            // When high resolution input timing is requested, we only need to wait for the next signal...
+            m_inputTimer.FrameWaitHandle.Wait();
+
+            // Input timer can be disabled while thread is waiting, so we make sure it is not null
+            // ReSharper disable once ConstantNullCoalescingCondition
+            return m_inputTimer?.LastFrameTime ?? Ticks.AlignToMillisecondDistribution(DateTime.UtcNow.Ticks, m_definedFrameRate).Value;
         }
 
         private void m_frameParser_ReceivedChannelFrame(object sender, EventArgs<IChannelFrame, bool> e)
         {
-            m_frameRateTotal++;
-
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
-                if (ReceivedChannelFrame is not null)
-                {
+                IChannelFrame frame = e.Argument1;
+
+                if (InjectSimulatedTimestamp && !(frame is IDataFrame && m_transportProtocol == TransportProtocol.File))
+                    frame.Timestamp = Ticks.AlignToMillisecondDistribution(DateTime.UtcNow.Ticks, m_definedFrameRate);
+
+                // Keep reading file data
+                if (m_transportProtocol == TransportProtocol.File && QueuedOutputs < 2 && QueuedBuffers < 10)
+                    m_readNextBuffer?.RunOnceAsync();
+
+                if (ReceivedChannelFrame is not null && e.Argument2)
                     ReceivedChannelFrame(this, e);
-
-                    if (!e.Argument2)
-                        return;
-                }
-
-                IChannelFrame sourceFrame = e.Argument1;
-
-                if (m_transportProtocol == TransportProtocol.File)
-                {
-                    DateTime timestamp = sourceFrame.Timestamp;
-
-                    if (timestamp >= ReplayStartTime && timestamp < ReplayStopTime)
-                        MaintainCapturedFrameReplayTiming(sourceFrame);
-                    else
-                        e.Argument2 = false; // Do not publish frame
-
-                    // Keep reading file data
-                    if (QueuedOutputs < 2 && QueuedBuffers < 10)
-                        m_readNextBuffer?.RunOnceAsync();
-                }
-                else if (InjectSimulatedTimestamp)
-                {
-                    sourceFrame.Timestamp = DateTime.UtcNow.Ticks;
-                }
             }
             catch (Exception ex)
             {
@@ -3596,9 +3581,27 @@ namespace GSF.PhasorProtocols
 
         private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
         {
+            m_frameRateTotal++;
+
             // We don't stop parsing for exceptions thrown in consumer event handlers
             try
             {
+                if (m_transportProtocol == TransportProtocol.File)
+                {
+                    IDataFrame dataFrame = e.Argument;
+                    long timestamp = dataFrame.Timestamp.Value;
+
+                    if (timestamp < ReplayStartTime.Ticks || timestamp >= ReplayStopTime.Ticks)
+                        return;
+
+                    // We only maintain replay timing for data frames
+                    long simulatedTimestamp = MaintainCapturedFrameReplayTiming();
+
+                    // If injecting a simulated timestamp, use the last received time
+                    if (InjectSimulatedTimestamp)
+                        dataFrame.Timestamp = simulatedTimestamp;
+                }
+
                 ReceivedDataFrame?.Invoke(this, e);
             }
             catch (Exception ex)

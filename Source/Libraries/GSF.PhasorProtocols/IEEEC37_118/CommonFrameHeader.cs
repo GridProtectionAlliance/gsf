@@ -78,7 +78,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             m_idCode = idCode;
             m_timestamp = timestamp;
             m_version = (byte)version;
-            m_timebase = (UInt24)100000;
+            m_timebase = (UInt24)100000U;
 
             if (configurationFrame is null)
                 return;
