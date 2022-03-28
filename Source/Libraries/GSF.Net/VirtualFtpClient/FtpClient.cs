@@ -168,7 +168,7 @@ namespace GSF.Net.VirtualFtpClient
         public string Server { get; set; }
 
         /// <summary>
-        /// Gets or sets FTP server port to use, defaults to 21.
+        /// Gets or sets FTP server port to use, defaults to 21 for FTP and 69 for TFTP.
         /// </summary>
         /// <remarks>
         /// This only needs to be changed if the FTP server is established on a non-standard port number.
