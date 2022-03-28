@@ -38,6 +38,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Threading;
+using GSF.Diagnostics;
 using GSF.Net.TFtp.Channel;
 using GSF.Net.TFtp.Commands;
 using GSF.Net.TFtp.Trace;
@@ -63,19 +64,26 @@ namespace GSF.Net.TFtp.Transfer
             ProposedOptions = TransferOptionSet.NewDefaultSet();
             Filename = filename;
             RetryCount = 5;
-            Timer = new Timer(Timer_OnTimer, null, 500, 500);
             SetState(initialState);
             Connection = connection;
             Connection.OnCommandReceived += Connection_OnCommandReceived;
             Connection.OnError += Connection_OnError;
             Connection.Open();
+            Timer = new Timer(Timer_OnTimer, null, 500, 500);
         }
 
         private void Timer_OnTimer(object context)
         {
             lock (this)
             {
-                State.OnTimer();
+                try
+                {
+                    State.OnTimer();
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, "Failed to execute TFTP state timer");
+                }
             }
         }
 
