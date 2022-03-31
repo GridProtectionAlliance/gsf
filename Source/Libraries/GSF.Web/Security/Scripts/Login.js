@@ -32,13 +32,14 @@
 //   string verificationValue: server generated anti-forgery verification token value
 //   string useAjaxVerfication: HTTP header named use to indicate an AJAX post
 //   string redirectPageLabel: user label for redirect location, e.g., main or target
-//   string oidcError: error Message from OIDC provider if en error occured
+//   string oidcError: error Message from OIDC provider if en error occurred
+//   boolean isPOSIX: flag that indicates if host system is POSIX based, e.g., Linux or OSX
 
 function loadSettings() {
     $("#username").val(persistentStorage.getItem("username")).trigger("input");
-    $("#iwa").prop("checked", persistentStorage.getItem("iwa") === "true").change();
-    $("#remember").prop("checked", persistentStorage.getItem("remember") === "true").change();
-    $("#ntlm").prop("checked", !isIE && persistentStorage.getItem("ntlm") !== "false").change();
+    $("#iwa").prop("checked", !isPOSIX && persistentStorage.getItem("iwa") === "true").change();
+    $("#remember").prop("checked", !isPOSIX && persistentStorage.getItem("remember") === "true").change();
+    $("#ntlm").prop("checked", !isIE && !isPOSIX && persistentStorage.getItem("ntlm") !== "false").change();
 }
 
 function saveSettings() {
@@ -304,7 +305,7 @@ $("#iwa").change(function () {
     if (this.checked) {
         $("#username").disable();
         $("#password").disable();
-        $("#ntlm").prop("checked", !isIE).change();
+        $("#ntlm").prop("checked", !isIE && !isPOSIX).change();
         $("#ntlm").disable();
         $("#ntlmLabel").addClass("disabled");
         $("#ntlmRegion").hide();
@@ -312,7 +313,7 @@ $("#iwa").change(function () {
         $("#username").enable();
         $("#password").enable();
 
-        if (!isIE) {
+        if (!isIE && !isPOSIX) {
             $("#ntlm").enable();
             $("#ntlmLabel").removeClass("disabled");
         }

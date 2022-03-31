@@ -20,6 +20,10 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@* ReSharper disable InlineOutVariableDeclaration *@
+@* ReSharper disable RedundantUsingDirective *@
+@* ReSharper disable UseStringInterpolation *@
+
 @using System.Net
 @using System.Net.Http
 @using System.Text
@@ -31,6 +35,7 @@
 @inherits ExtendedTemplateBase
 @{
     HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> queryParams = request.QueryParameters();
 
     string redirectPage;
     string authTestPage = AuthenticationOptions.DefaultAuthTestPage;
@@ -42,10 +47,11 @@
     string useAjaxVerfication = AuthenticationOptions.DefaultAjaxRequestVerificationToken;
     string loginHeader = "";
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
-    string oIDCError = "";
+    bool isPOSIX = GSF.Common.IsPosixEnvironment;
+    string oidcError;
 
 
-    if (request.QueryParameters().TryGetValue("redir", out redirectPage)) {
+    if (queryParams.TryGetValue("redir", out redirectPage)) {
         string base64Path = WebUtility.UrlDecode(redirectPage);
         byte[] pathBytes = Convert.FromBase64String(base64Path);
         redirectPage = Encoding.UTF8.GetString(pathBytes);
@@ -54,13 +60,10 @@
         redirectPage = "/";
     }
 
-    if (request.QueryParameters().TryGetValue("oidcError", out oIDCError))
-    {
-        oIDCError = WebUtility.UrlDecode(oIDCError);
-    }
-    else
-    {
-        oIDCError = "";
+    if (queryParams.TryGetValue("oidcError", out oidcError)) {
+        oidcError = WebUtility.UrlDecode(oidcError);
+    } else {
+        oidcError = "";
     }
 
     string redirectPageLabel = redirectPage == "/" ? "main" : "target";
@@ -95,13 +98,7 @@
         loginHeader = options.LoginHeader;
     }
 
-    bool useAlternateSecurityProvider = false;
-    string p;
-    if (request.QueryParameters().TryGetValue("useAlternateSecurityProvider", out p))
-    {
-        useAlternateSecurityProvider = true;
-    }
-
+    bool useAlternateSecurityProvider = queryParams.ContainsKey("useAlternateSecurityProvider");
 
     string constants = string.Format(@"
         const redirectPage = ""{0}"";
@@ -115,20 +112,22 @@
         const redirectPageLabel = ""{9}"";
         const useAlternateSecurityProvider = {10};
         const oidcError = ""{11}"";
+        const isPOSIX = {12};
     ",
-/* 0 */ redirectPage.JavaScriptEncode(),
-/* 1 */ authTestPage.JavaScriptEncode(),
-/* 2 */ loginPage.JavaScriptEncode(),
-/* 3 */ logoutPage.JavaScriptEncode(),
-/* 4 */ clearCredentials.JavaScriptEncode(),
-/* 5 */ unsecureConnection.ToString().ToLowerInvariant(),
-/* 6 */ verificationHeader.JavaScriptEncode(),
-/* 7 */ verificationValue.JavaScriptEncode(),
-/* 8 */ useAjaxVerfication.JavaScriptEncode(),
-/* 9 */ redirectPageLabel.JavaScriptEncode(),
-/* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant(),
-/* 11 */ oIDCError.JavaScriptEncode()
-);
+        /* 0 */ redirectPage.JavaScriptEncode(),
+        /* 1 */ authTestPage.JavaScriptEncode(),
+        /* 2 */ loginPage.JavaScriptEncode(),
+        /* 3 */ logoutPage.JavaScriptEncode(),
+        /* 4 */ clearCredentials.JavaScriptEncode(),
+        /* 5 */ unsecureConnection.ToString().ToLowerInvariant(),
+        /* 6 */ verificationHeader.JavaScriptEncode(),
+        /* 7 */ verificationValue.JavaScriptEncode(),
+        /* 8 */ useAjaxVerfication.JavaScriptEncode(),
+        /* 9 */ redirectPageLabel.JavaScriptEncode(),
+        /* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant(),
+        /* 11 */ oidcError.JavaScriptEncode(),
+        /* 12 */ isPOSIX.ToString().ToLowerInvariant()
+    );
 }
 <!DOCTYPE html>
 <html>
@@ -148,8 +147,8 @@
         table {
             width: 100%;
             table-layout: fixed;
-            border-radius: 0px;
-            margin: 0px auto;
+            border-radius: 0;
+            margin: 0 auto;
             float: none;
         }
 
@@ -186,7 +185,7 @@
 
         @@-moz-keyframes spin {
             0% {
-                -moz-transform: rotate(0deg);
+                -moz-transform: rotate(0);
             }
 
             100% {
@@ -196,7 +195,7 @@
 
         @@-webkit-keyframes spin {
             0% {
-                -webkit-transform: rotate(0deg);
+                -webkit-transform: rotate(0);
             }
 
             100% {
@@ -206,7 +205,7 @@
 
         @@-o-keyframes spin {
             0% {
-                -o-transform: rotate(0deg);
+                -o-transform: rotate(0);
             }
 
             100% {
@@ -216,8 +215,8 @@
 
         @@keyframes spin {
             0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
+                -webkit-transform: rotate(0);
+                transform: rotate(0);
             }
 
             100% {
@@ -242,10 +241,9 @@
                         </span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin" style="display: none"></span></h4>
                     </div>
                     <div class="panel-body" id="credentialsForm">
-                        @if (string.IsNullOrEmpty(oIDCError))
-                        {
-
-                            <form role="form">
+                    @if (string.IsNullOrEmpty(oidcError))
+                    {
+                        <form role="form">
                             <div class="form-group">
                                 <label for="username">User name:</label>
                                 <input type="text" class="form-control" id="username" />
@@ -254,7 +252,7 @@
                                 <label for="password">Password:</label>
                                 <input type="password" class="form-control" id="password" />
                             </div>
-                            <table>
+                            <table @Raw(isPOSIX ? "style=\"display: none\"" : "")>
                                 <tr>
                                     <td>
                                         <div class="form-group">
@@ -285,7 +283,7 @@
                             </table>
                             <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
                         </form>
-                        }
+                    }
                     </div>
                     <div class="panel-body" id="reloginForm" style="display: none">
                         <button type="button" class="btn btn-primary pull-right" id="returnToLogin">Return to Login</button>
@@ -304,6 +302,6 @@
     <script src="@Resources.Root/Security/Scripts/sha256.js"></script>
     <script src="@Resources.Root/Security/Scripts/enc-base64.js"></script>
     <script src="@Resources.Root/Security/Scripts/ntlm.js?ver=1"></script>
-    <script src="@Resources.Root/Security/Scripts/Login.js?ver=2"></script>
+    <script src="@Resources.Root/Security/Scripts/Login.js?ver=3"></script>
 </body>
 </html>
