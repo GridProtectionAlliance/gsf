@@ -103,31 +103,24 @@ namespace GrafanaAdapters
                     {
                         DataRow metadata = LookupTargetMetadata(target);
 
-                        if (metadata == null)
+                        if (metadata is null)
                             return true;
 
                         dynamic left = metadata[filter.key];
                         dynamic right = Convert.ChangeType(filter.value, metadata.Table.Columns[filter.key].DataType);
 
-                        switch (filter.@operator)
+                        return filter.@operator switch
                         {
-                            case "=":
-                            case "==":
-                                return left == right;
-                            case "!=":
-                            case "<>":
-                                return left != right;
-                            case "<":
-                                return left < right;
-                            case "<=":
-                                return left <= right;
-                            case ">":
-                                return left > right;
-                            case ">=":
-                                return left >= right;
-                        }
-
-                        return true;
+                            "="  => left == right,
+                            "==" => left == right,
+                            "!=" => left != right,
+                            "<>" => left != right,
+                            "<"  => left < right,
+                            "<=" => left <= right,
+                            ">"  => left > right,
+                            ">=" => left >= right,
+                            _    => true
+                        };
                     }
                     catch
                     {
@@ -245,9 +238,9 @@ namespace GrafanaAdapters
             // A single target might look like the following:
             // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
 
-            HashSet<string> targetSet = new HashSet<string>(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
-            HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            List<Match> seriesFunctions = new List<Match>();
+            HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
+            HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
+            List<Match> seriesFunctions = new();
 
             foreach (string target in targetSet)
             {
@@ -291,7 +284,7 @@ namespace GrafanaAdapters
                 // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
                 string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
 
-                Dictionary<ulong, string> targetMap = new Dictionary<ulong, string>();
+                Dictionary<ulong, string> targetMap = new();
 
                 // Expand target set to include point tags for all parsed inputs
                 foreach (string target in allTargets)

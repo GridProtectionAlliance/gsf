@@ -23,16 +23,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading;
-using System.Threading.Tasks;
 using GSF;
 using GSF.Historian;
-using GSF.Historian.DataServices;
 using HistorianAdapters;
-using Newtonsoft.Json;
 
 namespace GrafanaAdapters
 {
@@ -40,7 +36,7 @@ namespace GrafanaAdapters
     /// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
     /// </summary>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-    public class GrafanaDataService : DataService, IGrafanaDataService
+    public partial class GrafanaDataService
     {
         #region [ Members ]
 
@@ -120,16 +116,16 @@ namespace GrafanaAdapters
             get => base.Archive;
             set
             {
-                if (base.Archive != null)
+                if (base.Archive is not null)
                     base.Archive.MetadataUpdated -= Archive_MetadataUpdated;
 
                 base.Archive = value;
 
-                if (base.Archive != null)
+                if (base.Archive is not null)
                     base.Archive.MetadataUpdated += Archive_MetadataUpdated;
 
                 // Update data source metadata when an archive is defined, adapter should exist by then
-                if (m_dataSource.Metadata == null && Enabled)
+                if (m_dataSource.Metadata is null && Enabled)
                     Archive_MetadataUpdated(this, EventArgs.Empty);
             }
         }
@@ -189,160 +185,6 @@ namespace GrafanaAdapters
         public void TestDataSource()
         {
         }
-
-        /// <summary>
-        /// Queries openHistorian as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<List<TimeSeriesValues>> Query(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return await m_dataSource.Query(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openPDC alarm states as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return await m_dataSource.GetAlarmState(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openHistorian Device alarm states.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return await m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openHistorian Device Groups.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return await m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openPDC Alarms as a Grafana alarm data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<GrafanaAlarm>> GetAlarms(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return await m_dataSource.GetAlarms(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openHistorian as a Grafana Metadata source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public Task<string> GetMetadata(Target request)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                if (string.IsNullOrWhiteSpace(request.target))
-                    return string.Empty;
-
-                DataTable table = new DataTable();
-                DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? Array.Empty<DataRow>();
-
-                if (rows.Length > 0)
-                    table = rows.CopyToDataTable();
-
-                return JsonConvert.SerializeObject(table);
-            });
-        }
-
-        /// <summary>
-        /// Search openHistorian for a target.
-        /// </summary>
-        /// <param name="request">Search target.</param>
-        public async Task<string[]> Search(Target request) => 
-            await m_dataSource.Search(request, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public async Task<string[]> SearchFields(Target request) => 
-            await m_dataSource.SearchFields(request, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Search data source for a list of tables.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        public async Task<string[]> SearchFilters(Target request) => 
-            await m_dataSource.SearchFilters(request, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public async Task<string[]> SearchOrderBys(Target request) => 
-            await m_dataSource.SearchOrderBys(request, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
-        /// </summary>
-        /// <param name="request">Annotation request.</param>
-        public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return await m_dataSource.Annotations(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openHistorian location data for Grafana offsetting duplicate coordinates using a radial distribution.
-        /// </summary>
-        /// <param name="request"> Query request.</param>
-        /// <returns>JSON serialized location metadata for specified targets.</returns>
-        public async Task<string> GetLocationData(LocationRequest request)
-        {
-            if (request.zoom is null || request.radius is null)
-                return await LocationData.GetLocationData(request.request, m_cancellationSource.Token);
-
-            return await LocationData.GetLocationData((double)request.radius, (double)request.zoom, request.request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Requests available tag keys.
-        /// </summary>
-        /// <param name="_">Tag keys request.</param>
-        public async Task<TagKeysResponse[]> TagKeys(TagKeysRequest _) => 
-            await m_dataSource.TagKeys(_, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Requests available tag values.
-        /// </summary>
-        /// <param name="request">Tag values request.</param>
-        public async Task<TagValuesResponse[]> TagValues(TagValuesRequest request) => 
-            await m_dataSource.TagValues(request, m_cancellationSource.Token);
 
         #endregion
     }

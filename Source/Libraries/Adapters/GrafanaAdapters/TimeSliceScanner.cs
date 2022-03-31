@@ -47,7 +47,7 @@ namespace GrafanaAdapters
         /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
         public TimeSliceScanner(IEnumerable<DataSourceValueGroup> dataset, double tolerance = 0.0D)
         {
-            m_enumerators = new List<IEnumerator<DataSourceValue>>();
+            m_enumerators = new();
             Tolerance = tolerance;
 
             foreach (DataSourceValueGroup group in dataset)
@@ -90,13 +90,13 @@ namespace GrafanaAdapters
         {
             if (lastValue)
             {
-                Dictionary<string, DataSourceValue> nextSlice = new Dictionary<string, DataSourceValue>(StringComparer.OrdinalIgnoreCase);
+                Dictionary<string, DataSourceValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
                 ReadNextTimeSlice(value => nextSlice[value.Target] = value);
                 return nextSlice.Values;
             }
             else
             {
-                List<DataSourceValue> nextSlice = new List<DataSourceValue>();
+                List<DataSourceValue> nextSlice = new();
                 ReadNextTimeSlice(value => nextSlice.Add(value));
                 return nextSlice;
             }
@@ -118,7 +118,7 @@ namespace GrafanaAdapters
 
             publishTime += Tolerance;
 
-            List<int> completed = new List<int>();
+            List<int> completed = new();
             int index = 0;
 
             // Publish all values at the current time

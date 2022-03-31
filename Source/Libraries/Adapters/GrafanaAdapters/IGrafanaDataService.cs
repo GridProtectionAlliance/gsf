@@ -21,10 +21,8 @@
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
-using System.Threading.Tasks;
 
 namespace GrafanaAdapters
 {
@@ -32,82 +30,12 @@ namespace GrafanaAdapters
     /// Defines needed API calls for a Grafana data source.
     /// </summary>
     [ServiceContract]
-    public interface IGrafanaDataService
+    public partial interface IGrafanaDataService
     {
         /// <summary>
         /// Validates that openHistorian Grafana data source is responding as expected.
         /// </summary>
         [OperationContract, WebInvoke(UriTemplate = "/", Method ="GET", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         void TestDataSource();
-
-        /// <summary>
-        /// Queries openHistorian as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/query", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<List<TimeSeriesValues>> Query(QueryRequest request);
-
-        /// <summary>
-        /// Queries openPDC alarm states as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/GetAlarmState", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request);
-
-        /// <summary>
-        /// Queries openHistorian as a Grafana Metadata source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string> GetMetadata(Target request);
-
-        /// <summary>
-        /// Search openHistorian for a target.
-        /// </summary>
-        /// <param name="request">Search target.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/search", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> Search(Target request);
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfields", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchFields(Target request);
-
-        /// <summary>
-        /// Search data source for a list of tables.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfilters", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchFilters(Target request);
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table to use for ORDER BY expression.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchorderbys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchOrderBys(Target request);
-
-        /// <summary>
-        /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
-        /// </summary>
-        /// <param name="request">Annotation request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<List<AnnotationResponse>> Annotations(AnnotationRequest request);
-
-        /// <summary>
-        /// Requests available tag keys.
-        /// </summary>
-        /// <param name="_">Tag keys request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/tag-keys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<TagKeysResponse[]> TagKeys(TagKeysRequest _);
-
-        /// <summary>
-        /// Requests available tag values.
-        /// </summary>
-        /// <param name="request">Tag values request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/tag-values", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<TagValuesResponse[]> TagValues(TagValuesRequest request);
     }
 }

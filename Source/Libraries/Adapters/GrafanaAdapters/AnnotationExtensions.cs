@@ -50,15 +50,12 @@ namespace GrafanaAdapters
         /// <returns>Table name for specified annotation <paramref name="type"/>.</returns>
         public static string TableName(this AnnotationType type)
         {
-            switch (type)
+            return type switch
             {
-                case AnnotationType.RaisedAlarms:
-                    return "RaisedAlarms";
-                case AnnotationType.ClearedAlarms:
-                    return "ClearedAlarms";
-                default:
-                    return "Undefined";
-            }
+                AnnotationType.RaisedAlarms  => "RaisedAlarms",
+                AnnotationType.ClearedAlarms => "ClearedAlarms",
+                _                            => "Undefined"
+            };
         }
 
         private static string Translate(this string tableName)
@@ -80,14 +77,12 @@ namespace GrafanaAdapters
         /// <returns>Target field name for Guid based point IDs for specified annotation <paramref name="type"/>.</returns>
         public static string TargetFieldName(this AnnotationType type)
         {
-            switch (type)
+            return type switch
             {
-                case AnnotationType.RaisedAlarms:
-                case AnnotationType.ClearedAlarms:
-                    return "AssociatedMeasurementID";
-                default:
-                    throw new InvalidOperationException("Cannot extract target for specified annotation type.");
-            }
+                AnnotationType.RaisedAlarms  => "AssociatedMeasurementID",
+                AnnotationType.ClearedAlarms => "AssociatedMeasurementID",
+                _                            => throw new InvalidOperationException("Cannot extract target for specified annotation type.")
+            };
         }
 
         /// <summary>
@@ -103,15 +98,12 @@ namespace GrafanaAdapters
 
             double value = datapoint[TimeSeriesValues.Value];
 
-            switch (type)
+            return type switch
             {
-                case AnnotationType.RaisedAlarms:
-                    return value != 0.0D;
-                case AnnotationType.ClearedAlarms:
-                    return value == 0.0D;
-                default:
-                    throw new InvalidOperationException("Cannot determine data point applicability for specified annotation type.");
-            }
+                AnnotationType.RaisedAlarms  => value != 0.0D,
+                AnnotationType.ClearedAlarms => value == 0.0D,
+                _                            => throw new InvalidOperationException("Cannot determine data point applicability for specified annotation type.")
+            };
         }
 
         /// <summary>
@@ -199,17 +191,12 @@ namespace GrafanaAdapters
                 {
                     parsedFilterExpression = true;
 
-                    switch (tableName.ToUpperInvariant())
+                    type = tableName.ToUpperInvariant() switch
                     {
-                        case "RAISEDALARMS":
-                            type = AnnotationType.RaisedAlarms;
-                            break;
-                        case "CLEAREDALARMS":
-                            type = AnnotationType.ClearedAlarms;
-                            break;
-                        default:
-                            throw new InvalidOperationException("Invalid FILTER table for annotation query expression.");
-                    }
+                        "RAISEDALARMS"  => AnnotationType.RaisedAlarms,
+                        "CLEAREDALARMS" => AnnotationType.ClearedAlarms,
+                        _               => throw new InvalidOperationException("Invalid FILTER table for annotation query expression.")
+                    };
                 }
                 else if (query.StartsWith("#RaisedAlarms", StringComparison.OrdinalIgnoreCase))
                 {
@@ -283,7 +270,7 @@ namespace GrafanaAdapters
                     rows = source.Tables[type.TableName().Translate()].Rows.Cast<DataRow>().ToArray();
                 }
 
-                Dictionary<string, DataRow> definitions = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
+                Dictionary<string, DataRow> definitions = new(StringComparer.OrdinalIgnoreCase);
 
                 foreach (DataRow row in rows)
                 {

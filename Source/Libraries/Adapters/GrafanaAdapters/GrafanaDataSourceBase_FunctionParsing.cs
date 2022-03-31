@@ -613,51 +613,51 @@ namespace GrafanaAdapters
             s_groupOperationNames = Enum.GetNames(typeof(GroupOperation));
 
             // RegEx instance to find all series functions. Ignore RowFilter key words / functions ==> WHERE         IN                 AND                 OR              NOT              CONVERT              LEN              ISNULL              IIF              TRIM              SUBSTRING
-            s_seriesFunctions = new Regex($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!(\s+WHERE\s*)|(\s+IN\s*)|((\)|\'|\s+)AND\s*)|((\)|\'|\s+)OR\s*)|((\(|\s+)NOT\s*)|((\(|\s+)CONVERT\s*)|((\(|\s+)LEN\s*)|((\(|\s+)ISNULL\s*)|((\(|\s+)IIF\s*)|((\(|\s+)TRIM\s*)|((\(|\s+)SUBSTRING\s*))\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_seriesFunctions = new($@"({string.Join("|", s_groupOperationNames)})?\w+\s*(?<!(\s+WHERE\s*)|(\s+IN\s*)|((\)|\'|\s+)AND\s*)|((\)|\'|\s+)OR\s*)|((\(|\s+)NOT\s*)|((\(|\s+)CONVERT\s*)|((\(|\s+)LEN\s*)|((\(|\s+)ISNULL\s*)|((\(|\s+)IIF\s*)|((\(|\s+)TRIM\s*)|((\(|\s+)SUBSTRING\s*))\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // RegEx instances to identify specific functions and extract internal expressions
-            s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_minimumExpression = new Regex(string.Format(GetExpression, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_maximumExpression = new Regex(string.Format(GetExpression, "(Maximum|Max)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_totalExpression = new Regex(string.Format(GetExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_rangeExpression = new Regex(string.Format(GetExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_countExpression = new Regex(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_addExpression = new Regex(string.Format(GetExpression, "Add"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_subtractExpression = new Regex(string.Format(GetExpression, "Subtract"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_multiplyExpression = new Regex(string.Format(GetExpression, "Multiply"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_divideExpression = new Regex(string.Format(GetExpression, "Divide"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_moduloExpression = new Regex(string.Format(GetExpression, "(Modulo|Modulus|Mod)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_roundExpression = new Regex(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_floorExpression = new Regex(string.Format(GetExpression, "Floor"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_ceilingExpression = new Regex(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_truncateExpression = new Regex(string.Format(GetExpression, "(Truncate|Trunc)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_standardDeviationExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_topExpression = new Regex(string.Format(GetExpression, "(Top|Largest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot|Smallest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_randomExpression = new Regex(string.Format(GetExpression, "(Random|Rand|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_firstExpression = new Regex(string.Format(GetExpression, "First"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_lastExpression = new Regex(string.Format(GetExpression, "Last"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_percentileExpression = new Regex(string.Format(GetExpression, "(Percentile|Pctl)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_differenceExpression = new Regex(string.Format(GetExpression, "(Difference|Diff)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_timeDifferenceExpression = new Regex(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_intervalExpression = new Regex(string.Format(GetExpression, "Interval"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_includeRangeExpression = new Regex(string.Format(GetExpression, "(IncludeRange|Include)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_excludeRangeExpression = new Regex(string.Format(GetExpression, "(ExcludeRange|Exclude)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_filterNaNExpression = new Regex(string.Format(GetExpression, "FilterNaN"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_wrapAngleExpression = new Regex(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_evaluateExpression = new Regex(string.Format(GetExpression, "(Evaluate|Eval)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_importsCommand = new Regex(@"Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_averageExpression = new(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_minimumExpression = new(string.Format(GetExpression, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_maximumExpression = new(string.Format(GetExpression, "(Maximum|Max)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_totalExpression = new(string.Format(GetExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_rangeExpression = new(string.Format(GetExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_countExpression = new(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_distinctExpression = new(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_absoluteValueExpression = new(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_addExpression = new(string.Format(GetExpression, "Add"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_subtractExpression = new(string.Format(GetExpression, "Subtract"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_multiplyExpression = new(string.Format(GetExpression, "Multiply"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_divideExpression = new(string.Format(GetExpression, "Divide"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_moduloExpression = new(string.Format(GetExpression, "(Modulo|Modulus|Mod)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_roundExpression = new(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_floorExpression = new(string.Format(GetExpression, "Floor"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_ceilingExpression = new(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_truncateExpression = new(string.Format(GetExpression, "(Truncate|Trunc)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_standardDeviationExpression = new(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_medianExpression = new(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_modeExpression = new(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_topExpression = new(string.Format(GetExpression, "(Top|Largest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_bottomExpression = new(string.Format(GetExpression, "(Bottom|Bot|Smallest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_randomExpression = new(string.Format(GetExpression, "(Random|Rand|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_firstExpression = new(string.Format(GetExpression, "First"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_lastExpression = new(string.Format(GetExpression, "Last"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_percentileExpression = new(string.Format(GetExpression, "(Percentile|Pctl)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_differenceExpression = new(string.Format(GetExpression, "(Difference|Diff)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_timeDifferenceExpression = new(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_derivativeExpression = new(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_timeIntegrationExpression = new(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_intervalExpression = new(string.Format(GetExpression, "Interval"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_includeRangeExpression = new(string.Format(GetExpression, "(IncludeRange|Include)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_excludeRangeExpression = new(string.Format(GetExpression, "(ExcludeRange|Exclude)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_filterNaNExpression = new(string.Format(GetExpression, "FilterNaN"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_unwrapAngleExpression = new(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_wrapAngleExpression = new(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_labelExpression = new(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_evaluateExpression = new(string.Format(GetExpression, "(Evaluate|Eval)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_importsCommand = new(@"Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define required parameter counts for each function
-            s_requiredParameters = new Dictionary<SeriesFunction, int>
+            s_requiredParameters = new()
             {
                 [SeriesFunction.Average] = 0,
                 [SeriesFunction.Minimum] = 0,
@@ -700,7 +700,7 @@ namespace GrafanaAdapters
             };
 
             // Define optional parameter counts for each function
-            s_optionalParameters = new Dictionary<SeriesFunction, int>
+            s_optionalParameters = new()
             {
                 [SeriesFunction.Average] = 0,
                 [SeriesFunction.Minimum] = 0,
@@ -769,232 +769,232 @@ namespace GrafanaAdapters
                 Match match = s_averageExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Average, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Average, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for minimum function
                 match = s_minimumExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Minimum, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Minimum, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for maximum function
                 match = s_maximumExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Maximum, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Maximum, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for total function
                 match = s_totalExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Total, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Total, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for range function
                 match = s_rangeExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Range, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Range, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for count function
                 match = s_countExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Count, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Count, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for distinct function
                 match = s_distinctExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Distinct, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Distinct, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for absolute value function
                 match = s_absoluteValueExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.AbsoluteValue, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.AbsoluteValue, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for add function
                 match = s_addExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Add, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Add, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for subtract function
                 match = s_subtractExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Subtract, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Subtract, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for multiply function
                 match = s_multiplyExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Multiply, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Multiply, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for divide function
                 match = s_divideExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Divide, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Divide, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for modulo function
                 match = s_moduloExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Modulo, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Modulo, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for round function
                 match = s_roundExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Round, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Round, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for floor function
                 match = s_floorExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Floor, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Floor, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for ceiling function
                 match = s_ceilingExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Ceiling, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Ceiling, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for truncate function
                 match = s_truncateExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Truncate, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Truncate, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for standard deviation function
                 match = s_standardDeviationExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.StandardDeviation, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.StandardDeviation, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for median function
                 match = s_medianExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Median, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Median, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for mode function
                 match = s_modeExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Mode, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Mode, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for top function
                 match = s_topExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Top, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Top, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for bottom function
                 match = s_bottomExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Bottom, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Bottom, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for random function
                 match = s_randomExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Random, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Random, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for first function
                 match = s_firstExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.First, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.First, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for last function
                 match = s_lastExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Last, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Last, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for percentile function
                 match = s_percentileExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Percentile, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Percentile, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for difference function
                 match = s_differenceExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Difference, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Difference, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for time difference function
                 match = s_timeDifferenceExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.TimeDifference, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.TimeDifference, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for derivative function
                 match = s_derivativeExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Derivative, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Derivative, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for time integration function
                 match = s_timeIntegrationExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.TimeIntegration, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.TimeIntegration, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for interval function
                 match = s_intervalExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Interval, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Interval, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for include range function
                 match = s_includeRangeExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.IncludeRange, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.IncludeRange, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for exclude range function
                 match = s_excludeRangeExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.ExcludeRange, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.ExcludeRange, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for filter NaN function
                 match = s_filterNaNExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.FilterNaN, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.FilterNaN, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for unwrap angle function
                 match = s_unwrapAngleExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.UnwrapAngle, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.UnwrapAngle, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for wrap angle function
                 match = s_wrapAngleExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.WrapAngle, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.WrapAngle, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for label function
                 match = s_labelExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Label, match.Result("${Expression}").Trim(), groupOperation, imports);
+                    return new(SeriesFunction.Label, match.Result("${Expression}").Trim(), groupOperation, imports);
 
                 // Look for evaluate function
                 match = s_evaluateExpression.Match(expression);
 
                 if (match.Success)
-                    return new ParsedFunction(SeriesFunction.Evaluate, match.Result("${Expression}").Trim(), GroupOperation.Slice, imports);
+                    return new(SeriesFunction.Evaluate, match.Result("${Expression}").Trim(), GroupOperation.Slice, imports);
 
                 // Target is not a recognized function
-                return new ParsedFunction(SeriesFunction.None, expression, GroupOperation.None, imports);
+                return new(SeriesFunction.None, expression, GroupOperation.None, imports);
             });
 
             if (result.Item1 == SeriesFunction.None)

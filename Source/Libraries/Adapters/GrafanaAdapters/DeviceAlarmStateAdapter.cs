@@ -322,7 +322,7 @@ namespace GrafanaAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendFormat("           Monitoring Rate: {0:N0}ms", MonitoringRate);
@@ -374,7 +374,6 @@ namespace GrafanaAdapters
         /// Releases the unmanaged resources used by the <see cref="DeviceAlarmStateAdapter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_lastDeviceStateChange", Justification = "Object is disposed")]
         protected override void Dispose(bool disposing)
         {
             if (m_disposed)
@@ -385,7 +384,7 @@ namespace GrafanaAdapters
                 if (!disposing)
                     return;
 
-                if (m_monitoringTimer != null)
+                if (m_monitoringTimer is not null)
                 {
                     m_monitoringTimer.Enabled = false;
                     m_monitoringTimer.Elapsed -= MonitoringTimer_Elapsed;
@@ -408,21 +407,21 @@ namespace GrafanaAdapters
         {
             base.Initialize();
 
-            ConnectionStringParser parser = new ConnectionStringParser();
+            ConnectionStringParser parser = new();
             parser.ParseConnectionString(ConnectionString, this);
 
-            m_alarmStates = new Dictionary<AlarmState, AlarmStateRecord>();
-            m_alarmStateIDs = new Dictionary<int, AlarmState>();
-            m_deviceMeasurementKeys = new Dictionary<int, MeasurementKey[]>();
-            m_deviceMetadata = new Dictionary<int, DataRow>();
-            m_lastDeviceDataUpdates = new Dictionary<MeasurementKey, Ticks>();
-            m_lastDeviceStateChange = new FileBackedDictionary<int, long>(FilePath.GetAbsolutePath($"{Name}_LastStateChangeCache.bin".RemoveInvalidFileNameCharacters()));
-            m_lastAcknowledgedTransition = new Dictionary<int, Ticks>();
+            m_alarmStates = new();
+            m_alarmStateIDs = new();
+            m_deviceMeasurementKeys = new();
+            m_deviceMetadata = new();
+            m_lastDeviceDataUpdates = new();
+            m_lastDeviceStateChange = new(FilePath.GetAbsolutePath($"{Name}_LastStateChangeCache.bin".RemoveInvalidFileNameCharacters()));
+            m_lastAcknowledgedTransition = new();
             m_lastExternalDatabaseStateChange = 0L;
-            m_mappedAlarmStates = new Dictionary<AlarmState, string>();
+            m_mappedAlarmStates = new();
             m_stateCounts = CreateNewStateCountsMap();
-            m_compositeStates = new List<int>();
-            m_stateCountLock = new object();
+            m_compositeStates = new();
+            m_stateCountLock = new();
 
             LoadAlarmStates();
 
@@ -441,10 +440,10 @@ namespace GrafanaAdapters
             }
 
             // Define synchronized monitoring operation
-            m_monitoringOperation = new ShortSynchronizedOperation(MonitoringOperation, exception => OnProcessException(MessageLevel.Warning, exception));
+            m_monitoringOperation = new(MonitoringOperation, exception => OnProcessException(MessageLevel.Warning, exception));
 
             // Define monitoring timer
-            m_monitoringTimer = new Timer(MonitoringRate)
+            m_monitoringTimer = new(MonitoringRate)
             {
                 AutoReset = true
             };
@@ -455,107 +454,106 @@ namespace GrafanaAdapters
 
         private void LoadAlarmStates(bool reload = false)
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using AdoDataConnection connection = new("systemSettings");
+
+            // Load alarm state map - this defines database state ID and custom color for each alarm state
+            TableOperations<AlarmStateRecord> alarmStateTable = new(connection);
+            AlarmStateRecord[] alarmStateRecords = alarmStateTable.QueryRecords().ToArray();
+
+            foreach (AlarmState alarmState in Enum.GetValues(typeof(AlarmState)))
             {
-                // Load alarm state map - this defines database state ID and custom color for each alarm state
-                TableOperations<AlarmStateRecord> alarmStateTable = new TableOperations<AlarmStateRecord>(connection);
-                AlarmStateRecord[] alarmStateRecords = alarmStateTable.QueryRecords().ToArray();
+                AlarmStateRecord alarmStateRecord = alarmStateRecords.FirstOrDefault(record => record.State.RemoveWhiteSpace().Equals(alarmState.ToString(), StringComparison.OrdinalIgnoreCase));
 
-                foreach (AlarmState alarmState in Enum.GetValues(typeof(AlarmState)))
+                if (alarmStateRecord is null)
                 {
-                    AlarmStateRecord alarmStateRecord = alarmStateRecords.FirstOrDefault(record => record.State.RemoveWhiteSpace().Equals(alarmState.ToString(), StringComparison.OrdinalIgnoreCase));
-
-                    if (alarmStateRecord == null)
-                    {
-                        alarmStateRecord = alarmStateTable.NewRecord();
-                        alarmStateRecord.State = alarmState.ToString();
-                        alarmStateRecord.Color = "white";
-                    }
-
-                    m_alarmStates[alarmState] = alarmStateRecord;
-                    m_alarmStateIDs[alarmStateRecord.ID] = alarmState;
+                    alarmStateRecord = alarmStateTable.NewRecord();
+                    alarmStateRecord.State = alarmState.ToString();
+                    alarmStateRecord.Color = "white";
                 }
 
-                // Define SQL expression for direct connect and parent devices or all direct connect and child devices
-                string deviceSQL = TargetParentDevices ?
-                    "SELECT * FROM Device WHERE (IsConcentrator != 0 OR ParentID IS NULL) AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)" :
-                    "SELECT * FROM Device WHERE IsConcentrator = 0 AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)";
+                m_alarmStates[alarmState] = alarmStateRecord;
+                m_alarmStateIDs[alarmStateRecord.ID] = alarmState;
+            }
 
-                // Load any newly defined devices into the alarm device table
-                TableOperations<AlarmDevice> alarmDeviceTable = new TableOperations<AlarmDevice>(connection);
-                DataRow[] newDevices = connection.RetrieveData(deviceSQL).Select();
+            // Define SQL expression for direct connect and parent devices or all direct connect and child devices
+            string deviceSQL = TargetParentDevices ?
+                "SELECT * FROM Device WHERE (IsConcentrator != 0 OR ParentID IS NULL) AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)" :
+                "SELECT * FROM Device WHERE IsConcentrator = 0 AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)";
 
-                foreach (DataRow newDevice in newDevices)
+            // Load any newly defined devices into the alarm device table
+            TableOperations<AlarmDevice> alarmDeviceTable = new(connection);
+            DataRow[] newDevices = connection.RetrieveData(deviceSQL).Select();
+
+            foreach (DataRow newDevice in newDevices)
+            {
+                AlarmDevice alarmDevice = alarmDeviceTable.NewRecord();
+
+                bool enabled = newDevice["Enabled"].ToString().ParseBoolean();
+
+                alarmDevice.DeviceID = newDevice.ConvertField<int>("ID");
+                alarmDevice.StateID = enabled ? m_alarmStates[AlarmState.NotAvailable].ID : m_alarmStates[AlarmState.OutOfService].ID;
+                alarmDevice.DisplayData = enabled ? "0" : GetOutOfServiceTime(newDevice);
+
+                alarmDeviceTable.AddNewRecord(alarmDevice);
+
+                // Foreign key relationship with Device table with delete cascade should ensure automatic removals
+            }
+
+            List<MeasurementKey> inputMeasurementKeys = new();
+
+            // Load measurement signal ID to alarm device map
+            foreach (AlarmDevice alarmDevice in alarmDeviceTable.QueryRecords())
+            {
+                MeasurementKey[] keys = null;
+                DataRow metadata = connection.RetrieveRow("SELECT * FROM Device WHERE ID = {0}", alarmDevice.DeviceID);
+
+                if (metadata is not null)
                 {
-                    AlarmDevice alarmDevice = alarmDeviceTable.NewRecord();
+                    // Querying from MeasurementDetail because we also want to include disabled device measurements
+                    string measurementSQL = TargetParentDevices ?
+                        "SELECT MeasurementDetail.SignalID AS SignalID, MeasurementDetail.ID AS ID FROM MeasurementDetail INNER JOIN DeviceDetail ON MeasurementDetail.DeviceID = DeviceDetail.ID WHERE (DeviceDetail.Acronym = {0} OR DeviceDetail.ParentAcronym = {0}) AND MeasurementDetail.SignalAcronym = 'FREQ'" :
+                        "SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'";
 
-                    bool enabled = newDevice["Enabled"].ToString().ParseBoolean();
+                    DataTable table = connection.RetrieveData(measurementSQL, metadata.ConvertField<string>("Acronym"));
 
-                    alarmDevice.DeviceID = newDevice.ConvertField<int>("ID");
-                    alarmDevice.StateID = enabled ? m_alarmStates[AlarmState.NotAvailable].ID : m_alarmStates[AlarmState.OutOfService].ID;
-                    alarmDevice.DisplayData = enabled ? "0" : GetOutOfServiceTime(newDevice);
-
-                    alarmDeviceTable.AddNewRecord(alarmDevice);
-
-                    // Foreign key relationship with Device table with delete cascade should ensure automatic removals
+                    // ReSharper disable once AccessToDisposedClosure
+                    keys = table.AsEnumerable().Select(row => MeasurementKey.LookUpOrCreate(connection.Guid(row, "SignalID"), row["ID"].ToString())).ToArray();
                 }
 
-                List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
-
-                // Load measurement signal ID to alarm device map
-                foreach (AlarmDevice alarmDevice in alarmDeviceTable.QueryRecords())
+                if (keys?.Length > 0)
                 {
-                    MeasurementKey[] keys = null;
-                    DataRow metadata = connection.RetrieveRow("SELECT * FROM Device WHERE ID = {0}", alarmDevice.DeviceID);
+                    inputMeasurementKeys.AddRange(keys);
+                    m_deviceMeasurementKeys[alarmDevice.DeviceID] = keys;
+                    m_deviceMetadata[alarmDevice.DeviceID] = metadata;
 
-                    if (metadata != null)
+                    if (!m_lastDeviceStateChange.ContainsKey(alarmDevice.DeviceID))
+                        m_lastDeviceStateChange.Add(alarmDevice.DeviceID, alarmDevice.TimeStamp.Ticks);
+
+                    foreach (MeasurementKey key in keys)
                     {
-                        // Querying from MeasurementDetail because we also want to include disabled device measurements
-                        string measurementSQL = TargetParentDevices ?
-                            "SELECT MeasurementDetail.SignalID AS SignalID, MeasurementDetail.ID AS ID FROM MeasurementDetail INNER JOIN DeviceDetail ON MeasurementDetail.DeviceID = DeviceDetail.ID WHERE (DeviceDetail.Acronym = {0} OR DeviceDetail.ParentAcronym = {0}) AND MeasurementDetail.SignalAcronym = 'FREQ'" :
-                            "SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'";
-
-                        DataTable table = connection.RetrieveData(measurementSQL, metadata.ConvertField<string>("Acronym"));
-
-                        // ReSharper disable once AccessToDisposedClosure
-                        keys = table.AsEnumerable().Select(row => MeasurementKey.LookUpOrCreate(connection.Guid(row, "SignalID"), row["ID"].ToString())).ToArray();
-                    }
-
-                    if (keys?.Length > 0)
-                    {
-                        inputMeasurementKeys.AddRange(keys);
-                        m_deviceMeasurementKeys[alarmDevice.DeviceID] = keys;
-                        m_deviceMetadata[alarmDevice.DeviceID] = metadata;
-
-                        if (!m_lastDeviceStateChange.ContainsKey(alarmDevice.DeviceID))
-                            m_lastDeviceStateChange.Add(alarmDevice.DeviceID, alarmDevice.TimeStamp.Ticks);
-
-                        foreach (MeasurementKey key in keys)
+                        if (reload)
                         {
-                            if (reload)
-                            {
-                                if (!m_lastDeviceDataUpdates.ContainsKey(key))
-                                    m_lastDeviceDataUpdates.Add(key, DateTime.UtcNow.Ticks);
-                            }
-                            else
-                            {
-                                m_lastDeviceDataUpdates[key] = DateTime.UtcNow.Ticks;
-                            }
+                            if (!m_lastDeviceDataUpdates.ContainsKey(key))
+                                m_lastDeviceDataUpdates.Add(key, DateTime.UtcNow.Ticks);
+                        }
+                        else
+                        {
+                            m_lastDeviceDataUpdates[key] = DateTime.UtcNow.Ticks;
                         }
                     }
-                    else
-                    {
-                        // Mark alarm record as unavailable if no frequency measurement is available for device
-                        alarmDevice.StateID = m_alarmStates[AlarmState.NotAvailable].ID;
-                        alarmDevice.DisplayData = GetOutOfServiceTime(metadata);
-                        alarmDeviceTable.UpdateRecord(alarmDevice);
-                    }
                 }
-
-                // Load desired input measurements
-                InputMeasurementKeys = inputMeasurementKeys.ToArray();
-                TrackLatestMeasurements = true;
+                else
+                {
+                    // Mark alarm record as unavailable if no frequency measurement is available for device
+                    alarmDevice.StateID = m_alarmStates[AlarmState.NotAvailable].ID;
+                    alarmDevice.DisplayData = GetOutOfServiceTime(metadata);
+                    alarmDeviceTable.UpdateRecord(alarmDevice);
+                }
             }
+
+            // Load desired input measurements
+            InputMeasurementKeys = inputMeasurementKeys.ToArray();
+            TrackLatestMeasurements = true;
         }
 
         /// <summary>
@@ -595,14 +593,14 @@ namespace GrafanaAdapters
             lock (m_alarmStates)
             {
                 ImmediateMeasurements measurements = LatestMeasurements;
-                List<AlarmDevice> alarmDeviceUpdates = new List<AlarmDevice>();
+                List<AlarmDevice> alarmDeviceUpdates = new();
                 Dictionary<AlarmState, int> stateCounts = CreateNewStateCountsMap();
 
                 OnStatusMessage(MessageLevel.Info, "Updating device alarm states");
 
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection connection = new("systemSettings"))
                 {
-                    TableOperations<AlarmDevice> alarmDeviceTable = new TableOperations<AlarmDevice>(connection);
+                    TableOperations<AlarmDevice> alarmDeviceTable = new(connection);
 
                     foreach (AlarmDevice alarmDevice in alarmDeviceTable.QueryRecords())
                     {
@@ -696,18 +694,12 @@ namespace GrafanaAdapters
                         }
 
                         // Update display text to show time since last alarm state change
-                        switch (newState)
+                        alarmDevice.DisplayData = newState switch
                         {
-                            case AlarmState.Good:
-                                alarmDevice.DisplayData = "0";
-                                break;
-                            case AlarmState.OutOfService:
-                                alarmDevice.DisplayData = GetOutOfServiceTime(metadata);
-                                break;
-                            default:
-                                alarmDevice.DisplayData = GetShortElapsedTimeString(currentTime - m_lastDeviceStateChange[alarmDevice.DeviceID]);
-                                break;
-                        }
+                            AlarmState.Good         => "0",
+                            AlarmState.OutOfService => GetOutOfServiceTime(metadata),
+                            _                       => GetShortElapsedTimeString(currentTime - m_lastDeviceStateChange[alarmDevice.DeviceID])
+                        };
 
                         // Update alarm table record
                         alarmDeviceTable.UpdateRecord(alarmDevice);
@@ -722,94 +714,93 @@ namespace GrafanaAdapters
 
                 if (EnableExternalDatabaseSynchronization)
                 {
-                    TemplatedExpressionParser parameterTemplate = new TemplatedExpressionParser
+                    TemplatedExpressionParser parameterTemplate = new()
                     {
                         TemplatedExpression = ExternalDatabaseCommandParameters
                     };
 
                     AlarmState compositeState = AlarmState.OutOfService;
                     DataRow alarmedDeviceMetadata = null;
-                    Dictionary<string, string> substitutions = new Dictionary<string, string>();
+                    Dictionary<string, string> substitutions = new();
 
                     // Provide state counts as available substitution parameters
                     foreach (KeyValuePair<AlarmState, int> stateCount in stateCounts)
                         substitutions[$"{{{stateCount.Key}StateCount}}"] = stateCount.Value.ToString();
 
-                    using (AdoDataConnection connection = string.IsNullOrWhiteSpace(ExternalDatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(ExternalDatabaseConnnectionString, ExternalDatabaseProviderString))
+                    using AdoDataConnection connection = string.IsNullOrWhiteSpace(ExternalDatabaseConnnectionString) ? new("systemSettings") : new AdoDataConnection(ExternalDatabaseConnnectionString, ExternalDatabaseProviderString);
+
+                    foreach (AlarmDevice alarmDevice in alarmDeviceUpdates)
                     {
-                        foreach (AlarmDevice alarmDevice in alarmDeviceUpdates)
-                        {
-                            if (!m_deviceMetadata.TryGetValue(alarmDevice.DeviceID, out DataRow metadata))
-                                continue;
+                        if (!m_deviceMetadata.TryGetValue(alarmDevice.DeviceID, out DataRow metadata))
+                            continue;
 
-                            if (!m_alarmStateIDs.TryGetValue(alarmDevice.StateID, out AlarmState state))
-                                state = AlarmState.NotAvailable;
+                        if (!m_alarmStateIDs.TryGetValue(alarmDevice.StateID, out AlarmState state))
+                            state = AlarmState.NotAvailable;
 
-                            if (alarmedDeviceMetadata == null)
-                                alarmedDeviceMetadata = metadata;
-
-                            if (ExternalDatabaseReportSingleCompositeState)
-                            {
-                                if (state != AlarmState.Good)
-                                {
-                                    // First encountered alarmed device with highest alarm state will be reported as composite state
-                                    // because AlarmState values after Good are order by highest to lowest before OutOfService
-                                    if (state < compositeState)
-                                    {
-                                        compositeState = state;
-                                        alarmedDeviceMetadata = metadata;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // When ExternalDatabaseReportSingleCompositeState is false, reporting state per device
-                                if (state != AlarmState.Acknowledged)
-                                    ExternalDatabaseReportState(parameterTemplate, connection, state, metadata, substitutions);
-                            }
-                        }
+                        if (alarmedDeviceMetadata is null)
+                            alarmedDeviceMetadata = metadata;
 
                         if (ExternalDatabaseReportSingleCompositeState)
                         {
-                            AlarmState minimumHysteresisState = (AlarmState)ExternalDatabaseHysteresisMinimumState;
-
-                            if (compositeState == AlarmState.OutOfService)
-                                compositeState = AlarmState.Good;
-
-                            string lastUpdate = m_lastExternalDatabaseStateChange > 0L ? $", last update: {(DateTime.UtcNow.Ticks - m_lastExternalDatabaseStateChange).ToElapsedTimeString(2)}" : "";
-                            OnStatusMessage(MessageLevel.Info, $"Current composite reporting state: {compositeState}{lastUpdate}");
-
-                            if (compositeState <= minimumHysteresisState)
+                            if (state != AlarmState.Good)
                             {
-                                // Report composite states less than specified minimum hysteresis state, typically Good and Alarm, immediately
-                                ExternalDatabaseReportState(parameterTemplate, connection, compositeState, alarmedDeviceMetadata, substitutions);
-                                m_compositeStates.Clear();
-                                m_externalDatabaseUpdates++;
-                            }
-                            else
-                            {
-                                m_compositeStates.Add((int)compositeState);
-
-                                // Report other composite states only after specified hysteresis delay has passed
-                                if ((DateTime.UtcNow.Ticks - m_lastExternalDatabaseStateChange).ToMinutes() > ExternalDatabaseHysteresisDelay)
+                                // First encountered alarmed device with highest alarm state will be reported as composite state
+                                // because AlarmState values after Good are order by highest to lowest before OutOfService
+                                if (state < compositeState)
                                 {
-                                    // Pick average composite state
-                                    compositeState = (AlarmState)(int)Math.Round(m_compositeStates.Average());
-
-                                    // Validate average composite state
-                                    if (compositeState <= minimumHysteresisState || compositeState >= AlarmState.OutOfService)
-                                        compositeState = m_compositeStates.Select(state => (AlarmState)state).FirstOrDefault(state => state > minimumHysteresisState && state < AlarmState.OutOfService);
-
-                                    ExternalDatabaseReportState(parameterTemplate, connection, compositeState, alarmedDeviceMetadata, substitutions);
-                                    m_compositeStates.Clear();
-                                    m_externalDatabaseUpdates++;
+                                    compositeState = state;
+                                    alarmedDeviceMetadata = metadata;
                                 }
                             }
                         }
                         else
                         {
+                            // When ExternalDatabaseReportSingleCompositeState is false, reporting state per device
+                            if (state != AlarmState.Acknowledged)
+                                ExternalDatabaseReportState(parameterTemplate, connection, state, metadata, substitutions);
+                        }
+                    }
+
+                    if (ExternalDatabaseReportSingleCompositeState)
+                    {
+                        AlarmState minimumHysteresisState = (AlarmState)ExternalDatabaseHysteresisMinimumState;
+
+                        if (compositeState == AlarmState.OutOfService)
+                            compositeState = AlarmState.Good;
+
+                        string lastUpdate = m_lastExternalDatabaseStateChange > 0L ? $", last update: {(DateTime.UtcNow.Ticks - m_lastExternalDatabaseStateChange).ToElapsedTimeString(2)}" : "";
+                        OnStatusMessage(MessageLevel.Info, $"Current composite reporting state: {compositeState}{lastUpdate}");
+
+                        if (compositeState <= minimumHysteresisState)
+                        {
+                            // Report composite states less than specified minimum hysteresis state, typically Good and Alarm, immediately
+                            ExternalDatabaseReportState(parameterTemplate, connection, compositeState, alarmedDeviceMetadata, substitutions);
+                            m_compositeStates.Clear();
                             m_externalDatabaseUpdates++;
                         }
+                        else
+                        {
+                            m_compositeStates.Add((int)compositeState);
+
+                            // Report other composite states only after specified hysteresis delay has passed
+                            if ((DateTime.UtcNow.Ticks - m_lastExternalDatabaseStateChange).ToMinutes() > ExternalDatabaseHysteresisDelay)
+                            {
+                                // Pick average composite state
+                                compositeState = (AlarmState)(int)Math.Round(m_compositeStates.Average());
+
+                                // Validate average composite state
+                                if (compositeState <= minimumHysteresisState || compositeState >= AlarmState.OutOfService)
+                                    compositeState = m_compositeStates.Select(state => (AlarmState)state).FirstOrDefault(state => state > minimumHysteresisState && state < AlarmState.OutOfService);
+
+                                ExternalDatabaseReportState(parameterTemplate, connection, compositeState, alarmedDeviceMetadata, substitutions);
+                                m_compositeStates.Clear();
+                                m_externalDatabaseUpdates++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        m_externalDatabaseUpdates++;
                     }
                 }
             }
@@ -817,7 +808,7 @@ namespace GrafanaAdapters
 
         private void ExternalDatabaseReportState(TemplatedExpressionParser parameterTemplate, AdoDataConnection connection, AlarmState state, DataRow metadata, Dictionary<string, string> initialSubstitutions)
         {
-            Dictionary<string, string> substitutions = new Dictionary<string, string>(initialSubstitutions)
+            Dictionary<string, string> substitutions = new(initialSubstitutions)
             {
                 ["{AlarmState}"] = state.ToString(),
                 ["{AlarmStateValue}"] = ((int)state).ToString()
@@ -829,13 +820,13 @@ namespace GrafanaAdapters
                 substitutions["{MappedAlarmState}"] = "0";
 
             // Use device metadata columns as possible substitution parameters
-            if (metadata != null)
+            if (metadata is not null)
             {
                 foreach (DataColumn column in metadata.Table.Columns)
                     substitutions[$"{{Device.{column.ColumnName}}}"] = metadata[column.ColumnName].ToString();
             }
 
-            List<object> parameters = new List<object>();
+            List<object> parameters = new();
             string commandParameters = parameterTemplate.Execute(substitutions);
             string[] splitParameters = commandParameters.Split(',');
 
@@ -873,7 +864,7 @@ namespace GrafanaAdapters
         private static readonly string[] s_shortTimeNames = { " yr", " yr", " d", " d", " hr", " hr", " m", " m", " s", " s", "< " };
         private static readonly double s_daysPerYear = new Time(Time.SecondsPerYear(DateTime.UtcNow.Year)).ToDays();
 
-        private static Dictionary<AlarmState, int> CreateNewStateCountsMap() => new Dictionary<AlarmState, int>
+        private static Dictionary<AlarmState, int> CreateNewStateCountsMap() => new()
         {
             [AlarmState.Good] = 0,
             [AlarmState.Alarm] = 0,
@@ -886,7 +877,7 @@ namespace GrafanaAdapters
 
         private static string GetOutOfServiceTime(DataRow deviceRow)
         {
-            if (deviceRow == null)
+            if (deviceRow is null)
                 return "U/A";
 
             try
