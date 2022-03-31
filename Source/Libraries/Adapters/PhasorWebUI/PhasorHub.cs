@@ -39,11 +39,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
+using System.Threading.Tasks;
+#if MONO
+using System.Xml.Linq;
+using GSF.Communication;
+#else
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
-using System.Security;
 using System.Text;
-using System.Threading.Tasks;
+#endif
 using AnalogDefinition = PhasorWebUI.Adapters.AnalogDefinition;
 using ConfigurationCell = PhasorWebUI.Adapters.ConfigurationCell;
 using DigitalDefinition = PhasorWebUI.Adapters.DigitalDefinition;
@@ -63,7 +68,7 @@ namespace PhasorWebUI
     [AuthorizeHubRole]
     public class PhasorHub : RecordOperationsHub<PhasorHub>
     {
-        #region [ Constructors ]
+#region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="PhasorHub"/>.
@@ -106,9 +111,9 @@ namespace PhasorWebUI
         {
         }
 
-        #endregion
+#endregion
 
-        #region [ Methods ]
+#region [ Methods ]
 
         /// <summary>
         /// Overrides base OnConnected method to provide logging
@@ -136,9 +141,9 @@ namespace PhasorWebUI
             return base.OnDisconnected(stopCalled);
         }
 
-        #endregion
+#endregion
 
-        #region [ Static ]
+#region [ Static ]
 
         // Static Fields
         private static Action<string, UpdateType> s_logStatusMessageFunction;
@@ -169,11 +174,11 @@ namespace PhasorWebUI
 
         private const string SystemFrequencyDeviceName = "{0}SYSTEM!FREQ";
 
-        #endregion
+#endregion
 
         // Client-side script functionality
 
-        #region [ Device Table Operations ]
+#region [ Device Table Operations ]
 
         [RecordOperation(typeof(Device), RecordOperation.QueryRecordCount)]
 
@@ -277,9 +282,9 @@ namespace PhasorWebUI
             DataContext.Table<Device>().AddNewOrUpdateRecord(device);
         }
 
-        #endregion
+#endregion
 
-        #region [ Measurement Table Operations ]
+#region [ Measurement Table Operations ]
 
         [RecordOperation(typeof(Measurement), RecordOperation.QueryRecordCount)]
         public int QueryMeasurementCount(string filterText)
@@ -345,9 +350,9 @@ namespace PhasorWebUI
             DataContext.Table<Measurement>().AddNewOrUpdateRecord(measurement);
         }
 
-        #endregion
+#endregion
 
-        #region [ Phasor Table Operations ]
+#region [ Phasor Table Operations ]
 
         [RecordOperation(typeof(Phasor), RecordOperation.QueryRecordCount)]
         public int QueryPhasorCount(string filterText)
@@ -408,9 +413,9 @@ namespace PhasorWebUI
             return DataContext.Connection.ExecuteScalar<int>("DELETE FROM Phasor WHERE DeviceID = {0}", deviceID);
         }
 
-        #endregion
+#endregion
 
-        #region [ PowerCalculation Table Operations ]
+#region [ PowerCalculation Table Operations ]
 
         [RecordOperation(typeof(PowerCalculation), RecordOperation.QueryRecordCount)]
         public int QueryPowerCalculationCount(string filterText)
@@ -461,9 +466,9 @@ namespace PhasorWebUI
             return DataContext.Table<PowerCalculation>().QueryRecordWhere("VoltageAngleSignalID = {0} AND VoltageMagSignalID = {1} AND CurrentAngleSignalID = {2} AND CurrentMagSignalID = {3}", voltageAngleSignalID, voltageMagSignalID, currentAngleSignalID, currentMagSignalID) ?? NewPowerCalculation();
         }
 
-        #endregion
+#endregion
 
-        #region [ CustomActionAdapter Table Operations ]
+#region [ CustomActionAdapter Table Operations ]
 
         [RecordOperation(typeof(CustomActionAdapter), RecordOperation.QueryRecordCount)]
         public int QueryCustomActionAdapterCount(string filterText)
@@ -528,9 +533,9 @@ namespace PhasorWebUI
             }
         }
 
-        #endregion
+#endregion
 
-        #region [ Synchrophasor Device Wizard Operations ]
+#region [ Synchrophasor Device Wizard Operations ]
 
         public IEnumerable<SignalType> LoadSignalTypes(string source)
         {
@@ -778,6 +783,40 @@ namespace PhasorWebUI
 
             try
             {
+                // Try deserializing input as connection settings
+                ConnectionSettings connectionSettings;
+
+            #if MONO
+                connectionSettings = new ConnectionSettings();
+                XDocument doc = XDocument.Parse(sourceData);
+
+                foreach (XElement element in doc.Descendants().ToArray())
+                {
+                    switch (element.Name.ToString())
+                    {
+                        case nameof(ConnectionSettings.PhasorProtocol):
+                            if (!Enum.TryParse(element.Value, true, out connectionSettings.PhasorProtocol))
+                                connectionSettings.PhasorProtocol = PhasorProtocol.IEEEC37_118V1;
+                            break;
+                        case nameof(ConnectionSettings.TransportProtocol):
+                            if (!Enum.TryParse(element.Value, true, out connectionSettings.TransportProtocol))
+                                connectionSettings.TransportProtocol = TransportProtocol.Tcp;
+                            break;
+                        case nameof(ConnectionSettings.ConnectionString):
+                            connectionSettings.ConnectionString = element.Value;
+                            break;
+                        case nameof(ConnectionSettings.PmuID):
+                            int.TryParse(element.Value, out connectionSettings.PmuID);
+                            break;
+                        case nameof(ConnectionSettings.FrameRate):
+                            int.TryParse(element.Value, out connectionSettings.FrameRate);
+                            break;
+                        case nameof(ConnectionSettings.AutoRepeatPlayback):
+                            connectionSettings.AutoRepeatPlayback = element.Value.ParseBoolean();
+                            break;
+                    }
+                }
+            #else
                 SoapFormatter formatter = new SoapFormatter
                 {
                     AssemblyFormat = FormatterAssemblyStyle.Simple,
@@ -785,11 +824,9 @@ namespace PhasorWebUI
                     Binder = Serialization.LegacyBinder
                 };
 
-                // Try deserializing input as connection settings
-                ConnectionSettings connectionSettings;
-
                 using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
                     connectionSettings = formatter.Deserialize(source) as ConnectionSettings;
+            #endif
 
                 if (connectionSettings != null)
                 {
@@ -834,6 +871,7 @@ namespace PhasorWebUI
                     return RequestConfigurationFrame(connectionString);
                 }
 
+            #if !MONO
                 // Try deserializing input as a configuration frame
                 IConfigurationFrame configurationFrame;
 
@@ -842,6 +880,7 @@ namespace PhasorWebUI
 
                 if (configurationFrame != null)
                     return configurationFrame;
+            #endif
 
                 // Finally, assume input is simply a connection string and attempt to return retrieved configuration frame
                 return RequestConfigurationFrame(sourceData);
@@ -1055,6 +1094,6 @@ namespace PhasorWebUI
             return measurements;
         }
 
-        #endregion
+#endregion
     }
 }
