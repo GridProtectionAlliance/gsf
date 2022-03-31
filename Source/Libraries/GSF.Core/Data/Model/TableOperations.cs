@@ -170,7 +170,9 @@ namespace GSF.Data.Model
             // Establish any modeled root query restriction parameters
             if ((object)s_rootQueryRestrictionAttribute != null)
             {
-                RootQueryRestriction = new RecordRestriction(s_rootQueryRestrictionAttribute.FilterExpression, s_rootQueryRestrictionAttribute.Parameters);
+                // Copy parameters array so that modifications to parameter values do not affect other instances
+                object[] parameters = s_rootQueryRestrictionAttribute.Parameters.ToArray();
+                RootQueryRestriction = new RecordRestriction(s_rootQueryRestrictionAttribute.FilterExpression, parameters);
                 ApplyRootQueryRestrictionToUpdates = s_rootQueryRestrictionAttribute.ApplyToUpdates;
                 ApplyRootQueryRestrictionToDeletes = s_rootQueryRestrictionAttribute.ApplyToDeletes;
             }
