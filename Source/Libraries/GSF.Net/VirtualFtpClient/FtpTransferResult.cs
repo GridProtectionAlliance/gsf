@@ -21,27 +21,65 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Net.VirtualFtpClient
+using System.Collections;
+
+namespace GSF.Net.VirtualFtpClient;
+
+/// <summary>
+/// Represents a virtual FTP transfer result for the specified target <see cref="FtpType"/>.
+/// </summary>
+public class FtpTransferResult
 {
     /// <summary>
-    /// Represents a virtual FTP transfer result for the specified target <see cref="FtpType"/>.
+    /// FTP transfer result completed index.
     /// </summary>
-    public class FtpTransferResult
+    public const int Complete = 0;
+
+    /// <summary>
+    /// FTP transfer result failed index.
+    /// </summary>
+    public const int Fail = 1;
+
+    /// <summary>
+    /// FTP transfer result aborted index.
+    /// </summary>
+    public const int Abort = 2;
+
+    private readonly BitArray m_result;
+
+    internal FtpTransferResult(string message, int responseCode, int result)
     {
-        internal FtpTransferResult(string message, int responseCode)
-        {
-            Message = message;
-            ResponseCode = responseCode;
-        }
-
-        /// <summary>
-        /// Gets any message associated with transfer.
-        /// </summary>
-        public string Message { get; }
-
-        /// <summary>
-        /// Gets response code from transfer.
-        /// </summary>
-        public int ResponseCode { get; }
+        m_result = new BitArray(3);
+        Message = message;
+        ResponseCode = responseCode;
+        m_result[result] = true;
     }
+
+    /// <summary>
+    /// Returns true if asynchronous transfer completed successfully.
+    /// </summary>
+    public bool IsSuccess => m_result[Complete];
+
+    /// <summary>
+    /// Returns true if asynchronous transfer failed.
+    /// </summary>
+    public bool IsFailed => m_result[Fail];
+
+    /// <summary>
+    /// Returns true if asynchronous transfer was aborted.
+    /// </summary>
+    public bool IsAborted => m_result[Abort];
+
+    /// <summary>
+    /// Gets any message associated with transfer.
+    /// </summary>
+    public string Message { get; }
+
+    /// <summary>
+    /// Gets response code from transfer.
+    /// </summary>
+    public int ResponseCode { get; }
+
+    internal static int GetResult(bool isSuccess, bool isFailed, bool isAborted) => 
+        isSuccess ? Complete : isFailed ? Fail : isAborted ? Abort : Complete;
 }
