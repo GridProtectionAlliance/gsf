@@ -70,6 +70,9 @@ namespace GSF.Net.TFtp.Commands
         public TFtpTransferMode Mode { get; }
 
         public IEnumerable<TransferOption> Options { get; }
+
+        public override string ToString() => 
+            $"Target OP Code = {TargetOpCode}; Filename = {Filename}; Mode = {Mode}";
     }
 
     internal class ReadRequest : ReadOrWriteRequest, ITFtpCommand
@@ -81,10 +84,8 @@ namespace GSF.Net.TFtp.Commands
         {
         }
 
-        public void Visit(ITFtpCommandVisitor visitor)
-        {
+        public void Visit(ITFtpCommandVisitor visitor) => 
             visitor.OnReadRequest(this);
-        }
     }
 
     internal class WriteRequest : ReadOrWriteRequest, ITFtpCommand
@@ -96,10 +97,8 @@ namespace GSF.Net.TFtp.Commands
         {
         }
 
-        public void Visit(ITFtpCommandVisitor visitor)
-        {
+        public void Visit(ITFtpCommandVisitor visitor) => 
             visitor.OnWriteRequest(this);
-        }
     }
 
     internal class Data : ITFtpCommand
@@ -116,10 +115,11 @@ namespace GSF.Net.TFtp.Commands
 
         public byte[] Bytes { get; }
 
-        public void Visit(ITFtpCommandVisitor visitor)
-        {
+        public void Visit(ITFtpCommandVisitor visitor) => 
             visitor.OnData(this);
-        }
+
+        public override string ToString() =>
+            $"Block Number = {BlockNumber}; Op Code = {OpCode}";
     }
 
     internal class Acknowledgement : ITFtpCommand
@@ -133,10 +133,11 @@ namespace GSF.Net.TFtp.Commands
 
         public ushort BlockNumber { get; }
 
-        public void Visit(ITFtpCommandVisitor visitor)
-        {
+        public void Visit(ITFtpCommandVisitor visitor) => 
             visitor.OnAcknowledgement(this);
-        }
+
+        public override string ToString() =>
+            $"Block Number = {BlockNumber}; Op Code = {OpCode}";
     }
 
     internal class Error : ITFtpCommand
@@ -157,6 +158,9 @@ namespace GSF.Net.TFtp.Commands
         {
             visitor.OnError(this);
         }
+
+        public override string ToString() =>
+            $"Error Code = {ErrorCode}; Op Code = {OpCode}; Message = {Message}";
     }
 
     internal class OptionAcknowledgement : ITFtpCommand
@@ -170,9 +174,10 @@ namespace GSF.Net.TFtp.Commands
 
         public IEnumerable<TransferOption> Options { get; }
 
-        public void Visit(ITFtpCommandVisitor visitor)
-        {
+        public void Visit(ITFtpCommandVisitor visitor) => 
             visitor.OnOptionAcknowledgement(this);
-        }
+
+        public override string ToString() =>
+            $"Op Code = {OpCode}";
     }
 }
