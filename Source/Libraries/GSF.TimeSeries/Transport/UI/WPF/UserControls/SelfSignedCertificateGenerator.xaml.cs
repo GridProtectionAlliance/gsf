@@ -25,9 +25,10 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries.UI.Commands;
 using Microsoft.Win32;
@@ -37,7 +38,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
     /// <summary>
     /// Interaction logic for SelfSignedCertificateGenerator.xaml
     /// </summary>
-    public partial class SelfSignedCertificateGenerator : UserControl
+    public partial class SelfSignedCertificateGenerator
     {
         #region [ Members ]
 
@@ -73,14 +74,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         /// </summary>
         public string CertificateFile
         {
-            get
-            {
-                return (string)GetValue(CertificateFileProperty);
-            }
-            set
-            {
-                SetValue(CertificateFileProperty, value);
-            }
+            get => (string)GetValue(CertificateFileProperty);
+            set => SetValue(CertificateFileProperty, value);
         }
 
         /// <summary>
@@ -88,14 +83,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         /// </summary>
         public ICommand Command
         {
-            get
-            {
-                return (ICommand)GetValue(CommandProperty);
-            }
-            set
-            {
-                SetValue(CommandProperty, value);
-            }
+            get => (ICommand)GetValue(CommandProperty);
+            set => SetValue(CommandProperty, value);
         }
 
         /// <summary>
@@ -103,14 +92,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         /// </summary>
         public string CommonName
         {
-            get
-            {
-                return (string)GetValue(CommonNameProperty);
-            }
-            set
-            {
-                SetValue(CommonNameProperty, value);
-            }
+            get => (string)GetValue(CommonNameProperty);
+            set => SetValue(CommonNameProperty, value);
         }
 
         /// <summary>
@@ -121,8 +104,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         {
             get
             {
-                if ((object)m_generateButtonCommand == null)
-                    m_generateButtonCommand = new RelayCommand(GenerateCertificate, () => CanGenerate());
+                if (m_generateButtonCommand is null)
+                    m_generateButtonCommand = new RelayCommand(GenerateCertificate, CanGenerate);
 
                 return m_generateButtonCommand;
             }
@@ -140,25 +123,57 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         public void MakeCertificate(string commonName, string certificateFile)
         {
             string certificatePath = FilePath.GetAbsolutePath(certificateFile);
-            string makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
-
-            ProcessStartInfo processInfo;
+            int expirationYear = DateTime.UtcNow.Year + 20;
 
             if (Uri.CheckHostName(commonName) == UriHostNameType.Unknown)
-                throw new ArgumentException(string.Format("Common name \"{0}\" is not a valid host name.", commonName), nameof(commonName));
-
-            if (!File.Exists(makeCertPath))
-                throw new FileNotFoundException("Unable to find makecert.exe", "makecert.exe");
+                throw new ArgumentException($"Common name \"{commonName}\" is not a valid host name.", nameof(commonName));
 
             if (!FilePath.IsValidFileName(certificatePath))
-                throw new InvalidOperationException(string.Format("Invalid file path: {0}", certificatePath));
+                throw new InvalidOperationException($"Invalid file path: {certificatePath}");
 
-            processInfo = new ProcessStartInfo(makeCertPath);
-            processInfo.Arguments = string.Format("-r -pe -n \"CN={0}\" -ss My -sr LocalMachine \"{1}\"", commonName, certificatePath);
-            processInfo.UseShellExecute = true;
-            processInfo.Verb = "runas";
+            ProcessStartInfo processInfo;
+            Process process;
 
-            Process.Start(processInfo).Dispose();
+            // Attempt to use PowerShell to create a new self-signed certificate (trusting PowerShell to be more up to date with X.509 implementations and extensions)
+            try
+            {
+                string command = $"Invoke-Command {{$cert = New-SelfSignedCertificate -Type Custom -CertStoreLocation \"Cert:\\LocalMachine\\My\" -KeyAlgorithm RSA -KeyLength 4096 -HashAlgorithm SHA256 -KeyExportPolicy Exportable -NotAfter (Get-Date -Date \"{expirationYear}-12-31\") -Subject \"CN={commonName}\"; Export-Certificate -Cert $cert -FilePath \"{certificatePath}\"}}";
+
+                processInfo = new ProcessStartInfo("powershell.exe")
+                {
+                    Arguments = $"-NoProfile -NonInteractive -WindowStyle hidden -ExecutionPolicy unrestricted -EncodedCommand {Convert.ToBase64String(Encoding.Unicode.GetBytes(command))}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (process = Process.Start(processInfo))
+                    process?.WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+
+            if (File.Exists(certificatePath))
+                return;
+
+            // Fallback on attempting to use makecert to create a new self-signed certificate, makecert.exe is normally deployed with GSF applications
+            string makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
+            bool useShellExecute = File.Exists(makeCertPath);
+            
+            if (!useShellExecute)
+                makeCertPath = "makecert.exe";
+
+            processInfo = new ProcessStartInfo(makeCertPath)
+            {
+                Arguments = $"-r -a sha256 -len 4096 -pe -e 12/31/{expirationYear} -n \"CN={commonName}\" -ss My -sr LocalMachine \"{certificatePath}\"",
+                UseShellExecute = useShellExecute,
+                CreateNoWindow = true,                   // Hides window when UseShellExecute is false
+                WindowStyle = ProcessWindowStyle.Hidden  // Hides window when UseShellExecute is true
+            };
+
+            using (process = Process.Start(processInfo))
+                process?.WaitForExit();
         }
 
         private void GenerateCertificate()
@@ -171,18 +186,20 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             //    return;
             //}
 
-            saveDialog = new SaveFileDialog();
-            saveDialog.FileName = CertificateFile;
-            saveDialog.DefaultExt = ".cer";
-            saveDialog.Filter = "Certificate files|*.cer|All Files|*.*";
-
-            if (saveDialog.ShowDialog() == true)
+            saveDialog = new SaveFileDialog
             {
-                CertificateFile = saveDialog.FileName;
+                FileName = CertificateFile,
+                DefaultExt = ".cer",
+                Filter = "Certificate files|*.cer|All Files|*.*"
+            };
 
-                if (TryMakeCertificate() && (object)Command != null)
-                    Command.Execute(CertificateFile);
-            }
+            if (!saveDialog.ShowDialog().GetValueOrDefault())
+                return;
+
+            CertificateFile = saveDialog.FileName;
+
+            if (TryMakeCertificate() && Command is not null)
+                Command.Execute(CertificateFile);
         }
 
         private bool TryMakeCertificate()
@@ -199,16 +216,11 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             }
         }
 
-        private bool CanGenerate()
-        {
-            return ((object)Command == null) || Command.CanExecute(null);
-        }
+        private bool CanGenerate() =>
+            Command is null || Command.CanExecute(null);
 
-        private void OnProcessException(Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
-        }
+        private void OnProcessException(Exception ex) => 
+            ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
 
         #endregion
 

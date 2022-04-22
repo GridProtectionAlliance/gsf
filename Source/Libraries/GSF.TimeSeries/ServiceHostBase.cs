@@ -712,42 +712,48 @@ namespace GSF.TimeSeries
 
         private void GenerateLocalCertificate()
         {
-            ConfigurationFile configurationFile;
-            CategorizedSettingsElementCollection remotingServer;
-
-            string certificatePath;
             CertificateGenerator certificateGenerator = null;
-            X509Certificate2 certificate = null;
 
             if (string.IsNullOrWhiteSpace(ServiceName))
                 throw new InvalidOperationException("EstablishServiceProperties must be overridden and ServiceName must be set");
 
             try
             {
-                configurationFile = ConfigurationFile.Current;
-                remotingServer = configurationFile.Settings["remotingServer"];
+                ConfigurationFile configurationFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection remotingServer = configurationFile.Settings["remotingServer"];
+                X509Certificate2 certificate = null;
 
                 remotingServer.Add("CertificateFile", $"{ServiceName}.cer", "Path to the local certificate used by this server for authentication.");
-                certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
+                string certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
 
                 certificateGenerator = new CertificateGenerator()
                 {
                     Issuer = ServiceName,
-                    CertificatePath = certificatePath
+                    CertificatePath = certificatePath,
+                    ValidYears = 20
                 };
 
                 if (File.Exists(certificatePath))
                     certificate = new X509Certificate2(certificatePath);
 
-                if (!Equals(certificate, certificateGenerator.GenerateCertificate()))
-                    EventLog.WriteEntry(ServiceName, $"Created self-signed certificate for service: \"{certificatePath}\"", EventLogEntryType.Information, 0);
+                if (Equals(certificate, certificateGenerator.GenerateCertificate()))
+                    return;
+
+                string message = new StringBuilder()
+                    .AppendLine($"Created self-signed certificate for service: \"{certificatePath}\"")
+                    .AppendLine()
+                    .AppendLine("Certificate Generation Log:")
+                    .AppendLine(string.Join(Environment.NewLine, certificateGenerator.DebugLog ?? new List<string>()))
+                    .ToString();
+
+                EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Information, 0);
             }
             catch (Exception ex)
             {
                 string message = new StringBuilder()
                     .AppendLine(ex.ToString())
                     .AppendLine()
-                    .AppendLine("Debug info:")
+                    .AppendLine("Certificate Generation Log:")
                     .AppendLine(string.Join(Environment.NewLine, certificateGenerator?.DebugLog ?? new List<string>()))
                     .ToString();
 
