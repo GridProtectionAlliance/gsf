@@ -125,6 +125,9 @@ namespace GSF.Web.Model
             // Custom View Models are ViewOnly.
             ViewOnly = ViewOnly || CustomView != String.Empty;
 
+            RootQueryRestrictionAttribute rqra = typeof(T).GetCustomAttribute<RootQueryRestrictionAttribute>();
+            if (rqra != null)
+                RootQueryRestriction = new RecordRestriction(rqra.FilterExpression, rqra.Parameters.ToArray());
         }
 
         #endregion
@@ -141,7 +144,9 @@ namespace GSF.Web.Model
         protected string PostRoles { get; } = "Administrator";
         protected string PatchRoles { get; } = "Administrator";
         protected string DeleteRoles { get; } = "Administrator";
+        protected RecordRestriction RootQueryRestriction { get; } = null;
         private int? Take { get; } = null;
+
         private string SecurityType = "";
 
         protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
@@ -543,9 +548,9 @@ namespace GSF.Web.Model
 
     #endregion
 
-    #region [Helper Methods]
+        #region [Helper Methods]
 
-    protected string BuildWhereClause(IEnumerable<Search> searches)
+        protected string BuildWhereClause(IEnumerable<Search> searches)
         {
 
             string whereClause = string.Join(" AND ", searches.Select(search => {
@@ -589,12 +594,24 @@ namespace GSF.Web.Model
                         return new TableOperations<T>(connection).QueryRecords(DefaultSort, new RecordRestriction(filterExpression, parameters)).Take((int)Take);
 
                 }
+
+                string flt = filterExpression;
+                object[] param = parameters;
+
+                if (RootQueryRestriction != null)
+                {
+                    flt = RootQueryRestriction.FilterExpression + " AND " + filterExpression;
+                    param = RootQueryRestriction.Parameters.Concat(parameters).ToArray();
+                }
+                    
                 string sql = $@"
                     SELECT * FROM 
                     ({CustomView}) FullTbl 
-                    WHERE {filterExpression}
-                    {(DefaultSort != null ? " ORDER BY " +DefaultSort : "")}";
-                DataTable dataTbl = connection.RetrieveData(sql, parameters);
+                    WHERE {flt}
+                    {(DefaultSort != null ? " ORDER BY " + DefaultSort : "")}";
+
+
+                DataTable dataTbl = connection.RetrieveData(sql, param);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -616,9 +633,18 @@ namespace GSF.Web.Model
                 if (CustomView == String.Empty)
                     return new TableOperations<T>(connection).QueryRecordWhere(filterExpression, parameters);
 
-                string whereClause = " WHERE " + filterExpression;
+                string whereClause = filterExpression;
+                object[] param = parameters;
+
+                if (RootQueryRestriction != null)
+                {
+                    whereClause = RootQueryRestriction.FilterExpression + " AND " + filterExpression;
+                    param = RootQueryRestriction.Parameters.Concat(parameters).ToArray();
+                }
+
+                whereClause = " WHERE " + whereClause;
                 string sql = "SELECT * FROM (" + CustomView + ") FullTbl";
-                DataTable dataTbl = connection.RetrieveData(sql + whereClause, parameters);
+                DataTable dataTbl = connection.RetrieveData(sql + whereClause, param);
 
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
                 if (dataTbl.Rows.Count > 0)
@@ -638,8 +664,6 @@ namespace GSF.Web.Model
                         return new TableOperations<T>(connection).QueryRecords(DefaultSort);
                     else
                         return new TableOperations<T>(connection).QueryRecords(DefaultSort).Take((int)Take);
-
-
                 }
 
                 string sql = $@"
@@ -647,7 +671,19 @@ namespace GSF.Web.Model
                     ({CustomView}) FullTbl 
                     {(DefaultSort != null ? " ORDER BY " + DefaultSort : "")}";
 
-                DataTable dataTbl = connection.RetrieveData(sql);
+                DataTable dataTbl;
+                if (RootQueryRestriction != null)
+                {
+                    sql = $@"
+                    SELECT * FROM 
+                    ({CustomView}) FullTbl 
+                    WHERE ({RootQueryRestriction.FilterExpression})
+                    {(DefaultSort != null ? " ORDER BY " + DefaultSort : "")}";
+
+                    dataTbl = connection.RetrieveData(sql, RootQueryRestriction.Parameters);
+                }
+                else
+                    dataTbl = connection.RetrieveData(sql);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -734,6 +770,13 @@ namespace GSF.Web.Model
         {
             string whereClause = BuildWhereClause(postData.Searches);
 
+            object[] param = new object[0];
+            if (RootQueryRestriction != null)
+            {
+                whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
+                param = RootQueryRestriction.Parameters.ToArray();
+            }
+
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 string tableName = TableOperations<T>.GetTableName();
@@ -746,7 +789,7 @@ namespace GSF.Web.Model
 
                 else if (SearchSettings == null)
                     sql = $@" SELECT* FROM({CustomView}) FullTbl 
-                         {whereClause}
+                            {whereClause}
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
 
                 else
@@ -824,10 +867,11 @@ namespace GSF.Web.Model
                             '
                             exec sp_executesql @SQLStatement";
                 }
-                return connection.RetrieveData(sql, "");
+
+                return connection.RetrieveData(sql, param);
             }
 
         }
-        #endregion
+            #endregion
     }
 }
