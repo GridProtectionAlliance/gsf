@@ -770,7 +770,7 @@ namespace GSF.Web.Model
         {
             string whereClause = BuildWhereClause(postData.Searches);
 
-            object[] param = new object[0];
+            object[] param = new object[] { };
             if (RootQueryRestriction != null)
             {
                 whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
@@ -868,7 +868,9 @@ namespace GSF.Web.Model
                             exec sp_executesql @SQLStatement";
                 }
 
-                return connection.RetrieveData(sql, param);
+                if (param.Count() > 0)
+                    return connection.RetrieveData(sql, param);
+                return connection.RetrieveData(sql,"");
             }
 
         }
