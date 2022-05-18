@@ -389,6 +389,196 @@ namespace GSF.Scheduling
         }
 
         /// <summary>
+        /// Determines the nearest timestamp older than
+        /// the given timestamp that matches the schedule.
+        /// </summary>
+        /// <param name="targetDateTime">The target timestamp</param>
+        /// <returns>The timestamp prior to the target that the schedule was previously due</returns>
+        public DateTime PreviousTimeDue(DateTime targetDateTime)
+        {
+            if (m_minutePart.Values.Count == 0 ||
+                m_hourPart.Values.Count == 0 ||
+                m_dayPart.Values.Count == 0 ||
+                m_monthPart.Values.Count == 0 ||
+                m_dayOfWeekPart.Values.Count == 0)
+            {
+                return DateTime.MinValue;
+            }
+
+            DateTime currentDateTime = ToScheduleTimeZone(targetDateTime);
+
+            bool FindMatchingMonth()
+            {
+                while (true)
+                {
+                    if (m_monthPart.Matches(currentDateTime))
+                        return true;
+                    if (currentDateTime == DateTime.MinValue)
+                        return false;
+                    currentDateTime = PreviousMonth(currentDateTime);
+                }
+            }
+
+            bool FindMatchingDay()
+            {
+                while (true)
+                {
+                    if (m_dayPart.Matches(currentDateTime) && m_dayOfWeekPart.Matches(currentDateTime))
+                        return true;
+                    if (currentDateTime.Day == 1)
+                        return false;
+                    currentDateTime = PreviousDay(currentDateTime);
+                }
+            }
+
+            bool FindMatchingHour()
+            {
+                while (true)
+                {
+                    if (m_hourPart.Matches(currentDateTime))
+                        return true;
+                    if (currentDateTime.Hour == 0)
+                        return false;
+                    currentDateTime = PreviousHour(currentDateTime);
+                }
+            }
+
+            bool FindMatchingMinute()
+            {
+                while (true)
+                {
+                    if (m_minutePart.Matches(currentDateTime))
+                        return true;
+                    if (currentDateTime.Minute == 0)
+                        return false;
+                    currentDateTime = PreviousMinute(currentDateTime);
+                }
+            }
+
+            while (currentDateTime > DateTime.MinValue)
+            {
+                currentDateTime = PreviousMinute(currentDateTime);
+
+                if (!FindMatchingMonth())
+                    continue;
+
+                if (!FindMatchingDay())
+                    continue;
+
+                if (!FindMatchingHour())
+                    continue;
+
+                if (!FindMatchingMinute())
+                    continue;
+
+                return currentDateTime;
+            }
+
+            return DateTime.MinValue;
+        }
+
+        /// <summary>
+        /// Determines the nearest timestamp past the
+        /// given timestamp that matches the schedule.
+        /// </summary>
+        /// <param name="targetDateTime">The target timestamp</param>
+        /// <returns>The timestamp past the target that the schedule will next be due</returns>
+        public DateTime NextTimeDue(DateTime targetDateTime)
+        {
+            if (m_minutePart.Values.Count == 0 ||
+                m_hourPart.Values.Count == 0 ||
+                m_dayPart.Values.Count == 0 ||
+                m_monthPart.Values.Count == 0 ||
+                m_dayOfWeekPart.Values.Count == 0)
+            {
+                return DateTime.MaxValue;
+            }
+
+            DateTime currentDateTime = ToScheduleTimeZone(targetDateTime);
+
+            bool FindMatchingMonth()
+            {
+                while (true)
+                {
+                    if (m_monthPart.Matches(currentDateTime))
+                        return true;
+                    if (currentDateTime == DateTime.MaxValue)
+                        return false;
+                    currentDateTime = NextMonth(currentDateTime);
+                }
+            }
+
+            bool FindMatchingDay()
+            {
+                while (true)
+                {
+                    if (m_dayPart.Matches(currentDateTime) && m_dayOfWeekPart.Matches(currentDateTime))
+                        return true;
+
+                    DateTime nextDay = NextDay(currentDateTime);
+
+                    if (nextDay.Day == 1)
+                        return false;
+
+                    currentDateTime = nextDay;
+                }
+            }
+
+            bool FindMatchingHour()
+            {
+                while (true)
+                {
+                    if (m_hourPart.Matches(currentDateTime))
+                        return true;
+
+                    DateTime nextHour = NextHour(currentDateTime);
+
+                    if (nextHour.Hour == 0)
+                        return false;
+
+                    currentDateTime = nextHour;
+                }
+            }
+
+            bool FindMatchingMinute()
+            {
+                while (true)
+                {
+                    if (m_minutePart.Matches(currentDateTime))
+                        return true;
+
+                    DateTime nextMinute = NextMinute(currentDateTime);
+
+                    if (currentDateTime.Minute == 0)
+                        return false;
+
+                    currentDateTime = nextMinute;
+                }
+            }
+
+            while (currentDateTime < DateTime.MaxValue)
+            {
+                currentDateTime = NextMinute(currentDateTime);
+
+                if (!FindMatchingMonth())
+                    continue;
+
+                if (!FindMatchingDay())
+                    continue;
+
+                if (!FindMatchingHour())
+                    continue;
+
+                if (!FindMatchingMinute())
+                    continue;
+
+                return currentDateTime;
+            }
+
+            return DateTime.MaxValue;
+        }
+
+        /// <summary>
         /// Gets a hash code for the <see cref="Schedule"/>.
         /// </summary>
         /// <returns>An <see cref="Int32"/> based hashcode.</returns>
@@ -422,12 +612,87 @@ namespace GSF.Scheduling
             return m_name;
         }
 
+        private DateTime ToScheduleTimeZone(DateTime dateTime)
+        {
+            DateTimeKind targetKind = m_useLocalTime
+                ? DateTimeKind.Local
+                : DateTimeKind.Utc;
+
+            DateTime specifiedDateTime = (dateTime.Kind == DateTimeKind.Unspecified)
+                ? DateTime.SpecifyKind(dateTime, targetKind)
+                : dateTime;
+
+            return m_useLocalTime
+                ? specifiedDateTime.ToLocalTime()
+                : specifiedDateTime.ToUniversalTime();
+        }
+
         #endregion
 
         #region [ Static ]
 
         // Static Fields
         private static int s_instances;
+
+        // Static Methods
+
+        private static DateTime PreviousInterval(DateTime dt, TimeSpan interval)
+        {
+            long ticks = dt.Ticks % interval.Ticks;
+            DateTime startOfInterval = dt.AddTicks(-ticks);
+
+            if (startOfInterval <= DateTime.MinValue.AddMinutes(1.0D))
+                return DateTime.MinValue;
+
+            return startOfInterval.AddMinutes(-1.0D);
+        }
+
+        private static DateTime PreviousMonth(DateTime dt)
+        {
+            int day = dt.Day;
+            DateTime startOfMonth = dt.Date.AddDays(-day + 1.0D);
+            return PreviousMinute(startOfMonth);
+        }
+
+        private static DateTime PreviousDay(DateTime dt) =>
+            PreviousInterval(dt, TimeSpan.FromDays(1.0D));
+
+        private static DateTime PreviousHour(DateTime dt) =>
+            PreviousInterval(dt, TimeSpan.FromHours(1.0D));
+
+        private static DateTime PreviousMinute(DateTime dt) =>
+            PreviousInterval(dt, TimeSpan.FromMinutes(1.0D));
+
+        private static DateTime NextInterval(DateTime dt, TimeSpan interval)
+        {
+            long ticks = dt.Ticks % interval.Ticks;
+            DateTime startOfInterval = dt.AddTicks(-ticks);
+
+            if (startOfInterval >= DateTime.MaxValue.Add(-interval))
+                return DateTime.MaxValue;
+
+            return startOfInterval.Add(interval);
+        }
+
+        private static DateTime NextMonth(DateTime dt)
+        {
+            int day = dt.Day;
+            DateTime startOfMonth = dt.Date.AddDays(-day + 1.0D);
+
+            if (startOfMonth >= DateTime.MaxValue.AddMonths(-1))
+                return DateTime.MaxValue;
+
+            return startOfMonth.AddMonths(1);
+        }
+
+        private static DateTime NextDay(DateTime dt) =>
+            NextInterval(dt, TimeSpan.FromDays(1.0D));
+
+        private static DateTime NextHour(DateTime dt) =>
+            NextInterval(dt, TimeSpan.FromHours(1.0D));
+
+        private static DateTime NextMinute(DateTime dt) =>
+            NextInterval(dt, TimeSpan.FromMinutes(1.0D));
 
         #endregion
 
