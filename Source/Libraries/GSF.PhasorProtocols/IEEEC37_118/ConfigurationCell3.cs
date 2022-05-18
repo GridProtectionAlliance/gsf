@@ -97,7 +97,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 return info.GetValue(name, typeof(string)) is not string element || element == "INF" ?
                     float.PositiveInfinity :
-                    float.Parse(element);
+                    float.Parse(element, CultureInfo.InvariantCulture);
             }
 
             // Deserialize configuration cell
