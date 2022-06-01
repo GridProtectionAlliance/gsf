@@ -30,10 +30,10 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Security.Principal;
+using System.Threading;
 using System.Web.Mvc;
 using GSF.Security;
 
@@ -72,8 +72,8 @@ namespace GSF.Web.Security.AntiCsrf
 
         private static IIdentity ExtractIdentity(HttpRequestMessage request)
         {
-            SecurityPrincipal securityPrincipal = request.GetRequestContext().Principal as SecurityPrincipal;
-            return securityPrincipal?.Identity;
+            SecurityPrincipal securityPrincipal = request.GetRequestContext()?.Principal as SecurityPrincipal;
+            return securityPrincipal?.Identity ?? Thread.CurrentPrincipal?.Identity;
         }
 
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Caller will just regenerate token in case of failure.")]
