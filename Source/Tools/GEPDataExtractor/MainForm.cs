@@ -471,11 +471,17 @@ namespace GEPDataExtractor
                     {
                         string deviceFilter = textBoxDeviceFilter.Text;
 
-                        if (!string.IsNullOrWhiteSpace(deviceFilter))
+                        if (string.IsNullOrWhiteSpace(deviceFilter) || m_metadata is null)
+                            return;
+
+                        if (m_metadata.Devices is not null)
                         {
                             foreach (DeviceDetail record in m_metadata.Devices)
                                 record.Selected = false;
+                        }
 
+                        if (m_metadata.DeviceTable is not null)
+                        {
                             foreach (DataRow row in m_metadata.DeviceTable.Select($"Acronym LIKE '{deviceFilter}'"))
                             {
                                 if (!Guid.TryParse(row["UniqueID"].ToString(), out Guid uniqueID))
@@ -488,10 +494,10 @@ namespace GEPDataExtractor
 
                                 record.Selected = true;
                             }
-
-                            RefreshDevicesDataGrid();
-                            RefreshSelectedCount();
                         }
+
+                        RefreshDevicesDataGrid();
+                        RefreshSelectedCount();
                     }
                     catch (Exception ex)
                     {
@@ -860,7 +866,7 @@ namespace GEPDataExtractor
 
                 TextWriter createWriter(string fileName)
                 {
-                    if (checkBoxExportAsGZip.Checked)
+                    if (m_settings.ExportAsGZip)
                         return GZipWriter.CreateBinary($"{fileName}.gzip");
 
                     return File.CreateText(fileName);

@@ -202,6 +202,14 @@ namespace GEPDataExtractor
         public bool ExportFilePerDataType { get; set; }
 
         /// <summary>
+        /// Gets or sets flag that controls if one export file should be created per data type.
+        /// </summary>
+        [TypeConvertedValueExpression("Form.checkBoxExportAsGZip.Checked")]
+        [Description("Flag that controls if one export file should be created per data type.")]
+        [UserScopedSetting]
+        public bool ExportAsGZip { get; set; }
+
+        /// <summary>
         /// Gets or sets value that determines the acceptable amount of bad data for export.
         /// </summary>
         [TypeConvertedValueExpression("Form.maskedTextBoxAcceptableBadData.Text")]

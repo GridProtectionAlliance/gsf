@@ -125,10 +125,9 @@ namespace GEPDataExtractor
             object leftValue = m_property.GetValue(left);
             object rightValue = m_property.GetValue(right);
 
-            if (m_sortOrder == SortOrder.Descending)
-                return m_comparer.Compare(rightValue, leftValue);
-
-            return m_comparer.Compare(leftValue, rightValue);
+            return m_sortOrder == SortOrder.Descending ? 
+                m_comparer.Compare(rightValue, leftValue) : 
+                m_comparer.Compare(leftValue, rightValue);
         }
     }
 
@@ -179,12 +178,12 @@ namespace GEPDataExtractor
                 MessageBox.Show("Exception retrieving meta-data: " + ex.Message);
             }
 
-            if (!(MeasurementTable is null))
+            if (MeasurementTable is not null)
             {
                 // Load measurement records
                 foreach (DataRow row in MeasurementTable.Select("SignalAcronym <> 'STAT' and SignalAcronym <> 'DIGI'"))
                 {
-                    if (!(PhasorTable is null) && row["SignalAcronym"].ToString().Contains("PH") && !string.IsNullOrWhiteSpace(row["DeviceAcronym"].ToString()) && !string.IsNullOrWhiteSpace(row["PhasorSourceIndex"].ToString()))
+                    if (PhasorTable is not null && row["SignalAcronym"].ToString().Contains("PH") && !string.IsNullOrWhiteSpace(row["DeviceAcronym"].ToString()) && !string.IsNullOrWhiteSpace(row["PhasorSourceIndex"].ToString()))
                     {
                         DataRow[] rows = PhasorTable.Select($"DeviceAcronym = '{row["DeviceAcronym"]}' AND SourceIndex = {row["PhasorSourceIndex"]}");
 
@@ -196,7 +195,7 @@ namespace GEPDataExtractor
                 }
             }
 
-            if (!(DeviceTable is null))
+            if (DeviceTable is not null)
             {
                 // Load device records
                 foreach (DataRow row in DeviceTable.Rows)

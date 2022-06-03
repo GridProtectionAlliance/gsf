@@ -114,7 +114,7 @@ namespace GEPDataExtractor
                 if (!disposing)
                     return;
                 
-                if (!(m_subscriber is null))
+                if (m_subscriber is not null)
                 {
                     // Detach from subscriber events
                     m_subscriber.ProcessException -= m_subscriber_ProcessException;
@@ -125,7 +125,7 @@ namespace GEPDataExtractor
                     m_subscriber = null;
                 }
 
-                if (!(m_waitHandle is null))
+                if (m_waitHandle is not null)
                 {
                     m_waitHandle.Set(); // Release any waiting threads
                     m_waitHandle.Dispose();
@@ -150,11 +150,11 @@ namespace GEPDataExtractor
                 throw new TimeoutException($"Waited for {timeout / 1000.0D} seconds for meta-data, but none was received.");
 
             // If meta-data was received, return it
-            if (!(m_metadata is null))
+            if (m_metadata is not null)
                 return m_metadata;
 
             // If a processing exception occurred, re-throw it
-            if (!(m_processException is null))
+            if (m_processException is not null)
                 throw new InvalidOperationException(m_processException.Message, m_processException);
 
             // Otherwise return null (unlikely to ever get to this return)
@@ -195,10 +195,8 @@ namespace GEPDataExtractor
         /// <returns>The meta-data received from the GEP publisher in <see cref="DataSet"/> format.</returns>
         public static DataSet GetMetadata(string connectionString, int timeout = Timeout.Infinite)
         {
-            using (MetadataRetriever receiver = new MetadataRetriever(connectionString))
-            {
-                return receiver.GetMetadata(timeout);
-            }
+            using MetadataRetriever receiver = new MetadataRetriever(connectionString);
+            return receiver.GetMetadata(timeout);
         }
 
         #endregion

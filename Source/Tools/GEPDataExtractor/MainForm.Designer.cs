@@ -97,6 +97,7 @@
             this.buttonCancelExport = new System.Windows.Forms.Button();
             this.buttonCancelPreFilter = new System.Windows.Forms.Button();
             this.groupBoxExportOptions = new System.Windows.Forms.GroupBox();
+            this.checkBoxExportAsGZip = new System.Windows.Forms.CheckBox();
             this.checkBoxExportFilePerDataType = new System.Windows.Forms.CheckBox();
             this.labelExportFileName = new System.Windows.Forms.Label();
             this.buttonSelectFile = new System.Windows.Forms.Button();
@@ -104,7 +105,6 @@
             this.radioButtonCOMTRADE = new System.Windows.Forms.RadioButton();
             this.radioButtonCSV = new System.Windows.Forms.RadioButton();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.checkBoxExportAsGZip = new System.Windows.Forms.CheckBox();
             this.groupBoxServerConnection.SuspendLayout();
             this.groupBoxOptions.SuspendLayout();
             this.tabControlOptions.SuspendLayout();
@@ -705,6 +705,7 @@
             this.labelReadIntervalDetails.Size = new System.Drawing.Size(283, 13);
             this.labelReadIntervalDetails.TabIndex = 8;
             this.labelReadIntervalDetails.Text = "( if > 0, read values at timestamp then skip to next interval )";
+            this.labelReadIntervalDetails.Visible = false;
             // 
             // labelSecondsReadInterval
             // 
@@ -715,6 +716,7 @@
             this.labelSecondsReadInterval.Size = new System.Drawing.Size(47, 13);
             this.labelSecondsReadInterval.TabIndex = 7;
             this.labelSecondsReadInterval.Text = "seconds";
+            this.labelSecondsReadInterval.Visible = false;
             // 
             // maskedTextBoxReadInterval
             // 
@@ -725,7 +727,7 @@
             this.maskedTextBoxReadInterval.Size = new System.Drawing.Size(43, 20);
             this.maskedTextBoxReadInterval.TabIndex = 6;
             this.maskedTextBoxReadInterval.Text = "0";
-            this.maskedTextBoxReadInterval.ValidatingType = typeof(int);
+            this.maskedTextBoxReadInterval.Visible = false;
             this.maskedTextBoxReadInterval.TextChanged += new System.EventHandler(this.FormElementChanged);
             // 
             // labelReadInterval
@@ -738,6 +740,7 @@
             this.labelReadInterval.TabIndex = 5;
             this.labelReadInterval.Text = "Read Interval:";
             this.labelReadInterval.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.labelReadInterval.Visible = false;
             // 
             // maskedTextBoxFrameRate
             // 
@@ -826,12 +829,12 @@
             // labelFrameRate
             // 
             this.labelFrameRate.AutoSize = true;
-            this.labelFrameRate.Location = new System.Drawing.Point(5, 16);
+            this.labelFrameRate.Location = new System.Drawing.Point(14, 16);
             this.labelFrameRate.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelFrameRate.Name = "labelFrameRate";
-            this.labelFrameRate.Size = new System.Drawing.Size(108, 13);
+            this.labelFrameRate.Size = new System.Drawing.Size(99, 13);
             this.labelFrameRate.TabIndex = 0;
-            this.labelFrameRate.Text = "Frame Rate Estimate:";
+            this.labelFrameRate.Text = "Frame Rate Target:";
             this.labelFrameRate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // labelMetaDataTimeout
@@ -988,6 +991,20 @@
             this.groupBoxExportOptions.TabStop = false;
             this.groupBoxExportOptions.Text = "E&xport Options";
             // 
+            // checkBoxExportAsGZip
+            // 
+            this.checkBoxExportAsGZip.AutoSize = true;
+            this.checkBoxExportAsGZip.Checked = true;
+            this.checkBoxExportAsGZip.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxExportAsGZip.Location = new System.Drawing.Point(8, 130);
+            this.checkBoxExportAsGZip.Margin = new System.Windows.Forms.Padding(2);
+            this.checkBoxExportAsGZip.Name = "checkBoxExportAsGZip";
+            this.checkBoxExportAsGZip.Size = new System.Drawing.Size(172, 17);
+            this.checkBoxExportAsGZip.TabIndex = 13;
+            this.checkBoxExportAsGZip.Text = "Export as GZip compressed file";
+            this.checkBoxExportAsGZip.UseVisualStyleBackColor = true;
+            this.checkBoxExportAsGZip.CheckedChanged += new System.EventHandler(this.FormElementChanged);
+            // 
             // checkBoxExportFilePerDataType
             // 
             this.checkBoxExportFilePerDataType.AutoSize = true;
@@ -1061,19 +1078,6 @@
             this.saveFileDialog.DefaultExt = "csv";
             this.saveFileDialog.Filter = "CSV Files|*.csv|All Files|*.*";
             this.saveFileDialog.Title = "Select Export File Name";
-            // 
-            // checkBoxExportAsGZip
-            // 
-            this.checkBoxExportAsGZip.AutoSize = true;
-            this.checkBoxExportAsGZip.Checked = true;
-            this.checkBoxExportAsGZip.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxExportAsGZip.Location = new System.Drawing.Point(8, 130);
-            this.checkBoxExportAsGZip.Margin = new System.Windows.Forms.Padding(2);
-            this.checkBoxExportAsGZip.Name = "checkBoxExportAsGZip";
-            this.checkBoxExportAsGZip.Size = new System.Drawing.Size(172, 17);
-            this.checkBoxExportAsGZip.TabIndex = 13;
-            this.checkBoxExportAsGZip.Text = "Export as GZip compressed file";
-            this.checkBoxExportAsGZip.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
