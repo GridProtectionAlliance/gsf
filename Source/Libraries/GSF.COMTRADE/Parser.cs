@@ -49,6 +49,7 @@ namespace GSF.COMTRADE
         private int m_streamIndex;
         private double[] m_primaryValues;
         private double[] m_secondaryValues;
+        private uint m_initialSample;
         private bool m_disposed;
 
         #endregion
@@ -301,6 +302,7 @@ namespace GSF.COMTRADE
                 m_fileStreams[i] = new FileStream(fileNames[i], FileMode.Open, FileAccess.Read, FileShare.Read);
 
             m_streamIndex = 0;
+            m_initialSample = uint.MaxValue; // Using max value as uninitialized marker
 
             if (IsCombinedFileFormat)
             {
@@ -552,10 +554,17 @@ namespace GSF.COMTRADE
         private int ReadTimestamp(byte[] buffer)
         {
             int index = 0;
-            
+
             // Read sample index
             uint sample = LittleEndian.ToUInt32(buffer, index);
             index += 4;
+
+            // Capture initial sample index - this handle cases where sample index does not start at zero
+            if (m_initialSample == uint.MaxValue)
+                m_initialSample = sample;
+
+            // Change initial sample offset
+            sample -= m_initialSample;
 
             // Get timestamp of this record
             Timestamp = DateTime.MinValue;
