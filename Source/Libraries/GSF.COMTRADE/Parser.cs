@@ -402,11 +402,11 @@ namespace GSF.COMTRADE
             // Parse row of data
             uint sample = uint.Parse(elems[0]);
 
-            // Capture initial sample index - this handle cases where sample index does not start at zero
+            // Capture initial sample index - this handles cases where sample index does not start at zero
             if (m_initialSample == uint.MaxValue)
                 m_initialSample = sample;
 
-            // Change initial sample offset
+            // Offset by initial sample offset
             sample -= m_initialSample;
 
             // Get timestamp of this record
@@ -561,11 +561,11 @@ namespace GSF.COMTRADE
             uint sample = LittleEndian.ToUInt32(buffer, index);
             index += 4;
 
-            // Capture initial sample index - this handle cases where sample index does not start at zero
+            // Capture initial sample index - this handles cases where sample index does not start at zero
             if (m_initialSample == uint.MaxValue)
                 m_initialSample = sample;
 
-            // Change initial sample offset
+            // Offset by initial sample offset
             sample -= m_initialSample;
 
             // Get timestamp of this record
