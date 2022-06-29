@@ -406,7 +406,7 @@ namespace GSF.COMTRADE
             if (m_initialSample == uint.MaxValue)
                 m_initialSample = sample;
 
-            // Offset by initial sample offset
+            // Offset by initial sample
             sample -= m_initialSample;
 
             // Get timestamp of this record
@@ -565,7 +565,7 @@ namespace GSF.COMTRADE
             if (m_initialSample == uint.MaxValue)
                 m_initialSample = sample;
 
-            // Offset by initial sample offset
+            // Offset by initial sample
             sample -= m_initialSample;
 
             // Get timestamp of this record
