@@ -407,6 +407,13 @@ namespace GSF.COMTRADE
             // Parse row of data
             uint sample = uint.Parse(elems[0]);
 
+            // Capture initial sample index - this handle cases where sample index does not start at zero
+            if (m_initialSample == uint.MaxValue)
+                m_initialSample = sample;
+
+            // Change initial sample offset
+            sample -= m_initialSample;
+
             // Get timestamp of this record
             Timestamp = DateTime.MinValue;
 
