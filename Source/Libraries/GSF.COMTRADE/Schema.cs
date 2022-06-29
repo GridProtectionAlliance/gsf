@@ -402,7 +402,7 @@ namespace GSF.COMTRADE
                 m_nominalFrequency = value;
 
                 // Cascade nominal frequency update to analog channels
-                if (!(AnalogChannels is null))
+                if (AnalogChannels is not null)
                 {
                     foreach (AnalogChannel analogChannel in AnalogChannels)
                         analogChannel.NominalFrequency = m_nominalFrequency;
@@ -569,7 +569,7 @@ namespace GSF.COMTRADE
 
         // Static Methods
         internal static bool HasCFFExtension(string fileName) =>
-            !(fileName is null) && string.Equals(FilePath.GetExtension(fileName), ".cff", StringComparison.OrdinalIgnoreCase);
+            fileName is not null && string.Equals(FilePath.GetExtension(fileName), ".cff", StringComparison.OrdinalIgnoreCase);
 
         internal static bool IsFileSectionSeparator(string line) =>
             IsFileSectionSeparator(line, out _, out _);

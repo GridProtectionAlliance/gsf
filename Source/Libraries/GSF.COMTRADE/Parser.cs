@@ -336,7 +336,7 @@ namespace GSF.COMTRADE
         /// </summary>
         public void CloseFiles()
         {
-            if (!(m_fileStreams is null))
+            if (m_fileStreams is not null)
             {
                 foreach (FileStream fileStream in m_fileStreams)
                     fileStream?.Dispose();
@@ -363,19 +363,14 @@ namespace GSF.COMTRADE
             m_primaryValues = null;
             m_secondaryValues = null;
 
-            switch (m_schema.FileType)
+            return m_schema.FileType switch
             {
-                case FileType.Ascii:
-                    return ReadNextAscii();
-                case FileType.Binary:
-                    return ReadNextBinary();
-                case FileType.Binary32:
-                    return ReadNextBinary32();
-                case FileType.Float32:
-                    return ReadNextFloat32();
-                default:
-                    return false;
-            }
+                FileType.Ascii => ReadNextAscii(),
+                FileType.Binary => ReadNextBinary(),
+                FileType.Binary32 => ReadNextBinary32(),
+                FileType.Float32 => ReadNextFloat32(),
+                _ => false,
+            };
         }
 
         // Handle ASCII file read

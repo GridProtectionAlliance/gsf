@@ -319,39 +319,16 @@ namespace GSF.COMTRADE
                 {
                     char phaseDesignation = char.ToUpper(value[0]);
 
-                    switch (phaseDesignation)
+                    m_phaseDesignation = phaseDesignation switch
                     {
-                        case 'A':
-                        case 'R':
-                        case '1':
-                            m_phaseDesignation = 'A';
-                            break;
-                        case 'B':
-                        case 'S':
-                        case '2':
-                            m_phaseDesignation = 'B';
-                            break;
-                        case 'C':
-                        case 'T':
-                        case '3':
-                            m_phaseDesignation = 'C';
-                            break;
-                        case 'P':
-                        case '+':
-                            m_phaseDesignation = 'P';
-                            break;
-                        case 'N':
-                        case '-':
-                            m_phaseDesignation = '-';
-                            break;
-                        case 'Z':
-                        case '0':
-                            m_phaseDesignation = '0';
-                            break;
-                        default:
-                            m_phaseDesignation = char.MinValue;
-                            break;
-                    }
+                        'A' or 'R' or '1' => 'A',
+                        'B' or 'S' or '2' => 'B',
+                        'C' or 'T' or '3' => 'C',
+                        'P' or '+' => 'P',
+                        'N' or '-' => '-',
+                        'Z' or '0' => '0',
+                        _ => char.MinValue,
+                    };
                 }
             }
         }
