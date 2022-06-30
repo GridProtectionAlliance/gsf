@@ -783,12 +783,19 @@ namespace GSF.Web.Model
 
                 string sql = "";
 
-                if (SearchSettings == null && CustomView == String.Empty)
-                    sql = $@" SELECT * FROM {tableName} FullTbl {whereClause}
+                string limit;
+
+                if (Take == null)
+                    limit = "";
+                else
+                    limit = $"TOP {(int)Take}";
+
+                        if (SearchSettings == null && CustomView == String.Empty)
+                    sql = $@" SELECT {limit} * FROM {tableName} FullTbl {whereClause}
                             ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")} ";
 
                 else if (SearchSettings == null)
-                    sql = $@" SELECT* FROM({CustomView}) FullTbl 
+                    sql = $@" SELECT {limit} * FROM({CustomView}) FullTbl 
                             {whereClause}
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
 
@@ -835,7 +842,7 @@ namespace GSF.Web.Model
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
                                     SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
                                         FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
+                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT {limit} '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
 
                                 exec sp_executesql @CleanSQL
                             '
@@ -861,7 +868,7 @@ namespace GSF.Web.Model
                                 DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
                                     SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
                                         FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
+                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT {limit} '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
 
                                 exec sp_executesql @CleanSQL
                             '
