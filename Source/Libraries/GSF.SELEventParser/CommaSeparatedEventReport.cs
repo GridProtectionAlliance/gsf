@@ -85,6 +85,7 @@ namespace GSF.SELEventParser
         public double SamplesPerCycleDigital { get; set; }
         public double NumberOfCycles { get; set; }
         public string Event { get; set; }
+        public double Location { get; set; }
         public int TriggerIndex { get; set; }
         public int InitialReadingIndex { get; set; }
         public string[] SettingsRegions { get; set; }
@@ -396,7 +397,12 @@ namespace GSF.SELEventParser
                                     cSER.FrequencyNominal = 60D;
                                 cSER.Event = headerFields[StringParser.FindIndex("EVENT", lastHeaderFields)];
 
-                                int labelIndex = StringParser.FindIndex("SAM/CYC_A", lastHeaderFields);
+                                int labelIndex = StringParser.FindIndex("LOCATION", lastHeaderFields);
+                                if (labelIndex > 0 && double.TryParse(headerFields[labelIndex], out double location))
+                                    cSER.Location = location;
+                                else
+                                    cSER.Location = double.NaN;
+                                labelIndex = StringParser.FindIndex("SAM/CYC_A", lastHeaderFields);
                                 if (labelIndex > 0)
                                     cSER.SamplesPerCycleAnalog = Convert.ToDouble(headerFields[labelIndex]);
                                 labelIndex = StringParser.FindIndex("SAM/CYC_D", lastHeaderFields);
