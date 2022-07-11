@@ -249,18 +249,17 @@ namespace GSF.Web.Security
                         referrer = referrer + "&useAlternateSecurityProvider=1";
                 }
                 else if (useAlternateSecurityProvider)
+                {
                     referrer = "&useAlternateSecurityProvider=1";
+                }
                 
-
                 string urlQueryString = Request.QueryString.HasValue ? "?" + Request.QueryString.Value : "";
 
                 pathBytes = Encoding.UTF8.GetBytes(urlPath + urlQueryString);
                 base64Path = Convert.ToBase64String(pathBytes);
                 encodedPath = WebUtility.UrlEncode(base64Path);
 
-                ISecurityProvider securityProvider = securityPrincipal?.Identity?.Provider;
-                if (securityProvider == null)
-                    securityProvider = SecurityProviderCache.CreateProvider("", autoRefresh: false, useAlternate: useAlternateSecurityProvider);
+                ISecurityProvider securityProvider = securityPrincipal?.Identity?.Provider ?? SecurityProviderCache.CreateProvider("", autoRefresh: false, useAlternate: useAlternateSecurityProvider);
 
                 Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage, Request.Uri, encodedPath, referrer));
             }
@@ -270,7 +269,7 @@ namespace GSF.Web.Security
             }
 
             // Add current identity to unauthorized response header
-            string currentIdentity = securityPrincipal?.Identity.Name ?? "anonymous";
+            string currentIdentity = securityPrincipal?.Identity?.Name ?? "anonymous";
 
             if (Request.Environment.TryGetValue("OriginalPrincipal", out object value))
             {
