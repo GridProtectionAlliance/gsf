@@ -447,7 +447,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets <see cref="OutputStream"/>'s LagTime.
         /// </summary>
         [Required(ErrorMessage = "Output stream lag time is a required field, please provide a value.")]
-        [DefaultValue(3.0)]
+        [DefaultValue(5.0)]
         public double LagTime
         {
             get => m_lagTime;
@@ -462,7 +462,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets <see cref="OutputStream"/>'s LeadTime.
         /// </summary>
         [Required(ErrorMessage = "Output stream lead time is a required field, please provide a value.")]
-        [DefaultValue(1.0)]
+        [DefaultValue(5.0D)]
         public double LeadTime
         {
             get => m_leadTime;
