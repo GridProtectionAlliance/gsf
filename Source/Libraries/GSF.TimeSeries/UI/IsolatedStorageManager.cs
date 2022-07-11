@@ -129,10 +129,10 @@ namespace GSF.TimeSeries.UI
                 WriteToIsolatedStorage("DataResolution", 30);
 
             if (!SettingExists("LagTime") || overWriteExisting || ReadFromIsolatedStorage("LagTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LagTime").ToString()))
-                WriteToIsolatedStorage("LagTime", 3);
+                WriteToIsolatedStorage("LagTime", 10.0D);
 
             if (!SettingExists("LeadTime") || overWriteExisting || ReadFromIsolatedStorage("LeadTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LeadTime").ToString()))
-                WriteToIsolatedStorage("LeadTime", 1);
+                WriteToIsolatedStorage("LeadTime", 10.0D);
 
             if (!SettingExists("UseLocalClockAsRealtime") || overWriteExisting || ReadFromIsolatedStorage("UseLocalClockAsRealtime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("UseLocalClockAsRealtime").ToString()))
                 WriteToIsolatedStorage("UseLocalClockAsRealtime", "false");
