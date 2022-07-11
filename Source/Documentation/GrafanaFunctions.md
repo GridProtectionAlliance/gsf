@@ -158,7 +158,7 @@ Returns a single value that is the count of the values in the source series.
 * Returns: Single value
 * Example: `Count(PPA:1; PPA:2; PPA:3)`
 * Variants: `Count`
-* Execution:[Immediate enumeration](#execution-modes)
+* Execution: [Immediate enumeration](#execution-modes)
 
 ## Distinct
 
