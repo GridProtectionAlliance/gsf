@@ -89,7 +89,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     m_acronym = m_acronym.Substring(0, 200);
 
                 OnPropertyChanged(nameof(Acronym));
-                Existing = Device.GetDevice(null, "WHERE Acronym = '" + m_acronym.ToUpper() + "'") is not null;
+                Existing = Device.GetDevice(null, $"WHERE Acronym = '{m_acronym.ToUpper()}'") is not null;
             }
         }
 

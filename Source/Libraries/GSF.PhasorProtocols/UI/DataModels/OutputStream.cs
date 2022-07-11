@@ -92,13 +92,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             if (value is null)
                 return null;
 
-            if (parameter is null)
-                return null;
-
-            if (parameter is not CollectionViewSource viewSource)
-                return null;
-
-            if (viewSource.Source is not Dictionary<OutputProtocol, string> typeList)
+            if (parameter is not CollectionViewSource { Source: Dictionary<OutputProtocol, string> typeList })
                 return null;
 
             string name = value.ToString();
@@ -117,7 +111,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <returns>A converted value. If the method returns <see langword="null" />, the valid null value is used.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is KeyValuePair<OutputProtocol, string> pair ? (object)pair.Key : null;
+            return value is KeyValuePair<OutputProtocol, string> pair ? pair.Key : null;
         }
 
         /// <summary>
@@ -280,7 +274,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 m_type = value;
 
-                Dictionary<string, string> settings = ConnectionString?.ParseKeyValuePairs() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                Dictionary<string, string> settings;
+
+                try
+                {
+                    settings = ConnectionString?.ParseKeyValuePairs() ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                }
+                catch
+                {
+                    settings = new Dictionary<string, string>();
+                }
 
                 switch (m_type)
                 {
@@ -311,7 +314,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => m_connectionString;
             set
             {
-                Dictionary<string, string> settings = value.ParseKeyValuePairs();
+                Dictionary<string, string> settings;
+
+                try
+                {
+                    settings = value.ParseKeyValuePairs();
+                }
+                catch
+                {
+                    settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                }
 
                 if (settings.TryGetValue(nameof(RoundToNearestTimestamp), out string setting))
                 {
@@ -777,7 +789,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets an output stream type lookup list, maps <see cref="OutputStream"/> enum value to its display name.
         /// </summary>
-        public static ReadOnlyDictionary<OutputProtocol, string> OutputProtocolNames { get; } = new ReadOnlyDictionary<OutputProtocol, string>
+        public static ReadOnlyDictionary<OutputProtocol, string> OutputProtocolNames { get; } = new
         (
             new Dictionary<OutputProtocol, string>
             {
@@ -858,7 +870,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (keys is not null && keys.Count > 0)
                 {
-                    string commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
+                    string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
                     string query = $"SELECT * FROM OutputStreamDetail WHERE ID IN ({commaSeparatedKeys})";
                     DataTable outputStreamTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
 
@@ -934,7 +946,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 OutputStreamDevice outputStreamDevice = outputStreamDevices[0];
 
                 // Get OriginalSource value for the above OutputStreamDevice from the input Device table.
-                Device device = Device.GetDevice(database, " WHERE Acronym LIKE '%" + outputStreamDevice.Acronym + "'");
+                Device device = Device.GetDevice(database, $" WHERE Acronym LIKE '%{outputStreamDevice.Acronym}'");
 
                 return device is null ? "" : device.OriginalSource;
             }
@@ -991,7 +1003,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
                 else
                 {
-                    OutputStream oldOutputStream = GetOutputStream(database, " WHERE ID = " + outputStream.ID);
+                    OutputStream oldOutputStream = GetOutputStream(database, $" WHERE ID = {outputStream.ID}");
 
                     query = database.ParameterizedQueryString("UPDATE OutputStream SET NodeID = {0}, Acronym = {1}, Name = {2}, Type = {3}, ConnectionString = {4}, " +
                         "IDCode = {5}, CommandChannel = {6}, DataChannel = {7}, AutoPublishConfigFrame = {8}, AutoStartDataChannel = {9}, NominalFrequency = {10}, " +
@@ -1048,7 +1060,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     // Get ID of the output stream if a new one was inserted above.
                     if (outputStream.ID == 0)
-                        outputStream.ID = GetOutputStream(database, " WHERE Acronym = '" + outputStream.Acronym.Replace(" ", "").ToUpper() + "'").ID;
+                        outputStream.ID = GetOutputStream(database, $" WHERE Acronym = '{outputStream.Acronym.Replace(" ", "").ToUpper()}'").ID;
 
                     IList<int> keys = OutputStreamDevice.LoadKeys(database, outputStream.ID);
 
@@ -1060,7 +1072,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     if (!string.IsNullOrEmpty(outputStream.MirroringSourceDevice))
                     {
                         // Get list of input devices, filter by original source = outputstream.MirrorSourceDevice.
-                        ObservableCollection<Device> devices = Device.GetDevices(database, "WHERE OriginalSource = '" + outputStream.MirroringSourceDevice + "'");
+                        ObservableCollection<Device> devices = Device.GetDevices(database, $"WHERE OriginalSource = '{outputStream.MirroringSourceDevice}'");
 
                         // Add these above input devices as output stream devices.
                         OutputStreamDevice.AddDevices(database, outputStream.ID, devices, true, true);
@@ -1127,7 +1139,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStream WHERE ID = {0}", "outputStreamID"), DefaultTimeout, outputStreamID);
 
                 // Delete statistic measurements from database using the output stream acronym we have just deleted
-                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalReference LIKE '" + outputStreamAcronym.Rows[0].Field<string>("Acronym") + "!OS-ST%'"), DefaultTimeout);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString($"DELETE FROM Measurement WHERE SignalReference LIKE '{outputStreamAcronym.Rows[0].Field<string>("Acronym")}!OS-ST%'"), DefaultTimeout);
 
                 CommonFunctions.SendCommandToService("ReloadConfig");
 
@@ -1153,7 +1165,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable outputStreamTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDetail " + whereClause);
+                DataTable outputStreamTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDetail {whereClause}");
 
                 if (outputStreamTable.Rows.Count == 0)
                     return null;

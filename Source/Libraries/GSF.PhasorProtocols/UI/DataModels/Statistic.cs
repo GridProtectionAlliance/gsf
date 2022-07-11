@@ -69,14 +69,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
+            get => m_id;
+            set => m_id = value;
         }
 
         /// <summary>
@@ -86,10 +80,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(20, ErrorMessage = "Statistic Source cannot exceed 20 characters.")]
         public string Source
         {
-            get
-            {
-                return m_source;
-            }
+            get => m_source;
             set
             {
                 m_source = value;
@@ -103,10 +94,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Statistic Signal Index is a required field, please provice a value.")]
         public int SignalIndex
         {
-            get
-            {
-                return m_signalIndex;
-            }
+            get => m_signalIndex;
             set
             {
                 m_signalIndex = value;
@@ -121,10 +109,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Statistic Name cannot exceed 200 characters.")]
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -137,10 +122,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Description
         {
-            get
-            {
-                return m_description;
-            }
+            get => m_description;
             set
             {
                 m_description = value;
@@ -154,10 +136,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Statistic Assembly Name is a required field, please provide a value.")]
         public string AssemblyName
         {
-            get
-            {
-                return m_assemblyName;
-            }
+            get => m_assemblyName;
             set
             {
                 m_assemblyName = value;
@@ -171,10 +150,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Statistic Type Name is a required field, please provide a value.")]
         public string TypeName
         {
-            get
-            {
-                return m_typeName;
-            }
+            get => m_typeName;
             set
             {
                 m_typeName = value;
@@ -188,10 +164,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Statistic Method Name is a required field, please provide a value.")]
         public string MethodName
         {
-            get
-            {
-                return m_methodName;
-            }
+            get => m_methodName;
             set
             {
                 m_methodName = value;
@@ -204,10 +177,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Arguments
         {
-            get
-            {
-                return m_arguments;
-            }
+            get => m_arguments;
             set
             {
                 m_arguments = value;
@@ -221,10 +191,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(true)]
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
@@ -238,10 +205,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Statistic DataType cannot exceed 200 characters.")]
         public string DataType
         {
-            get
-            {
-                return m_dataType;
-            }
+            get => m_dataType;
             set
             {
                 m_dataType = value;
@@ -255,10 +219,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Statistic DisplayFormat cannot exceed 200 characters.")]
         public string DisplayFormat
         {
-            get
-            {
-                return m_displayFormat;
-            }
+            get => m_displayFormat;
             set
             {
                 m_displayFormat = value;
@@ -271,10 +232,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool IsConnectedState
         {
-            get
-            {
-                return m_isConnectedState;
-            }
+            get => m_isConnectedState;
             set
             {
                 m_isConnectedState = value;
@@ -288,10 +246,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(0)]
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -342,7 +297,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }

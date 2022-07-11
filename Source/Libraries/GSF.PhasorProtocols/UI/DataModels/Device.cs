@@ -896,7 +896,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<Device>(deviceList ?? new Device[0]);
+                return new ObservableCollection<Device>(deviceList ?? Array.Empty<Device>());
             }
             finally
             {
@@ -1551,7 +1551,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         private static string ParseConnectionString(string connectionString)
         {
-            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings;
+
+            try
+            {
+                settings = connectionString.ParseKeyValuePairs();
+            }
+            catch
+            {
+                settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
 
             if (settings.ContainsKey("commandchannel"))
             {
@@ -1564,7 +1573,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         private static string ParseAlternateCommand(string connectionString)
         {
-            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings;
+
+            try
+            {
+                settings = connectionString.ParseKeyValuePairs();
+            }
+            catch
+            {
+                settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            }
 
             return settings.ContainsKey("commandchannel") ? 
                 settings["commandchannel"].Replace("{", "").Replace("}", "") : 

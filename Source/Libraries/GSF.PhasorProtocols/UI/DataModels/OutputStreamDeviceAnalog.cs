@@ -275,7 +275,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<OutputStreamDeviceAnalog>(outputStreamDeviceAnalogList ?? new OutputStreamDeviceAnalog[0]);
+                return new ObservableCollection<OutputStreamDeviceAnalog>(outputStreamDeviceAnalogList ?? Array.Empty<OutputStreamDeviceAnalog>());
             }
             finally
             {

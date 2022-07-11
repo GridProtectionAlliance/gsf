@@ -357,18 +357,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (keys is not null && keys.Count > 0)
                 {
-                    string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
+                    string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
 
-                    string query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " + 
-                                   "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual " + 
-                                   $"FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
+                    string query = $"SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
 
                     if (database.IsMySQL)
-                    {
-                        query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " + 
-                                "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` " + 
-                                $"FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
-                    }
+                        query = $"SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
 
                     DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamDeviceList = new OutputStreamDevice[outputStreamDeviceTable.Rows.Count];
@@ -397,7 +391,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<OutputStreamDevice>(outputStreamDeviceList ?? new OutputStreamDevice[0]);
+                return new ObservableCollection<OutputStreamDevice>(outputStreamDeviceList ?? Array.Empty<OutputStreamDevice>());
             }
             finally
             {
@@ -473,7 +467,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
                 else
                 {
-                    OutputStreamDevice originalDevice = GetOutputStreamDevice(database, "WHERE ID = " + outputStreamDevice.ID);
+                    OutputStreamDevice originalDevice = GetOutputStreamDevice(database, $"WHERE ID = {outputStreamDevice.ID}");
 
                     query = database.ParameterizedQueryString("UPDATE OutputStreamDevice SET NodeID = {0}, AdapterID = {1}, IDCode = {2}, Acronym = {3}, BpaAcronym = {4}, " +
                         "Name = {5}, PhasorDataFormat = {6}, FrequencyDataFormat = {7}, AnalogDataFormat = {8}, CoordinateFormat = {9}, LoadOrder = {10}, Enabled = {11}, " +
@@ -493,7 +487,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         foreach (OutputStreamMeasurement measurement in OutputStreamMeasurement.Load(database, keys))
                         {
-                            measurement.SignalReference = measurement.SignalReference.Replace(originalDevice.Acronym + "-", outputStreamDevice.Acronym + "-");
+                            measurement.SignalReference = measurement.SignalReference.Replace($"{originalDevice.Acronym}-", $"{outputStreamDevice.Acronym}-");
                             OutputStreamMeasurement.Save(database, measurement);
                         }
                     }
@@ -530,7 +524,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 try
                 {
                     database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE From OutputStreamMeasurement WHERE AdapterID = {0} AND SignalReference LIKE {1}", "outputStreamID", "outputStreamDeviceAcronym"),
-                        DefaultTimeout, outputStreamID, "%" + outputStreamDeviceAcronym + "%");
+                        DefaultTimeout, outputStreamID, $"%{outputStreamDeviceAcronym}%");
                 }
                 catch (Exception ex)
                 {
@@ -577,7 +571,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     outputStreamDevice.IDCode = device.AccessID;
                     Save(database, outputStreamDevice);
 
-                    outputStreamDevice = GetOutputStreamDevice(database, "WHERE Acronym = '" + outputStreamDevice.Acronym + "' AND AdapterID = " + outputStreamID);
+                    outputStreamDevice = GetOutputStreamDevice(database, $"WHERE Acronym = '{outputStreamDevice.Acronym}' AND AdapterID = {outputStreamID}");
 
                     if (outputStreamDevice is not null)
                     {
@@ -640,7 +634,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     {
                                         NodeID = device.NodeID,
                                         OutputStreamDeviceID = outputStreamDevice.ID,
-                                        Label = string.IsNullOrEmpty(measurement.AlternateTag) ? device.Acronym.Length > 12 ? device.Acronym.Substring(0, 12) + ":A" + analogIndex : device.Acronym + ":A" + analogIndex : measurement.AlternateTag
+                                        Label = string.IsNullOrEmpty(measurement.AlternateTag) ? device.Acronym.Length > 12 ? $"{device.Acronym.Substring(0, 12)}:A{analogIndex}" : $"{device.Acronym}:A{analogIndex}" : measurement.AlternateTag
                                     };
 
                                     int charIndex = measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal);
@@ -704,7 +698,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDetail " + whereClause);
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDeviceDetail {whereClause}");
 
                 if (deviceTable.Rows.Count == 0)
                     return null;
@@ -754,7 +748,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<OutputStreamDevice> outputStreamDeviceList = new();
-                DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDetail " + whereClause);
+                DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDeviceDetail {whereClause}");
 
                 foreach (DataRow row in outputStreamDeviceTable.Rows)
                 {

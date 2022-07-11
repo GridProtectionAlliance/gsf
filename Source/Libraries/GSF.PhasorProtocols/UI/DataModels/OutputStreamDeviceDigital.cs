@@ -70,10 +70,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceDigital NodeID is a required field, please provide value.")]
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -87,10 +84,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceDigital OutputStreamDeviceID is a required field, please provide value.")]
         public int OutputStreamDeviceID
         {
-            get
-            {
-                return m_outputStreamDeviceID;
-            }
+            get => m_outputStreamDeviceID;
             set
             {
                 m_outputStreamDeviceID = value;
@@ -105,10 +99,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceDigital ID is a required field, please provide value.")]
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -122,10 +113,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceDigital Label is a required field, please provide value.")]
         public string Label
         {
-            get
-            {
-                return m_label;
-            }
+            get => m_label;
             set
             {
                 m_label = value.TruncateRight(256).PadRight(256);
@@ -138,10 +126,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>                
         public string DisplayLabel
         {
-            get
-            {
-                return string.Concat(Label.GetSegments(16).Select(label => label.Trim() + "\r\n").Take(16));
-            }
+            get => string.Concat(Label.GetSegments(16).Select(label => $"{label.Trim()}\r\n").Take(16));
             set
             {
                 Label = string.Concat(value.Split(new[] { "\r\n" }, StringSplitOptions.None).Select(label => label.TruncateRight(16).PadRight(16)).Take(16));
@@ -155,10 +140,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamDeviceDigital MaskValue is a required field, please provide value.")]
         public int MaskValue
         {
-            get
-            {
-                return m_maskValue;
-            }
+            get => m_maskValue;
             set
             {
                 m_maskValue = value;
@@ -173,10 +155,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(0)]
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -190,14 +169,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
+            get => m_createdOn;
+            set => m_createdOn = value;
         }
 
         /// <summary>
@@ -206,14 +179,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
+            get => m_createdBy;
+            set => m_createdBy = value;
         }
 
         /// <summary>
@@ -222,14 +189,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
+            get => m_updatedOn;
+            set => m_updatedOn = value;
         }
 
         /// <summary>
@@ -238,14 +199,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
+            get => m_updatedBy;
+            set => m_updatedBy = value;
         }
 
         #endregion
@@ -271,14 +226,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<int> outputStreamDeviceDigitalList = new List<int>();
-                DataTable outputStreamDeviceDigitalTable;
 
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From OutputStreamDeviceDigital WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause));
+                DataTable outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From OutputStreamDeviceDigital WHERE OutputStreamDeviceID = {outputStreamDeviceID} {sortClause}");
 
                 foreach (DataRow row in outputStreamDeviceDigitalTable.Rows)
                 {
@@ -289,7 +243,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -315,11 +269,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataTable outputStreamDeviceDigitalTable;
                 int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, OutputStreamDeviceID, ID, Label, MaskValue, LoadOrder " +
-                             "FROM OutputStreamDeviceDigital WHERE ID IN ({0})", commaSeparatedKeys));
+                    commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
+                    query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, MaskValue, LoadOrder FROM OutputStreamDeviceDigital WHERE ID IN ({commaSeparatedKeys})");
 
                     outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamDeviceDigitalList = new OutputStreamDeviceDigital[outputStreamDeviceDigitalTable.Rows.Count];
@@ -340,11 +293,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<OutputStreamDeviceDigital>(outputStreamDeviceDigitalList ?? new OutputStreamDeviceDigital[0]);
+                return new ObservableCollection<OutputStreamDeviceDigital>(outputStreamDeviceDigitalList ?? Array.Empty<OutputStreamDeviceDigital>());
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -380,7 +333,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -425,7 +378,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -440,14 +393,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             bool createdConnection = false;
 
-            int adapterID;
-            int outputStreamDeviceID;
-            int deletedSignalReferenceIndex;
-            int presentDeviceDigitalCount;
-
-            string digitalSignalReference;
-            string signalReferenceBase;
-            string previousDigitalSignalReference;
             string nextDigitalSignalReference = string.Empty;
             string lastAffectedMeasurementMessage = string.Empty;
 
@@ -458,19 +403,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                GetDeleteMeasurementDetails(database, outputStreamDeviceDigitalID, out digitalSignalReference, out adapterID, out outputStreamDeviceID);
+                GetDeleteMeasurementDetails(database, outputStreamDeviceDigitalID, out string digitalSignalReference, out int adapterID, out int outputStreamDeviceID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStreamMeasurement WHERE SignalReference = {0} AND AdapterID = {1}", "signalReference", "adapterID"), DefaultTimeout, digitalSignalReference, adapterID);
-                presentDeviceDigitalCount = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM OutputStreamDeviceDigital WHERE OutputStreamDeviceID = {0}", "outputStreamDeviceID"), DefaultTimeout, outputStreamDeviceID));
+                int presentDeviceDigitalCount = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM OutputStreamDeviceDigital WHERE OutputStreamDeviceID = {0}", "outputStreamDeviceID"), DefaultTimeout, outputStreamDeviceID));
 
                 // Using signal reference of measurement deleted build the next signal reference (increment by 1)\
-                int.TryParse(Regex.Match(digitalSignalReference, @"\d+$").Value, out deletedSignalReferenceIndex);
-                signalReferenceBase = Regex.Replace(digitalSignalReference, @"\d+$", "");
+                int.TryParse(Regex.Match(digitalSignalReference, @"\d+$").Value, out int deletedSignalReferenceIndex);
+                string signalReferenceBase = Regex.Replace(digitalSignalReference, @"\d+$", "");
 
                 for (int i = deletedSignalReferenceIndex; i < presentDeviceDigitalCount; i++)
                 {
                     // We will be modifying the measurement with signal reference index i+1 to have signal reference index i.
-                    previousDigitalSignalReference = string.Format("{0}{1}", signalReferenceBase, i);
-                    nextDigitalSignalReference = string.Format("{0}{1}", signalReferenceBase, i + 1);
+                    string previousDigitalSignalReference = $"{signalReferenceBase}{i}";
+                    nextDigitalSignalReference = $"{signalReferenceBase}{i + 1}";
 
                     // Obtain details of measurements of the deleted measurements, then modify the signal reference (decrement by 1) and put it back
                     OutputStreamMeasurement outputStreamMeasurement = GetOutputMeasurementDetails(database, nextDigitalSignalReference, adapterID);
@@ -485,10 +430,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
             catch (Exception ex)
             {
                 if (!string.IsNullOrEmpty(nextDigitalSignalReference))
-                    lastAffectedMeasurementMessage = string.Format("{0}(Last affected measurement: {1})", Environment.NewLine, nextDigitalSignalReference);
+                    lastAffectedMeasurementMessage = $"{Environment.NewLine}(Last affected measurement: {nextDigitalSignalReference})";
 
                 CommonFunctions.LogException(database, "OutputStreamDeviceDigital.Delete", ex);
-                MessageBoxResult dialogResult = MessageBox.Show(string.Format("Could not delete or modify measurements.{0}Do you still wish to delete this Digital?{1}", Environment.NewLine, lastAffectedMeasurementMessage), "", MessageBoxButton.YesNo);
+                MessageBoxResult dialogResult = MessageBox.Show($"Could not delete or modify measurements.{Environment.NewLine}Do you still wish to delete this Digital?{lastAffectedMeasurementMessage}", "", MessageBoxButton.YesNo);
 
                 if (dialogResult == MessageBoxResult.Yes)
                 {
@@ -499,12 +444,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 else
                 {
                     Exception exception = ex.InnerException ?? ex;
-                    return string.Format("Delete OutputStreamDeviceDigital was unsuccessful: {0}", exception.Message);
+                    return $"Delete OutputStreamDeviceDigital was unsuccessful: {exception.Message}";
                 }
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -543,7 +488,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
 
@@ -560,24 +505,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
             try
             {
-                DataRow outputDigitalRecord;
-                DataRow outputDeviceRecord;
-
-                string labelName;
-                string deviceName;
-                string digitalPointTag;
-
                 createdConnection = CreateConnection(ref database);
 
-                outputDigitalRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDigitalFormat, outputStreamDeviceDigitalID)).Rows[0];
-                labelName = outputDigitalRecord.Field<string>("Label");
+                DataRow outputDigitalRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDigitalFormat, outputStreamDeviceDigitalID)).Rows[0];
+                string labelName = outputDigitalRecord.Field<string>("Label");
                 outputStreamDeviceID = outputDigitalRecord.Field<int>("OutputStreamDeviceID");
 
-                outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
-                deviceName = outputDeviceRecord.Field<string>("Acronym");
+                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
+                string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                digitalPointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName)).ToNonNullString();
+                string digitalPointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName)).ToNonNullString();
                 digitalSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, digitalPointTag)).ToNonNullString();
             }
             catch (Exception ex)
@@ -587,7 +525,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }

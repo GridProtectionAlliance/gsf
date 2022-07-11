@@ -323,7 +323,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (keys is not null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
                     query = $"SELECT ID, DeviceID, Label, Type, Phase, BaseKV, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE ID IN ({commaSeparatedKeys})";
 
                     DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
@@ -346,7 +346,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<Phasor>(phasorList ?? new Phasor[0]);
+                return new ObservableCollection<Phasor>(phasorList ?? Array.Empty<Phasor>());
             }
             finally
             {
@@ -458,7 +458,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 // Get reference to the device to which phasor is being added.
-                Device device = Device.GetDevice(database, "WHERE ID = " + phasor.DeviceID);
+                Device device = Device.GetDevice(database, $"WHERE ID = {phasor.DeviceID}");
 
                 // Get Phasor signal types.
                 ObservableCollection<SignalType> signals;
@@ -469,11 +469,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     signals = SignalType.GetCurrentPhasorSignalTypes();
 
                 // Get reference to phasor which has just been added.
-                Phasor addedPhasor = GetPhasor(database, "WHERE DeviceID = " + phasor.DeviceID + " AND SourceIndex = " + phasor.SourceIndex);
+                Phasor addedPhasor = GetPhasor(database, $"WHERE DeviceID = {phasor.DeviceID} AND SourceIndex = {phasor.SourceIndex}");
 
                 foreach (SignalType signal in signals)
                 {
-                    Measurement measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + phasor.DeviceID + " AND SignalTypeSuffix = '" + signal.Suffix + "' AND PhasorSourceIndex = " + oldSourceIndex);
+                    Measurement measurement = Measurement.GetMeasurement(database, $"WHERE DeviceID = {phasor.DeviceID} AND SignalTypeSuffix = '{signal.Suffix}' AND PhasorSourceIndex = {oldSourceIndex}");
 
                     if (measurement is null)
                     {
@@ -482,11 +482,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             DeviceID = device.ID,
                             HistorianID = device.HistorianID,
                             PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0], addedPhasor.BaseKV),
-                            SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex,
+                            SignalReference = $"{device.Acronym}-{signal.Suffix}{addedPhasor.SourceIndex}",
                             SignalTypeID = signal.ID,
                             Adder = string.Equals(signal.Suffix, "PA") ? phasor.AngleAdder : 0.0F,
                             Multiplier = string.Equals(signal.Suffix, "PM") ? phasor.MagnitudeMultiplier : 1.0F,
-                            Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name,
+                            Description = $"{device.Name} {addedPhasor.Label} {device.VendorDeviceName} {addedPhasor.Phase} {signal.Name}",
                             PhasorSourceIndex = addedPhasor.SourceIndex,
                             Enabled = true
                         };
@@ -498,9 +498,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         // Update existing record when needed or when phasor source index has changed
                         measurement.HistorianID = device.HistorianID;
                         measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.Label, addedPhasor.SourceIndex, addedPhasor.Phase[0], addedPhasor.BaseKV);
-                        measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
+                        measurement.SignalReference = $"{device.Acronym}-{signal.Suffix}{addedPhasor.SourceIndex}";
                         measurement.SignalTypeID = signal.ID;
-                        measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
+                        measurement.Description = $"{device.Name} {addedPhasor.Label} {device.VendorDeviceName} {addedPhasor.Phase} {signal.Name}";
                         measurement.PhasorSourceIndex = addedPhasor.SourceIndex;
 
                         Measurement.Save(database, measurement);
@@ -534,7 +534,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                Phasor phasor = GetPhasor(database, "WHERE ID = " + phasorID);
+                Phasor phasor = GetPhasor(database, $"WHERE ID = {phasorID}");
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Phasor WHERE ID = {0}", "phasorID"), DefaultTimeout, phasorID);
 
@@ -547,7 +547,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     catch (Exception ex)
                     {
                         CommonFunctions.LogException(database, "Phasor.Delete", ex);
-                        throw new Exception("Phasor deleted successfully but failed to delete measurements. " + Environment.NewLine + ex.Message);
+                        throw new Exception($"Phasor deleted successfully but failed to delete measurements. {Environment.NewLine}{ex.Message}");
                     }
                 }
 
@@ -573,7 +573,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM PhasorDetail " + whereClause);
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM PhasorDetail {whereClause}");
 
                 if (phasorTable.Rows.Count == 0)
                     return null;

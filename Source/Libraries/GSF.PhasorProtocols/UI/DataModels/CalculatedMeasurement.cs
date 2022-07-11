@@ -93,10 +93,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Please select a node ID.")]
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -110,14 +107,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
+            get => m_id;
+            set => m_id = value;
         }
 
         /// <summary>
@@ -128,10 +119,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [AcronymValidation]
         public string Acronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value;
@@ -145,10 +133,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Calculated measurement name cannot exceed 200 characters.")]
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -162,10 +147,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Calculated measurement type name is a required field, please provide value.")]
         public string TypeName
         {
-            get
-            {
-                return m_typeName;
-            }
+            get => m_typeName;
             set
             {
                 m_typeName = value;
@@ -179,10 +161,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "Calculated measurement assembly name is a required field, please provide value.")]
         public string AssemblyName
         {
-            get
-            {
-                return m_assemblyName;
-            }
+            get => m_assemblyName;
             set
             {
                 m_assemblyName = value;
@@ -196,13 +175,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public string ConnectionString
         {
-            get
-            {
-                return m_connectionString;
-            }
+            get => m_connectionString;
             set
             {
-                if ((object)value == null)
+                if (value is null)
                     m_connectionString = string.Empty;
                 else
                     m_connectionString = value;
@@ -216,10 +192,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [StringLength(200, ErrorMessage = "Config Section cannot exceed 200 characters.")]
         public string ConfigSection
         {
-            get
-            {
-                return m_configSection;
-            }
+            get => m_configSection;
             set
             {
                 m_configSection = value;
@@ -233,10 +206,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public string OutputMeasurements
         {
-            get
-            {
-                return m_outputMeasurements;
-            }
+            get => m_outputMeasurements;
             set
             {
                 m_outputMeasurements = value;
@@ -250,10 +220,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Because of database design, no validation attributes are applied.
         public string InputMeasurements
         {
-            get
-            {
-                return m_inputMeasurements;
-            }
+            get => m_inputMeasurements;
             set
             {
                 m_inputMeasurements = value;
@@ -268,10 +235,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(-1)]
         public int MinimumMeasurementsToUse
         {
-            get
-            {
-                return m_minimumMeasurementsToUse;
-            }
+            get => m_minimumMeasurementsToUse;
             set
             {
                 m_minimumMeasurementsToUse = value;
@@ -286,10 +250,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(30)]
         public int FramesPerSecond
         {
-            get
-            {
-                return m_framesPerSecond;
-            }
+            get => m_framesPerSecond;
             set
             {
                 m_framesPerSecond = value;
@@ -304,10 +265,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(3.0D)]
         public double LagTime
         {
-            get
-            {
-                return m_lagTime;
-            }
+            get => m_lagTime;
             set
             {
                 m_lagTime = value;
@@ -322,10 +280,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(1.0D)]
         public double LeadTime
         {
-            get
-            {
-                return m_leadTime;
-            }
+            get => m_leadTime;
             set
             {
                 m_leadTime = value;
@@ -339,10 +294,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(false)]
         public bool UseLocalClockAsRealTime
         {
-            get
-            {
-                return m_useLocalClockAsRealTime;
-            }
+            get => m_useLocalClockAsRealTime;
             set
             {
                 m_useLocalClockAsRealTime = value;
@@ -356,10 +308,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(true)]
         public bool AllowSortsByArrival
         {
-            get
-            {
-                return m_allowSortsByArrival;
-            }
+            get => m_allowSortsByArrival;
             set
             {
                 m_allowSortsByArrival = value;
@@ -374,10 +323,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(0)]
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -391,10 +337,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(false)]
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
@@ -408,10 +351,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(false)]
         public bool IgnoreBadTimeStamps
         {
-            get
-            {
-                return m_ignoreBadTimeStamps;
-            }
+            get => m_ignoreBadTimeStamps;
             set
             {
                 m_ignoreBadTimeStamps = value;
@@ -426,10 +366,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(10000)]
         public int TimeResolution
         {
-            get
-            {
-                return m_timeResolution;
-            }
+            get => m_timeResolution;
             set
             {
                 m_timeResolution = value;
@@ -443,10 +380,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(true)]
         public bool AllowPreemptivePublishing
         {
-            get
-            {
-                return m_allowPreemptivePublishing;
-            }
+            get => m_allowPreemptivePublishing;
             set
             {
                 m_allowPreemptivePublishing = value;
@@ -461,10 +395,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue("LastReceived")]
         public string DownsamplingMethod
         {
-            get
-            {
-                return m_downsamplingMethod;
-            }
+            get => m_downsamplingMethod;
             set
             {
                 m_downsamplingMethod = value;
@@ -475,13 +406,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         ///  Gets <see cref="CalculatedMeasurement"/> NodeName
         /// </summary>
-        public string NodeName
-        {
-            get
-            {
-                return m_nodeName;
-            }
-        }
+        public string NodeName => m_nodeName;
 
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> PerformTimestampReasonabilityCheck
@@ -489,10 +414,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [DefaultValue(true)]
         public bool PerformTimestampReasonabilityCheck
         {
-            get
-            {
-                return m_performTimestampReasonabilityCheck;
-            }
+            get => m_performTimestampReasonabilityCheck;
             set
             {
                 m_performTimestampReasonabilityCheck = value;
@@ -506,14 +428,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
+            get => m_createdOn;
+            set => m_createdOn = value;
         }
 
         /// <summary>
@@ -522,14 +438,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
+            get => m_createdBy;
+            set => m_createdBy = value;
         }
 
         /// <summary>
@@ -538,14 +448,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
+            get => m_updatedOn;
+            set => m_updatedOn = value;
         }
 
         /// <summary>
@@ -554,14 +458,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
+            get => m_updatedBy;
+            set => m_updatedBy = value;
         }
 
         #endregion
@@ -586,14 +484,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<int> calculatedMeasurementList = new List<int>();
-                DataTable calculatedMeasurementTable;
 
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From CalculatedMeasurementDetail {0}", sortClause));
+                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From CalculatedMeasurementDetail {sortClause}");
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                 {
@@ -604,7 +501,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -630,9 +527,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataTable calculatedMeasurementTable;
                 int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
 
                     query = string.Format("SELECT NodeID, ID, Acronym, Name, AssemblyName, " +
                         "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
@@ -676,11 +573,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<CalculatedMeasurement>(calculatedMeasurementList ?? new CalculatedMeasurement[0]);
+                return new ObservableCollection<CalculatedMeasurement>(calculatedMeasurementList ?? Array.Empty<CalculatedMeasurement>());
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -703,7 +600,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (isOptional)
                     calculatedMeasurementList.Add(0, "Select CalculatedMeasurement");
-                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM CalculatedMeasurement  ORDER BY LoadOrder");
+                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM CalculatedMeasurement ORDER BY LoadOrder");
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                     calculatedMeasurementList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
@@ -712,7 +609,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -726,11 +623,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string Save(AdoDataConnection database, CalculatedMeasurement calculatedMeasurement)
         {
             bool createdConnection = false;
-            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
+
+                string query;
 
                 if (calculatedMeasurement.ID == 0)
                 {
@@ -779,7 +677,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -809,7 +707,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }

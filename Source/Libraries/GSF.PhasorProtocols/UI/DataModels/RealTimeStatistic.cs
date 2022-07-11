@@ -32,6 +32,7 @@ using GSF.Data;
 using GSF.TimeSeries.Statistics;
 using GSF.TimeSeries.UI;
 
+// ReSharper disable AccessToDisposedClosure
 namespace GSF.PhasorProtocols.UI.DataModels
 {
     /// <summary>
@@ -55,10 +56,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string SourceType
         {
-            get
-            {
-                return m_sourceType;
-            }
+            get => m_sourceType;
             set
             {
                 m_sourceType = value;
@@ -71,10 +69,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Expanded
         {
-            get
-            {
-                return m_expanded;
-            }
+            get => m_expanded;
             set
             {
                 m_expanded = value;
@@ -87,10 +82,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public ObservableCollection<StreamStatistic> StreamStatisticList
         {
-            get
-            {
-                return m_streamStatisticList;
-            }
+            get => m_streamStatisticList;
             set
             {
                 m_streamStatisticList = value;
@@ -282,7 +274,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         (
                             (
                                 from statisticMeasurement in statisticMeasurements
-                                where statisticMeasurement.SignalReference.StartsWith(outputStream.Field<string>("Acronym") + "!OS-")
+                                where statisticMeasurement.SignalReference.StartsWith($"{outputStream.Field<string>("Acronym")}!OS-")
                                 select statisticMeasurement
                             ).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
                         )
@@ -328,7 +320,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         (
                             (
                                 from statisticMeasurement in statisticMeasurements
-                                where statisticMeasurement.SignalReference.StartsWith(publisher.Field<string>("AdapterName") + "!PUB-")
+                                where statisticMeasurement.SignalReference.StartsWith($"{publisher.Field<string>("AdapterName")}!PUB-")
                                 select statisticMeasurement
                             ).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
                         )
@@ -391,7 +383,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -459,8 +451,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     string measurementSource = keyvaluepair.Value;
                     Debug.WriteLine(measurementSource);
                     string signalReference = measurement.Field<string>("SignalReference");
-                    int signalReferenceIndex = signalReference.LastIndexOf("-ST");
-                    int measurementIndex = (signalReferenceIndex != -1) ? Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST") + 3)) : -1;
+                    int signalReferenceIndex = signalReference.LastIndexOf("-ST", StringComparison.OrdinalIgnoreCase);
+                    int measurementIndex = (signalReferenceIndex != -1) ? Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST", StringComparison.OrdinalIgnoreCase) + 3)) : -1;
                     Statistic statisticDefinition = null;
 
                     foreach (Statistic statistic in statisticDefinitions)
@@ -498,7 +490,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -571,10 +563,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -587,10 +576,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Acronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value;
@@ -603,10 +589,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -619,10 +602,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string StatusColor
         {
-            get
-            {
-                return m_statusColor;
-            }
+            get => m_statusColor;
             set
             {
                 m_statusColor = value;
@@ -635,10 +615,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public ObservableCollection<PdcDeviceStatistic> DeviceStatisticList
         {
-            get
-            {
-                return m_deviceStatisticList;
-            }
+            get => m_deviceStatisticList;
             set
             {
                 m_deviceStatisticList = value;
@@ -651,10 +628,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public ObservableCollection<StatisticMeasurement> StatisticMeasurementList
         {
-            get
-            {
-                return m_statisticMeasurementList;
-            }
+            get => m_statisticMeasurementList;
             set
             {
                 m_statisticMeasurementList = value;
@@ -667,10 +641,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Expanded
         {
-            get
-            {
-                return m_expanded;
-            }
+            get => m_expanded;
             set
             {
                 m_expanded = value;
@@ -705,10 +676,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int DeviceID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -721,10 +689,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int ParentID
         {
-            get
-            {
-                return m_parentId;
-            }
+            get => m_parentId;
             set
             {
                 m_parentId = value;
@@ -737,10 +702,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string DeviceAcronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value;
@@ -753,10 +715,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string DeviceName
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -769,10 +728,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public ObservableCollection<StatisticMeasurement> StatisticMeasurementList
         {
-            get
-            {
-                return m_statisticMeasurementList;
-            }
+            get => m_statisticMeasurementList;
             set
             {
                 m_statisticMeasurementList = value;
@@ -785,10 +741,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Expanded
         {
-            get
-            {
-                return m_expanded;
-            }
+            get => m_expanded;
             set
             {
                 m_expanded = value;
@@ -835,10 +788,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public Guid SignalID
         {
-            get
-            {
-                return m_signalID;
-            }
+            get => m_signalID;
             set
             {
                 m_signalID = value;
@@ -851,10 +801,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int DeviceID
         {
-            get
-            {
-                return m_deviceID;
-            }
+            get => m_deviceID;
             set
             {
                 m_deviceID = value;
@@ -867,10 +814,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int PointID
         {
-            get
-            {
-                return m_pointID;
-            }
+            get => m_pointID;
             set
             {
                 m_pointID = value;
@@ -883,10 +827,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -899,10 +840,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string PointTag
         {
-            get
-            {
-                return m_pointTag;
-            }
+            get => m_pointTag;
             set
             {
                 m_pointTag = value;
@@ -915,10 +853,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string SignalReference
         {
-            get
-            {
-                return m_signalReference;
-            }
+            get => m_signalReference;
             set
             {
                 m_signalReference = value;
@@ -931,10 +866,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Source
         {
-            get
-            {
-                return m_source;
-            }
+            get => m_source;
             set
             {
                 m_source = value;
@@ -947,10 +879,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string StatisticName
         {
-            get
-            {
-                return m_statisticName;
-            }
+            get => m_statisticName;
             set
             {
                 m_statisticName = value;
@@ -963,10 +892,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string StatisticDescription
         {
-            get
-            {
-                return m_statisticDescription;
-            }
+            get => m_statisticDescription;
             set
             {
                 m_statisticDescription = value;
@@ -979,10 +905,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string DataType
         {
-            get
-            {
-                return m_dataType;
-            }
+            get => m_dataType;
             set
             {
                 m_dataType = value;
@@ -995,10 +918,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string DisplayFormat
         {
-            get
-            {
-                return m_displayFormat;
-            }
+            get => m_displayFormat;
             set
             {
                 m_displayFormat = value;
@@ -1011,10 +931,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool ConnectedState
         {
-            get
-            {
-                return m_connectedState;
-            }
+            get => m_connectedState;
             set
             {
                 m_connectedState = value;
@@ -1027,10 +944,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int LoadOrder
         {
-            get
-            {
-                return m_loadOrder;
-            }
+            get => m_loadOrder;
             set
             {
                 m_loadOrder = value;
@@ -1043,10 +957,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string TimeTag
         {
-            get
-            {
-                return m_timeTag;
-            }
+            get => m_timeTag;
             set
             {
                 m_timeTag = value;
@@ -1059,10 +970,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Value
         {
-            get
-            {
-                return m_value;
-            }
+            get => m_value;
             set
             {
                 m_value = value;
@@ -1075,10 +983,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Quality
         {
-            get
-            {
-                return m_quality;
-            }
+            get => m_quality;
             set
             {
                 m_quality = value;
@@ -1091,10 +996,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public SolidColorBrush Foreground
         {
-            get
-            {
-                return m_foreground;
-            }
+            get => m_foreground;
             set
             {
                 m_foreground = value;
@@ -1107,10 +1009,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Expanded
         {
-            get
-            {
-                return m_expanded;
-            }
+            get => m_expanded;
             set
             {
                 m_expanded = value;

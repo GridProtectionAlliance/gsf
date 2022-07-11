@@ -275,8 +275,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (keys is not null && keys.Count > 0)
                 {
-                    string commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    string query = database.ParameterizedQueryString("SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder " + $"FROM OutputStreamDevicePhasor WHERE ID IN ({commaSeparatedKeys})");
+                    string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
+                    string query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder FROM OutputStreamDevicePhasor WHERE ID IN ({commaSeparatedKeys})");
 
                     DataTable outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, query);
                     outputStreamDevicePhasorList = new OutputStreamDevicePhasor[outputStreamDevicePhasorTable.Rows.Count];
@@ -303,7 +303,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<OutputStreamDevicePhasor>(outputStreamDevicePhasorList ?? new OutputStreamDevicePhasor[0]);
+                return new ObservableCollection<OutputStreamDevicePhasor>(outputStreamDevicePhasorList ?? Array.Empty<OutputStreamDevicePhasor>());
             }
             finally
             {

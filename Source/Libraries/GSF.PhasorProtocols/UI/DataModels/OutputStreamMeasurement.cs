@@ -71,10 +71,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>		
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -87,10 +84,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int AdapterID
         {
-            get
-            {
-                return m_adapterID;
-            }
+            get => m_adapterID;
             set
             {
                 m_adapterID = value;
@@ -103,14 +97,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
+            get => m_id;
+            set => m_id = value;
         }
 
         /// <summary>
@@ -118,10 +106,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int? HistorianID
         {
-            get
-            {
-                return m_historianID;
-            }
+            get => m_historianID;
             set
             {
                 m_historianID = value;
@@ -134,10 +119,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>		
         public int PointID
         {
-            get
-            {
-                return m_pointID;
-            }
+            get => m_pointID;
             set
             {
                 m_pointID = value;
@@ -152,10 +134,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         [Required(ErrorMessage = "OutputStreamMeasurement SignalReference is a required field, please provide value.")]
         public string SignalReference
         {
-            get
-            {
-                return m_signalReference;
-            }
+            get => m_signalReference;
             set
             {
                 m_signalReference = value;
@@ -166,24 +145,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="OutputStreamMeasurement"/>'s SourcePointTag.
         /// </summary>        
-        public string SourcePointTag
-        {
-            get
-            {
-                return m_sourcePointTag;
-            }
-        }
+        public string SourcePointTag => m_sourcePointTag;
 
         /// <summary>
         /// Gets or sets the current <see cref="OutputStreamMeasurement"/>'s HistorianAcronym.
         /// </summary>
-        public string HistorianAcronym
-        {
-            get
-            {
-                return m_historianAcronym;
-            }
-        }
+        public string HistorianAcronym => m_historianAcronym;
 
         /// <summary>
         /// Gets or sets the Date or Time the current <see cref="OutputStreamMeasurement"/> was created on.
@@ -191,14 +158,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get
-            {
-                return m_createdOn;
-            }
-            set
-            {
-                m_createdOn = value;
-            }
+            get => m_createdOn;
+            set => m_createdOn = value;
         }
 
         /// <summary>
@@ -207,14 +168,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get
-            {
-                return m_createdBy;
-            }
-            set
-            {
-                m_createdBy = value;
-            }
+            get => m_createdBy;
+            set => m_createdBy = value;
         }
 
         /// <summary>
@@ -223,14 +178,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get
-            {
-                return m_updatedOn;
-            }
-            set
-            {
-                m_updatedOn = value;
-            }
+            get => m_updatedOn;
+            set => m_updatedOn = value;
         }
 
         /// <summary>
@@ -239,14 +188,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get
-            {
-                return m_updatedBy;
-            }
-            set
-            {
-                m_updatedBy = value;
-            }
+            get => m_updatedBy;
+            set => m_updatedBy = value;
         }
 
         #endregion
@@ -272,14 +215,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 IList<int> outputStreamMeasurementList = new List<int>();
-                DataTable outputStreamMeasurementTable;
 
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From OutputStreamMeasurementDetail where AdapterID = {0} {1}", outputStreamID, sortClause));
+                DataTable outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From OutputStreamMeasurementDetail where AdapterID = {outputStreamID} {sortClause}");
 
                 foreach (DataRow row in outputStreamMeasurementTable.Rows)
                 {
@@ -290,7 +232,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -316,11 +258,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataTable outputStreamMeasurementTable;
                 int id;
 
-                if ((object)keys != null && keys.Count > 0)
+                if (keys is not null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT NodeID, AdapterID, ID, HistorianID, PointID, SignalReference, SourcePointTag, HistorianAcronym " +
-                        "FROM OutputStreamMeasurementDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                    commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
+                    query = $"SELECT NodeID, AdapterID, ID, HistorianID, PointID, SignalReference, SourcePointTag, HistorianAcronym FROM OutputStreamMeasurementDetail WHERE ID IN ({commaSeparatedKeys})";
 
                     outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamMeasurementList = new OutputStreamMeasurement[outputStreamMeasurementTable.Rows.Count];
@@ -343,11 +284,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                return new ObservableCollection<OutputStreamMeasurement>(outputStreamMeasurementList ?? new OutputStreamMeasurement[0]);
+                return new ObservableCollection<OutputStreamMeasurement>(outputStreamMeasurementList ?? Array.Empty<OutputStreamMeasurement>());
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -382,7 +323,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -428,7 +369,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -456,7 +397,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -494,7 +435,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }

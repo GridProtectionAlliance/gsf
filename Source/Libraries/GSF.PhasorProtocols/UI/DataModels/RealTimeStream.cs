@@ -74,10 +74,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -90,10 +87,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Acronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value;
@@ -106,10 +100,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -122,10 +113,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string CompanyName
         {
-            get
-            {
-                return m_companyName;
-            }
+            get => m_companyName;
             set
             {
                 m_companyName = value;
@@ -138,10 +126,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Expanded
         {
-            get
-            {
-                return m_expanded;
-            }
+            get => m_expanded;
             set
             {
                 m_expanded = value;
@@ -154,10 +139,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string StatusColor
         {
-            get
-            {
-                return m_statusColor;
-            }
+            get => m_statusColor;
             set
             {
                 m_statusColor = value;
@@ -170,10 +152,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
@@ -186,10 +165,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public ObservableCollection<RealTimeDevice> DeviceList
         {
-            get
-            {
-                return m_deviceList;
-            }
+            get => m_deviceList;
             set
             {
                 m_deviceList = value;
@@ -216,7 +192,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
             try
             {
-                ObservableCollection<RealTimeStream> realTimeStreamList = null;
                 createdConnection = CreateConnection(ref database);
 
                 DataSet resultSet = new();
@@ -257,61 +232,77 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     "SignalAcronym, Description, SignalName, EngineeringUnits, HistorianAcronym, Subscribed, Internal FROM MeasurementDetail WHERE NodeID <> {0} AND " +
                     "SignalAcronym <> {1} AND Subscribed <> 0 ORDER BY SignalReference", "nodeID", "signalAcronym"), DefaultTimeout, database.CurrentNodeID(), "STAT");
 
-                realTimeStreamList = new ObservableCollection<RealTimeStream>(
-                        from pdc in resultSet.Tables["PdcTable"].AsEnumerable()
-                        let settings = pdc.Field<string>("ConnectionString").ToNonNullString().ParseKeyValuePairs()
-                        select new RealTimeStream
+                Dictionary<string, string> parseKeyValuePairs(string connectionString)
+                {
+                    Dictionary<string, string> settings;
+
+                    try
+                    {
+                        settings = connectionString.ParseKeyValuePairs();
+                    }
+                    catch
+                    {
+                        settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    }
+
+                    return settings;
+                }
+
+                ObservableCollection<RealTimeStream> realTimeStreamList = new(
+                    from pdc in resultSet.Tables["PdcTable"].AsEnumerable()
+                    let settings = parseKeyValuePairs(pdc.Field<string>("ConnectionString").ToNonNullString())
+                    select new RealTimeStream
+                    {
+                        ID = pdc.ConvertField<int>("ID"),
+                        Acronym = string.IsNullOrEmpty(pdc.Field<string>("Acronym")) ? "DIRECT CONNECTED" : pdc.Field<string>("Acronym"),
+                        Name = pdc.Field<string>("Name"),
+                        CompanyName = pdc.Field<string>("CompanyName"),
+                        StatusColor = string.IsNullOrEmpty(pdc.Field<string>("Acronym")) ? "Transparent" : "Gray",
+                        Enabled = Convert.ToBoolean(pdc.Field<object>("Enabled")),
+                        Expanded = false,
+                        DeviceList = new ObservableCollection<RealTimeDevice>(
+                            from device in resultSet.Tables["DeviceTable"].AsEnumerable()
+                            where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym") && device.ConvertField<int>("AccessID") != GroupAccessID
+                            select new RealTimeDevice
                             {
-                                ID = pdc.ConvertField<int>("ID"),
-                                Acronym = string.IsNullOrEmpty(pdc.Field<string>("Acronym")) ? "DIRECT CONNECTED" : pdc.Field<string>("Acronym"),
-                                Name = pdc.Field<string>("Name"),
-                                CompanyName = pdc.Field<string>("CompanyName"),
-                                StatusColor = string.IsNullOrEmpty(pdc.Field<string>("Acronym")) ? "Transparent" : "Gray",
-                                Enabled = Convert.ToBoolean(pdc.Field<object>("Enabled")),
+                                ID = device.ConvertNullableField<int>("ID"),
+                                Acronym = device.Field<string>("Acronym"),
+                                Name = device.Field<string>("Name"),
+                                ProtocolName = device.Field<string>("ProtocolName"),
+                                VendorDeviceName = device.Field<string>("VendorDeviceName"),
+                                ParentAcronym = string.IsNullOrEmpty(device.Field<string>("ParentAcronym")) ? "DIRECT CONNECTED" : device.Field<string>("ParentAcronym"),
                                 Expanded = false,
-                                DeviceList = new ObservableCollection<RealTimeDevice>(
-                                        from device in resultSet.Tables["DeviceTable"].AsEnumerable()
-                                        where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym") && device.ConvertField<int>("AccessID") != GroupAccessID
-                                        select new RealTimeDevice
-                                            {
-                                                ID = device.ConvertNullableField<int>("ID"),
-                                                Acronym = device.Field<string>("Acronym"),
-                                                Name = device.Field<string>("Name"),
-                                                ProtocolName = device.Field<string>("ProtocolName"),
-                                                VendorDeviceName = device.Field<string>("VendorDeviceName"),
-                                                ParentAcronym = string.IsNullOrEmpty(device.Field<string>("ParentAcronym")) ? "DIRECT CONNECTED" : device.Field<string>("ParentAcronym"),
-                                                Expanded = false,
-                                                StatusColor = device.ConvertNullableField<int>("ID") == null ? "Transparent" : "Gray",
-                                                Enabled = Convert.ToBoolean(device.Field<object>("Enabled")),
-                                                MeasurementList = new ObservableCollection<RealTimeMeasurement>(
-                                                        from measurement in resultSet.Tables["MeasurementTable"].AsEnumerable()
-                                                        where measurement.ConvertNullableField<int>("DeviceID") == device.ConvertNullableField<int>("ID") && (measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.OrdinalIgnoreCase)))   //We will only display measurements which are internal or subscribed to avoid confusion.
-                                                        select new RealTimeMeasurement
-                                                            {
-                                                                ID = measurement.Field<string>("ID"),
-                                                                DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
-                                                                SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
-                                                                PointID = measurement.ConvertField<int>("PointID"),
-                                                                PointTag = measurement.Field<string>("PointTag"),
-                                                                SignalReference = measurement.Field<string>("SignalReference"),
-                                                                Description = measurement.Field<string>("description"),
-                                                                SignalName = measurement.Field<string>("SignalName"),
-                                                                SignalAcronym = measurement.Field<string>("SignalAcronym"),
-                                                                EngineeringUnit = measurement.Field<string>("SignalAcronym") == "FLAG" ? "Hex" : measurement.Field<string>("EngineeringUnits"),
-                                                                Expanded = false,
-                                                                Selected = false,
-                                                                Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
-                                                                LongTimeTag = "N/A",
-                                                                TimeTag = "N/A",
-                                                                Value = "--",
-                                                                Quality = "N/A",
-                                                                Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0))
-                                                            }
-                                                    )
-                                            }
-                                    )
+                                StatusColor = device.ConvertNullableField<int>("ID") is null ? "Transparent" : "Gray",
+                                Enabled = Convert.ToBoolean(device.Field<object>("Enabled")),
+                                MeasurementList = new ObservableCollection<RealTimeMeasurement>(
+                                    from measurement in resultSet.Tables["MeasurementTable"].AsEnumerable()
+                                    where measurement.ConvertNullableField<int>("DeviceID") == device.ConvertNullableField<int>("ID") && (measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.OrdinalIgnoreCase)))   //We will only display measurements which are internal or subscribed to avoid confusion.
+                                    select new RealTimeMeasurement
+                                    {
+                                        ID = measurement.Field<string>("ID"),
+                                        DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
+                                        SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
+                                        PointID = measurement.ConvertField<int>("PointID"),
+                                        PointTag = measurement.Field<string>("PointTag"),
+                                        SignalReference = measurement.Field<string>("SignalReference"),
+                                        Description = measurement.Field<string>("description"),
+                                        SignalName = measurement.Field<string>("SignalName"),
+                                        SignalAcronym = measurement.Field<string>("SignalAcronym"),
+                                        EngineeringUnit = measurement.Field<string>("SignalAcronym") == "FLAG" ? "Hex" : measurement.Field<string>("EngineeringUnits"),
+                                        Expanded = false,
+                                        Selected = false,
+                                        Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
+                                        LongTimeTag = "N/A",
+                                        TimeTag = "N/A",
+                                        Value = "--",
+                                        Quality = "N/A",
+                                        Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0))
+                                    }
+                                )
                             }
-                    );
+                        )
+                    }
+                );
 
                 if (otherMeasurements.Rows.Count > 0)
                 {
@@ -328,7 +319,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             DeviceList = new ObservableCollection<RealTimeDevice>(
                                 otherMeasurements.Rows
                                 .Cast<DataRow>()
-                                .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") == null)
+                                .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
                                 .Select(measurement => measurement.Field<string>("SignalReference"))
                                 .Select(GetSourceName)
                                 .Distinct()
@@ -346,7 +337,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         MeasurementList = new ObservableCollection<RealTimeMeasurement>(
                                             otherMeasurements.Rows
                                             .Cast<DataRow>()
-                                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") == null && measurement.Field<string>("SignalReference").StartsWith(source))
+                                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null && measurement.Field<string>("SignalReference").StartsWith(source))
                                             .Select(measurement => new RealTimeMeasurement
                                                 {
                                                     ID = measurement.Field<string>("ID"),
@@ -389,7 +380,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             DeviceList = new ObservableCollection<RealTimeDevice>(
                                 resultSet.Tables["MeasurementTable"].Rows
                                 .Cast<DataRow>()
-                                .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") == null)
+                                .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
                                 .Select(measurement => measurement.Field<string>("SignalReference"))
                                 .Select(GetSourceName)
                                 .Distinct()
@@ -407,7 +398,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         MeasurementList = new ObservableCollection<RealTimeMeasurement>(
                                             resultSet.Tables["MeasurementTable"].Rows
                                             .Cast<DataRow>()
-                                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") == null && measurement.Field<string>("SignalReference").StartsWith(source))
+                                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null && measurement.Field<string>("SignalReference").StartsWith(source))
                                             .Select(measurement => new RealTimeMeasurement
                                                 {
                                                     ID = measurement.Field<string>("ID"),
@@ -453,7 +444,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection && database is not null)
                     database.Dispose();
             }
         }
@@ -511,18 +502,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         private static string GetSourceName(string signalReference)
         {
-            int hyphenIndex;
-            int colonIndex;
-
             // Try to parse source name based on properly formatted signal reference (SOURCENAME-XX#)
-            hyphenIndex = signalReference.LastIndexOf('-');
+            int hyphenIndex = signalReference.LastIndexOf('-');
 
             if (hyphenIndex >= 0)
                 return signalReference.Substring(0, hyphenIndex);
 
             // Try to parse source name from signal reference formatted like point tag (SOURCENAME:XXXY#).
             // This format may include company name, but should be the same for all points from the same device
-            colonIndex = signalReference.LastIndexOf(':');
+            int colonIndex = signalReference.LastIndexOf(':');
 
             if (colonIndex >= 0)
                 return signalReference.Substring(0, colonIndex);
@@ -582,10 +570,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int? ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -598,14 +583,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Acronym
         {
-            get
-            {
-                return m_acronym;
-            }
+            get => m_acronym;
             set
             {
                 m_acronym = value;
-                AcronymTruncated = m_acronym.Substring(m_acronym.LastIndexOf("!") + 1);
+                AcronymTruncated = m_acronym.Substring(m_acronym.LastIndexOf("!", StringComparison.Ordinal) + 1);
                 OnPropertyChanged(nameof(Acronym));
             }
         }
@@ -615,14 +597,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string AcronymTruncated
         {
-            get
-            {
-                return m_acronymTruncated;
-            }
-            set
-            {
-                m_acronymTruncated = value;
-            }
+            get => m_acronymTruncated;
+            set => m_acronymTruncated = value;
         }
 
         /// <summary>
@@ -630,10 +606,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -646,10 +619,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ProtocolName
         {
-            get
-            {
-                return m_protocolName;
-            }
+            get => m_protocolName;
             set
             {
                 m_protocolName = value;
@@ -662,10 +632,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string VendorDeviceName
         {
-            get
-            {
-                return m_vendorDeviceName;
-            }
+            get => m_vendorDeviceName;
             set
             {
                 m_vendorDeviceName = value;
@@ -678,10 +645,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ParentAcronym
         {
-            get
-            {
-                return m_parentAcronym;
-            }
+            get => m_parentAcronym;
             set
             {
                 m_parentAcronym = value;
@@ -694,10 +658,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Expanded
         {
-            get
-            {
-                return m_expanded;
-            }
+            get => m_expanded;
             set
             {
                 m_expanded = value;
@@ -710,10 +671,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string StatusColor
         {
-            get
-            {
-                return m_statusColor;
-            }
+            get => m_statusColor;
             set
             {
                 m_statusColor = value;
@@ -726,10 +684,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
@@ -742,10 +697,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public ObservableCollection<RealTimeMeasurement> MeasurementList
         {
-            get
-            {
-                return m_measurementList;
-            }
+            get => m_measurementList;
             set
             {
                 m_measurementList = value;
@@ -762,7 +714,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             get
             {
-                if (double.IsNaN(m_maximumSignalReferenceWidth) && m_measurementList != null)
+                if (double.IsNaN(m_maximumSignalReferenceWidth) && m_measurementList is not null)
                     m_maximumSignalReferenceWidth = m_measurementList.Max(rtm => RealTimeStream.GetTextWidth(rtm.SignalReference));
 
                 return m_maximumSignalReferenceWidth;
@@ -781,7 +733,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             get
             {
-                if (double.IsNaN(m_maximumShortSignalReferenceWidth) && m_measurementList != null)
+                if (double.IsNaN(m_maximumShortSignalReferenceWidth) && m_measurementList is not null)
                     m_maximumShortSignalReferenceWidth = m_measurementList.Max(rtm => RealTimeStream.GetTextWidth(rtm.ShortSignalReference));
 
                 return m_maximumShortSignalReferenceWidth;
@@ -798,10 +750,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public RealTimeStream Parent
         {
-            get
-            {
-                return m_parent;
-            }
+            get => m_parent;
             set
             {
                 m_parent = value;
@@ -863,10 +812,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public RealTimeDevice Parent
         {
-            get
-            {
-                return m_parent;
-            }
+            get => m_parent;
             set
             {
                 m_parent = value;
@@ -881,19 +827,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             get
             {
-                if (m_parent == null)
+                if (m_parent is null)
                     return "Auto";
 
                 double width = m_parent.MaximumSignalReferenceWidth;
 
-                if (double.IsNaN(width))
-                    return "Auto";
-
-                return width.ToString();
+                return double.IsNaN(width) ? "Auto" : width.ToString();
             }
+            // ReSharper disable once ValueParameterNotUsed
             set
             {
-
             }
         }
 
@@ -904,19 +847,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             get
             {
-                if (m_parent == null)
+                if (m_parent is null)
                     return "Auto";
 
                 double width = m_parent.MaximumShortSignalReferenceWidth;
 
-                if (double.IsNaN(width))
-                    return "Auto";
-
-                return width.ToString();
+                return double.IsNaN(width) ? "Auto" : width.ToString();
             }
+            // ReSharper disable once ValueParameterNotUsed
             set
             {
-
             }
         }
 
@@ -925,10 +865,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int? DeviceID
         {
-            get
-            {
-                return m_deviceID;
-            }
+            get => m_deviceID;
             set
             {
                 m_deviceID = value;
@@ -941,10 +878,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public Guid SignalID
         {
-            get
-            {
-                return m_signalID;
-            }
+            get => m_signalID;
             set
             {
                 m_signalID = value;
@@ -957,10 +891,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -973,10 +904,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public int PointID
         {
-            get
-            {
-                return m_pointID;
-            }
+            get => m_pointID;
             set
             {
                 m_pointID = value;
@@ -989,10 +917,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string PointTag
         {
-            get
-            {
-                return m_pointTag;
-            }
+            get => m_pointTag;
             set
             {
                 m_pointTag = value;
@@ -1005,10 +930,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string SignalReference
         {
-            get
-            {
-                return m_signalReference;
-            }
+            get => m_signalReference;
             set
             {
                 m_signalReference = value;
@@ -1020,23 +942,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets a shortened version of the signal reference.
         /// </summary>
-        public string ShortSignalReference
-        {
-            get
-            {
-                return m_signalReference.TrimWithEllipsisMiddle(16);
-            }
-        }
+        public string ShortSignalReference => m_signalReference.TrimWithEllipsisMiddle(16);
 
         /// <summary>
         /// Gets or sets Description for <see cref="RealTimeMeasurement"/>.
         /// </summary>
         public string Description
         {
-            get
-            {
-                return m_description;
-            }
+            get => m_description;
             set
             {
                 m_description = value;
@@ -1049,10 +962,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string SignalName
         {
-            get
-            {
-                return m_signalName;
-            }
+            get => m_signalName;
             set
             {
                 m_signalName = value;
@@ -1065,10 +975,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string SignalAcronym
         {
-            get
-            {
-                return m_signalAcronym;
-            }
+            get => m_signalAcronym;
             set
             {
                 m_signalAcronym = value;
@@ -1081,10 +988,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string EngineeringUnit
         {
-            get
-            {
-                return m_engineeringUnit;
-            }
+            get => m_engineeringUnit;
             set
             {
                 m_engineeringUnit = value;
@@ -1098,10 +1002,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Expanded
         {
-            get
-            {
-                return m_expanded;
-            }
+            get => m_expanded;
             set
             {
                 m_expanded = value;
@@ -1114,10 +1015,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Selected
         {
-            get
-            {
-                return m_selected;
-            }
+            get => m_selected;
             set
             {
                 m_selected = value;
@@ -1130,10 +1028,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool Selectable
         {
-            get
-            {
-                return m_selectable;
-            }
+            get => m_selectable;
             set
             {
                 m_selectable = value;
@@ -1146,10 +1041,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string LongTimeTag
         {
-            get
-            {
-                return m_longTimeTag;
-            }
+            get => m_longTimeTag;
             set
             {
                 m_longTimeTag = value;
@@ -1162,10 +1054,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string TimeTag
         {
-            get
-            {
-                return m_timeTag;
-            }
+            get => m_timeTag;
             set
             {
                 m_timeTag = value;
@@ -1180,12 +1069,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             get
             {
-                bool hex;
-                uint hexValue;
+                bool hex = m_engineeringUnit.ToNonNullString().Trim().ToUpperInvariant() == "HEX";
 
-                hex = m_engineeringUnit.ToNonNullString().Trim().ToUpperInvariant() == "HEX";
-
-                if (hex && uint.TryParse(m_value, out hexValue))
+                if (hex && uint.TryParse(m_value, out uint hexValue))
                     return hexValue.ToString("X8");
 
                 return m_value;
@@ -1202,10 +1088,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string Quality
         {
-            get
-            {
-                return m_quality;
-            }
+            get => m_quality;
             set
             {
                 m_quality = value;
@@ -1218,10 +1101,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public long LastUpdated
         {
-            get
-            {
-                return m_lastUpdated;
-            }
+            get => m_lastUpdated;
             set
             {
                 m_lastUpdated = value;
@@ -1234,10 +1114,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public SolidColorBrush Foreground
         {
-            get
-            {
-                return m_foreground;
-            }
+            get => m_foreground;
             set
             {
                 m_foreground = value;
