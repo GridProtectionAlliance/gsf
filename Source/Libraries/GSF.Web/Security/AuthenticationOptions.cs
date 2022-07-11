@@ -254,7 +254,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Gets an immutable version of the authentication options.
         /// </summary>
-        public ReadonlyAuthenticationOptions Readonly => new ReadonlyAuthenticationOptions(this);
+        public ReadonlyAuthenticationOptions Readonly => new(this);
 
         #endregion
 
@@ -283,9 +283,9 @@ namespace GSF.Web.Security
             if (m_alternateSecurityProviderResources is null)
                 AlternateSecurityProviderResourceExpression = DefaultAlternateSecurityProviderResourceExpression ;
 
-            if (string.IsNullOrEmpty(m_alternateSecurityProviderResourceExpression))
-                return m_alternateSecurityProviderResourceCache.GetOrAdd(urlPath, false);
-            return m_alternateSecurityProviderResourceCache.GetOrAdd(urlPath, m_alternateSecurityProviderResources.IsMatch);
+            return string.IsNullOrEmpty(m_alternateSecurityProviderResourceExpression)
+                ? m_alternateSecurityProviderResourceCache.GetOrAdd(urlPath, false)
+                : m_alternateSecurityProviderResourceCache.GetOrAdd(urlPath, m_alternateSecurityProviderResources!.IsMatch);
         }
 
         /// <summary>
