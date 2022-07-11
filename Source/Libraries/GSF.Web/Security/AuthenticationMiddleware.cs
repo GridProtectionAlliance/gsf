@@ -24,6 +24,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Web.Hosting;
 using GSF.Diagnostics;
 using GSF.Security;
 using Microsoft.Owin;
@@ -51,10 +52,8 @@ namespace GSF.Web.Security
         /// Returns the authentication handler that provides the authentication logic.
         /// </summary>
         /// <returns>The authentication handler to provide authentication logic.</returns>
-        protected override AuthenticationHandler<AuthenticationOptions> CreateHandler()
-        {
-            return new AuthenticationHandler();
-        }
+        protected override AuthenticationHandler<AuthenticationOptions> CreateHandler() =>
+            new AuthenticationHandler();
     }
 
     /// <summary>
@@ -70,9 +69,13 @@ namespace GSF.Web.Security
         /// <returns><see cref="IAppBuilder"/> instance.</returns>
         public static IAppBuilder UseAuthentication(this IAppBuilder app, AuthenticationOptions options)
         {
-            HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
-            listener.AuthenticationSchemeSelectorDelegate = request => AuthenticationSchemeSelector(request, options);
-            listener.Realm = options.Realm;
+            // Only self hosted Owin web server has access to HttpListener
+            if (!HostingEnvironment.IsHosted)
+            {
+                HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
+                listener.AuthenticationSchemeSelectorDelegate = request => AuthenticationSchemeSelector(request, options);
+                listener.Realm = options.Realm;
+            }
 
             return app.Use<AuthenticationMiddleware>(options);
         }
@@ -81,24 +84,23 @@ namespace GSF.Web.Security
         private static AuthenticationSchemes AuthenticationSchemeSelector(HttpListenerRequest request, AuthenticationOptions options)
         {
             // Only change authentication scheme when requesting the authorization test page
-            if (request.Url.AbsolutePath.Equals(options.AuthTestPage))
+            if (!request.Url.AbsolutePath.Equals(options.AuthTestPage))
             {
-                string scheme = request.QueryString.GetValues("scheme")?.FirstOrDefault();
-                AuthenticationSchemes authenticationScheme;
-
-                if (Enum.TryParse(scheme, true, out authenticationScheme))
-                {
-                    string resource = request.Url.PathAndQuery;
-                    AuthenticationSchemes selectedScheme = options.AuthenticationSchemes & authenticationScheme;
-                    string logMessage = $"Authentication scheme selected for {resource}: {selectedScheme}";
-                    Log.Publish(MessageLevel.Debug, "AuthenticationSchemeSelected", logMessage);
-                    return options.AuthenticationSchemes & authenticationScheme;
-                }
+                // All other requests to web server are treated as anonymous so as to not establish any extra
+                // expectations for the browser - the AuthenticationHandler fully manages the security
+                return AuthenticationSchemes.Anonymous;
             }
 
-            // All requests to web server are treated as anonymous so as to not establish any extra
-            // expectations for the browser - the AuthenticationHandler fully manages the security
-            return AuthenticationSchemes.Anonymous;
+            string scheme = request.QueryString.GetValues("scheme")?.FirstOrDefault();
+
+            if (!Enum.TryParse(scheme, true, out AuthenticationSchemes authenticationScheme))
+                return AuthenticationSchemes.Anonymous; // Unrecognized auth scheme
+
+            AuthenticationSchemes selectedScheme = options.AuthenticationSchemes & authenticationScheme;
+            
+            Log.Publish(MessageLevel.Debug, "AuthenticationSchemeSelected", $"Authentication scheme selected for {request.Url.PathAndQuery}: {selectedScheme}");
+            
+            return selectedScheme;
         }
 
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AppBuilderExtensions), MessageClass.Framework);
