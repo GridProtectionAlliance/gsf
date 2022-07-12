@@ -50,42 +50,42 @@ namespace LibraryTester
 
         static void Main(string[] args)
         {
-            Debug.WriteLine(Word.MakeWord(30, 120));
-            Debug.WriteLine(Word.MakeWord(15, 60));
-            Debug.WriteLine(Word.MakeWord(5, 20));
-            Debug.WriteLine(Word.MakeWord(1, 4));
+            //Debug.WriteLine(Word.MakeWord(30, 120));
+            //Debug.WriteLine(Word.MakeWord(15, 60));
+            //Debug.WriteLine(Word.MakeWord(5, 20));
+            //Debug.WriteLine(Word.MakeWord(1, 4));
 
-            // Add references for projects as needed, then add a simple call so that immediate window
-            // will have access to assembly. Only a single call per assembly is needed.
+            //// Add references for projects as needed, then add a simple call so that immediate window
+            //// will have access to assembly. Only a single call per assembly is needed.
 
-            DateTime.TryParseExact("19/12/1972,16:19:05.765", new[]
-            {
-                "d/M/yyyy,H:mm:ss",
-                "d/M/yyyy,H:mm:ss.FFF",
-                "d/M/yyyy,H:mm:ss.FFFFFF",
-                "d/M/yyyy,H:mm:ss.FFFFFFF",
-                "M/d/yyyy,H:mm:ss",
-                "M/d/yyyy,H:mm:ss.FFF",
-                "M/d/yyyy,H:mm:ss.FFFFFF",
-                "M/d/yyyy,H:mm:ss.FFFFFFF"
-            },
-            CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result);
+            //DateTime.TryParseExact("19/12/1972,16:19:05.765", new[]
+            //{
+            //    "d/M/yyyy,H:mm:ss",
+            //    "d/M/yyyy,H:mm:ss.FFF",
+            //    "d/M/yyyy,H:mm:ss.FFFFFF",
+            //    "d/M/yyyy,H:mm:ss.FFFFFFF",
+            //    "M/d/yyyy,H:mm:ss",
+            //    "M/d/yyyy,H:mm:ss.FFF",
+            //    "M/d/yyyy,H:mm:ss.FFFFFF",
+            //    "M/d/yyyy,H:mm:ss.FFFFFFF"
+            //},
+            //CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result);
 
-            Debug.WriteLine(result);
+            //Debug.WriteLine(result);
 
-            DataSet dataSet = new DataSet();
-            dataSet.ReadXml(@"..\..\..\TimeSeries Platform Library Samples\FilterExpressionTests\MetadataSample1.xml");
+            //DataSet dataSet = new DataSet();
+            //dataSet.ReadXml(@"..\..\..\TimeSeries Platform Library Samples\FilterExpressionTests\MetadataSample1.xml");
 
-            DataTable deviceDetail = dataSet.Tables["DeviceDetail"];
+            //DataTable deviceDetail = dataSet.Tables["DeviceDetail"];
 
-            DataColumn testColumn = new DataColumn("Test", typeof(bool), "AccessID % 2 = 0 OR FramesPerSecond % 4 <> 2 AND AccessID % 1 = 0");
+            //DataColumn testColumn = new DataColumn("Test", typeof(bool), "AccessID % 2 = 0 OR FramesPerSecond % 4 <> 2 AND AccessID % 1 = 0");
 
-            deviceDetail.Columns.Add(testColumn);
+            //deviceDetail.Columns.Add(testColumn);
 
-            Debug.WriteLine(deviceDetail.Rows[0]["Test"]);
+            //Debug.WriteLine(deviceDetail.Rows[0]["Test"]);
 
-            Common.IsDefaultValue(true);            // Call to load GSF.Core
-            Transport.GetDefaultIPStack();          // Call to load GSF.Communications
+            //Common.IsDefaultValue(true);            // Call to load GSF.Core
+            //Transport.GetDefaultIPStack();          // Call to load GSF.Communications
 
             byte[] bytes = { 1, 2, 3, 4, 5, 6, 7, 8 };
             ulong value = BitConverter.ToUInt64(bytes, 0);
@@ -173,6 +173,14 @@ namespace LibraryTester
             radix = codec.Encode(lvalue);
             Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<long>(radix)}, Length = {radix.Length}");
 
+            lvalue = Int24.MaxValue / 2;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Radix = {radix}, Decode = {codec.Decode<Int24>(radix)}, Length = {radix.Length}");
+
+            value = UInt24.MaxValue / 2;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<UInt24>(radix)}, Length = {radix.Length}");
+
             value = ulong.MaxValue;
 
             codec = RadixCodec.Radix16;
@@ -196,6 +204,35 @@ namespace LibraryTester
             Debug.WriteLine($"Value = {value}, Radix = {radix}, Decode = {codec.Decode<ulong>(radix)}, Length(86) = {radix.Length}");
 
 
+            Debug.WriteLine("");
+            Debug.WriteLine("-----------------------------------------------------------------------------");
+            Debug.WriteLine("");
+
+            codec = RadixCodec.Radix65535;
+            
+            lvalue = int.MaxValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Decode = {codec.Decode<long>(radix)}, Length({codec.Radix}) = \"{radix}\", {radix.Length} characters");
+
+            lvalue = int.MinValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Decode = {codec.Decode<long>(radix)}, Length({codec.Radix}) = \"{radix}\", {radix.Length} characters");
+
+            value = uint.MaxValue;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Decode = {codec.Decode<ulong>(radix)}, Length({codec.Radix}) = \"{radix}\", {radix.Length} characters");
+
+            lvalue = long.MaxValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Decode = {codec.Decode<long>(radix)}, Length({codec.Radix}) = \"{radix}\", {radix.Length} characters");
+
+            lvalue = long.MinValue;
+            radix = codec.Encode(lvalue);
+            Debug.WriteLine($"Value = {lvalue}, Decode = {codec.Decode<long>(radix)}, Length({codec.Radix}) = \"{radix}\", {radix.Length} characters");
+
+            value = ulong.MaxValue;
+            radix = codec.Encode(value);
+            Debug.WriteLine($"Value = {value}, Decode = {codec.Decode<ulong>(radix)}, Length({codec.Radix}) = \"{radix}\", {radix.Length} characters");
 
             Action<List<int>> showCount = list => Console.WriteLine(list?.Count.ToString("N0") ?? "Calculating...");
 
