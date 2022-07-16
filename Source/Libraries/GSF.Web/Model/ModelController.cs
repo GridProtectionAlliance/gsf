@@ -582,18 +582,24 @@ namespace GSF.Web.Model
             return whereClause;
         }
 
-        private IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecordsWhere(DefaultSort, false, filterExpression, parameters);
+        private IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecordsWhere(null, false, filterExpression, parameters);
         
         private IEnumerable<T> QueryRecordsWhere(string orderBy, bool ascending, string filterExpression, params object[] parameters)
         {
+            string orderString = "";
+            if (!string.IsNullOrEmpty(orderBy))
+                orderString = orderBy + (ascending ? " ASC" : " DESC");
+            if (string.IsNullOrEmpty(orderBy) && !string.IsNullOrEmpty(DefaultSort))
+                orderString = DefaultSort;
+
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 if (CustomView == String.Empty)
                 {
                     if(Take == null)
-                        return new TableOperations<T>(connection).QueryRecords(orderBy + (ascending ? " ASC" : " DESC"), new RecordRestriction(filterExpression, parameters));
+                        return new TableOperations<T>(connection).QueryRecords(orderString, new RecordRestriction(filterExpression, parameters));
                     else
-                        return new TableOperations<T>(connection).QueryRecords(orderBy + (ascending ? " ASC" : " DESC"), new RecordRestriction(filterExpression, parameters)).Take((int)Take);
+                        return new TableOperations<T>(connection).QueryRecords(orderString, new RecordRestriction(filterExpression, parameters)).Take((int)Take);
 
                 }
 
@@ -610,7 +616,7 @@ namespace GSF.Web.Model
                     SELECT * FROM 
                     ({CustomView}) FullTbl 
                     WHERE {flt}
-                    {(orderBy != null ? " ORDER BY " + orderBy + (ascending ? " ASC" : " DESC") : "")}";
+                    {(orderBy != null ? " ORDER BY " + orderString : "")}";
 
 
                 DataTable dataTbl = connection.RetrieveData(sql, param);
@@ -630,6 +636,7 @@ namespace GSF.Web.Model
 
         private T QueryRecordWhere(string filterExpression, params object[] parameters)
         {
+            
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 if (CustomView == String.Empty)
@@ -656,24 +663,30 @@ namespace GSF.Web.Model
             }
         }
 
-        private IEnumerable<T> QueryRecords() => QueryRecords(DefaultSort, false);
+        private IEnumerable<T> QueryRecords() => QueryRecords(null, false);
     
         private IEnumerable<T> QueryRecords(string sortBy, bool ascending)
         {
+            string orderString = "";
+            if (!string.IsNullOrEmpty(sortBy))
+                orderString = sortBy + (ascending ? " ASC" : " DESC");
+            if (string.IsNullOrEmpty(sortBy) && !string.IsNullOrEmpty(DefaultSort))
+                orderString = DefaultSort;
+
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
                 if (CustomView == String.Empty)
                 {
                     if (Take == null)
-                        return new TableOperations<T>(connection).QueryRecords(sortBy + (ascending? " ASC" : " DESC"));
+                        return new TableOperations<T>(connection).QueryRecords(orderString);
                     else
-                        return new TableOperations<T>(connection).QueryRecords(sortBy + (ascending ? " ASC" : " DESC")).Take((int)Take);
+                        return new TableOperations<T>(connection).QueryRecords(orderString).Take((int)Take);
                 }
 
                 string sql = $@"
                     SELECT * FROM 
                     ({CustomView}) FullTbl 
-                    {(DefaultSort != null ? " ORDER BY " + sortBy + (ascending ? " ASC" : " DESC") : "")}";
+                    {(sortBy != null ? " ORDER BY " + orderString : "")}";
 
                 DataTable dataTbl;
                 if (RootQueryRestriction != null)
@@ -682,7 +695,7 @@ namespace GSF.Web.Model
                     SELECT * FROM 
                     ({CustomView}) FullTbl 
                     WHERE ({RootQueryRestriction.FilterExpression})
-                    {(sortBy != null ? " ORDER BY " + (ascending ? " ASC" : " DESC") : "")}";
+                    {(sortBy != null ? " ORDER BY " + orderString : "")}";
 
                     dataTbl = connection.RetrieveData(sql, RootQueryRestriction.Parameters);
                 }
