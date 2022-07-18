@@ -2075,25 +2075,22 @@ namespace PhasorProtocolAdapters
         {
             long now = DateTime.UtcNow.Ticks;
 
-            if (m_receivedConfigFrame)
+            // Use the config frame to calculate the expected measurements for the device
+            DataSet dataSource = DataSource;
+
+            if (dataSource is not null && dataSource.Tables.Contains("ActiveMeasurements"))
             {
-                // If this is the first time we've received the configuration frame,
-                // we'll use it to calculate expected measurements per second for each device
-                DataSet dataSource = DataSource;
+                DataTable measurementTable = dataSource.Tables["ActiveMeasurements"];
+                IConfigurationFrame configurationFrame = m_frameParser.ConfigurationFrame;
+                IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> statisticsHelpers = StatisticsHelpers;
 
-                if (dataSource is not null && dataSource.Tables.Contains("ActiveMeasurements"))
+                foreach (DeviceStatisticsHelper<ConfigurationCell> statisticsHelper in statisticsHelpers)
                 {
-                    DataTable measurementTable = dataSource.Tables["ActiveMeasurements"];
-                    IConfigurationFrame configurationFrame = m_frameParser.ConfigurationFrame;
+                    int measurementsPerFrame = measurementTable.Select($"SignalReference LIKE '{statisticsHelper.Device.IDLabel}-%' AND SignalType <> 'FLAG' AND SignalType <> 'STAT'").Length;
 
-                    foreach (DeviceStatisticsHelper<ConfigurationCell> statisticsHelper in StatisticsHelpers)
-                    {
-                        int measurementsPerFrame = measurementTable.Select($"SignalReference LIKE '{statisticsHelper.Device.IDLabel}-%' AND SignalType <> 'FLAG' AND SignalType <> 'STAT'").Length;
-                        
-                        statisticsHelper.Device.MeasurementsDefined = measurementsPerFrame;
-                        statisticsHelper.ExpectedMeasurementsPerSecond = configurationFrame.FrameRate * measurementsPerFrame;
-                        statisticsHelper.Reset(now);
-                    }
+                    statisticsHelper.Device.MeasurementsDefined = measurementsPerFrame;
+                    statisticsHelper.ExpectedMeasurementsPerSecond = configurationFrame.FrameRate * measurementsPerFrame;
+                    statisticsHelper.Reset(now);
                 }
             }
 
