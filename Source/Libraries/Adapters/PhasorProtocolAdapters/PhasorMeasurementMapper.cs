@@ -2075,7 +2075,7 @@ namespace PhasorProtocolAdapters
         {
             long now = DateTime.UtcNow.Ticks;
 
-            if (!m_receivedConfigFrame)
+            if (m_receivedConfigFrame)
             {
                 // If this is the first time we've received the configuration frame,
                 // we'll use it to calculate expected measurements per second for each device
