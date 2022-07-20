@@ -61,7 +61,9 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using static GSF.RadixCodec;
 
+// ReSharper disable RedundantOverflowCheckingContext
 namespace GSF
 {
     #region [ Enumerations ]
@@ -2835,6 +2837,83 @@ namespace GSF
 
             return value;
         }
+
+        #endregion
+
+        #region [ ToBinaryString Extensions ]
+
+        private static string RemoveSign(string value) =>
+            value.Length > 0 && value[0] == '-' ? value.Substring(1) : value;
+
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this sbyte value) => RemoveSign(Radix2.Encode(value)).PadLeft(8, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this byte value) => Radix2.Encode((ushort)value).PadLeft(8, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this short value) => RemoveSign(Radix2.Encode(value)).PadLeft(16, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this ushort value) => Radix2.Encode(value).PadLeft(16, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this Int24 value) => RemoveSign(Radix2.Encode(value)).PadLeft(24, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this UInt24 value) => Radix2.Encode(value).PadLeft(24, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this int value) => RemoveSign(Radix2.Encode(value)).PadLeft(32, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this uint value) => Radix2.Encode(value).PadLeft(32, '0');
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this long value) => RemoveSign(Radix2.Encode(value).PadLeft(64, '0'));
+        
+        /// <summary>
+        /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
+        /// </summary>
+        /// <param name="value">Integer value to encode.</param>
+        /// <returns>Binary encoding of <paramref name="value"/>.</returns>
+        public static string ToBinaryString(this ulong value) => Radix2.Encode(value).PadLeft(64, '0');
 
         #endregion
     }

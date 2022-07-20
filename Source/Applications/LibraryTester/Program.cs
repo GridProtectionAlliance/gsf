@@ -87,6 +87,57 @@ namespace LibraryTester
             //Common.IsDefaultValue(true);            // Call to load GSF.Core
             //Transport.GetDefaultIPStack();          // Call to load GSF.Communications
 
+            Debug.WriteLine(((byte)0U).ToBinaryString());
+            Debug.WriteLine(((ushort)0U).ToBinaryString());
+            Debug.WriteLine(((UInt24)0U).ToBinaryString());
+            Debug.WriteLine(0U.ToBinaryString());
+            Debug.WriteLine(((ulong)0U).ToBinaryString());
+
+            Debug.WriteLine(((sbyte)1).ToBinaryString());
+            Debug.WriteLine(((byte)1U).ToBinaryString());
+            Debug.WriteLine(((short)1).ToBinaryString());
+            Debug.WriteLine(((ushort)1U).ToBinaryString());
+            Debug.WriteLine(((Int24)1).ToBinaryString());
+            Debug.WriteLine(((UInt24)1U).ToBinaryString());
+            Debug.WriteLine(1.ToBinaryString());
+            Debug.WriteLine(1U.ToBinaryString());
+            Debug.WriteLine(((long)1).ToBinaryString());
+            Debug.WriteLine(((ulong)1U).ToBinaryString());
+
+            Debug.WriteLine(((byte)12U).ToBinaryString());
+            Debug.WriteLine(((ushort)12U).ToBinaryString());
+            Debug.WriteLine(((UInt24)12U).ToBinaryString());
+            Debug.WriteLine(12U.ToBinaryString());
+            Debug.WriteLine(((ulong)12U).ToBinaryString());
+
+            Debug.WriteLine(sbyte.MinValue.ToBinaryString());
+            Debug.WriteLine(sbyte.MaxValue.ToBinaryString());
+            Debug.WriteLine(byte.MaxValue.ToBinaryString());
+
+            Debug.WriteLine(short.MinValue.ToBinaryString());
+            Debug.WriteLine(short.MaxValue.ToBinaryString());
+            Debug.WriteLine(ushort.MaxValue.ToBinaryString());
+
+            Debug.WriteLine(Int24.MinValue.ToBinaryString());
+            Debug.WriteLine(Int24.MaxValue.ToBinaryString());
+            Debug.WriteLine(UInt24.MaxValue.ToBinaryString());
+
+            Debug.WriteLine(int.MinValue.ToBinaryString());
+            Debug.WriteLine(int.MaxValue.ToBinaryString());
+            Debug.WriteLine(uint.MaxValue.ToBinaryString());
+
+            Debug.WriteLine(long.MinValue.ToBinaryString());
+            Debug.WriteLine(long.MaxValue.ToBinaryString());
+            Debug.WriteLine(ulong.MaxValue.ToBinaryString());
+
+            const ushort BadData = 0xC000;
+
+            Debug.WriteLine(ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(BadData)));
+            Debug.WriteLine(RadixCodec.Radix2.Encode(BadData));
+
+            Debug.WriteLine(ByteEncoding.Hexadecimal.GetString(BitConverter.GetBytes(BadData)));
+            Debug.WriteLine(RadixCodec.Radix16.Encode(BadData));
+
             byte[] bytes = { 1, 2, 3, 4, 5, 6, 7, 8 };
             ulong value = BitConverter.ToUInt64(bytes, 0);
 
