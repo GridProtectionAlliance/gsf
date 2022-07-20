@@ -143,11 +143,10 @@ namespace GSF.PhasorProtocols
             get
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
-                byte[] valueBytes = BitConverter.GetBytes(Value);
 
                 baseAttributes.Add("Digital Value", Value.ToString());
-                baseAttributes.Add("Digital Value (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(valueBytes));
-                baseAttributes.Add("Digital Value (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(valueBytes)}");
+                baseAttributes.Add("Digital Value (Big Endian Bits)", Value.ToBinaryString());
+                baseAttributes.Add("Digital Value (Hexadecimal)", $"0x{Value:X2}");
 
                 return baseAttributes;
             }

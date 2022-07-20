@@ -533,8 +533,8 @@ namespace PhasorProtocolAdapters
                     status.AppendLine($"      Analog scaling value: {AnalogScalingValue:00000000} ({AnalogScalingValue * 0.00001D:0.00000})");
                 }
 
-                status.AppendLine($"       Digital normal mask: {ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.LowWord()))} (big-endian)");
-                status.AppendLine($" Digital valid inputs mask: {ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(DigitalMaskValue.HighWord()))} (big-endian)");
+                status.AppendLine($"       Digital normal mask: {DigitalMaskValue.LowWord().ToBinaryString()} (big-endian)");
+                status.AppendLine($" Digital valid inputs mask: {DigitalMaskValue.HighWord().ToBinaryString()} (big-endian)");
 
                 if (m_dataChannel is not null)
                 {

@@ -137,16 +137,13 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                byte[] normalStatusBytes = BitConverter.GetBytes(NormalStatus);
-                byte[] validInputsBytes = BitConverter.GetBytes(ValidInputs);
-
                 baseAttributes.Add("Normal Status", NormalStatus.ToString());
-                baseAttributes.Add("Normal Status (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(normalStatusBytes));
-                baseAttributes.Add("Normal Status (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(normalStatusBytes)}");
+                baseAttributes.Add("Normal Status (Big Endian Bits)", NormalStatus.ToBinaryString());
+                baseAttributes.Add("Normal Status (Hexadecimal)", $"0x{NormalStatus:X2)}");
 
                 baseAttributes.Add("Valid Inputs", ValidInputs.ToString());
-                baseAttributes.Add("Valid Inputs (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(validInputsBytes));
-                baseAttributes.Add("Valid Inputs (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(validInputsBytes)}");
+                baseAttributes.Add("Valid Inputs (Big Endian Bits)", ValidInputs.ToBinaryString());
+                baseAttributes.Add("Valid Inputs (Hexadecimal)", $"0x{ValidInputs:X2)}");
 
                 return baseAttributes;
             }

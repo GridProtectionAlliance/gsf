@@ -368,13 +368,12 @@ namespace GSF.PhasorProtocols
             get
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
-                byte[] valueBytes = BitConverter.GetBytes(StatusFlags);
 
                 baseAttributes.Add("Station Name", StationName);
                 baseAttributes.Add("ID Label", IDLabel);
                 baseAttributes.Add("Status Flags", StatusFlags.ToString());
-                baseAttributes.Add("Status Flags (Big Endian Bits)", ByteEncoding.BigEndianBinary.GetString(valueBytes));
-                baseAttributes.Add("Status Flags (Hexadecimal)", $"0x{ByteEncoding.Hexadecimal.GetString(valueBytes)}");
+                baseAttributes.Add("Status Flags (Big Endian Bits)", StatusFlags.ToBinaryString());
+                baseAttributes.Add("Status Flags (Hexadecimal)", $"0x{StatusFlags:X2}");
                 baseAttributes.Add("Data Is Valid", DataIsValid.ToString());
                 baseAttributes.Add("Synchronization Is Valid", SynchronizationIsValid.ToString());
                 baseAttributes.Add("Data Sorting Type", Enum.GetName(typeof(DataSortingType), DataSortingType));
