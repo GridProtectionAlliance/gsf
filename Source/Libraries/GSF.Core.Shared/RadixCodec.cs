@@ -31,12 +31,19 @@ namespace GSF
     /// Represents a radix value codec for conversion of base-10 integer values to and from other base values.
     /// </summary>
     /// <remarks>
-    /// The primary use case of this class is to provide compact string-based encodings of integer values.
-    /// This works much like base-64 encoding but with variable base sizes and an integer source data focus.
-    /// The encoded base value strings are not intended to provide compression, radix value encodings of
-    /// integers will almost always have a byte-size that is greater than native bytes that make up integer.
-    /// The encodings produced by this class do not manage arbitrary sized bytes arrays, nor do they include
-    /// padding - as a result, encodings are not intended to comply with RFC 3548.
+    /// <para>
+    /// The primary use case of this class is to provide compact string-based encodings of integer values, e.g.,
+    /// storing an unsigned 32-bit integer value in a string-based database field that only holds 6 characters;
+    /// the maximum <see cref="UInt32"/> value of 4294967295 requires 10 characters of storage as a string.
+    /// </para>
+    /// <para>
+    /// </para>
+    /// The codec algorithm for <see cref="RadixCodec"/> works much like base-64 encoding but with variable base
+    /// sizes and an integer source data focus, not a byte-array. The encoded base value strings are not intended
+    /// to provide binary compression, many of the radix value encodings of integers produced by this class will
+    /// have a byte-size that is greater than native bytes that make up integer. Since the encodings produced by
+    /// this class do not manage arbitrary sized bytes arrays nor do they include padding, the encodings are not
+    /// intended to comply with RFC 3548.
     /// </remarks>
     public class RadixCodec
     {
