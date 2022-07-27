@@ -790,7 +790,11 @@ namespace GSF.Web.Model
             object[] param = new object[] { };
             if (RootQueryRestriction != null)
             {
-                whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
+                if (whereClause == "")
+                    whereClause = $" WHERE ${RootQueryRestriction.FilterExpression}";
+                else
+                    whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
+
                 param = RootQueryRestriction.Parameters.ToArray();
             }
 
@@ -807,15 +811,13 @@ namespace GSF.Web.Model
                 else
                     limit = $"TOP {(int)Take}";
 
-                        if (SearchSettings == null && CustomView == String.Empty)
+                if (SearchSettings == null && CustomView == String.Empty)
                     sql = $@" SELECT {limit} * FROM {tableName} FullTbl {whereClause}
-                            ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")} ";
-
+                        ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")} ";
                 else if (SearchSettings == null)
                     sql = $@" SELECT {limit} * FROM({CustomView}) FullTbl 
-                            {whereClause}
+                        {whereClause}
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
-
                 else
                 {
                     string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
@@ -832,64 +834,33 @@ namespace GSF.Web.Model
                     if (searchSettingConditions != String.Empty)
                         searchSettingConditions = "(" + searchSettingConditions + ")";
 
-                    string joinCondition = $"af.FieldName IN {pivotCollums.Replace("'", "''")} AND ";
-                    joinCondition = joinCondition + searchSettingConditions.Replace("'", "''");
+                    string joinCondition = $"af.FieldName IN {pivotCollums} AND ";
+                    joinCondition = joinCondition + searchSettingConditions;
                     if (SearchSettings.Condition != String.Empty)
                         joinCondition = $"{joinCondition} AND ";
                     joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
 
-                    if (CustomView == String.Empty)
-                        sql = $@"
-                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
-                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
-                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
-
-                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                                SELECT * INTO #Tbl FROM (
-                                SELECT 
-                                    SRC.*,
-                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-                                    AF.{SearchSettings.ValueField} AS AFValue
-                                FROM  {tableName} SRC LEFT JOIN 
-                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
-                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS FullTbl' ELSE '' END) + ' 
-                                {whereClause.Replace("'", "''")};
-
-                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
-                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
-                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT {limit} '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
-
-                                exec sp_executesql @CleanSQL
-                            '
-                            exec sp_executesql @SQLStatement";
-                    else
-                        sql = $@"
-                            DECLARE @PivotColumns NVARCHAR(MAX) = N''
-                            SELECT @PivotColumns = @PivotColumns + '[AFV_' + [Key] + '],'
-                                FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]
-
-                            DECLARE @SQLStatement NVARCHAR(MAX) = N'
-                                SELECT * INTO #Tbl FROM (
-                                SELECT 
-                                    SRC.*,
-                                    ''AFV_'' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
-                                    AF.{SearchSettings.ValueField} AS AFValue
-                                FROM  ({CustomView.Replace("'", "''")}) SRC LEFT JOIN 
-                                    {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
-                                ) as FullTbl ' + (SELECT CASE WHEN Len(@PivotColumns) > 0 THEN 'PIVOT (
-                                    Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ('+ SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')) AS FullTbl' ELSE '' END) + ' 
-                                {whereClause.Replace("'", "''")};
-
-                                DECLARE @NoNPivotColumns NVARCHAR(MAX) = N''''
-                                    SELECT @NoNPivotColumns = @NoNPivotColumns + ''[''+ name + ''],''
-                                        FROM tempdb.sys.columns WHERE  object_id = Object_id(''tempdb..#Tbl'') AND name NOT LIKE ''AFV%''; 
-                                DECLARE @CleanSQL NVARCHAR(MAX) = N''SELECT {limit} '' + SUBSTRING(@NoNPivotColumns,0, LEN(@NoNPivotColumns)) + ''FROM #Tbl ORDER BY { postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}''
-
-                                exec sp_executesql @CleanSQL
-                            '
-                            exec sp_executesql @SQLStatement";
+                    string sqlPivotColumns = $@"
+                        SELECT '[AFV_' + [Key] + ']'
+                            FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]";
+                    sqlPivotColumns = string.Join(",", connection.RetrieveData(sqlPivotColumns).Select().Select(r => r[0].ToString()));
+                    string tblSelect = $@"
+                        (SELECT 
+                            SRC.*,
+                            'AFV_' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
+                            AF.{SearchSettings.ValueField} AS AFValue
+                        FROM  ({(string.IsNullOrEmpty(CustomView) ? tableName : CustomView)}) SRC LEFT JOIN 
+                            {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
+                        ) as FullTbl {(string.IsNullOrEmpty(sqlPivotColumns) ? "" : $"PIVOT (Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ({sqlPivotColumns})) AS FullTbl")}";
+                    string sqlNoPivot = $@"
+                        SELECT TOP 0 * INTO #Tbl FROM {tblSelect}
+                        SELECT '[' + name + ']'
+                                FROM tempdb.sys.columns WHERE  object_id = Object_id('tempdb..#Tbl') AND name NOT LIKE 'AFV%';";
+                    sqlNoPivot = string.Join(",", connection.RetrieveData(sqlNoPivot).Select().Select(r => r[0].ToString()));
+                    sql = $@"
+                        SELECT {limit} {sqlNoPivot} FROM {tblSelect}
+                        {whereClause}
+                        ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
                 }
 
                 if (param.Count() > 0)
