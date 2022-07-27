@@ -791,7 +791,7 @@ namespace GSF.Web.Model
             if (RootQueryRestriction != null)
             {
                 if (whereClause == "")
-                    whereClause = $" WHERE ${RootQueryRestriction.FilterExpression}";
+                    whereClause = $" WHERE {RootQueryRestriction.FilterExpression}";
                 else
                     whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
 
