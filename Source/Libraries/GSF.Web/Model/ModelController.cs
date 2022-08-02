@@ -849,7 +849,7 @@ namespace GSF.Web.Model
                             SRC.*,
                             'AFV_' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
                             AF.{SearchSettings.ValueField} AS AFValue
-                        FROM  ({(string.IsNullOrEmpty(CustomView) ? tableName : CustomView)}) SRC LEFT JOIN 
+                        FROM  {(string.IsNullOrEmpty(CustomView) ? tableName : $"({CustomView})")} SRC LEFT JOIN
                             {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                         ) as FullTbl {(string.IsNullOrEmpty(sqlPivotColumns) ? "" : $"PIVOT (Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ({sqlPivotColumns})) AS FullTbl")}";
                     string sqlNoPivot = $@"
