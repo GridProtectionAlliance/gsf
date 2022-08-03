@@ -23,11 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Hosting;
 using GSF.Collections;
 using GSF.Data;
 using GSF.IO;
@@ -48,7 +48,7 @@ namespace GSF.Web.Model
 
         // Fields
         private readonly IRazorEngine m_razorEngine;
-        private readonly DynamicViewBag m_viewBag = new DynamicViewBag();
+        private readonly DynamicViewBag m_viewBag = new();
         private Dictionary<string, string> m_parameters;
 
         #endregion
@@ -139,7 +139,7 @@ namespace GSF.Web.Model
         {
             get
             {
-                if ((object)m_parameters == null)
+                if (m_parameters is null)
                 {
                     HttpRequestMessage request = ViewBag.Request;
                     m_parameters = HttpUtility.ParseQueryString(request.RequestUri.Query).ToDictionary();
@@ -192,14 +192,15 @@ namespace GSF.Web.Model
         {
             try
             {
-                using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
-                {
-                    if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
-                        dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, null as string, m_viewBag);
+                using DataContext dataContext = new(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler);
 
-                    m_viewBag.AddValue("DataContext", dataContext);
-                    return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
-                }
+                if (PagedViewModelDataType is not null && PagedViewModelHubType is not null)
+                    dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, null as string, m_viewBag);
+
+                m_viewBag.AddValue("DataContext", dataContext);
+                m_viewBag.AddValue("IsHosted", HostingEnvironment.IsHosted);
+
+                return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
             catch (Exception ex)
             {
@@ -222,28 +223,28 @@ namespace GSF.Web.Model
         {
             try
             {
-                using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
-                {
-                    // Need to add the security principal to the view bag before configuring the view
-                    m_viewBag.AddValue("SecurityPrincipal", request.GetRequestContext().Principal);
+                using DataContext dataContext = new(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler);
 
-                    if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
-                        dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
+                // Need to add the security principal to the view bag before configuring the view
+                m_viewBag.AddValue("SecurityPrincipal", request.GetRequestContext().Principal);
 
-                    m_viewBag.AddValue("Application", s_applicationCache);
-                    m_viewBag.AddValue("DataContext", dataContext);
-                    m_viewBag.AddValue("Request", request);
-                    m_viewBag.AddValue("Response", response);
-                    m_viewBag.AddValue("IsPost", request.Method == HttpMethod.Post);
-                    m_viewBag.AddValue("WebServerOptions", WebServerOptions);
-                    m_viewBag.AddValue("AuthenticationOptions", request.GetAuthenticationOptions());
+                if (PagedViewModelDataType is not null && PagedViewModelHubType is not null)
+                    dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
 
-                    // See if a client session has been defined for this execution request
-                    if (SessionHandler.TryGetSessionState(request, WebServerOptions?.SessionToken, out DynamicViewBag sessionState))
-                        m_viewBag.AddValue("Session", sessionState);
+                m_viewBag.AddValue("Application", s_applicationCache);
+                m_viewBag.AddValue("DataContext", dataContext);
+                m_viewBag.AddValue("IsHosted", HostingEnvironment.IsHosted);
+                m_viewBag.AddValue("Request", request);
+                m_viewBag.AddValue("Response", response);
+                m_viewBag.AddValue("IsPost", request.Method == HttpMethod.Post);
+                m_viewBag.AddValue("WebServerOptions", WebServerOptions);
+                m_viewBag.AddValue("AuthenticationOptions", request.GetAuthenticationOptions());
 
-                    return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
-                }
+                // See if a client session has been defined for this execution request
+                if (SessionHandler.TryGetSessionState(request, WebServerOptions?.SessionToken, out DynamicViewBag sessionState))
+                    m_viewBag.AddValue("Session", sessionState);
+
+                return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
             catch (Exception ex)
             {
@@ -263,10 +264,8 @@ namespace GSF.Web.Model
         /// <param name="response">HTTP response message.</param>
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <returns>Task that will provide rendered result.</returns>
-        public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
-        {
-            return Task.Run(() => Execute(request, response), cancellationToken);
-        }
+        public Task<string> ExecuteAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken) =>
+            Task.Run(() => Execute(request, response), cancellationToken);
 
         private string RenderErrorTemplate(string errorTemplateName, Exception ex)
         {
@@ -278,20 +277,13 @@ namespace GSF.Web.Model
 
             string fileExtension = FilePath.GetExtension(errorTemplateName).ToLowerInvariant();
             bool debugBuild = AssemblyInfo.EntryAssembly.Debuggable;
-            IRazorEngine razorEngine;
-
-            switch (fileExtension)
+            
+            IRazorEngine razorEngine = fileExtension switch
             {
-                case ".cshtml":
-                    razorEngine = embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : debugBuild ? RazorEngine<CSharpDebug>.Default as IRazorEngine : RazorEngine<CSharp>.Default;
-                    break;
-                case ".vbhtml":
-                    razorEngine = embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : debugBuild ? RazorEngine<VisualBasicDebug>.Default as IRazorEngine : RazorEngine<VisualBasic>.Default;
-                    break;
-                default:
-                    razorEngine = RazorEngine<CSharp>.Default;
-                    break;
-            }
+                ".cshtml" => embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : debugBuild ? RazorEngine<CSharpDebug>.Default : RazorEngine<CSharp>.Default,
+                ".vbhtml" => embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : debugBuild ? RazorEngine<VisualBasicDebug>.Default : RazorEngine<VisualBasic>.Default,
+                _ => RazorEngine<CSharp>.Default,
+            };
 
             m_viewBag.AddValue("Exception", ex);
             m_viewBag.AddValue("DebugBuild", debugBuild);

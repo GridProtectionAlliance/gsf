@@ -45,7 +45,7 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Default value for <see cref="ErrorTemplateName"/>.
         /// </summary>
-        public const string DefaultErrorTemplateName = Resources.Root + "/Shared/Views/Error.cshtml";
+        public const string DefaultErrorTemplateName = Resources.DefaultRoot + "/Shared/Views/Error.cshtml";
 
         /// <summary>
         /// Default value for <see cref="ClientCacheEnabled"/>.
@@ -212,7 +212,7 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets an immutable version of the web server options.
         /// </summary>
-        public ReadonlyWebServerOptions Readonly => new ReadonlyWebServerOptions(this);
+        public ReadonlyWebServerOptions Readonly => new(this);
 
         #endregion
 

@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System.Web;
+using System.Web.Hosting;
 using GSF.Web.Security;
 
 namespace GSF.Web.Shared
@@ -31,14 +33,23 @@ namespace GSF.Web.Shared
     public static class Resources
     {
         /// <summary>
-        /// Defines embedded resource root path.
+        /// Defines default embedded resource root path.
         /// </summary>
-        public const string Root = "/Notifications/@GSF/Web";
+        public const string DefaultRoot = "/@" + nameof(GSF) + "/" + nameof(Web);
+        
+        private static string s_rootPath;
+        private static string s_headerIcons;
+
+        /// <summary>
+        /// Gets derived embedded resource root path.
+        /// </summary>
+        public static string Root => s_rootPath ??= 
+            HostingEnvironment.IsHosted ? VirtualPathUtility.ToAbsolute($"~{DefaultRoot}") : DefaultRoot;
 
         /// <summary>
         /// Gets common set of icon resources that can be included in web page header.
         /// </summary>
-        public static readonly string HeaderIcons = $@"
+        public static string HeaderIcons => s_headerIcons ??= $@"
             <link rel=""shortcut icon"" href=""{Root}/Shared/Images/Icons/favicon.ico"" />
             <link rel=""icon"" type=""image/png"" href=""{Root}/Shared/Images/Icons/favicon-196x196.png"" sizes=""196x196"" />
             <link rel=""icon"" type=""image/png"" href=""{Root}/Shared/Images/Icons/favicon-96x96.png"" sizes=""96x96"" />

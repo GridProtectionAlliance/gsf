@@ -49,8 +49,7 @@
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
     bool isPOSIX = GSF.Common.IsPosixEnvironment;
     string oidcError;
-
-
+    
     if (queryParams.TryGetValue("redir", out redirectPage)) {
         string base64Path = WebUtility.UrlDecode(redirectPage);
         byte[] pathBytes = Convert.FromBase64String(base64Path);
@@ -59,7 +58,11 @@
     else {
         redirectPage = "/";
     }
-    redirectPage = Url.Content("~") + redirectPage;
+    
+    if ((ViewBag.IsHosted ?? false) && redirectPage.StartsWith("/")) {
+        redirectPage = Url.Content("~" + redirectPage);
+    }
+
     if (queryParams.TryGetValue("oidcError", out oidcError)) {
         oidcError = WebUtility.UrlDecode(oidcError);
     } else {

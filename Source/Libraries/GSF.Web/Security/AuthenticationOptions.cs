@@ -68,7 +68,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Default value for <see cref="LoginPage"/>.
         /// </summary>
-        public const string DefaultLoginPage = Resources.Root + "/Security/Views/Login.cshtml";
+        public const string DefaultLoginPage = Resources.DefaultRoot + "/Security/Views/Login.cshtml";
 
         /// <summary>
         /// Default value for <see cref="LogoutPage"/>.
