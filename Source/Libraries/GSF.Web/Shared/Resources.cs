@@ -33,7 +33,7 @@ namespace GSF.Web.Shared
         /// <summary>
         /// Defines embedded resource root path.
         /// </summary>
-        public const string Root = "/@GSF/Web";
+        public const string Root = "/Notifications/@GSF/Web";
 
         /// <summary>
         /// Gets common set of icon resources that can be included in web page header.

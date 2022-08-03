@@ -59,7 +59,7 @@
     else {
         redirectPage = "/";
     }
-
+    redirectPage = Url.Content("~") + redirectPage;
     if (queryParams.TryGetValue("oidcError", out oidcError)) {
         oidcError = WebUtility.UrlDecode(oidcError);
     } else {
