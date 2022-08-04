@@ -69,7 +69,7 @@ namespace GSF.Geo
         public override double Distance(GeoCoordinate coordinate1, GeoCoordinate coordinate2)
         {
             const double RadianConversionFactor = Math.PI / 180.0D;
-            const double R = 6371000;
+            const double R = 6378137;
 
             double phi1 = coordinate1.Latitude * RadianConversionFactor;
             double phi2 = coordinate2.Latitude * RadianConversionFactor;
