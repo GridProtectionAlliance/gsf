@@ -71,30 +71,24 @@ namespace GSF.Geo
 
         /// <summary>
         /// Calculates distance between this and another <see cref="GeoCoordinate"/> value.
+        /// Base on the <see cref="EPSG3857"/> reference system.
         /// </summary>
         /// <param name="other">Other <see cref="GeoCoordinate"/>.</param>
         /// <returns>Distance between two <see cref="GeoCoordinate"/> values.</returns>
         public double Distance(GeoCoordinate other)
         {
-            const double RadianConversionFactor = Math.PI / 180.0D;
-
-            double r = 6378137;
-            double lambda1 = Longitude * RadianConversionFactor;
-            double lambda2 = other.Longitude * RadianConversionFactor;
-            double phi1 = Latitude * RadianConversionFactor;
-            double phi2 = other.Latitude * RadianConversionFactor;
-            double dPhi = phi2 - phi1;
-            double dLambda = lambda2 - lambda1;
-
-            double a = Math.Sin(dPhi / 2) * Math.Sin(dPhi / 2) +
-                    Math.Cos(phi1) * Math.Cos(phi2) *
-                    Math.Sin(dLambda / 2) * Math.Sin(dLambda / 2);
-
-            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-            return r * c;
+            CoordinateReferenceSystem referenceSystem = new EPSG3857();
+            return Distance(other, referenceSystem);
         }
 
+        /// <summary>
+        /// Calculates distance between this and another <see cref="GeoCoordinate"/> value.
+        /// using the specified <see cref="CoordinateReferenceSystem"/>
+        /// </summary>
+        /// <param name="other">Other <see cref="GeoCoordinate"/>.</param>
+        /// <param name="referenceSystem">The <see cref="CoordinateReferenceSystem"/> used.</param>
+        /// <returns>Distance between two <see cref="GeoCoordinate"/> values.</returns>
+        public double Distance(GeoCoordinate other, CoordinateReferenceSystem referenceSystem) => referenceSystem.Distance(this, other);
         #endregion
     }
 }
