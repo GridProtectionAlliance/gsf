@@ -630,7 +630,16 @@
             return false;
         }
 
-        function guessPhase(phase, phasorLabel) {
+        function guessPhase(phasorDefinition, phasorLabel) {
+            const phase = phasorDefinition.Phase;
+
+            // If user has already manually updated phase, do not "re-guess"
+            const updatedOn = new Date(phasorDefinition.UpdatedOn);
+            const createdOn = new Date(phasorDefinition.CreatedOn);
+
+            if (updatedOn > createdOn)
+                return phase;
+
             if (!isEmpty(phase) && phase !== "+" && !phase.endsWith("?"))
                 return phase;
 
@@ -1243,7 +1252,7 @@
                 for (let i = 0; i < deviceCount; i++) {
                     const cell = self.configFrame().Cells[i];
 
-                    // TODO: Update screen to accomodate lat/long at the device level
+                    // TODO: Update screen to accommodate lat/long at the device level
                     if (!isEmpty(cell.Latitude))
                         self.latitude(cell.Latitude);
 
@@ -1477,7 +1486,7 @@
                 const voltage = {};
                 const phasorLabel = notNull(phasorDefinition.Label).replaceAll(" ", "_").toUpperCase();
                 const nominalVoltage = guessNominalVoltage(phasorDefinition.NominalVoltage, phasorLabel, cell.IDLabel());
-                const phase = guessPhase(phasorDefinition.Phase, phasorLabel);
+                const phase = guessPhase(phasorDefinition, phasorLabel);
                 const vphmSignalType = getPhasorSignalType("VPHM");
 
                 voltage._enabled = ko.observable(!self.forwardOnly() && nominalVoltage >= 0);
@@ -1705,7 +1714,7 @@
                 current.AssociatedVoltage(phasorDefinition.DestinationPhasorID);
 
                 // Guess phase, which will subsequently guess any unassociated voltage
-                current.Phase(guessPhase(phasorDefinition.Phase, phasorLabel));
+                current.Phase(guessPhase(phasorDefinition, phasorLabel));
 
                 phasorDefinition.Current = current;
                 phasorDefinition.Label = current.Label;

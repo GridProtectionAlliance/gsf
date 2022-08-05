@@ -27,6 +27,10 @@ namespace PhasorWebUI.Adapters
         public int? NominalVoltage { get; set; }
 
         public int SourceIndex { get; set; }
+
+        public DateTime CreatedOn { get; set; }
+
+        public DateTime UpdatedOn { get; set; }
     }
 
     public class AnalogDefinition
