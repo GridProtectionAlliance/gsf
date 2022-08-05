@@ -26,8 +26,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.52.0")]
-[assembly: AssemblyInformationalVersion("2.4.52-beta")]
+[assembly: AssemblyVersion("2.4.53.0")]
+[assembly: AssemblyInformationalVersion("2.4.53-beta")]
 
 // Informational attributes.
 [assembly: AssemblyTitle("HistorianPlaybackUtility")]
