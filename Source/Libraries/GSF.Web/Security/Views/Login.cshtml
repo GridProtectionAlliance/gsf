@@ -27,6 +27,7 @@
 @using System.Net
 @using System.Net.Http
 @using System.Text
+@using System.Web.Hosting
 @using GSF.Web
 @using GSF.Web.Model
 @using GSF.Web.Security
@@ -59,7 +60,7 @@
         redirectPage = "/";
     }
     
-    if ((ViewBag.IsHosted ?? false) && redirectPage.StartsWith("/")) {
+    if (HostingEnvironment.IsHosted && redirectPage.StartsWith("/")) {
         redirectPage = Url.Content("~" + redirectPage);
     }
 
