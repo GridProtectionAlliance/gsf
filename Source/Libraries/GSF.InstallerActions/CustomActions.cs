@@ -441,8 +441,12 @@ namespace GSF.InstallerActions
             {
                 // Create service admins group and add service account to that group as well as the Performance Log Users group
                 addServiceAccountToGroup(serviceAdminsGroupName);
-                addServiceAccountToGroup("Performance Monitor Users");
-                addServiceAccountToGroup("Performance Log Users");
+
+                string performanceMonitorUsers = UserInfo.SIDToAccountName("S-1-5-32-558");
+                string performanceLogUsers = UserInfo.SIDToAccountName("S-1-5-32-559");
+
+                addServiceAccountToGroup(performanceMonitorUsers);
+                addServiceAccountToGroup(performanceLogUsers);
 
                 try
                 {
