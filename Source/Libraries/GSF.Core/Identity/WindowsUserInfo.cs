@@ -550,7 +550,7 @@ namespace GSF.Identity
                 m_parent.Domain = Environment.MachineName;
 
             // WinNT directory entries will only resolve "BUILTIN" local prefixes with a "."
-            if (m_parent.Domain.Equals("BUILTIN", StringComparison.OrdinalIgnoreCase))
+            if (m_parent.Domain.Equals(BuiltInGroupName, StringComparison.OrdinalIgnoreCase))
                 m_parent.Domain = ".";
 
             // Determine if "domain" is for local machine or active directory
@@ -708,6 +708,14 @@ namespace GSF.Identity
 
         // Static Fields
         private static readonly string[] s_builtInLocalGroups;
+        
+        /// <summary>
+        /// Localized version of Windows "BUILTIN" group name.
+        /// </summary>
+        /// <remarks>
+        /// For non-English based OS languages, this name may be different. For example, on a German OS this is "VORDEFINIERT".
+        /// </remarks>
+        public static readonly string BuiltInGroupName;
 
         // Static constructor
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
@@ -747,14 +755,25 @@ namespace GSF.Identity
                         SecurityIdentifier securityIdentifier = new SecurityIdentifier(builtInSid, null);
                         NTAccount groupAccount = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
 
+                        // Determine localized name for "BUILTIN" domain name
+                        if (BuiltInGroupName is null)
+                        {
+                            string[] parts = groupAccount.ToString().Split('\\');
+
+                            if (parts.Length == 2)
+                                BuiltInGroupName = parts[0].Trim();
+                        }
+
                         // Don't include "BUILTIN\" prefix for group names so they are easily comparable
-                        builtInGroups.Add(groupAccount.ToString().Substring(8));
+                        builtInGroups.Add(groupAccount.ToString().Substring((BuiltInGroupName ?? "BUILTIN").Length + 1));
                     }
                     catch (IdentityNotMappedException ex)
                     {
                         Logger.SwallowException(ex, "WindowsUserInfo.cs Static Constructor: Failed to lookup identity", builtInSid.ToString());
                     }
                 }
+
+                BuiltInGroupName ??= "BUILTIN";
             }
 
             // Sort list so binary search can be used
@@ -1354,7 +1373,7 @@ namespace GSF.Identity
                     else if (accountName.StartsWith(machineDomain, StringComparison.OrdinalIgnoreCase))
                     {
                         // If the machine domain is specified, attempt the lookup again using the BUILTIN domain instead
-                        accountAlias = Regex.Replace(accountName, $"^{Regex.Escape(machineDomain)}", @"BUILTIN\", RegexOptions.IgnoreCase);
+                        accountAlias = Regex.Replace(accountName, $"^{Regex.Escape(machineDomain)}", @$"{BuiltInGroupName}\", RegexOptions.IgnoreCase);
                         accountAliasSID = AccountNameToSID(accountAlias);
 
                         if (!ReferenceEquals(accountAlias, accountAliasSID))
@@ -1462,7 +1481,7 @@ namespace GSF.Identity
                             if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
                                 groups.Add($"{Environment.MachineName}\\{groupName}");
                             else
-                                groups.Add($"BUILTIN\\{groupName}");
+                                groups.Add($"{BuiltInGroupName}\\{groupName}");
                         }
                     }
 
@@ -1527,7 +1546,7 @@ namespace GSF.Identity
                     if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
                         groups.Add($"{Environment.MachineName}\\{groupName}");
                     else
-                        groups.Add($"BUILTIN\\{groupName}");
+                        groups.Add($"{BuiltInGroupName}\\{groupName}");
                 }
             }
 

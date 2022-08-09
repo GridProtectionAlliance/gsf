@@ -1799,8 +1799,8 @@ namespace GSF.Identity
         // DirectoryEntry will only resolve "BUILTIN\" groups with a dot ".\"
         internal static string ValidateGroupName(string groupName)
         {
-            if (!Common.IsPosixEnvironment && groupName.StartsWith(@"BUILTIN\", StringComparison.OrdinalIgnoreCase))
-                return Regex.Replace(groupName, @"^BUILTIN\\", @".\", RegexOptions.IgnoreCase);
+            if (!Common.IsPosixEnvironment && groupName.StartsWith(@$"{WindowsUserInfo.BuiltInGroupName}\", StringComparison.OrdinalIgnoreCase))
+                return Regex.Replace(groupName, @$"^{WindowsUserInfo.BuiltInGroupName}\\", @".\", RegexOptions.IgnoreCase);
 
             return groupName;
         }
