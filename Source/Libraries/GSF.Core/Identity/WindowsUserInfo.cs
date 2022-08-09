@@ -890,7 +890,7 @@ namespace GSF.Identity
         // Determines if local account (e.g., user or group) exists using an existing directory entry
         private static bool LocalAccountExists(DirectoryEntry localMachine, string accountName, string schemaType, bool allowActiveDirectoryAccount, out DirectoryEntry accountEntry)
         {
-            if (allowActiveDirectoryAccount && accountName.Contains("\\"))
+            if (accountName.Contains("\\"))
             {
                 string[] accountParts = accountName.Split('\\');
 
@@ -900,7 +900,7 @@ namespace GSF.Identity
                     string account = accountParts[1].Trim();
 
                     // Check for non-local domain name (don't check for those like NT SERVICE, WinNT:// works with those)
-                    if (!string.IsNullOrEmpty(domain) &&
+                    if (allowActiveDirectoryAccount && !string.IsNullOrEmpty(domain) &&
                         string.Compare(domain, ".", StringComparison.OrdinalIgnoreCase) != 0 &&
                         string.Compare(domain, Environment.MachineName, StringComparison.OrdinalIgnoreCase) != 0)
                     {
