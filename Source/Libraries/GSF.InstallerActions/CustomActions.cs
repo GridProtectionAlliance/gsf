@@ -87,8 +87,8 @@ namespace GSF.InstallerActions
 
             bool isSystemAccount = 
                 serviceAccount.Equals("LocalSystem", StringComparison.OrdinalIgnoreCase) ||
-                serviceAccount.StartsWith(@"NT AUTHORITY\", StringComparison.OrdinalIgnoreCase) ||
-                serviceAccount.StartsWith(@"NT SERVICE\", StringComparison.OrdinalIgnoreCase);
+                serviceAccount.StartsWith($@"{UserInfo.NTAuthorityGroupName}\", StringComparison.OrdinalIgnoreCase) ||
+                serviceAccount.StartsWith($@"{UserInfo.NTServiceGroupName}\", StringComparison.OrdinalIgnoreCase);
 
             bool isManagedServiceAccount = serviceAccount.EndsWith("$", StringComparison.Ordinal);
 

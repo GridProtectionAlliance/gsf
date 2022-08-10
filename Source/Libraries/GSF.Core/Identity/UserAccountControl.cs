@@ -56,7 +56,7 @@ namespace GSF.Identity
         /// <returns>A <see cref="Process"/> object representing the newly created process.</returns>
         public static Process CreateProcessAsAdmin(string fileName, string arguments = "")
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo(fileName, arguments);
+            ProcessStartInfo startInfo = new(fileName, arguments);
             startInfo.UseShellExecute = true;
             startInfo.Verb = "runas";
             return Process.Start(startInfo);
@@ -96,7 +96,7 @@ namespace GSF.Identity
                     throw new Win32Exception(WindowsApi.GetLastError());
 
                 // Enable SeIncreaseQuotaPrivilege in this process.  (This requires administrative privileges.)
-                WindowsApi.TOKEN_PRIVILEGES tkp = new WindowsApi.TOKEN_PRIVILEGES();
+                WindowsApi.TOKEN_PRIVILEGES tkp = new();
                 long luid = 0;
                 int returnLen = 0;
 
@@ -120,9 +120,8 @@ namespace GSF.Identity
                     throw new InvalidOperationException("Unable to locate shell window. System might be using a custom shell.");
 
                 // Get the ID of the desktop shell process.
-                uint dwShellPID;
 
-                WindowsApi.GetWindowThreadProcessId(hShellWnd, out dwShellPID);
+                WindowsApi.GetWindowThreadProcessId(hShellWnd, out uint dwShellPID);
 
                 if (dwShellPID == 0)
                     throw new Win32Exception(WindowsApi.GetLastError());
@@ -144,12 +143,11 @@ namespace GSF.Identity
                     throw new Win32Exception(WindowsApi.GetLastError());
 
                 // Start the target process with the new token.
-                WindowsApi.PROCESS_INFORMATION pi;
-                WindowsApi.STARTUPINFO si = new WindowsApi.STARTUPINFO();
+                WindowsApi.STARTUPINFO si = new();
 
                 si.cb = Marshal.SizeOf(si);
 
-                if (!WindowsApi.CreateProcessWithTokenW(hPrimaryToken, 0, null, fileName + " " + arguments, 0, IntPtr.Zero, null, ref si, out pi))
+                if (!WindowsApi.CreateProcessWithTokenW(hPrimaryToken, 0, null, fileName + " " + arguments, 0, IntPtr.Zero, null, ref si, out WindowsApi.PROCESS_INFORMATION pi))
                     throw new Win32Exception(WindowsApi.GetLastError());
 
                 WindowsApi.CloseHandle(pi.hProcess);
@@ -188,7 +186,7 @@ namespace GSF.Identity
                     return GetProcessTokenElevationType() != WindowsApi.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault; // Split token
 
                 // If UAC is off, we can't rely on the token; check for Admin group.
-                return (new WindowsPrincipal(WindowsIdentity.GetCurrent())).IsInRole("Administrators");
+                return new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole("Administrators");
             }
         }
 
@@ -208,15 +206,9 @@ namespace GSF.Identity
                 // Check the HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA registry value.
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(UacRegistryKey, false);
 
-                if ((object)key != null)
-                {
-                    object value = key.GetValue(UacRegistryValue);
+                object value = key?.GetValue(UacRegistryValue);
 
-                    if ((object)value != null)
-                        return value.Equals(1);
-                }
-
-                return false;
+                return value is not null && value.Equals(1);
             }
         }
 
@@ -240,12 +232,11 @@ namespace GSF.Identity
                         throw new Win32Exception(WindowsApi.GetLastError());
 
                     uint virtualizationEnabled = 0;
-                    uint dwSize;
 
-                    if (!WindowsApi.GetTokenInformation(hToken, WindowsApi.TOKEN_INFORMATION_CLASS.TokenVirtualizationEnabled, ref virtualizationEnabled, sizeof(uint), out dwSize))
+                    if (!WindowsApi.GetTokenInformation(hToken, WindowsApi.TOKEN_INFORMATION_CLASS.TokenVirtualizationEnabled, ref virtualizationEnabled, sizeof(uint), out uint _))
                         throw new Win32Exception(WindowsApi.GetLastError());
 
-                    return (virtualizationEnabled != 0);
+                    return virtualizationEnabled != 0;
                 }
                 finally
                 {
@@ -262,21 +253,14 @@ namespace GSF.Identity
         /// This property will return <c>false</c> if UAC is disabled and the process is running as admin.  It only determines whether the process
         /// went through the elevation procedure.
         /// </remarks>
-        public static bool IsCurrentProcessElevated
-        {
-            get
-            {
-                return GetProcessTokenElevationType() == WindowsApi.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull; // elevated
-            }
-        }
+        public static bool IsCurrentProcessElevated => 
+            GetProcessTokenElevationType() == WindowsApi.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull; // elevated
 
         /// <summary>
         /// Disables User Account Control by changing the LUA registry key. The changes do not have effect until the system is restarted.
         /// </summary>
-        public static void DisableUac()
-        {
+        public static void DisableUac() => 
             SetUacRegistryValue(false);
-        }
 
         /// <summary>
         /// Disables User Account Control and restarts the system.
@@ -290,10 +274,8 @@ namespace GSF.Identity
         /// <summary>
         /// Enables User Account Control by changing the LUA registry key. The changes do not have effect until the system is restarted.
         /// </summary>
-        public static void EnableUac()
-        {
+        public static void EnableUac() => 
             SetUacRegistryValue(true);
-        }
 
         /// <summary>
         /// Enables User Account Control and restarts the system.
@@ -314,9 +296,8 @@ namespace GSF.Identity
                     throw new Win32Exception(WindowsApi.GetLastError());
 
                 WindowsApi.TOKEN_ELEVATION_TYPE elevationType = WindowsApi.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault;
-                uint dwSize;
 
-                if (!WindowsApi.GetTokenInformation(hToken, WindowsApi.TOKEN_INFORMATION_CLASS.TokenElevationType, ref elevationType, (uint)sizeof(WindowsApi.TOKEN_ELEVATION_TYPE), out dwSize))
+                if (!WindowsApi.GetTokenInformation(hToken, WindowsApi.TOKEN_INFORMATION_CLASS.TokenElevationType, ref elevationType, (uint)sizeof(WindowsApi.TOKEN_ELEVATION_TYPE), out uint _))
                     throw new Win32Exception(WindowsApi.GetLastError());
 
                 return elevationType;
@@ -331,9 +312,7 @@ namespace GSF.Identity
         private static void SetUacRegistryValue(bool enabled)
         {
             RegistryKey key = Registry.LocalMachine.OpenSubKey(UacRegistryKey, true);
-
-            if ((object)key != null)
-                key.SetValue(UacRegistryValue, enabled ? 1 : 0);
+            key?.SetValue(UacRegistryValue, enabled ? 1 : 0);
         }
 
         private static void RestartWindows()

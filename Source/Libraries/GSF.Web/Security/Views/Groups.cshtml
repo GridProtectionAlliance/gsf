@@ -42,6 +42,7 @@
 //*****************************************************************************************************@
 @using GSF.Configuration
 @using GSF.Data.Model
+@using GSF.Identity
 @using GSF.Security
 @using GSF.Security.Model
 @using GSF.Web.Model
@@ -223,7 +224,7 @@
                     } else {
                         securityHub.groupNameToSID(accountName).done(function (sid) {
                             if (accountName !== sid && accountName.countOccurrences("\\") < 2) {
-                                if (accountName.startsWith("NT AUTHORITY")) {
+                                if (accountName.startsWith("@UserInfo.NTAuthorityGroupName")) {
                                     // This is a valid group source for things like "Authenticated Users", but is
                                     // not technically a "group" - since SID validated, we report a valid account
                                     showAccountNameValidityFeedback(AccountState.Valid);

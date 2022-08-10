@@ -38,68 +38,43 @@ namespace GSF.Identity
         /// <remarks>
         /// Note that when the domain is unavailable, this function will return <c>false</c>.
         /// </remarks>
-        bool DomainRespondsForUser
-        {
-            get;
-        }
+        bool DomainRespondsForUser { get; }
 
         /// <summary>
         /// Gets flag that determines if user exists.
         /// </summary>
         /// <returns><c>true</c> if user is found to exist; otherwise <c>false</c>.</returns>
-        bool Exists
-        {
-            get;
-        }
+        bool Exists{ get; }
 
         /// <summary>
         /// Gets or sets enabled state.
         /// </summary>
-        bool Enabled
-        {
-            get;
-            set;
-        }
+        bool Enabled { get; set; }
 
         /// <summary>
         /// Gets the last login time of the user.
         /// </summary>
-        DateTime LastLogon
-        {
-            get;
-        }
+        DateTime LastLogon { get; }
 
         /// <summary>
         /// Gets the <see cref="DateTime"/> when the account was created.
         /// </summary>
-        DateTime AccountCreationDate
-        {
-            get;
-        }
+        DateTime AccountCreationDate { get; }
 
         /// <summary>
         /// Gets the <see cref="DateTime"/>, in UTC, of next password change for the user.
         /// </summary>
-        DateTime NextPasswordChangeDate
-        {
-            get;
-        }
+        DateTime NextPasswordChangeDate { get; }
 
         /// <summary>
         /// Gets the account control information of the local user.
         /// </summary>
-        int LocalUserAccountControl
-        {
-            get;
-        }
+        int LocalUserAccountControl { get; }
 
         /// <summary>
         /// Gets this maximum password age for the user.
         /// </summary>
-        Ticks MaximumPasswordAge
-        {
-            get;
-        }
+        Ticks MaximumPasswordAge { get; }
 
         /// <summary>
         /// Gets all the groups associated with the user - this includes local groups and Active Directory groups if applicable.
@@ -109,10 +84,7 @@ namespace GSF.Identity
         /// Groups names are prefixed with their associated domain, computer name or BUILTIN.
         /// </para>
         /// </remarks>
-        string[] Groups
-        {
-            get;
-        }
+        string[] Groups { get; }
 
         /// <summary>
         /// Gets the local groups the user is a member of.
@@ -122,26 +94,17 @@ namespace GSF.Identity
         /// Groups names are prefixed with BUILTIN or computer name.
         /// </para>
         /// </remarks>
-        string[] LocalGroups
-        {
-            get;
-        }
+        string[] LocalGroups { get; }
 
         /// <summary>
         /// Gets the full user name for local accounts.
         /// </summary>
-        string FullLocalUserName
-        {
-            get;
-        }
+        string FullLocalUserName { get; }
 
         /// <summary>
         /// Gets flag that determines if this <see cref="UserInfo"/> instance is based on a local WinNT account instead of found through LDAP.
         /// </summary>
-        bool IsLocalAccount
-        {
-            get;
-        }
+        bool IsLocalAccount { get; }
 
         /// <summary>
         /// Initializes the <see cref="UserInfo"/> object.

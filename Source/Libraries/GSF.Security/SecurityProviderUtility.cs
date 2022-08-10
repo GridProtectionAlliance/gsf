@@ -44,6 +44,7 @@ using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
+using GSF.Identity;
 using GSF.Net.Smtp;
 using GSF.Security.Cryptography;
 
@@ -75,7 +76,7 @@ namespace GSF.Security
         private static readonly string s_notificationSenderEmail;
 
         private static Dictionary<string, Func<string, ISecurityProvider>> s_providerFactory;
-        private static readonly object s_providerFactoryLock = new object();
+        private static readonly object s_providerFactoryLock = new();
 
         // Static Constructor
         static SecurityProviderUtility()
@@ -124,8 +125,8 @@ namespace GSF.Security
 
             // If an application is being launched from an installer it will have the NT AUTHORITY\System Identity which
             // will not have available user information - so we pickup username from Environment instead
-            if (username.StartsWith("NT AUTHORITY\\", StringComparison.OrdinalIgnoreCase))
-                username = Environment.UserDomainName + "\\" + Environment.UserName;
+            if (username.StartsWith($"{UserInfo.NTAuthorityGroupName}\\", StringComparison.OrdinalIgnoreCase))
+                username = $"{Environment.UserDomainName}\\{Environment.UserName}";
 
             // Instantiate the provider
             // ReSharper disable once AssignNullToNotNullAttribute
@@ -237,7 +238,7 @@ namespace GSF.Security
             spec = spec.Replace("*", ".*");     // Convert '*' to its regex equivalent.
 
             // Perform a case-insensitive regex match.
-            return Regex.IsMatch(target, string.Format("^{0}$", spec), RegexOptions.IgnoreCase);
+            return Regex.IsMatch(target, $"^{spec}$", RegexOptions.IgnoreCase);
         }
 
         /// <summary>
@@ -245,10 +246,8 @@ namespace GSF.Security
         /// </summary>
         /// <param name="password">Password to be encrypted.</param>
         /// <returns>Encrypted password.</returns>
-        public static string EncryptPassword(string password)
-        {
-            return Cipher.GetPasswordHash(password);
-        }
+        public static string EncryptPassword(string password) =>
+            Cipher.GetPasswordHash(password);
 
         /// <summary>
         /// Generates a random password of the specified <paramref name="length"/> with at least one uppercase letter, one lowercase letter, one special character and one digit.
@@ -270,10 +269,8 @@ namespace GSF.Security
         /// <param name="recipient">Email address of the notification recipient.</param>
         /// <param name="subject">Subject of the notification.</param>
         /// <param name="body">Content of the notification.</param>
-        public static void SendNotification(string recipient, string subject, string body)
-        {
+        public static void SendNotification(string recipient, string subject, string body) => 
             Mail.Send(s_notificationSenderEmail, recipient, subject, body, false, s_notificationSmtpServer);
-        }
 
         private static Func<string, ISecurityProvider> CreateSecurityProviderFactory(string settingsCategory)
         {
@@ -284,12 +281,12 @@ namespace GSF.Security
 
             Type providerType = Type.GetType(providerTypeSetting);
 
-            if ((object)providerType == null)
+            if (providerType is null)
                 throw new InvalidOperationException("The default security provider type defined by the system does not exist.");
 
             ConstructorInfo constructor = providerType.GetConstructor(new[] { typeof(string) });
 
-            if ((object)constructor == null)
+            if (constructor is null)
                 throw new InvalidOperationException("The default security provider type does not define a constructor with the appropriate signature.");
 
             ParameterExpression parameterExpression = Expression.Parameter(typeof(string));
@@ -302,19 +299,18 @@ namespace GSF.Security
 
         private static Func<string, ISecurityProvider> ProviderFactory(string settingsCategory)
         {
-            if (settingsCategory == null)
-                settingsCategory = SettingsCategory;
+            settingsCategory ??= SettingsCategory;
 
             lock (s_providerFactoryLock)
             {
-                if (s_providerFactory is null)
-                    s_providerFactory = new Dictionary<string, Func<string, ISecurityProvider>>();
+                s_providerFactory ??= new Dictionary<string, Func<string, ISecurityProvider>>();
 
                 if (s_providerFactory.ContainsKey(settingsCategory))
                     return s_providerFactory[settingsCategory];
+
                 s_providerFactory.Add(settingsCategory, CreateSecurityProviderFactory(settingsCategory));
                 return s_providerFactory[settingsCategory];
-            }           
+            }
         }
         #endregion
     }

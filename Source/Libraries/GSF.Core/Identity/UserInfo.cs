@@ -298,26 +298,14 @@ namespace GSF.Identity
 
         bool ISupportLifecycle.Enabled
         {
-            get
-            {
-                return m_userInfo.Enabled;
-            }
-            set
-            {
-                m_userInfo.Enabled = value;
-            }
+            get => m_userInfo.Enabled;
+            set => m_userInfo.Enabled = value;
         }
 
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        bool ISupportLifecycle.IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        bool ISupportLifecycle.IsDisposed => m_disposed;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="UserInfo"/> object are 
@@ -325,14 +313,8 @@ namespace GSF.Identity
         /// </summary>
         public bool PersistSettings
         {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
+            get => m_persistSettings;
+            set => m_persistSettings = value;
         }
 
         /// <summary>
@@ -342,10 +324,7 @@ namespace GSF.Identity
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
         public string SettingsCategory
         {
-            get
-            {
-                return m_settingsCategory;
-            }
+            get => m_settingsCategory;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -365,14 +344,8 @@ namespace GSF.Identity
         /// </remarks>
         public IPrincipal PassthroughPrincipal
         {
-            get
-            {
-                return m_passthroughPrincipal;
-            }
-            set
-            {
-                m_passthroughPrincipal = value;
-            }
+            get => m_passthroughPrincipal;
+            set => m_passthroughPrincipal = value;
         }
 
         /// <summary>
@@ -380,59 +353,29 @@ namespace GSF.Identity
         /// </summary>
         public string Domain
         {
-            get
-            {
-                return m_domain;
-            }
-            internal set
-            {
-                m_domain = value;
-            }
+            get => m_domain;
+            internal set => m_domain = value;
         }
 
         /// <summary>
         /// Gets the user name of the user.
         /// </summary>
-        public string UserName
-        {
-            get
-            {
-                return m_userName;
-            }
-        }
+        public string UserName => m_userName;
 
         /// <summary>
         /// Gets LDAP path defined for this user, if any.
         /// </summary>
-        public string LdapPath
-        {
-            get
-            {
-                return m_ldapPath;
-            }
-        }
+        public string LdapPath => m_ldapPath;
 
         /// <summary>
         /// Gets the Login ID of the user.
         /// </summary>
-        public string LoginID
-        {
-            get
-            {
-                return string.Format("{0}\\{1}", m_domain, m_userName);
-            }
-        }
+        public string LoginID => $"{m_domain}\\{m_userName}";
 
         /// <summary>
         /// Gets the ID of the user in LDAP format.
         /// </summary>
-        public string LdapID
-        {
-            get
-            {
-                return string.Format("{0}@{1}", m_userName, m_domain);
-            }
-        }
+        public string LdapID => $"{m_userName}@{m_domain}";
 
         /// <summary>
         /// Gets flag that determines if domain is responding to user existence.
@@ -441,13 +384,7 @@ namespace GSF.Identity
         /// <remarks>
         /// Note that when the domain is unavailable, this function will return <c>false</c>.
         /// </remarks>
-        public bool DomainRespondsForUser
-        {
-            get
-            {
-                return m_userInfo.DomainRespondsForUser;
-            }
-        }
+        public bool DomainRespondsForUser => m_userInfo.DomainRespondsForUser;
 
         /// <summary>
         /// Gets flag that determines if user exists.
@@ -475,46 +412,22 @@ namespace GSF.Identity
         /// anticipation of offline access.
         /// </para>
         /// </remarks>
-        public bool Exists
-        {
-            get
-            {
-                return m_userInfo.Exists;
-            }
-        }
+        public bool Exists => m_userInfo.Exists;
 
         /// <summary>
         /// Gets the last login time of the user.
         /// </summary>
-        public DateTime LastLogon
-        {
-            get
-            {
-                return m_userInfo.LastLogon;
-            }
-        }
+        public DateTime LastLogon => m_userInfo.LastLogon;
 
         /// <summary>
         /// Gets the <see cref="DateTime"/> when the account was created.
         /// </summary>
-        public DateTime AccountCreationDate
-        {
-            get
-            {
-                return m_userInfo.AccountCreationDate;
-            }
-        }
+        public DateTime AccountCreationDate => m_userInfo.AccountCreationDate;
 
         /// <summary>
         /// Gets the <see cref="DateTime"/>, in UTC, of next password change for the user.
         /// </summary>
-        public DateTime NextPasswordChangeDate
-        {
-            get
-            {
-                return m_userInfo.NextPasswordChangeDate;
-            }
-        }
+        public DateTime NextPasswordChangeDate => m_userInfo.NextPasswordChangeDate;
 
         /// <summary>
         /// Gets the account control information of the user.
@@ -545,10 +458,7 @@ namespace GSF.Identity
 
                 return m_userAccountControl;
             }
-            internal set
-            {
-                m_userAccountControl = value;
-            }
+            internal set => m_userAccountControl = value;
         }
 
         /// <summary>
@@ -556,63 +466,33 @@ namespace GSF.Identity
         /// </summary>
         /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
         /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
-        public bool AccountIsLockedOut
-        {
-            get
-            {
-                return Convert.ToBoolean(UserAccountControl & LOCKED);
-            }
-        }
+        public bool AccountIsLockedOut => Convert.ToBoolean(UserAccountControl & LOCKED);
 
         /// <summary>
         /// Gets flag that determines if account is disabled for this user.
         /// </summary>
         /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
         /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
-        public bool AccountIsDisabled
-        {
-            get
-            {
-                return Convert.ToBoolean(UserAccountControl & ACCOUNTDISABLED);
-            }
-        }
+        public bool AccountIsDisabled => Convert.ToBoolean(UserAccountControl & ACCOUNTDISABLED);
 
         /// <summary>
         /// Gets flag that determines if account password cannot change for this user.
         /// </summary>
         /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
         /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
-        public bool PasswordCannotChange
-        {
-            get
-            {
-                return Convert.ToBoolean(UserAccountControl & PASSWD_CANT_CHANGE);
-            }
-        }
+        public bool PasswordCannotChange => Convert.ToBoolean(UserAccountControl & PASSWD_CANT_CHANGE);
 
         /// <summary>
         /// Gets flag that determines if account password does not expire for this user.
         /// </summary>
         /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
         /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
-        public bool PasswordDoesNotExpire
-        {
-            get
-            {
-                return Convert.ToBoolean(UserAccountControl & DONT_EXPIRE_PASSWORD);
-            }
-        }
+        public bool PasswordDoesNotExpire => Convert.ToBoolean(UserAccountControl & DONT_EXPIRE_PASSWORD);
 
         /// <summary>
         /// Gets this maximum password age for the user.
         /// </summary>
-        public Ticks MaximumPasswordAge
-        {
-            get
-            {
-                return m_userInfo.MaximumPasswordAge;
-            }
-        }
+        public Ticks MaximumPasswordAge => m_userInfo.MaximumPasswordAge;
 
         /// <summary>
         /// Gets all the groups associated with the user - this includes local groups and Active Directory groups if applicable.
@@ -620,13 +500,7 @@ namespace GSF.Identity
         /// <remarks>
         /// Groups names are prefixed with their associated domain, computer name or BUILTIN.
         /// </remarks>
-        public string[] Groups
-        {
-            get
-            {
-                return m_userInfo.Groups;
-            }
-        }
+        public string[] Groups => m_userInfo.Groups;
 
         /// <summary>
         /// Gets the local groups the user is a member of.
@@ -634,70 +508,37 @@ namespace GSF.Identity
         /// <remarks>
         /// Groups names are prefixed with BUILTIN or computer name.
         /// </remarks>
-        public string[] LocalGroups
-        {
-            get
-            {
-                return m_userInfo.LocalGroups;
-            }
-        }
+        public string[] LocalGroups => m_userInfo.LocalGroups;
 
         /// <summary>
         /// Gets the First Name of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "givenName" active directory property.</remarks>
-        public string FirstName
-        {
-            get
-            {
-                if (m_userInfo.IsLocalAccount)
-                    return GetNameElements(DisplayName)[0];
-
-                return GetUserPropertyValue("givenName");
-            }
-        }
+        public string FirstName => m_userInfo.IsLocalAccount ? 
+            GetNameElements(DisplayName)[0] : 
+            GetUserPropertyValue("givenName");
 
         /// <summary>
         /// Gets the Last Name of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "sn" active directory property.</remarks>
-        public string LastName
-        {
-            get
-            {
-                if (m_userInfo.IsLocalAccount)
-                    return GetNameElements(DisplayName)[1];
-
-                return GetUserPropertyValue("sn");
-            }
-        }
+        public string LastName => m_userInfo.IsLocalAccount ? 
+            GetNameElements(DisplayName)[1] : 
+            GetUserPropertyValue("sn");
 
         /// <summary>
         /// Gets the Display Name the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "displayName" active directory property.</remarks>
-        public string DisplayName
-        {
-            get
-            {
-                if (m_userInfo.IsLocalAccount)
-                    return m_userInfo.FullLocalUserName;
-
-                return GetUserPropertyValue("displayName");
-            }
-        }
+        public string DisplayName => m_userInfo.IsLocalAccount ? 
+            m_userInfo.FullLocalUserName : 
+            GetUserPropertyValue("displayName");
 
         /// <summary>
         /// Gets the Middle Initial of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "initials" active directory property.</remarks>
-        public string MiddleInitial
-        {
-            get
-            {
-                return GetUserPropertyValue("initials");
-            }
-        }
+        public string MiddleInitial => GetUserPropertyValue("initials");
 
         /// <summary>
         /// Gets the Full Name of the user.
@@ -710,16 +551,16 @@ namespace GSF.Identity
                 if (m_userInfo.IsLocalAccount)
                     return m_userInfo.FullLocalUserName;
 
-                string fName = FirstName;
-                string lName = LastName;
-                string mInitial = MiddleInitial;
+                string firstName = FirstName;
+                string lastName = LastName;
+                string middleInitial = MiddleInitial;
 
-                if (!string.IsNullOrEmpty(fName) && !string.IsNullOrEmpty(lName))
+                if (!string.IsNullOrEmpty(firstName) && !string.IsNullOrEmpty(lastName))
                 {
-                    if (string.IsNullOrEmpty(mInitial))
-                        return fName + " " + lName;
+                    if (string.IsNullOrEmpty(middleInitial))
+                        return firstName + " " + lastName;
 
-                    return fName + " " + mInitial + ". " + lName;
+                    return firstName + " " + middleInitial + ". " + lastName;
                 }
 
                 return LoginID;
@@ -730,132 +571,66 @@ namespace GSF.Identity
         /// Gets the E-Mail address of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "mail" active directory property.</remarks>
-        public string Email
-        {
-            get
-            {
-                return GetUserPropertyValue("mail");
-            }
-        }
+        public string Email => GetUserPropertyValue("mail");
 
         /// <summary>
         /// Gets the web page address of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "wWWHomePage" active directory property.</remarks>
-        public string Webpage
-        {
-            get
-            {
-                return GetUserPropertyValue("wWWHomePage");
-            }
-        }
+        public string Webpage => GetUserPropertyValue("wWWHomePage");
 
         /// <summary>
         /// Gets the description specified for the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "description" active directory property.</remarks>
-        public string Description
-        {
-            get
-            {
-                return GetUserPropertyValue("description");
-            }
-        }
+        public string Description => GetUserPropertyValue("description");
 
         /// <summary>
         /// Gets the Telephone Number of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "telephoneNumber" active directory property.</remarks>
-        public string Telephone
-        {
-            get
-            {
-                return GetUserPropertyValue("telephoneNumber");
-            }
-        }
+        public string Telephone => GetUserPropertyValue("telephoneNumber");
 
         /// <summary>
         /// Gets the Title of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "title" active directory property.</remarks>
-        public string Title
-        {
-            get
-            {
-                return GetUserPropertyValue("title");
-            }
-        }
+        public string Title => GetUserPropertyValue("title");
 
         /// <summary>
         /// Gets the Company of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "company" active directory property.</remarks>
-        public string Company
-        {
-            get
-            {
-                return GetUserPropertyValue("company");
-            }
-        }
+        public string Company => GetUserPropertyValue("company");
 
         /// <summary>
         /// Gets the Office location of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "physicalDeliveryOfficeName" active directory property.</remarks>
-        public string Office
-        {
-            get
-            {
-                return GetUserPropertyValue("physicalDeliveryOfficeName");
-            }
-        }
+        public string Office => GetUserPropertyValue("physicalDeliveryOfficeName");
 
         /// <summary>
         /// Gets the Department where the user works.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "department" active directory property.</remarks>
-        public string Department
-        {
-            get
-            {
-                return GetUserPropertyValue("department");
-            }
-        }
+        public string Department => GetUserPropertyValue("department");
 
         /// <summary>
         /// Gets the City where the user works.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "l" active directory property.</remarks>
-        public string City
-        {
-            get
-            {
-                return GetUserPropertyValue("l");
-            }
-        }
+        public string City => GetUserPropertyValue("l");
 
         /// <summary>
         /// Gets the Mailbox address of where the user works.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "streetAddress" active directory property.</remarks>
-        public string Mailbox
-        {
-            get
-            {
-                return GetUserPropertyValue("streetAddress");
-            }
-        }
+        public string Mailbox => GetUserPropertyValue("streetAddress");
 
         /// <summary>
         /// Gets flag that determines if this <see cref="UserInfo"/> instance is based on a local account instead of found through LDAP.
         /// </summary>
-        public bool IsLocalAccount
-        {
-            get
-            {
-                return m_userInfo.IsLocalAccount;
-            }
-        }
+        public bool IsLocalAccount => m_userInfo.IsLocalAccount;
 
         #endregion
 
@@ -876,29 +651,29 @@ namespace GSF.Identity
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         private void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        if ((object)m_userInfo != null)
-                            m_userInfo.Dispose();
+                // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
 
-                        m_userInfo = null;
+                if (m_userInfo is not null)
+                    m_userInfo.Dispose();
 
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                m_userInfo = null;
 
-                    if (Disposed != null)
-                        Disposed(this, EventArgs.Empty);
-                }
+                // This will be done only when the object is disposed by calling Dispose().
+                SaveSettings();
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
+
+                if (Disposed is not null)
+                    Disposed(this, EventArgs.Empty);
             }
         }
 
@@ -921,20 +696,20 @@ namespace GSF.Identity
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!m_persistSettings)
+                return;
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["PrivilegedDomain", true].Update(m_privilegedDomain);
-                settings["PrivilegedUserName", true].Update(m_privilegedUserName);
-                settings["PrivilegedPassword", true].Update(m_privilegedPassword);
-                config.Save();
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            settings["PrivilegedDomain", true].Update(m_privilegedDomain);
+            settings["PrivilegedUserName", true].Update(m_privilegedUserName);
+            settings["PrivilegedPassword", true].Update(m_privilegedPassword);
+            config.Save();
         }
 
         /// <summary>
@@ -944,22 +719,22 @@ namespace GSF.Identity
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!m_persistSettings)
+                return;
 
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("PrivilegedDomain", m_privilegedDomain, "Domain of privileged domain user account used for Active Directory information lookup, if needed.");
-                settings.Add("PrivilegedUserName", m_privilegedUserName, "Username of privileged domain user account used for Active Directory information lookup, if needed.");
-                settings.Add("PrivilegedPassword", m_privilegedPassword, "Encrypted password of privileged domain user account used for Active Directory information lookup, if needed.", true);
-                m_privilegedDomain = settings["PrivilegedDomain"].ValueAs(m_privilegedDomain);
-                m_privilegedUserName = settings["PrivilegedUserName"].ValueAs(m_privilegedUserName);
-                m_privilegedPassword = settings["PrivilegedPassword"].ValueAs(m_privilegedPassword);
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            settings.Add("PrivilegedDomain", m_privilegedDomain, "Domain of privileged domain user account used for Active Directory information lookup, if needed.");
+            settings.Add("PrivilegedUserName", m_privilegedUserName, "Username of privileged domain user account used for Active Directory information lookup, if needed.");
+            settings.Add("PrivilegedPassword", m_privilegedPassword, "Encrypted password of privileged domain user account used for Active Directory information lookup, if needed.", true);
+            m_privilegedDomain = settings["PrivilegedDomain"].ValueAs(m_privilegedDomain);
+            m_privilegedUserName = settings["PrivilegedUserName"].ValueAs(m_privilegedUserName);
+            m_privilegedPassword = settings["PrivilegedPassword"].ValueAs(m_privilegedPassword);
         }
 
         /// <summary>
@@ -1040,20 +815,16 @@ namespace GSF.Identity
         /// </summary>
         /// <param name="oldPassword">Old password.</param>
         /// <param name="newPassword">New password.</param>
-        public void ChangePassword(string oldPassword, string newPassword)
-        {
+        public void ChangePassword(string oldPassword, string newPassword) => 
             m_userInfo.ChangePassword(oldPassword, newPassword);
-        }
 
         /// <summary>
         /// Returns the value for specified active directory property.
         /// </summary>
         /// <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
         /// <returns><see cref="String"/> value for the specified active directory property.</returns>
-        public string GetUserPropertyValue(string propertyName)
-        {
-            return m_userInfo.GetUserPropertyValue(propertyName);
-        }
+        public string GetUserPropertyValue(string propertyName) =>
+            m_userInfo.GetUserPropertyValue(propertyName);
 
         // Split a string into first name and last name
         private static string[] GetNameElements(string displayName)
@@ -1064,10 +835,9 @@ namespace GSF.Identity
             {
                 int lastSplit = displayName.LastIndexOf(' ');
 
-                if (lastSplit >= 0)
-                    return new[] { displayName.Substring(0, lastSplit), displayName.Substring(lastSplit + 1) };
-
-                return new[] { displayName, "" };
+                return lastSplit >= 0 ? 
+                    new[] { displayName.Substring(0, lastSplit), displayName.Substring(lastSplit + 1) } : 
+                    new[] { displayName, "" };
             }
 
             return new[] { "", "" };
@@ -1080,6 +850,30 @@ namespace GSF.Identity
         // Static Fields
         private static string m_lastUserID;
         private static UserInfo s_currentUserInfo;
+
+        /// <summary>
+        /// Localized version of Windows "BUILTIN" local permissions group name.
+        /// </summary>
+        /// <remarks>
+        /// For non-English based OS languages, this name may be different. For example, on a German OS this is "VORDEFINIERT".
+        /// </remarks>
+        public static readonly string BuiltInGroupName = WindowsUserInfo.BuiltInGroupName;
+
+        /// <summary>
+        /// Localized version of Windows "NT AUTHORITY" local permissions group name.
+        /// </summary>
+        /// <remarks>
+        /// For non-English based OS languages, this name may be different. For example, on a French OS this is "NT-AUTORITÄT".
+        /// </remarks>
+        public static readonly string NTAuthorityGroupName = WindowsUserInfo.NTAuthorityGroupName;
+
+        /// <summary>
+        /// Localized version of Windows "NT SERVICE" local Windows services group name.
+        /// </summary>
+        /// <remarks>
+        /// For non-English based OS languages, this name may be different.
+        /// </remarks>
+        public static readonly string NTServiceGroupName = WindowsUserInfo.NTServiceGroupName;
 
         // Static Properties
 
@@ -1096,11 +890,7 @@ namespace GSF.Identity
                 try
                 {
                     WindowsIdentity identity = WindowsIdentity.GetCurrent();
-
-                    if ((object)identity != null)
-                        return identity.Name;
-
-                    return null;
+                    return identity.Name;
                 }
                 catch (SecurityException)
                 {
@@ -1120,7 +910,7 @@ namespace GSF.Identity
 
                 if (!string.IsNullOrEmpty(currentUserID))
                 {
-                    if ((object)s_currentUserInfo == null ||
+                    if (s_currentUserInfo is null ||
                         string.IsNullOrEmpty(m_lastUserID) ||
                         !currentUserID.Equals(m_lastUserID, StringComparison.OrdinalIgnoreCase))
                     {
@@ -1149,13 +939,7 @@ namespace GSF.Identity
         /// available only if the virtual directory hosting the web application is configured to use "Integrated 
         /// Windows Authentication".
         /// </remarks>
-        public static string RemoteUserID
-        {
-            get
-            {
-                return Thread.CurrentPrincipal.Identity.Name;
-            }
-        }
+        public static string RemoteUserID => Thread.CurrentPrincipal.Identity.Name;
 
         /// <summary>
         /// Gets the <see cref="UserInfo"/> object for the <see cref="RemoteUserID"/>.
@@ -1165,27 +949,16 @@ namespace GSF.Identity
             get
             {
                 string userID = RemoteUserID;
-
-                if ((object)userID == null)
-                    return null;
-
-                return new UserInfo(RemoteUserID);
+                return userID is null ? null : new UserInfo(RemoteUserID);
             }
         }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the current machine is joined to a domain (non-local such as AD or LDAP).
         /// </summary>
-        public static bool MachineIsJoinedToDomain
-        {
-            get
-            {
-                if (Common.IsPosixEnvironment)
-                    return UnixUserInfo.MachineIsJoinedToDomain;
-
-                return WindowsUserInfo.MachineIsJoinedToDomain;
-            }
-        }
+        public static bool MachineIsJoinedToDomain => Common.IsPosixEnvironment ? 
+            UnixUserInfo.MachineIsJoinedToDomain : 
+            WindowsUserInfo.MachineIsJoinedToDomain;
 
         // Static Methods
 
@@ -1196,13 +969,9 @@ namespace GSF.Identity
         /// <remarks>
         /// Names in this list will not have a "BUILTIN\" prefix.
         /// </remarks>
-        public static string[] GetBuiltInLocalGroups()
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.GetBuiltInLocalGroups();
-
-            return WindowsUserInfo.GetBuiltInLocalGroups();
-        }
+        public static string[] GetBuiltInLocalGroups() => Common.IsPosixEnvironment ? 
+            UnixUserInfo.GetBuiltInLocalGroups() : 
+            WindowsUserInfo.GetBuiltInLocalGroups();
 
         /// <summary>
         /// Authenticates the specified user credentials.
@@ -1226,7 +995,7 @@ namespace GSF.Identity
         ///         string password = "password";
         ///        
         ///         // Authenticate user credentials.
-        ///         if ((object)UserInfo.AuthenticateUser(domain, username, password) != null)
+        ///         if (UserInfo.AuthenticateUser(domain, username, password) is not null)
         ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
         ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\".", domain, username);
@@ -1236,11 +1005,8 @@ namespace GSF.Identity
         /// }
         /// </code>
         /// </example>
-        public static IPrincipal AuthenticateUser(string domain, string userName, string password)
-        {
-            string errorMessage;
-            return AuthenticateUser(domain, userName, password, out errorMessage);
-        }
+        public static IPrincipal AuthenticateUser(string domain, string userName, string password) =>
+            AuthenticateUser(domain, userName, password, out _);
 
         /// <summary>
         /// Authenticates the specified user credentials.
@@ -1266,7 +1032,7 @@ namespace GSF.Identity
         ///         string errorMessage;
         ///
         ///         // Authenticate user credentials.
-        ///         if ((object)UserInfo.AuthenticateUser(domain, username, password, out errorMessage) != null)
+        ///         if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage) is not null)
         ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
         ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\" due to exception: {2}", domain, username, errorMessage);
@@ -1276,13 +1042,9 @@ namespace GSF.Identity
         /// }
         /// </code>
         /// </example>
-        public static IPrincipal AuthenticateUser(string domain, string userName, string password, out string errorMessage)
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.AuthenticateUser(domain, userName, password, out errorMessage);
-
-            return WindowsUserInfo.AuthenticateUser(domain, userName, password, out errorMessage);
-        }
+        public static IPrincipal AuthenticateUser(string domain, string userName, string password, out string errorMessage) => Common.IsPosixEnvironment ? 
+            UnixUserInfo.AuthenticateUser(domain, userName, password, out errorMessage) : 
+            WindowsUserInfo.AuthenticateUser(domain, userName, password, out errorMessage);
 
         /// <summary>
         /// Impersonates the specified user.
@@ -1313,13 +1075,9 @@ namespace GSF.Identity
         /// }
         /// </code>
         /// </example>
-        public static WindowsImpersonationContext ImpersonateUser(string domain, string userName, string password)
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.ImpersonateUser(domain, userName, password);
-
-            return WindowsUserInfo.ImpersonateUser(domain, userName, password);
-        }
+        public static WindowsImpersonationContext ImpersonateUser(string domain, string userName, string password) => Common.IsPosixEnvironment
+            ? UnixUserInfo.ImpersonateUser(domain, userName, password)
+            : WindowsUserInfo.ImpersonateUser(domain, userName, password);
 
         /// <summary>
         /// Ends the impersonation of the specified user.
@@ -1351,11 +1109,11 @@ namespace GSF.Identity
         /// </example>
         public static void EndImpersonation(WindowsImpersonationContext impersonatedUser)
         {
-            if ((object)impersonatedUser != null)
-            {
-                impersonatedUser.Undo();
-                impersonatedUser.Dispose();
-            }
+            if (impersonatedUser is null)
+                return;
+
+            impersonatedUser.Undo();
+            impersonatedUser.Dispose();
         }
 
         /// <summary>
@@ -1371,13 +1129,12 @@ namespace GSF.Identity
                     domain.Equals(".", StringComparison.Ordinal) ||
                     domain.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase);
 
-            // TODO: NT AUTHORITY and such groups can be localized to the OS language, these groups won't be recognized as local domains on non EN-US machines in this code
             return
                 string.IsNullOrEmpty(domain) ||
                 domain.Equals(".", StringComparison.Ordinal) ||
                 domain.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
-                domain.Equals("NT SERVICE", StringComparison.OrdinalIgnoreCase) ||
-                domain.Equals("NT AUTHORITY", StringComparison.OrdinalIgnoreCase) ||
+                domain.Equals(NTServiceGroupName, StringComparison.OrdinalIgnoreCase) ||
+                domain.Equals(NTAuthorityGroupName, StringComparison.OrdinalIgnoreCase) ||
                 domain.Equals("IIS APPPOOL", StringComparison.OrdinalIgnoreCase);
         }
 
@@ -1390,7 +1147,7 @@ namespace GSF.Identity
         /// <exception cref="ArgumentException">No <paramref name="userName"/> was specified.</exception>
         public static bool LocalUserExists(string userName)
         {
-            if ((object)userName == null)
+            if (userName is null)
                 throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
@@ -1399,10 +1156,9 @@ namespace GSF.Identity
             if (userName.Length == 0)
                 throw new ArgumentException("No user name was specified.", nameof(userName));
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.LocalUserExists(userName);
-
-            return WindowsUserInfo.LocalUserExists(userName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.LocalUserExists(userName) : 
+                WindowsUserInfo.LocalUserExists(userName);
         }
 
         /// <summary>
@@ -1417,10 +1173,10 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not create local user.</exception>
         public static bool CreateLocalUser(string userName, string password, string userDescription = null)
         {
-            if ((object)userName == null)
+            if (userName is null)
                 throw new ArgumentNullException(nameof(userName));
 
-            if ((object)password == null)
+            if (password is null)
                 throw new ArgumentNullException(nameof(password));
 
             // Remove any irrelevant white space
@@ -1429,10 +1185,9 @@ namespace GSF.Identity
             if (userName.Length == 0)
                 throw new ArgumentException("Cannot create local user: no user name was specified.", nameof(userName));
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.CreateLocalUser(userName, password, userDescription);
-
-            return WindowsUserInfo.CreateLocalUser(userName, password, userDescription);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.CreateLocalUser(userName, password, userDescription) :
+                WindowsUserInfo.CreateLocalUser(userName, password, userDescription);
         }
 
         /// <summary>
@@ -1445,10 +1200,10 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not set password for local user.</exception>
         public static void SetLocalUserPassword(string userName, string password)
         {
-            if ((object)userName == null)
+            if (userName is null)
                 throw new ArgumentNullException(nameof(userName));
 
-            if ((object)password == null)
+            if (password is null)
                 throw new ArgumentNullException(nameof(password));
 
             // Remove any irrelevant white space
@@ -1459,8 +1214,8 @@ namespace GSF.Identity
 
             if (Common.IsPosixEnvironment)
                 UnixUserInfo.SetLocalUserPassword(userName, password);
-
-            WindowsUserInfo.SetLocalUserPassword(userName, password);
+            else
+                WindowsUserInfo.SetLocalUserPassword(userName, password);
         }
 
         /// <summary>
@@ -1473,7 +1228,7 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not remove local user.</exception>
         public static bool RemoveLocalUser(string userName)
         {
-            if ((object)userName == null)
+            if (userName is null)
                 throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
@@ -1482,10 +1237,9 @@ namespace GSF.Identity
             if (userName.Length == 0)
                 throw new ArgumentException("Cannot remove local user: no user name was specified.", nameof(userName));
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.RemoveLocalUser(userName);
-
-            return WindowsUserInfo.RemoveLocalUser(userName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.RemoveLocalUser(userName) : 
+                WindowsUserInfo.RemoveLocalUser(userName);
         }
 
         /// <summary>
@@ -1497,7 +1251,7 @@ namespace GSF.Identity
         /// <exception cref="ArgumentException">No <paramref name="groupName"/> was specified.</exception>
         public static bool LocalGroupExists(string groupName)
         {
-            if ((object)groupName == null)
+            if (groupName is null)
                 throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
@@ -1508,10 +1262,9 @@ namespace GSF.Identity
 
             groupName = ValidateGroupName(groupName);
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.LocalGroupExists(groupName);
-
-            return WindowsUserInfo.LocalGroupExists(groupName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.LocalGroupExists(groupName) : 
+                WindowsUserInfo.LocalGroupExists(groupName);
         }
 
         /// <summary>
@@ -1525,7 +1278,7 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not create local group.</exception>
         public static bool CreateLocalGroup(string groupName, string groupDescription = null)
         {
-            if ((object)groupName == null)
+            if (groupName is null)
                 throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
@@ -1536,10 +1289,9 @@ namespace GSF.Identity
 
             groupName = ValidateGroupName(groupName);
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.CreateLocalGroup(groupName);
-
-            return WindowsUserInfo.CreateLocalGroup(groupName, groupDescription);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.CreateLocalGroup(groupName) : 
+                WindowsUserInfo.CreateLocalGroup(groupName, groupDescription);
         }
 
         /// <summary>
@@ -1552,7 +1304,7 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not remove local group.</exception>
         public static bool RemoveLocalGroup(string groupName)
         {
-            if ((object)groupName == null)
+            if (groupName is null)
                 throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
@@ -1563,10 +1315,9 @@ namespace GSF.Identity
 
             groupName = ValidateGroupName(groupName);
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.RemoveLocalGroup(groupName);
-
-            return WindowsUserInfo.RemoveLocalGroup(groupName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.RemoveLocalGroup(groupName) : 
+                WindowsUserInfo.RemoveLocalGroup(groupName);
         }
 
         /// <summary>
@@ -1586,10 +1337,10 @@ namespace GSF.Identity
         /// </remarks>
         public static bool UserIsInLocalGroup(string groupName, string userName)
         {
-            if ((object)groupName == null)
+            if (groupName is null)
                 throw new ArgumentNullException(nameof(groupName));
 
-            if ((object)userName == null)
+            if (userName is null)
                 throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
@@ -1604,10 +1355,9 @@ namespace GSF.Identity
 
             groupName = ValidateGroupName(groupName);
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.UserIsInLocalGroup(groupName, userName);
-
-            return WindowsUserInfo.UserIsInLocalGroup(groupName, userName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.UserIsInLocalGroup(groupName, userName) : 
+                WindowsUserInfo.UserIsInLocalGroup(groupName, userName);
         }
 
         /// <summary>
@@ -1627,10 +1377,10 @@ namespace GSF.Identity
         /// </remarks>
         public static bool AddUserToLocalGroup(string groupName, string userName)
         {
-            if ((object)groupName == null)
+            if (groupName is null)
                 throw new ArgumentNullException(nameof(groupName));
 
-            if ((object)userName == null)
+            if (userName is null)
                 throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
@@ -1645,10 +1395,9 @@ namespace GSF.Identity
 
             groupName = ValidateGroupName(groupName);
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.AddUserToLocalGroup(groupName, userName);
-
-            return WindowsUserInfo.AddUserToLocalGroup(groupName, userName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.AddUserToLocalGroup(groupName, userName) : 
+                WindowsUserInfo.AddUserToLocalGroup(groupName, userName);
         }
 
         /// <summary>
@@ -1668,10 +1417,10 @@ namespace GSF.Identity
         /// </remarks>
         public static bool RemoveUserFromLocalGroup(string groupName, string userName)
         {
-            if ((object)groupName == null)
+            if (groupName is null)
                 throw new ArgumentNullException(nameof(groupName));
 
-            if ((object)userName == null)
+            if (userName is null)
                 throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
@@ -1686,10 +1435,9 @@ namespace GSF.Identity
 
             groupName = ValidateGroupName(groupName);
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.RemoveUserFromLocalGroup(groupName, userName);
-
-            return WindowsUserInfo.RemoveUserFromLocalGroup(groupName, userName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.RemoveUserFromLocalGroup(groupName, userName) : 
+                WindowsUserInfo.RemoveUserFromLocalGroup(groupName, userName);
         }
 
         /// <summary>
@@ -1702,7 +1450,7 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not get members for local group.</exception>
         public static string[] GetLocalGroupUserList(string groupName)
         {
-            if ((object)groupName == null)
+            if (groupName is null)
                 throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
@@ -1728,13 +1476,9 @@ namespace GSF.Identity
         /// If the <paramref name="userName"/> cannot be converted to a SID, <paramref name="userName"/>
         /// will be the return value.
         /// </remarks>
-        public static string UserNameToSID(string userName)
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.UserNameToSID(userName);
-
-            return WindowsUserInfo.AccountNameToSID(userName);
-        }
+        public static string UserNameToSID(string userName) => Common.IsPosixEnvironment ? 
+            UnixUserInfo.UserNameToSID(userName) : 
+            WindowsUserInfo.AccountNameToSID(userName);
 
         /// <summary>
         /// Converts the given group name to the SID corresponding to that name.
@@ -1745,13 +1489,9 @@ namespace GSF.Identity
         /// If the <paramref name="groupName"/> cannot be converted to a SID, <paramref name="groupName"/>
         /// will be the return value.
         /// </remarks>
-        public static string GroupNameToSID(string groupName)
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.GroupNameToSID(groupName);
-
-            return WindowsUserInfo.AccountNameToSID(groupName);
-        }
+        public static string GroupNameToSID(string groupName) => Common.IsPosixEnvironment ? 
+            UnixUserInfo.GroupNameToSID(groupName) : 
+            WindowsUserInfo.AccountNameToSID(groupName);
 
         /// <summary>
         /// Converts the given SID to the corresponding account name.
@@ -1762,45 +1502,33 @@ namespace GSF.Identity
         /// If the <paramref name="sid"/> cannot be converted to an account name, <paramref name="sid"/>
         /// will be the return value.
         /// </remarks>
-        public static string SIDToAccountName(string sid)
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.SIDToAccountName(sid);
-
-            return WindowsUserInfo.SIDToAccountName(sid);
-        }
+        public static string SIDToAccountName(string sid) => Common.IsPosixEnvironment ? 
+            UnixUserInfo.SIDToAccountName(sid) : 
+            WindowsUserInfo.SIDToAccountName(sid);
 
         /// <summary>
         /// Determines whether the given security identifier identifies a user account.
         /// </summary>
         /// <param name="sid">The security identifier.</param>
         /// <returns>True if the security identifier identifies a user account; false otherwise.</returns>
-        public static bool IsUserSID(string sid)
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.IsUserSID(sid);
-
-            return WindowsUserInfo.IsUserSID(sid);
-        }
+        public static bool IsUserSID(string sid) => Common.IsPosixEnvironment ? 
+            UnixUserInfo.IsUserSID(sid) : 
+            WindowsUserInfo.IsUserSID(sid);
 
         /// <summary>
         /// Determines whether the given security identifier identifies a group.
         /// </summary>
         /// <param name="sid">The security identifier.</param>
         /// <returns>True if the security identifier identifies a group; false otherwise.</returns>
-        public static bool IsGroupSID(string sid)
-        {
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.IsGroupSID(sid);
-
-            return WindowsUserInfo.IsGroupSID(sid);
-        }
+        public static bool IsGroupSID(string sid) => Common.IsPosixEnvironment ? 
+            UnixUserInfo.IsGroupSID(sid) : 
+            WindowsUserInfo.IsGroupSID(sid);
 
         // DirectoryEntry will only resolve "BUILTIN\" groups with a dot ".\"
         internal static string ValidateGroupName(string groupName)
         {
-            if (!Common.IsPosixEnvironment && groupName.StartsWith(@$"{WindowsUserInfo.BuiltInGroupName}\", StringComparison.OrdinalIgnoreCase))
-                return Regex.Replace(groupName, @$"^{WindowsUserInfo.BuiltInGroupName}\\", @".\", RegexOptions.IgnoreCase);
+            if (!Common.IsPosixEnvironment && groupName.StartsWith($@"{BuiltInGroupName}\", StringComparison.OrdinalIgnoreCase))
+                return Regex.Replace(groupName, $@"^{BuiltInGroupName}\\", @".\", RegexOptions.IgnoreCase);
 
             return groupName;
         }
