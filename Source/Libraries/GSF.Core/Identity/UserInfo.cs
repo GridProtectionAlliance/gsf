@@ -182,6 +182,7 @@ namespace GSF.Identity
 
         internal const string SecurityExceptionFormat = "{0} user account control information cannot be obtained. {1} may not have needed rights to {2}.";
         internal const string UnknownErrorFormat = "Unknown error. Invalid value returned when querying user account control for {0}. Value: '{1}'";
+
         internal const int ACCOUNTDISABLED = 2;
         internal const int LOCKED = 16;
         internal const int PASSWD_CANT_CHANGE = 64;
@@ -196,11 +197,7 @@ namespace GSF.Identity
 
         // Fields
         private IUserInfo m_userInfo;
-        private string m_domain;
-        private readonly string m_userName;
-        private bool m_persistSettings;
         private string m_settingsCategory;
-        private IPrincipal m_passthroughPrincipal;
         private int m_userAccountControl;
         private bool m_disposed;
 
@@ -255,26 +252,26 @@ namespace GSF.Identity
                 if (accountParts.Length != 2)
                 {
                     // Login ID is specified in 'username' format.
-                    m_userName = loginID;
+                    UserName = loginID;
                 }
                 else
                 {
                     // Login ID is specified in 'username@domain' format.
-                    m_userName = accountParts[0];
-                    m_domain = accountParts[1];
+                    UserName = accountParts[0];
+                    Domain = accountParts[1];
                 }
             }
             else
             {
                 // Login ID is specified in 'domain\username' format.
-                m_domain = accountParts[0];
-                m_userName = accountParts[1];
+                Domain = accountParts[0];
+                UserName = accountParts[1];
             }
 
             m_ldapPath = ldapPath;
 
             // Initialize default settings
-            m_persistSettings = DefaultPersistSettings;
+            PersistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_userAccountControl = -1;
 
@@ -311,11 +308,7 @@ namespace GSF.Identity
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="UserInfo"/> object are 
         /// to be saved to the config file.
         /// </summary>
-        public bool PersistSettings
-        {
-            get => m_persistSettings;
-            set => m_persistSettings = value;
-        }
+        public bool PersistSettings { get; set; }
 
         /// <summary>
         /// Gets or sets the category under which the settings of <see cref="UserInfo"/> object are to be saved
@@ -342,25 +335,17 @@ namespace GSF.Identity
         /// computer is disconnected from the domain but still able to authenticate
         /// using the last seen domain user account.
         /// </remarks>
-        public IPrincipal PassthroughPrincipal
-        {
-            get => m_passthroughPrincipal;
-            set => m_passthroughPrincipal = value;
-        }
+        public IPrincipal PassthroughPrincipal { get; set; }
 
         /// <summary>
         /// Gets the domain for the user.
         /// </summary>
-        public string Domain
-        {
-            get => m_domain;
-            internal set => m_domain = value;
-        }
+        public string Domain { get; internal set; }
 
         /// <summary>
         /// Gets the user name of the user.
         /// </summary>
-        public string UserName => m_userName;
+        public string UserName { get; }
 
         /// <summary>
         /// Gets LDAP path defined for this user, if any.
@@ -370,12 +355,12 @@ namespace GSF.Identity
         /// <summary>
         /// Gets the Login ID of the user.
         /// </summary>
-        public string LoginID => $"{m_domain}\\{m_userName}";
+        public string LoginID => $"{Domain}\\{UserName}";
 
         /// <summary>
         /// Gets the ID of the user in LDAP format.
         /// </summary>
-        public string LdapID => $"{m_userName}@{m_domain}";
+        public string LdapID => $"{UserName}@{Domain}";
 
         /// <summary>
         /// Gets flag that determines if domain is responding to user existence.
@@ -449,7 +434,7 @@ namespace GSF.Identity
                         string userPropertyValue = GetUserPropertyValue("userAccountControl");
 
                         if (string.IsNullOrEmpty(userPropertyValue))
-                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Active directory", CurrentUserID, m_domain));
+                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Active directory", CurrentUserID, Domain));
 
                         if (!int.TryParse(userPropertyValue, out m_userAccountControl))
                             throw new InvalidOperationException(string.Format(UnknownErrorFormat, LoginID, userPropertyValue));
@@ -555,15 +540,13 @@ namespace GSF.Identity
                 string lastName = LastName;
                 string middleInitial = MiddleInitial;
 
-                if (!string.IsNullOrEmpty(firstName) && !string.IsNullOrEmpty(lastName))
-                {
-                    if (string.IsNullOrEmpty(middleInitial))
-                        return firstName + " " + lastName;
+                if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName))
+                    return LoginID;
 
-                    return firstName + " " + middleInitial + ". " + lastName;
-                }
+                if (string.IsNullOrEmpty(middleInitial))
+                    return firstName + " " + lastName;
 
-                return LoginID;
+                return firstName + " " + middleInitial + ". " + lastName;
             }
         }
 
@@ -685,8 +668,8 @@ namespace GSF.Identity
         {
             m_userInfo.Initialize();
 
-            if (string.IsNullOrEmpty(m_domain))
-                m_domain = Environment.MachineName;
+            if (string.IsNullOrEmpty(Domain))
+                Domain = Environment.MachineName;
         }
 
         /// <summary>
@@ -696,7 +679,7 @@ namespace GSF.Identity
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
-            if (!m_persistSettings)
+            if (!PersistSettings)
                 return;
 
             // Ensure that settings category is specified.
@@ -706,9 +689,11 @@ namespace GSF.Identity
             // Save settings under the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
             settings["PrivilegedDomain", true].Update(m_privilegedDomain);
             settings["PrivilegedUserName", true].Update(m_privilegedUserName);
             settings["PrivilegedPassword", true].Update(m_privilegedPassword);
+
             config.Save();
         }
 
@@ -719,7 +704,7 @@ namespace GSF.Identity
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
-            if (!m_persistSettings)
+            if (!PersistSettings)
                 return;
 
             // Ensure that settings category is specified.
@@ -729,9 +714,11 @@ namespace GSF.Identity
             // Load settings from the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            
             settings.Add("PrivilegedDomain", m_privilegedDomain, "Domain of privileged domain user account used for Active Directory information lookup, if needed.");
             settings.Add("PrivilegedUserName", m_privilegedUserName, "Username of privileged domain user account used for Active Directory information lookup, if needed.");
             settings.Add("PrivilegedPassword", m_privilegedPassword, "Encrypted password of privileged domain user account used for Active Directory information lookup, if needed.", true);
+            
             m_privilegedDomain = settings["PrivilegedDomain"].ValueAs(m_privilegedDomain);
             m_privilegedUserName = settings["PrivilegedUserName"].ValueAs(m_privilegedUserName);
             m_privilegedPassword = settings["PrivilegedPassword"].ValueAs(m_privilegedPassword);
@@ -831,16 +818,14 @@ namespace GSF.Identity
         {
             displayName = displayName.Trim();
 
-            if (!string.IsNullOrEmpty(displayName))
-            {
-                int lastSplit = displayName.LastIndexOf(' ');
+            if (string.IsNullOrEmpty(displayName))
+                return new[] { "", "" };
 
-                return lastSplit >= 0 ? 
-                    new[] { displayName.Substring(0, lastSplit), displayName.Substring(lastSplit + 1) } : 
-                    new[] { displayName, "" };
-            }
+            int lastSplit = displayName.LastIndexOf(' ');
 
-            return new[] { "", "" };
+            return lastSplit >= 0 ?
+                new[] { displayName.Substring(0, lastSplit), displayName.Substring(lastSplit + 1) } :
+                new[] { displayName, "" };
         }
 
         #endregion
@@ -848,7 +833,7 @@ namespace GSF.Identity
         #region [ Static ]
 
         // Static Fields
-        private static string m_lastUserID;
+        private static string s_lastUserID;
         private static UserInfo s_currentUserInfo;
 
         /// <summary>
@@ -911,8 +896,8 @@ namespace GSF.Identity
                 if (!string.IsNullOrEmpty(currentUserID))
                 {
                     if (s_currentUserInfo is null ||
-                        string.IsNullOrEmpty(m_lastUserID) ||
-                        !currentUserID.Equals(m_lastUserID, StringComparison.OrdinalIgnoreCase))
+                        string.IsNullOrEmpty(s_lastUserID) ||
+                        !currentUserID.Equals(s_lastUserID, StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {
@@ -925,7 +910,7 @@ namespace GSF.Identity
                     }
                 }
 
-                m_lastUserID = currentUserID;
+                s_lastUserID = currentUserID;
 
                 return s_currentUserInfo;
             }
@@ -949,7 +934,7 @@ namespace GSF.Identity
             get
             {
                 string userID = RemoteUserID;
-                return userID is null ? null : new UserInfo(RemoteUserID);
+                return userID is null ? null : new UserInfo(userID);
             }
         }
 
@@ -1075,9 +1060,9 @@ namespace GSF.Identity
         /// }
         /// </code>
         /// </example>
-        public static WindowsImpersonationContext ImpersonateUser(string domain, string userName, string password) => Common.IsPosixEnvironment
-            ? UnixUserInfo.ImpersonateUser(domain, userName, password)
-            : WindowsUserInfo.ImpersonateUser(domain, userName, password);
+        public static WindowsImpersonationContext ImpersonateUser(string domain, string userName, string password) => Common.IsPosixEnvironment ?
+            UnixUserInfo.ImpersonateUser(domain, userName, password) : 
+            WindowsUserInfo.ImpersonateUser(domain, userName, password);
 
         /// <summary>
         /// Ends the impersonation of the specified user.
@@ -1461,10 +1446,9 @@ namespace GSF.Identity
 
             groupName = ValidateGroupName(groupName);
 
-            if (Common.IsPosixEnvironment)
-                return UnixUserInfo.GetLocalGroupUserList(groupName);
-
-            return WindowsUserInfo.GetLocalGroupUserList(groupName);
+            return Common.IsPosixEnvironment ? 
+                UnixUserInfo.GetLocalGroupUserList(groupName) : 
+                WindowsUserInfo.GetLocalGroupUserList(groupName);
         }
 
         /// <summary>
