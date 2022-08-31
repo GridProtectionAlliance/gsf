@@ -119,7 +119,7 @@
         const isPOSIX = {12};
     ",
         /* 0 */ redirectPage.JavaScriptEncode(),
-        /* 1 */ authTestPage.JavaScriptEncode(),
+        /* 1 */ Url.Content(authTestPage).JavaScriptEncode(),
         /* 2 */ loginPage.JavaScriptEncode(),
         /* 3 */ logoutPage.JavaScriptEncode(),
         /* 4 */ clearCredentials.JavaScriptEncode(),

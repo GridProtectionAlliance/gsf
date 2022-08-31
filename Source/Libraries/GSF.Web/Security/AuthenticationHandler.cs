@@ -35,6 +35,7 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GSF.Diagnostics;
 using GSF.Reflection;
@@ -77,6 +78,10 @@ namespace GSF.Web.Security
             }
         }
 
+        // Gets the path that matches the AuthTest page
+        private string AuthTestPath =>
+            s_basePathRegex.Replace(Options.AuthTestPage, "");
+
         #endregion
 
         #region [ Methods ]
@@ -99,7 +104,7 @@ namespace GSF.Web.Security
             NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
 
             bool useAlternateSecurityProvider = Options.IsAlternateSecurityProviderResource(Request.Path.Value);
-            useAlternateSecurityProvider = useAlternateSecurityProvider || (Options.AuthTestPage == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
+            useAlternateSecurityProvider = useAlternateSecurityProvider || (AuthTestPath == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
             
             // Attempt to read the session ID from the HTTP cookies
             Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
@@ -205,7 +210,7 @@ namespace GSF.Web.Security
             NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
 
             bool useAlternateSecurityProvider = Options.IsAlternateSecurityProviderResource(Request.Path.Value);
-            useAlternateSecurityProvider = useAlternateSecurityProvider || (Options.AuthTestPage == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
+            useAlternateSecurityProvider = useAlternateSecurityProvider || (AuthTestPath == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
 
             if (Request.User is not null && Request.User.IsInRole("logout"))
             {
@@ -261,7 +266,9 @@ namespace GSF.Web.Security
 
                 ISecurityProvider securityProvider = securityPrincipal?.Identity?.Provider ?? SecurityProviderCache.CreateProvider("", autoRefresh: false, useAlternate: useAlternateSecurityProvider);
 
-                Response.Redirect(securityProvider.TranslateRedirect(Options.LoginPage, Request.Uri, encodedPath, referrer));
+                string pathBase = Request.PathBase.HasValue ? Request.PathBase.Value : "/";
+                string path = s_basePathRegex.Replace(Options.LoginPage, pathBase);
+                Response.Redirect(securityProvider.TranslateRedirect(path, Request.Uri, encodedPath, referrer));
             }
             else
             {
@@ -406,7 +413,7 @@ namespace GSF.Web.Security
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AuthenticationHandler), MessageClass.Framework);
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_alternateAuthorizationCache;
-
+        private static readonly Regex s_basePathRegex = new Regex("^~(?=/)", RegexOptions.Compiled);
 
         // Static Constructor
         static AuthenticationHandler()
