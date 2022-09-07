@@ -376,7 +376,20 @@ namespace PhasorWebUI
         [RecordOperation(typeof(Phasor), RecordOperation.CreateNewRecord)]
         public Phasor NewPhasor()
         {
-            return DataContext.Table<Phasor>().NewRecord();
+            return DataContext.Table<Phasor>().NewRecord();;
+        }
+
+        public Phasor NewPhasorWithTimestamps(string updatedOn, string createdOn)
+        {
+            Phasor newPhasor = NewPhasor();
+
+            if (!string.IsNullOrEmpty(updatedOn) && DateTime.TryParse(updatedOn, out DateTime result) && result > DateTime.MinValue)
+                newPhasor.UpdatedOn = result;
+
+            if (!string.IsNullOrEmpty(createdOn) && DateTime.TryParse(createdOn, out result) && result > DateTime.MinValue)
+                newPhasor.CreatedOn = result;
+
+            return newPhasor;
         }
 
         [AuthorizeHubRole("Administrator, Editor")]
