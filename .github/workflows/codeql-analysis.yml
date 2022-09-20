@@ -81,7 +81,7 @@ jobs:
       
     - name: Build Grid Solutions Framework
       run: |
-       nuget restore Source\Tools\StatHistorianReportGenerator\packages.StatHistorianReportGenerator.config
+       nuget restore Source\Tools\StatHistorianReportGenerator\packages.StatHistorianReportGenerator.config -SolutionDirectory Source
        msbuild Source\GridSolutionsFramework.sln -t:restore,build -m -p:Configuration=Debug -p:RestorePackagesConfig=true -p:UseSharedCompilation=false -p:PostBuildEvent=
        
     - name: Perform CodeQL Analysis
