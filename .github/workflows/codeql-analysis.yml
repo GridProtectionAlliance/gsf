@@ -73,12 +73,16 @@ jobs:
     #    and modify them (or add more) to build your code if your project
     #    uses a compiled language
 
-    - name: Setup msbuild
+    - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.0.2      
       
     - name: Build Grid Solutions Framework
       run: |
-       msbuild Source/GridSolutionsFramework.sln -t:restore,build -p:Configuration=Debug -p:RestorePackagesConfig=true -p:UseSharedCompilation=false -p:PostBuildEvent=
+       nuget restore Source\Tools\StatHistorianReportGenerator\packages.StatHistorianReportGenerator.config
+       msbuild Source\GridSolutionsFramework.sln -t:restore,build -m -p:Configuration=Debug -p:RestorePackagesConfig=true -p:UseSharedCompilation=false -p:PostBuildEvent=
        
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
