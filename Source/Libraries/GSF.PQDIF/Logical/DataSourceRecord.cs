@@ -237,10 +237,10 @@ namespace GSF.PQDIF.Logical
             get
             {
                 CollectionElement collectionElement = m_physicalRecord.Body.Collection;
-                VectorElement dataSourceNameElement = collectionElement.GetVectorByTag(DataSourceOwnerTag);
-                if ((object)dataSourceNameElement == null)
+                VectorElement dataSourceOwnerElement = collectionElement.GetVectorByTag(DataSourceOwnerTag);
+                if ((object)dataSourceOwnerElement == null)
                     return null;
-                return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
+                return Encoding.ASCII.GetString(dataSourceOwnerElement.GetValues()).Trim((char)0);
             }
             set
             {
@@ -258,8 +258,10 @@ namespace GSF.PQDIF.Logical
             get
             {
                 CollectionElement collectionElement = m_physicalRecord.Body.Collection;
-                VectorElement dataSourceNameElement = collectionElement.GetVectorByTag(DataSourceLocationTag);
-                return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
+                VectorElement dataSourceLocationElement = collectionElement.GetVectorByTag(DataSourceLocationTag);
+                if ((object)dataSourceLocationElement == null)
+                    return null;
+                return Encoding.ASCII.GetString(dataSourceLocationElement.GetValues()).Trim((char)0);
             }
             set
             {
