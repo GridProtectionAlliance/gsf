@@ -69,6 +69,8 @@ namespace GSF.TimeSeries.Adapters
 
         // Fields
         private readonly LongSynchronizedOperation m_parseConnectionString;
+        private readonly LongSynchronizedOperation m_initializeChildAdapters;
+        private readonly List<MeasurementKey[]> m_inputMeasurementKeysQueue;
         private bool m_disposed;
 
         #endregion
@@ -87,6 +89,13 @@ namespace GSF.TimeSeries.Adapters
             {
                 IsBackground = true
             };
+
+            m_initializeChildAdapters = new LongSynchronizedOperation(InitializeChildAdapters, ex => OnProcessException(MessageLevel.Warning, ex, "InitializeChildAdapters"))
+            {
+                IsBackground = true
+            };
+
+            m_inputMeasurementKeysQueue = new List<MeasurementKey[]>(2);
         }
 
         #endregion
@@ -410,6 +419,30 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void InitializeChildAdapterManagement(MeasurementKey[] inputMeasurementKeys)
         {
+            lock (m_inputMeasurementKeysQueue)
+            {
+                if (m_inputMeasurementKeysQueue.Count < 2)
+                    m_inputMeasurementKeysQueue.Add(inputMeasurementKeys);
+                else
+                    m_inputMeasurementKeysQueue[1] = inputMeasurementKeys;
+
+                m_initializeChildAdapters.RunOnceAsync();
+            }
+        }
+
+        private void InitializeChildAdapters()
+        {
+            MeasurementKey[] inputMeasurementKeys;
+
+            lock (m_inputMeasurementKeysQueue)
+            {
+                if (m_inputMeasurementKeysQueue.Count == 0)
+                    return;
+
+                inputMeasurementKeys = m_inputMeasurementKeysQueue[0];
+                m_inputMeasurementKeysQueue.RemoveAt(0);
+            }
+
             try
             {
                 // If no inputs are defined, skip setup
@@ -596,7 +629,7 @@ namespace GSF.TimeSeries.Adapters
             if (AutoReparseConnectionString || !Initialized)
                 return;
 
-            ThreadPool.QueueUserWorkItem(_ => InitializeChildAdapterManagement(InputMeasurementKeys));
+            InitializeChildAdapterManagement(InputMeasurementKeys);
         }
 
         /// <summary>
