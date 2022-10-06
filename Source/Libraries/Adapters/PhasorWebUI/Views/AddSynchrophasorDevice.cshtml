@@ -3361,7 +3361,10 @@
                 if (isEmpty(device.Name))
                     device.Name = device.Acronym;
 
-                device.ConnectionString = connectionString;
+                // Only update connection string if one has been defined, prevents changing any existing one to blank
+                if (connectionString.length > 0)
+                    device.ConnectionString = connectionString;
+                    
                 device.AutoStartDataParsingSequence = autoStartDataParsingSequence;
                 device.SkipDisableRealTimeData = skipDisableRealTimeData;
                 device.Enabled = true;
