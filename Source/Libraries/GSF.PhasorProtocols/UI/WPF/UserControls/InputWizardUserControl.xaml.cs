@@ -319,6 +319,17 @@ namespace GSF.PhasorProtocols.UI.UserControls
             }
         }
 
+        private void PdcAcronymTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UseSourcePrefix.Content = $"Use Source Prefix: {PdcAcronymTextBox.Text}!";
+
+            if (!m_dataContext.UseSourcePrefix)
+                return;
+
+            m_dataContext.UseSourcePrefix = false;
+            m_dataContext.UseSourcePrefix = true;
+        }
+
         #endregion
     }
 }

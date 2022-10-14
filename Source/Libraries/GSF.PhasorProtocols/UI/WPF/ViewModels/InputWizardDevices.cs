@@ -91,6 +91,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private int? m_pdcID;
         private string m_pdcAcronym;
         private string m_pdcName;
+        private bool m_useSourcePrefix;
         private int m_pdcVendorDeviceID;
         private int m_pdcFrameRate;
         private int m_companyID;
@@ -327,7 +328,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>
         public int[] DeviceIDs
         {
-            get => m_deviceIDs ?? (m_deviceIDs = Array.Empty<int>());
+            get => m_deviceIDs ??= Array.Empty<int>();
             set
             {
                 m_deviceIDs = value;
@@ -340,7 +341,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>
         public string[] DeviceAcronyms
         {
-            get => m_deviceAcronyms ?? (m_deviceAcronyms = Array.Empty<string>());
+            get => m_deviceAcronyms ??= Array.Empty<string>();
             set
             {
                 m_deviceAcronyms = value;
@@ -419,6 +420,46 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 m_pdcAcronym = value.Replace(" ", "_").Replace("'", "").ToUpper();
                 ValidatePdcAcronym();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets if source prefix should be used for device names.
+        /// </summary>
+        public bool UseSourcePrefix
+        {
+            get => m_useSourcePrefix;
+            set
+            {
+                m_useSourcePrefix = value;
+                OnPropertyChanged(nameof(UseSourcePrefix));
+
+                if (ItemsSource.Count == 0)
+                    return;
+
+                if (value)
+                {
+                    string prefix = $"{m_pdcAcronym}!";
+
+                    for (int i = 0; i < ItemsSource.Count; i++)
+                    {
+                        if (!ItemsSource[i].Acronym.StartsWith(prefix))
+                            ItemsSource[i].Acronym = $"{prefix}{ItemsSource[i].Acronym}";
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < ItemsSource.Count; i++)
+                    {
+                        int indexOfExclamation = m_deviceAcronyms[i].IndexOf('!');
+
+                        if (indexOfExclamation > 0)
+                            ItemsSource[i].Acronym = ItemsSource[i].Acronym.Substring(indexOfExclamation + 1);
+                    }
+                }
+
+                m_deviceAcronyms = ItemsSource.Select(childDevice => childDevice.Acronym).ToArray();
+                OnPropertyChanged(nameof(DeviceAcronyms));
             }
         }
 
@@ -568,52 +609,52 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Gets <see cref="ICommand"/> to launch the wizard walk through.
         /// </summary>
-        public ICommand LaunchWalkthroughCommand => m_launchWalkthroughCommand ?? (m_launchWalkthroughCommand = new RelayCommand(LaunchWalkthrough));
+        public ICommand LaunchWalkthroughCommand => m_launchWalkthroughCommand ??= new RelayCommand(LaunchWalkthrough);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to connection file.
         /// </summary>
-        public ICommand BrowseConnectionFileCommand => m_browseConnectionFileCommand ?? (m_browseConnectionFileCommand = new RelayCommand(BrowseConnectionFile, () => CanSave));
+        public ICommand BrowseConnectionFileCommand => m_browseConnectionFileCommand ??= new RelayCommand(BrowseConnectionFile, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to build connection string.
         /// </summary>
-        public ICommand BuildConnectionStringCommand => m_buildConnectionStringCommand ?? (m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString, () => CanSave));
+        public ICommand BuildConnectionStringCommand => m_buildConnectionStringCommand ??= new RelayCommand(BuildConnectionString, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to build alternate command channel.
         /// </summary>
-        public ICommand BuildAlternateCommandChannelCommand => m_buildAlternateCommandChannelCommand ?? (m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel, () => CanSave));
+        public ICommand BuildAlternateCommandChannelCommand => m_buildAlternateCommandChannelCommand ??= new RelayCommand(BuildAlternateCommandChannel, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to INI file.
         /// </summary>
-        public ICommand BrowseIniFileCommand => m_browseIniFileCommand ?? (m_browseIniFileCommand = new RelayCommand(BrowseIniFile, () => CanSave));
+        public ICommand BrowseIniFileCommand => m_browseIniFileCommand ??= new RelayCommand(BrowseIniFile, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to browse to configuration file.
         /// </summary>
-        public ICommand BrowseConfigurationFileCommand => m_browseConfigurationFileCommand ?? (m_browseConfigurationFileCommand = new RelayCommand(BrowseConfigurationFile, () => CanSave));
+        public ICommand BrowseConfigurationFileCommand => m_browseConfigurationFileCommand ??= new RelayCommand(BrowseConfigurationFile, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to request configuration frame from backed service.
         /// </summary>
-        public ICommand RequestConfigurationCommand => m_requestConfigurationCommand ?? (m_requestConfigurationCommand = new RelayCommand(RequestConfiguration, () => CanSave));
+        public ICommand RequestConfigurationCommand => m_requestConfigurationCommand ??= new RelayCommand(RequestConfiguration, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to cancel a configuration frame request.
         /// </summary>
-        public ICommand CancelConfigurationRequestCommand => m_cancelConfigurationRequestCommand ?? (m_cancelConfigurationRequestCommand = new RelayCommand(CancelConfigurationRequest));
+        public ICommand CancelConfigurationRequestCommand => m_cancelConfigurationRequestCommand ??= new RelayCommand(CancelConfigurationRequest);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to save current configuration to XML file.
         /// </summary>
-        public ICommand SaveConfigurationFileCommand => m_saveConfigurationFileCommand ?? (m_saveConfigurationFileCommand = new RelayCommand(SaveConfigurationFile, () => CanSave));
+        public ICommand SaveConfigurationFileCommand => m_saveConfigurationFileCommand ??= new RelayCommand(SaveConfigurationFile, () => CanSave);
 
         /// <summary>
         /// Gets <see cref="ICommand"/> to create or update configuration manually.
         /// </summary>
-        public ICommand ManualConfigurationCommand => m_manualConfigurationCommand ?? (m_manualConfigurationCommand = new RelayCommand(ManualConfiguration, () => CanSave));
+        public ICommand ManualConfigurationCommand => m_manualConfigurationCommand ??= new RelayCommand(ManualConfiguration, () => CanSave);
 
         /// <summary>
         /// Gets or sets summary message to be displayed on UI after parsing configuration file or frame.

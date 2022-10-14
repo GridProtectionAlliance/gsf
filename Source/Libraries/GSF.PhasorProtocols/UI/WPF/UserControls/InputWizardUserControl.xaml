@@ -212,8 +212,9 @@
                     <TextBlock Grid.Row="9" Grid.Column="0" Text="PDC Acronym" Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource ObjectToVisibilityConverter}}"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2"
                         Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource ObjectToVisibilityConverter}}">
-                        <TextBox Name="PdcAcronymTextBox" Text="{tsfBinding:Column Path=DataContext.PdcAcronym, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="{StaticResource SmallItemSize}" />
+                        <TextBox Name="PdcAcronymTextBox" Text="{tsfBinding:Column Path=DataContext.PdcAcronym, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="{StaticResource SmallItemSize}" TextChanged="PdcAcronymTextBox_TextChanged" />
                         <TextBlock Text="{tsfBinding:Column Path=DataContext.PdcMessage, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="Auto" TextWrapping="Wrap"/>
+                        <CheckBox x:Name="UseSourcePrefix" Margin="5,-5,0,-4" IsChecked="{tsfBinding:Column Path=DataContext.UseSourcePrefix, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Content="Use Source Prefix: &quot;!&quot;"  />
                     </StackPanel>
 
                     <TextBlock Grid.Row="10" Grid.Column="0" Text="PDC Name" Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource ObjectToVisibilityConverter}}"/>
