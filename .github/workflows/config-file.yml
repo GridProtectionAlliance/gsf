@@ -4,4 +4,4 @@ query-filters:
   - exclude:
       id:
         - csharp/telemetry/unsupported-external-api
-        - csharp/telemetry/supported-external-taint
+        - csharp/telemetry/supported-external-api-taint
