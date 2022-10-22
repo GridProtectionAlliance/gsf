@@ -1,4 +1,4 @@
-Uname: "Custom CodeQL scanning config for GSF"
+name: "Custom CodeQL scanning config for GSF"
 
 query-filters:
   - exclude:
@@ -8,3 +8,4 @@ query-filters:
         - csharp/telemetry/supported-external-api-sources
         - csharp/telemetry/supported-external-api-sinks
         - csharp/telemetry/external-libs
+        - cs/weak-encryption
