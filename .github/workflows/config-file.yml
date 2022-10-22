@@ -7,3 +7,4 @@ query-filters:
         - csharp/telemetry/supported-external-api-taint
         - csharp/telemetry/supported-external-api-sources
         - csharp/telemetry/supported-external-api-sinks
+        - csharp/telemetry/external-libs
