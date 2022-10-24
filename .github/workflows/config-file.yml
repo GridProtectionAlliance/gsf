@@ -11,3 +11,4 @@ query-filters:
         - cs/weak-encryption
         - cs/web/persistent-cookie
         - cs/insufficient-key-size
+        - cs/insecure-randomness
