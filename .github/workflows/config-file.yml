@@ -10,3 +10,4 @@ query-filters:
         - csharp/telemetry/external-libs
         - cs/weak-encryption
         - cs/web/persistent-cookie
+        - cs/insufficient-key-size
