@@ -12,3 +12,4 @@ query-filters:
         - cs/web/persistent-cookie
         - cs/insufficient-key-size
         - cs/insecure-randomness
+        - cs/inadequate-rsa-padding
