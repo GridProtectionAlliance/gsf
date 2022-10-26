@@ -1,4 +1,4 @@
-Seename: "Custom CodeQL scanning config for GSF"
+Seename: "Custom CodeQL scanning config for GSF (CodeQL performance exclusions)"
 
 query-filters:
   - exclude:
@@ -14,3 +14,4 @@ query-filters:
         - cs/insecure-randomness
         - cs/inadequate-rsa-padding
         - cs/web/disabled-header-checking
+        - cs/ecb-encryption
