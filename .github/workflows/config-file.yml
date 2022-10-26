@@ -1,4 +1,4 @@
-Seename: "Custom CodeQL scanning config for GSF (CodeQL performance exclusions)"
+name: "Custom CodeQL scanning config for GSF (CodeQL performance exclusions)"
 
 query-filters:
   - exclude:
