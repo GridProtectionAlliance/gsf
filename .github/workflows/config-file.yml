@@ -1,4 +1,4 @@
-name: "Custom CodeQL scanning config for GSF"
+Seename: "Custom CodeQL scanning config for GSF"
 
 query-filters:
   - exclude:
@@ -13,3 +13,4 @@ query-filters:
         - cs/insufficient-key-size
         - cs/insecure-randomness
         - cs/inadequate-rsa-padding
+        - cs/web/disabled-header-checking
