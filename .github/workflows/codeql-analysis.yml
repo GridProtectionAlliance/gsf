@@ -35,7 +35,7 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
-        config-file: ./.github/workflows/config-file.yml
+        config-file: ./.github/codeql/codeql-config.yml
         languages: ${{ matrix.language }}
     
     - name: Restore .NET SDK style project NuGet packages

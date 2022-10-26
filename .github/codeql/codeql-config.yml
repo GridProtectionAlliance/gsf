@@ -8,11 +8,5 @@ query-filters:
         - csharp/telemetry/supported-external-api-sources
         - csharp/telemetry/supported-external-api-sinks
         - csharp/telemetry/external-libs
-        - cs/weak-encryption
-        - cs/web/persistent-cookie
-        - cs/insufficient-key-size
-        - cs/insecure-randomness
-        - cs/inadequate-rsa-padding
-        - cs/web/disabled-header-checking
-        - cs/ecb-encryption
-        - cs/user-controlled-bypass
+        - cs/path-injection
+        

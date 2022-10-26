@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		buildmono.sh = buildmono.sh
 		..\.github\workflows\codeql-analysis.yml = ..\.github\workflows\codeql-analysis.yml
+		..\.github\codeql\codeql-config.yml = ..\.github\codeql\codeql-config.yml
 		..\Build\Scripts\GridSolutionsFramework.version = ..\Build\Scripts\GridSolutionsFramework.version
 		GSF.snk = GSF.snk
 		..\LICENSE = ..\LICENSE
