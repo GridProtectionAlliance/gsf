@@ -15,3 +15,4 @@ query-filters:
         - cs/inadequate-rsa-padding
         - cs/web/disabled-header-checking
         - cs/ecb-encryption
+        - cs/user-controlled-bypass
