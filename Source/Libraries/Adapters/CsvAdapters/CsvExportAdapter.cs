@@ -59,6 +59,16 @@ namespace CsvAdapters
         public const string DefaultTimestampFormat = "yyyy-MM-dd HH:mm:ss.fffffff";
 
         /// <summary>
+        /// Default value for the <see cref="HeaderLine"/> property.
+        /// </summary>
+        public const string DefaultHeaderLine = "Timestamp,ID,Value";
+
+        /// <summary>
+        /// Default value for the <see cref="FileNameTemplate"/> property.
+        /// </summary>
+        public const string DefaultFileNameTemplate = "{0:yyyy-MM-dd HH.mm}.csv";
+
+        /// <summary>
         /// Default value for the <see cref="DownsampleInterval"/> property.
         /// </summary>
         public const double DefaultDownsampleInterval = 0.0D;
@@ -140,6 +150,22 @@ namespace CsvAdapters
         [DefaultValue(DefaultTimestampFormat)]
         [Description("Defines the format of timestamps in the CSV exports")]
         public string TimestampFormat { get; set; }
+
+        /// <summary>
+        /// Gets or sets the default header line for the CSV exports, set to empty string for no header. Column order is fixed as timestamp, ID, and value.
+        /// </summary>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultHeaderLine)]
+        [Description("Defines the default header line for the CSV exports, set to empty string for no header - column order is fixed as timestamp, ID, and value")]
+        public string HeaderLine { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CSV export filename template. String format parameter 0 is current UTC time.
+        /// </summary>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultFileNameTemplate)]
+        [Description("Defines the CSV export filename template - string format parameter 0 is current UTC time")]
+        public string FileNameTemplate { get; set; }
 
         /// <summary>
         /// Gets or sets the downsampling interval, in seconds, set to zero for no downsampling.
@@ -244,7 +270,9 @@ namespace CsvAdapters
                 status.AppendLine($"              Offload Path: {FilePath.TrimFileName(OffloadPath, 51)}");
                 status.AppendLine($"         Rollover Schedule: {RolloverSchedule}");
                 status.AppendLine($"          Timestamp Format: {TimestampFormat}");
-                status.AppendLine($"       Downsample Interval: {(DownsampleInterval > 0.0D ? $"{DownsampleInterval:N4} seconds)" : "Disabled - Full Resolution Export")}");
+                status.AppendLine($"           CSV Header Line: {HeaderLine.TrimWithEllipsisEnd(51)}");
+                status.AppendLine($"    CSV File Name Template: {FileNameTemplate.TrimWithEllipsisEnd(51)}");
+                status.AppendLine($"     Downsampling Interval: {(DownsampleInterval > 0.0D ? $"{DownsampleInterval:N4} seconds)" : "Disabled - Full Resolution Export")}");
                 status.AppendLine($" Time Reasonability Checks: {(EnableTimeReasonabilityValidation ? "Enabled" : "Disabled")}");
                 status.AppendLine($"          Allowed Lag Time: {LagTime:N4} seconds");
                 status.AppendLine($"         Allowed Lead Time: {LeadTime:N4} seconds");
@@ -259,7 +287,7 @@ namespace CsvAdapters
         /// Gets a short one-line status of this <see cref="CsvExportAdapter"/>.
         /// </summary>
         public override string GetShortStatus(int maxLength) =>
-            $"{ProcessedMeasurements} measurements exported so far...".CenterText(maxLength);
+            $"{ProcessedMeasurements:N0} measurements exported so far...".CenterText(maxLength);
 
         /// <summary>
         /// Attempts to connect to data output stream.
@@ -289,6 +317,7 @@ namespace CsvAdapters
         /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Measurements to queue for processing.</param>
+        // ReSharper disable PossibleMultipleEnumeration
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
             if (EnableTimeReasonabilityValidation)
@@ -301,20 +330,20 @@ namespace CsvAdapters
                 foreach (IMeasurement measurement in measurements)
                 {
                     // Get last measurement timestamp -- initial timestamp is from top of second
-                    long lastTimestamp = m_lastTimestamps.GetOrDefault(measurement.ID, _ => 
+                    long lastTimestamp = m_lastTimestamps.GetOrDefault(measurement.ID, _ =>
                         measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second).Value);
-                
-                    if ((measurement.Timestamp - lastTimestamp).ToSeconds() >= DownsampleInterval)
-                    {
-                        exportMeasurements.Add(measurement);
-                        m_lastTimestamps[measurement.ID] = measurement.Timestamp.Value;
-                    }
+
+                    if ((measurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
+                        continue;
+
+                    exportMeasurements.Add(measurement);
+                    m_lastTimestamps[measurement.ID] = measurement.Timestamp.Value;
                 }
 
                 measurements = exportMeasurements;
             }
 
-            if (measurements.Count() == 0)
+            if (!measurements.Any())
                 return;
 
             base.QueueMeasurementsForProcessing(measurements);
@@ -331,16 +360,16 @@ namespace CsvAdapters
                     m_activeFileName = GenerateActiveFileName();
 
                 string activeFilePath = Path.Combine(ExportPath, m_activeFileName);
-                bool writeHeader = !File.Exists(activeFilePath);
+                bool writeHeader = !File.Exists(activeFilePath) && !string.IsNullOrWhiteSpace(HeaderLine);
                 Directory.CreateDirectory(ExportPath);
 
                 using (TextWriter writer = AppendToFile(activeFilePath))
                 {
                     if (writeHeader)
-                        writer.WriteLine("Timestamp,ID,Value");
+                        writer.WriteLine(HeaderLine);
 
                     foreach (IMeasurement measurement in measurements)
-                        writer.WriteLine(ToCSV(measurement));
+                        writer.WriteLine(ToCsv(measurement));
                 }
             }
         }
@@ -356,11 +385,11 @@ namespace CsvAdapters
             
             try
             {
-                if (disposing)
-                {
-                    m_scheduleManager.Stop();
-                    m_scheduleManager.Dispose();
-                }
+                if (!disposing)
+                    return;
+
+                m_scheduleManager.Stop();
+                m_scheduleManager.Dispose();
             }
             finally
             {
@@ -370,10 +399,10 @@ namespace CsvAdapters
         }
 
         // Converts the measurement to a row in CSV format.
-        private string ToCSV(IMeasurement measurement)
+        private string ToCsv(IMeasurement measurement)
         {
             string timestamp = measurement.Timestamp.ToString(TimestampFormat);
-            string id = measurement.Key.SignalID.ToString();
+            string id = measurement.ID.ToString();
             string value = measurement.AdjustedValue.ToString();
             
             return string.Join(",", timestamp, id, value);
@@ -381,7 +410,7 @@ namespace CsvAdapters
 
         // Generates the name of the next active file.
         private string GenerateActiveFileName() =>
-            $"{DateTime.UtcNow:yyyy-MM-dd HH.mm}.csv";
+            string.Format(FileNameTemplate, DateTime.UtcNow);
 
         // Rolls over the active file by moving it to the offload directory
         // and unsetting the active file name so that a new active file
@@ -402,12 +431,12 @@ namespace CsvAdapters
 
             string activeFilePath = Path.Combine(ExportPath, activeFileName);
 
-            if (!string.IsNullOrWhiteSpace(OffloadPath) && File.Exists(activeFilePath))
-            {
-                Directory.CreateDirectory(OffloadPath);
-                string offloadFilePath = Path.Combine(OffloadPath, activeFileName);
-                File.Move(activeFilePath, offloadFilePath);
-            }
+            if (string.IsNullOrWhiteSpace(OffloadPath) || !File.Exists(activeFilePath))
+                return;
+
+            Directory.CreateDirectory(OffloadPath);
+            string offloadFilePath = Path.Combine(OffloadPath, activeFileName);
+            File.Move(activeFilePath, offloadFilePath);
         }
 
         // Executes the rollover process to offload the
@@ -419,7 +448,7 @@ namespace CsvAdapters
         private void HandleException(Exception ex) => 
             OnProcessException(MessageLevel.Error, ex);
 
-        private StreamWriter AppendToFile(string filePath)
+        private static StreamWriter AppendToFile(string filePath)
         {
             // The "Path traversal" security warning is not relevant
             // because the path comes from software configuration
