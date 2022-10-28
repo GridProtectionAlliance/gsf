@@ -240,9 +240,14 @@ namespace CsvAdapters
             if (string.IsNullOrWhiteSpace(OffloadPath))
                 return;
 
+            string targetFileExtension = Path.GetExtension(GenerateActiveFileName());
+
+            if (string.IsNullOrWhiteSpace(targetFileExtension))
+                targetFileExtension = ".csv";
+
             lock (m_activeFileLock)
             {
-                foreach (string filePath in FilePath.EnumerateFiles(ExportPath, "*.csv", SearchOption.TopDirectoryOnly, HandleException))
+                foreach (string filePath in FilePath.EnumerateFiles(ExportPath, $"*{targetFileExtension}", SearchOption.TopDirectoryOnly, HandleException))
                 {
                     string fileName = Path.GetFileName(filePath);
 
