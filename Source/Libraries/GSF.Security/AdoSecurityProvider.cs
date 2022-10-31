@@ -1019,11 +1019,11 @@ namespace GSF.Security
             if (userAccounts.Length == 0)
                 userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(UserData.Username)}'");
 
-            Guid userAccountID = new Guid();
+            Guid userAccountID = Guid.Empty;
+
             if (userAccounts.Length > 0)
                 userAccountID = Guid.Parse(Convert.ToString(userAccounts[0]["ID"]));
-
-
+            
             // Filter explicitly assigned application roles for current user - this will return an empty set if no
             // explicitly defined roles exist for the user -or- user doesn't exist in the database.
             DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
