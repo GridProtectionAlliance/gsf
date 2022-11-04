@@ -35,6 +35,7 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
+        threads: 1
         config-file: ./.github/codeql/codeql-config.yml
         languages: ${{ matrix.language }}
     
@@ -87,3 +88,5 @@ jobs:
        
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
+      with:
+        threads: 1
