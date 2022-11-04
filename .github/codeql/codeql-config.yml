@@ -9,4 +9,4 @@ query-filters:
         - csharp/telemetry/supported-external-api-sinks
         - csharp/telemetry/external-libs
         - cs/path-injection
-        
+        - cs/zipslip
