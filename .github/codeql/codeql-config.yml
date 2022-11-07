@@ -11,3 +11,4 @@ query-filters:
         - cs/path-injection
         - cs/zipslip
         - cs/command-line-injection
+        - cs/web/xss
