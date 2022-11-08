@@ -13,3 +13,4 @@ query-filters:
         - cs/command-line-injection
         - cs/web/xss
         - cs/sql-injection
+        - cs/ldap-injection
