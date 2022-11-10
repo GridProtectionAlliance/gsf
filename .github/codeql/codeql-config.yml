@@ -14,3 +14,4 @@ query-filters:
         - cs/web/xss
         - cs/sql-injection
         - cs/ldap-injection
+        - cs/xml-injection
