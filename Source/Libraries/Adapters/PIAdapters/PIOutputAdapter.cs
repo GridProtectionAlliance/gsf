@@ -698,7 +698,11 @@ namespace PIAdapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if (m_archiveOnChangeDataTypes is not null)
+            if (m_archiveOnChangeDataTypes is null)
+            {
+                base.QueueMeasurementsForProcessing(measurements);
+            }
+            else
             {
                 List<IMeasurement> measurementsToProcess = new();
 
@@ -726,11 +730,8 @@ namespace PIAdapters
                     measurementsToProcess.Add(measurement);
                 }
 
-                base.QueueMeasurementsForProcessing(measurementsToProcess);
-            }
-            else
-            {
-                base.QueueMeasurementsForProcessing(measurements);
+                if (measurementsToProcess.Count > 0)
+                    base.QueueMeasurementsForProcessing(measurementsToProcess);
             }
         }
 
