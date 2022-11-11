@@ -35,6 +35,8 @@ using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Data;
+using GSF.Units.EE;
 using OSIsoft.AF;
 using OSIsoft.AF.Asset;
 using OSIsoft.AF.Data;
@@ -117,6 +119,7 @@ namespace PIAdapters
         private const string DefaultPIPointClass = "classic";
         private const bool DefaultUseCompression = true;
         private const bool DefaultUpdateExistingTagCompressionState = false;
+        private const string DefaultArchiveOnChangeDataTypes = "";
         private const string DefaultTagMapCacheFileName = "";
         private const double DefaultMaximumPointResolution = 0.0D;
         private const bool DefaultEnableTimeReasonabilityCheck = false;
@@ -135,6 +138,9 @@ namespace PIAdapters
         private readonly HashSet<MeasurementKey> m_pendingMappings;         // List of pending measurement mappings
         private readonly LongSynchronizedOperation m_handleTagRemoval;      // Tag removal operation, if any
         private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
+        private HashSet<SignalType> m_archiveOnChangeDataTypes;             // Data types to archive on change
+        private readonly Dictionary<Guid, double> m_lastArchiveValues;      // Cache of last point archive values
+        private readonly Dictionary<Guid, SignalType> m_signalTypeMap;      // Map of signal types for encountered measurements
         private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
         private long m_pastTimeReasonabilityLimit;                          // Past-timestamp reasonability limit
         private long m_futureTimeReasonabilityLimit;                        // Future-timestamp reasonability limit
@@ -166,6 +172,8 @@ namespace PIAdapters
             m_tagMap = new ConcurrentDictionary<Guid, string>();
             m_pendingMappings = new HashSet<MeasurementKey>();
             m_handleTagRemoval = new LongSynchronizedOperation(HandleTagRemoval, ex => OnProcessException(MessageLevel.Error, ex)) { IsBackground = true };
+            m_lastArchiveValues = new Dictionary<Guid, double>();
+            m_signalTypeMap = new Dictionary<Guid, SignalType>();
             m_lastMetadataRefresh = DateTime.MinValue;
         }
 
@@ -303,6 +311,49 @@ namespace PIAdapters
         public bool UpdateExistingTagCompressionState { get; set; } = DefaultUpdateExistingTagCompressionState;
 
         /// <summary>
+        /// Gets or sets the data types to only archive on change. Empty string value means all values archived, <c>*</c> means archive all values on change, <c>DIGI</c> means only archive digital values on change. Separate multiple values with a comma, for example: <c>DIGI,VPHM,FREQ</c>.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines the data types to only archive on change. Empty string value means all values archived, '*' means archive all values on change, and 'DIGI' means only archive digital values on change. Separate multiple values with a comma, for example: DIGI,VPHM,FREQ")]
+        [DefaultValue(DefaultArchiveOnChangeDataTypes)]
+        public string ArchiveOnChangeDataTypes
+        {
+            get => m_archiveOnChangeDataTypes is null ? string.Empty : string.Join(",", m_archiveOnChangeDataTypes.Select(signalType => signalType.ToString()));
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    m_archiveOnChangeDataTypes = null;
+                }
+                else
+                {
+                    HashSet<SignalType> archiveOnChangeTypes = new();
+
+                    bool hasAsterisk = false;
+
+                    foreach (string dataTypeEntry in value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        string dataType = dataTypeEntry.Trim();
+
+                        if (dataType.Equals("*"))
+                        {
+                            hasAsterisk = true;
+                            break;
+                        }
+
+                        if (Enum.TryParse(dataType, true, out SignalType signalType))
+                            archiveOnChangeTypes.Add(signalType);
+                    }
+            
+                    if (hasAsterisk)
+                        archiveOnChangeTypes = new HashSet<SignalType>(Enum.GetValues(typeof(SignalType)).Cast<SignalType>());
+
+                    m_archiveOnChangeDataTypes = archiveOnChangeTypes.Count > 0 ? archiveOnChangeTypes : null;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the filename to be used for tag map cache.
         /// </summary>
         [ConnectionStringParameter]
@@ -365,6 +416,7 @@ namespace PIAdapters
                 status.AppendLine($"       Connected to server: {(m_connection?.Connected ?? false ? "Yes" : "No")}");
                 status.AppendLine($"         Using compression: {UseCompression}");
                 status.AppendLine($"  Update compression state: {UpdateExistingTagCompressionState}");
+                status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes}");
                 status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
                 status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
 
@@ -524,6 +576,9 @@ namespace PIAdapters
             if (settings.TryGetValue(nameof(UpdateExistingTagCompressionState), out setting))
                 UpdateExistingTagCompressionState = setting.ParseBoolean();
 
+            if (settings.TryGetValue(nameof(ArchiveOnChangeDataTypes), out setting))
+                ArchiveOnChangeDataTypes = setting;
+
             if (settings.TryGetValue(nameof(TagNamePrefixRemoveCount), out setting) && int.TryParse(setting, out intVal))
                 TagNamePrefixRemoveCount = intVal;
 
@@ -634,6 +689,48 @@ namespace PIAdapters
                 m_connection.Disconnected -= Connection_Disconnected;
                 m_connection.Dispose();
                 m_connection = null;
+            }
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// </summary>
+        /// <param name="measurements">Measurements to queue for processing.</param>
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            if (m_archiveOnChangeDataTypes is not null)
+            {
+                List<IMeasurement> measurementsToProcess = new();
+
+                foreach (IMeasurement measurement in measurements)
+                {
+                    // Lookup measurement's signal type (data source lookup hit taken once per encountered measurement)
+                    SignalType signalType = m_signalTypeMap.GetOrAdd(measurement.ID, _ => DataSource.GetSignalType(measurement.Key));
+
+                    // If measurement signal type is not an archive on change data type target, process measurement as normal
+                    if (!m_archiveOnChangeDataTypes.Contains(signalType))
+                    {
+                        measurementsToProcess.Add(measurement);
+                        continue;
+                    }
+
+                    // Get measurement's last archive value (NaN for first encounter)
+                    double value = m_lastArchiveValues.GetOrAdd(measurement.ID, _ => double.NaN);
+
+                    // Skip measurement processing if value has not changed
+                    if (value == measurement.AdjustedValue)
+                        continue;
+
+                    // Update last archive value and process measurement
+                    m_lastArchiveValues[measurement.ID] = measurement.AdjustedValue;
+                    measurementsToProcess.Add(measurement);
+                }
+
+                base.QueueMeasurementsForProcessing(measurementsToProcess);
+            }
+            else
+            {
+                base.QueueMeasurementsForProcessing(measurements);
             }
         }
 
