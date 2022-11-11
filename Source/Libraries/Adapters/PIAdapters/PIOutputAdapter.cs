@@ -327,7 +327,7 @@ namespace PIAdapters
                 }
                 else
                 {
-                    HashSet<SignalType> archiveOnChangeTypes = new();
+                    HashSet<SignalType> archiveOnChangeDataTypes = new();
 
                     bool hasAsterisk = false;
 
@@ -342,13 +342,13 @@ namespace PIAdapters
                         }
 
                         if (Enum.TryParse(dataType, true, out SignalType signalType))
-                            archiveOnChangeTypes.Add(signalType);
+                            archiveOnChangeDataTypes.Add(signalType);
                     }
             
                     if (hasAsterisk)
-                        archiveOnChangeTypes = new HashSet<SignalType>(Enum.GetValues(typeof(SignalType)).Cast<SignalType>());
+                        archiveOnChangeDataTypes = new HashSet<SignalType>(Enum.GetValues(typeof(SignalType)).Cast<SignalType>());
 
-                    m_archiveOnChangeDataTypes = archiveOnChangeTypes.Count > 0 ? archiveOnChangeTypes : null;
+                    m_archiveOnChangeDataTypes = archiveOnChangeDataTypes.Count > 0 ? archiveOnChangeDataTypes : null;
                 }
             }
         }
@@ -718,11 +718,11 @@ namespace PIAdapters
                     double value = m_lastArchiveValues.GetOrAdd(measurement.ID, _ => double.NaN);
 
                     // Skip measurement processing if value has not changed
-                    if (value == measurement.AdjustedValue)
+                    if (value == measurement.Value)
                         continue;
 
                     // Update last archive value and process measurement
-                    m_lastArchiveValues[measurement.ID] = measurement.AdjustedValue;
+                    m_lastArchiveValues[measurement.ID] = measurement.Value;
                     measurementsToProcess.Add(measurement);
                 }
 
