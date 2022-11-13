@@ -162,29 +162,22 @@ namespace GSF.Web.Model
         [HttpGet, Route("New")]
         public virtual IHttpActionResult GetNew()
         {
-            if (ViewOnly)
+            if (ViewOnly || !GetAuthCheck())
                 return Unauthorized();
 
-            if (GetAuthCheck())
+           
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                using (AdoDataConnection connection = new AdoDataConnection(Connection))
-                {
 
-                    try
-                    {
-                        return Ok(new TableOperations<T>(connection).NewRecord());
-                    }
-                    catch (Exception ex)
-                    {
-                        return InternalServerError(ex);
-                    }
+                try
+                {
+                    return Ok(new TableOperations<T>(connection).NewRecord());
+                }
+                catch (Exception ex)
+                {
+                    return InternalServerError(ex);
                 }
             }
-            else
-            {
-                return Unauthorized();
-            }
-
         }
 
         /// <summary>
@@ -195,37 +188,24 @@ namespace GSF.Web.Model
         [HttpGet, Route("{parentID?}")]
         public virtual IHttpActionResult Get(string parentID = null)
         {
-            if (GetAuthCheck())
+            if (!GetAuthCheck())
+                return Unauthorized();
+            
+            IEnumerable<T> result;
+            if (ParentKey != string.Empty && parentID != null)
             {
-
-                try
-                {
-                    IEnumerable<T> result;
-                    if (ParentKey != string.Empty && parentID != null)
-                    {
-                        PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
-                        if (parentKey.PropertyType == typeof(int))
-                            result = QueryRecordsWhere(ParentKey + " = {0}", int.Parse(parentID));
-                        else if (parentKey.PropertyType == typeof(Guid))
-                            result = QueryRecordsWhere(ParentKey + " = {0}", Guid.Parse(parentID));
-                        else
-                            result = QueryRecordsWhere(ParentKey + " = {0}", parentID);
-                    }
-                    else
-                        result = QueryRecords();
-
-                    return Ok(result);
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
-
+                PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
+                if (parentKey.PropertyType == typeof(int))
+                    result = QueryRecordsWhere(ParentKey + " = {0}", int.Parse(parentID));
+                else if (parentKey.PropertyType == typeof(Guid))
+                    result = QueryRecordsWhere(ParentKey + " = {0}", Guid.Parse(parentID));
+                else
+                    result = QueryRecordsWhere(ParentKey + " = {0}", parentID);
             }
             else
-            {
-                return Unauthorized();
-            }
+                result = QueryRecords();
+
+            return Ok(result);           
 
         }
 
@@ -237,39 +217,25 @@ namespace GSF.Web.Model
         [HttpGet, Route("One/{id}")]
         public virtual IHttpActionResult GetOne(string id)
         {
-            if (GetAuthCheck())
+            if (!GetAuthCheck())
+                return Unauthorized();
+            
+            T result = null;
+            PropertyInfo primaryKey = typeof(T).GetProperty(PrimaryKeyField);
+            if (primaryKey.PropertyType == typeof(int))
+                result = QueryRecordWhere(PrimaryKeyField + " = {0}", int.Parse(id));
+            else if (primaryKey.PropertyType == typeof(Guid))
+                result = QueryRecordWhere(PrimaryKeyField + " = {0}", Guid.Parse(id));
+            else
+                result = QueryRecordWhere(PrimaryKeyField + " = {0}", id);
+
+            if (result == null)
             {
-
-                try
-                {
-                    T result = null;
-                    PropertyInfo primaryKey = typeof(T).GetProperty(PrimaryKeyField);
-                    if (primaryKey.PropertyType == typeof(int))
-                        result = QueryRecordWhere(PrimaryKeyField + " = {0}", int.Parse(id));
-                    else if (primaryKey.PropertyType == typeof(Guid))
-                        result = QueryRecordWhere(PrimaryKeyField + " = {0}", Guid.Parse(id));
-                    else
-                        result = QueryRecordWhere(PrimaryKeyField + " = {0}", id);
-
-                    if (result == null)
-                    {
-                        string tableName = TableOperations<T>.GetTableName();
-                        return BadRequest(string.Format(PrimaryKeyField + " provided does not exist in '{0}'.", tableName));
-                    }
-                    else
-                        return Ok(result);
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
-
+                string tableName = TableOperations<T>.GetTableName();
+                return BadRequest(string.Format(PrimaryKeyField + " provided does not exist in '{0}'.", tableName));
             }
             else
-            {
-                return Unauthorized();
-            }
-
+                return Ok(result);   
         }
 
         /// <summary>
@@ -281,26 +247,11 @@ namespace GSF.Web.Model
         [HttpGet, Route("{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string sort, int ascending)
         {
-            if (GetAuthCheck())
-            {
-
-                try
-                {
-                    IEnumerable<T> result = QueryRecords(sort,ascending > 0);
-
-                    return Ok(JsonConvert.SerializeObject(result));
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
-
-            }
-            else
-            {
+            if (!GetAuthCheck())
                 return Unauthorized();
-            }
-
+              
+                    IEnumerable<T> result = QueryRecords(sort,ascending > 0);
+                    return Ok(JsonConvert.SerializeObject(result));
         }
 
         /// <summary>
@@ -313,39 +264,24 @@ namespace GSF.Web.Model
         [HttpGet, Route("{parentID}/{sort}/{ascending:int}")]
         public virtual IHttpActionResult Get(string parentID, string sort, int ascending)
         {
-            if (GetAuthCheck())
+            if (!GetAuthCheck())
+                return Unauthorized();
+        
+            IEnumerable<T> result;
+            if (ParentKey != string.Empty && parentID != null)
             {
-
-
-                try
-                {
-                    IEnumerable<T> result;
-                    if (ParentKey != string.Empty && parentID != null)
-                    {
-                        PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
-                        if (parentKey.PropertyType == typeof(int))
-                            result = QueryRecordsWhere(sort, ascending > 0, ParentKey + " = {0}", int.Parse(parentID));
-                        else if (parentKey.PropertyType == typeof(Guid))
-                            result = QueryRecordsWhere(sort, ascending > 0, ParentKey + " = {0}", Guid.Parse(parentID));
-                        else
-                            result = QueryRecordsWhere(sort, ascending > 0, ParentKey + " = {0}", parentID);
-                    }
-                    else
-                        result = QueryRecords(sort,ascending > 0);
-
-                    return Ok(JsonConvert.SerializeObject(result));
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
-
+                PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
+                if (parentKey.PropertyType == typeof(int))
+                    result = QueryRecordsWhere(sort, ascending > 0, ParentKey + " = {0}", int.Parse(parentID));
+                else if (parentKey.PropertyType == typeof(Guid))
+                    result = QueryRecordsWhere(sort, ascending > 0, ParentKey + " = {0}", Guid.Parse(parentID));
+                else
+                    result = QueryRecordsWhere(sort, ascending > 0, ParentKey + " = {0}", parentID);
             }
             else
-            {
-                return Unauthorized();
-            }
+                result = QueryRecords(sort,ascending > 0);
 
+            return Ok(JsonConvert.SerializeObject(result));
         }
 
 
@@ -357,28 +293,15 @@ namespace GSF.Web.Model
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
         {
-            try
+            if (!PostAuthCheck() || ViewOnly)
+                return Unauthorized();
+                
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                if (PostAuthCheck() && !ViewOnly)
-                {
-                    using (AdoDataConnection connection = new AdoDataConnection(Connection))
-                    {
 
-                        T newRecord = record.ToObject<T>();
-                        int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
-                        
-                        return Ok(result);
-                    }
-                }
-                else
-                {
-                    return Unauthorized();
-                }
-
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
+                T newRecord = record.ToObject<T>();
+                int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
+                return Ok(result);
             }
         }
 
@@ -391,40 +314,26 @@ namespace GSF.Web.Model
         [HttpPatch, Route("Update")]
         public virtual IHttpActionResult Patch([FromBody] T record)
         {
-            try
-            {
-                if (PatchAuthCheck() && !ViewOnly)
-                {
+            if (!PatchAuthCheck() || ViewOnly)
+                return Unauthorized();
 
-                    using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            {
+                int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
+
+                if (PrimaryKeyField != string.Empty)
+                {
+                    T newRecord = record;
+                    PropertyInfo prop = typeof(T).GetProperty(PrimaryKeyField);
+                    if (prop != null)
                     {
-                        int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
-
-                        if (PrimaryKeyField != string.Empty)
-                        {
-                            T newRecord = record;
-                            PropertyInfo prop = typeof(T).GetProperty(PrimaryKeyField);
-                            if (prop != null)
-                            {
-                                object uniqueKey = prop.GetValue(newRecord);
-                                newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
-                                return Ok(newRecord);
-                            }
-
-                        }
-                        return Ok(result);
+                        object uniqueKey = prop.GetValue(newRecord);
+                        newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
+                        return Ok(newRecord);
                     }
-                }
-                else
-                {
-                    return Unauthorized();
-                }
 
-
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
+                }
+                return Ok(result);
             }
         }
 
@@ -437,53 +346,35 @@ namespace GSF.Web.Model
         [HttpDelete, Route("Delete")]
         public virtual IHttpActionResult Delete(T record)
         {
-            try
+            if (!DeleteAuthCheck() || ViewOnly)
+                return Unauthorized();
+
+            using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                if (DeleteAuthCheck() && !ViewOnly)
+                string tableName = new TableOperations<T>(connection).TableName;
+
+                PropertyInfo idProp = typeof(T).GetProperty(PrimaryKeyField);
+                int result;
+
+                if (idProp.PropertyType == typeof(int))
                 {
-
-                    using (AdoDataConnection connection = new AdoDataConnection(Connection))
-                    {
-                        string tableName = new TableOperations<T>(connection).TableName;
-
-                        PropertyInfo idProp = typeof(T).GetProperty(PrimaryKeyField);
-                        if (idProp.PropertyType == typeof(int))
-                        {
-                            int id = (int)idProp.GetValue(record);
-                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = {id}'");
-                            return Ok(result);
-
-                        }
-                        else if (idProp.PropertyType == typeof(Guid))
-                        {
-                            Guid id = (Guid)idProp.GetValue(record);
-                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
-                            return Ok(result);
-
-                        }
-                        else if (idProp.PropertyType == typeof(string))
-                        {
-                            string id = (string)idProp.GetValue(record);
-                            int result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
-                            return Ok(result);
-
-                        }
-                        else
-                        {
-                            int result = new TableOperations<T>(connection).DeleteRecord(record);
-                            return Ok(result);
-                        }
-                    }
+                    int id = (int)idProp.GetValue(record);
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = {id}'");
+                }
+                else if (idProp.PropertyType == typeof(Guid))
+                {
+                    Guid id = (Guid)idProp.GetValue(record);
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
+                }
+                else if (idProp.PropertyType == typeof(string))
+                {
+                    string id = (string)idProp.GetValue(record);
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
                 }
                 else
-                {
-                    return Unauthorized();
-                }
-
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
+                    result = new TableOperations<T>(connection).DeleteRecord(record);
+                
+                return Ok(result);
             }
         }
 
@@ -499,15 +390,8 @@ namespace GSF.Web.Model
             if (GetAuthCheck() && !AllowSearch)
                 return Unauthorized();
 
-            try
-            {
-                DataTable table = GetSearchResults(postData);
-                return Ok(JsonConvert.SerializeObject(table));
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
+           DataTable table = GetSearchResults(postData);
+            return Ok(JsonConvert.SerializeObject(table));         
         }
 
         /// <summary>
@@ -523,27 +407,20 @@ namespace GSF.Web.Model
             if (GetAuthCheck() && !AllowSearch)
                 return Unauthorized();
 
-            try
+            if (ParentKey != string.Empty && parentID != null)
             {
-                if (ParentKey != string.Empty && parentID != null)
-                {
-                    List<Search> searches = postData.Searches.ToList();
-                    PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
-                    if (parentKey.PropertyType == typeof(int))
-                        searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
-                    else 
-                        searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+                List<Search> searches = postData.Searches.ToList();
+                PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
+                if (parentKey.PropertyType == typeof(int))
+                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                else 
+                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
-                    postData.Searches = searches;
-                }
+                postData.Searches = searches;
+            }
 
-                DataTable table = GetSearchResults(postData);
-                return Ok(JsonConvert.SerializeObject(table));
-            }
-            catch (Exception ex)
-            {
-                return InternalServerError(ex);
-            }
+            DataTable table = GetSearchResults(postData);
+            return Ok(JsonConvert.SerializeObject(table));
         }
 
     #endregion
