@@ -155,6 +155,7 @@ namespace GSF.Web.Model
         #endregion
 
         #region [ Http Methods ]
+
         /// <summary>
         /// Used to get an empty record
         /// </summary>
@@ -165,18 +166,9 @@ namespace GSF.Web.Model
             if (ViewOnly || !GetAuthCheck())
                 return Unauthorized();
 
-           
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-
-                try
-                {
-                    return Ok(new TableOperations<T>(connection).NewRecord());
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
+                return Ok(new TableOperations<T>(connection).NewRecord());
             }
         }
 
@@ -220,7 +212,7 @@ namespace GSF.Web.Model
             if (!GetAuthCheck())
                 return Unauthorized();
             
-            T result = null;
+            T result;
             PropertyInfo primaryKey = typeof(T).GetProperty(PrimaryKeyField);
             if (primaryKey.PropertyType == typeof(int))
                 result = QueryRecordWhere(PrimaryKeyField + " = {0}", int.Parse(id));
@@ -250,8 +242,8 @@ namespace GSF.Web.Model
             if (!GetAuthCheck())
                 return Unauthorized();
               
-                    IEnumerable<T> result = QueryRecords(sort,ascending > 0);
-                    return Ok(JsonConvert.SerializeObject(result));
+            IEnumerable<T> result = QueryRecords(sort,ascending > 0);
+            return Ok(JsonConvert.SerializeObject(result));
         }
 
         /// <summary>
@@ -298,7 +290,6 @@ namespace GSF.Web.Model
                 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-
                 T newRecord = record.ToObject<T>();
                 int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
                 return Ok(result);
@@ -331,8 +322,8 @@ namespace GSF.Web.Model
                         newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
                         return Ok(newRecord);
                     }
-
                 }
+
                 return Ok(result);
             }
         }
@@ -390,7 +381,7 @@ namespace GSF.Web.Model
             if (GetAuthCheck() && !AllowSearch)
                 return Unauthorized();
 
-           DataTable table = GetSearchResults(postData);
+            DataTable table = GetSearchResults(postData);
             return Ok(JsonConvert.SerializeObject(table));         
         }
 
@@ -423,7 +414,7 @@ namespace GSF.Web.Model
             return Ok(JsonConvert.SerializeObject(table));
         }
 
-    #endregion
+        #endregion
 
         #region [Helper Methods]
 
