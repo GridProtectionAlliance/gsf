@@ -1489,15 +1489,15 @@ namespace GSF
             int valueInt;
             if (BitConverter.IsLittleEndian)
             {
-                valueInt = value[0] |
-                         value[1] << 8 |
-                         value[2] << 16;
+                valueInt = value[startIndex] |
+                         value[startIndex + 1] << 8 |
+                         value[startIndex + 2] << 16;
             }
             else
             {
-                valueInt = value[0] << 16 |
-                         value[1] << 8 |
-                         value[2];
+                valueInt = value[startIndex] << 16 |
+                         value[startIndex + 1] << 8 |
+                         value[startIndex + 2];
 
             }
             // Deserialize value
