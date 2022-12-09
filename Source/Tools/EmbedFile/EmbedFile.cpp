@@ -27,6 +27,7 @@
  * into a byte array where the array is declared in a .H file and defined in a .CPP file.
  */
 
+// ReSharper disable CppClangTidyConcurrencyMtUnsafe
 #include "pch.h"
 
 FILE* open_or_exit(const char* fname, const char* mode)
@@ -63,29 +64,48 @@ bool starts_with(const char* str, const char* prefix)
     return _strnicmp(prefix, str, strlen(prefix)) == 0;
 }
 
+bool ends_with(const char* str, const char* suffix)
+{
+    const size_t suffixLen = strlen(suffix);
+    return _strnicmp(suffix, &str[strlen(str) - suffixLen], suffixLen) == 0;
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 3) {
-        fprintf(stderr, "\nUSAGE: EmbedFile {sym} {rsrc} [-namespace={ns1::ns2::}] [-addNull] [-useIncludeGuard]\n\n"
+        fprintf(stderr, "\nUSAGE: EmbedFile {sym} {rsrc} [-namespace={ns1::ns2}] [-useOldNamespaceFormat] [-addNull] [-useIncludeGuard]\n\n"
             "  Creates {sym}.cpp/.h from the contents of {rsrc}\n\n");
         return EXIT_FAILURE;
     }
 
+    constexpr size_t BufferSize = 1024;
     const char* sym = argv[1];
     FILE* in = open_or_exit(argv[2], "r");
     const char* namespaceArgument = "";
     const char* namespacePrefix = "";
     bool addNullByte = false;
     bool useIncludeGuard = false;
+    bool useOldNamespaceFormat = false;
+    char namespaceWork[BufferSize];
 
-    // Parse optional argumments
+    // Parse optional arguments
     for (int i = 3; i < argc; i++)
     {
-        //                                 01234567890
+        //                        01234567890
         if (starts_with(argv[i], "-namespace=") && strlen(argv[i]) > 11)
         {
             namespaceArgument = argv[i];
             namespacePrefix = &namespaceArgument[11];
+
+            if (!ends_with(namespacePrefix, "::"))
+            {
+                sprintf_s(namespaceWork, BufferSize, "%s::", namespacePrefix);
+                namespacePrefix = namespaceWork;
+            }
+        }
+        else if (_strcmpi(argv[i], "-useOldNamespaceFormat") == 0)
+        {
+            useOldNamespaceFormat = true;
         }
         else if (_strcmpi(argv[i], "-addNull") == 0)
         {
@@ -98,37 +118,43 @@ int main(int argc, char** argv)
     }
 
     // Create .H resource file
-    char symfile[256];
+    char symfile[BufferSize];
     snprintf(symfile, sizeof(symfile), "%s.h", sym);
     FILE* out = open_or_exit(symfile, "w");
 
     // Define #ifdef directive symbol used to include header file only once
-    char symdirective[256];
+    char symdirective[BufferSize]{};
 
     if (useIncludeGuard)
     {
         const char* s = sym;
         char* d = symdirective;
 
-        while (*s) {
+        while (*s)
+        {
             if (isupper(*s))
                 *d++ = '_';
-            *d++ = toupper(*s++);
+
+            *d++ = static_cast<char>(toupper(*s++));
         }
 
         *d = '\0';
     }
 
-    char now[256];
+    char now[BufferSize];
     time_t rawtime;
     struct tm timeinfo {};
     time(&rawtime);
     localtime_s(&timeinfo, &rawtime);
-    asctime_s(now, 256, &timeinfo);
+    asctime_s(now, BufferSize, &timeinfo);
 
     // Write header for .H resource file
     fprintf(out, "// Auto-generated on %s", now);
-    fprintf(out, "// EmbedFile.exe %s %s %s%s%s\n\n", sym, argv[2], namespaceArgument, addNullByte ? " -addNull" : "", useIncludeGuard ? " -useIncludeGuard" : "");
+    fprintf(out, "// EmbedFile.exe %s %s %s%s%s%s\n\n", sym, argv[2], 
+        namespaceArgument, 
+        useOldNamespaceFormat ? " -useOldNamespaceFormat" : "" , 
+        addNullByte ? " -addNull" : "", 
+        useIncludeGuard ? " -useIncludeGuard" : "");
 
     if (useIncludeGuard)
     {
@@ -144,29 +170,42 @@ int main(int argc, char** argv)
 
     if (strlen(namespacePrefix) > 0)
     {
-        // When a C++ namespace prefix is provided, break each namespace
-        // component out into separate namespace commands for the .H file
-        char source[256];
-        strcpy_s(source, 256, namespacePrefix);
-
-        char* next_token;
-        char* token = strtok_s(source, "::", &next_token);
         int32_t count = 0;
 
-        while (token) {
-            if (count++ > 0)
-                fprintf(out, " {\n");
+        // When a C++ namespace prefix is provided and old pre C++17 multi-line format is desired,
+        // break each namespace component out into separate namespace commands for the .H file
+        if (useOldNamespaceFormat)
+        {
+            char source[BufferSize];
+            strcpy_s(source, BufferSize, namespacePrefix);
 
-            fprintf(out, "namespace %s", token);
-            token = strtok_s(nullptr, "::", &next_token);
+            char* next_token;
+            char* token = strtok_s(source, "::", &next_token);
+
+            while (token)
+            {
+                if (count++ > 0)
+                    fprintf(out, " {\n");
+
+                fprintf(out, "namespace %s", token);
+                token = strtok_s(nullptr, "::", &next_token);
+            }
+        }
+        else
+        {
+            fprintf(out, "namespace %.*s", static_cast<int>(strlen(namespacePrefix) - 2),  namespacePrefix);
         }
 
         fprintf(out, "\n{\n");
         fprintf(out, "    const extern uint8_t %s[];\n", sym);
         fprintf(out, "    const extern uint32_t %sLength;\n", sym);
+        fprintf(out, "}");
 
-        for (int32_t i = 0; i < count; i++)
-            fprintf(out, "}");
+        if (useOldNamespaceFormat)
+        {
+            for (int32_t i = 0; i < count - 1; i++)
+                fprintf(out, "}");
+        }
     }
     else
     {
@@ -185,11 +224,15 @@ int main(int argc, char** argv)
 
     // Write header for .CPP resource file
     fprintf(out, "// Auto-generated on %s", now);
-    fprintf(out, "// EmbedFile.exe %s %s %s%s%s\n\n", sym, argv[2], namespaceArgument, addNullByte ? " -addNull" : "", useIncludeGuard ? " -useIncludeGuard" : "");
+    fprintf(out, "// EmbedFile.exe %s %s %s%s%s%s\n\n", sym, argv[2], 
+        namespaceArgument, 
+        useOldNamespaceFormat ? " -useOldNamespaceFormat" : "", 
+        addNullByte ? " -addNull" : "", 
+        useIncludeGuard ? " -useIncludeGuard" : "");
     fprintf(out, "#include \"%s.h\"\n\n", sym);
     fprintf(out, "const uint8_t %s%s[] = {", namespacePrefix, sym);
 
-    unsigned char buf[256];
+    unsigned char buf[BufferSize];
     size_t nread;
     int32_t chars = 0;
 
@@ -209,7 +252,7 @@ int main(int argc, char** argv)
         write_byte(out, chars, '\0');
     
     fprintf(out, "\n};\n\n");
-    fprintf(out, "const uint32_t %s%sLength = sizeof(%s%s);\n", namespacePrefix, sym, namespacePrefix, sym);
+    fprintf(out, "const%s uint32_t %s%sLength = sizeof(%s%s);\n", useOldNamespaceFormat ? "" : "expr",  namespacePrefix, sym, namespacePrefix, sym);
 
     fclose(in);
     fclose(out);
