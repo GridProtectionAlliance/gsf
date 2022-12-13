@@ -113,7 +113,7 @@ namespace GSF.TimeSeries.Adapters
 
             if (instance.ConfigurationReloadWaitTimeout < 0)
                 instance.ConfigurationReloadWaitTimeout = 0;
-
+            
             if (instance.InputMeasurementIndexUsedForName < 0 || instance.InputMeasurementIndexUsedForName > instance.PerAdapterInputCount - 1)
                 instance.InputMeasurementIndexUsedForName = 0;
 

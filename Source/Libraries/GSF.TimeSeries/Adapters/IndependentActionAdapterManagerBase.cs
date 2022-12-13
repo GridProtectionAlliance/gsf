@@ -298,7 +298,8 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets number of input measurement required by each adapter.
+        /// Gets number of input measurement required by each adapter. If value is not constant, use
+        /// <see cref="CurrentAdapterIndex"/> to determine input count for adapter at current index.
         /// </summary>
         public abstract int PerAdapterInputCount { get; }
 
@@ -453,7 +454,10 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 ReadOnlyCollection<string> perAdapterOutputNames = PerAdapterOutputNames;
+                
+                CurrentAdapterIndex = 0;
                 int inputsPerAdapter = PerAdapterInputCount;
+                
                 int outputsPerAdapter = perAdapterOutputNames?.Count ?? 0;
 
                 if (perAdapterOutputNames is null || inputsPerAdapter <= 0 || outputsPerAdapter <= 0)
@@ -506,6 +510,7 @@ namespace GSF.TimeSeries.Adapters
                 for (int i = 0; i < inputMeasurementKeys.Length; i += inputsPerAdapter)
                 {
                     CurrentAdapterIndex = adapters.Count;
+                    inputsPerAdapter = PerAdapterInputCount;
 
                     Guid[] inputs = new Guid[inputsPerAdapter];
                     Guid[] outputs = new Guid[outputsPerAdapter];
