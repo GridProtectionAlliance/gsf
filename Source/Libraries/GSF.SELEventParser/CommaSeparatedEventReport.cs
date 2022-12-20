@@ -34,6 +34,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using GSF.Parsing;
 
@@ -655,6 +656,10 @@ namespace GSF.SELEventParser
             double[] scalingFactors = new double[cSER.ExpectedAnalogCount];
             bool scalingRequired = false;
 
+            bool IsVoltsOrAmps(string fieldHeader) =>
+                new[] { "VA(V)", "VB(V)", "VC(V)", "IA", "IB", "IC", "IN", "IG" }
+                    .Any(fieldHeader.Contains);
+
             for (int fieldIndex = 0; fieldIndex < cSER.ExpectedAnalogCount; fieldIndex++)
             {
                 cSER.AnalogSection.AnalogChannels.Add(new Channel<double>());
@@ -664,7 +669,7 @@ namespace GSF.SELEventParser
                     scalingFactors[fieldIndex] = 1000D * Math.Sqrt(2);
                     scalingRequired = true;
                 }
-                else if (lastHeaderFields[fieldIndex].ToUpper().Contains("VA(V)") || lastHeaderFields[fieldIndex].ToUpper().Contains("VB(V)") || lastHeaderFields[fieldIndex].ToUpper().Contains("VC(V)"))
+                else if (IsVoltsOrAmps(lastHeaderFields[fieldIndex].ToUpper()))
                 {
                     scalingFactors[fieldIndex] = 1D * Math.Sqrt(2);
                     scalingRequired = true;
