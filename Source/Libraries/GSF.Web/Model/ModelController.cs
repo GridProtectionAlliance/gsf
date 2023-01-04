@@ -378,7 +378,7 @@ namespace GSF.Web.Model
         [HttpPost, Route("SearchableList")]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData)
         {
-            if (!GetAuthCheck() && !AllowSearch)
+            if (!GetAuthCheck() || !AllowSearch)
                 return Unauthorized();
 
             DataTable table = GetSearchResults(postData);
