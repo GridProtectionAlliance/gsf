@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <RootNamespace>GSF.PhasorProtocols</RootNamespace>
     <AssemblyName>GSF.PhasorProtocols</AssemblyName>
     <TargetFrameworkProfile />

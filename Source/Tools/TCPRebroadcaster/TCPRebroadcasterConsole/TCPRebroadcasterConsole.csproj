@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TCPRebroadcasterConsole</RootNamespace>
     <AssemblyName>TCPRebroadcasterConsole</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>TVAServiceConsole.ico</ApplicationIcon>
     <TargetFrameworkProfile />
