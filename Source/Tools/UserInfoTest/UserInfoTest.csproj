@@ -63,10 +63,6 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\GSF.Security\GSF.Security.csproj">
-      <Project>{4060e729-effd-4e50-a0d5-99c0990ef7da}</Project>
-      <Name>GSF.Security</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

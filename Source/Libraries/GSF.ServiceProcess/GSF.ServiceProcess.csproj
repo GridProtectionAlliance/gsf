@@ -106,10 +106,6 @@
       <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GSF.Security\GSF.Security.csproj">
-      <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
-      <Name>GSF.Security</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="GSF.ServiceProcess.nuspec" />

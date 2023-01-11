@@ -126,10 +126,6 @@
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\GSF.Web\GSF.Web.csproj">
-      <Project>{0501c2dc-3428-4413-ae92-f0d82ff3dbbc}</Project>
-      <Name>GSF.Web</Name>
-    </ProjectReference>
     <ProjectReference Include="..\HistorianAdapters\HistorianAdapters.csproj">
       <Project>{8a1bcfaa-19e8-408a-8c72-170b1211dc27}</Project>
       <Name>HistorianAdapters</Name>
