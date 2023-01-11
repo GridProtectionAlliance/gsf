@@ -149,10 +149,6 @@
       <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
       <Name>GSF.ServiceProcess</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\GSF.Windows\GSF.Windows.csproj">
-      <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>
-      <Name>GSF.Windows</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
