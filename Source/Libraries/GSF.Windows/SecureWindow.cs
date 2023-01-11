@@ -34,7 +34,6 @@
 using System;
 using System.ComponentModel;
 using System.Security.Principal;
-using System.Threading;
 using System.Windows;
 using GSF.Security;
 
@@ -148,14 +147,8 @@ namespace GSF.Windows
         /// </summary>
         public bool ForceLoginDisplay
         {
-            get
-            {
-                return (bool)GetValue(ForceLoginDisplayProperty);
-            }
-            set
-            {
-                SetValue(ForceLoginDisplayProperty, value);
-            }
+            get => (bool)GetValue(ForceLoginDisplayProperty);
+            set => SetValue(ForceLoginDisplayProperty, value);
         }
 
         /// <summary>
@@ -163,14 +156,8 @@ namespace GSF.Windows
         /// </summary>
         public ResourceAccessiblityMode ResourceAccessiblity
         {
-            get
-            {
-                return (ResourceAccessiblityMode)GetValue(ResourceAccessiblityProperty);
-            }
-            set
-            {
-                SetValue(ResourceAccessiblityProperty, value);
-            }
+            get => (ResourceAccessiblityMode)GetValue(ResourceAccessiblityProperty);
+            set => SetValue(ResourceAccessiblityProperty, value);
         }
 
         /// <summary>
@@ -178,14 +165,8 @@ namespace GSF.Windows
         /// </summary>
         public string IncludedRoles
         {
-            get
-            {
-                return (string)GetValue(IncludedRolesProperty);
-            }
-            set
-            {
-                SetValue(IncludedRolesProperty, value);
-            }
+            get => (string)GetValue(IncludedRolesProperty);
+            set => SetValue(IncludedRolesProperty, value);
         }
 
         /// <summary>
@@ -193,14 +174,8 @@ namespace GSF.Windows
         /// </summary>
         public SecurityPrincipal SecurityPrincipal
         {
-            get
-            {
-                return (SecurityPrincipal)GetValue(SecurityPrincipalProperty);
-            }
-            set
-            {
-                SetValue(SecurityPrincipalProperty, value);
-            }
+            get => (SecurityPrincipal)GetValue(SecurityPrincipalProperty);
+            set => SetValue(SecurityPrincipalProperty, value);
         }
 
         #endregion
@@ -256,7 +231,7 @@ namespace GSF.Windows
 
                 // See if user's password has expired
                 if (securityProvider.UserData.IsDefined && securityProvider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
-                    ShowSecurityDialog(DisplayType.ChangePassword, string.Format("Your password has expired. {0} You must change your password to continue.", securityProvider.AuthenticationFailureReason));
+                    ShowSecurityDialog(DisplayType.ChangePassword, $"Your password has expired. {securityProvider.AuthenticationFailureReason} You must change your password to continue.");
                 else
                     ShowSecurityDialog(DisplayType.Login);
             }
@@ -325,25 +300,25 @@ namespace GSF.Windows
         /// Identifies the <see cref="ForceLoginDisplay"/> dependency property.
         /// </summary>
         /// <returns>identifier for the <see cref="ForceLoginDisplay"/> dependency property.</returns>
-        public static readonly DependencyProperty ForceLoginDisplayProperty = DependencyProperty.Register("ForceLoginDisplay", typeof(bool), typeof(SecureWindow), new PropertyMetadata(false));
+        public static readonly DependencyProperty ForceLoginDisplayProperty = DependencyProperty.Register(nameof(ForceLoginDisplay), typeof(bool), typeof(SecureWindow), new PropertyMetadata(false));
 
         /// <summary>
         /// Identifies the <see cref="ResourceAccessiblity"/> dependency property.
         /// </summary>
         /// <returns>identifier for the <see cref="ResourceAccessiblity"/> dependency property.</returns>
-        public static readonly DependencyProperty ResourceAccessiblityProperty = DependencyProperty.Register("ResourceAccessiblity", typeof(ResourceAccessiblityMode), typeof(SecureWindow), new PropertyMetadata(ResourceAccessiblityMode.Configurable));
+        public static readonly DependencyProperty ResourceAccessiblityProperty = DependencyProperty.Register(nameof(ResourceAccessiblity), typeof(ResourceAccessiblityMode), typeof(SecureWindow), new PropertyMetadata(ResourceAccessiblityMode.Configurable));
 
         /// <summary>
         /// Identifies the <see cref="IncludedRoles"/> dependency property.
         /// </summary>
         /// <returns>identifier for the <see cref="IncludedRoles"/> dependency property.</returns>
-        public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register("IncludedRoles", typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
+        public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register(nameof(IncludedRoles), typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
 
         /// <summary>
         /// Identifies the <see cref="SecurityPrincipal"/> dependency property.
         /// </summary>
         /// <returns>identifier for the <see cref="SecurityPrincipal"/> dependency property.</returns>
-        public static readonly DependencyProperty SecurityPrincipalProperty = DependencyProperty.Register("SecurityPrincipal", typeof(SecurityPrincipal), typeof(SecureWindow));
+        public static readonly DependencyProperty SecurityPrincipalProperty = DependencyProperty.Register(nameof(SecurityPrincipal), typeof(SecurityPrincipal), typeof(SecureWindow));
 
         #endregion
     }
