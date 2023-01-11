@@ -51,10 +51,6 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\GSF.Web\GSF.Web.csproj">
-      <Project>{0501c2dc-3428-4413-ae92-f0d82ff3dbbc}</Project>
-      <Name>GSF.Web</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

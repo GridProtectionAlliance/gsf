@@ -259,10 +259,6 @@
       <Project>{72713097-3be3-4fa7-97b5-7ec3a2ba8316}</Project>
       <Name>GSF.Net</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GSF.Security\GSF.Security.csproj">
-      <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
-      <Name>GSF.Security</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GSF.ServiceProcess\GSF.ServiceProcess.csproj">
       <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
       <Name>GSF.ServiceProcess</Name>
