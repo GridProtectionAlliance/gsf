@@ -262,7 +262,7 @@ namespace GSF.Windows
             ISecurityProvider securityProvider = SecurityPrincipal?.Identity.Provider;
 
             // Show authentication failure reason if one was defined and user didn't force another message
-            if ((object)errorMessage == null && (object)securityProvider != null)
+            if (errorMessage is null && securityProvider is not null)
                 errorMessage = securityProvider.AuthenticationFailureReason;
 
             if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -276,7 +276,7 @@ namespace GSF.Windows
             {
                 // User chose to cancel security action. If the secure window has no parent,
                 // this is root window so exit application, otherwise just close the window
-                if ((object)this.Owner == null)
+                if (this.Owner is null)
                 {
                     m_shutdownRequested = true;
                     Application.Current.Shutdown();
