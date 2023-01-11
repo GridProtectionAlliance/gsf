@@ -11,7 +11,7 @@
     <RootNamespace>GSF.PhasorProtocols</RootNamespace>
     <AssemblyName>GSF.PhasorProtocols</AssemblyName>
     <TargetFrameworkProfile />
-    <LangVersion>9</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
