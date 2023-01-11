@@ -134,10 +134,6 @@
       <Project>{5af0d55a-30bf-46a5-8a47-fa885f56bfef}</Project>
       <Name>GSF.TimeSeries.UI.WPF</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\GSF.Windows\GSF.Windows.csproj">
-      <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>
-      <Name>GSF.Windows</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

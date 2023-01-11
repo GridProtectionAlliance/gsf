@@ -61,9 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="MainForm.cs" />
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
@@ -138,10 +136,6 @@
     <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj">
       <Project>{7ed01b57-dd71-4a38-bb29-65d629224a12}</Project>
       <Name>GSF.TimeSeries.UI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\GSF.Windows\GSF.Windows.csproj">
-      <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>
-      <Name>GSF.Windows</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
