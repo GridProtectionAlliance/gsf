@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        MinWidth="500"
         Title="" ShowInTaskbar="False" Background="Transparent"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen"
         WindowStyle="ToolWindow">
@@ -52,7 +53,7 @@
             <Grid x:Name="LoginSection" Grid.Row="2" Visibility="Visible">
 
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="200" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -79,14 +80,16 @@
                 <TextBox x:Name="TextBoxUserName" Grid.Row="3" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
 
                 <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
-                    <TextBlock Text="Password" FontSize="{StaticResource RegularTextSize}" Margin="5" />
-                    <TextBlock Text="*" Foreground="Red"/>
+                    <TextBlock x:Name="LabelPassword" Text="Password" FontSize="{StaticResource RegularTextSize}" Margin="5" />
+                    <TextBlock x:Name="LabelPasswordRequired"  Text="*" Foreground="Red"/>
                 </StackPanel>
 
                 <PasswordBox x:Name="TextBoxPassword" Grid.Row="4" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
 
                 <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1" Height="52" VerticalAlignment="Top">
-                    <Button x:Name="ButtonLogin" Content="Login" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Height="25" Margin="5"/>                    
+                    <Button x:Name="ButtonLogin" Content="Login" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Height="25" Margin="7 5 5 5"/>
+                    <TextBlock Text="or" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
+                    <Button x:Name="ButtonAzAuth" Content="Azure Auth" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Height="25" Margin="5 5 -20 5" />
                 </StackPanel>
                 
                 <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">

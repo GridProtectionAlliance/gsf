@@ -33,6 +33,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using GSF.Configuration;
 using GSF.Identity;
 using GSF.Security;
@@ -66,7 +67,7 @@ namespace GSF.Windows
     /// <summary>
     /// Represents a WPF window used to request user credentials and other security related information.
     /// </summary>
-    public partial class SecurityPortal : Window
+    public partial class SecurityPortal
     {
         #region [ Members ]
 
@@ -91,6 +92,9 @@ namespace GSF.Windows
             Closed += Window_Closed;
             MouseDown += Window_MouseDown;
             ButtonLogin.Click += ButtonLogin_Click;
+            ButtonAzAuth.Click += ButtonAzAuth_Click;
+            ButtonAzAuth.MouseEnter += ButtonAzAuth_MouseEnter;
+            ButtonAzAuth.MouseLeave += ButtonAzAuth_MouseLeave;
             ButtonExit.Click += ButtonExit_Click;
             ButtonOK.Click += ButtonOK_Click;
             ButtonChange.Click += ButtonChange_Click;
@@ -146,21 +150,14 @@ namespace GSF.Windows
         /// <summary>
         /// Gets the security principal used for role-based authorization.
         /// </summary>
-        public SecurityPrincipal SecurityPrincipal
-        {
-            get;
-            private set;
-        }
-
+        public SecurityPrincipal SecurityPrincipal { get; private set; }
+        
         /// <summary>
         /// Gets or sets flag that indicates if there was a failure during provider initialization.
         /// </summary>
         public bool ProviderFailure
         {
-            get
-            {
-                return m_providerFailure;
-            }
+            get => m_providerFailure;
             set
             {
                 m_providerFailure = value;
@@ -179,8 +176,7 @@ namespace GSF.Windows
                     ConfigurationFile.Current.Save();
                 }
 
-                if (DialogResult == null)
-                    DialogResult = value;
+                DialogResult ??= value;
             }
         }
 
@@ -207,37 +203,46 @@ namespace GSF.Windows
             ButtonOK.IsDefault = false;
             ButtonChange.IsDefault = false;
 
-            if (m_displayType == DisplayType.Login)
+            switch (m_displayType)
             {
-                TextBoxPassword.Password = "";
-                ButtonLogin.IsDefault = true;
-                TextBlockApplicationLogin.Visibility = Visibility.Visible;
-                LoginSection.Visibility = Visibility.Visible;
+                case DisplayType.Login:
+                {
+                    TextBoxPassword.Password = "";
+                    ButtonLogin.IsDefault = true;
+                    TextBlockApplicationLogin.Visibility = Visibility.Visible;
+                    LoginSection.Visibility = Visibility.Visible;
 
-                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
-                    TextBoxUserName.Focus();
-                else
-                    TextBoxPassword.Focus();
-            }
-            else if (m_displayType == DisplayType.AccessDenied)
-            {
-                ButtonOK.IsDefault = true;
-                TextBlockAccessDenied.Visibility = Visibility.Visible;
-                AccessDeniedSection.Visibility = Visibility.Visible;
-            }
-            else if (m_displayType == DisplayType.ChangePassword)
-            {
-                TextBoxOldPassword.Password = "";
-                TextBoxNewPassword.Password = "";
-                TextBoxConfirmPassword.Password = "";
-                ButtonChange.IsDefault = true;
-                TextBlockChangePassword.Visibility = Visibility.Visible;
-                ChangePasswordSection.Visibility = Visibility.Visible;
+                    if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                        TextBoxUserName.Focus();
+                    else
+                        TextBoxPassword.Focus();
 
-                if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
-                    TextBoxChangePasswordUserName.Focus();
-                else
-                    TextBoxOldPassword.Focus();
+                    break;
+                }
+                case DisplayType.AccessDenied:
+                {
+                    ButtonOK.IsDefault = true;
+                    TextBlockAccessDenied.Visibility = Visibility.Visible;
+                    AccessDeniedSection.Visibility = Visibility.Visible;
+
+                    break;
+                }
+                case DisplayType.ChangePassword:
+                {
+                    TextBoxOldPassword.Password = "";
+                    TextBoxNewPassword.Password = "";
+                    TextBoxConfirmPassword.Password = "";
+                    ButtonChange.IsDefault = true;
+                    TextBlockChangePassword.Visibility = Visibility.Visible;
+                    ChangePasswordSection.Visibility = Visibility.Visible;
+
+                    if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
+                        TextBoxChangePasswordUserName.Focus();
+                    else
+                        TextBoxOldPassword.Focus();
+
+                    break;
+                }
             }
         }
 
@@ -269,43 +274,38 @@ namespace GSF.Windows
         /// <param name="message">Error message to display.</param>
         public void DisplayErrorMessage(string message)
         {
-            if ((object)TextBlockGlobalMessage != null)
+            if (TextBlockGlobalMessage is null)
+                return;
+
+            if (string.IsNullOrWhiteSpace(message))
             {
-                if (string.IsNullOrWhiteSpace(message))
-                {
-                    TextBlockGlobalMessage.Text = "";
-                    TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
-                }
-                else
-                {
-                    TextBlockGlobalMessage.Text = message;
-                    TextBlockGlobalMessage.Visibility = Visibility.Visible;
-                }
+                TextBlockGlobalMessage.Text = "";
+                TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                TextBlockGlobalMessage.Text = message;
+                TextBlockGlobalMessage.Visibility = Visibility.Visible;
             }
         }
 
         /// <summary>
         /// Clears error message.
         /// </summary>
-        public void ClearErrorMessage()
-        {
+        public void ClearErrorMessage() => 
             DisplayErrorMessage(null);
-        }
 
         private bool TryImpersonate(string loginID, string password, out WindowsImpersonationContext impersonationContext)
         {
-            string domain;
-            string username;
-            string[] splitLoginID;
-
             try
             {
-                splitLoginID = loginID.Split('\\');
+                string[] splitLoginID = loginID.Split('\\');
 
                 if (splitLoginID.Length == 2)
                 {
-                    domain = splitLoginID[0];
-                    username = splitLoginID[1];
+                    string domain = splitLoginID[0];
+                    string username = splitLoginID[1];
+                    
                     impersonationContext = UserInfo.ImpersonateUser(domain, username, password);
 
                     return true;
@@ -327,10 +327,8 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void Window_Closed(object sender, EventArgs e)
-        {
+        private void Window_Closed(object sender, EventArgs e) => 
             ExitSuccess = false;
-        }
 
         /// <summary>
         /// Handles mouse down event anywhere on the screen so user can click and drag this window around.
@@ -350,14 +348,12 @@ namespace GSF.Windows
         /// <param name="e">Arguments of this event.</param>
         private void ButtonLogin_Click(object sender, RoutedEventArgs e)
         {
-            UserInfo userInfo;
             WindowsImpersonationContext impersonationContext = null;
-            ISecurityProvider securityProvider;
 
             try
             {
                 // Determine whether we need to try impersonating the user
-                userInfo = new UserInfo(TextBoxUserName.Text);
+                UserInfo userInfo = new(TextBoxUserName.Text);
 
                 // If the application is unable to access the domain, possibly because the local user
                 // running the application does not have access to domain objects, it's possible that
@@ -379,14 +375,14 @@ namespace GSF.Windows
                 }
 
                 // Initialize the security provider
-                securityProvider = SecurityProviderCache.CreateProvider(TextBoxUserName.Text);
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(TextBoxUserName.Text);
                 securityProvider.SecurePassword = TextBoxPassword.SecurePassword;
 
                 // Attempt to authenticate user
                 if (securityProvider.Authenticate())
                 {
                     // Setup security principal for subsequent uses
-                    SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                    SecurityIdentity securityIdentity = new(securityProvider);
                     SecurityPrincipal = new SecurityPrincipal(securityIdentity);
                     ClearErrorMessage();
                     ExitSuccess = true;
@@ -397,7 +393,7 @@ namespace GSF.Windows
                     if (securityProvider.UserData.IsDefined && securityProvider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     {
                         // Display password expired message
-                        DisplayErrorMessage(string.Format("Your password has expired. {0} You must change your password to continue.", securityProvider.AuthenticationFailureReason));
+                        DisplayErrorMessage($"Your password has expired. {securityProvider.AuthenticationFailureReason} You must change your password to continue.");
                         m_displayType = DisplayType.ChangePassword;
                         ManageScreenVisualization();
                         TextBoxPassword.Password = "";
@@ -425,12 +421,38 @@ namespace GSF.Windows
             }
             finally
             {
-                if ((object)impersonationContext != null)
+                if (impersonationContext is not null)
                 {
                     impersonationContext.Undo();
                     impersonationContext.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// Attempts to logins user with Azure authentication.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonAzAuth_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ButtonAzAuth_MouseEnter(object sender, MouseEventArgs e)
+        {
+            TextBoxPassword.IsEnabled = false;
+            LabelPassword.Tag = LabelPassword.Foreground;
+            LabelPassword.Foreground = Brushes.Gray;
+            LabelPasswordRequired.Tag = LabelPasswordRequired.Foreground;
+            LabelPasswordRequired.Foreground = Brushes.Gray;
+        }
+
+        private void ButtonAzAuth_MouseLeave(object sender, MouseEventArgs e)
+        {
+            TextBoxPassword.IsEnabled = true;
+            LabelPassword.Foreground = (Brush)LabelPassword.Tag;
+            LabelPasswordRequired.Foreground = (Brush)LabelPasswordRequired.Tag;
         }
 
         /// <summary>
@@ -463,7 +485,7 @@ namespace GSF.Windows
                         DisplayErrorMessage("Password changed successfully.");
 
                         // Setup security principal for subsequent uses
-                        SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                        SecurityIdentity securityIdentity = new(securityProvider);
                         SecurityPrincipal = new SecurityPrincipal(securityIdentity);
                         ClearErrorMessage();
                         ExitSuccess = true;
@@ -471,22 +493,23 @@ namespace GSF.Windows
                     else
                     {
                         // Show why password change failed
-                        if (!ShowFailureReason(securityProvider))
-                        {
-                            if (!securityProvider.IsUserAuthenticated)
-                                DisplayErrorMessage("Authentication was not successful.");
-                            else
-                                DisplayErrorMessage("Password change was not successful.");
+                        if (ShowFailureReason(securityProvider))
+                            return;
 
-                            if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
-                                TextBoxChangePasswordUserName.Focus();
-                            else
-                                TextBoxOldPassword.Focus();
-                        }
+                        DisplayErrorMessage(securityProvider.IsUserAuthenticated ? 
+                            "Password change was not successful." : 
+                            "Authentication was not successful.");
+
+                        if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
+                            TextBoxChangePasswordUserName.Focus();
+                        else
+                            TextBoxOldPassword.Focus();
                     }
                 }
                 else
+                {
                     DisplayErrorMessage("Account does not support password change.");
+                }
             }
             catch (Exception ex)
             {
@@ -500,10 +523,8 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void ButtonExit_Click(object sender, RoutedEventArgs e)
-        {
+        private void ButtonExit_Click(object sender, RoutedEventArgs e) => 
             ExitSuccess = false;
-        }
 
         /// <summary>
         /// Closes window.
@@ -530,10 +551,8 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void ButtonForgotPasswordLink_Click(object sender, RoutedEventArgs e)
-        {
+        private void ButtonForgotPasswordLink_Click(object sender, RoutedEventArgs e) => 
             MessageBox.Show("Please contact application administrator to reset your password.", "Forgot Password");
-        }
 
         /// <summary>
         /// Navigates users to Change Password screen.
@@ -579,10 +598,8 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e) => 
             ClearErrorMessage();
-        }
 
         /// <summary>
         /// We make sure all text boxes "select-all" when they receive focus.
@@ -591,20 +608,18 @@ namespace GSF.Windows
         /// <param name="e">Arguments of this event.</param>
         private void TextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if ((object)sender != null)
+            switch (sender)
             {
-                TextBox box = sender as TextBox;
-
-                if ((object)box != null)
-                {
+                case null:
+                    return;
+                case TextBox box:
                     box.SelectAll();
-                }
-                else
+                    break;
+                default:
                 {
                     PasswordBox passwordBox = sender as PasswordBox;
-
-                    if ((object)passwordBox != null)
-                        passwordBox.SelectAll();
+                    passwordBox?.SelectAll();
+                    break;
                 }
             }
         }

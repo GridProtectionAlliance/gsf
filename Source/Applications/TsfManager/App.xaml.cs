@@ -43,7 +43,6 @@ namespace TsfManager
         private Guid m_nodeID;
         private readonly ErrorLogger m_errorLogger;
         private readonly Func<string> m_defaultErrorText;
-        private readonly string m_title;
 
         #endregion
 
@@ -56,20 +55,24 @@ namespace TsfManager
         {
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
 
-            m_errorLogger = new ErrorLogger();
-            m_defaultErrorText = m_errorLogger.ErrorTextMethod;
-            m_errorLogger.ErrorTextMethod = ErrorText;
-            m_errorLogger.ExitOnUnhandledException = false;
-            m_errorLogger.HandleUnhandledException = true;
-            m_errorLogger.LogToEmail = false;
-            m_errorLogger.LogToEventLog = true;
-            m_errorLogger.LogToFile = true;
-            m_errorLogger.LogToScreenshot = true;
-            m_errorLogger.LogToUI = true;
+            m_errorLogger = new ErrorLogger
+            {
+                ErrorTextMethod = ErrorText,
+                ExitOnUnhandledException = false,
+                HandleUnhandledException = true,
+                LogToEmail = false,
+                LogToEventLog = true,
+                LogToFile = true,
+                LogToScreenshot = true,
+                LogToUI = true
+            };
+
             m_errorLogger.Initialize();
+            
+            m_defaultErrorText = m_errorLogger.ErrorTextMethod;
 
             Version appVersion = AssemblyInfo.EntryAssembly.Version;
-            m_title = AssemblyInfo.EntryAssembly.Title + " (v" + appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ") ";
+            Title = AssemblyInfo.EntryAssembly.Title + " (v" + appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ") ";
         }
 
         #endregion
@@ -81,10 +84,7 @@ namespace TsfManager
         /// </summary>
         public Guid NodeID
         {
-            get
-            {
-                return m_nodeID;
-            }
+            get => m_nodeID;
             set
             {
                 m_nodeID = value;
@@ -92,13 +92,7 @@ namespace TsfManager
             }
         }
 
-        public string Title
-        {
-            get
-            {
-                return m_title;
-            }
-        }
+        public string Title { get; }
 
         #endregion
 
@@ -109,13 +103,13 @@ namespace TsfManager
             string errorMessage = m_defaultErrorText();
             Exception ex = m_errorLogger.LastException;
 
-            if (ex != null)
-            {
-                if (string.Compare(ex.Message, "UnhandledException", true) == 0 && ex.InnerException != null)
-                    ex = ex.InnerException;
+            if (ex is null)
+                return errorMessage;
 
-                errorMessage = string.Format("{0}\r\n\r\nError details: {1}", errorMessage, ex.Message);
-            }
+            if (string.Compare(ex.Message, "UnhandledException", StringComparison.OrdinalIgnoreCase) == 0 && ex.InnerException != null)
+                ex = ex.InnerException;
+
+            errorMessage = $"{errorMessage}\r\n\r\nError details: {ex.Message}";
 
             return errorMessage;
         }
