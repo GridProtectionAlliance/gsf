@@ -135,7 +135,7 @@ namespace GSF.Windows
         /// </summary>
         public SecureWindow()
         {
-            this.Initialized += SecureWindow_Initialized;
+            Initialized += SecureWindow_Initialized;
         }
 
         #endregion
@@ -186,13 +186,8 @@ namespace GSF.Windows
         /// Gets the name of resource being accessed.
         /// </summary>
         /// <returns>Name of the resource being accessed.</returns>
-        protected virtual string GetResourceName()
-        {
-            if (!string.IsNullOrEmpty(this.Name))
-                return Name;
-
-            return GetType().Name;
-        }
+        protected virtual string GetResourceName() => 
+            string.IsNullOrEmpty(Name) ? GetType().Name : Name;
 
         private void SecureWindow_Initialized(object sender, EventArgs e)
         {
@@ -215,7 +210,7 @@ namespace GSF.Windows
                 securityProvider.PassthroughPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
                 securityProvider.Authenticate();
 
-                SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                SecurityIdentity securityIdentity = new(securityProvider);
                 SecurityPrincipal = new SecurityPrincipal(securityIdentity);
             }
             catch (Exception ex)
@@ -258,7 +253,7 @@ namespace GSF.Windows
 
         private void ShowSecurityDialog(DisplayType displayType, string errorMessage = null)
         {
-            SecurityPortal securityDialog = new SecurityPortal(displayType);
+            SecurityPortal securityDialog = new(displayType);
             ISecurityProvider securityProvider = SecurityPrincipal?.Identity.Provider;
 
             // Show authentication failure reason if one was defined and user didn't force another message
@@ -276,14 +271,14 @@ namespace GSF.Windows
             {
                 // User chose to cancel security action. If the secure window has no parent,
                 // this is root window so exit application, otherwise just close the window
-                if (this.Owner is null)
+                if (Owner is null)
                 {
                     m_shutdownRequested = true;
                     Application.Current.Shutdown();
                 }
                 else
                 {
-                    this.Close();
+                    Close();
                 }
             }
 

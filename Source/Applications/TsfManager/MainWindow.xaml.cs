@@ -27,7 +27,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -36,7 +35,6 @@ using System.Xml.Serialization;
 using GSF.Communication;
 using GSF.IO;
 using GSF.Reflection;
-using GSF.Security;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
 
@@ -45,7 +43,7 @@ namespace TsfManager
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : ResizableWindow
+    public partial class MainWindow
     {
         #region [ Members ]
 
@@ -59,13 +57,7 @@ namespace TsfManager
 
         #region [ Properties ]
 
-        public ObservableCollection<MenuDataItem> MenuDataItems
-        {
-            get
-            {
-                return m_menuDataItems;
-            }
-        }
+        public ObservableCollection<MenuDataItem> MenuDataItems => m_menuDataItems;
 
         #endregion
 
@@ -77,21 +69,25 @@ namespace TsfManager
         public MainWindow()
         {
             InitializeComponent();
-            this.Loaded += MainWindow_Loaded;
-            this.Unloaded += MainWindow_Unloaded;
+
+            if (SecurityPrincipal is null)
+            {
+                Environment.Exit(403);
+                return;
+            }
+
+            Loaded += MainWindow_Loaded;
+            Unloaded += MainWindow_Unloaded;
             Title = ((App)Application.Current).Title;
             TextBoxTitle.Text = AssemblyInfo.EntryAssembly.Title;
 
-            CommonFunctions.CurrentUser = Thread.CurrentPrincipal.Identity.Name;
-            CommonFunctions.CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
-
-            if (!string.IsNullOrEmpty(CommonFunctions.CurrentUser))
-                Title += " Current User: " + CommonFunctions.CurrentUser;
+            CommonFunctions.CurrentPrincipal = SecurityPrincipal;
+            Title += " - " + SecurityPrincipal.Identity.Provider.UserData.LoginID;
 
             CommonFunctions.SetRetryServiceConnection(true);
             CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
-            CommonFunctions.CanGoForwardChanged += (sender, args) => ForwardButton.IsEnabled = CommonFunctions.CanGoForward;
-            CommonFunctions.CanGoBackChanged += (sender, args) => BackButton.IsEnabled = CommonFunctions.CanGoBack;
+            CommonFunctions.CanGoForwardChanged += (_, _) => ForwardButton.IsEnabled = CommonFunctions.CanGoForward;
+            CommonFunctions.CanGoBackChanged += (_, _) => BackButton.IsEnabled = CommonFunctions.CanGoBack;
         }
 
         #endregion
@@ -107,14 +103,22 @@ namespace TsfManager
 
                 Dictionary<Guid, string> updatedNodeList = Node.GetLookupList(null);
                 ComboboxNode.ItemsSource = updatedNodeList;
-                if (ComboboxNode.Items.Count > 0)
+
+                if (ComboboxNode.Items.Count <= 0)
+                    return;
+
+                if (!updatedNodeList.ContainsKey(m_selectedNodeId))
+                    return;
+
+                KeyValuePair<Guid, string> first = new();
+
+                foreach (KeyValuePair<Guid, string> pair in updatedNodeList.Where(pair => pair.Key == m_selectedNodeId))
                 {
-                    if (updatedNodeList.ContainsKey(m_selectedNodeId))
-                        ComboboxNode.SelectedItem = (from r in updatedNodeList
-                                                     where r.Key == m_selectedNodeId
-                                                     select r).FirstOrDefault();
+                    first = pair;
+                    break;
                 }
 
+                ComboboxNode.SelectedItem = first;
             }
             finally
             {
@@ -130,8 +134,8 @@ namespace TsfManager
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Load Menu
-            XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("MenuDataItems");
-            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);
+            XmlRootAttribute xmlRootAttribute = new("MenuDataItems");
+            XmlSerializer serializer = new(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);
 
             using (XmlReader reader = XmlReader.Create(FilePath.GetAbsolutePath("Menu.xml")))
             {
@@ -170,48 +174,44 @@ namespace TsfManager
         /// <param name="e">Event argument.</param>
         private void ComboboxNode_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(ComboboxNode.SelectionBoxItem.ToString()))
-                ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectionBoxItem).Key;
-            else
-                ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
+            ((App)Application.Current).NodeID = string.IsNullOrEmpty(ComboboxNode.SelectionBoxItem.ToString()) ? 
+                ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key : 
+                ((KeyValuePair<Guid, string>)ComboboxNode.SelectionBoxItem).Key;
 
             m_menuDataItems[0].Command.Execute(null);
         }
 
         private void ConnectToService()
         {
-            if (m_windowsServiceClient != null)
+            if (m_windowsServiceClient != null && m_windowsServiceClient.Helper is not null && m_windowsServiceClient.Helper.RemotingClient is not null)
             {
-                if ((object)m_windowsServiceClient != null && (object)m_windowsServiceClient.Helper != null && (object)m_windowsServiceClient.Helper.RemotingClient != null)
-                {
-                    m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
-                    m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
-                }
+                m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
+                m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
             }
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
 
-            if ((object)m_windowsServiceClient != null)
-            {
-                m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
-                m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+            if (m_windowsServiceClient is null)
+                return;
 
-                if (m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+            m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+            m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+
+            if (m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+            {
+                EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
                 {
-                    EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
-                    {
-                        EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
-                        ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
-                    });
-                }
-                else
+                    EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
+                    ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
+                });
+            }
+            else
+            {
+                EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
                 {
-                    EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
-                    {
-                        EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
-                        ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
-                    });
-                }
+                    EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
+                    ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
+                });
             }
         }
 
@@ -233,15 +233,11 @@ namespace TsfManager
             });
         }
 
-        private void ButtonBack_Click(object sender, RoutedEventArgs e)
-        {
+        private void ButtonBack_Click(object sender, RoutedEventArgs e) => 
             CommonFunctions.GoBack();
-        }
 
-        private void ButtonForward_Click(object sender, RoutedEventArgs e)
-        {
+        private void ButtonForward_Click(object sender, RoutedEventArgs e) => 
             CommonFunctions.GoForward();
-        }
 
         #endregion
     }
