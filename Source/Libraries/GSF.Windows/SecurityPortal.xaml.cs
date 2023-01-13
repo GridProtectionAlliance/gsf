@@ -135,7 +135,7 @@ namespace GSF.Windows
 
             TextBoxUserName.Text = setting;
 
-            // Inititialize screen
+            // Initialize screen
             ClearErrorMessage();
             ManageScreenVisualization();
 

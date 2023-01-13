@@ -32,6 +32,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Principal;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
@@ -42,7 +43,6 @@ using Microsoft.Win32;
 
 #if !MONO
 using System.DirectoryServices.AccountManagement;
-using System.Text;
 #endif
 
 // ReSharper disable RedundantExplicitParamsArrayCreation
