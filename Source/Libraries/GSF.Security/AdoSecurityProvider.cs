@@ -48,13 +48,11 @@ using GSF.Data;
 using GSF.Diagnostics;
 using GSF.Identity;
 
-#pragma warning disable S2068
-
 namespace GSF.Security
 {
     /// <summary>
     /// Represents an <see cref="ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Oracle, etc.) for its
-    /// backend data store and authenticates internal users against Active Directory and external users against the database.
+    /// back-end data store and authenticates internal users against Active Directory and external users against the database.
     /// </summary>
     /// <example>
     /// Required config file entries (automatically added):
@@ -229,7 +227,7 @@ namespace GSF.Security
         /// Initializes a new instance of the <see cref="AdoSecurityProvider"/> class.
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
-        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the back-end data store, otherwise false.</param>
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         protected AdoSecurityProvider(string username, bool canRefreshData, bool canResetPassword, bool canChangePassword)
@@ -249,11 +247,7 @@ namespace GSF.Security
         /// <summary>
         /// Gets last exception reported by the <see cref="AdoSecurityProvider"/>.
         /// </summary>
-        public Exception LastException
-        {
-            get;
-            set;
-        }
+        public Exception LastException { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if <see cref="LogAuthenticationAttempt"/> and <see cref="LogError"/> should
@@ -263,11 +257,7 @@ namespace GSF.Security
         /// Setting this flag to <c>false</c> may be necessary in cases where a database has been setup to use authentication
         /// but does not include an "AccessLog" or "ErrorLog" table.
         /// </remarks>
-        public bool UseDatabaseLogging
-        {
-            get;
-            set;
-        }
+        public bool UseDatabaseLogging { get; set; }
 
 
         /// <summary>
@@ -275,11 +265,7 @@ namespace GSF.Security
         /// The user still needs to exist but they won't require a Role and will be assigned the DefaultRoles.
         /// It is a comma separate list for multiple Roles. If an empty String is supplied a Role is required for the user.
         /// </summary>
-        public string DefaultRoles
-        {
-            get;
-            set;
-        }
+        public string DefaultRoles { get; set; }
 
         #endregion
 
@@ -297,7 +283,7 @@ namespace GSF.Security
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
 
-            settings.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security data store.");
+            settings.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the back-end security data store.");
             settings.Add("LdapPath", "", "Specifies the LDAP path used to initialize the security provider.");
             settings.Add("PasswordRequirementsRegex", DefaultPasswordRequirementsRegex, "Regular expression used to validate new passwords for database users.");
             settings.Add("PasswordRequirementsError", DefaultPasswordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
@@ -320,7 +306,7 @@ namespace GSF.Security
 
             try
             {
-                UserData userData = new UserData(UserData.Username);
+                UserData userData = new(UserData.Username);
 
                 // Initialize user data.
                 userData.Initialize();
@@ -331,20 +317,20 @@ namespace GSF.Security
                 //   Table3: Roles that are assigned to the user either implicitly (NT groups) or explicitly (database) or through a group.
 
                 DataSet securityContext;
+                InvalidOperationException connectionException = null;
 
                 try
                 {
                     // Attempt to extract current security context from the database
-                    using (AdoDataConnection database = new AdoDataConnection(SettingsCategory))
-                    {
-                        securityContext = ExtractSecurityContext(database.Connection, ex => LogError(ex.Source, ex.ToString()), UserData.Username);
-                    }
+                    using AdoDataConnection database = new(SettingsCategory);
+                    securityContext = ExtractSecurityContext(database.Connection, ex => LogError(ex.Source, ex.ToString()), UserData.Username);
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
                     // Failed to open ADO connection, attempt to fall back on using security context from last known cached information
-                    using (AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache())
-                        securityContext = cache.DataSet;
+                    using AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache();
+                    securityContext = cache.DataSet;
+                    connectionException = ex;
                 }
 
                 try
@@ -360,13 +346,20 @@ namespace GSF.Security
                 }
 
                 // Validate that needed security tables exist in the data set
-                if ((object)securityContext == null)
+                if (securityContext is null)
                     throw new SecurityException("Failed to load a valid security context. Cannot proceed with user authentication.");
 
                 foreach (string securityTable in s_securityTables)
                 {
-                    if (!securityContext.Tables.Contains(securityTable))
-                        throw new SecurityException($"Failed to load a valid security context - missing table '{securityTable}'. Cannot proceed with user authentication.");
+                    if (securityContext.Tables.Contains(securityTable))
+                        continue;
+
+                    string exceptionMessage = $"Failed while attempting to fall back on cached security context: missing table '{securityTable}'.{Environment.NewLine}{Environment.NewLine}Cannot proceed with user authentication.";
+
+                    if (connectionException is null)
+                        throw new SecurityException(exceptionMessage);
+
+                    throw new SecurityException($"{connectionException.Message}{Environment.NewLine}{Environment.NewLine}Also {exceptionMessage.ToCamelCase()}", connectionException);
                 }
 
                 if (securityContext.Tables[ApplicationRoleTable].Rows.Count == 0 && string.IsNullOrEmpty(DefaultRoles))
@@ -400,7 +393,7 @@ namespace GSF.Security
                     userAccountID = Guid.Parse(Convert.ToString(userAccount["ID"]));
                 }
 
-                if (userData.IsExternal && (object)userAccount != null)
+                if (userData.IsExternal && userAccount is not null)
                 {
                     // Load database user details
                     if (string.IsNullOrEmpty(userData.LoginID))
@@ -444,7 +437,7 @@ namespace GSF.Security
                 }
 
                 // Administrator can lock out NT/AD user as well as database-only user via database
-                if (!userData.IsLockedOut && (object)userAccount != null && !Convert.IsDBNull(userAccount["LockedOut"]))
+                if (!userData.IsLockedOut && userAccount is not null && !Convert.IsDBNull(userAccount["LockedOut"]))
                     userData.IsLockedOut = Convert.ToBoolean(userAccount["LockedOut"]);
 
                 // At this point an NT/AD based user will have a list of groups that is known to be available to the user. A database
@@ -481,7 +474,7 @@ namespace GSF.Security
                                 securityGroup = securityGroups[0];
                         }
 
-                        if ((object)securityGroup == null || Convert.IsDBNull(securityGroup["Name"]))
+                        if (securityGroup is null || Convert.IsDBNull(securityGroup["Name"]))
                             continue;
 
                         // Just in case a database user was manually assigned to an NT/AD group, make sure to convert
@@ -511,7 +504,7 @@ namespace GSF.Security
                 // application roles based on the role assignments of the groups the user is a member of.
                 if (userApplicationRoles.Length == 0)
                 {
-                    List<DataRow> implicitRoles = new List<DataRow>();
+                    List<DataRow> implicitRoles = new();
 
                     // Filter implicitly assigned application roles for each of the user's database and NT/AD groups. Note that
                     // even if user is not defined in the database, an NT/AD group they are a member of may be associated with
@@ -563,7 +556,7 @@ namespace GSF.Security
                             applicationRole = applicationRoles[0];
                     }
 
-                    if ((object)applicationRole == null || Convert.IsDBNull(applicationRole["Name"]))
+                    if (applicationRole is null || Convert.IsDBNull(applicationRole["Name"]))
                         continue;
 
                     // Found application role by ID, add role name to user roles if not already defined
@@ -574,7 +567,7 @@ namespace GSF.Security
                 }
 
                 // Add DefaultRoles if no Roles are present
-                if (!string.IsNullOrEmpty(DefaultRoles) && userData.Roles.Count() == 0)
+                if (!string.IsNullOrEmpty(DefaultRoles) && !userData.Roles.Any())
                     foreach(string role in DefaultRoles.Split(','))
                         userData.Roles.Add(role);
 
@@ -672,7 +665,7 @@ namespace GSF.Security
             }
 
             // If an exception occurred during authentication, rethrow it after logging authentication attempt
-            if ((object)authenticationException != null)
+            if (authenticationException is not null)
             {
                 LastException = authenticationException;
                 LogError(authenticationException.Source, authenticationException.ToString());
@@ -713,44 +706,43 @@ namespace GSF.Security
                 if (!Regex.IsMatch(newPassword, m_passwordRequirementsRegex))
                     throw new SecurityException(m_passwordRequirementsError);
 
-                using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
-                {
-                    if ((object)dbConnection == null)
-                        return false;
+                using IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection;
 
-                    bool oracle = dbConnection.GetType().Name == "OracleConnection";
-                    IDbCommand command = dbConnection.CreateCommand();
-                    command.CommandType = CommandType.Text;
+                if (dbConnection is null)
+                    return false;
 
-                    if (command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
-                        command.CommandText = "UPDATE UserAccount SET [Password] = @newPassword, ChangePasswordOn = @changePasswordOn WHERE Name = @name AND [Password] = @oldPassword";
-                    else if (oracle)
-                        command.CommandText = "UPDATE UserAccount SET Password = :newPassword, ChangePasswordOn = :changePasswordOn WHERE Name = :name AND Password = :oldPassword";
-                    else
-                        command.CommandText = "UPDATE UserAccount SET Password = @newPassword, ChangePasswordOn = @changePasswordOn WHERE Name = @name AND Password = @oldPassword";
+                bool oracle = dbConnection.GetType().Name == "OracleConnection";
+                IDbCommand command = dbConnection.CreateCommand();
+                command.CommandType = CommandType.Text;
 
-                    IDbDataParameter param = command.CreateParameter();
-                    param.ParameterName = oracle ? ":newPassword" : "@newPassword";
-                    param.Value = SecurityProviderUtility.EncryptPassword(newPassword);
-                    command.Parameters.Add(param);
+                if (command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
+                    command.CommandText = "UPDATE UserAccount SET [Password] = @newPassword, ChangePasswordOn = @changePasswordOn WHERE Name = @name AND [Password] = @oldPassword";
+                else if (oracle)
+                    command.CommandText = "UPDATE UserAccount SET Password = :newPassword, ChangePasswordOn = :changePasswordOn WHERE Name = :name AND Password = :oldPassword";
+                else
+                    command.CommandText = "UPDATE UserAccount SET Password = @newPassword, ChangePasswordOn = @changePasswordOn WHERE Name = @name AND Password = @oldPassword";
 
-                    param = command.CreateParameter();
-                    param.ParameterName = oracle ? ":changePasswordOn" : "@changePasswordOn";
-                    param.Value = DateTime.UtcNow.AddDays(90.0D);
-                    command.Parameters.Add(param);
+                IDbDataParameter param = command.CreateParameter();
+                param.ParameterName = oracle ? ":newPassword" : "@newPassword";
+                param.Value = SecurityProviderUtility.EncryptPassword(newPassword);
+                command.Parameters.Add(param);
 
-                    param = command.CreateParameter();
-                    param.ParameterName = oracle ? ":name" : "@name";
-                    param.Value = UserData.Username;
-                    command.Parameters.Add(param);
+                param = command.CreateParameter();
+                param.ParameterName = oracle ? ":changePasswordOn" : "@changePasswordOn";
+                param.Value = DateTime.UtcNow.AddDays(90.0D);
+                command.Parameters.Add(param);
 
-                    param = command.CreateParameter();
-                    param.ParameterName = oracle ? ":oldPassword" : "@oldPassword";
-                    param.Value = UserData.Password;
-                    command.Parameters.Add(param);
+                param = command.CreateParameter();
+                param.ParameterName = oracle ? ":name" : "@name";
+                param.Value = UserData.Username;
+                command.Parameters.Add(param);
 
-                    command.ExecuteNonQuery();
-                }
+                param = command.CreateParameter();
+                param.ParameterName = oracle ? ":oldPassword" : "@oldPassword";
+                param.Value = UserData.Password;
+                command.Parameters.Add(param);
+
+                command.ExecuteNonQuery();
 
                 return true;
             }
@@ -781,7 +773,7 @@ namespace GSF.Security
             if (m_lastLoggedLoginResult == loginSuccess)
                 return;
 
-            if ((object)UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
+            if (UserData is not null && !string.IsNullOrWhiteSpace(UserData.Username))
             {
                 string message = $"User \"{UserData.Username}\" login attempt {(loginSuccess ? "succeeded using " + (m_successfulPassThroughAuthentication ? "pass-through authentication" : "user acquired password") : "failed")}.";
                 EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
@@ -806,10 +798,9 @@ namespace GSF.Security
                 // a read-only database is being used or current user only has read-only access to database.
                 if (!string.IsNullOrWhiteSpace(SettingsCategory) && UseDatabaseLogging)
                 {
-                    using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
-                    {
-                        connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess);
-                    }
+                    using AdoDataConnection connection = new(SettingsCategory);
+
+                    connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess);
                 }
             }
 
@@ -832,10 +823,9 @@ namespace GSF.Security
                 {
                     try
                     {
-                        using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
-                        {
-                            connection.ExecuteNonQuery("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", source, message);
-                        }
+                        using AdoDataConnection connection = new(SettingsCategory);
+
+                        connection.ExecuteNonQuery("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", source, message);
 
                         return true;
                     }
@@ -870,107 +860,104 @@ namespace GSF.Security
             try
             {
                 // Using an inter-process cache for user roles
-                using (UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache())
+                using UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache();
+
+                // Retrieve current user roles
+                HashSet<string> currentRoles = new(UserData.Roles, StringComparer.OrdinalIgnoreCase);
+
+                // Attempt to retrieve cached user roles
+                string[] cachedRoles = userRoleCache[UserData.Username];
+
+                bool rolesChanged = false;
+                string message;
+                EventLogEntryType entryType;
+
+                if (cachedRoles is null)
                 {
-                    HashSet<string> currentRoles;
-                    string[] cachedRoles;
-
-                    // Retrieve current user roles
-                    currentRoles = new HashSet<string>(UserData.Roles, StringComparer.OrdinalIgnoreCase);
-
-                    // Attempt to retrieve cached user roles
-                    cachedRoles = userRoleCache[UserData.Username];
-
-                    bool rolesChanged = false;
-                    string message;
-                    EventLogEntryType entryType;
-
-                    if ((object)cachedRoles == null)
+                    if (currentRoles.Count == 0)
                     {
-                        if (currentRoles.Count == 0)
-                        {
-                            // New user access granted
-                            message = $"Initial Encounter: user \"{UserData.Username}\" attempted login with no assigned roles.";
-                            entryType = EventLogEntryType.FailureAudit;
-                            rolesChanged = true;
-                        }
-                        else
-                        {
-                            // New user access granted
-                            message = $"Initial Encounter: user \"{UserData.Username}\" granted access with role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\".";
-                            entryType = EventLogEntryType.Information;
-                            rolesChanged = true;
-                        }
-                    }
-                    else if (!currentRoles.SetEquals(cachedRoles))
-                    {
-                        if (currentRoles.Count == 0)
-                        {
-                            // New user access granted
-                            message = $"Subsequent Encounter: user \"{UserData.Username}\" attempted login with no assigned roles - role assignment that existed at last login was \"{cachedRoles.ToDelimitedString(", ")}\".";
-                            entryType = EventLogEntryType.FailureAudit;
-                            rolesChanged = true;
-                        }
-                        else
-                        {
-                            // User role access changed
-                            message = $"Subsequent Encounter: user \"{UserData.Username}\" granted access with new role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\" - role assignment is different from last login, was \"{cachedRoles.ToDelimitedString(", ")}\".";
-                            entryType = EventLogEntryType.Warning;
-                            rolesChanged = true;
-                        }
+                        // New user access granted
+                        message = $"Initial Encounter: user \"{UserData.Username}\" attempted login with no assigned roles.";
+                        entryType = EventLogEntryType.FailureAudit;
+                        rolesChanged = true;
                     }
                     else
                     {
-                        if (currentRoles.Count == 0)
-                        {
-                            // New user access granted
-                            message = $"Subsequent Encounter: user \"{UserData.Username}\" attempted login with no assigned roles - same as last login attempt.";
-                            entryType = EventLogEntryType.FailureAudit;
-                            rolesChanged = true;
-                        }
-                        else
-                        {
-                            message = $"Subsequent Encounter: user \"{UserData.Username}\" granted access with role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\" - role assignment is the same as last login.";
-                            entryType = EventLogEntryType.SuccessAudit;
-                        }
-                    }
-
-                    // Log granted role access to event log
-                    try
-                    {
-                        LogEvent(ApplicationName, message, entryType, 0);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogError(ex.Source, ex.ToString());
-                    }
-
-                    // If role has changed, update cache
-                    if (rolesChanged)
-                    {
-                        userRoleCache[UserData.Username] = currentRoles.ToArray();
-                        userRoleCache.WaitForSave();
-
-                        MessageLevel level;
-
-                        switch (entryType)
-                        {
-                            case EventLogEntryType.SuccessAudit:
-                            case EventLogEntryType.Information:
-                                level = MessageLevel.Info;
-                                break;
-                            case EventLogEntryType.FailureAudit:
-                            case EventLogEntryType.Warning:
-                                level = MessageLevel.Warning;
-                                break;
-                            default:
-                                level = MessageLevel.Error;
-                                break;
-                        }
-
-                        Log.Publish(level, MessageFlags.SecurityMessage, "UserRoleAccessChanged", message);
+                        // New user access granted
+                        message = $"Initial Encounter: user \"{UserData.Username}\" granted access with role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\".";
+                        entryType = EventLogEntryType.Information;
+                        rolesChanged = true;
                     }
                 }
+                else if (!currentRoles.SetEquals(cachedRoles))
+                {
+                    if (currentRoles.Count == 0)
+                    {
+                        // New user access granted
+                        message = $"Subsequent Encounter: user \"{UserData.Username}\" attempted login with no assigned roles - role assignment that existed at last login was \"{cachedRoles.ToDelimitedString(", ")}\".";
+                        entryType = EventLogEntryType.FailureAudit;
+                        rolesChanged = true;
+                    }
+                    else
+                    {
+                        // User role access changed
+                        message = $"Subsequent Encounter: user \"{UserData.Username}\" granted access with new role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\" - role assignment is different from last login, was \"{cachedRoles.ToDelimitedString(", ")}\".";
+                        entryType = EventLogEntryType.Warning;
+                        rolesChanged = true;
+                    }
+                }
+                else
+                {
+                    if (currentRoles.Count == 0)
+                    {
+                        // New user access granted
+                        message = $"Subsequent Encounter: user \"{UserData.Username}\" attempted login with no assigned roles - same as last login attempt.";
+                        entryType = EventLogEntryType.FailureAudit;
+                        rolesChanged = true;
+                    }
+                    else
+                    {
+                        message = $"Subsequent Encounter: user \"{UserData.Username}\" granted access with role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\" - role assignment is the same as last login.";
+                        entryType = EventLogEntryType.SuccessAudit;
+                    }
+                }
+
+                // Log granted role access to event log
+                try
+                {
+                    LogEvent(ApplicationName, message, entryType, 0);
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex.Source, ex.ToString());
+                }
+
+                if (!rolesChanged)
+                    return;
+
+                // If role has changed, update cache
+                userRoleCache[UserData.Username] = currentRoles.ToArray();
+                userRoleCache.WaitForSave();
+
+                MessageLevel level;
+
+                switch (entryType)
+                {
+                    case EventLogEntryType.SuccessAudit:
+                    case EventLogEntryType.Information:
+                        level = MessageLevel.Info;
+                        break;
+                    case EventLogEntryType.FailureAudit:
+                    case EventLogEntryType.Warning:
+                        level = MessageLevel.Warning;
+                        break;
+                    // ReSharper disable once UnreachableSwitchCaseDueToIntegerAnalysis
+                    default:
+                        level = MessageLevel.Error;
+                        break;
+                }
+
+                Log.Publish(level, MessageFlags.SecurityMessage, "UserRoleAccessChanged", message);
             }
             catch (Exception ex)
             {
@@ -985,22 +972,21 @@ namespace GSF.Security
         /// <returns>The roles that the specified user has.</returns>
         public override List<string> GetUserRoles(string applicationId)
         {
-            List<string> roles = new List<string>();
+            List<string> roles = new();
 
-            DataSet securityContext = new DataSet("AdoSecurityContext");
+            DataSet securityContext = new("AdoSecurityContext");
 
            
             try
             {
-                Guid nodeId = new Guid(applicationId);
+                Guid nodeId = new(applicationId);
                 // Attempt to extract current security context from the database
-                using (AdoDataConnection database = new AdoDataConnection(SettingsCategory))
+                using AdoDataConnection database = new(SettingsCategory);
+
+                // Read the security context tables from the database connection
+                foreach (string securityTable in s_securityTables)
                 {
-                    // Read the security context tables from the database connection
-                    foreach (string securityTable in s_securityTables)
-                    {
-                        AddSecurityContextTable(database.Connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? nodeId : default(Guid));
-                    }
+                    AddSecurityContextTable(database.Connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? nodeId : default(Guid));
                 }
             }
             catch (InvalidOperationException)
@@ -1032,7 +1018,7 @@ namespace GSF.Security
             // application roles based on the role assignments of the groups the user is a member of.
             if (userApplicationRoles.Length == 0)
             {
-                List<DataRow> implicitRoles = new List<DataRow>();
+                List<DataRow> implicitRoles = new();
 
                 // Filter implicitly assigned application roles for each of the user's database and NT/AD groups. Note that
                 // even if user is not defined in the database, an NT/AD group they are a member of may be associated with
@@ -1050,14 +1036,14 @@ namespace GSF.Security
                     if (securityGroups.Length == 0)
                         securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupName)}'");
 
-                    if (securityGroups.Length > 0)
-                    {
-                        // Found security group by name, access group ID to lookup application roles defined for the group
-                        DataRow securityGroup = securityGroups[0];
+                    if (securityGroups.Length <= 0)
+                        continue;
 
-                        if (!Convert.IsDBNull(securityGroup["ID"]))
-                            implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select($"SecurityGroupID = '{EncodeEscapeSequences(securityGroup["ID"].ToString())}'"));
-                    }
+                    // Found security group by name, access group ID to lookup application roles defined for the group
+                    DataRow securityGroup = securityGroups[0];
+
+                    if (!Convert.IsDBNull(securityGroup["ID"]))
+                        implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select($"SecurityGroupID = '{EncodeEscapeSequences(securityGroup["ID"].ToString())}'"));
                 }
 
                 userApplicationRoles = implicitRoles.ToArray();
@@ -1085,7 +1071,7 @@ namespace GSF.Security
                         applicationRole = applicationRoles[0];
                 }
 
-                if ((object)applicationRole == null || Convert.IsDBNull(applicationRole["Name"]))
+                if (applicationRole is null || Convert.IsDBNull(applicationRole["Name"]))
                     continue;
 
                 // Found application role by ID, add role name to user roles if not already defined
@@ -1095,10 +1081,11 @@ namespace GSF.Security
                     roles.Add(roleName);
             }
 
+            if (string.IsNullOrEmpty(DefaultRoles) || roles.Count != 0)
+                return roles;
+
             // Add DefaultRoles if no Roles are present
-            if (!string.IsNullOrEmpty(DefaultRoles) && roles.Count() == 0)
-                foreach (string role in DefaultRoles.Split(','))
-                    roles.Add(role);
+            roles.AddRange(DefaultRoles.Split(','));
 
             return roles;
         }
@@ -1145,29 +1132,28 @@ namespace GSF.Security
             DefaultNodeID = Guid.Parse(systemSettings["NodeID"].Value.ToNonNullString(Guid.NewGuid().ToString()));
 
             // Determine whether the node exists in the database and create it if it doesn't
-            if (DefaultNodeID != Guid.Empty)
+            if (DefaultNodeID == Guid.Empty)
+                return;
+
+            try
             {
-                try
-                {
-                    using (AdoDataConnection connection = new AdoDataConnection(DefaultSettingsCategory))
-                    {
-                        const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
-                        const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
-                        const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
+                using AdoDataConnection connection = new(DefaultSettingsCategory);
 
-                        int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
+                const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
+                const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
+                const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
 
-                        if (nodeCount == 0)
-                        {
-                            connection.ExecuteNonQuery(NodeInsertFormat);
-                            connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.SwallowException(ex, "AdoSecurityProvider: Failed to create default database node ID");
-                }
+                int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
+
+                if (nodeCount != 0)
+                    return;
+
+                connection.ExecuteNonQuery(NodeInsertFormat);
+                connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex, "AdoSecurityProvider: Failed to create default database node ID");
             }
         }
 
@@ -1182,67 +1168,65 @@ namespace GSF.Security
         /// <returns>A new <see cref="DataSet"/> containing the latest security context.</returns>
         public static DataSet ExtractSecurityContext(IDbConnection connection, Action<Exception> exceptionHandler, string currentUserName = null)
         {
-            DataSet securityContext = new DataSet("AdoSecurityContext");
+            DataSet securityContext = new("AdoSecurityContext");
 
             // Read the security context tables from the database connection
             foreach (string securityTable in s_securityTables)
-            {
                 AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? DefaultNodeID : default(Guid));
-            }
 
             // Always cache security context after successful extraction
-            Thread cacheSecurityContext = new Thread(() =>
+            Thread cacheSecurityContext = new(() =>
             {
                 try
                 {
-                    using (AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache())
-                    {
-                        cache.DataSet = securityContext;
-                        cache.WaitForSave();
-                    }
+                    using AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache();
+
+                    cache.DataSet = securityContext;
+                    cache.WaitForSave();
                 }
                 catch (Exception ex)
                 {
                     exceptionHandler(ex);
                 }
-            });
+            })
+            { 
+                IsBackground = true
+            };
 
-            cacheSecurityContext.IsBackground = true;
             cacheSecurityContext.Start();
 
+            if (SecurityContextRefreshed is null)
+                return securityContext;
+
             // Raise an event that will send a notification when the security context for a user has been refreshed
-            if ((object)SecurityContextRefreshed != null)
+            try
             {
-                try
+                Dictionary<string, string[]> userRoles = new(StringComparer.OrdinalIgnoreCase);
+                string[] roles;
+
+                using UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache();
+
+                foreach (DataRow row in securityContext.Tables[UserAccountTable].Rows)
                 {
-                    Dictionary<string, string[]> userRoles = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
-                    string[] roles;
+                    string userName = UserInfo.SIDToAccountName(Convert.ToString(row["Name"]));
 
-                    using (UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache())
-                    {
-                        foreach (DataRow row in securityContext.Tables[UserAccountTable].Rows)
-                        {
-                            string userName = UserInfo.SIDToAccountName(Convert.ToString(row["Name"]));
-
-                            if (userRoleCache.TryGetUserRole(userName, out roles))
-                                userRoles[userName] = roles;
-                        }
-
-                        // Also make sure current user is added since user may have implicit rights based on group
-                        if (!string.IsNullOrEmpty(currentUserName))
-                        {
-                            if (!userRoles.ContainsKey(currentUserName) && userRoleCache.TryGetUserRole(currentUserName, out roles))
-                                userRoles[currentUserName] = roles;
-                        }
-
-                        if (userRoles.Count > 0)
-                            SecurityContextRefreshed(typeof(AdoSecurityProvider), new EventArgs<Dictionary<string, string[]>>(userRoles));
-                    }
+                    if (userRoleCache.TryGetUserRole(userName, out roles))
+                        userRoles[userName] = roles;
                 }
-                catch (Exception ex)
+
+                // Also make sure current user is added since user may have implicit rights based on group
+                if (!string.IsNullOrEmpty(currentUserName))
                 {
-                    exceptionHandler(new InvalidOperationException($"Failed to raise \"SecurtyContextRefreshed\" event: {ex.Message}", ex));
+                    if (!userRoles.ContainsKey(currentUserName) && userRoleCache.TryGetUserRole(currentUserName, out roles))
+                        userRoles[currentUserName] = roles;
                 }
+
+                if (userRoles.Count > 0)
+                    SecurityContextRefreshed(typeof(AdoSecurityProvider), new EventArgs<Dictionary<string, string[]>>(userRoles));
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler(new InvalidOperationException($"Failed to raise \"SecurtyContextRefreshed\" event: {ex.Message}", ex));
             }
 
             return securityContext;
@@ -1256,23 +1240,13 @@ namespace GSF.Security
 
         private static void AddSecurityContextTable(IDbConnection connection, DataSet securityContext, string tableName, Guid nodeID)
         {
-            string tableQuery;
-
-            if (nodeID == default(Guid))
-                tableQuery = $"SELECT * FROM {tableName}";
-            else
-                tableQuery = $"SELECT * FROM {tableName} WHERE NodeID = '{nodeID}'";
-
-            using (IDataReader reader = connection.ExecuteReader(tableQuery))
-            {
-                securityContext.Tables.Add(tableName).Load(reader);
-            }
+            string tableQuery = $"SELECT * FROM {tableName}{(nodeID == default ? "" : $" WHERE NodeID = '{nodeID}'")}";
+            using IDataReader reader = connection.ExecuteReader(tableQuery);
+            securityContext.Tables.Add(tableName).Load(reader);
         }
 
-        private static string EncodeEscapeSequences(string value)
-        {
-            return value.ToNonNullString().Replace("\\", "\\\\");
-        }
+        private static string EncodeEscapeSequences(string value) => 
+            value.ToNonNullString().Replace("\\", "\\\\");
 
         #endregion
     }
