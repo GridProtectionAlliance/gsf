@@ -42,6 +42,7 @@ using Microsoft.Win32;
 
 #if !MONO
 using System.DirectoryServices.AccountManagement;
+using System.Text;
 #endif
 
 // ReSharper disable RedundantExplicitParamsArrayCreation
@@ -188,8 +189,8 @@ namespace GSF.Identity
                 {
                     try
                     {
-                        return IsLocalAccount ? 
-                            DateTime.Parse(GetUserPropertyValue("lastLogin")) : 
+                        return IsLocalAccount ?
+                            DateTime.Parse(GetUserPropertyValue("lastLogin")) :
                             DateTime.FromFileTime(ConvertToLong(GetUserPropertyValueCollection("lastLogon").Value));
                     }
                     catch
@@ -374,10 +375,10 @@ namespace GSF.Identity
         {
             get
             {
-            #if !MONO
+#if !MONO
                 if (!Enabled)
                     return Array.Empty<string>();
-                
+
                 if (IsLocalAccount || m_useLegacyGroupLookups)
                     return OldGetGroups();
 
@@ -385,14 +386,79 @@ namespace GSF.Identity
                 {
                     try
                     {
+                        // In the following code, GetAuthorizationGroups can be super slow. Updated code inspired by:
+                        //     https://milestone.topics.it/2012/12/userprincipalgetauthorizationgroupsoh-my.html
+
+                        /*
                         using PrincipalContext context = IsLocalAccount ? new PrincipalContext(ContextType.Machine) : new PrincipalContext(ContextType.Domain, m_parent.Domain);
                         using UserPrincipal principal = UserPrincipal.FindByIdentity(context, m_parent.UserName);
 
-                        return principal?.GetAuthorizationGroups()
+                        if (principal is null)
+                            return Array.Empty<string>();
+
+                        return principal.GetAuthorizationGroups()
                             .Select(groupPrincipal => groupPrincipal.Sid.ToString())
                             .Select(SIDToAccountName)
-                            .ToArray() ??
-                             Array.Empty<string>();
+                            .ToArray();
+                        */
+
+                        DirectoryEntry rootEntry = new()
+                        {
+                            AuthenticationType = AuthenticationTypes.Secure
+                        };
+
+                        DirectorySearcher searcher = new()
+                        {
+                            SearchRoot = rootEntry,
+                            Filter = "(samAccountName=" + m_parent.UserName + ")"
+                        };
+
+                        SearchResult result = searcher.FindOne();
+
+                        if (result is null)
+                            return Array.Empty<string>();
+
+                        DirectoryEntry user = result.GetDirectoryEntry();
+                        user.RefreshCache(new[] { "tokenGroups" });
+
+                        string createGroupFilter(DirectoryEntry entry)
+                        {
+                            StringBuilder filter = new("(|");
+                            
+                            foreach (byte[] bytes in entry.Properties["tokenGroups"])
+                            {
+                                SecurityIdentifier sid = new(bytes, 0);
+                                filter.Append($"(objectSid={sid.Value})");
+                            }
+
+                            filter.Append(")");
+
+                            return filter.ToString();
+                        }
+
+                        searcher = new DirectorySearcher
+                        {
+                            SearchRoot = rootEntry,
+                            Filter = createGroupFilter(user)
+                        };
+
+                        searcher.PropertiesToLoad.Add("name");
+
+                        IEnumerable<SearchResult> results = searcher.FindAll().Cast<SearchResult>();
+
+                        string getName(SearchResult searchResult)
+                        {
+                            try
+                            {
+                                return searchResult.Properties["name"][0].ToString();
+                            }
+                            catch
+                            {
+                                return null;
+                            }
+                        }
+
+                        return results.Select(getName).Where(name => !string.IsNullOrEmpty(name)).ToArray();
                     }
                     catch (Exception ex)
                     {
@@ -403,9 +469,9 @@ namespace GSF.Identity
                         return OldGetGroups();
                     }
                 }
-            #else
+#else
                 return OldGetGroups();
-            #endif
+#endif
             }
         }
 
@@ -413,7 +479,7 @@ namespace GSF.Identity
         {
             get
             {
-            #if !MONO
+#if !MONO
                 if (!Enabled)
                     return Array.Empty<string>();
 
@@ -444,9 +510,9 @@ namespace GSF.Identity
                         return OldGetLocalGroups();
                     }
                 }
-            #else
+#else
                 return OldGetLocalGroups();
-            #endif
+#endif
             }
         }
 
@@ -694,8 +760,8 @@ namespace GSF.Identity
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         private DirectorySearcher CreateDirectorySearcher() =>
-            string.IsNullOrEmpty(m_parent.LdapPath) ? 
-                new DirectorySearcher() : 
+            string.IsNullOrEmpty(m_parent.LdapPath) ?
+                new DirectorySearcher() :
                 new DirectorySearcher(new DirectoryEntry(m_parent.LdapPath));
 
         #endregion
@@ -704,7 +770,7 @@ namespace GSF.Identity
 
         // Static Fields
         private static readonly string[] s_builtInLocalGroups;
-        
+
         internal static readonly string BuiltInGroupName;
 
         internal static readonly string NTAuthorityGroupName;
@@ -823,7 +889,7 @@ namespace GSF.Identity
             return (long)highPart << 32 | (uint)lowPart;
         }
 
-        public static string[] GetBuiltInLocalGroups() => 
+        public static string[] GetBuiltInLocalGroups() =>
             s_builtInLocalGroups;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
@@ -989,7 +1055,7 @@ namespace GSF.Identity
                     using DirectoryEntry newUserEntry = localMachine.Children.Add(userName, "user");
 
                     newUserEntry.Invoke("SetPassword", new object[] { password });
-                    newUserEntry.Invoke("Put", new object[] { "Description", userDescription ?? $"Local account for {userName}"});
+                    newUserEntry.Invoke("Put", new object[] { "Description", userDescription ?? $"Local account for {userName}" });
                     newUserEntry.CommitChanges();
 
                     return true;
@@ -1093,7 +1159,7 @@ namespace GSF.Identity
                 {
                     using DirectoryEntry newGroupEntry = localMachine.Children.Add(groupName, "group");
 
-                    newGroupEntry.Invoke("Put", new object[] { "Description", groupDescription ?? $"{groupName} group."});
+                    newGroupEntry.Invoke("Put", new object[] { "Description", groupDescription ?? $"{groupName} group." });
                     newGroupEntry.CommitChanges();
 
                     return true;
@@ -1404,10 +1470,10 @@ namespace GSF.Identity
             return sid;
         }
 
-        public static bool IsUserSID(string sid) => 
+        public static bool IsUserSID(string sid) =>
             IsSchemaSID(sid, "User");
 
-        public static bool IsGroupSID(string sid) => 
+        public static bool IsGroupSID(string sid) =>
             IsSchemaSID(sid, "Group");
 
         private static bool IsSchemaSID(string sid, string schemaClassName)
