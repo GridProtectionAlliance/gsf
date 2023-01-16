@@ -378,7 +378,7 @@ namespace GSF.Web.Model
         [HttpPost, Route("SearchableList")]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData)
         {
-            if (GetAuthCheck() && !AllowSearch)
+            if (!GetAuthCheck() || !AllowSearch)
                 return Unauthorized();
 
             DataTable table = GetSearchResults(postData);
@@ -395,7 +395,7 @@ namespace GSF.Web.Model
         [HttpPost, Route("{parentID?}/SearchableList")]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData, string parentID = null)
         {
-            if (GetAuthCheck() && !AllowSearch)
+            if (!GetAuthCheck() || !AllowSearch)
                 return Unauthorized();
 
             if (ParentKey != string.Empty && parentID != null)
