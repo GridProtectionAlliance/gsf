@@ -89,7 +89,7 @@
                 <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1" Height="52" VerticalAlignment="Top">
                     <Button x:Name="ButtonLogin" Content="Login" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Height="25" Margin="7 5 5 5"/>
                     <TextBlock Text="or" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
-                    <Button x:Name="ButtonAzAuth" Content="Azure Auth" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Height="25" Margin="5 5 -20 5" />
+                    <Button x:Name="ButtonAzAuth" Content="Azure AD Auth" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Height="25" Margin="5 5 -20 5" />
                 </StackPanel>
                 
                 <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">

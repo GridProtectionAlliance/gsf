@@ -441,6 +441,8 @@ namespace GSF.Windows
 
         private void ButtonAzAuth_MouseEnter(object sender, MouseEventArgs e)
         {
+            TextBoxPassword.Tag = TextBoxPassword.Password;
+            TextBoxPassword.Password = "";
             TextBoxPassword.IsEnabled = false;
             LabelPassword.Tag = LabelPassword.Foreground;
             LabelPassword.Foreground = Brushes.Gray;
@@ -451,6 +453,7 @@ namespace GSF.Windows
         private void ButtonAzAuth_MouseLeave(object sender, MouseEventArgs e)
         {
             TextBoxPassword.IsEnabled = true;
+            TextBoxPassword.Password = (string)TextBoxPassword.Tag;
             LabelPassword.Foreground = (Brush)LabelPassword.Tag;
             LabelPasswordRequired.Foreground = (Brush)LabelPasswordRequired.Tag;
         }
