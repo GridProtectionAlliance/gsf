@@ -41,9 +41,9 @@ namespace GrafanaAdapters
 
         static TargetCaches()
         {
-            ResetCacheFunctions = new();
+            ResetCacheFunctions = new List<Action>();
 
-            s_resetAllCaches = new(() =>
+            s_resetAllCaches = new ShortSynchronizedOperation(() =>
             {
                 Action[] resetCacheFunctions;
 
@@ -73,7 +73,7 @@ namespace GrafanaAdapters
         static TargetCache()
         {
             s_cacheName = $"GrafanaTargetCache-{typeof(T).Name}";
-            s_targetCache = new(s_cacheName);
+            s_targetCache = new MemoryCache(s_cacheName);
 
             lock (TargetCaches.ResetCacheFunctions)
                 TargetCaches.ResetCacheFunctions.Add(ResetCache);
@@ -107,6 +107,6 @@ namespace GrafanaAdapters
         }
 
         internal static void ResetCache() => 
-            Interlocked.Exchange(ref s_targetCache, new(s_cacheName)).Dispose();
+            Interlocked.Exchange(ref s_targetCache, new MemoryCache(s_cacheName)).Dispose();
     }
 }

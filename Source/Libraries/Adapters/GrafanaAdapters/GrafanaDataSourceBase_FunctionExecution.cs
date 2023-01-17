@@ -51,7 +51,7 @@ namespace GrafanaAdapters
             {
                 if (Enum.TryParse(value, out TimeUnit timeUnit))
                 {
-                    targetTimeUnit = new()
+                    targetTimeUnit = new TargetTimeUnit
                     {
                         Unit = timeUnit
                     };
@@ -62,7 +62,7 @@ namespace GrafanaAdapters
                 switch (value?.ToLowerInvariant())
                 {
                     case "milliseconds":
-                        targetTimeUnit = new()
+                        targetTimeUnit = new TargetTimeUnit
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Milli
@@ -70,7 +70,7 @@ namespace GrafanaAdapters
 
                         return true;
                     case "microseconds":
-                        targetTimeUnit = new()
+                        targetTimeUnit = new TargetTimeUnit
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Micro
@@ -78,7 +78,7 @@ namespace GrafanaAdapters
 
                         return true;
                     case "nanoseconds":
-                        targetTimeUnit = new()
+                        targetTimeUnit = new TargetTimeUnit
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Nano
@@ -211,7 +211,7 @@ namespace GrafanaAdapters
                     }
                 }
 
-                return new(parsedParameters.ToArray(), expression);
+                return new Tuple<string[], string>(parsedParameters.ToArray(), expression);
             });
 
             string[] parameters = expressionParameters.Item1;
@@ -341,7 +341,7 @@ namespace GrafanaAdapters
 
                     for (int i = 0; i < valueGroups.Length; i++)
                     {
-                        yield return new()
+                        yield return new DataSourceValueGroup
                         {
                             Target = seriesLabels[i],
                             RootTarget = valueGroups[i].RootTarget,
@@ -362,7 +362,7 @@ namespace GrafanaAdapters
 
                     foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, SeriesFunction.Evaluate, parameters, cancellationToken))
                     {
-                        yield return new()
+                        yield return new DataSourceValueGroup
                         {
                             Target = $"Evaluate({{ {parameters[0]} }}, {valueGroup.Target})",
                             RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
@@ -408,7 +408,7 @@ namespace GrafanaAdapters
 
                             foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters, cancellationToken))
                             {
-                                yield return new()
+                                yield return new DataSourceValueGroup
                                 {
                                     Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
                                     RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
@@ -424,7 +424,7 @@ namespace GrafanaAdapters
                         {
                             foreach (DataSourceValueGroup valueGroup in dataset)
                             {
-                                yield return new()
+                                yield return new DataSourceValueGroup
                                 {
                                     Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
                                     RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
@@ -457,7 +457,7 @@ namespace GrafanaAdapters
 
             foreach (IGrouping<string, DataSourceValue> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target))
             {
-                yield return new()
+                yield return new DataSourceValueGroup
                 {
                     Target = valueGroup.Key,
                     RootTarget = valueGroup.Key,
@@ -772,7 +772,7 @@ namespace GrafanaAdapters
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new() { Value = dataValue.Value - lastValue, Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = dataValue.Value - lastValue, Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -781,12 +781,12 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.TimeDifference:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Seconds };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new() { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
@@ -794,12 +794,12 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Derivative:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Seconds };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new() { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -808,7 +808,7 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.TimeIntegration:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Hours };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Hours };
 
                     result.Value = 0.0D;
 
@@ -830,7 +830,7 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Interval:
                     if (parameters.Length == 1 || !TargetTimeUnit.TryParse(parameters[1], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Seconds };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     value = FromTimeUnits(ParseFloat(parameters[0], source, true, isSliceOperation), timeUnit) / SI.Milli;
 
@@ -972,7 +972,7 @@ namespace GrafanaAdapters
                         IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () => context.CompileDynamic(expression));
 
                         // Return evaluated expression
-                        yield return new() { Value = Convert.ToDouble(dynamicExpression.Evaluate()), Time = lastTime, Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}" };
+                        yield return new DataSourceValue { Value = Convert.ToDouble(dynamicExpression.Evaluate()), Time = lastTime, Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}" };
                     }
 
                     break;
@@ -1029,7 +1029,7 @@ namespace GrafanaAdapters
             Tuple<bool, double> cache = TargetCache<Tuple<bool, double>>.GetOrAdd(parameter, () =>
             {
                 bool success = double.TryParse(parameter, out double result);
-                return new(success, result);
+                return new Tuple<bool, double>(success, result);
             });
 
             if (cache.Item1)
@@ -1115,7 +1115,7 @@ namespace GrafanaAdapters
                     success = int.TryParse(parameter, out result);
                 }
 
-                return new(success, result);
+                return new Tuple<bool, int>(success, result);
             });
 
             if (cache.Item1)

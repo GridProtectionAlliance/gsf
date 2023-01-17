@@ -47,7 +47,7 @@ namespace GrafanaAdapters
         /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
         public TimeSliceScanner(IEnumerable<DataSourceValueGroup> dataset, double tolerance = 0.0D)
         {
-            m_enumerators = new();
+            m_enumerators = new List<IEnumerator<DataSourceValue>>();
             Tolerance = tolerance;
 
             foreach (DataSourceValueGroup group in dataset)
@@ -158,16 +158,16 @@ namespace GrafanaAdapters
             }
 
             // Remove completed enumerators
-            if (completed.Count > 0)
-            {
-                completed.Sort();
+            if (completed.Count == 0)
+                return;
 
-                // Remove highest numeric indexes first to retain source index integrity
-                for (int i = completed.Count - 1; i >= 0; i--)
-                    m_enumerators.RemoveAt(completed[i]);
+            completed.Sort();
 
-                completed.Clear();
-            }
+            // Remove highest numeric indexes first to retain source index integrity
+            for (int i = completed.Count - 1; i >= 0; i--)
+                m_enumerators.RemoveAt(completed[i]);
+
+            completed.Clear();
         }
 
         #endregion
