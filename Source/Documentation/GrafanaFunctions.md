@@ -496,11 +496,18 @@ Returns a series of values that represent an adjusted set of angles that are wra
 
 ## Label
 
-Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this function will be ignored. The label parameter also supports substitutions when root target metadata can be resolved. For series values that directly map to a point tag, metadata value substitutions for the tag can be used in the label value - for example: {Alias}, {ID}, {SignalID}, {PointTag}, {AlternateTag}, {SignalReference}, {Device}, {FramesPerSecond}, {Protocol}, {ProtocolType}, {SignalType}, {EngineeringUnits}, {PhasorType}, {Company}, {Description} - where applicable, these substitutions can be used in any combination.
+Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3". Group operations on this function will be ignored. Label value parameter can be optionally quoted with single or double quotes.
+
+The label parameter also supports substitutions when root target metadata can be resolved. For series values that directly map to a point tag, metadata value substitutions for the tag can be used in the label value - for example: `{Alias}`, `{ID}`, `{SignalID}`, `{PointTag}`, `{AlternateTag}`, `{SignalReference}`, `{Device}`, `{FramesPerSecond}`, `{Protocol}`, `{ProtocolType}`, `{SignalType}`, `{EngineeringUnits}`, `{PhasorType}`, `{PhasorLabel}`, `{BaseKV}`, `{Company}`, `{Longitude}`, `{Latitude}`, `{Description}`, etc. Each of these fields come from the "ActiveMeasurements" metadata source, as defined in the "ConfigurationEntity" table. Where applicable, substitutions can be used along with fixed label text in any combination, e.g.: `'Series {ID} [{PointTag}]'`.
+
+Other metadata sources that target time-series measurements can also be used for substitutions so long the source is defined in the "ConfigurationEntity" table and the metadata columns include a "PointTag" field that can be matched to the target Grafana series name. To use any field from another defined metadata source, use the following substitution parameter format: `{TableName.FieldName}`.
 
 * Signature: `Label(value, expression)`
 * Returns: Series of values
-* Example: `Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))`
+* Example 1: `Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))`
+* Example 2: `Label("{Alias} {EngineeringUnits}", Shelby=GPA_SHELBY:FREQ)`
+* Example 3: `Label({AlternateTag}, FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PH%')`
+* Example 4: `Label('Shelby {ScadaTags.CircuitName} MW', FILTER ScadaTags WHERE SignalType='MW' AND Substation='SHELBY')`
 * Variants: `Label`, `Name`
 * Execution: [Deferred enumeration](#execution-modes)
 
