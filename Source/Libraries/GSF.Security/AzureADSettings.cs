@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.IO;
 using GSF.Configuration;
 using GSF.IO;
@@ -67,6 +68,8 @@ public class AzureADSettings
     /// Default value for <see cref="Enabled"/> property.
     /// </summary>
     public const bool DefaultEnabled = false;
+
+    private const string DefaultAzureADConfigSource = "appsettings.json";
 
     private const string DefaultAzureADSettings = @$"{{
   ""{DefaultSettingsCategory}"": {{
@@ -117,11 +120,35 @@ public class AzureADSettings
     public string Authority => $"{Instance}{TenantID}";
 
     /// <summary>
+    /// Loads Azure AD settings. Source based on target configuration.
+    /// </summary>
+    /// <param name="settingsCategory">Settings category to use for determine configuration location.</param>
+    /// <returns>Loaded <see cref="AzureADSettings"/> settings instance.</returns>
+    public static AzureADSettings Load(string settingsCategory = null)
+    {
+        const string AzureADConfigSource = "AzureADConfigSource";
+
+        if (string.IsNullOrEmpty(settingsCategory))
+            settingsCategory = SecurityProviderBase.DefaultSettingsCategory;
+
+        // Make sure default settings exist
+        ConfigurationFile config = ConfigurationFile.Current;
+        CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
+
+        settings.Add(AzureADConfigSource, DefaultAzureADConfigSource, "Azure AD configuration source. Either 'appsettings.json' file path or settings category to use.");
+        string configSource = settings[AzureADConfigSource].ValueAs(DefaultAzureADConfigSource).Trim();
+
+        return configSource.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ? 
+            LoadFromAppSettings(configSource) : 
+            LoadFromConfig(configSource);
+    }
+
+    /// <summary>
     /// Loads Azure AD settings from the specified JSON app settings file.
     /// </summary>
     /// <param name="filepath">JSON settings file to load. Defaults to local "appsettings.json".</param>
     /// <returns>Loaded <see cref="AzureADSettings"/> settings instance.</returns>
-    public static AzureADSettings Load(string filepath = null)
+    public static AzureADSettings LoadFromAppSettings(string filepath = null)
     {
         if (string.IsNullOrEmpty(filepath))
             filepath = "appsettings.json";
@@ -133,7 +160,7 @@ public class AzureADSettings
             File.WriteAllText(filepath, DefaultAzureADSettings);
 
         dynamic settings = JsonConvert.DeserializeObject(File.ReadAllText(filepath));
-        settings = settings?[DefaultSettingsCategory];
+        settings = settings?.AzureAd;
 
         return new AzureADSettings
         {
