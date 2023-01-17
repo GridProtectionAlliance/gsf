@@ -140,6 +140,9 @@
     <PackageReference Include="Microsoft.Identity.Client.NativeInterop">
       <Version>0.12.4</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Page Include="SecurityPortal.xaml" Condition=" '$(Configuration)' != 'Mono' ">

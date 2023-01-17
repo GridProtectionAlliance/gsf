@@ -253,7 +253,7 @@ namespace GSF.Windows
 
         private void ShowSecurityDialog(DisplayType displayType, string errorMessage = null)
         {
-            SecurityPortal securityDialog = new(displayType);
+            SecurityPortal securityDialog = new(this, displayType);
             ISecurityProvider securityProvider = SecurityPrincipal?.Identity.Provider;
 
             // Show authentication failure reason if one was defined and user didn't force another message
