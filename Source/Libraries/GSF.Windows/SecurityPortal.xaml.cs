@@ -28,15 +28,24 @@
 //******************************************************************************************************
 
 using System;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using GSF.Configuration;
+using GSF.Diagnostics;
 using GSF.Identity;
 using GSF.Security;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Broker;
+using Newtonsoft.Json;
+using Logger = GSF.Diagnostics.Logger;
 
 namespace GSF.Windows
 {
@@ -72,6 +81,7 @@ namespace GSF.Windows
         #region [ Members ]
 
         // Fields
+        private readonly SecureWindow m_parent;
         private DisplayType m_displayType;
         private bool m_providerFailure;
 
@@ -82,11 +92,13 @@ namespace GSF.Windows
         /// <summary>
         /// Initializes a new WPF window.
         /// </summary>
+        /// <param name="parent">Parent secure window reference.</param>
         /// <param name="displayType">Type of the message received from security API which is used to decide controls to be displayed on the screen.</param>
-        public SecurityPortal(DisplayType displayType)
+        public SecurityPortal(SecureWindow parent, DisplayType displayType)
         {
             InitializeComponent();
 
+            m_parent = parent;
             m_displayType = displayType;
 
             Closed += Window_Closed;
@@ -95,6 +107,7 @@ namespace GSF.Windows
             ButtonAzAuth.Click += ButtonAzAuth_Click;
             ButtonAzAuth.MouseEnter += ButtonAzAuth_MouseEnter;
             ButtonAzAuth.MouseLeave += ButtonAzAuth_MouseLeave;
+            ButtonAzAuth.IsEnabled = Settings.Enabled;
             ButtonExit.Click += ButtonExit_Click;
             ButtonOK.Click += ButtonOK_Click;
             ButtonChange.Click += ButtonChange_Click;
@@ -113,6 +126,9 @@ namespace GSF.Windows
             TextBoxOldPassword.GotFocus += TextBox_GotFocus;
             TextBoxNewPassword.GotFocus += TextBox_GotFocus;
             TextBoxConfirmPassword.GotFocus += TextBox_GotFocus;
+
+            if (!Settings.Enabled)
+                LabelOr.Foreground = Brushes.Gray;
 
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
             ConfigurationFile config = ConfigurationFile.Current;
@@ -151,7 +167,7 @@ namespace GSF.Windows
         /// Gets the security principal used for role-based authorization.
         /// </summary>
         public SecurityPrincipal SecurityPrincipal { get; private set; }
-        
+
         /// <summary>
         /// Gets or sets flag that indicates if there was a failure during provider initialization.
         /// </summary>
@@ -206,43 +222,43 @@ namespace GSF.Windows
             switch (m_displayType)
             {
                 case DisplayType.Login:
-                {
-                    TextBoxPassword.Password = "";
-                    ButtonLogin.IsDefault = true;
-                    TextBlockApplicationLogin.Visibility = Visibility.Visible;
-                    LoginSection.Visibility = Visibility.Visible;
+                    {
+                        TextBoxPassword.Password = "";
+                        ButtonLogin.IsDefault = true;
+                        TextBlockApplicationLogin.Visibility = Visibility.Visible;
+                        LoginSection.Visibility = Visibility.Visible;
 
-                    if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
-                        TextBoxUserName.Focus();
-                    else
-                        TextBoxPassword.Focus();
+                        if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                            TextBoxUserName.Focus();
+                        else
+                            TextBoxPassword.Focus();
 
-                    break;
-                }
+                        break;
+                    }
                 case DisplayType.AccessDenied:
-                {
-                    ButtonOK.IsDefault = true;
-                    TextBlockAccessDenied.Visibility = Visibility.Visible;
-                    AccessDeniedSection.Visibility = Visibility.Visible;
+                    {
+                        ButtonOK.IsDefault = true;
+                        TextBlockAccessDenied.Visibility = Visibility.Visible;
+                        AccessDeniedSection.Visibility = Visibility.Visible;
 
-                    break;
-                }
+                        break;
+                    }
                 case DisplayType.ChangePassword:
-                {
-                    TextBoxOldPassword.Password = "";
-                    TextBoxNewPassword.Password = "";
-                    TextBoxConfirmPassword.Password = "";
-                    ButtonChange.IsDefault = true;
-                    TextBlockChangePassword.Visibility = Visibility.Visible;
-                    ChangePasswordSection.Visibility = Visibility.Visible;
+                    {
+                        TextBoxOldPassword.Password = "";
+                        TextBoxNewPassword.Password = "";
+                        TextBoxConfirmPassword.Password = "";
+                        ButtonChange.IsDefault = true;
+                        TextBlockChangePassword.Visibility = Visibility.Visible;
+                        ChangePasswordSection.Visibility = Visibility.Visible;
 
-                    if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
-                        TextBoxChangePasswordUserName.Focus();
-                    else
-                        TextBoxOldPassword.Focus();
+                        if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
+                            TextBoxChangePasswordUserName.Focus();
+                        else
+                            TextBoxOldPassword.Focus();
 
-                    break;
-                }
+                        break;
+                    }
             }
         }
 
@@ -292,7 +308,7 @@ namespace GSF.Windows
         /// <summary>
         /// Clears error message.
         /// </summary>
-        public void ClearErrorMessage() => 
+        public void ClearErrorMessage() =>
             DisplayErrorMessage(null);
 
         private bool TryImpersonate(string loginID, string password, out WindowsImpersonationContext impersonationContext)
@@ -305,7 +321,7 @@ namespace GSF.Windows
                 {
                     string domain = splitLoginID[0];
                     string username = splitLoginID[1];
-                    
+
                     impersonationContext = UserInfo.ImpersonateUser(domain, username, password);
 
                     return true;
@@ -327,7 +343,7 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void Window_Closed(object sender, EventArgs e) => 
+        private void Window_Closed(object sender, EventArgs e) =>
             ExitSuccess = false;
 
         /// <summary>
@@ -434,9 +450,141 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void ButtonAzAuth_Click(object sender, RoutedEventArgs e)
+        private async void ButtonAzAuth_Click(object sender, RoutedEventArgs e)
         {
+            PublicClientApplicationBuilder appParams = PublicClientApplicationBuilder.Create(Settings.ClientID)
+                .WithAuthority(Settings.Authority)
+                .WithDefaultRedirectUri()
+                .WithBrokerPreview();
 
+            IPublicClientApplication app = appParams.Build();
+            TokenCacheHelper.EnableSerialization(app.UserTokenCache);
+
+            IAccount account = m_parent.ForceLoginDisplay ? null :
+                string.IsNullOrWhiteSpace(TextBoxUserName.Text) ?
+                    PublicClientApplication.OperatingSystemAccount :
+                    app.GetAccountsAsync().Result.FirstOrDefault();
+
+            AuthenticationResult authResult;
+            string[] scopes = { "user.read" };
+
+            try
+            {
+                authResult = await app.AcquireTokenSilent(scopes, account).ExecuteAsync();
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                Log.Publish(MessageLevel.Info, nameof(ButtonAzAuth_Click), nameof(MsalUiRequiredException), exception: ex);
+
+                try
+                {
+                    AcquireTokenInteractiveParameterBuilder authParams = app.AcquireTokenInteractive(scopes)
+                        .WithAccount(account)
+                        .WithParentActivityOrWindow(new WindowInteropHelper(this).Handle)
+                        .WithPrompt(Prompt.NoPrompt);
+
+                    if (!string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                        authParams.WithLoginHint(TextBoxUserName.Text);
+
+                    authResult = await authParams.ExecuteAsync();
+                }
+                catch (MsalException msalex)
+                {
+                    Log.Publish(MessageLevel.Error, nameof(ButtonAzAuth_Click), "Azure AD Error Acquiring Token", exception: msalex);
+                    DisplayErrorMessage($"Azure AD Error Acquiring Token:{Environment.NewLine}{msalex.Message}");
+
+                    if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                        TextBoxUserName.Focus();
+                    else
+                        TextBoxPassword.Focus();
+
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Error, nameof(ButtonAzAuth_Click), "Azure AD Error Acquiring Token Silently", exception: ex);
+                DisplayErrorMessage($"Azure AD Error Acquiring Token Silently:{Environment.NewLine}{ex.Message}");
+
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
+
+                return;
+            }
+
+            if (authResult is null)
+            {
+                DisplayErrorMessage($"Azure AD Failed to Acquire Authorization Result:{Environment.NewLine}No result retrieved for silent nor interactive authorization.");
+
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
+
+                return;
+            }
+
+            string username;
+            dynamic settings;
+
+            try
+            {
+                // At this point, user is authenticated so we use Microsoft Graph to get their username
+                HttpRequestMessage request = new(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+
+                HttpClient httpClient = new();
+                HttpResponseMessage response = await httpClient.SendAsync(request);
+
+                string content = await response.Content.ReadAsStringAsync();
+
+                settings = JsonConvert.DeserializeObject(content);
+                username = settings?.userPrincipalName;
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Error, nameof(ButtonAzAuth_Click), "Azure AD Error Acquiring User Info from Microsoft Graph", exception: ex);
+                DisplayErrorMessage($"Azure AD Error Acquiring User Info from Microsoft Graph:{Environment.NewLine}{ex.Message}");
+
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                DisplayErrorMessage($"Azure AD Failed to Acquire User Info from Microsoft Graph:{Environment.NewLine}No value retrieved for \"userPrincipalName\" in \"{settings}\".");
+
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
+
+                return;
+            }
+
+            try
+            {
+                // Initialize the security provider
+                TextBoxUserName.Text = username;
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
+                securityProvider.GetType().GetProperty(nameof(SecurityProviderBase.IsUserAuthenticated))?.SetValue(securityProvider, true);
+
+                // Setup security principal for subsequent uses
+                SecurityIdentity securityIdentity = new(securityProvider);
+                SecurityPrincipal = new SecurityPrincipal(securityIdentity);
+                ClearErrorMessage();
+                ExitSuccess = true;
+            }
+            catch (Exception ex)
+            {
+                DisplayErrorMessage($"Azure AD Failed to Establish Security Identity for \"{username}\":{Environment.NewLine}{ex.Message}");
+            }
         }
 
         private void ButtonAzAuth_MouseEnter(object sender, MouseEventArgs e)
@@ -499,8 +647,8 @@ namespace GSF.Windows
                         if (ShowFailureReason(securityProvider))
                             return;
 
-                        DisplayErrorMessage(securityProvider.IsUserAuthenticated ? 
-                            "Password change was not successful." : 
+                        DisplayErrorMessage(securityProvider.IsUserAuthenticated ?
+                            "Password change was not successful." :
                             "Authentication was not successful.");
 
                         if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
@@ -526,7 +674,7 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void ButtonExit_Click(object sender, RoutedEventArgs e) => 
+        private void ButtonExit_Click(object sender, RoutedEventArgs e) =>
             ExitSuccess = false;
 
         /// <summary>
@@ -554,7 +702,7 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void ButtonForgotPasswordLink_Click(object sender, RoutedEventArgs e) => 
+        private void ButtonForgotPasswordLink_Click(object sender, RoutedEventArgs e) =>
             MessageBox.Show("Please contact application administrator to reset your password.", "Forgot Password");
 
         /// <summary>
@@ -601,7 +749,7 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e) => 
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e) =>
             ClearErrorMessage();
 
         /// <summary>
@@ -619,15 +767,35 @@ namespace GSF.Windows
                     box.SelectAll();
                     break;
                 default:
-                {
-                    PasswordBox passwordBox = sender as PasswordBox;
-                    passwordBox?.SelectAll();
-                    break;
-                }
+                    {
+                        PasswordBox passwordBox = sender as PasswordBox;
+                        passwordBox?.SelectAll();
+                        break;
+                    }
             }
         }
 
         #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(SecurityPortal), MessageClass.Component);
+        private static readonly AzureADSettings Settings;
+
+        static SecurityPortal()
+        {
+            try
+            {
+                Settings = AzureADSettings.Load();
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Info, $".cctor::{nameof(SecurityPortal)}", "AzureADSettings.Load()", exception: ex);
+            }
+        }
 
         #endregion
     }
