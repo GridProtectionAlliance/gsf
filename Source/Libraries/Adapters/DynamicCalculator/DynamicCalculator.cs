@@ -30,6 +30,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Ciloci.Flee;
 using GSF;
 using GSF.Collections;
@@ -584,12 +585,18 @@ namespace DynamicCalculator
             if (alias.EndsWith("[]"))
             {
                 alias = alias.Substring(0, alias.Length - 2).Trim();
-                string[] targets = target.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                
+                // Split on any comma that is not in parenthesis
+                Regex parser = new(@",(?![^(]*\))", RegexOptions.Compiled);
+                string[] targets =  parser.Split(target);
                 int index = 0;
 
                 for (int i = 0; i < targets.Length; i++)
                 {
                     target = targets[i].Trim();
+
+                    if (string.IsNullOrEmpty(target))
+                        continue;
 
                     if (target.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase))
                     {
@@ -605,7 +612,8 @@ namespace DynamicCalculator
                     }
                 }
 
-                m_arrayVariableLengths[alias] = index;            }
+                m_arrayVariableLengths[alias] = index;
+            }
             else
             {
                 MeasurementKey key = GetKey(target);
