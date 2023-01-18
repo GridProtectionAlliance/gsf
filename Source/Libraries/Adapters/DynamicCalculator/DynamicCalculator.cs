@@ -32,11 +32,13 @@ using System.Reflection;
 using System.Text;
 using Ciloci.Flee;
 using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using SparseArray = System.Collections.Generic.Dictionary<int, double>;
 
 namespace DynamicCalculator
 {
@@ -76,7 +78,7 @@ namespace DynamicCalculator
         /// <summary>
         /// Defines the default value for <see cref="Imports"/> property.
         /// </summary>
-        public const string DefaultImports = "AssemblyName=mscorlib, TypeName=System.Math; AssemblyName=mscorlib, TypeName=System.DateTime";
+        public const string DefaultImports = $"AssemblyName=mscorlib, TypeName=System.Math; AssemblyName=mscorlib, TypeName=System.DateTime; AssemblyName=DynamicCalculator, TypeName=DynamicCalculator.{nameof(AggregateFunctions)}";
 
         private const string TimeVariable = "TIME";
         private const string UtcTimeVariable = "UTCTIME";
@@ -96,6 +98,7 @@ namespace DynamicCalculator
         private double m_latestValue;
 
         private readonly HashSet<string> m_variableNames;
+        private readonly Dictionary<string, int> m_arrayVariableLengths;
         private readonly Dictionary<MeasurementKey, string> m_keyMapping;
         private readonly SortedDictionary<int, string> m_nonAliasedTokens;
 
@@ -120,6 +123,7 @@ namespace DynamicCalculator
             };
 
             m_variableNames = new HashSet<string>();
+            m_arrayVariableLengths = new Dictionary<string, int>();
             m_keyMapping = new Dictionary<MeasurementKey, string>();
             m_nonAliasedTokens = new SortedDictionary<int, string>();
             m_expressionContext = new ExpressionContext();
@@ -176,6 +180,7 @@ namespace DynamicCalculator
 
                 // Empty the collection of variable names
                 m_variableNames.Clear();
+                m_arrayVariableLengths.Clear();
                 m_keyMapping.Clear();
                 m_nonAliasedTokens.Clear();
 
@@ -321,7 +326,7 @@ namespace DynamicCalculator
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine();
@@ -336,7 +341,7 @@ namespace DynamicCalculator
                 if (ExpectsOutputMeasurement)
                     status.AppendLine($"     Last Calculated Value: {m_latestValue}");
 
-                List<string> imports = new List<string>();
+                List<string> imports = new();
 
                 if (!string.IsNullOrWhiteSpace(Imports))
                 {
@@ -359,26 +364,14 @@ namespace DynamicCalculator
             }
         }
 
-        private new Ticks RealTime
-        {
-            get
+        private new Ticks RealTime =>
+            TimestampSource switch
             {
-                switch (TimestampSource)
-                {
-                    case TimestampSource.RealTime:
-                        return base.RealTime;
-
-                    case TimestampSource.LocalClock:
-                        return DateTime.UtcNow;
-
-                    case TimestampSource.Frame:
-                        return m_latestTimestamp;
-
-                    default:
-                        return m_latestTimestamp;
-                }
-            }
-        }
+                TimestampSource.RealTime => base.RealTime,
+                TimestampSource.LocalClock => DateTime.UtcNow,
+                TimestampSource.Frame => m_latestTimestamp,
+                _ => m_latestTimestamp
+            };
 
         #endregion
 
@@ -497,11 +490,55 @@ namespace DynamicCalculator
             foreach (MeasurementKey key in m_keyMapping.Keys)
             {
                 string name = m_keyMapping[key];
+                int arrayMarkerIndex = name.IndexOf('[');
 
-                if (measurements.TryGetValue(key, out IMeasurement measurement))
-                    m_expressionContext.Variables[name] = measurement.AdjustedValue;
+                if (arrayMarkerIndex > 0)
+                {
+                    string alias = name.Substring(0, arrayMarkerIndex);
+                    int index = int.Parse(name.Substring(arrayMarkerIndex + 1, name.Length - arrayMarkerIndex - 2));
+
+                    if (m_expressionContext.Variables.GetOrAdd(alias, _ => new SparseArray()) is not SparseArray array)
+                        throw new NullReferenceException($"Failed to create array variable \"{alias}[]\".");
+
+                    if (measurements.TryGetValue(key, out IMeasurement measurement))
+                        array[index] = measurement.AdjustedValue;
+                    else
+                        array[index] = SentinelValue;
+                }
                 else
-                    m_expressionContext.Variables[name] = SentinelValue;
+                {
+                    if (measurements.TryGetValue(key, out IMeasurement measurement))
+                        m_expressionContext.Variables[name] = measurement.AdjustedValue;
+                    else
+                        m_expressionContext.Variables[name] = SentinelValue;
+                }
+            }
+
+            // Convert SparseArray instances to normal arrays
+            foreach (KeyValuePair<string, int> kvp in m_arrayVariableLengths)
+            {
+                string alias = kvp.Key;
+                int length = kvp.Value;
+                object value = null;
+
+                if (m_expressionContext.Variables.TryGetValue(alias, ref value) && value is SparseArray sparseArray)
+                {
+                    double[] array = new double[length];
+
+                    for (int i = 0; i < length; i++)
+                    {
+                        if (sparseArray.TryGetValue(i, out double measurementValue))
+                            array[i] = measurementValue;
+                        else
+                            array[i] = SentinelValue;
+                    }
+
+                    m_expressionContext.Variables[alias] = array;
+                }
+                else
+                {
+                    m_expressionContext.Variables[alias] = Enumerable.Repeat(SentinelValue, length).ToArray();
+                }
             }
 
             // Handle special constants
@@ -511,8 +548,7 @@ namespace DynamicCalculator
             m_expressionContext.Variables[SystemNameVariable] = SystemName;
 
             // Compile the expression if it has not been compiled already
-            if (m_expression is null)
-                m_expression = m_expressionContext.CompileDynamic(m_aliasedExpressionText);
+            m_expression ??= m_expressionContext.CompileDynamic(m_aliasedExpressionText);
 
             // Evaluate the expression and generate the measurement
             HandleCalculatedValue(m_expression.Evaluate());
@@ -538,10 +574,32 @@ namespace DynamicCalculator
             if (splitToken.Length > 2)
                 throw new FormatException($"Too many equals signs: {token}");
 
-            MeasurementKey key = GetKey(splitToken[1].Trim());
             string alias = splitToken[0].Trim();
+            string target = splitToken[1].Trim();
 
-            AddMapping(key, alias);
+            if (string.IsNullOrWhiteSpace(alias))
+                throw new FormatException($"Variable name cannot be empty: {token}");
+
+            // Check for variable declarations defined as array inputs
+            if (alias.EndsWith("[]"))
+            {
+                alias = alias.Substring(0, alias.Length - 2).Trim();
+                string[] targets = target.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    target = targets[i].Trim();
+                    MeasurementKey key = GetKey(target);
+                    AddMapping(key, alias, $"{alias}[{i}]");
+                }
+
+                m_arrayVariableLengths[alias] = targets.Length;
+            }
+            else
+            {
+                MeasurementKey key = GetKey(target);
+                AddMapping(key, alias);
+            }
         }
 
         // Adds a variable to the key-variable map which has not been explicitly aliased.
@@ -561,9 +619,9 @@ namespace DynamicCalculator
         }
 
         // Adds the given mapping to the key-variable map.
-        private void AddMapping(MeasurementKey key, string alias)
+        private void AddMapping(MeasurementKey key, string alias, string indexedAlias = null)
         {
-            if (m_variableNames.Contains(alias))
+            if (indexedAlias is null && m_variableNames.Contains(alias))
                 throw new ArgumentException($"Variable name is not unique: {alias}");
 
             foreach (string reservedName in ReservedVariableNames)
@@ -573,13 +631,13 @@ namespace DynamicCalculator
             }
 
             m_variableNames.Add(alias);
-            m_keyMapping.Add(key, alias);
+            m_keyMapping.Add(key, indexedAlias ?? alias);
         }
 
         // Performs alias replacement on tokens that were not explicitly aliased.
         private void PerformAliasReplacement()
         {
-            StringBuilder aliasedExpressionTextBuilder = new StringBuilder(m_expressionText);
+            StringBuilder aliasedExpressionTextBuilder = new(m_expressionText);
 
             foreach (string token in m_nonAliasedTokens.Values)
             {
@@ -592,7 +650,7 @@ namespace DynamicCalculator
         }
 
         // Gets a measurement key based on a token which
-        // may be either a signal ID, measurement key or point yah.
+        // may be either a signal ID, measurement key or point tag.
         private MeasurementKey GetKey(string token)
         {
             if (Guid.TryParse(token, out Guid signalID))
@@ -601,17 +659,16 @@ namespace DynamicCalculator
             if (MeasurementKey.TryParse(token, out MeasurementKey key))
                 return key;
 
-            const string measurementTable = "ActiveMeasurements";
+            const string MeasurementTable = "ActiveMeasurements";
 
-            if (!(DataSource is null) && DataSource.Tables.Contains(measurementTable))
+            if (DataSource is not null && DataSource.Tables.Contains(MeasurementTable))
             {
-                DataRow[] rows = DataSource.Tables[measurementTable].Select($"PointTag = '{token}'");
+                DataRow[] rows = DataSource.Tables[MeasurementTable].Select($"PointTag = '{token}'");
 
                 if (rows.Length > 0)
                     key = MeasurementKey.LookUpOrCreate(rows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), rows[0]["ID"].ToString());
             }
 
-            // If all else fails, attempt to parse the item as a measurement key
             if (key == default || key == MeasurementKey.Undefined)
                 throw new InvalidOperationException($"Could not parse token \"{token}\" as a Guid, measurement key, or point tag");
 
