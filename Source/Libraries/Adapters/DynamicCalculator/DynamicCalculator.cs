@@ -585,16 +585,27 @@ namespace DynamicCalculator
             {
                 alias = alias.Substring(0, alias.Length - 2).Trim();
                 string[] targets = target.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                int index = 0;
 
                 for (int i = 0; i < targets.Length; i++)
                 {
                     target = targets[i].Trim();
-                    MeasurementKey key = GetKey(target);
-                    AddMapping(key, alias, $"{alias}[{i}]");
+
+                    if (target.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        MeasurementKey[] keys = AdapterBase.ParseInputMeasurementKeys(DataSource, false, target);
+
+                        foreach (MeasurementKey key in keys)
+                            AddMapping(key, alias, $"{alias}[{index++}]");
+                    }
+                    else
+                    {
+                        MeasurementKey key = GetKey(target);
+                        AddMapping(key, alias, $"{alias}[{index++}]");
+                    }
                 }
 
-                m_arrayVariableLengths[alias] = targets.Length;
-            }
+                m_arrayVariableLengths[alias] = index;            }
             else
             {
                 MeasurementKey key = GetKey(target);
