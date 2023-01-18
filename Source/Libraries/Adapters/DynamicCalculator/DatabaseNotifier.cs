@@ -222,7 +222,7 @@ namespace DynamicCalculator
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine();
@@ -324,18 +324,18 @@ namespace DynamicCalculator
         {
             using (AdoDataConnection connection = string.IsNullOrWhiteSpace(DatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(DatabaseConnnectionString, DatabaseProviderString))
             {
-                TemplatedExpressionParser parameterTemplate = new TemplatedExpressionParser
+                TemplatedExpressionParser parameterTemplate = new()
                 {
                     TemplatedExpression = DatabaseCommandParameters
                 };
 
-                Dictionary<string, string> substitutions = new Dictionary<string, string>
+                Dictionary<string, string> substitutions = new()
                 {
                     ["{Acronym}"] = Name,
                     ["{Timestamp}"] = RealTime.ToString(TimeTagBase.DefaultFormat)
                 };
 
-                List<object> parameters = new List<object>();
+                List<object> parameters = new();
                 string[] commandParameters = parameterTemplate.Execute(substitutions).Split(',');
 
                 // Do some basic typing on command parameters

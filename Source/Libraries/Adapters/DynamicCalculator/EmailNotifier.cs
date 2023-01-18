@@ -290,7 +290,7 @@ namespace DynamicCalculator
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine();
