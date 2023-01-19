@@ -390,6 +390,8 @@ namespace GrafanaAdapters
 
         private void LoadAlarmStates(bool reload = false)
         {
+            const int DeviceGroupAccessID = -99999;
+
             using AdoDataConnection connection = new("systemSettings");
 
             // Load alarm state map - this defines database state ID and custom color for each alarm state
@@ -414,7 +416,7 @@ namespace GrafanaAdapters
             // Define SQL expression for direct connect and parent devices or all direct connect and child devices
             string deviceSQL = TargetParentDevices ?
                 "SELECT * FROM Device WHERE (IsConcentrator != 0 OR ParentID IS NULL) AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)" :
-                "SELECT * FROM Device WHERE IsConcentrator = 0 AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)";
+                $"SELECT * FROM Device WHERE IsConcentrator = 0 AND AccessID <> {DeviceGroupAccessID} AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)";
 
             // Load any newly defined devices into the alarm device table
             TableOperations<AlarmDevice> alarmDeviceTable = new(connection);
