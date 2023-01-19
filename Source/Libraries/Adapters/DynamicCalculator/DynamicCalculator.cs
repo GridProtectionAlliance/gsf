@@ -485,6 +485,8 @@ namespace DynamicCalculator
 
         private void Calculate(IDictionary<MeasurementKey, IMeasurement> measurements)
         {
+            Dictionary<string, SparseArray> arrayVariables = new();
+
             m_expressionContext.Variables.Clear();
 
             // Set the values of variables in the expression
@@ -497,9 +499,7 @@ namespace DynamicCalculator
                 {
                     string alias = name.Substring(0, arrayMarkerIndex);
                     int index = int.Parse(name.Substring(arrayMarkerIndex + 1, name.Length - arrayMarkerIndex - 2));
-
-                    if (m_expressionContext.Variables.GetOrAdd(alias, _ => new SparseArray()) is not SparseArray array)
-                        throw new NullReferenceException($"Failed to create array variable \"{alias}[]\".");
+                    SparseArray array = arrayVariables.GetOrAdd(alias, _ => new SparseArray());
 
                     if (measurements.TryGetValue(key, out IMeasurement measurement))
                         array[index] = measurement.AdjustedValue;
@@ -520,16 +520,15 @@ namespace DynamicCalculator
             {
                 string alias = kvp.Key;
                 int length = kvp.Value;
-                object value = null;
 
-                if (m_expressionContext.Variables.TryGetValue(alias, ref value) && value is SparseArray sparseArray)
+                if (arrayVariables.TryGetValue(alias, out SparseArray sparseArray))
                 {
                     double[] array = new double[length];
 
                     for (int i = 0; i < length; i++)
                     {
-                        if (sparseArray.TryGetValue(i, out double measurementValue))
-                            array[i] = measurementValue;
+                        if (sparseArray.TryGetValue(i, out double value))
+                            array[i] = value;
                         else
                             array[i] = SentinelValue;
                     }
