@@ -121,8 +121,7 @@ namespace GSF.NumericalAnalysis
 
             if (s.Length < (m_A.Length + m_B.Length - 2))
             {
-                s = new double[(m_A.Length + m_B.Length - 2) - s.Length];
-                Array.Fill(s, 0.0D);
+                s = Enumerable.Repeat(0.0D, (m_A.Length + m_B.Length - 2) - s.Length).ToArray();
                 s = initialState.StateValue.Concat(s).ToArray();
             }
 
