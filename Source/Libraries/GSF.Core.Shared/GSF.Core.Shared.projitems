@@ -12,6 +12,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogFileWriterInMemory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EnabledState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\AnalogFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\FilterState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\DigitalFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RadixCodec.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BigEndian.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BitMath.cs" />
