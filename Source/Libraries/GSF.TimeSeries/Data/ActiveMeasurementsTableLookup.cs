@@ -69,7 +69,7 @@ namespace GSF.TimeSeries.Data
 
                 string device = row.AsString("Device");
 
-                if (device == null)
+                if (device is null)
                     continue;
 
                 if (!m_lookupByDeviceNameNoStats.TryGetValue(device, out rowList))

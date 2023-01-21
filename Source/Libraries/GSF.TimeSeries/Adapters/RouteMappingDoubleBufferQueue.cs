@@ -41,10 +41,10 @@ namespace GSF.TimeSeries.Adapters
 
         private class GlobalCache
         {
-            public Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
-            public Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
-            public List<Consumer> BroadcastConsumers;
-            public int Version;
+            public readonly Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
+            public readonly Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
+            public readonly List<Consumer> BroadcastConsumers;
+            public readonly int Version;
 
             public GlobalCache(Dictionary<IAdapter, Consumer> consumers, int version)
             {
@@ -54,18 +54,16 @@ namespace GSF.TimeSeries.Adapters
                 Version = version;
 
                 // Generate routes for all signals received by each consumer adapter
-                foreach (var kvp in consumers)
+                foreach (KeyValuePair<IAdapter, Consumer> kvp in consumers)
                 {
-                    var consumerAdapter = kvp.Key;
-                    var consumer = kvp.Value;
+                    IAdapter consumerAdapter = kvp.Key;
+                    Consumer consumer = kvp.Value;
 
-                    if ((object)consumerAdapter.InputMeasurementKeys != null)
+                    if (consumerAdapter.InputMeasurementKeys is not null)
                     {
                         // Create routes for each of the consumer's input signals
                         foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
-                        {
-                            GlobalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
-                        }
+                            GlobalSignalLookup.GetOrAdd(signalID, _ => new List<Consumer>()).Add(consumer);
                     }
                     else
                     {
@@ -84,10 +82,10 @@ namespace GSF.TimeSeries.Adapters
 
         private class LocalCache
         {
-            private Dictionary<Guid, List<Producer>> m_localSignalLookup;
-            private Dictionary<Consumer, Producer> m_localDestinationLookup;
-            private RouteMappingDoubleBufferQueue m_routingTables;
-            private object m_localCacheLock;
+            private readonly Dictionary<Guid, List<Producer>> m_localSignalLookup;
+            private readonly Dictionary<Consumer, Producer> m_localDestinationLookup;
+            private readonly RouteMappingDoubleBufferQueue m_routingTables;
+            private readonly object m_localCacheLock;
             private int m_version;
 
             public LocalCache(RouteMappingDoubleBufferQueue routingTables, IAdapter producerAdapter)
@@ -97,12 +95,9 @@ namespace GSF.TimeSeries.Adapters
                 m_localDestinationLookup = new Dictionary<Consumer, Producer>();
                 m_routingTables = routingTables;
 
-                IInputAdapter inputAdapter = producerAdapter as IInputAdapter;
-                IActionAdapter actionAdapter = producerAdapter as IActionAdapter;
-
-                if ((object)inputAdapter != null)
+                if (producerAdapter is IInputAdapter inputAdapter)
                     inputAdapter.NewMeasurements += Route;
-                else if ((object)actionAdapter != null)
+                else if (producerAdapter is IActionAdapter actionAdapter)
                     actionAdapter.NewMeasurements += Route;
             }
 
@@ -110,18 +105,14 @@ namespace GSF.TimeSeries.Adapters
             {
                 ICollection<IMeasurement> measurements = e?.Argument;
 
-                if (measurements == null)
+                if (measurements is null)
                     return;
 
-                GlobalCache globalCache;
-                List<Producer> producers;
-                List<Consumer> consumers;
-
                 // Get the global cache from the routing tables
-                globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
+                GlobalCache globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
 
                 // Return if routes are still being calculated
-                if ((object)globalCache == null)
+                if (globalCache is null)
                     return;
 
                 lock (m_localCacheLock)
@@ -148,10 +139,10 @@ namespace GSF.TimeSeries.Adapters
                     foreach (IMeasurement measurement in measurements)
                     {
                         // Attempt to look up the signal in the local cache
-                        if (!m_localSignalLookup.TryGetValue(measurement.ID, out producers))
+                        if (!m_localSignalLookup.TryGetValue(measurement.ID, out List<Producer> producers))
                         {
                             // Not in the local cache - check the global cache and fall back on broadcast consumers
-                            if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out consumers))
+                            if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out List<Consumer> consumers))
                                 consumers = globalCache.BroadcastConsumers;
 
                             // Get a producer for each of the consumers
@@ -170,13 +161,10 @@ namespace GSF.TimeSeries.Adapters
 
                     // Produce measurements to consumers in the local destination
                     // cache which have measurements to be received
-                    foreach (Producer producer in m_localDestinationLookup.Values)
+                    foreach (Producer producer in m_localDestinationLookup.Values.Where(producer => producer.Measurements.Count > 0))
                     {
-                        if (producer.Measurements.Count > 0)
-                        {
-                            producer.QueueProducer.Produce(producer.Measurements);
-                            producer.Measurements.Clear();
-                        }
+                        producer.QueueProducer.Produce(producer.Measurements);
+                        producer.Measurements.Clear();
                     }
                 }
             }
@@ -207,7 +195,7 @@ namespace GSF.TimeSeries.Adapters
 
                 Adapter = adapter;
 
-                if ((object)actionAdapter != null)
+                if (actionAdapter is not null)
                 {
                     Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => actionAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
                 }
@@ -215,10 +203,9 @@ namespace GSF.TimeSeries.Adapters
                 {
                     outputAdapter = adapter as IOutputAdapter;
 
-                    if ((object)outputAdapter != null)
-                        Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => outputAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
-                    else
-                        Manager = new DoubleBufferedQueueManager<IMeasurement>(() => { });
+                    Manager = outputAdapter is not null ? 
+                        new DoubleBufferedQueueManager<IMeasurement>(measurements => outputAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction) : 
+                        new DoubleBufferedQueueManager<IMeasurement>(() => { });
                 }
             }
         }
@@ -226,15 +213,15 @@ namespace GSF.TimeSeries.Adapters
         private GlobalCache m_globalCache;
         private Action<string> m_onStatusMessage;
         private Action<Exception> m_onProcessException;
-        private LocalCache m_injectMeasurementsLocalCache;
+        private readonly LocalCache m_injectMeasurementsLocalCache;
 
         /// <summary>
         /// Instances a new <see cref="RouteMappingDoubleBufferQueue"/>.
         /// </summary>
         public RouteMappingDoubleBufferQueue()
         {
-            m_onStatusMessage = x => { };
-            m_onProcessException = x => { };
+            m_onStatusMessage = _ => { };
+            m_onProcessException = _ => { };
             m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
             m_injectMeasurementsLocalCache = new LocalCache(this, null);
         }
@@ -246,13 +233,8 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="onProcessException">Raise exceptions on this callback</param>
         public void Initialize(Action<string> onStatusMessage, Action<Exception> onProcessException)
         {
-            if (onStatusMessage == null)
-                throw new ArgumentNullException(nameof(onStatusMessage));
-            if (onProcessException == null)
-                throw new ArgumentNullException(nameof(onProcessException));
-
-            m_onStatusMessage = onStatusMessage;
-            m_onProcessException = onProcessException;
+            m_onStatusMessage = onStatusMessage ?? throw new ArgumentNullException(nameof(onStatusMessage));
+            m_onProcessException = onProcessException ?? throw new ArgumentNullException(nameof(onProcessException));
         }
 
         /// <summary>
@@ -268,31 +250,26 @@ namespace GSF.TimeSeries.Adapters
         [SuppressMessage("SonarQube.UnusedObject", "S1848", Justification = "Class instantiation of \"LocalCache\" attaches event handlers for adapters.")]
         public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
-            if (producerAdapters == null)
+            if (producerAdapters is null)
                 throw new ArgumentNullException(nameof(producerAdapters));
-            if (consumerAdapters == null)
+            
+            if (consumerAdapters is null)
                 throw new ArgumentNullException(nameof(consumerAdapters));
 
             // Attach to NewMeasurements event of all producer adapters that are new
+            // ReSharper disable once ObjectCreationAsStatement
             foreach (IAdapter producerAdapter in producerAdapters.NewAdapter)
-            {
-                // ReSharper disable once ObjectCreationAsStatement
                 new LocalCache(this, producerAdapter);
-            }
 
-            Dictionary<IAdapter, Consumer> consumerLookup = new Dictionary<IAdapter, Consumer>(m_globalCache.GlobalDestinationLookup);
+            Dictionary<IAdapter, Consumer> consumerLookup = new(m_globalCache.GlobalDestinationLookup);
 
             // Create new consumer adapters
-            foreach (var consumerAdapter in consumerAdapters.NewAdapter)
-            {
+            foreach (IAdapter consumerAdapter in consumerAdapters.NewAdapter)
                 consumerLookup.Add(consumerAdapter, new Consumer(consumerAdapter, m_onProcessException));
-            }
 
             // Remove old adapters
-            foreach (var consumerAdapter in consumerAdapters.OldAdapter)
-            {
+            foreach (IAdapter consumerAdapter in consumerAdapters.OldAdapter)
                 consumerLookup.Remove(consumerAdapter);
-            }
 
             Interlocked.Exchange(ref m_globalCache, new GlobalCache(consumerLookup, m_globalCache.Version + 1));
         }

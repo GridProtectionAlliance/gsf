@@ -72,10 +72,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
         /// </summary>
-        public abstract bool CanAugment
-        {
-            get;
-        }
+        public abstract bool CanAugment { get; }
 
         #endregion
 

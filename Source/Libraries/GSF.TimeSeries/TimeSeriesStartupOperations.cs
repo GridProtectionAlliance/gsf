@@ -162,7 +162,7 @@ namespace GSF.TimeSeries
             string sid;
             string accountName;
 
-            Dictionary<string, string> updateMap = new Dictionary<string, string>();
+            Dictionary<string, string> updateMap = new();
 
             // Find user accounts that need to be updated
             using (IDataReader userAccountReader = database.Connection.ExecuteReader(SelectUserAccountQuery))
@@ -231,19 +231,19 @@ namespace GSF.TimeSeries
             {
                 Dictionary<string, string> kvps = arguments.ParseKeyValuePairs();
 
-                if (kvps.TryGetValue("internalDataPublisherEnabled", out string value))
+                if (kvps.TryGetValue(nameof(internalDataPublisherEnabled), out string value))
                     internalDataPublisherEnabled = value.ParseBoolean();
 
-                if (kvps.TryGetValue("externalDataPublisherEnabled", out value))
+                if (kvps.TryGetValue(nameof(externalDataPublisherEnabled), out value))
                     externalDataPublisherEnabled = value.ParseBoolean();
 
-                if (kvps.TryGetValue("tlsDataPublisherEnabled", out value))
+                if (kvps.TryGetValue(nameof(tlsDataPublisherEnabled), out value))
                     tlsDataPublisherEnabled = value.ParseBoolean();
 
-                if (kvps.TryGetValue("sttpDataPublisherEnabled", out value))
+                if (kvps.TryGetValue(nameof(sttpDataPublisherEnabled), out value))
                     sttpDataPublisherEnabled = value.ParseBoolean();
                 
-                if (kvps.TryGetValue("sttpsDataPublisherEnabled", out value))
+                if (kvps.TryGetValue(nameof(sttpsDataPublisherEnabled), out value))
                     sttpsDataPublisherEnabled = value.ParseBoolean();
             }
 

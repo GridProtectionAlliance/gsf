@@ -59,16 +59,13 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
         /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override MeasurementKey[] InputMeasurementKeys
         {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
+            get => base.InputMeasurementKeys;
             set
             {
                 base.InputMeasurementKeys = value;
@@ -84,14 +81,8 @@ namespace GSF.TimeSeries.Adapters
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override IMeasurement[] OutputMeasurements
         {
-            get
-            {
-                return base.OutputMeasurements;
-            }
-            set
-            {
-                base.OutputMeasurements = value;
-            }
+            get => base.OutputMeasurements;
+            set => base.OutputMeasurements = value;
         }
 
         /// <summary>
@@ -130,10 +121,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            return $"{ProcessedMeasurements} measurements processed so far...".CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) => 
+            $"{ProcessedMeasurements} measurements processed so far...".CenterText(maxLength);
 
         /// <summary>
         /// Processes the new measurements before they have been routed to other adapters.

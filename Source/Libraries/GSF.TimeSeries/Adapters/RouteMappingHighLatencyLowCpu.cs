@@ -45,16 +45,16 @@ namespace GSF.TimeSeries.Adapters
             private readonly Action<IEnumerable<IMeasurement>> m_callback;
             private readonly ConcurrentQueue<List<IMeasurement>> m_pendingMeasurements;
             public List<IMeasurement> MeasurementsToRoute;
-            public RoutingPassthroughMethod Methods;
+            public readonly RoutingPassthroughMethod Methods;
 
             public Consumer(IAdapter adapter)
             {
                 Methods = (adapter as IOptimizedRoutingConsumer)?.GetRoutingPassthroughMethods();
-                if (Methods == null)
+                if (Methods is null)
                 {
-                    if (adapter is IActionAdapter)
+                    if (adapter is IActionAdapter actionAdapter)
                     {
-                        m_callback = ((IActionAdapter)adapter).QueueMeasurementsForProcessing;
+                        m_callback = actionAdapter.QueueMeasurementsForProcessing;
                     }
                     else
                     {
@@ -83,8 +83,7 @@ namespace GSF.TimeSeries.Adapters
                 if (e.Argument == ScheduledTaskRunningReason.Disposing)
                     return;
 
-                List<IMeasurement> lst;
-                while (m_pendingMeasurements.TryDequeue(out lst))
+                while (m_pendingMeasurements.TryDequeue(out List<IMeasurement> lst))
                 {
                     m_callback(lst);
                 }
@@ -121,24 +120,24 @@ namespace GSF.TimeSeries.Adapters
                 Version = version;
 
                 // Generate routes for all signals received by each consumer adapter
-                foreach (var kvp in consumers)
+                foreach (KeyValuePair<IAdapter, Consumer> kvp in consumers)
                 {
-                    var consumerAdapter = kvp.Key;
-                    var consumer = kvp.Value;
-                    if (consumer.Methods != null)
+                    IAdapter consumerAdapter = kvp.Key;
+                    Consumer consumer = kvp.Value;
+                    if (consumer.Methods is not null)
                     {
                         RoutingPassthroughAdapters.Add(consumer.Methods);
                     }
                     else
                     {
                         NormalDestinationAdapters.Add(consumer);
-                        if ((object)consumerAdapter.InputMeasurementKeys != null)
+                        if (consumerAdapter.InputMeasurementKeys is not null)
                         {
                             // Create routes for each of the consumer's input signals
                             foreach (MeasurementKey key in consumerAdapter.InputMeasurementKeys)
                             {
-                                var list = GlobalSignalLookup[key.RuntimeID];
-                                if (list == null)
+                                List<Consumer> list = GlobalSignalLookup[key.RuntimeID];
+                                if (list is null)
                                 {
                                     list = new List<Consumer>();
                                     GlobalSignalLookup[key.RuntimeID] = list;
@@ -164,8 +163,8 @@ namespace GSF.TimeSeries.Adapters
         private long m_measurementsRoutedInputMeasurements;
         private long m_measurementsRoutedOutput;
         private long m_routeOperations;
-        private int m_routeLatency;
-        private int m_batchSize;
+        private readonly int m_routeLatency;
+        private readonly int m_batchSize;
 
         private GlobalCache m_globalCache;
         private Action<string> m_onStatusMessage;
@@ -177,7 +176,7 @@ namespace GSF.TimeSeries.Adapters
         /// Once this many measurements have been queued, a route operation will not wait the mandatory wait time
         /// and will immediately start the routing process.
         /// </summary>
-        private int m_maxPendingMeasurements;
+        private readonly int m_maxPendingMeasurements;
 
         private readonly LogPublisher Log = Logger.CreatePublisher(typeof(RouteMappingHighLatencyLowCpu), MessageClass.Framework);
 
@@ -198,10 +197,10 @@ namespace GSF.TimeSeries.Adapters
             m_task.Disposing += m_task_Disposing;
             m_task.Start(m_routeLatency);
 
-            m_onStatusMessage = x => { };
-            m_onProcessException = x => { };
+            m_onStatusMessage = _ => { };
+            m_onProcessException = _ => { };
             m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
-            RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x != null);
+            RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x is not null);
         }
 
         /// <summary>
@@ -216,13 +215,8 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="onProcessException">Raise exceptions on this callback</param>
         public void Initialize(Action<string> onStatusMessage, Action<Exception> onProcessException)
         {
-            if (onStatusMessage == null)
-                throw new ArgumentNullException(nameof(onStatusMessage));
-            if (onProcessException == null)
-                throw new ArgumentNullException(nameof(onProcessException));
-
-            m_onStatusMessage = onStatusMessage;
-            m_onProcessException = onProcessException;
+            m_onStatusMessage = onStatusMessage ?? throw new ArgumentNullException(nameof(onStatusMessage));
+            m_onProcessException = onProcessException ?? throw new ArgumentNullException(nameof(onProcessException));
         }
 
         /// <summary>
@@ -232,45 +226,41 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="consumerAdapters">all of the consumers</param>
         public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
-            if (producerAdapters == null)
+            if (producerAdapters is null)
                 throw new ArgumentNullException(nameof(producerAdapters));
-            if (consumerAdapters == null)
+            if (consumerAdapters is null)
                 throw new ArgumentNullException(nameof(consumerAdapters));
 
-            foreach (var producerAdapter in producerAdapters.NewAdapter)
+            foreach (IAdapter producerAdapter in producerAdapters.NewAdapter)
             {
-                IInputAdapter inputAdapter = producerAdapter as IInputAdapter;
-                IActionAdapter actionAdapter = producerAdapter as IActionAdapter;
-                if ((object)inputAdapter != null)
+                if (producerAdapter is IInputAdapter inputAdapter)
                     inputAdapter.NewMeasurements += Route;
-                else if ((object)actionAdapter != null)
+                else if (producerAdapter is IActionAdapter actionAdapter)
                     actionAdapter.NewMeasurements += Route;
             }
 
-            foreach (var producerAdapter in producerAdapters.OldAdapter)
+            foreach (IAdapter producerAdapter in producerAdapters.OldAdapter)
             {
-                IInputAdapter inputAdapter = producerAdapter as IInputAdapter;
-                IActionAdapter actionAdapter = producerAdapter as IActionAdapter;
-                if ((object)inputAdapter != null)
+                if (producerAdapter is IInputAdapter inputAdapter)
                     inputAdapter.NewMeasurements -= Route;
-                else if ((object)actionAdapter != null)
+                else if (producerAdapter is IActionAdapter actionAdapter)
                     actionAdapter.NewMeasurements -= Route;
             }
 
-            Dictionary<IAdapter, Consumer> consumerLookup = new Dictionary<IAdapter, Consumer>(m_globalCache.GlobalDestinationLookup);
+            Dictionary<IAdapter, Consumer> consumerLookup = new(m_globalCache.GlobalDestinationLookup);
 
-            foreach (var consumerAdapter in consumerAdapters.NewAdapter)
+            foreach (IAdapter consumerAdapter in consumerAdapters.NewAdapter)
             {
                 consumerLookup.Add(consumerAdapter, new Consumer(consumerAdapter));
             }
 
-            foreach (var consumerAdapter in consumerAdapters.OldAdapter)
+            foreach (IAdapter consumerAdapter in consumerAdapters.OldAdapter)
             {
                 consumerLookup.Remove(consumerAdapter);
             }
 
             m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
-            RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x != null);
+            RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x is not null);
 
         }
 
@@ -303,14 +293,13 @@ namespace GSF.TimeSeries.Adapters
                             m_measurementsRoutedOutput));
             }
 
-            var map = m_globalCache;
+            GlobalCache map = m_globalCache;
 
             try
             {
                 int measurementsRouted = 0;
 
-                List<IMeasurement> measurements;
-                while (m_inboundQueue.TryDequeue(out measurements))
+                while (m_inboundQueue.TryDequeue(out List<IMeasurement> measurements))
                 {
                     measurementsRouted += measurements.Count;
                     Interlocked.Add(ref m_pendingMeasurements, -measurements.Count);
@@ -333,9 +322,9 @@ namespace GSF.TimeSeries.Adapters
                     m_measurementsRoutedInputMeasurements += measurements.Count;
                     for (int x = 0; x < measurements.Count; x++)
                     {
-                        var measurement = measurements[x];
+                        IMeasurement measurement = measurements[x];
                         List<Consumer> consumers = map.GlobalSignalLookup[measurement.Key.RuntimeID];
-                        if (consumers != null)
+                        if (consumers is not null)
                         {
                             for (int i = 0; i < consumers.Count; i++)
                             {
@@ -350,12 +339,12 @@ namespace GSF.TimeSeries.Adapters
                     if (measurementsRouted > m_batchSize)
                     {
                         measurementsRouted = 0;
-                        foreach (var consumer in map.NormalDestinationAdapters)
+                        foreach (Consumer consumer in map.NormalDestinationAdapters)
                         {
                             measurementsRouted = Math.Max(measurementsRouted, consumer.MeasurementsToRoute.Count);
                             if (consumer.MeasurementsToRoute.Count > m_batchSize)
                             {
-                                foreach (var c2 in map.NormalDestinationAdapters)
+                                foreach (Consumer c2 in map.NormalDestinationAdapters)
                                 {
                                     c2.RoutingComplete();
                                 }
@@ -368,7 +357,7 @@ namespace GSF.TimeSeries.Adapters
             }
             finally
             {
-                foreach (var consumer in map.NormalDestinationAdapters)
+                foreach (Consumer consumer in map.NormalDestinationAdapters)
                 {
                     consumer.RoutingComplete();
                 }
@@ -390,7 +379,7 @@ namespace GSF.TimeSeries.Adapters
 
         private void Route(object sender, EventArgs<ICollection<IMeasurement>> measurements)
         {
-            if (measurements?.Argument == null)
+            if (measurements?.Argument is null)
                 return;
 
             Route(measurements.Argument as List<IMeasurement> ?? measurements.Argument.ToList());

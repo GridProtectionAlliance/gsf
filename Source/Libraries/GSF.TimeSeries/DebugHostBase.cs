@@ -109,14 +109,14 @@ namespace GSF.TimeSeries
 
                 // Initialize text.
                 m_productName = AssemblyInfo.EntryAssembly.Title;
-                this.Text = string.Format(this.Text, m_productName);
+                Text = string.Format(Text, m_productName);
                 notifyIcon.Text = string.Format(notifyIcon.Text, m_productName);
-                notifyIcon.Icon = this.Icon;
+                notifyIcon.Icon = Icon;
                 LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
                 exitToolStripMenuItem.Text = string.Format(exitToolStripMenuItem.Text, m_productName);
 
                 // Minimize the window.
-                this.WindowState = FormWindowState.Minimized;
+                WindowState = FormWindowState.Minimized;
 
                 // Start the windows service.
                 ServiceHost.StartHostedService();
@@ -146,24 +146,24 @@ namespace GSF.TimeSeries
 
         private void DebugHost_Resize(object sender, EventArgs e)
         {
-            if (this.WindowState == FormWindowState.Minimized)
+            if (WindowState == FormWindowState.Minimized)
             {
                 // Don't show the window in task bar when minimized.
-                this.ShowInTaskbar = false;
+                ShowInTaskbar = false;
             }
         }
 
         private void showToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Show the window in task bar the in normal mode (visible).
-            this.ShowInTaskbar = true;
-            this.WindowState = FormWindowState.Normal;
+            ShowInTaskbar = true;
+            WindowState = FormWindowState.Normal;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Close this window which will cause the application to exit.
-            this.Close();
+            Close();
         }
 
         #endregion

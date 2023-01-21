@@ -80,14 +80,8 @@ namespace GSF.TimeSeries
         /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).</returns>
         public double Value
         {
-            get
-            {
-                return m_value;
-            }
-            set
-            {
-                m_value = value;
-            }
+            get => m_value;
+            set => m_value = value;
         }
 
         /// <summary>
@@ -98,14 +92,8 @@ namespace GSF.TimeSeries
         /// </remarks>
         public Ticks Timestamp
         {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
+            get => m_timestamp;
+            set => m_timestamp = value;
         }
 
         /// <summary>
@@ -113,14 +101,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public MeasurementMetadata Metadata
         {
-            get
-            {
-                return m_metadata;
-            }
-            set
-            {
-                m_metadata = value;
-            }
+            get => m_metadata;
+            set => m_metadata = value;
         }
 
         /// <summary>
@@ -159,14 +141,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public MeasurementStateFlags StateFlags
         {
-            get
-            {
-                return m_stateFlags;
-            }
-            set
-            {
-                m_stateFlags = value;
-            }
+            get => m_stateFlags;
+            set => m_stateFlags = value;
         }
 
         /// <summary>
@@ -188,59 +164,23 @@ namespace GSF.TimeSeries
         // Big-Endian binary value interpretation
         BigBinaryValue ITimeSeriesValue.Value
         {
-            get
-            {
-                return Value;
-            }
+            get => Value;
             set
             {
-                switch (value.TypeCode)
+                Value = value.TypeCode switch
                 {
-                    case TypeCode.Byte:
-                        Value = (byte)value;
-                        break;
-                    case TypeCode.SByte:
-                        Value = (sbyte)value;
-                        break;
-                    case TypeCode.Int16:
-                        Value = (short)value;
-                        break;
-                    case TypeCode.UInt16:
-                        Value = (ushort)value;
-                        break;
-                    case TypeCode.Int32:
-                        Value = (int)value;
-                        break;
-                    case TypeCode.UInt32:
-                        Value = (uint)value;
-                        break;
-                    case TypeCode.Int64:
-                        Value = (long)value;
-                        break;
-                    case TypeCode.UInt64:
-                        Value = (ulong)value;
-                        break;
-                    case TypeCode.Single:
-                        Value = (float)value;
-                        break;
-                    case TypeCode.Double:
-                        Value = (double)value;
-                        break;
-                    //case TypeCode.Boolean:
-                    //    break;
-                    //case TypeCode.Char:
-                    //    break;
-                    //case TypeCode.DateTime:
-                    //    break;
-                    //case TypeCode.Decimal:
-                    //    break;
-                    //case TypeCode.String:
-                    //    m_value = double.Parse(value);
-                    //    break;
-                    default:
-                        Value = value;
-                        break;
-                }
+                    TypeCode.Byte => value,
+                    TypeCode.SByte => value,
+                    TypeCode.Int16 => value,
+                    TypeCode.UInt16 => value,
+                    TypeCode.Int32 => value,
+                    TypeCode.UInt32 => value,
+                    TypeCode.Int64 => value,
+                    TypeCode.UInt64 => value,
+                    TypeCode.Single => value,
+                    TypeCode.Double => value,
+                    _ => value
+                };
             }
         }
 
@@ -280,9 +220,7 @@ namespace GSF.TimeSeries
         /// </returns>
         public override bool Equals(object obj)
         {
-            ITimeSeriesValue other = obj as ITimeSeriesValue;
-
-            if ((object)other != null)
+            if (obj is ITimeSeriesValue other)
                 return Equals(other);
 
             return false;
@@ -296,7 +234,7 @@ namespace GSF.TimeSeries
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
         public int CompareTo(ITimeSeriesValue other)
         {
-            if ((object)other != null)
+            if (other is not null)
                 return GetHashCode().CompareTo(other.GetHashCode());
 
             return 1;
@@ -311,9 +249,7 @@ namespace GSF.TimeSeries
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
         public int CompareTo(object obj)
         {
-            ITimeSeriesValue other = obj as ITimeSeriesValue;
-
-            if ((object)other != null)
+            if (obj is ITimeSeriesValue other)
                 return CompareTo(other);
 
             throw new ArgumentException("Measurement can only be compared with other measurements or time-series values");
@@ -341,7 +277,7 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator ==(Measurement measurement1, Measurement measurement2)
         {
-            return (object)measurement1 != null && measurement1.Equals(measurement2);
+            return (object)measurement1 is not null && measurement1.Equals(measurement2);
         }
 
         /// <summary>
@@ -352,7 +288,7 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator !=(Measurement measurement1, Measurement measurement2)
         {
-            return (object)measurement1 != null && !measurement1.Equals(measurement2);
+            return (object)measurement1 is not null && !measurement1.Equals(measurement2);
         }
 
         /// <summary>
@@ -408,7 +344,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Represents an undefined measurement.
         /// </summary>
-        public static readonly Measurement Undefined = new Measurement
+        public static readonly Measurement Undefined = new()
         {
             Metadata = MeasurementMetadata.Undefined
         };
@@ -474,8 +410,8 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.</returns>
         public static string ToString(IMeasurement measurement, bool includeTagName = true)
         {
-            if ((object)measurement == null)
-                return "Undefined";
+            if (measurement is null)
+                return nameof(Undefined);
 
             string tagName = measurement.TagName;
             string keyText = measurement.Key.ToString();

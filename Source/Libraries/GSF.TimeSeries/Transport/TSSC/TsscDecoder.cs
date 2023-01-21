@@ -146,7 +146,7 @@ namespace GSF.TimeSeries.Transport.TSSC
 
             id = m_lastPoint.PrevNextPointId1;
             nextPoint = m_points[m_lastPoint.PrevNextPointId1];
-            if (nextPoint == null)
+            if (nextPoint is null)
             {
                 nextPoint = new TsscPointMetadata(null, ReadBit, ReadBits5);
                 m_points[id] = nextPoint;

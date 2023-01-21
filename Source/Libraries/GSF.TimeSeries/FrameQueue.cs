@@ -68,9 +68,9 @@ namespace GSF.TimeSeries
         internal FrameQueue(CreateNewFrameFunction createNewFrame)
         {
             m_createNewFrame = createNewFrame;
-            m_frameList = new();
-            m_frameHash = new();
-            m_queueLock = new();
+            m_frameList = new LinkedList<TrackingFrame>();
+            m_frameHash = new ConcurrentDictionary<long, TrackingFrame>();
+            m_queueLock = new SpinLock();
         }
 
         /// <summary>
@@ -356,7 +356,7 @@ namespace GSF.TimeSeries
                     // TODO: data (e.g., a historian) to create an evenly timestamped export
 
                     // Create a new frame for this timestamp
-                    frame = new(m_createNewFrame(destinationTicks), DownsamplingMethod);
+                    frame = new TrackingFrame(m_createNewFrame(destinationTicks), DownsamplingMethod);
 
                     if (m_frameList.Count > 0)
                     {

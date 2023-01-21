@@ -94,7 +94,7 @@ namespace GSF.TimeSeries.Statistics
                     // Attach to Disposed event of source, if defined
                     EventInfo disposedEvent = source.GetType().GetEvent("Disposed");
 
-                    if (disposedEvent != null)
+                    if (disposedEvent is not null)
                         disposedEvent.GetAddMethod().Invoke(source, new object[] { new EventHandler(StatisticSourceDisposed) });
                 }
             }

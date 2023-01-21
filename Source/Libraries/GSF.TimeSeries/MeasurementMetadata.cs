@@ -143,21 +143,20 @@ namespace GSF.TimeSeries
         #region [ Static ]
 
         // Static Fields
-        private static MeasurementMetadata s_undefined;
 
         // Static Properties
 
         /// <summary>
         /// Represents an undefined <see cref="MeasurementMetadata"/>.
         /// </summary>
-        public static MeasurementMetadata Undefined => s_undefined;
+        public static MeasurementMetadata Undefined { get; private set; }
 
         // Static Methods
 
         // Create measurement metadata for undefined
         internal static void CreateUndefinedMeasurementMetadata()
         {
-            s_undefined = s_undefined ?? new MeasurementMetadata(MeasurementKey.Undefined, null, 0, 1, null);
+            Undefined = Undefined ?? new MeasurementMetadata(MeasurementKey.Undefined, null, 0, 1, null);
         }
 
         #endregion

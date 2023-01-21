@@ -40,7 +40,6 @@ namespace GSF.TimeSeries.Transport
         #region [ Members ]
 
         // Fields
-        private Func<Guid, bool> m_hasRightsFunc;
 
         #endregion
 
@@ -53,7 +52,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="subscriberID">The ID of the subscriber whose rights are being looked up.</param>
         public SubscriberRightsLookup(DataSet dataSource, Guid subscriberID)
         {
-            m_hasRightsFunc = BuildLookup(dataSource, subscriberID);
+            HasRightsFunc = BuildLookup(dataSource, subscriberID);
         }
 
         #endregion
@@ -63,13 +62,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the function that determines whether the subscriber has rights to a given signal.
         /// </summary>
-        public Func<Guid, bool> HasRightsFunc
-        {
-            get
-            {
-                return m_hasRightsFunc;
-            }
-        }
+        public Func<Guid, bool> HasRightsFunc { get; }
 
         #endregion
 
@@ -82,17 +75,14 @@ namespace GSF.TimeSeries.Transport
         /// <returns>True if the subscriber has rights; false otherwise.</returns>
         public bool HasRights(Guid signalID)
         {
-            return m_hasRightsFunc(signalID);
+            return HasRightsFunc(signalID);
         }
 
         private Func<Guid, bool> BuildLookup(DataSet dataSource, Guid subscriberID)
         {
-            HashSet<Guid> authorizedSignals = new HashSet<Guid>();
+            HashSet<Guid> authorizedSignals = new();
 
             const string filterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
-
-            DataRow subscriber;
-            DataRow[] subscriberMeasurementGroups;
 
             //==================================================================
             //Check if subscriber is disabled or removed
@@ -100,15 +90,15 @@ namespace GSF.TimeSeries.Transport
             // If subscriber has been disabled or removed
             // from the list of valid subscribers,
             // they no longer have rights to any signals
-            subscriber = dataSource.Tables["Subscribers"].Select($"ID = '{subscriberID}' AND Enabled <> 0").FirstOrDefault();
+            DataRow subscriber = dataSource.Tables["Subscribers"].Select($"ID = '{subscriberID}' AND Enabled <> 0").FirstOrDefault();
 
-            if ((object)subscriber == null)
-                return id => false;
+            if (subscriber is null)
+                return _ => false;
 
             //=================================================================
             // Check group implicitly authorized signals
 
-            subscriberMeasurementGroups = dataSource.Tables["SubscriberMeasurementGroups"].Select($"SubscriberID = '{subscriberID}'");
+            DataRow[] subscriberMeasurementGroups = dataSource.Tables["SubscriberMeasurementGroups"].Select($"SubscriberID = '{subscriberID}'");
 
             subscriberMeasurementGroups
                 .Join(dataSource.Tables["MeasurementGroups"].Select(),

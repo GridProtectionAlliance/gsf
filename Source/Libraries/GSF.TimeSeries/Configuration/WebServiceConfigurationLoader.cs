@@ -38,7 +38,6 @@ namespace GSF.TimeSeries.Configuration
         #region [ Members ]
 
         // Fields
-        private string m_uri;
 
         #endregion
 
@@ -47,17 +46,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets or sets the URI for the web service.
         /// </summary>
-        public string URI
-        {
-            get
-            {
-                return m_uri;
-            }
-            set
-            {
-                m_uri = value;
-            }
-        }
+        public string URI { get; set; }
 
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
@@ -74,14 +63,12 @@ namespace GSF.TimeSeries.Configuration
         /// <returns>The configuration data set.</returns>
         public override DataSet Load()
         {
-            DataSet configuration;
-            WebRequest request;
             WebResponse response;
 
             OnStatusMessage(MessageLevel.Info, "Webservice configuration connection opened.");
 
-            configuration = new DataSet();
-            request = WebRequest.Create(m_uri);
+            DataSet configuration = new();
+            WebRequest request = WebRequest.Create(URI);
 
             using (response = request.GetResponse())
             {

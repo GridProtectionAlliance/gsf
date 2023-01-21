@@ -67,6 +67,6 @@ namespace GSF.TimeSeries.Statistics
             return double.NaN;
         }
 
-        private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+        private static readonly StatisticValueStateCache s_statisticValueCache = new();
     }
 }

@@ -44,7 +44,7 @@ namespace GSF.TimeSeries.Reports
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 // Show collection status
                 status.AppendFormat(" Total reporting processes: {0}", Count);
@@ -156,7 +156,7 @@ namespace GSF.TimeSeries.Reports
         /// <returns>New collection of <see cref="IReportingProcess"/> implementations.</returns>
         public static ReportingProcessCollection LoadImplementations(Action<Exception> exceptionHandler = null)
         {
-            ReportingProcessCollection reportingProcesses = new ReportingProcessCollection();
+            ReportingProcessCollection reportingProcesses = new();
             IReportingProcess reportingProcess;
 
             foreach (Type reportingProcessType in typeof(IReportingProcess).LoadImplementations())
@@ -170,13 +170,13 @@ namespace GSF.TimeSeries.Reports
                 }
                 catch (Exception ex)
                 {
-                    if ((object)exceptionHandler != null)
+                    if ((object)exceptionHandler is not null)
                         exceptionHandler(ex);
                     else
                         throw;
                 }
 
-                if ((object)reportingProcess != null)
+                if (reportingProcess is not null)
                     reportingProcesses.Add(reportingProcess);
             }
 

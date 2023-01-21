@@ -36,13 +36,13 @@ namespace GSF.TimeSeries.Statistics
         private static T GetPropertyValue<T>(object source, string name)
         {
             PropertyInfo property = source.GetType().GetProperty(name);
-            return property != null ? (T)property.GetValue(source) : default(T);
+            return property is not null ? (T)property.GetValue(source) : default(T);
         }
 
         private static T GetFunctionValue<T>(object source, string name, params object[] parameters)
         {
             MethodInfo method = source.GetType().GetMethod(name);
-            return method != null ? (T)method.Invoke(source, parameters) : default(T);
+            return method is not null ? (T)method.Invoke(source, parameters) : default(T);
         }
 
         #region [ Subscriber Statistics ]
@@ -129,7 +129,7 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSubscriberStatistic_TLSSecuredChannel(object source, string arguments)
         {
-            return string.Equals(source is DataSubscriber subscriber ? subscriber.SecurityMode.ToString() : GetPropertyValue<object>(source, "SecurityMode").ToString(), "TLS", StringComparison.OrdinalIgnoreCase) ? 1.0D : 0.0D;
+            return string.Equals(source is DataSubscriber subscriber ? subscriber.SecurityMode.ToString() : GetPropertyValue<object>(source, nameof(SecurityMode)).ToString(), "TLS", StringComparison.OrdinalIgnoreCase) ? 1.0D : 0.0D;
         }
 
         #endregion
@@ -212,11 +212,11 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetPublisherStatistic_TLSSecuredChannel(object source, string arguments)
         {
-            return string.Equals(source is DataPublisher publisher ? publisher.SecurityMode.ToString() : GetPropertyValue<object>(source, "SecurityMode").ToString(), "TLS", StringComparison.OrdinalIgnoreCase) ? 1.0D : 0.0D;
+            return string.Equals(source is DataPublisher publisher ? publisher.SecurityMode.ToString() : GetPropertyValue<object>(source, nameof(SecurityMode)).ToString(), "TLS", StringComparison.OrdinalIgnoreCase) ? 1.0D : 0.0D;
         }
 
         #endregion
 
-        private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+        private static readonly StatisticValueStateCache s_statisticValueCache = new();
     }
 }

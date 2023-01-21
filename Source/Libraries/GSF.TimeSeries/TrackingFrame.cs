@@ -37,11 +37,8 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private readonly IFrame m_sourceFrame;
-        private readonly long m_timestamp;
         private readonly DownsamplingMethod m_downsamplingMethod;
         private readonly ConcurrentDictionary<MeasurementKey, List<IMeasurement>> m_measurements;
-        private readonly ReaderWriterSpinLock m_frameLock;
         private long m_derivedMeasurements;
 
         #endregion
@@ -55,10 +52,10 @@ namespace GSF.TimeSeries
         /// <param name="downsamplingMethod"><see cref="DownsamplingMethod"/> to apply.</param>
         public TrackingFrame(IFrame sourceFrame, DownsamplingMethod downsamplingMethod)
         {
-            m_sourceFrame = sourceFrame;
-            m_timestamp = sourceFrame.Timestamp;
+            SourceFrame = sourceFrame;
+            Timestamp = sourceFrame.Timestamp;
             m_downsamplingMethod = downsamplingMethod;
-            m_frameLock = new ReaderWriterSpinLock();
+            Lock = new ReaderWriterSpinLock();
 
             if (downsamplingMethod != DownsamplingMethod.LastReceived)
                 m_measurements = new ConcurrentDictionary<MeasurementKey, List<IMeasurement>>();
@@ -71,47 +68,24 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets instance of <see cref="IFrame"/> being tracked.
         /// </summary>
-        public IFrame SourceFrame
-        {
-            get
-            {
-                return m_sourceFrame;
-            }
-        }
+        public IFrame SourceFrame { get; }
 
         /// <summary>
         /// Gets timestamp of <see cref="IFrame"/> being tracked.
         /// </summary>
-        public long Timestamp
-        {
-            get
-            {
-                return m_timestamp;
-            }
-        }
+        public long Timestamp { get; }
 
         /// <summary>
         /// Total number of measurements down-sampled by <see cref="TrackingFrame"/>.
         /// </summary>
-        public long DownsampledMeasurements
-        {
-            get
-            {
-                // Only measurements that came in after initial sorts were downsampled...
-                return m_derivedMeasurements - m_sourceFrame.SortedMeasurements;
-            }
-        }
+        public long DownsampledMeasurements =>
+            // Only measurements that came in after initial sorts were downsampled...
+            m_derivedMeasurements - SourceFrame.SortedMeasurements;
 
         /// <summary>
         /// Gets the <see cref="TrackingFrame"/> locking primitive.
         /// </summary>
-        public ReaderWriterSpinLock Lock
-        {
-            get
-            {
-                return m_frameLock;
-            }
-        }
+        public ReaderWriterSpinLock Lock { get; }
 
         #endregion
 
@@ -139,15 +113,15 @@ namespace GSF.TimeSeries
                     // Get tracked measurement values
                     if (m_measurements.TryGetValue(measurement.Key, out values))
                     {
-                        if ((object)values != null && values.Count > 0)
+                        if (values is not null && values.Count > 0)
                         {
                             // Get first tracked value (should only be one for "Closest")
                             derivedMeasurement = values[0];
 
-                            if ((object)derivedMeasurement != null)
+                            if (derivedMeasurement is not null)
                             {
                                 // Determine if new measurement's timestamp is closer to frame
-                                if (measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp)
+                                if (measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= Timestamp)
                                 {
                                     // This measurement came in out-of-order and is closer to frame timestamp, so 
                                     // we sort this measurement instead of the original
@@ -177,18 +151,18 @@ namespace GSF.TimeSeries
                     // Get tracked measurement values
                     if (m_measurements.TryGetValue(measurement.Key, out values))
                     {
-                        if ((object)values != null && values.Count > 0)
+                        if (values is not null && values.Count > 0)
                         {
                             // Get first tracked value - we clone the measurement since we are updating its value
                             derivedMeasurement = Measurement.Clone(values[0]);
 
-                            if ((object)derivedMeasurement != null)
+                            if (derivedMeasurement is not null)
                             {
                                 // Get function defined for measurement value filtering
                                 MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
 
                                 // Default to average value filter if none is specified
-                                if ((object)measurementValueFilter == null)
+                                if ((object)measurementValueFilter is null)
                                     measurementValueFilter = Measurement.AverageValueFilter;
 
                                 // Add new measurement to tracking collection
@@ -223,12 +197,12 @@ namespace GSF.TimeSeries
                     // Get tracked measurement values
                     if (m_measurements.TryGetValue(measurement.Key, out values))
                     {
-                        if ((object)values != null && values.Count > 0)
+                        if (values is not null && values.Count > 0)
                         {
                             // Get first tracked value (should only be one for "BestQuality")
                             derivedMeasurement = values[0];
 
-                            if ((object)derivedMeasurement != null)
+                            if (derivedMeasurement is not null)
                             {
                                 // Determine if new measurement's quality is better than existing one or if new measurement's timestamp is closer to frame
                                 if
@@ -240,7 +214,7 @@ namespace GSF.TimeSeries
                                     )
                                         ||
                                     (
-                                        measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp
+                                        measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= Timestamp
                                     )
                                 )
                                 {

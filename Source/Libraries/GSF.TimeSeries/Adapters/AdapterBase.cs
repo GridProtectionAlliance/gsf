@@ -105,14 +105,10 @@ namespace GSF.TimeSeries.Adapters
         private string m_name;
         private uint m_id;
         private string m_connectionString;
-        private Dictionary<string, string> m_settings;
-        private DataSet m_dataSource;
         private int m_initializationTimeout;
-        private bool m_autoStart;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
         private long m_processedMeasurements;
-        private int m_measurementReportingInterval;
         private bool m_enabled;
         private long m_startTime;
         private long m_stopTime;
@@ -120,8 +116,6 @@ namespace GSF.TimeSeries.Adapters
         private DateTime m_stopTimeConstraint;
         private int m_processingInterval;
         private int m_hashCode;
-        private bool m_initialized;
-        private bool m_disposed;
 
         #endregion
 
@@ -133,16 +127,16 @@ namespace GSF.TimeSeries.Adapters
         protected AdapterBase()
         {
             Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
-            m_name = this.GetType().Name;
+            m_name = GetType().Name;
             Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", m_name);
-            m_settings = new Dictionary<string, string>();
+            Settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
             GenHashCode();
 
             // Set incoming measurements to none by default
-            m_inputMeasurementKeys = new MeasurementKey[0];
+            m_inputMeasurementKeys = Array.Empty<MeasurementKey>();
 
             m_initializationTimeout = DefaultInitializationTimeout;
         }
@@ -150,10 +144,8 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="AdapterBase"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~AdapterBase()
-        {
+        ~AdapterBase() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -172,10 +164,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -189,10 +178,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual uint ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -255,19 +241,15 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string ConnectionString
         {
-            get
-            {
-                return m_connectionString;
-            }
+            get => m_connectionString;
             set
             {
                 m_connectionString = value;
 
                 // Pre-parse settings upon connection string assignment
-                if (string.IsNullOrWhiteSpace(m_connectionString))
-                    m_settings = new Dictionary<string, string>();
-                else
-                    m_settings = m_connectionString.ParseKeyValuePairs();
+                Settings = string.IsNullOrWhiteSpace(m_connectionString) ? 
+                    new Dictionary<string, string>() : 
+                    m_connectionString.ParseKeyValuePairs();
             }
         }
 
@@ -282,17 +264,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="AdapterBase"/>.
         /// </summary>
-        public virtual DataSet DataSource
-        {
-            get
-            {
-                return m_dataSource;
-            }
-            set
-            {
-                m_dataSource = value;
-            }
-        }
+        public virtual DataSet DataSource { get; set; }
 
         /// <summary>
         /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
@@ -302,30 +274,14 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual int InitializationTimeout
         {
-            get
-            {
-                return m_initializationTimeout;
-            }
-            set
-            {
-                m_initializationTimeout = value;
-            }
+            get => m_initializationTimeout;
+            set => m_initializationTimeout = value;
         }
 
         /// <summary>
         /// Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
         /// </summary>
-        public virtual bool AutoStart
-        {
-            get
-            {
-                return m_autoStart;
-            }
-            set
-            {
-                m_autoStart = value;
-            }
-        }
+        public virtual bool AutoStart { get; set; }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
@@ -333,22 +289,19 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
         /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public virtual MeasurementKey[] InputMeasurementKeys
         {
-            get
-            {
-                return m_inputMeasurementKeys;
-            }
+            get => m_inputMeasurementKeys;
             set
             {
                 if (m_inputMeasurementKeys == value)
                     return;
 
-                if ((object)m_inputMeasurementKeys != null && (object)value != null)
+                if (m_inputMeasurementKeys is not null && value is not null)
                 {
                     if (new HashSet<MeasurementKey>(m_inputMeasurementKeys).SetEquals(value))
                         return;
@@ -362,16 +315,13 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public virtual IMeasurement[] OutputMeasurements
         {
-            get
-            {
-                return m_outputMeasurements;
-            }
+            get => m_outputMeasurements;
             set
             {
                 m_outputMeasurements = value;
@@ -390,32 +340,12 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This is used to determined how many measurements should be processed before reporting status.
         /// </remarks>
-        public virtual int MeasurementReportingInterval
-        {
-            get
-            {
-                return m_measurementReportingInterval;
-            }
-            set
-            {
-                m_measurementReportingInterval = value;
-            }
-        }
+        public virtual int MeasurementReportingInterval { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if the adapter has been initialized successfully.
         /// </summary>
-        public virtual bool Initialized
-        {
-            get
-            {
-                return m_initialized;
-            }
-            set
-            {
-                m_initialized = value;
-            }
-        }
+        public virtual bool Initialized { get; set; }
 
         /// <summary>
         /// Gets or sets enabled state of this <see cref="AdapterBase"/>.
@@ -426,10 +356,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 if (m_enabled && !value)
@@ -452,10 +379,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public abstract bool SupportsTemporalProcessing
-        {
-            get;
-        }
+        public abstract bool SupportsTemporalProcessing { get; }
 
         /// <summary>
         /// Gets the start time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
@@ -485,10 +409,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual int ProcessingInterval
         {
-            get
-            {
-                return m_processingInterval;
-            }
+            get => m_processingInterval;
             set
             {
                 m_processingInterval = value;
@@ -525,7 +446,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        public Dictionary<string, string> Settings => m_settings;
+        public Dictionary<string, string> Settings { get; private set; }
 
         /// <summary>
         /// Gets the status of this <see cref="AdapterBase"/>.
@@ -539,76 +460,59 @@ namespace GSF.TimeSeries.Adapters
             {
                 const int MaxMeasurementsToShow = 10;
 
-                StringBuilder status = new StringBuilder();
-                DataSet dataSource = this.DataSource;
+                StringBuilder status = new();
+                DataSet dataSource = DataSource;
 
-                status.AppendFormat("       Data source defined: {0}", dataSource != null);
-                status.AppendLine();
-                if ((object)dataSource != null)
-                {
-                    status.AppendFormat("    Referenced data source: {0}, {1:N0} tables", dataSource.DataSetName, dataSource.Tables.Count);
-                    status.AppendLine();
-                }
-                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString("N0") + " milliseconds");
-                status.AppendLine();
-                status.AppendFormat("       Adapter initialized: {0}", Initialized);
-                status.AppendLine();
-                status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
-                status.AppendLine();
-                status.AppendFormat("         Connect on demand: {0}", !AutoStart);
-                status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0:N0}", ProcessedMeasurements);
-                status.AppendLine();
-                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString(3));
-                status.AppendLine();
-                status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
-                status.AppendLine();
+                status.AppendLine($"       Data source defined: {dataSource is not null}");
+
+                if (dataSource is not null)
+                    status.AppendLine($"    Referenced data source: {dataSource.DataSetName}, {dataSource.Tables.Count:N0} tables");
+
+                status.AppendLine($"    Initialization timeout: {(InitializationTimeout < 0 ? "Infinite" : InitializationTimeout + " milliseconds")}");
+                status.AppendLine($"       Adapter initialized: {Initialized}");
+                status.AppendLine($"         Operational state: {(Enabled ? "Running" : "Stopped")}");
+                status.AppendLine($"         Connect on demand: {!AutoStart}");
+                status.AppendLine($"    Processed measurements: {ProcessedMeasurements}");
+                status.AppendLine($"    Total adapter run time: {RunTime.ToString(3)}");
+                status.AppendLine($"       Temporal processing: {(SupportsTemporalProcessing ? "Supported" : "Unsupported")}");
+                
                 if (SupportsTemporalProcessing)
                 {
-                    status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                    status.AppendLine();
-                    status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                    status.AppendLine();
-                    status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval.ToString("N0") + " milliseconds"));
-                    status.AppendLine();
+                    status.AppendLine($"     Start time constraint: {(StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
+                    status.AppendLine($"      Stop time constraint: {(StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
+                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"))}");
                 }
-                status.AppendFormat("   Item reporting interval: Every {0:N0} items", MeasurementReportingInterval);
-                status.AppendLine();
-                status.AppendFormat("                Adapter ID: {0}", ID);
-                status.AppendLine();
+                
+                status.AppendLine($"   Item reporting interval: Every {MeasurementReportingInterval:N0} items");
+                status.AppendLine($"                Adapter ID: {ID}");
 
                 Dictionary<string, string> keyValuePairs = Settings;
-                char[] keyChars;
-                string value;
 
-                status.AppendFormat("         Connection string: {0:N0} key/value pairs", keyValuePairs.Count);
+                status.AppendLine($"         Connection string: {keyValuePairs.Count:N0} key/value pairs");
+                status.AppendLine();
+                
                 //                            1         2         3         4         5         6         7
                 //                   123456789012345678901234567890123456789012345678901234567890123456789012345678
                 //                                         Key = Value
                 //                                                        1         2         3         4         5
                 //                                               12345678901234567890123456789012345678901234567890
-                status.AppendLine();
-                status.AppendLine();
-
                 foreach (KeyValuePair<string, string> item in keyValuePairs)
                 {
-                    keyChars = item.Key.Trim().ToCharArray();
+                    char[] keyChars = item.Key.Trim().ToCharArray();
                     keyChars[0] = char.ToUpper(keyChars[0]);
-
-                    value = item.Value.Trim();
+                    string value = item.Value.Trim();
+                    
                     if (value.Length > 50)
                         value = value.TruncateRight(47) + "...";
 
-                    status.AppendFormat("{0} = {1}", new string(keyChars).TruncateRight(25).PadLeft(25), value.PadRight(50));
-                    status.AppendLine();
+                    status.AppendLine($"{new string(keyChars).TruncateRight(25),25} = {value,-50}");
                 }
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+                if (OutputMeasurements is not null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
-                    status.AppendFormat("       Output measurements: {0:N0} defined measurements", OutputMeasurements.Length);
-                    status.AppendLine();
+                    status.AppendLine($"       Output measurements: {OutputMeasurements.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
@@ -624,16 +528,13 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+                if (InputMeasurementKeys is not null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
-                    status.AppendFormat("        Input measurements: {0:N0} defined measurements", InputMeasurementKeys.Length);
-                    status.AppendLine();
+                    status.AppendLine($"        Input measurements: {InputMeasurementKeys.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
                         status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
 
                     if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
                         status.AppendLine("...".CenterText(50));
@@ -648,7 +549,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        public bool IsDisposed => m_disposed;
+        public bool IsDisposed { get; private set; }
 
         #endregion
 
@@ -669,11 +570,11 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                m_disposed = true;  // Prevent duplicate dispose.
-                Disposed?.Invoke(this, EventArgs.Empty);
-            }
+            if (IsDisposed)
+                return;
+
+            IsDisposed = true;  // Prevent duplicate dispose.
+            Disposed?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -684,40 +585,33 @@ namespace GSF.TimeSeries.Adapters
             Initialized = false;
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
-            if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, setting);
-            else
-                InputMeasurementKeys = new MeasurementKey[0];
+            InputMeasurementKeys = settings.TryGetValue("inputMeasurementKeys", out string setting) ? 
+                ParseInputMeasurementKeys(DataSource, true, setting) : 
+                Array.Empty<MeasurementKey>();
 
             if (settings.TryGetValue("outputMeasurements", out setting))
                 OutputMeasurements = ParseOutputMeasurements(DataSource, true, setting);
 
-            if (settings.TryGetValue("measurementReportingInterval", out setting))
-                MeasurementReportingInterval = int.Parse(setting);
-            else
-                MeasurementReportingInterval = DefaultMeasurementReportingInterval;
+            MeasurementReportingInterval = settings.TryGetValue("measurementReportingInterval", out setting) ? 
+                int.Parse(setting) : 
+                DefaultMeasurementReportingInterval;
 
             if (settings.TryGetValue("connectOnDemand", out setting))
                 AutoStart = !setting.ParseBoolean();
             else
                 AutoStart = true;
 
-            string startTime, stopTime, parameters;
-
-            bool startTimeDefined = settings.TryGetValue("startTimeConstraint", out startTime);
-            bool stopTimeDefined = settings.TryGetValue("stopTimeConstraint", out stopTime);
+            bool startTimeDefined = settings.TryGetValue("startTimeConstraint", out string startTime);
+            bool stopTimeDefined = settings.TryGetValue("stopTimeConstraint", out string stopTime);
 
             if (startTimeDefined || stopTimeDefined)
             {
-                settings.TryGetValue("timeConstraintParameters", out parameters);
+                settings.TryGetValue("timeConstraintParameters", out string parameters);
                 SetTemporalConstraint(startTime, stopTime, parameters);
             }
 
-            int processingInterval;
-
-            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
+            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out int processingInterval))
                 ProcessingInterval = processingInterval;
         }
 
@@ -727,7 +621,7 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Starts the adapter or restarts it if it is already running.", "Administrator", "Editor")]
         public virtual void Start()
         {
-            if (m_disposed)
+            if (IsDisposed)
                 throw new ObjectDisposedException(Name, "Cannot start adapter because it is disposed.");
 
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
@@ -745,7 +639,7 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Stops the adapter.", "Administrator", "Editor")]
         public virtual void Stop()
         {
-            if (m_disposed)
+            if (IsDisposed)
                 throw new ObjectDisposedException(Name, "Cannot stop adapter because it is disposed.");
 
             m_enabled = false;
@@ -757,7 +651,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="initialized">Desired initialized state.</param>
         [AdapterCommand("Manually sets the initialized state of the adapter.", "Administrator", "Editor")]
-        public virtual void SetInitializedState(bool initialized) => this.Initialized = initialized;
+        public virtual void SetInitializedState(bool initialized) => 
+            Initialized = initialized;
 
         /// <summary>
         /// Gets a short one-line status of this <see cref="AdapterBase"/>.
@@ -826,21 +721,16 @@ namespace GSF.TimeSeries.Adapters
         /// Serves as a hash function for the current <see cref="AdapterBase"/>.
         /// </summary>
         /// <returns>A hash code for the current <see cref="AdapterBase"/>.</returns>
-        public override int GetHashCode()
-        {
-            // ReSharper disable once NonReadonlyMemberInGetHashCode
-            return m_hashCode;
-        }
+        public override int GetHashCode() => // ReSharper disable once NonReadonlyMemberInGetHashCode
+            m_hashCode; 
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
         /// <param name="status">New status message.</param>
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnStatusMessage(string status)
-        {
+        protected void OnStatusMessage(string status) => 
             OnStatusMessage(MessageLevel.Info, status, "Unclassified Status");
-        }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event with a formatted status message.
@@ -850,11 +740,10 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
-        [StringFormatMethod("formattedStatus"), Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnStatusMessage(string formattedStatus, params object[] args)
-        {
+        [StringFormatMethod("formattedStatus")]
+        [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
+        protected void OnStatusMessage(string formattedStatus, params object[] args) => 
             OnStatusMessage(MessageLevel.Info, string.Format(formattedStatus, args), "Unclassified Status");
-        }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
@@ -880,7 +769,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(StatusMessage)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -889,10 +778,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnProcessException(Exception ex)
-        {
+        protected void OnProcessException(Exception ex) => 
             OnProcessException(MessageLevel.Info, ex, "Unclassified Exception");
-        }
 
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
@@ -918,7 +805,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for {nameof(ProcessException)} event: {ex.Message}", null, ex);
             }
         }
 
@@ -934,7 +821,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(InputMeasurementKeysUpdated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -950,7 +837,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(OutputMeasurementsUpdated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -966,7 +853,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ConfigurationChanged)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -981,30 +868,28 @@ namespace GSF.TimeSeries.Adapters
             // messages of how many points have been archived so far...
             int interval = MeasurementReportingInterval;
 
-            if (interval > 0)
-            {
-                bool showMessage = m_processedMeasurements + totalAdded >= (m_processedMeasurements / interval + 1) * interval;
+            if (interval <= 0)
+                return;
 
-                m_processedMeasurements += totalAdded;
+            bool showMessage = m_processedMeasurements + totalAdded >= (m_processedMeasurements / interval + 1) * interval;
 
-                if (showMessage)
-                    OnStatusMessage(MessageLevel.Info, $"{m_processedMeasurements:N0} measurements have been processed so far...", "Processed Measurement Count");
-            }
+            m_processedMeasurements += totalAdded;
+
+            if (showMessage)
+                OnStatusMessage(MessageLevel.Info, $"{m_processedMeasurements:N0} measurements have been processed so far...", "Processed Measurement Count");
         }
 
-        private void GenHashCode()
-        {
-            // We cache hash code during construction or after element value change to speed usage
+        // We cache hash code during construction or after element value change to speed usage
+        private void GenHashCode() => 
             m_hashCode = (Name + ID).GetHashCode();
-        }
 
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-        private static readonly Regex s_filterExpression = new Regex("(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
+        private static readonly Regex s_filterExpression = new("(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex s_timetagExpression = new("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
 
         // Static Methods
 
@@ -1015,22 +900,15 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="level">Message level.</param>
         /// <returns>Status message with common time-series messaging prefix for given <see cref="MessageLevel"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetStatusWithMessageLevelPrefix(string status, MessageLevel level)
-        {
-            switch (level)
+        public static string GetStatusWithMessageLevelPrefix(string status, MessageLevel level) =>
+            level switch
             {
-                case MessageLevel.Debug:
-                    return $"DEBUG: {status}";
-                case MessageLevel.Warning:
-                    return $"WARNING: {status}";
-                case MessageLevel.Error:
-                    return $"ERROR: {status}";
-                case MessageLevel.Critical:
-                    return $"CRITICAL: {status}";
-                default:
-                    return status;
-            }
-        }
+                MessageLevel.Debug => $"DEBUG: {status}",
+                MessageLevel.Warning => $"WARNING: {status}",
+                MessageLevel.Error => $"ERROR: {status}",
+                MessageLevel.Critical => $"CRITICAL: {status}",
+                _ => status
+            };
 
         /// <summary>
         /// Parses a standard FILTER styles expression into its constituent parts.
@@ -1147,41 +1025,34 @@ namespace GSF.TimeSeries.Adapters
                 dateTime = DateTime.UtcNow;
                 timetag = timetag.RemoveWhiteSpace();
 
-                if (timetag.Length > 1)
+                if (timetag.Length <= 1)
+                    return dateTime;
+
+                Match timetagMatch;
+
+                lock (s_timetagExpression)
                 {
-                    Match timetagMatch;
+                    timetagMatch = s_timetagExpression.Match(timetag);
+                }
 
-                    lock (s_timetagExpression)
-                    {
-                        timetagMatch = s_timetagExpression.Match(timetag);
-                    }
+                if (timetagMatch.Success)
+                {
+                    double offset = double.Parse(timetagMatch.Result("${Offset}").Trim());
+                    string unit = timetagMatch.Result("${Unit}").Trim().ToLower();
 
-                    if (timetagMatch.Success)
+                    dateTime = unit[0] switch
                     {
-                        double offset = double.Parse(timetagMatch.Result("${Offset}").Trim());
-                        string unit = timetagMatch.Result("${Unit}").Trim().ToLower();
-
-                        switch (unit[0])
-                        {
-                            case 's':
-                                dateTime = dateTime.AddSeconds(offset);
-                                break;
-                            case 'm':
-                                dateTime = dateTime.AddMinutes(offset);
-                                break;
-                            case 'h':
-                                dateTime = dateTime.AddHours(offset);
-                                break;
-                            case 'd':
-                                dateTime = dateTime.AddDays(offset);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        // Expression match failed, attempt to parse absolute time specification.
-                        dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
-                    }
+                        's' => dateTime.AddSeconds(offset),
+                        'm' => dateTime.AddMinutes(offset),
+                        'h' => dateTime.AddHours(offset),
+                        'd' => dateTime.AddDays(offset),
+                        _ => dateTime
+                    };
+                }
+                else
+                {
+                    // Expression match failed, attempt to parse absolute time specification.
+                    dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
                 }
             }
             else
@@ -1205,49 +1076,48 @@ namespace GSF.TimeSeries.Adapters
         {
             string[] sourceIDs = null;
 
-            if (adapter is IOutputAdapter)
-                sourceIDs = (adapter as IOutputAdapter).InputSourceIDs;
-            else if (adapter is IActionAdapter)
-                sourceIDs = (adapter as IActionAdapter).InputSourceIDs;
+            if (adapter is IOutputAdapter outputAdapter)
+                sourceIDs = outputAdapter.InputSourceIDs;
+            else if (adapter is IActionAdapter actionAdapter)
+                sourceIDs = actionAdapter.InputSourceIDs;
 
-            if (sourceIDs != null)
+            if (sourceIDs is null)
+                return;
+
+            // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
+            try
             {
-                // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
-                try
+                if (!adapter.DataSource.Tables.Contains(measurementTable))
+                    return;
+
+                StringBuilder likeExpression = new();
+
+                // Build like expression for each source ID
+                foreach (string sourceID in sourceIDs)
                 {
-                    if (adapter.DataSource.Tables.Contains(measurementTable))
-                    {
-                        StringBuilder likeExpression = new StringBuilder();
+                    if (likeExpression.Length > 0)
+                        likeExpression.Append(" OR ");
 
-                        // Build like expression for each source ID
-                        foreach (string sourceID in sourceIDs)
-                        {
-                            if (likeExpression.Length > 0)
-                                likeExpression.Append(" OR ");
-
-                            likeExpression.AppendFormat("ID LIKE '{0}:*'", sourceID);
-                        }
-
-                        DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
-                        MeasurementKey[] sourceIDKeys = null;
-
-                        if (filteredRows.Length > 0)
-                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()))).ToArray();
-
-                        if (sourceIDKeys != null)
-                        {
-                            // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
-                            if ((object)adapter.InputMeasurementKeys == null)
-                                adapter.InputMeasurementKeys = sourceIDKeys;
-                            else
-                                adapter.InputMeasurementKeys = sourceIDKeys.Concat(adapter.InputMeasurementKeys).Distinct().ToArray();
-                        }
-                    }
+                    likeExpression.Append($"ID LIKE '{sourceID}:*'");
                 }
-                catch
-                {
-                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
-                }
+
+                DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
+                MeasurementKey[] sourceIDKeys = null;
+
+                if (filteredRows.Length > 0)
+                    sourceIDKeys = filteredRows.Select(row => MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToNonNullString(MeasurementKey.Undefined.ToString()))).ToArray();
+
+                if (sourceIDKeys is null)
+                    return;
+
+                // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
+                adapter.InputMeasurementKeys = adapter.InputMeasurementKeys is null ? 
+                    sourceIDKeys : 
+                    sourceIDKeys.Concat(adapter.InputMeasurementKeys).Distinct().ToArray();
+            }
+            catch
+            {
+                // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
             }
         }
 
@@ -1263,59 +1133,58 @@ namespace GSF.TimeSeries.Adapters
         {
             string[] sourceIDs = null;
 
-            if (adapter is IInputAdapter)
-                sourceIDs = (adapter as IInputAdapter).OutputSourceIDs;
-            else if (adapter is IActionAdapter)
-                sourceIDs = (adapter as IActionAdapter).OutputSourceIDs;
+            if (adapter is IInputAdapter inputAdapter)
+                sourceIDs = inputAdapter.OutputSourceIDs;
+            else if (adapter is IActionAdapter actionAdapter)
+                sourceIDs = actionAdapter.OutputSourceIDs;
 
-            if (sourceIDs != null)
+            if (sourceIDs is null)
+                return;
+
+            // Attempt to lookup output measurements for given source IDs from default measurement table, if defined
+            try
             {
-                // Attempt to lookup output measurements for given source IDs from default measurement table, if defined
-                try
+                if (!adapter.DataSource.Tables.Contains(measurementTable))
+                    return;
+
+                StringBuilder likeExpression = new();
+
+                // Build like expression for each source ID
+                foreach (string sourceID in sourceIDs)
                 {
-                    if (adapter.DataSource.Tables.Contains(measurementTable))
-                    {
-                        StringBuilder likeExpression = new StringBuilder();
+                    if (likeExpression.Length > 0)
+                        likeExpression.Append(" OR ");
 
-                        // Build like expression for each source ID
-                        foreach (string sourceID in sourceIDs)
-                        {
-                            if (likeExpression.Length > 0)
-                                likeExpression.Append(" OR ");
-
-                            likeExpression.AppendFormat("ID LIKE '{0}:*'", sourceID);
-                        }
-
-                        DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
-                        MeasurementKey[] sourceIDKeys = null;
-
-                        if (filteredRows.Length > 0)
-                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()))).ToArray();
-
-                        if (sourceIDKeys != null)
-                        {
-                            List<IMeasurement> measurements = new List<IMeasurement>();
-
-                            foreach (MeasurementKey key in sourceIDKeys)
-                            {
-                                // Create a new measurement for the provided field level information
-                                Measurement measurement = new Measurement();
-                                measurement.Metadata = key.Metadata;
-                                measurements.Add(measurement);
-                            }
-
-                            // Combine output measurements for source IDs with any existing output measurements and return unique set
-                            if ((object)adapter.OutputMeasurements == null)
-                                adapter.OutputMeasurements = measurements.ToArray();
-                            else
-                                adapter.OutputMeasurements = measurements.Concat(adapter.OutputMeasurements).Distinct().ToArray();
-                        }
-                    }
+                    likeExpression.AppendFormat("ID LIKE '{0}:*'", sourceID);
                 }
-                catch
+
+                DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
+                MeasurementKey[] sourceIDKeys = null;
+
+                if (filteredRows.Length > 0)
+                    sourceIDKeys = filteredRows.Select(row => MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToNonNullString(MeasurementKey.Undefined.ToString()))).ToArray();
+
+                if (sourceIDKeys is null)
+                    return;
+
+                List<IMeasurement> measurements = new();
+
+                foreach (MeasurementKey key in sourceIDKeys)
                 {
-                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                    // Create a new measurement for the provided field level information
+                    Measurement measurement = new();
+                    measurement.Metadata = key.Metadata;
+                    measurements.Add(measurement);
                 }
+
+                // Combine output measurements for source IDs with any existing output measurements and return unique set
+                adapter.OutputMeasurements = adapter.OutputMeasurements is null ? 
+                    measurements.ToArray() : 
+                    measurements.Concat(adapter.OutputMeasurements).Distinct().ToArray();
+            }
+            catch
+            {
+                // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
             }
         }
 
@@ -1352,23 +1221,20 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
         {
-            List<MeasurementKey> keys = new List<MeasurementKey>();
+            List<MeasurementKey> keys = new();
             MeasurementKey key;
-            Guid id;
-            string tableName, expression, sortField;
-            int takeCount;
-            bool dataSourceAvailable = (object)dataSource != null;
+            bool dataSourceAvailable = dataSource is not null;
 
             if (string.IsNullOrWhiteSpace(value))
                 return keys.ToArray();
 
             value = value.Trim();
 
-            if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
+            if (dataSourceAvailable && ParseFilterExpression(value, out string tableName, out string expression, out string sortField, out int takeCount))
             {
                 foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                 {
-                    key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToString());
+                    key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
 
                     if (key != MeasurementKey.Undefined)
                         keys.Add(key);
@@ -1386,17 +1252,15 @@ namespace GSF.TimeSeries.Adapters
                     // Global configuration setting can override ability to use SELECT statements
                     if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
                     {
-                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                        using AdoDataConnection database = new("systemSettings");
+                        DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+
+                        foreach (DataRow row in results.Rows)
                         {
-                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+                            key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
 
-                            foreach (DataRow row in results.Rows)
-                            {
-                                key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToString());
-
-                                if (key != MeasurementKey.Undefined)
-                                    keys.Add(key);
-                            }
+                            if (key != MeasurementKey.Undefined)
+                                keys.Add(key);
                         }
                     }
                     else
@@ -1417,7 +1281,7 @@ namespace GSF.TimeSeries.Adapters
                     if (string.IsNullOrWhiteSpace(item))
                         continue;
 
-                    if (Guid.TryParse(item, out id))
+                    if (Guid.TryParse(item, out Guid id))
                     {
                         // The item was parsed as a signal ID so do a straight lookup
                         key = MeasurementKey.LookUpBySignalID(id);
@@ -1427,23 +1291,21 @@ namespace GSF.TimeSeries.Adapters
                             DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
 
                             if (filteredRows.Length > 0)
-                                MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
+                                MeasurementKey.TryCreateOrUpdate(id, filteredRows[0][nameof(ID)].ToString(), out key);
                         }
                     }
                     else if (!MeasurementKey.TryParse(item, out key))
                     {
                         if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            DataRow[] filteredRows;
-
                             // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                            filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{item.Trim()}'");
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{item.Trim()}'");
 
                             if (filteredRows.Length == 0)
                                 filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
 
                             if (filteredRows.Length > 0)
-                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
+                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
                         }
 
                         // If all else fails, attempt to parse the item as a measurement key
@@ -1476,10 +1338,8 @@ namespace GSF.TimeSeries.Adapters
         /// Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
         /// injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
         /// </remarks>
-        public static MeasurementKey[] ParseOutputMeasurementKeys(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
-        {
-            return ParseOutputMeasurements(dataSource, allowSelect, value, measurementTable).MeasurementKeys().ToArray();
-        }
+        public static MeasurementKey[] ParseOutputMeasurementKeys(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements") => 
+            ParseOutputMeasurements(dataSource, allowSelect, value, measurementTable).MeasurementKeys().ToArray();
 
         /// <summary>
         /// Parses output measurements from connection string setting.
@@ -1495,26 +1355,24 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
         {
-            List<IMeasurement> measurements = new List<IMeasurement>();
+            List<IMeasurement> measurements = new();
             Measurement measurement;
             MeasurementKey key;
             Guid id;
-            string tableName, expression, sortField;
-            int takeCount;
-            bool dataSourceAvailable = (object)dataSource != null;
+            bool dataSourceAvailable = dataSource is not null;
 
             if (string.IsNullOrWhiteSpace(value))
                 return measurements.ToArray();
 
             value = value.Trim();
 
-            if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
+            if (dataSourceAvailable && ParseFilterExpression(value, out string tableName, out string expression, out string sortField, out int takeCount))
             {
                 foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                 {
                     id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                    key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
+                    key = MeasurementKey.LookUpOrCreate(id, row[nameof(ID)].ToString());
 
                     measurement = new Measurement
                     {
@@ -1536,23 +1394,22 @@ namespace GSF.TimeSeries.Adapters
                     // Global configuration setting can override ability to use SELECT statements
                     if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
                     {
-                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                        using AdoDataConnection database = new("systemSettings");
+
+                        DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+
+                        foreach (DataRow row in results.Rows)
                         {
-                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+                            id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                            foreach (DataRow row in results.Rows)
+                            key = MeasurementKey.LookUpOrCreate(id, row[nameof(ID)].ToString());
+
+                            measurement = new Measurement
                             {
-                                id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                Metadata = key.Metadata,
+                            };
 
-                                key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
-
-                                measurement = new Measurement
-                                {
-                                    Metadata = key.Metadata,
-                                };
-
-                                measurements.Add(measurement);
-                            }
+                            measurements.Add(measurement);
                         }
                     }
                     else
@@ -1567,15 +1424,12 @@ namespace GSF.TimeSeries.Adapters
             }
             else
             {
-                string[] elem;
-                double adder, multipler;
-
                 foreach (string item in value.Split(';'))
                 {
                     if (string.IsNullOrWhiteSpace(item))
                         continue;
 
-                    elem = item.Trim().Split(',');
+                    string[] elem = item.Trim().Split(',');
 
                     // Trim all tokens ahead of time
                     for (int i = 0; i < elem.Length; i++)
@@ -1591,17 +1445,15 @@ namespace GSF.TimeSeries.Adapters
                             DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
 
                             if (filteredRows.Length > 0)
-                                MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
+                                MeasurementKey.TryCreateOrUpdate(id, filteredRows[0][nameof(ID)].ToString(), out key);
                         }
                     }
                     else if (!MeasurementKey.TryParse(elem[0], out key))
                     {
                         if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            DataRow[] filteredRows;
-
                             // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                            filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{elem[0]}'");
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{elem[0]}'");
 
                             if (filteredRows.Length == 0)
                             {
@@ -1610,11 +1462,11 @@ namespace GSF.TimeSeries.Adapters
                                 filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
 
                                 if (filteredRows.Length > 0)
-                                    elem = new string[0];
+                                    elem = Array.Empty<string>();
                             }
 
                             if (filteredRows.Length > 0)
-                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
+                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
                         }
 
                         // If all else fails, attempt to parse the item as a measurement key
@@ -1631,10 +1483,10 @@ namespace GSF.TimeSeries.Adapters
                         continue;
 
                     // Adder and multiplier may be optionally specified
-                    if (elem.Length < 2 || !double.TryParse(elem[1], out adder))
+                    if (elem.Length < 2 || !double.TryParse(elem[1], out double adder))
                         adder = 0.0D;
 
-                    if (elem.Length < 3 || !double.TryParse(elem[2], out multipler))
+                    if (elem.Length < 3 || !double.TryParse(elem[2], out double multipler))
                         multipler = 1.0D;
 
                     // Create a new measurement for the provided field level information

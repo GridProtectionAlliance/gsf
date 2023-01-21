@@ -38,8 +38,8 @@ namespace GSF.TimeSeries
     /// </remarks>
     public static class IMeasurementExtensions
     {
-        private static readonly ConcurrentDictionary<string, int> s_signalTypeIDs = new ConcurrentDictionary<string, int>();
-        private static readonly ConcurrentDictionary<Guid, int> s_signalTypeIDCache = new ConcurrentDictionary<Guid, int>();
+        private static readonly ConcurrentDictionary<string, int> s_signalTypeIDs = new();
+        private static readonly ConcurrentDictionary<Guid, int> s_signalTypeIDCache = new();
 
         /// <summary>
         /// Returns <c>true</c> if <see cref="MeasurementStateFlags.BadData"/> is not set.
@@ -103,7 +103,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="measurements"><see cref="IMeasurement"/> enumeration to convert.</param>
         /// <returns><see cref="MeasurementKey"/> values of the <see cref="IMeasurement"/> enumeration.</returns>
-        public static MeasurementKey[] MeasurementKeys(this IEnumerable<IMeasurement> measurements) => measurements == null ? new MeasurementKey[0] : measurements.Select(m => m.Key).ToArray();
+        public static MeasurementKey[] MeasurementKeys(this IEnumerable<IMeasurement> measurements) => measurements is null ? Array.Empty<MeasurementKey>() : measurements.Select(m => m.Key).ToArray();
 
         /// <summary>
         /// Gets a unique (run-time only) signal type ID for the given <paramref name="measurement"/> useful for sorting.

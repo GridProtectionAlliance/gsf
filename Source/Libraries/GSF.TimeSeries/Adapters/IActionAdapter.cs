@@ -65,11 +65,7 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
         /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
         /// </remarks>
-        bool RespectInputDemands
-        {
-            get;
-            set;
-        }
+        bool RespectInputDemands { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
@@ -79,11 +75,7 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
         /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
         /// </remarks>
-        bool RespectOutputDemands
-        {
-            get;
-            set;
-        }
+        bool RespectOutputDemands { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
@@ -92,11 +84,7 @@ namespace GSF.TimeSeries.Adapters
         /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
         /// Set to <c>null</c> to apply no filter.
         /// </remarks>
-        string[] InputSourceIDs
-        {
-            get;
-            set;
-        }
+        string[] InputSourceIDs { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
@@ -105,29 +93,17 @@ namespace GSF.TimeSeries.Adapters
         /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
         /// Set to <c>null</c> to apply no filter.
         /// </remarks>
-        string[] OutputSourceIDs
-        {
-            get;
-            set;
-        }
+        string[] OutputSourceIDs { get; set; }
 
         /// <summary>
         /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        MeasurementKey[] RequestedInputMeasurementKeys
-        {
-            get;
-            set;
-        }
+        MeasurementKey[] RequestedInputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        MeasurementKey[] RequestedOutputMeasurementKeys
-        {
-            get;
-            set;
-        }
+        MeasurementKey[] RequestedOutputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Queues measurements for processing.  Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.

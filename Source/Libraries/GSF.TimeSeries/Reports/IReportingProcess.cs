@@ -36,92 +36,53 @@ namespace GSF.TimeSeries.Reports
         /// <summary>
         /// Gets report type (i.e., name) for this reporting process.
         /// </summary>
-        string ReportType
-        {
-            get;
-        }
+        string ReportType { get; }
 
         /// <summary>
         /// Gets or sets the path to the archive file to which the statistics required for reporting are archived.
         /// </summary>
-        string ArchiveFilePath
-        {
-            get;
-            set;
-        }
+        string ArchiveFilePath { get; set; }
 
         /// <summary>
         /// Gets or sets the directory to which reports will be written.
         /// </summary>
-        string ReportLocation
-        {
-            get;
-            set;
-        }
+        string ReportLocation { get; set; }
 
         /// <summary>
         /// Gets or sets the title to be displayed on reports.
         /// </summary>
-        string Title
-        {
-            get;
-            set;
-        }
+        string Title { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the company to be displayed on reports.
         /// </summary>
-        string Company
-        {
-            get;
-            set;
-        }
+        string Company { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum lifetime of a report
         /// since the last time it was accessed, in days.
         /// </summary>
-        double IdleReportLifetime
-        {
-            get;
-            set;
-        }
+        double IdleReportLifetime { get; set; }
 
         /// <summary>
         /// Gets or sets flag to enable e-mailing of reports.
         /// </summary>
-        bool EnableReportEmail
-        {
-            get;
-            set;
-        }
+        bool EnableReportEmail { get; set; }
 
         /// <summary>
         /// Gets or sets SMTP server to use when e-mailing reports.
         /// </summary>
-        string SmtpServer
-        {
-            get;
-            set;
-        }
+        string SmtpServer { get; set; }
 
         /// <summary>
         /// Gets or sets the "from" address to use when e-mailing reports.
         /// </summary>
-        string FromAddress
-        {
-            get;
-            set;
-        }
+        string FromAddress { get; set; }
 
         /// <summary>
         /// Gets or sets the comma separated "to" addresses to use when e-mailing reports. 
         /// </summary>
-        string ToAddresses
-        {
-            get;
-            set;
-        }
+        string ToAddresses { get; set; }
 
         /// <summary>
         /// Returns the list of reports that are available from the report location.

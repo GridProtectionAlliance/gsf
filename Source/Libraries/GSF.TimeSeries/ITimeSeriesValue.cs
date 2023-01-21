@@ -38,19 +38,12 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// This is the fundamental identifier of the <see cref="ITimeSeriesValue{T}"/>.
         /// </remarks>
-        Guid ID
-        {
-            get;
-        }
+        Guid ID { get; }
 
         /// <summary>
         /// Gets or sets the raw value of this <see cref="ITimeSeriesValue{T}"/>.
         /// </summary>
-        BigBinaryValue Value
-        {
-            get;
-            set;
-        }
+        BigBinaryValue Value { get; set; }
 
         /// <summary>
         /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ITimeSeriesValue{T}"/>.
@@ -58,11 +51,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        Ticks Timestamp
-        {
-            get;
-            set;
-        }
+        Ticks Timestamp { get; set; }
 
         /// <summary>
         /// Get the hash code for the <see cref="ITimeSeriesValue.ID"/>.
@@ -81,10 +70,6 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets the raw typed value of this <see cref="ITimeSeriesValue{T}"/>.
         /// </summary>
-        new T Value
-        {
-            get;
-            set;
-        }
+        new T Value { get; set; }
     }
 }

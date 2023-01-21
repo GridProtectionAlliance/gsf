@@ -52,8 +52,8 @@ namespace GSF.TimeSeries.Adapters
         public const string DefaultSourceMeasurementTable = "ActiveMeasurements";
 
         // Fields
-        private readonly ConcurrentDictionary<long, IMeasurement[,]> m_dataWindows = new ConcurrentDictionary<long, IMeasurement[,]>();
-        private readonly Dictionary<MeasurementKey, int> m_keyIndexes = new Dictionary<MeasurementKey, int>();
+        private readonly ConcurrentDictionary<long, IMeasurement[,]> m_dataWindows = new();
+        private readonly Dictionary<MeasurementKey, int> m_keyIndexes = new();
         private ShortSynchronizedOperation m_processDataWindows;
         private long m_lastFrameTimestamp;
         private long m_processedDataWindows;
@@ -148,19 +148,15 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
-                status.AppendFormat("       Queued Data Windows: {0:N0}", m_dataWindows.Count);
-                status.AppendLine();
-                status.AppendFormat("      Last Frame Timestamp: {0:yyyy-MM-dd HH:mm:ss}", new DateTime(Interlocked.Read(ref m_lastFrameTimestamp)));
-                status.AppendLine();
-                status.AppendFormat("    Processed Data Windows: {0:N0}", Interlocked.Read(ref m_processedDataWindows));
-                status.AppendLine();
-                status.AppendFormat("  Source Measurement Table: {0}", SourceMeasurementTable);
-                status.AppendLine();
+                status.AppendLine($"       Queued Data Windows: {m_dataWindows.Count:N0}");
+                status.AppendLine($"      Last Frame Timestamp: {new DateTime(Interlocked.Read(ref m_lastFrameTimestamp)):yyyy-MM-dd HH:mm:ss}");
+                status.AppendLine($"    Processed Data Windows: {Interlocked.Read(ref m_processedDataWindows):N0}");
+                status.AppendLine($"  Source Measurement Table: {SourceMeasurementTable}");
                 status.Append(base.Status);
 
-                if (OutputMeasurements != null && OutputMeasurements.Length > 0)
+                if (OutputMeasurements is not null && OutputMeasurements.Length > 0)
                 {
                     status.AppendLine();
                     status.AppendLine("Output measurements signal type summary:");
@@ -168,17 +164,16 @@ namespace GSF.TimeSeries.Adapters
 
                     foreach (SignalType signalType in Enum.GetValues(typeof(SignalType)))
                     {
-                        int count = OutputMeasurements.Where((key, index) => OutputMeasurementTypes[index] == signalType).Count();
+                        int count = OutputMeasurements.Where((_, index) => OutputMeasurementTypes[index] == signalType).Count();
 
                         if (count <= 0)
                             continue;
 
-                        status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
-                        status.AppendLine();
+                        status.AppendLine($"{count,15} {signalType.GetFormattedName()} signal{(count > 1 ? "s" : "")}");
                     }
                 }
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > 0)
+                if (InputMeasurementKeys is not null && InputMeasurementKeys.Length > 0)
                 {
                     status.AppendLine();
                     status.AppendLine("Input measurement keys signal type summary:");
@@ -186,13 +181,12 @@ namespace GSF.TimeSeries.Adapters
 
                     foreach (SignalType signalType in Enum.GetValues(typeof(SignalType)))
                     {
-                        int count = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == signalType).Count();
+                        int count = InputMeasurementKeys.Where((_, index) => InputMeasurementKeyTypes[index] == signalType).Count();
 
                         if (count <= 0)
                             continue;
 
-                        status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
-                        status.AppendLine();
+                        status.AppendLine($"{count,15} {signalType.GetFormattedName()} signal{(count > 1 ? "s" : "")}");
                     }
                 }
 
@@ -212,7 +206,7 @@ namespace GSF.TimeSeries.Adapters
             string setting;
 
             // Parse all properties marked with ConnectionStringParameterAttribute from provided ConnectionString value
-            ConnectionStringParser parser = new ConnectionStringParser();
+            ConnectionStringParser parser = new();
             parser.ParseConnectionString(ConnectionString, this);
 
             base.Initialize();
@@ -292,15 +286,15 @@ namespace GSF.TimeSeries.Adapters
             // Process all completed data windows
             foreach (long timestamp in timestamps)
             {
-                if (m_dataWindows.TryRemove(timestamp, out IMeasurement[,] dataWindow))
-                {
-                    Debug.Assert(dataWindow.GetLength(0) == InputCount, $"Unexpected data window input size: {dataWindow.GetLength(0)}, expected {InputCount}");
-                    Debug.Assert(dataWindow.GetLength(1) == FramesPerSecond, $"Unexpected data window row size: {dataWindow.GetLength(1)}, expected {FramesPerSecond}");
+                if (!m_dataWindows.TryRemove(timestamp, out IMeasurement[,] dataWindow))
+                    continue;
 
-                    ProcessDataWindow(timestamp, dataWindow);
+                Debug.Assert(dataWindow.GetLength(0) == InputCount, $"Unexpected data window input size: {dataWindow.GetLength(0)}, expected {InputCount}");
+                Debug.Assert(dataWindow.GetLength(1) == FramesPerSecond, $"Unexpected data window row size: {dataWindow.GetLength(1)}, expected {FramesPerSecond}");
+
+                ProcessDataWindow(timestamp, dataWindow);
                     
-                    Interlocked.Increment(ref m_processedDataWindows);
-                }
+                Interlocked.Increment(ref m_processedDataWindows);
             }
         }
 

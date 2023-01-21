@@ -49,22 +49,8 @@ namespace GSF.TimeSeries.Reports
         #region [ Members ]
 
         // Fields
-        private readonly string m_reportType;
         private readonly ConcurrentQueue<Tuple<DateTime, bool>> m_reportGenerationQueue;
         private readonly LongSynchronizedOperation m_executeOperation;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
-        private string m_archiveFilePath;
-        private string m_reportLocation;
-        private string m_title;
-        private string m_company;
-        private double m_idleReportLifetime;
-        private bool m_enableReportEmail;
-        private string m_smtpServer;
-        private string m_fromAddress;
-        private string m_toAddresses;
-        private string m_smtpUsername;
-        private SecureString m_smtpPassword;
         private long m_generatedReports;
         private DateTime m_lastReportGenerationTime;
 
@@ -78,24 +64,24 @@ namespace GSF.TimeSeries.Reports
         /// <param name="reportType">Report type - passed into StatHistorianReportGenerator.</param>
         protected ReportingProcessBase(string reportType)
         {
-            m_reportType = reportType;
+            ReportType = reportType;
             m_reportGenerationQueue = new ConcurrentQueue<Tuple<DateTime, bool>>();
             m_executeOperation = new LongSynchronizedOperation(Execute)
             {
                 IsBackground = true
             };
 
-            m_persistSettings = true;
-            m_settingsCategory = string.Format("{0}Reporting", m_reportType);
-            m_archiveFilePath = "Eval(statArchiveFile.FileName)";
-            m_reportLocation = "Reports";
-            m_title = string.Format("Eval(securityProvider.ApplicationName) {0} Report", m_reportType);
-            m_company = "Eval(systemSettings.CompanyName)";
-            m_idleReportLifetime = 14.0D;
-            m_enableReportEmail = false;
-            m_smtpServer = "localhost";
-            m_fromAddress = "reports@gridprotectionalliance.org";
-            m_toAddresses = "wile.e.coyote@acme.com";
+            PersistSettings = true;
+            SettingsCategory = string.Format("{0}Reporting", ReportType);
+            ArchiveFilePath = "Eval(statArchiveFile.FileName)";
+            ReportLocation = nameof(Reports);
+            Title = string.Format("Eval(securityProvider.ApplicationName) {0} Report", ReportType);
+            Company = "Eval(systemSettings.CompanyName)";
+            IdleReportLifetime = 14.0D;
+            EnableReportEmail = false;
+            SmtpServer = "localhost";
+            FromAddress = "reports@gridprotectionalliance.org";
+            ToAddresses = "wile.e.coyote@acme.com";
         }
 
         #endregion
@@ -105,17 +91,7 @@ namespace GSF.TimeSeries.Reports
         /// <summary>
         /// Determines whether the object settings are to be persisted to the config file.
         /// </summary>
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
+        public bool PersistSettings { get; set; }
 
         /// <summary>
         /// Gets report type, i.e., basically the report name associated with this reporting process.
@@ -123,218 +99,80 @@ namespace GSF.TimeSeries.Reports
         /// <remarks>
         /// This value is passed to StatHistorianReportGenerator as "reportType" parameter.
         /// </remarks>
-        public string ReportType
-        {
-            get
-            {
-                return m_reportType;
-            }
-        }
+        public string ReportType { get; }
 
-        string IProvideStatus.Name
-        {
-            get
-            {
-                return GetType().Name;
-            }
-        }
+        string IProvideStatus.Name => GetType().Name;
 
         /// <summary>
         /// Gets or sets the category name under which the object settings are persisted in the config file.
         /// </summary>
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                m_settingsCategory = value;
-            }
-        }
+        public string SettingsCategory { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the archive file to which
         /// the statistics required for reporting are archived.
         /// </summary>
-        public string ArchiveFilePath
-        {
-            get
-            {
-                return m_archiveFilePath;
-            }
-            set
-            {
-                m_archiveFilePath = value;
-            }
-        }
+        public string ArchiveFilePath { get; set; }
 
         /// <summary>
         /// Gets or sets the directory to which reports will be written.
         /// </summary>
-        public string ReportLocation
-        {
-            get
-            {
-                return m_reportLocation;
-            }
-            set
-            {
-                m_reportLocation = value;
-            }
-        }
+        public string ReportLocation { get; set; }
 
         /// <summary>
         /// Gets or sets the title to be displayed on reports.
         /// </summary>
-        public string Title
-        {
-            get
-            {
-                return m_title;
-            }
-            set
-            {
-                m_title = value;
-            }
-        }
+        public string Title { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the company to be displayed on reports.
         /// </summary>
-        public string Company
-        {
-            get
-            {
-                return m_company;
-            }
-            set
-            {
-                m_company = value;
-            }
-        }
+        public string Company { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum lifetime of a report
         /// since the last time it was accessed, in days.
         /// </summary>
-        public double IdleReportLifetime
-        {
-            get
-            {
-                return m_idleReportLifetime;
-            }
-            set
-            {
-                m_idleReportLifetime = value;
-            }
-        }
+        public double IdleReportLifetime { get; set; }
 
         /// <summary>
         /// Gets or sets flag to enable e-mailing of reports.
         /// </summary>
-        public bool EnableReportEmail
-        {
-            get
-            {
-                return m_enableReportEmail;
-            }
-            set
-            {
-                m_enableReportEmail = value;
-            }
-        }
+        public bool EnableReportEmail { get; set; }
 
         /// <summary>
         /// Gets or sets SMTP server to use when e-mailing reports.
         /// </summary>
-        public string SmtpServer
-        {
-            get
-            {
-                return m_smtpServer;
-            }
-            set
-            {
-                m_smtpServer = value;
-            }
-        }
+        public string SmtpServer { get; set; }
 
         /// <summary>
         /// Gets or sets the "from" address to use when e-mailing reports.
         /// </summary>
-        public string FromAddress
-        {
-            get
-            {
-                return m_fromAddress;
-            }
-            set
-            {
-                m_fromAddress = value;
-            }
-        }
+        public string FromAddress { get; set; }
 
         /// <summary>
         /// Gets or sets the comma separated "to" addresses to use when e-mailing reports. 
         /// </summary>
-        public string ToAddresses
-        {
-            get
-            {
-                return m_toAddresses;
-            }
-            set
-            {
-                m_toAddresses = value;
-            }
-        }
+        public string ToAddresses { get; set; }
 
         /// <summary>
         /// Gets or sets the username used to authenticate to the SMTP server.
         /// </summary>
-        public string SmtpUsername
-        {
-            get
-            {
-                return m_smtpUsername;
-            }
-            set
-            {
-                m_smtpUsername = value;
-            }
-        }
+        public string SmtpUsername { get; set; }
 
         /// <summary>
         /// Gets or sets the password used to authenticate to the SMTP server.
         /// </summary>
         public string SmtpPassword
         {
-            get
-            {
-                return m_smtpPassword.ToUnsecureString();
-            }
-            set
-            {
-                m_smtpPassword = value.ToSecureString();
-            }
+            get => SmtpSecurePassword.ToUnsecureString();
+            set => SmtpSecurePassword = value.ToSecureString();
         }
 
         /// <summary>
         /// Gets or sets the password used to authenticate to the SMTP server as a secure string.
         /// </summary>
-        public SecureString SmtpSecurePassword
-        {
-            get
-            {
-                return m_smtpPassword;
-            }
-            set
-            {
-                m_smtpPassword = value;
-            }
-        }
+        public SecureString SmtpSecurePassword { get; set; }
 
         /// <summary>
         /// Gets the current status details about reporting process.
@@ -343,7 +181,7 @@ namespace GSF.TimeSeries.Reports
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.AppendFormat("               Report type: {0}", ReportType ?? "undefined");
                 status.AppendLine();
@@ -392,7 +230,7 @@ namespace GSF.TimeSeries.Reports
         /// <returns>The list of generated reports.</returns>
         public List<string> GetReportsList()
         {
-            string reportLocation = FilePath.GetAbsolutePath(m_reportLocation)
+            string reportLocation = FilePath.GetAbsolutePath(ReportLocation)
                 .EnsureEnd(Path.DirectorySeparatorChar);
 
             if (Directory.Exists(reportLocation))
@@ -413,7 +251,7 @@ namespace GSF.TimeSeries.Reports
         public List<string> GetPendingReportsList()
         {
             return m_reportGenerationQueue.ToArray()
-                .Select(reportDate => string.Format("{0} {1:yyyy-MM-dd}.pdf", m_title, reportDate))
+                .Select(reportDate => string.Format("{0} {1:yyyy-MM-dd}.pdf", Title, reportDate))
                 .ToList();
         }
 
@@ -448,9 +286,9 @@ namespace GSF.TimeSeries.Reports
             {
                 if (IsReportFileName(report))
                 {
-                    info = new FileInfo(FilePath.GetAbsolutePath(Path.Combine(m_reportLocation, report)));
+                    info = new FileInfo(FilePath.GetAbsolutePath(Path.Combine(ReportLocation, report)));
 
-                    if ((DateTime.UtcNow - info.LastAccessTimeUtc).TotalDays > m_idleReportLifetime)
+                    if ((DateTime.UtcNow - info.LastAccessTimeUtc).TotalDays > IdleReportLifetime)
                         File.Delete(info.FullName);
                 }
             }
@@ -461,40 +299,40 @@ namespace GSF.TimeSeries.Reports
         /// </summary>
         public virtual void LoadSettings()
         {
-            if (!m_persistSettings)
+            if (!PersistSettings)
                 return;
 
             // Ensure that settings category is specified.
-            if (string.IsNullOrEmpty(m_settingsCategory))
+            if (string.IsNullOrEmpty(SettingsCategory))
                 throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
             // Load settings from the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
 
-            settings.Add("ArchiveFilePath", m_archiveFilePath, "Path to the archive file to which the statistics required for reporting are archived.");
-            settings.Add("ReportLocation", m_reportLocation, "Directory to which reports will be written.");
-            settings.Add("Title", m_title, "Title to be displayed on reports.");
-            settings.Add("Company", m_company, "Name of the company to be displayed on reports.");
-            settings.Add("IdleReportLifetime", m_idleReportLifetime, "The minimum lifetime of a report since the last time it was accessed, in days.");
-            settings.Add("EnableReportEmail", m_enableReportEmail, "Set to true to enable daily e-mailing of reports.");
-            settings.Add("SmtpServer", m_smtpServer, "The SMTP relay server from which to send e-mails.");
-            settings.Add("FromAddress", m_fromAddress, "The from address for the report e-mails.");
-            settings.Add("ToAddresses", m_toAddresses, "Comma separated list of destination addresses for the report e-mails.");
-            settings.Add("SmtpUsername", m_smtpUsername, "Username to authenticate to the SMTP server.");
-            settings.Add("SmtpPassword", m_smtpPassword, "Password to authenticate to the SMTP server.");
+            settings.Add(nameof(ArchiveFilePath), ArchiveFilePath, "Path to the archive file to which the statistics required for reporting are archived.");
+            settings.Add(nameof(ReportLocation), ReportLocation, "Directory to which reports will be written.");
+            settings.Add(nameof(Title), Title, "Title to be displayed on reports.");
+            settings.Add(nameof(Company), Company, "Name of the company to be displayed on reports.");
+            settings.Add(nameof(IdleReportLifetime), IdleReportLifetime, "The minimum lifetime of a report since the last time it was accessed, in days.");
+            settings.Add(nameof(EnableReportEmail), EnableReportEmail, "Set to true to enable daily e-mailing of reports.");
+            settings.Add(nameof(SmtpServer), SmtpServer, "The SMTP relay server from which to send e-mails.");
+            settings.Add(nameof(FromAddress), FromAddress, "The from address for the report e-mails.");
+            settings.Add(nameof(ToAddresses), ToAddresses, "Comma separated list of destination addresses for the report e-mails.");
+            settings.Add(nameof(SmtpUsername), SmtpUsername, "Username to authenticate to the SMTP server.");
+            settings.Add(nameof(SmtpPassword), SmtpSecurePassword, "Password to authenticate to the SMTP server.");
 
-            ArchiveFilePath = settings["ArchiveFilePath"].ValueAs(m_archiveFilePath);
-            ReportLocation = settings["ReportLocation"].ValueAs(m_reportLocation);
-            Title = settings["Title"].ValueAs(m_title);
-            Company = settings["Company"].ValueAs(m_company);
-            IdleReportLifetime = settings["IdleReportLifetime"].ValueAs(m_idleReportLifetime);
-            EnableReportEmail = settings["EnableReportEmail"].ValueAsBoolean();
-            SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
-            FromAddress = settings["FromAddress"].ValueAs(m_fromAddress);
-            ToAddresses = settings["ToAddresses"].ValueAs(m_toAddresses);
-            SmtpUsername = settings["SmtpUsername"].ValueAs(m_smtpUsername);
-            SmtpPassword = settings["SmtpPassword"].ValueAs(string.Empty);
+            ArchiveFilePath = settings[nameof(ArchiveFilePath)].ValueAs(ArchiveFilePath);
+            ReportLocation = settings[nameof(ReportLocation)].ValueAs(ReportLocation);
+            Title = settings[nameof(Title)].ValueAs(Title);
+            Company = settings[nameof(Company)].ValueAs(Company);
+            IdleReportLifetime = settings[nameof(IdleReportLifetime)].ValueAs(IdleReportLifetime);
+            EnableReportEmail = settings[nameof(EnableReportEmail)].ValueAsBoolean();
+            SmtpServer = settings[nameof(SmtpServer)].ValueAs(SmtpServer);
+            FromAddress = settings[nameof(FromAddress)].ValueAs(FromAddress);
+            ToAddresses = settings[nameof(ToAddresses)].ValueAs(ToAddresses);
+            SmtpUsername = settings[nameof(SmtpUsername)].ValueAs(SmtpUsername);
+            SmtpPassword = settings[nameof(SmtpPassword)].ValueAs(string.Empty);
         }
 
         /// <summary>
@@ -502,27 +340,27 @@ namespace GSF.TimeSeries.Reports
         /// </summary>
         public virtual void SaveSettings()
         {
-            if (!m_persistSettings)
+            if (!PersistSettings)
                 return;
 
             // Ensure that settings category is specified.
-            if (string.IsNullOrEmpty(m_settingsCategory))
+            if (string.IsNullOrEmpty(SettingsCategory))
                 throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
             // Save settings under the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-            settings["ArchiveFilePath", true].Update(m_archiveFilePath);
-            settings["ReportLocation", true].Update(m_reportLocation);
-            settings["Title", true].Update(m_title);
-            settings["Company", true].Update(m_company);
-            settings["IdleReportLifetime", true].Update(m_idleReportLifetime);
-            settings["EnableReportEmail", true].Update(m_enableReportEmail);
-            settings["SmtpServer", true].Update(m_smtpServer);
-            settings["FromAddress", true].Update(m_fromAddress);
-            settings["ToAddresses", true].Update(m_toAddresses);
-            settings["SmtpUsername", true].Update(m_smtpUsername);
-            settings["SmtpPassword", true].Update(SmtpPassword);
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings[nameof(ArchiveFilePath), true].Update(ArchiveFilePath);
+            settings[nameof(ReportLocation), true].Update(ReportLocation);
+            settings[nameof(Title), true].Update(Title);
+            settings[nameof(Company), true].Update(Company);
+            settings[nameof(IdleReportLifetime), true].Update(IdleReportLifetime);
+            settings[nameof(EnableReportEmail), true].Update(EnableReportEmail);
+            settings[nameof(SmtpServer), true].Update(SmtpServer);
+            settings[nameof(FromAddress), true].Update(FromAddress);
+            settings[nameof(ToAddresses), true].Update(ToAddresses);
+            settings[nameof(SmtpUsername), true].Update(SmtpUsername);
+            settings[nameof(SmtpPassword), true].Update(SmtpPassword);
             config.Save();
         }
 
@@ -532,9 +370,8 @@ namespace GSF.TimeSeries.Reports
         private void Execute()
         {
             WindowsIdentity currentOwner = WindowsIdentity.GetCurrent();
-            Tuple<DateTime, bool> tuple;
 
-            if ((object)currentOwner != null)
+            if (currentOwner is not null)
             {
                 // Wait for existing processes to exit, for instance if the
                 // service was restarted while a report was being generated
@@ -545,10 +382,10 @@ namespace GSF.TimeSeries.Reports
                 }
             }
 
-            while (m_reportGenerationQueue.TryPeek(out tuple))
+            while (m_reportGenerationQueue.TryPeek(out Tuple<DateTime, bool> tuple))
             {
                 // Execute the reporting process
-                using (Process process = new Process())
+                using (Process process = new())
                 {
                     process.StartInfo.FileName = FilePath.GetAbsolutePath("StatHistorianReportGenerator.exe");
                     process.StartInfo.Arguments = GetArguments(tuple.Item1, tuple.Item2);
@@ -625,25 +462,24 @@ namespace GSF.TimeSeries.Reports
         /// <param name="args">Received command line arguments.</param>
         public virtual void SetArguments(Arguments args)
         {
-            double value;
             string arg = args["reportLocation"];
 
-            if ((object)arg != null)
+            if ((object)arg is not null)
                 ReportLocation = arg.Trim();
 
             arg = args["title"];
 
-            if ((object)arg != null)
+            if ((object)arg is not null)
                 Title = arg.Trim();
 
             arg = args["company"];
 
-            if ((object)arg != null)
+            if ((object)arg is not null)
                 Company = arg.Trim();
 
             arg = args["idleReportLifetime"];
 
-            if ((object)arg != null && double.TryParse(arg.Trim(), out value))
+            if ((object)arg is not null && double.TryParse(arg.Trim(), out double value))
                 IdleReportLifetime = value;
         }
 
@@ -652,11 +488,10 @@ namespace GSF.TimeSeries.Reports
         /// </summary>
         public virtual bool IsReportFileName(string fileName)
         {
-            string regex = string.Format(@"{0} (?<Date>[^.]+)\.pdf", m_title);
+            string regex = string.Format(@"{0} (?<Date>[^.]+)\.pdf", Title);
             Match match = Regex.Match(fileName, regex);
-            DateTime reportDate;
 
-            return match.Success && DateTime.TryParse(match.Groups["Date"].Value, out reportDate);
+            return match.Success && DateTime.TryParse(match.Groups["Date"].Value, out DateTime reportDate);
         }
 
         /// <summary>
@@ -667,7 +502,7 @@ namespace GSF.TimeSeries.Reports
             try
             {
                 string query = "Select * From Win32_Process Where ProcessID = " + processId;
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+                ManagementObjectSearcher searcher = new(query);
                 ManagementObjectCollection processList = searcher.Get();
 
                 object[] argList;

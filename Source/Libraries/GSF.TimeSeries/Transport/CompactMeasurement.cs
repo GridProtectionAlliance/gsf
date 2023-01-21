@@ -183,7 +183,6 @@ namespace GSF.TimeSeries.Transport
         private int m_timeIndex;
         private readonly bool m_useMillisecondResolution;
         private bool m_usingBaseTimeOffset;
-        private readonly bool m_includeTime;
 
         #endregion
 
@@ -200,10 +199,10 @@ namespace GSF.TimeSeries.Transport
         public CompactMeasurement(SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0, bool useMillisecondResolution = false)
         {
             m_signalIndexCache = signalIndexCache;
-            m_includeTime = includeTime;
+            IncludeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if ((object)baseTimeOffsets == null)
+            if (baseTimeOffsets is null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
@@ -229,10 +228,10 @@ namespace GSF.TimeSeries.Transport
             StateFlags = measurement.StateFlags;
 
             m_signalIndexCache = signalIndexCache;
-            m_includeTime = includeTime;
+            IncludeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if ((object)baseTimeOffsets == null)
+            if (baseTimeOffsets is null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
@@ -248,13 +247,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets flag that determines if time is serialized into measurement binary image.
         /// </summary>
-        public bool IncludeTime
-        {
-            get
-            {
-                return m_includeTime;
-            }
-        }
+        public bool IncludeTime { get; }
 
         /// <summary>
         /// Gets the length of the <see cref="CompactMeasurement"/>.
@@ -265,7 +258,7 @@ namespace GSF.TimeSeries.Transport
             {
                 int length = FixedLength;
 
-                if (m_includeTime)
+                if (IncludeTime)
                 {
                     long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
 
@@ -307,24 +300,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets offset compressed millisecond-resolution 2-byte timestamp.
         /// </summary>
-        public ushort TimestampC2
-        {
-            get
-            {
-                return (ushort)(Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds();
-            }
-        }
+        public ushort TimestampC2 => (ushort)(Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds();
 
         /// <summary>
         /// Gets offset compressed tick-resolution 4-byte timestamp.
         /// </summary>
-        public uint TimestampC4
-        {
-            get
-            {
-                return (uint)((long)Timestamp - m_baseTimeOffsets[m_timeIndex]);
-            }
-        }
+        public uint TimestampC4 => (uint)((long)Timestamp - m_baseTimeOffsets[m_timeIndex]);
 
         /// <summary>
         /// Gets or sets byte level compact state flags with encoded time index and base time offset bits.
@@ -359,16 +340,12 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public ushort RuntimeID
         {
-            get
-            {
-                return m_signalIndexCache.GetSignalIndex(Key);
-            }
+            get => m_signalIndexCache.GetSignalIndex(Key);
             set
             {
                 // Attempt to restore signal identification
-                MeasurementKey key;
 
-                if (m_signalIndexCache.Reference.TryGetValue(value, out key))
+                if (m_signalIndexCache.Reference.TryGetValue(value, out MeasurementKey key))
                 {
                     Metadata = key.Metadata;
                 }
@@ -414,7 +391,7 @@ namespace GSF.TimeSeries.Transport
             Value = BigEndian.ToSingle(buffer, index);
             index += 4;
 
-            if (m_includeTime)
+            if (IncludeTime)
             {
                 if (m_usingBaseTimeOffset)
                 {
@@ -489,7 +466,7 @@ namespace GSF.TimeSeries.Transport
             // Encode adjusted value (accounts for adder and multiplier)
             startIndex += BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
 
-            if (m_includeTime)
+            if (IncludeTime)
             {
                 if (m_usingBaseTimeOffset)
                 {

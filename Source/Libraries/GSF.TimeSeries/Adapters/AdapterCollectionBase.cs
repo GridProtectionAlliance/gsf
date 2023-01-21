@@ -90,18 +90,12 @@ namespace GSF.TimeSeries.Adapters
 
         // Fields
         private string m_name;
-        private uint m_id;
-        private bool m_initialized;
         private string m_connectionString;
-        private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
-        private string m_dataMember;
         private int m_initializationTimeout;
         private bool m_autoStart;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
-        private string[] m_inputSourceIDs;
-        private string[] m_outputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private Ticks m_lastProcessTime;
@@ -118,7 +112,6 @@ namespace GSF.TimeSeries.Adapters
         private bool m_enabled;
         private long m_startTime;
         private long m_stopTime;
-        private bool m_disposed;
 
         #endregion
 
@@ -132,7 +125,7 @@ namespace GSF.TimeSeries.Adapters
             Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
             m_name = GetType().Name;
             Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", m_name);
-            m_settings = new Dictionary<string, string>();
+            Settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
@@ -156,7 +149,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_lifecycleThreadScheduler.MaxThreadCount < 4)
                 m_lifecycleThreadScheduler.MaxThreadCount = 4;
 
-            m_lifecycleThreadScheduler.UnhandledException += (sender, args) => OnProcessException(MessageLevel.Warning, args.Argument);
+            m_lifecycleThreadScheduler.UnhandledException += (_, args) => OnProcessException(MessageLevel.Warning, args.Argument);
         }
 
         /// <summary>
@@ -181,10 +174,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -195,51 +185,27 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets numeric ID associated with this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        public virtual uint ID
-        {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
-        }
+        public virtual uint ID { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if the adapter collection has been initialized successfully.
         /// </summary>
-        public virtual bool Initialized
-        {
-            get
-            {
-                return m_initialized;
-            }
-            set
-            {
-                m_initialized = value;
-            }
-        }
+        public virtual bool Initialized { get; set; }
 
         /// <summary>
         /// Gets or sets key/value pair connection information specific to this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
         public virtual string ConnectionString
         {
-            get
-            {
-                return m_connectionString;
-            }
+            get => m_connectionString;
             set
             {
                 m_connectionString = value;
 
                 // Pre-parse settings upon connection string assignment
-                if (string.IsNullOrWhiteSpace(m_connectionString))
-                    m_settings = new Dictionary<string, string>();
-                else
-                    m_settings = m_connectionString.ParseKeyValuePairs();
+                Settings = string.IsNullOrWhiteSpace(m_connectionString) ? 
+                    new Dictionary<string, string>() : 
+                    m_connectionString.ParseKeyValuePairs();
             }
         }
 
@@ -257,10 +223,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual DataSet DataSource
         {
-            get
-            {
-                return m_dataSource;
-            }
+            get => m_dataSource;
             set
             {
                 m_dataSource = value;
@@ -269,9 +232,7 @@ namespace GSF.TimeSeries.Adapters
                 lock (this)
                 {
                     foreach (T item in this)
-                    {
                         item.DataSource = m_dataSource;
-                    }
                 }
             }
         }
@@ -285,17 +246,7 @@ namespace GSF.TimeSeries.Adapters
         /// ID, AdapterName, AssemblyName, TypeName, ConnectionString<br/>
         /// ID column type should be integer based, all other column types are expected to be string based.
         /// </remarks>
-        public virtual string DataMember
-        {
-            get
-            {
-                return m_dataMember;
-            }
-            set
-            {
-                m_dataMember = value;
-            }
-        }
+        public virtual string DataMember { get; set; }
 
         /// <summary>
         /// Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="Start()"/> for initialization.
@@ -305,14 +256,8 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual int InitializationTimeout
         {
-            get
-            {
-                return m_initializationTimeout;
-            }
-            set
-            {
-                m_initializationTimeout = value;
-            }
+            get => m_initializationTimeout;
+            set => m_initializationTimeout = value;
         }
 
         /// <summary>
@@ -320,14 +265,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual bool AutoStart
         {
-            get
-            {
-                return m_autoStart;
-            }
-            set
-            {
-                m_autoStart = value;
-            }
+            get => m_autoStart;
+            set => m_autoStart = value;
         }
 
         /// <summary>
@@ -338,28 +277,22 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 // If a specific set of input measurement keys has been assigned, use that set
-                if (m_inputMeasurementKeys != null)
+                if (m_inputMeasurementKeys is not null)
                     return m_inputMeasurementKeys;
 
-                List<MeasurementKey> cumulativeKeys = new List<MeasurementKey>();
+                List<MeasurementKey> cumulativeKeys = new();
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
                     foreach (T adapter in this)
                     {
-                        if ((object)adapter != null)
-                        {
-                            MeasurementKey[] inputMeasurementKeys = adapter.InputMeasurementKeys;
+                        MeasurementKey[] inputMeasurementKeys = adapter?.InputMeasurementKeys;
 
-                            // If any of the children expects all measurements (i.e., null InputMeasurementKeys)
-                            // then the parent collection must expect all measurements
-                            if ((object)inputMeasurementKeys == null)
-                                return null;
-
-                            if (inputMeasurementKeys.Length > 0)
-                                cumulativeKeys.AddRange(inputMeasurementKeys);
-                        }
+                        // If any of the children expects all measurements (i.e., null InputMeasurementKeys)
+                        // then the parent collection must expect all measurements
+                        if (inputMeasurementKeys?.Length > 0)
+                            cumulativeKeys.AddRange(inputMeasurementKeys);
                     }
                 }
 
@@ -380,24 +313,21 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 // If a specific set of output measurements has been assigned, use that set
-                if (m_outputMeasurements != null)
+                if (m_outputMeasurements is not null)
                     return m_outputMeasurements;
 
                 // Otherwise return cumulative results of all child adapters
-                List<IMeasurement> cumulativeMeasurements = new List<IMeasurement>();
+                List<IMeasurement> cumulativeMeasurements = new();
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
                     foreach (T adapter in this)
                     {
-                        if ((object)adapter != null)
-                        {
-                            IMeasurement[] outputMeasurements = adapter.OutputMeasurements;
+                        IMeasurement[] outputMeasurements = adapter?.OutputMeasurements;
 
-                            if (outputMeasurements != null && outputMeasurements.Length > 0)
-                                cumulativeMeasurements.AddRange(outputMeasurements);
-                        }
+                        if (outputMeasurements?.Length > 0)
+                            cumulativeMeasurements.AddRange(outputMeasurements);
                     }
                 }
 
@@ -416,17 +346,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// The collection classes simply track this value if assigned, no automatic action is taken.
         /// </remarks>
-        public virtual string[] InputSourceIDs
-        {
-            get
-            {
-                return m_inputSourceIDs;
-            }
-            set
-            {
-                m_inputSourceIDs = value;
-            }
-        }
+        public virtual string[] InputSourceIDs { get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
@@ -434,17 +354,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// The collection classes simply track this value if assigned, no automatic action is taken.
         /// </remarks>
-        public virtual string[] OutputSourceIDs
-        {
-            get
-            {
-                return m_outputSourceIDs;
-            }
-            set
-            {
-                m_outputSourceIDs = value;
-            }
-        }
+        public virtual string[] OutputSourceIDs { get; set; }
 
         /// <summary>
         /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
@@ -454,25 +364,22 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 // If a specific set of input measurement keys has been assigned, use that set
-                if (m_requestedInputMeasurementKeys != null)
+                if (m_requestedInputMeasurementKeys is not null)
                     return m_requestedInputMeasurementKeys;
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
                     if (typeof(IActionAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IActionAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IActionAdapter>().Where(item => item.RequestedInputMeasurementKeys is not null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
 
                     if (typeof(IOutputAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputMeasurementKeys is not null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
                 }
 
                 return null;
             }
-            set
-            {
-                m_requestedInputMeasurementKeys = value;
-            }
+            set => m_requestedInputMeasurementKeys = value;
         }
 
         /// <summary>
@@ -483,25 +390,22 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 // If a specific set of output measurement keys has been assigned, use that set
-                if (m_requestedOutputMeasurementKeys != null)
+                if (m_requestedOutputMeasurementKeys is not null)
                     return m_requestedOutputMeasurementKeys;
 
                 // Otherwise return cumulative results of all child adapters
                 lock (this)
                 {
                     if (typeof(IActionAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys is not null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
 
                     if (typeof(IInputAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys is not null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
                 }
 
                 return null;
             }
-            set
-            {
-                m_requestedOutputMeasurementKeys = value;
-            }
+            set => m_requestedOutputMeasurementKeys = value;
         }
 
         /// <summary>
@@ -540,10 +444,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual int ProcessingInterval
         {
-            get
-            {
-                return m_processingInterval;
-            }
+            get => m_processingInterval;
             set
             {
                 m_processingInterval = value;
@@ -614,10 +515,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 if (m_enabled && !value)
@@ -640,7 +538,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        public bool IsDisposed => m_disposed;
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="AdapterCollectionBase{T}"/> is read-only.
@@ -652,15 +550,12 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected virtual bool MonitorTimerEnabled
         {
-            get
-            {
-                return m_monitorTimerEnabled;
-            }
+            get => m_monitorTimerEnabled;
             set
             {
                 m_monitorTimerEnabled = value;
 
-                if (m_monitorTimer != null)
+                if (m_monitorTimer is not null)
                     m_monitorTimer.Enabled = value && Enabled;
             }
         }
@@ -674,7 +569,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        public Dictionary<string, string> Settings => m_settings;
+        public Dictionary<string, string> Settings { get; private set; }
 
         /// <summary>
         /// Gets the descriptive status of this <see cref="AdapterCollectionBase{T}"/>.
@@ -683,70 +578,56 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
                 DataSet dataSource = DataSource;
 
                 // Show collection status
-                status.AppendFormat("  Total adapter components: {0}", Count);
-                status.AppendLine();
-                status.AppendFormat("    Collection initialized: {0}", Initialized);
-                status.AppendLine();
-                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
-                status.AppendLine();
-                status.AppendFormat(" Current operational state: {0}", Enabled ? "Enabled" : "Disabled");
-                status.AppendLine();
-                status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
-                status.AppendLine();
+                status.AppendLine($"  Total adapter components: {Count}");
+                status.AppendLine($"    Collection initialized: {Initialized}");
+                status.AppendLine($"    Initialization timeout: {(InitializationTimeout < 0 ? "Infinite" : $"{InitializationTimeout:N0} milliseconds")}");
+                status.AppendLine($" Current operational state: {(Enabled ? nameof(Enabled) : "Disabled")}");
+                status.AppendLine($"       Temporal processing: {(SupportsTemporalProcessing ? "Supported" : "Unsupported")}");
+
                 if (SupportsTemporalProcessing)
                 {
-                    status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                    status.AppendLine();
-                    status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                    status.AppendLine();
-                    status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
-                    status.AppendLine();
+                    status.AppendLine($"     Start time constraint: {(StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
+                    status.AppendLine($"      Stop time constraint: {(StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
+                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"))}");
                 }
+
                 if (MonitorTimerEnabled)
                 {
-                    status.AppendFormat("    Processed measurements: {0:N0}", m_processedMeasurements);
-                    status.AppendLine();
-                    status.AppendFormat("   Average processing rate: {0:N0} measurements / second", ((int)(m_processedMeasurements / m_totalProcessTime)));
-                    status.AppendLine();
+                    status.AppendLine($"    Processed measurements: {m_processedMeasurements:N0}");
+                    status.AppendLine($"   Average processing rate: {((int)(m_processedMeasurements / m_totalProcessTime)):N0} measurements / second");
                 }
-                status.AppendFormat("       Data source defined: {0}", dataSource != null);
-                status.AppendLine();
-                if (dataSource != null)
-                {
-                    status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
-                    status.AppendLine();
-                }
-                status.AppendFormat("    Data source table name: {0}", DataMember);
-                status.AppendLine();
+
+                status.AppendLine($"       Data source defined: {dataSource is not null}");
+                
+                if (dataSource is not null)
+                    status.AppendLine($"    Referenced data source: {dataSource.DataSetName}, {dataSource.Tables.Count:N0} tables");
+
+                status.AppendLine($"    Data source table name: {DataMember}");
 
                 Dictionary<string, string> keyValuePairs = Settings;
-                char[] keyChars;
-                string value;
 
-                status.AppendFormat("         Connection string: {0} key/value pairs", keyValuePairs.Count);
+                status.AppendLine($"         Connection string: {keyValuePairs.Count:N0} key/value pairs");
+                status.AppendLine();
+                
                 //                            1         2         3         4         5         6         7
                 //                   123456789012345678901234567890123456789012345678901234567890123456789012345678
                 //                                         Key = Value
                 //                                                        1         2         3         4         5
                 //                                               12345678901234567890123456789012345678901234567890
-                status.AppendLine();
-                status.AppendLine();
-
                 foreach (KeyValuePair<string, string> item in keyValuePairs)
                 {
-                    keyChars = item.Key.Trim().ToCharArray();
+                    char[] keyChars = item.Key.Trim().ToCharArray();
                     keyChars[0] = char.ToUpper(keyChars[0]);
-
-                    value = item.Value.Trim();
+                    string value = item.Value.Trim();
+                    
                     if (value.Length > 50)
                         value = value.TruncateRight(47) + "...";
 
-                    status.AppendFormat("{0} = {1}", new string(keyChars).TruncateRight(25).PadLeft(25), value.PadRight(50));
-                    status.AppendLine();
+                    status.AppendLine($"{new string(keyChars).TruncateRight(25),25} = {value,-50}");
                 }
 
                 status.AppendLine();
@@ -756,10 +637,8 @@ namespace GSF.TimeSeries.Adapters
                     int index = 0;
 
                     status.AppendLine();
-                    status.AppendFormat("Status of each {0} component:", Name);
-                    status.AppendLine();
-                    status.Append(new string('-', 79));
-                    status.AppendLine();
+                    status.AppendLine($"Status of each {Name} component:");
+                    status.AppendLine(new string('-', 79));
 
                     // Show the status of registered components.
                     lock (this)
@@ -768,28 +647,26 @@ namespace GSF.TimeSeries.Adapters
                         {
                             IProvideStatus statusProvider = item;
 
-                            if (statusProvider != null)
+                            if (statusProvider is null)
+                                continue;
+
+                            // This component provides status information.                       
+                            status.AppendLine();
+                            status.AppendLine($"Status of {typeof(T).Name} component {++index}, {statusProvider.Name}:");
+
+                            try
                             {
-                                // This component provides status information.                       
-                                status.AppendLine();
-                                status.AppendFormat("Status of {0} component {1}, {2}:", typeof(T).Name, ++index, statusProvider.Name);
-                                status.AppendLine();
-                                try
-                                {
-                                    status.Append(statusProvider.Status);
-                                }
-                                catch (Exception ex)
-                                {
-                                    status.AppendFormat("Failed to retrieve status due to exception: {0}", ex.Message);
-                                    status.AppendLine();
-                                }
+                                status.Append(statusProvider.Status);
+                            }
+                            catch (Exception ex)
+                            {
+                                status.AppendLine($"Failed to retrieve status due to exception: {ex.Message}");
                             }
                         }
                     }
 
                     status.AppendLine();
-                    status.Append(new string('-', 79));
-                    status.AppendLine();
+                    status.AppendLine(new string('-', 79));
                 }
 
                 return status.ToString();
@@ -815,29 +692,27 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (IsDisposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_monitorTimer != null)
-                        {
-                            m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
-                            m_monitorTimer.Dispose();
-                        }
-                        m_monitorTimer = null;
+                if (!disposing)
+                    return;
 
-                        Clear();        // This disposes all items in collection...
-                    }
-                }
-                finally
+                if (m_monitorTimer is not null)
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
-
-                    if (Disposed != null)
-                        Disposed(this, EventArgs.Empty);
+                    m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
+                    m_monitorTimer.Dispose();
                 }
+                m_monitorTimer = null;
+
+                Clear();        // This disposes all items in collection...
+            }
+            finally
+            {
+                IsDisposed = true;  // Prevent duplicate dispose.
+                Disposed?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -859,7 +734,7 @@ namespace GSF.TimeSeries.Adapters
         /// <exception cref="InvalidOperationException">DataMember is null or empty.</exception>
         public virtual void Initialize()
         {
-            if ((object)DataSource == null)
+            if (DataSource is null)
                 throw new NullReferenceException($"DataSource is null, cannot load {Name}");
 
             if (string.IsNullOrWhiteSpace(DataMember))
@@ -868,11 +743,9 @@ namespace GSF.TimeSeries.Adapters
             Initialized = false;
 
             Dictionary<string, string> settings = Settings;
-            string setting;
-            T item;
 
             // Load the default initialization parameter for adapters in this collection
-            if (settings.TryGetValue("initializationTimeout", out setting))
+            if (settings.TryGetValue("initializationTimeout", out string setting))
                 InitializationTimeout = int.Parse(setting);
 
             lock (this)
@@ -883,14 +756,16 @@ namespace GSF.TimeSeries.Adapters
                 {
                     foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
                     {
-                        if (TryCreateAdapter(adapterRow, out item))
+                        if (TryCreateAdapter(adapterRow, out T item))
                             Add(item);
                     }
 
                     Initialized = true;
                 }
                 else
+                {
                     throw new InvalidOperationException($"Data set member \"{DataMember}\" was not found in data source, check ConfigurationEntity. Failed to initialize {Name}.");
+                }
             }
         }
 
@@ -906,20 +781,18 @@ namespace GSF.TimeSeries.Adapters
         /// <exception cref="NullReferenceException"><paramref name="adapterRow"/> is null.</exception>
         public virtual bool TryCreateAdapter(DataRow adapterRow, out T adapter)
         {
-            if ((object)adapterRow == null)
+            if (adapterRow is null)
                 throw new NullReferenceException("Cannot initialize from null adapter DataRow");
 
-            Assembly assembly;
-            string name = "", assemblyName = "", typeName = "", connectionString, setting;
-            uint id;
+            string name = "", assemblyName = "", typeName = "";
 
             try
             {
                 name = adapterRow["AdapterName"].ToNonNullString("[IAdapter]");
-                assemblyName = FilePath.GetAbsolutePath(adapterRow["AssemblyName"].ToNonNullString());
+                assemblyName = FilePath.GetAbsolutePath(adapterRow[nameof(AssemblyName)].ToNonNullString());
                 typeName = adapterRow["TypeName"].ToNonNullString();
-                connectionString = adapterRow["ConnectionString"].ToNonNullString();
-                id = uint.Parse(adapterRow["ID"].ToNonNullString("0"));
+                string connectionString = adapterRow[nameof(ConnectionString)].ToNonNullString();
+                uint id = uint.Parse(adapterRow[nameof(ID)].ToNonNullString("0"));
 
                 if (string.IsNullOrWhiteSpace(typeName))
                     throw new InvalidOperationException("No adapter type was defined");
@@ -927,7 +800,7 @@ namespace GSF.TimeSeries.Adapters
                 if (!File.Exists(assemblyName))
                     throw new InvalidOperationException("Specified adapter assembly does not exist");
 
-                assembly = Assembly.LoadFrom(assemblyName);
+                Assembly assembly = Assembly.LoadFrom(assemblyName);
                 adapter = (T)Activator.CreateInstance(assembly.GetType(typeName));
 
                 // Assign critical adapter properties
@@ -937,10 +810,9 @@ namespace GSF.TimeSeries.Adapters
                 adapter.DataSource = DataSource;
 
                 // Assign adapter initialization timeout   
-                if (adapter.Settings.TryGetValue("initializationTimeout", out setting))
-                    adapter.InitializationTimeout = int.Parse(setting);
-                else
-                    adapter.InitializationTimeout = InitializationTimeout;
+                adapter.InitializationTimeout = adapter.Settings.TryGetValue("initializationTimeout", out string setting) ? 
+                    int.Parse(setting) : 
+                    InitializationTimeout;
 
                 return true;
             }
@@ -957,9 +829,8 @@ namespace GSF.TimeSeries.Adapters
         // Explicit IAdapter implementation of TryCreateAdapter
         bool IAdapterCollection.TryCreateAdapter(DataRow adapterRow, out IAdapter adapter)
         {
-            T adapterT;
-            bool result = TryCreateAdapter(adapterRow, out adapterT);
-            adapter = adapterT as IAdapter;
+            bool result = TryCreateAdapter(adapterRow, out T adapterT);
+            adapter = adapterT;
             return result;
         }
 
@@ -969,10 +840,8 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="id">ID of adapter to get.</param>
         /// <param name="adapter">Adapter reference if found; otherwise null.</param>
         /// <returns><c>true</c> if adapter with the specified <paramref name="id"/> was found; otherwise <c>false</c>.</returns>
-        public virtual bool TryGetAdapterByID(uint id, out T adapter)
-        {
-            return TryGetAdapter(id, (item, value) => item.ID == value, out adapter);
-        }
+        public virtual bool TryGetAdapterByID(uint id, out T adapter) => 
+            TryGetAdapter(id, (item, value) => item.ID == value, out adapter);
 
         /// <summary>
         /// Attempts to get the adapter with the specified <paramref name="name"/>.
@@ -980,10 +849,8 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="name">Name of adapter to get.</param>
         /// <param name="adapter">Adapter reference if found; otherwise null.</param>
         /// <returns><c>true</c> if adapter with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
-        public virtual bool TryGetAdapterByName(string name, out T adapter)
-        {
-            return TryGetAdapter(name, (item, value) => item.Name.Equals(value, StringComparison.OrdinalIgnoreCase), out adapter);
-        }
+        public virtual bool TryGetAdapterByName(string name, out T adapter) => 
+            TryGetAdapter(name, (item, value) => item.Name.Equals(value, StringComparison.OrdinalIgnoreCase), out adapter);
 
         /// <summary>
         /// Attempts to get the adapter with the specified <paramref name="value"/> given <paramref name="testItem"/> function.
@@ -998,11 +865,11 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (T item in this)
                 {
-                    if (testItem(item, value))
-                    {
-                        adapter = item;
-                        return true;
-                    }
+                    if (!testItem(item, value))
+                        continue;
+
+                    adapter = item;
+                    return true;
                 }
             }
 
@@ -1013,18 +880,16 @@ namespace GSF.TimeSeries.Adapters
         // Explicit IAdapter implementation of TryGetAdapterByID
         bool IAdapterCollection.TryGetAdapterByID(uint id, out IAdapter adapter)
         {
-            T adapterT;
-            bool result = TryGetAdapterByID(id, out adapterT);
-            adapter = adapterT as IAdapter;
+            bool result = TryGetAdapterByID(id, out T adapterT);
+            adapter = adapterT;
             return result;
         }
 
         // Explicit IAdapter implementation of TryGetAdapterByName
         bool IAdapterCollection.TryGetAdapterByName(string name, out IAdapter adapter)
         {
-            T adapterT;
-            bool result = TryGetAdapterByName(name, out adapterT);
-            adapter = adapterT as IAdapter;
+            bool result = TryGetAdapterByName(name, out T adapterT);
+            adapter = adapterT;
             return result;
         }
 
@@ -1035,46 +900,43 @@ namespace GSF.TimeSeries.Adapters
         /// <returns><c>true</c> if item was successfully initialized; otherwise <c>false</c>.</returns>
         public virtual bool TryInitializeAdapterByID(uint id)
         {
-            T newAdapter, oldAdapter;
-            uint rowID;
-
             foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
             {
-                rowID = uint.Parse(adapterRow["ID"].ToNonNullString("0"));
+                uint rowID = uint.Parse(adapterRow[nameof(ID)].ToNonNullString("0"));
 
-                if (rowID == id)
+                if (rowID != id)
+                    continue;
+
+                if (TryCreateAdapter(adapterRow, out T newAdapter))
                 {
-                    if (TryCreateAdapter(adapterRow, out newAdapter))
+                    // Found and created new item - update collection reference
+                    bool foundItem = false;
+
+                    lock (this)
                     {
-                        // Found and created new item - update collection reference
-                        bool foundItem = false;
-
-                        lock (this)
+                        for (int i = 0; i < Count; i++)
                         {
-                            for (int i = 0; i < Count; i++)
-                            {
-                                oldAdapter = this[i];
+                            T oldAdapter = this[i];
 
-                                if (oldAdapter.ID == id)
-                                {
-                                    // Dispose old item, initialize new item
-                                    this[i] = newAdapter;
+                            if (oldAdapter.ID != id)
+                                continue;
 
-                                    foundItem = true;
-                                    break;
-                                }
-                            }
+                            // Dispose old item, initialize new item
+                            this[i] = newAdapter;
 
-                            // Add item to collection if it didn't exist
-                            if (!foundItem)
-                                Add(newAdapter);
-
-                            return true;
+                            foundItem = true;
+                            break;
                         }
-                    }
 
-                    break;
+                        // Add item to collection if it didn't exist
+                        if (!foundItem)
+                            Add(newAdapter);
+
+                        return true;
+                    }
                 }
+
+                break;
             }
 
             return false;
@@ -1086,38 +948,36 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Starts, or restarts, each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Start()
         {
-            LogicalThread lifecycleThread;
-
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
-            if (!m_enabled)
+            if (m_enabled)
+                return;
+
+            m_enabled = true;
+            m_stopTime = 0;
+            m_startTime = DateTime.UtcNow.Ticks;
+
+            ResetStatistics();
+
+            lock (this)
             {
-                m_enabled = true;
-                m_stopTime = 0;
-                m_startTime = DateTime.UtcNow.Ticks;
-
-                ResetStatistics();
-
-                lock (this)
+                foreach (T item in this)
                 {
-                    foreach (T item in this)
-                    {
-                        if (item.Initialized && item.AutoStart && !item.Enabled)
-                        {
-                            // Create local reference to the foreach
-                            // variable to be accessed in the lambda function
-                            T itemRef = item;
+                    if (!item.Initialized || !item.AutoStart || item.Enabled)
+                        continue;
 
-                            // Push start command to the lifecycle thread for the adapter
-                            lifecycleThread = m_lifecycleThreads.GetOrAdd(item.ID, id => m_lifecycleThreadScheduler.CreateThread());
-                            lifecycleThread.Push(() => Start(itemRef));
-                        }
-                    }
+                    // Create local reference to the foreach
+                    // variable to be accessed in the lambda function
+                    T itemRef = item;
+
+                    // Push start command to the lifecycle thread for the adapter
+                    LogicalThread lifecycleThread = m_lifecycleThreads.GetOrAdd(item.ID, _ => m_lifecycleThreadScheduler.CreateThread());
+                    lifecycleThread.Push(() => Start(itemRef));
                 }
-
-                // Start data monitor...
-                if (MonitorTimerEnabled)
-                    m_monitorTimer.Start();
             }
+
+            // Start data monitor...
+            if (MonitorTimerEnabled)
+                m_monitorTimer.Start();
         }
 
         /// <summary>
@@ -1126,33 +986,31 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Stops each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Stop()
         {
-            LogicalThread lifecycleThread;
+            if (!m_enabled)
+                return;
 
-            if (m_enabled)
+            m_enabled = false;
+            m_stopTime = DateTime.UtcNow.Ticks;
+
+            lock (this)
             {
-                m_enabled = false;
-                m_stopTime = DateTime.UtcNow.Ticks;
-
-                lock (this)
+                foreach (T item in this)
                 {
-                    foreach (T item in this)
-                    {
-                        if (item.Initialized && item.Enabled)
-                        {
-                            // Create local reference to the foreach
-                            // variable to be accessed in the lambda function
-                            T itemRef = item;
+                    if (!item.Initialized || !item.Enabled)
+                        continue;
 
-                            // Push stop command to the lifecycle thread for the adapter
-                            lifecycleThread = m_lifecycleThreads.GetOrAdd(item.ID, id => m_lifecycleThreadScheduler.CreateThread());
-                            lifecycleThread.Push(() => Stop(itemRef));
-                        }
-                    }
+                    // Create local reference to the foreach
+                    // variable to be accessed in the lambda function
+                    T itemRef = item;
+
+                    // Push stop command to the lifecycle thread for the adapter
+                    LogicalThread lifecycleThread = m_lifecycleThreads.GetOrAdd(item.ID, _ => m_lifecycleThreadScheduler.CreateThread());
+                    lifecycleThread.Push(() => Stop(itemRef));
                 }
-
-                // Stop data monitor...
-                m_monitorTimer.Stop();
             }
+
+            // Stop data monitor...
+            m_monitorTimer.Stop();
         }
 
         /// <summary>
@@ -1173,10 +1031,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterCollectionBase{T}"/>.</returns>
-        public virtual string GetShortStatus(int maxLength)
-        {
-            return $"Total components: {Count:N0}".CenterText(maxLength);
-        }
+        public virtual string GetShortStatus(int maxLength) => 
+            $"Total components: {Count:N0}".CenterText(maxLength);
 
         /// <summary>
         /// Defines a temporal processing constraint for the adapter collection and applies this constraint to each adapter.
@@ -1230,23 +1086,19 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Defines a temporal processing constraint for each adapter in the collection.", "Administrator", "Editor", "Viewer")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
-            if (!string.IsNullOrWhiteSpace(startTime))
-                m_startTimeConstraint = AdapterBase.ParseTimeTag(startTime);
-            else
-                m_startTimeConstraint = DateTime.MinValue;
+            m_startTimeConstraint = string.IsNullOrWhiteSpace(startTime) ? 
+                DateTime.MinValue : 
+                AdapterBase.ParseTimeTag(startTime);
 
-            if (!string.IsNullOrWhiteSpace(stopTime))
-                m_stopTimeConstraint = AdapterBase.ParseTimeTag(stopTime);
-            else
-                m_stopTimeConstraint = DateTime.MaxValue;
+            m_stopTimeConstraint = string.IsNullOrWhiteSpace(stopTime) ? 
+                DateTime.MaxValue : 
+                AdapterBase.ParseTimeTag(stopTime);
 
             // Apply temporal constraint to all adapters in this collection
             lock (this)
             {
                 foreach (T adapter in this)
-                {
                     adapter.SetTemporalConstraint(startTime, stopTime, constraintParameters);
-                }
             }
         }
         /// <summary>
@@ -1254,10 +1106,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="status">New status message.</param>
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnStatusMessage(string status)
-        {
+        protected void OnStatusMessage(string status) => 
             OnStatusMessage(MessageLevel.Info, status, "Unclassified Status");
-        }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event with a formatted status message.
@@ -1267,11 +1117,10 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
-        [StringFormatMethod("formattedStatus"), Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnStatusMessage(string formattedStatus, params object[] args)
-        {
+        [StringFormatMethod("formattedStatus")]
+        [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
+        protected void OnStatusMessage(string formattedStatus, params object[] args) => 
             OnStatusMessage(MessageLevel.Info, string.Format(formattedStatus, args), "Unclassified Status");
-        }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
@@ -1297,7 +1146,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(StatusMessage)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1306,10 +1155,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnProcessException(Exception ex)
-        {
+        protected void OnProcessException(Exception ex) => 
             OnProcessException(MessageLevel.Info, ex, "Unclassified Exception");
-        }
 
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
@@ -1335,7 +1182,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for {nameof(ProcessException)} event: {ex.Message}", null, ex);
             }
         }
 
@@ -1351,7 +1198,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(InputMeasurementKeysUpdated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1367,7 +1214,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(OutputMeasurementsUpdated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1383,7 +1230,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ConfigurationChanged)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1459,37 +1306,35 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void InitializeItem(T item)
         {
-            LogicalThread lifecycleThread;
+            if (item is null)
+                return;
 
-            if ((object)item != null)
+            // Wire up events
+            item.StatusMessage += item_StatusMessage;
+            item.ProcessException += item_ProcessException;
+            item.ConfigurationChanged += item_ConfigurationChanged;
+            item.Disposed += item_Disposed;
+
+            try
             {
-                // Wire up events
-                item.StatusMessage += item_StatusMessage;
-                item.ProcessException += item_ProcessException;
-                item.ConfigurationChanged += item_ConfigurationChanged;
-                item.Disposed += item_Disposed;
+                if (!AutoInitialize)
+                    return;
 
-                try
-                {
-                    // If automatically initializing new elements, handle object initialization on
-                    // its own thread so it can take needed amount of time
-                    if (AutoInitialize)
-                    {
-                        lifecycleThread = GetLifecycleThread(item);
+                // If automatically initializing new elements, handle object initialization on
+                // its own thread so it can take needed amount of time
+                LogicalThread lifecycleThread = GetLifecycleThread(item);
 
-                        lifecycleThread.Push(() =>
-                        {
-                            m_activeItem.Value = item;
-                            LogicalThread.CurrentThread.Push(() => Initialize(item));
-                        });
-                    }
-                }
-                catch (Exception ex)
+                lifecycleThread.Push(() =>
                 {
-                    // Process exception for logging
-                    string errorMessage = $"Failed to queue initialize operation for adapter {item.Name}: {ex.Message}";
-                    OnProcessException(MessageLevel.Warning, new InvalidOperationException(errorMessage, ex));
-                }
+                    m_activeItem.Value = item;
+                    LogicalThread.CurrentThread.Push(() => Initialize(item));
+                });
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                string errorMessage = $"Failed to queue initialize operation for adapter {item.Name}: {ex.Message}";
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException(errorMessage, ex));
             }
         }
 
@@ -1502,13 +1347,11 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void DisposeItem(T item)
         {
-            LogicalThread lifecycleThread;
+            if (item is null)
+                return;
 
-            if ((object)item != null)
-            {
-                lifecycleThread = GetLifecycleThread(item);
-                lifecycleThread.Push(() => Dispose(item));
-            }
+            LogicalThread lifecycleThread = GetLifecycleThread(item);
+            lifecycleThread.Push(() => Dispose(item));
         }
 
         // Handle item initialization
@@ -1645,10 +1488,10 @@ namespace GSF.TimeSeries.Adapters
         // Gets the lifecycle thread for the given item
         private LogicalThread GetLifecycleThread(T item)
         {
-            return m_lifecycleThreads.GetOrAdd(item.ID, id =>
+            return m_lifecycleThreads.GetOrAdd(item.ID, _ =>
             {
                 LogicalThread thread = m_lifecycleThreadScheduler.CreateThread();
-                thread.UnhandledException += (sender, args) => item_ProcessException(item, args);
+                thread.UnhandledException += (_, args) => item_ProcessException(item, args);
                 return thread;
             });
         }
@@ -1674,8 +1517,8 @@ namespace GSF.TimeSeries.Adapters
         // We monitor the total number of measurements destined for archival here...
         private void m_monitorTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
-            StringBuilder status = new StringBuilder();
-            long totalNew, processedMeasurements = ProcessedMeasurements;
+            StringBuilder status = new();
+            long processedMeasurements = ProcessedMeasurements;
 
             // Calculate time since last call
             Ticks currentTime = DateTime.UtcNow.Ticks;
@@ -1685,7 +1528,7 @@ namespace GSF.TimeSeries.Adapters
             m_lastProcessTime = currentTime;
 
             // Calculate how many new measurements have been received in the last minute...
-            totalNew = processedMeasurements - m_processedMeasurements;
+            long totalNew = processedMeasurements - m_processedMeasurements;
             m_processedMeasurements = processedMeasurements;
 
             // Process statistics for 12 hours total runtime:

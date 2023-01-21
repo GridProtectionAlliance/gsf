@@ -38,7 +38,6 @@ namespace GSF.TimeSeries.Transport
         #region [ Members ]
 
         // Fields
-        private IClientSubscription m_parent;
 
         #endregion
 
@@ -47,28 +46,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool SupportsTemporalProcessing => true;
 
         /// <summary>
         /// Gets or sets parent subscription for the proxy used to deliver data.
         /// </summary>
-        public IClientSubscription Parent
-        {
-            get
-            {
-                return m_parent;
-            }
-            set
-            {
-                m_parent = value;
-            }
-        }
+        public IClientSubscription Parent { get; set; }
 
         #endregion
 
@@ -80,8 +63,8 @@ namespace GSF.TimeSeries.Transport
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if ((object)m_parent != null)
-                m_parent.QueueMeasurementsForProcessing(measurements);
+            if (Parent is not null)
+                Parent.QueueMeasurementsForProcessing(measurements);
         }
 
         /// <summary>
@@ -93,10 +76,10 @@ namespace GSF.TimeSeries.Transport
         {
             int inputCount = 0, outputCount = 0;
 
-            if (InputMeasurementKeys != null)
+            if (InputMeasurementKeys is not null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if (OutputMeasurements != null)
+            if (OutputMeasurements is not null)
                 outputCount = OutputMeasurements.Length;
 
             return $"Total input measurements: {inputCount}, total output measurements: {outputCount}".PadLeft(maxLength);

@@ -52,32 +52,21 @@ namespace GSF.TimeSeries.Transport
 
         // Fields
         private DataPublisher m_parent;
-        private readonly Guid m_clientID;
         private Guid m_subscriberID;
-        private readonly string m_connectionID;
         private readonly string m_hostName;
-        private string m_subscriberAcronym;
-        private string m_subscriberName;
-        private string m_sharedSecret;
         private string m_subscriberInfo;
         private IClientSubscription m_subscription;
         private volatile bool m_authenticated;
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
-        private List<IPAddress> m_validIPAddresses;
-        private IPAddress m_ipAddress;
-        private IServer m_commandChannel;
         private UdpServer m_dataChannel;
         private string m_configurationString;
         private bool m_connectionEstablished;
-        private bool m_isSubscribed;
-        private Ticks m_lastCipherKeyUpdateTime;
         private SharedTimer m_pingTimer;
         private SharedTimer m_reconnectTimer;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
         private bool m_disposed;
-        private bool m_clientNotFoundExceptionExceptionOccurred;
 
         #endregion
 
@@ -92,8 +81,8 @@ namespace GSF.TimeSeries.Transport
         public ClientConnection(DataPublisher parent, Guid clientID, IServer commandChannel)
         {
             m_parent = parent;
-            m_clientID = clientID;
-            m_commandChannel = commandChannel;
+            ClientID = clientID;
+            CommandChannel = commandChannel;
             m_subscriberID = clientID;
             m_keyIVs = null;
             m_cipherIndex = 0;
@@ -115,17 +104,17 @@ namespace GSF.TimeSeries.Transport
                 Socket commandChannelSocket = GetCommandChannelSocket();
                 IPEndPoint remoteEndPoint = null;
 
-                if ((object)commandChannel != null)
+                if (commandChannel is not null)
                     remoteEndPoint = commandChannelSocket.RemoteEndPoint as IPEndPoint;
 
-                if ((object)remoteEndPoint != null)
+                if (remoteEndPoint is not null)
                 {
-                    m_ipAddress = remoteEndPoint.Address;
+                    IPAddress = remoteEndPoint.Address;
 
                     if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-                        m_connectionID = "[" + m_ipAddress + "]:" + remoteEndPoint.Port;
+                        ConnectionID = "[" + IPAddress + "]:" + remoteEndPoint.Port;
                     else
-                        m_connectionID = m_ipAddress + ":" + remoteEndPoint.Port;
+                        ConnectionID = IPAddress + ":" + remoteEndPoint.Port;
 
                     try
                     {
@@ -134,7 +123,7 @@ namespace GSF.TimeSeries.Transport
                         if (!string.IsNullOrWhiteSpace(ipHost.HostName))
                         {
                             m_hostName = ipHost.HostName;
-                            m_connectionID = m_hostName + " (" + m_connectionID + ")";
+                            ConnectionID = m_hostName + " (" + ConnectionID + ")";
                         }
                     }
 
@@ -160,22 +149,22 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 // At worst we'll just use the client GUID for identification
-                m_connectionID = m_subscriberID == Guid.Empty ? clientID.ToString() : m_subscriberID.ToString();
+                ConnectionID = m_subscriberID == Guid.Empty ? clientID.ToString() : m_subscriberID.ToString();
             }
 
-            if (string.IsNullOrWhiteSpace(m_connectionID))
-                m_connectionID = "unavailable";
+            if (string.IsNullOrWhiteSpace(ConnectionID))
+                ConnectionID = "unavailable";
 
             if (string.IsNullOrWhiteSpace(m_hostName))
             {
-                if ((object)m_ipAddress != null)
-                    m_hostName = m_ipAddress.ToString();
+                if (IPAddress is not null)
+                    m_hostName = IPAddress.ToString();
                 else
-                    m_hostName = m_connectionID;
+                    m_hostName = ConnectionID;
             }
 
-            if ((object)m_ipAddress == null)
-                m_ipAddress = IPAddress.None;
+            if (IPAddress is null)
+                IPAddress = IPAddress.None;
         }
 
         /// <summary>
@@ -193,22 +182,19 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets client ID of this <see cref="ClientConnection"/>.
         /// </summary>
-        public Guid ClientID => m_clientID;
+        public Guid ClientID { get; }
 
         /// <summary>
         /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching to or detaching from events as needed, associated with this <see cref="ClientConnection"/>.
         /// </summary>
         public UdpServer DataChannel
         {
-            get
-            {
-                return m_dataChannel;
-            }
+            get => m_dataChannel;
             set
             {
-                m_connectionEstablished = (object)value != null;
+                m_connectionEstablished = value is not null;
 
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel is not null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ClientConnectingException -= m_dataChannel_ClientConnectingException;
@@ -223,7 +209,7 @@ namespace GSF.TimeSeries.Transport
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel is not null)
                 {
                     // Save UDP settings so channel can be reestablished if needed
                     m_configurationString = m_dataChannel.ConfigurationString;
@@ -240,12 +226,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets <see cref="IServer"/> command channel.
         /// </summary>
-        public IServer CommandChannel => m_commandChannel;
+        public IServer CommandChannel { get; private set; }
 
         /// <summary>
         /// Gets <see cref="IServer"/> publication channel - that is, data channel if defined otherwise command channel.
         /// </summary>
-        public IServer PublishChannel => (object)m_dataChannel == null ? m_commandChannel : m_dataChannel;
+        public IServer PublishChannel => m_dataChannel ?? CommandChannel;
 
         /// <summary>
         /// Gets connected state of the associated client socket.
@@ -261,7 +247,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     commandChannelSocket = GetCommandChannelSocket();
 
-                    if ((object)commandChannelSocket != null)
+                    if (commandChannelSocket is not null)
                         isConnected = commandChannelSocket.Connected;
                 }
                 catch
@@ -276,17 +262,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets IsSubscribed state.
         /// </summary>
-        public bool IsSubscribed
-        {
-            get
-            {
-                return m_isSubscribed;
-            }
-            set
-            {
-                m_isSubscribed = value;
-            }
-        }
+        public bool IsSubscribed { get; set; }
 
         /// <summary>
         /// Gets or sets flag that indicates if the socket exception for "No client found for ID [Guid]" has been thrown.
@@ -300,14 +276,8 @@ namespace GSF.TimeSeries.Transport
             // Users have encountered issues when a client disconnects where many thousands of exceptions get thrown, every 3ms.
             // This can cause the entire system to become unresponsive and causes all devices to reset (no data).
             // System only recovers when the client disconnect process finally executes as this can take some time to occur.
-            get
-            {
-                return m_clientNotFoundExceptionExceptionOccurred;
-            }
-            set
-            {
-                m_clientNotFoundExceptionExceptionOccurred = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -315,45 +285,19 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public Guid SubscriberID
         {
-            get
-            {
-                return m_subscriberID;
-            }
-            set
-            {
-                m_subscriberID = value;
-            }
+            get => m_subscriberID;
+            set => m_subscriberID = value;
         }
 
         /// <summary>
         /// Gets or sets the subscriber acronym of this <see cref="ClientConnection"/>.
         /// </summary>
-        public string SubscriberAcronym
-        {
-            get
-            {
-                return m_subscriberAcronym;
-            }
-            set
-            {
-                m_subscriberAcronym = value;
-            }
-        }
+        public string SubscriberAcronym { get; set; }
 
         /// <summary>
         /// Gets or sets the subscriber name of this <see cref="ClientConnection"/>.
         /// </summary>
-        public string SubscriberName
-        {
-            get
-            {
-                return m_subscriberName;
-            }
-            set
-            {
-                m_subscriberName = value;
-            }
-        }
+        public string SubscriberName { get; set; }
 
         /// <summary>
         /// Gets or sets subscriber info for this <see cref="ClientConnection"/>.
@@ -363,7 +307,7 @@ namespace GSF.TimeSeries.Transport
             get
             {
                 if (string.IsNullOrWhiteSpace(m_subscriberInfo))
-                    return m_subscriberName;
+                    return SubscriberName;
 
                 return m_subscriberInfo;
             }
@@ -376,11 +320,10 @@ namespace GSF.TimeSeries.Transport
                 else
                 {
                     Dictionary<string, string> settings = value.ParseKeyValuePairs();
-                    string source, version, buildDate;
 
-                    settings.TryGetValue("source", out source);
-                    settings.TryGetValue("version", out version);
-                    settings.TryGetValue("buildDate", out buildDate);
+                    settings.TryGetValue("source", out string source);
+                    settings.TryGetValue("version", out string version);
+                    settings.TryGetValue("buildDate", out string buildDate);
 
                     m_subscriberInfo = $"{source.ToNonNullNorWhiteSpace("unknown source")} version {version.ToNonNullNorWhiteSpace("?.?.?.?")} built on {buildDate.ToNonNullNorWhiteSpace("undefined date")}";
                 }
@@ -390,37 +333,21 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the connection identification of this <see cref="ClientConnection"/>.
         /// </summary>
-        public string ConnectionID => m_connectionID;
+        public string ConnectionID { get; }
 
         /// <summary>
         /// Gets or sets authenticated state of this <see cref="ClientConnection"/>.
         /// </summary>
         public bool Authenticated
         {
-            get
-            {
-                return m_authenticated;
-            }
-            set
-            {
-                m_authenticated = value;
-            }
+            get => m_authenticated;
+            set => m_authenticated = value;
         }
 
         /// <summary>
         /// Gets or sets shared secret used to lookup cipher keys only known to client and server.
         /// </summary>
-        public string SharedSecret
-        {
-            get
-            {
-                return m_sharedSecret;
-            }
-            set
-            {
-                m_sharedSecret = value;
-            }
-        }
+        public string SharedSecret { get; set; }
 
         /// <summary>
         /// Gets active and standby keys and initialization vectors.
@@ -435,42 +362,29 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets time of last cipher key update.
         /// </summary>
-        public Ticks LastCipherKeyUpdateTime => m_lastCipherKeyUpdateTime;
+        public Ticks LastCipherKeyUpdateTime { get; private set; }
 
         /// <summary>
         /// Gets or sets the list of valid IP addresses that this client can connect from.
         /// </summary>
-        public List<IPAddress> ValidIPAddresses
-        {
-            get
-            {
-                return m_validIPAddresses;
-            }
-            set
-            {
-                m_validIPAddresses = value;
-            }
-        }
+        public List<IPAddress> ValidIPAddresses { get; set; }
 
         /// <summary>
         /// Gets the IP address of the remote client connection.
         /// </summary>
-        public IPAddress IPAddress => m_ipAddress;
+        public IPAddress IPAddress { get; private set; }
 
         /// <summary>
         /// Gets or sets subscription associated with this <see cref="ClientConnection"/>.
         /// </summary>
         public IClientSubscription Subscription
         {
-            get
-            {
-                return m_subscription;
-            }
+            get => m_subscription;
             set
             {
                 m_subscription = value;
 
-                if ((object)m_subscription != null)
+                if (m_subscription is not null)
                     m_subscription.Name = m_hostName;
             }
         }
@@ -486,31 +400,19 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public OperationalModes OperationalModes
         {
-            get
-            {
-                return m_operationalModes;
-            }
+            get => m_operationalModes;
             set
             {
                 m_operationalModes = value;
 
-                switch ((OperationalEncoding)(value & OperationalModes.EncodingMask))
+                m_encoding = (OperationalEncoding)(value & OperationalModes.EncodingMask) switch
                 {
-                    case OperationalEncoding.Unicode:
-                        m_encoding = Encoding.Unicode;
-                        break;
-                    case OperationalEncoding.BigEndianUnicode:
-                        m_encoding = Encoding.BigEndianUnicode;
-                        break;
-                    case OperationalEncoding.UTF8:
-                        m_encoding = Encoding.UTF8;
-                        break;
-                    case OperationalEncoding.ANSI:
-                        m_encoding = Encoding.Default;
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unsupported encoding detected: {value}");
-                }
+                    OperationalEncoding.Unicode => Encoding.Unicode,
+                    OperationalEncoding.BigEndianUnicode => Encoding.BigEndianUnicode,
+                    OperationalEncoding.UTF8 => Encoding.UTF8,
+                    OperationalEncoding.ANSI => Encoding.Default,
+                    _ => throw new InvalidOperationException($"Unsupported encoding detected: {value}")
+                };
             }
         }
 
@@ -526,11 +428,11 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
                 const string formatString = "{0,26}: {1}";
 
                 status.AppendLine();
-                status.AppendFormat(formatString, "Subscriber ID", m_connectionID);
+                status.AppendFormat(formatString, "Subscriber ID", ConnectionID);
                 status.AppendLine();
                 status.AppendFormat(formatString, "Subscriber name", SubscriberName);
                 status.AppendLine();
@@ -538,10 +440,10 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat(formatString, "Publish channel protocol", PublishChannel.TransportProtocol);
                 status.AppendLine();
-                status.AppendFormat(formatString, "Data packet security", (object)m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendFormat(formatString, "Data packet security", m_keyIVs is null ? "unencrypted" : "encrypted");
                 status.AppendLine();
 
-                if ((object)m_dataChannel != null)
+                if (m_dataChannel is not null)
                 {
                     status.AppendLine();
                     status.Append(m_dataChannel.Status);
@@ -576,14 +478,14 @@ namespace GSF.TimeSeries.Transport
                 {
                     if (disposing)
                     {
-                        if ((object)m_pingTimer != null)
+                        if (m_pingTimer is not null)
                         {
                             m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
                             m_pingTimer.Dispose();
                             m_pingTimer = null;
                         }
 
-                        if ((object)m_reconnectTimer != null)
+                        if (m_reconnectTimer is not null)
                         {
                             m_reconnectTimer.Elapsed -= m_reconnectTimer_Elapsed;
                             m_reconnectTimer.Dispose();
@@ -591,8 +493,8 @@ namespace GSF.TimeSeries.Transport
                         }
 
                         DataChannel = null;
-                        m_commandChannel = null;
-                        m_ipAddress = null;
+                        CommandChannel = null;
+                        IPAddress = null;
                         m_subscription = null;
                         m_parent = null;
                     }
@@ -609,13 +511,13 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         internal void UpdateKeyIVs()
         {
-            using (AesManaged symmetricAlgorithm = new AesManaged())
+            using (AesManaged symmetricAlgorithm = new())
             {
                 symmetricAlgorithm.KeySize = 256;
                 symmetricAlgorithm.GenerateKey();
                 symmetricAlgorithm.GenerateIV();
 
-                if ((object)m_keyIVs == null)
+                if (m_keyIVs is null)
                 {
                     // Initialize new key set
                     m_keyIVs = new byte[2][][];
@@ -644,7 +546,7 @@ namespace GSF.TimeSeries.Transport
                 }
             }
 
-            m_lastCipherKeyUpdateTime = DateTime.UtcNow.Ticks;
+            LastCipherKeyUpdateTime = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>
@@ -653,13 +555,13 @@ namespace GSF.TimeSeries.Transport
         public bool RotateCipherKeys()
         {
             // Make sure at least a second has passed before next key rotation
-            if ((DateTime.UtcNow.Ticks - m_lastCipherKeyUpdateTime).ToMilliseconds() >= 1000.0D)
+            if ((DateTime.UtcNow.Ticks - LastCipherKeyUpdateTime).ToMilliseconds() >= 1000.0D)
             {
                 try
                 {
                     // Since this function cannot be not called more than once per second there
                     // is no real benefit to maintaining these memory streams at a member level
-                    using (BlockAllocatedMemoryStream response = new BlockAllocatedMemoryStream())
+                    using (BlockAllocatedMemoryStream response = new())
                     {
                         byte[] bytes, bufferLen;
 
@@ -670,7 +572,7 @@ namespace GSF.TimeSeries.Transport
                         response.WriteByte((byte)m_cipherIndex);
 
                         // Serialize new keys
-                        using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
+                        using (BlockAllocatedMemoryStream buffer = new())
                         {
                             // Write even key
                             bufferLen = BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
@@ -697,31 +599,31 @@ namespace GSF.TimeSeries.Transport
                         }
 
                         // Encrypt keys using private keys known only to current client and server
-                        if (m_authenticated && !string.IsNullOrWhiteSpace(m_sharedSecret))
-                            bytes = bytes.Encrypt(m_sharedSecret, CipherStrength.Aes256);
+                        if (m_authenticated && !string.IsNullOrWhiteSpace(SharedSecret))
+                            bytes = bytes.Encrypt(SharedSecret, CipherStrength.Aes256);
 
                         // Add serialized key response
                         response.Write(bytes, 0, bytes.Length);
 
                         // Send cipher key updates
-                        m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateCipherKeys, ServerCommand.Subscribe, response.ToArray());
+                        m_parent.SendClientResponse(ClientID, ServerResponse.UpdateCipherKeys, ServerCommand.Subscribe, response.ToArray());
                     }
 
                     // Send success message
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.Succeeded, ServerCommand.RotateCipherKeys, "New cipher keys established.");
+                    m_parent.SendClientResponse(ClientID, ServerResponse.Succeeded, ServerCommand.RotateCipherKeys, "New cipher keys established.");
                     m_parent.OnStatusMessage(MessageLevel.Info, $"{ConnectionID} cipher keys rotated.");
                     return true;
                 }
                 catch (Exception ex)
                 {
                     // Send failure message
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Failed to establish new cipher keys: " + ex.Message);
+                    m_parent.SendClientResponse(ClientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Failed to establish new cipher keys: " + ex.Message);
                     m_parent.OnStatusMessage(MessageLevel.Warning, $"Failed to establish new cipher keys for {ConnectionID}: {ex.Message}");
                     return false;
                 }
             }
 
-            m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Cipher key rotation skipped, keys were already rotated within last second.");
+            m_parent.SendClientResponse(ClientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Cipher key rotation skipped, keys were already rotated within last second.");
             m_parent.OnStatusMessage(MessageLevel.Warning, $"Cipher key rotation skipped for {ConnectionID}, keys were already rotated within last second.");
             return false;
         }
@@ -733,16 +635,12 @@ namespace GSF.TimeSeries.Transport
         /// <returns>The socket instance used by the client to send and receive data over the command channel.</returns>
         public Socket GetCommandChannelSocket()
         {
-            TcpServer tcpCommandChannel = m_commandChannel as TcpServer;
-            TlsServer tlsCommandChannel = m_commandChannel as TlsServer;
+            TlsServer tlsCommandChannel = CommandChannel as TlsServer;
 
-            TransportProvider<Socket> tcpProvider;
-            TransportProvider<TlsServer.TlsSocket> tlsProvider;
-
-            if ((object)tcpCommandChannel != null && tcpCommandChannel.TryGetClient(m_clientID, out tcpProvider))
+            if (CommandChannel is TcpServer tcpCommandChannel && tcpCommandChannel.TryGetClient(ClientID, out TransportProvider<Socket> tcpProvider))
                 return tcpProvider.Provider;
 
-            if ((object)tlsCommandChannel != null && tlsCommandChannel.TryGetClient(m_clientID, out tlsProvider))
+            if (tlsCommandChannel is not null && tlsCommandChannel.TryGetClient(ClientID, out TransportProvider<TlsServer.TlsSocket> tlsProvider))
                 return tlsProvider.Provider.Socket;
 
             return null;
@@ -751,19 +649,19 @@ namespace GSF.TimeSeries.Transport
         private void m_pingTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             // Send a no-op keep-alive ping to make sure the client is still connected
-            m_parent.SendClientResponse(m_clientID, ServerResponse.NoOP, ServerCommand.Subscribe);
+            m_parent.SendClientResponse(ClientID, ServerResponse.NoOP, ServerCommand.Subscribe);
         }
 
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            m_parent.OnProcessException(MessageLevel.Info, new ConnectionException($"Data channel client connection exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
+            m_parent.OnProcessException(MessageLevel.Info, new ConnectionException($"Data channel client connection exception occurred while sending client data to \"{ConnectionID}\": {ex.Message}", ex));
         }
 
         private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
         {
             Exception ex = e.Argument2;
-            m_parent.OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
+            m_parent.OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{ConnectionID}\": {ex.Message}", ex));
         }
 
         private void m_dataChannel_ServerStarted(object sender, EventArgs e)
@@ -777,7 +675,7 @@ namespace GSF.TimeSeries.Transport
             {
                 m_parent.OnStatusMessage(MessageLevel.Info, "Data channel stopped unexpectedly, restarting data channel...");
 
-                if ((object)m_reconnectTimer != null)
+                if (m_reconnectTimer is not null)
                     m_reconnectTimer.Start();
             }
             else
@@ -793,7 +691,7 @@ namespace GSF.TimeSeries.Transport
                 m_parent.OnStatusMessage(MessageLevel.Info, "Attempting to restart data channel...");
                 DataChannel = null;
 
-                UdpServer dataChannel = new UdpServer(m_configurationString);
+                UdpServer dataChannel = new(m_configurationString);
                 dataChannel.Start();
 
                 DataChannel = dataChannel;

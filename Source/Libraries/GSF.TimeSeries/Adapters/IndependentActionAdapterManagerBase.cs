@@ -85,12 +85,12 @@ namespace GSF.TimeSeries.Adapters
             this.HandleConstruct();
 
             // Define a synchronized operation to manage parsing connection string operations sequentially
-            m_parseConnectionString = new LongSynchronizedOperation(ParseConnectionString, ex => OnProcessException(MessageLevel.Warning, ex, "ParseConnectionString"))
+            m_parseConnectionString = new LongSynchronizedOperation(ParseConnectionString, ex => OnProcessException(MessageLevel.Warning, ex, nameof(ParseConnectionString)))
             {
                 IsBackground = true
             };
 
-            m_initializeChildAdapters = new LongSynchronizedOperation(InitializeChildAdapters, ex => OnProcessException(MessageLevel.Warning, ex, "InitializeChildAdapters"))
+            m_initializeChildAdapters = new LongSynchronizedOperation(InitializeChildAdapters, ex => OnProcessException(MessageLevel.Warning, ex, nameof(InitializeChildAdapters)))
             {
                 IsBackground = true
             };
@@ -365,7 +365,7 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.AppendLine($"         Frames Per Second: {FramesPerSecond:N0}");
                 status.AppendLine($"      Lag Time / Lead Time: {LagTime:N3} / {LeadTime:N3}");
@@ -475,30 +475,29 @@ namespace GSF.TimeSeries.Adapters
                     if (CurrentDeviceID > 0)
                         OnStatusMessage(MessageLevel.Warning, $"WARNING: Creating a parent device for \"{Name}\" [{GetType().Name}] based on specified template \"{ParentDeviceAcronymTemplate}\", but overridden CurrentDeviceID property reports non-zero value: {CurrentDeviceID:N0}");
 
-                    using (AdoDataConnection connection = GetConfiguredConnection())
-                    {
-                        TableOperations<DeviceRecord> deviceTable = new TableOperations<DeviceRecord>(connection);
-                        string deviceAcronym = string.Format(ParentDeviceAcronymTemplate, Name);
+                    using AdoDataConnection connection = GetConfiguredConnection();
 
-                        DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym) ?? deviceTable.NewRecord();
-                        int protocolID = connection.ExecuteScalar<int?>("SELECT ID FROM Protocol WHERE Acronym = 'VirtualInput'") ?? 15;
+                    TableOperations<DeviceRecord> deviceTable = new(connection);
+                    string deviceAcronym = string.Format(ParentDeviceAcronymTemplate, Name);
 
-                        device.Acronym = deviceAcronym;
-                        device.Name = deviceAcronym;
-                        device.ProtocolID = protocolID;
-                        device.Enabled = true;
+                    DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym) ?? deviceTable.NewRecord();
+                    int protocolID = connection.ExecuteScalar<int?>("SELECT ID FROM Protocol WHERE Acronym = 'VirtualInput'") ?? 15;
 
-                        deviceTable.AddNewOrUpdateRecord(device);
-                        currentDeviceID = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym)?.ID;
-                    }
+                    device.Acronym = deviceAcronym;
+                    device.Name = deviceAcronym;
+                    device.ProtocolID = protocolID;
+                    device.Enabled = true;
+
+                    deviceTable.AddNewOrUpdateRecord(device);
+                    currentDeviceID = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym)?.ID;
                 }
 
-                HashSet<string> activeAdapterNames = new HashSet<string>(StringComparer.Ordinal);
-                List<TAdapter> adapters = new List<TAdapter>();
-                HashSet<Guid> signalIDs = new HashSet<Guid>();
+                HashSet<string> activeAdapterNames = new(StringComparer.Ordinal);
+                List<TAdapter> adapters = new();
+                HashSet<Guid> signalIDs = new();
 
                 // Create settings dictionary for connection string to use with primary child adapters
-                Dictionary<string, string> settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);
 
                 foreach (PropertyInfo property in GetType().GetProperties())
                 {
@@ -534,7 +533,7 @@ namespace GSF.TimeSeries.Adapters
                     activeAdapterNames.Add(adapterName);
 
                     // See if child adapter already exists
-                    if (this.FindAdapter(adapterName) != null)
+                    if (this.FindAdapter(adapterName) is not null)
                         continue;
 
                     // Setup output measurements for new child adapter
@@ -640,26 +639,30 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Recalculates routing tables.
         /// </summary>
-        public virtual void RecalculateRoutingTables() => this.HandleRecalculateRoutingTables();
+        public virtual void RecalculateRoutingTables() => 
+            this.HandleRecalculateRoutingTables();
 
         /// <summary>
         /// Queues a collection of measurements for processing to each <see cref="IActionAdapter"/> connected to this <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.
         /// </summary>
         /// <param name="measurements">Measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements) => this.HandleQueueMeasurementsForProcessing(measurements);
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements) => 
+            this.HandleQueueMeasurementsForProcessing(measurements);
 
         /// <summary>
         /// Gets a short one-line status of this <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of the <see cref="IndependentActionAdapterManagerBase{TAdapter}"/>.</returns>
-        public override string GetShortStatus(int maxLength) => this.HandleGetShortStatus(maxLength);
+        public override string GetShortStatus(int maxLength) => 
+            this.HandleGetShortStatus(maxLength);
 
         /// <summary>
         /// Enumerates child adapters.
         /// </summary>
         [AdapterCommand("Enumerates child adapters.")]
-        public virtual void EnumerateAdapters() => this.HandleEnumerateAdapters();
+        public virtual void EnumerateAdapters() => 
+            this.HandleEnumerateAdapters();
 
         /// <summary>
         /// Gets subscriber information for specified client connection.
@@ -667,13 +670,15 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="adapterIndex">Enumerated index for child adapter.</param>
         /// <returns>Status for adapter with specified <paramref name="adapterIndex"/>.</returns>
         [AdapterCommand("Gets subscriber information for specified client connection.")]
-        public virtual string GetAdapterStatus(int adapterIndex) => this.HandleGetAdapterStatus(adapterIndex);
+        public virtual string GetAdapterStatus(int adapterIndex) => 
+            this.HandleGetAdapterStatus(adapterIndex);
         
         /// <summary>
         /// Gets configured database connection.
         /// </summary>
         /// <returns>New ADO data connection based on configured settings.</returns>
-        public AdoDataConnection GetConfiguredConnection() => this.HandleGetConfiguredConnection();
+        public AdoDataConnection GetConfiguredConnection() => 
+            this.HandleGetConfiguredConnection();
 
         #endregion
 

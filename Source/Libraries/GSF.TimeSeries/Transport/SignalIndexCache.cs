@@ -93,7 +93,7 @@ namespace GSF.TimeSeries.Transport
             m_subscriberID = remoteCache.SubscriberID;
 
             // If active measurements are defined, interpret signal cache in context of current measurement key definitions
-            if (dataSource != null && dataSource.Tables.Contains("ActiveMeasurements"))
+            if (dataSource is not null && dataSource.Tables.Contains("ActiveMeasurements"))
             {
                 DataTable activeMeasurements = dataSource.Tables["ActiveMeasurements"];
                 m_reference = new ConcurrentDictionary<ushort, MeasurementKey>();
@@ -130,14 +130,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public Guid SubscriberID
         {
-            get
-            {
-                return m_subscriberID;
-            }
-            set
-            {
-                m_subscriberID = value;
-            }
+            get => m_subscriberID;
+            set => m_subscriberID = value;
         }
 
         /// <summary>
@@ -145,15 +139,12 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public ConcurrentDictionary<ushort, MeasurementKey> Reference
         {
-            get
-            {
-                return m_reference;
-            }
+            get => m_reference;
             set
             {
                 m_reference = value;
-                IndexedArray<int> signalIDCache = new IndexedArray<int>(-1);
-                foreach (var pair in value)
+                IndexedArray<int> signalIDCache = new(-1);
+                foreach (KeyValuePair<ushort, MeasurementKey> pair in value)
                 {
                     signalIDCache[pair.Value.RuntimeID] = pair.Key;
                 }
@@ -178,14 +169,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public Guid[] UnauthorizedSignalIDs
         {
-            get
-            {
-                return m_unauthorizedSignalIDs;
-            }
-            set
-            {
-                m_unauthorizedSignalIDs = value;
-            }
+            get => m_unauthorizedSignalIDs;
+            set => m_unauthorizedSignalIDs = value;
         }
 
         /// <summary>
@@ -207,14 +192,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public Encoding Encoding
         {
-            get
-            {
-                return m_encoding;
-            }
-            set
-            {
-                m_encoding = value;
-            }
+            get => m_encoding;
+            set => m_encoding = value;
         }
 
         /// <summary>
@@ -226,7 +205,7 @@ namespace GSF.TimeSeries.Transport
             {
                 int binaryLength = 0;
 
-                if ((object)m_encoding == null)
+                if (m_encoding is null)
                     throw new InvalidOperationException("Attempt to get binary length of signal index cache without setting a character encoding.");
 
                 // Byte size of cache
@@ -245,7 +224,7 @@ namespace GSF.TimeSeries.Transport
                 binaryLength += 4;
 
                 // Each unauthorized ID
-                binaryLength += 16 * (m_unauthorizedSignalIDs ?? new Guid[0]).Length;
+                binaryLength += 16 * (m_unauthorizedSignalIDs ?? Array.Empty<Guid>()).Length;
 
                 return binaryLength;
             }
@@ -277,20 +256,19 @@ namespace GSF.TimeSeries.Transport
         /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
         public int GenerateBinaryImage(byte[] buffer, int startIndex)
         {
-            Guid[] unauthorizedSignalIDs = m_unauthorizedSignalIDs ?? new Guid[0];
+            Guid[] unauthorizedSignalIDs = m_unauthorizedSignalIDs ?? Array.Empty<Guid>();
 
             int binaryLength = BinaryLength;
             int offset = startIndex;
-            byte[] bigEndianBuffer;
             byte[] unicodeBuffer;
 
-            if ((object)m_encoding == null)
+            if (m_encoding is null)
                 throw new InvalidOperationException("Attempt to generate binary image of signal index cache without setting a character encoding.");
 
             buffer.ValidateParameters(startIndex, binaryLength);
 
             // Byte size of cache
-            bigEndianBuffer = BigEndian.GetBytes(binaryLength);
+            byte[] bigEndianBuffer = BigEndian.GetBytes(binaryLength);
             Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
             offset += bigEndianBuffer.Length;
 
@@ -355,19 +333,15 @@ namespace GSF.TimeSeries.Transport
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            int binaryLength;
             int offset = startIndex;
 
-            int referenceCount;
             ushort signalIndex;
             Guid signalID;
             int sourceSize;
             string source;
             uint id;
 
-            int unauthorizedIDCount;
-
-            if ((object)m_encoding == null)
+            if (m_encoding is null)
                 throw new InvalidOperationException("Attempt to parse binary image of signal index cache without setting a character encoding.");
 
             buffer.ValidateParameters(startIndex, length);
@@ -376,7 +350,7 @@ namespace GSF.TimeSeries.Transport
                 return 0;
 
             // Byte size of cache
-            binaryLength = BigEndian.ToInt32(buffer, offset);
+            int binaryLength = BigEndian.ToInt32(buffer, offset);
             offset += 4;
 
             if (length < binaryLength)
@@ -390,7 +364,7 @@ namespace GSF.TimeSeries.Transport
             offset += 16;
 
             // Number of references
-            referenceCount = BigEndian.ToInt32(buffer, offset);
+            int referenceCount = BigEndian.ToInt32(buffer, offset);
             offset += 4;
 
             for (int i = 0; i < referenceCount; i++)
@@ -417,7 +391,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Number of unauthorized IDs
-            unauthorizedIDCount = BigEndian.ToInt32(buffer, offset);
+            int unauthorizedIDCount = BigEndian.ToInt32(buffer, offset);
             m_unauthorizedSignalIDs = new Guid[unauthorizedIDCount];
             offset += 4;
 

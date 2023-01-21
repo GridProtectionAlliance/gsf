@@ -131,7 +131,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 return false;
 
             TsscPointMetadata point = m_points[id];
-            if (point == null)
+            if (point is null)
             {
                 point = new TsscPointMetadata(WriteBits, null, null);
                 point.PrevNextPointId1 = (ushort)(id + 1);

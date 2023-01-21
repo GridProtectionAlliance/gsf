@@ -46,16 +46,10 @@ namespace GSF.TimeSeries
         private readonly object m_timerTickLock;
         private ManualResetEventSlim m_frameWaitHandleA;
         private ManualResetEventSlim m_frameWaitHandleB;
-        private readonly int m_framesPerSecond;
         private readonly int m_frameWindowSize;
-        private readonly int[] m_frameMilliseconds;
         private int m_lastFrameIndex;
-        private long m_lastFrameTime;
         private long m_missedPublicationWindows;
         private long m_lastMissedWindowTime;
-        private long m_resynchronizations;
-        private int m_referenceCount;
-        private Action<Exception> m_exceptionHandler;
         private bool m_disposed;
 
         #endregion
@@ -73,7 +67,7 @@ namespace GSF.TimeSeries
             m_frameWaitHandleA = new ManualResetEventSlim(false);
             m_frameWaitHandleB = new ManualResetEventSlim(false);
             m_useWaitHandleA = true;
-            m_framesPerSecond = framesPerSecond;
+            FramesPerSecond = framesPerSecond;
 
             // Create a new precision timer for this timer state
             m_timer = new PrecisionTimer();
@@ -85,7 +79,7 @@ namespace GSF.TimeSeries
             m_timer.Tick += m_timer_Tick;
 
             m_frameWindowSize = (int)Math.Round(1000.0D / framesPerSecond) * 2;
-            m_frameMilliseconds = Ticks.MillisecondDistribution(framesPerSecond);
+            FrameMilliseconds = Ticks.MillisecondDistribution(framesPerSecond);
 
             // Start high resolution timer on a separate thread so the start
             // time can synchronized to the top of the millisecond
@@ -107,57 +101,27 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets frames per second for this <see cref="PrecisionInputTimer"/>.
         /// </summary>
-        public int FramesPerSecond
-        {
-            get
-            {
-                return m_framesPerSecond;
-            }
-        }
+        public int FramesPerSecond { get; }
 
         /// <summary>
         /// Gets array of frame millisecond times for this <see cref="PrecisionInputTimer"/>.
         /// </summary>
-        public int[] FrameMilliseconds
-        {
-            get
-            {
-                return m_frameMilliseconds;
-            }
-        }
+        public int[] FrameMilliseconds { get; }
 
         /// <summary>
         /// Gets reference count for this <see cref="PrecisionInputTimer"/>.
         /// </summary>
-        public int ReferenceCount
-        {
-            get
-            {
-                return m_referenceCount;
-            }
-        }
+        public int ReferenceCount { get; private set; }
 
         /// <summary>
         /// Gets number of resynchronizations that have occurred for this <see cref="PrecisionInputTimer"/>.
         /// </summary>
-        public long Resynchronizations
-        {
-            get
-            {
-                return m_resynchronizations;
-            }
-        }
+        public long Resynchronizations { get; private set; }
 
         /// <summary>
         /// Gets time of last frame, in ticks.
         /// </summary>
-        public long LastFrameTime
-        {
-            get
-            {
-                return m_lastFrameTime;
-            }
-        }
+        public long LastFrameTime { get; private set; }
 
         /// <summary>
         /// Gets a reference to the frame wait handle.
@@ -176,17 +140,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets function used to handle exceptions.
         /// </summary>
-        public Action<Exception> ExceptionHandler
-        {
-            get
-            {
-                return m_exceptionHandler;
-            }
-            set
-            {
-                m_exceptionHandler = value;
-            }
-        }
+        public Action<Exception> ExceptionHandler { get; set; }
 
         #endregion
 
@@ -213,21 +167,21 @@ namespace GSF.TimeSeries
                 {
                     if (disposing)
                     {
-                        if ((object)m_timer != null)
+                        if (m_timer is not null)
                         {
                             m_timer.Tick -= m_timer_Tick;
                             m_timer.Dispose();
                         }
                         m_timer = null;
 
-                        if ((object)m_frameWaitHandleA != null)
+                        if (m_frameWaitHandleA is not null)
                         {
                             m_frameWaitHandleA.Set();
                             m_frameWaitHandleA.Dispose();
                         }
                         m_frameWaitHandleA = null;
 
-                        if ((object)m_frameWaitHandleB != null)
+                        if (m_frameWaitHandleB is not null)
                         {
                             m_frameWaitHandleB.Set();
                             m_frameWaitHandleB.Dispose();
@@ -247,7 +201,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public void AddReference()
         {
-            m_referenceCount++;
+            ReferenceCount++;
         }
 
         /// <summary>
@@ -255,7 +209,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public void RemoveReference()
         {
-            m_referenceCount--;
+            ReferenceCount--;
         }
 
         // This timer function is called every millisecond so that frames can be published at the exact desired time 
@@ -273,13 +227,13 @@ namespace GSF.TimeSeries
                     bool releaseTimer = false, resync = false;
 
                     // Make sure current time is reasonably close to current frame index
-                    if (Math.Abs(milliseconds - m_frameMilliseconds[m_lastFrameIndex]) > m_frameWindowSize)
+                    if (Math.Abs(milliseconds - FrameMilliseconds[m_lastFrameIndex]) > m_frameWindowSize)
                         m_lastFrameIndex = 0;
 
                     // See if it is time to publish
-                    for (int frameIndex = m_lastFrameIndex; frameIndex < m_frameMilliseconds.Length; frameIndex++)
+                    for (int frameIndex = m_lastFrameIndex; frameIndex < FrameMilliseconds.Length; frameIndex++)
                     {
-                        frameMilliseconds = m_frameMilliseconds[frameIndex];
+                        frameMilliseconds = FrameMilliseconds[frameIndex];
 
                         if (frameMilliseconds == milliseconds)
                         {
@@ -305,16 +259,16 @@ namespace GSF.TimeSeries
                             // Prepare index for next check, time moving forward
                             m_lastFrameIndex = frameIndex + 1;
 
-                            if (m_lastFrameIndex >= m_frameMilliseconds.Length)
+                            if (m_lastFrameIndex >= FrameMilliseconds.Length)
                                 m_lastFrameIndex = 0;
 
                             if (resync)
                             {
-                                if ((object)m_timer != null)
+                                if (m_timer is not null)
                                 {
                                     m_timer.Stop();
                                     ThreadPool.QueueUserWorkItem(SynchronizeInputTimer);
-                                    m_resynchronizations++;
+                                    Resynchronizations++;
                                 }
                             }
 
@@ -330,7 +284,7 @@ namespace GSF.TimeSeries
                     if (releaseTimer)
                     {
                         // Baseline time-stamp to the top of the millisecond for frame publication
-                        m_lastFrameTime = ticks - ticks % Ticks.PerMillisecond;
+                        LastFrameTime = ticks - ticks % Ticks.PerMillisecond;
 
                         // Pulse all waiting threads toggling between ready handles
                         if (m_useWaitHandleA)
@@ -349,8 +303,8 @@ namespace GSF.TimeSeries
                 }
                 catch (Exception ex)
                 {
-                    if ((object)m_exceptionHandler != null)
-                        m_exceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
+                    if ((object)ExceptionHandler is not null)
+                        ExceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
                 }
                 finally
                 {
@@ -375,7 +329,7 @@ namespace GSF.TimeSeries
             m_lastMissedWindowTime = 0;
             m_missedPublicationWindows = 0;
 
-            if ((object)m_timer != null)
+            if (m_timer is not null)
                 m_timer.Start();
         }
 
@@ -384,7 +338,7 @@ namespace GSF.TimeSeries
         #region [ Static ]
 
         // Static Fields
-        private static readonly Dictionary<int, PrecisionInputTimer> s_inputTimers = new Dictionary<int, PrecisionInputTimer>();
+        private static readonly Dictionary<int, PrecisionInputTimer> s_inputTimers = new();
 
         // Static Methods
 
@@ -415,7 +369,7 @@ namespace GSF.TimeSeries
                     catch (Exception ex)
                     {
                         // Process exception for logging
-                        if ((object)exceptionHandler != null)
+                        if ((object)exceptionHandler is not null)
                             exceptionHandler(new InvalidOperationException("Failed to create precision input timer due to exception: " + ex.Message, ex));
                         else
                             throw;
@@ -423,7 +377,7 @@ namespace GSF.TimeSeries
                 }
 
                 // Increment reference count for input timer at given frame rate
-                if ((object)timer != null)
+                if (timer is not null)
                     timer.AddReference();
             }
 
@@ -439,7 +393,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         public static void Detach(ref PrecisionInputTimer timer)
         {
-            if ((object)timer != null)
+            if (timer is not null)
             {
                 lock (s_inputTimers)
                 {

@@ -88,24 +88,14 @@ namespace GSF.TimeSeries.Adapters
         private string m_name;
         private uint m_id;
         private string m_connectionString;
-        private Dictionary<string, string> m_settings;
-        private DataSet m_dataSource;
-        private int m_initializationTimeout;
-        private bool m_autoStart;
-        private bool m_respectInputDemands;
-        private bool m_respectOutputDemands;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
-        private MeasurementKey[] m_requestedInputMeasurementKeys;
-        private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
         private int m_minimumMeasurementsToUse;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_hashCode;
-        private bool m_initialized;
-        private bool m_disposed;
 
         #endregion
 
@@ -116,18 +106,18 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected ActionAdapterBase()
         {
-            m_name = this.GetType().Name;
+            m_name = GetType().Name;
             Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", m_name);
-            m_settings = new Dictionary<string, string>();
+            Settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
             GenHashCode();
 
             // Set incoming measurements to none by default
-            m_inputMeasurementKeys = new MeasurementKey[0];
+            m_inputMeasurementKeys = Array.Empty<MeasurementKey>();
 
             // For most implementations millisecond resolution will be sufficient
-            base.TimeResolution = Ticks.PerMillisecond;
+            TimeResolution = Ticks.PerMillisecond;
         }
 
         #endregion
@@ -139,10 +129,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual string Name
         {
-            get
-            {
-                return m_name;
-            }
+            get => m_name;
             set
             {
                 m_name = value;
@@ -156,10 +143,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual uint ID
         {
-            get
-            {
-                return m_id;
-            }
+            get => m_id;
             set
             {
                 m_id = value;
@@ -229,19 +213,15 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string ConnectionString
         {
-            get
-            {
-                return m_connectionString;
-            }
+            get => m_connectionString;
             set
             {
                 m_connectionString = value;
 
                 // Pre-parse settings upon connection string assignment
-                if (string.IsNullOrWhiteSpace(m_connectionString))
-                    m_settings = new Dictionary<string, string>();
-                else
-                    m_settings = m_connectionString.ParseKeyValuePairs();
+                Settings = string.IsNullOrWhiteSpace(m_connectionString) ? 
+                    new Dictionary<string, string>() : 
+                    m_connectionString.ParseKeyValuePairs();
             }
         }
 
@@ -256,17 +236,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="ActionAdapterBase"/>.
         /// </summary>
-        public virtual DataSet DataSource
-        {
-            get
-            {
-                return m_dataSource;
-            }
-            set
-            {
-                m_dataSource = value;
-            }
-        }
+        public virtual DataSet DataSource { get; set; }
 
         /// <summary>
         /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
@@ -274,32 +244,12 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Set to <see cref="Timeout.Infinite"/> to wait indefinitely.
         /// </remarks>
-        public virtual int InitializationTimeout
-        {
-            get
-            {
-                return m_initializationTimeout;
-            }
-            set
-            {
-                m_initializationTimeout = value;
-            }
-        }
+        public virtual int InitializationTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
         /// </summary>
-        public virtual bool AutoStart
-        {
-            get
-            {
-                return m_autoStart;
-            }
-            set
-            {
-                m_autoStart = value;
-            }
-        }
+        public virtual bool AutoStart { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
@@ -309,17 +259,7 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
         /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
         /// </remarks>
-        public virtual bool RespectInputDemands
-        {
-            get
-            {
-                return m_respectInputDemands;
-            }
-            set
-            {
-                m_respectInputDemands = value;
-            }
-        }
+        public virtual bool RespectInputDemands { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
@@ -329,17 +269,7 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
         /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
         /// </remarks>
-        public virtual bool RespectOutputDemands
-        {
-            get
-            {
-                return m_respectOutputDemands;
-            }
-            set
-            {
-                m_respectOutputDemands = value;
-            }
-        }
+        public virtual bool RespectOutputDemands { get; set; }
 
         /// <summary>
         /// Gets or sets the number of frames per second.
@@ -347,18 +277,12 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Valid frame rates for a <see cref="ConcentratorBase"/> are greater than 0 frames per second.
         /// </remarks>
-        [ConnectionStringParameter,
-        Description("Defines the number of frames per second expected by the adapter.")]
+        [ConnectionStringParameter]
+        [Description("Defines the number of frames per second expected by the adapter.")]
         public new int FramesPerSecond
         {
-            get
-            {
-                return base.FramesPerSecond;
-            }
-            set
-            {
-                base.FramesPerSecond = value;
-            }
+            get => base.FramesPerSecond;
+            set => base.FramesPerSecond = value;
         }
 
         /// <summary>
@@ -370,18 +294,12 @@ namespace GSF.TimeSeries.Adapters
         /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
-        [ConnectionStringParameter,
-        Description("Defines the allowed past time deviation tolerance, in seconds (can be sub-second).")]
+        [ConnectionStringParameter]
+        [Description("Defines the allowed past time deviation tolerance, in seconds (can be sub-second).")]
         public new double LagTime
         {
-            get
-            {
-                return base.LagTime;
-            }
-            set
-            {
-                base.LagTime = value;
-            }
+            get => base.LagTime;
+            set => base.LagTime = value;
         }
 
         /// <summary>
@@ -393,18 +311,12 @@ namespace GSF.TimeSeries.Adapters
         /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
-        [ConnectionStringParameter,
-        Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second).")]
+        [ConnectionStringParameter]
+        [Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second).")]
         public new double LeadTime
         {
-            get
-            {
-                return base.LeadTime;
-            }
-            set
-            {
-                base.LeadTime = value;
-            }
+            get => base.LeadTime;
+            set => base.LeadTime = value;
         }
 
         /// <summary>
@@ -413,22 +325,19 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
         /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public virtual MeasurementKey[] InputMeasurementKeys
         {
-            get
-            {
-                return m_inputMeasurementKeys;
-            }
+            get => m_inputMeasurementKeys;
             set
             {
                 if (m_inputMeasurementKeys == value)
                     return;
 
-                if ((object)m_inputMeasurementKeys != null && (object)value != null)
+                if (m_inputMeasurementKeys is not null && value is not null)
                 {
                     if (new HashSet<MeasurementKey>(m_inputMeasurementKeys).SetEquals(value))
                         return;
@@ -438,7 +347,7 @@ namespace GSF.TimeSeries.Adapters
 
                 // The input measurements typically define the "expected measurements" of the action adapter, so
                 // we use the number of these items to define the expected measurement count
-                ExpectedMeasurements = (object)m_inputMeasurementKeys != null ? m_inputMeasurementKeys.Length : 0;
+                ExpectedMeasurements = m_inputMeasurementKeys?.Length ?? 0;
 
                 OnInputMeasurementKeysUpdated();
             }
@@ -447,16 +356,13 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public virtual IMeasurement[] OutputMeasurements
         {
-            get
-            {
-                return m_outputMeasurements;
-            }
+            get => m_outputMeasurements;
             set
             {
                 m_outputMeasurements = value;
@@ -473,16 +379,10 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string[] InputSourceIDs
         {
-            get
-            {
-                if ((object)m_inputSourceIDs == null)
-                    return null;
-
-                return m_inputSourceIDs.ToArray();
-            }
+            get => m_inputSourceIDs?.ToArray();
             set
             {
-                if ((object)value == null)
+                if (value is null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -506,16 +406,10 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string[] OutputSourceIDs
         {
-            get
-            {
-                if ((object)m_outputSourceIDs == null)
-                    return null;
-
-                return m_outputSourceIDs.ToArray();
-            }
+            get => m_outputSourceIDs?.ToArray();
             set
             {
-                if ((object)value == null)
+                if (value is null)
                 {
                     m_outputSourceIDs = null;
                 }
@@ -533,40 +427,17 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedInputMeasurementKeys
-        {
-            get
-            {
-                return m_requestedInputMeasurementKeys;
-            }
-            set
-            {
-                m_requestedInputMeasurementKeys = value;
-            }
-        }
+        public virtual MeasurementKey[] RequestedInputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
-        {
-            get
-            {
-                return m_requestedOutputMeasurementKeys;
-            }
-            set
-            {
-                m_requestedOutputMeasurementKeys = value;
-            }
-        }
+        public virtual MeasurementKey[] RequestedOutputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public abstract bool SupportsTemporalProcessing
-        {
-            get;
-        }
+        public abstract bool SupportsTemporalProcessing { get; }
 
         /// <summary>
         /// Gets the start time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
@@ -594,36 +465,23 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 // Default to all measurements if minimum is not specified
-                if (m_minimumMeasurementsToUse < 1 && (object)InputMeasurementKeys != null)
+                if (m_minimumMeasurementsToUse < 1 && InputMeasurementKeys is not null)
                     return InputMeasurementKeys.Length;
 
                 return m_minimumMeasurementsToUse;
             }
-            set
-            {
-                m_minimumMeasurementsToUse = value;
-            }
+            set => m_minimumMeasurementsToUse = value;
         }
 
         /// <summary>
         /// Gets or sets flag indicating if the action adapter has been initialized successfully.
         /// </summary>
-        public virtual bool Initialized
-        {
-            get
-            {
-                return m_initialized;
-            }
-            set
-            {
-                m_initialized = value;
-            }
-        }
+        public virtual bool Initialized { get; set; }
 
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        public Dictionary<string, string> Settings => m_settings;
+        public Dictionary<string, string> Settings { get; private set; }
 
         /// <summary>
         /// Returns the detailed status of the action adapter.
@@ -637,80 +495,60 @@ namespace GSF.TimeSeries.Adapters
             {
                 const int MaxMeasurementsToShow = 10;
 
-                StringBuilder status = new StringBuilder();
-                DataSet dataSource = this.DataSource;
+                StringBuilder status = new();
+                DataSet dataSource = DataSource;
 
-                status.AppendFormat("       Data source defined: {0}", (object)dataSource != null);
-                status.AppendLine();
+                status.AppendLine($"       Data source defined: {dataSource is not null}");
 
-                if ((object)dataSource != null)
-                {
-                    status.AppendFormat("    Referenced data source: {0}, {1:N0} tables", dataSource.DataSetName, dataSource.Tables.Count);
-                    status.AppendLine();
-                }
+                if (dataSource is not null)
+                    status.AppendLine($"    Referenced data source: {dataSource.DataSetName}, {dataSource.Tables.Count:N0} tables");
 
-                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout + " milliseconds");
-                status.AppendLine();
-                status.AppendFormat("       Adapter initialized: {0}", Initialized);
-                status.AppendLine();
-                status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
-                status.AppendLine();
-                status.AppendFormat("         Connect on demand: {0}", !AutoStart);
-                status.AppendLine();
-                status.AppendFormat("  Respecting input demands: {0}", RespectInputDemands);
-                status.AppendLine();
-                status.AppendFormat(" Respecting output demands: {0}", RespectOutputDemands);
-                status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
-                status.AppendLine();
-                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString(3));
-                status.AppendLine();
-                status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
-                status.AppendLine();
+                status.AppendLine($"    Initialization timeout: {(InitializationTimeout < 0 ? "Infinite" : InitializationTimeout + " milliseconds")}");
+                status.AppendLine($"       Adapter initialized: {Initialized}");
+                status.AppendLine($"         Operational state: {(Enabled ? "Running" : "Stopped")}");
+                status.AppendLine($"         Connect on demand: {!AutoStart}");
+                status.AppendLine($"  Respecting input demands: {RespectInputDemands}");
+                status.AppendLine($" Respecting output demands: {RespectOutputDemands}");
+                status.AppendLine($"    Processed measurements: {ProcessedMeasurements}");
+                status.AppendLine($"    Total adapter run time: {RunTime.ToString(3)}");
+                status.AppendLine($"       Temporal processing: {(SupportsTemporalProcessing ? "Supported" : "Unsupported")}");
+                
                 if (SupportsTemporalProcessing)
                 {
-                    status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                    status.AppendLine();
-                    status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-                    status.AppendLine();
-                    status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval.ToString("N0") + " milliseconds"));
-                    status.AppendLine();
+                    status.AppendLine($"     Start time constraint: {(StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
+                    status.AppendLine($"      Stop time constraint: {(StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
+                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"))}");
                 }
-                status.AppendFormat("                Adapter ID: {0}", ID);
-                status.AppendLine();
+                
+                status.AppendLine($"                Adapter ID: {ID}");
 
                 Dictionary<string, string> keyValuePairs = Settings;
-                char[] keyChars;
-                string value;
 
-                status.AppendFormat("         Connection string: {0:N0} key/value pairs", keyValuePairs.Count);
+                status.AppendLine($"         Connection string: {keyValuePairs.Count:N0} key/value pairs");
+                status.AppendLine();
+                
                 //                            1         2         3         4         5         6         7
                 //                   123456789012345678901234567890123456789012345678901234567890123456789012345678
                 //                                         Key = Value
                 //                                                        1         2         3         4         5
                 //                                               12345678901234567890123456789012345678901234567890
-                status.AppendLine();
-                status.AppendLine();
-
                 foreach (KeyValuePair<string, string> item in keyValuePairs)
                 {
-                    keyChars = item.Key.Trim().ToCharArray();
+                    char[] keyChars = item.Key.Trim().ToCharArray();
                     keyChars[0] = char.ToUpper(keyChars[0]);
-
-                    value = item.Value.Trim();
+                    string value = item.Value.Trim();
+                    
                     if (value.Length > 50)
                         value = value.TruncateRight(47) + "...";
 
-                    status.AppendFormat("{0} = {1}", new string(keyChars).TruncateRight(25).PadLeft(25), value.PadRight(50));
-                    status.AppendLine();
+                    status.AppendLine($"{new string(keyChars).TruncateRight(25),25} = {value,-50}");
                 }
 
                 status.AppendLine();
 
-                if ((object)OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+                if (OutputMeasurements is not null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
-                    status.AppendFormat("       Output measurements: {0:N0} defined measurements", OutputMeasurements.Length);
-                    status.AppendLine();
+                    status.AppendLine($"       Output measurements: {OutputMeasurements.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
@@ -726,16 +564,13 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if ((object)InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+                if (InputMeasurementKeys is not null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
-                    status.AppendFormat("        Input measurements: {0:N0} defined measurements", InputMeasurementKeys.Length);
-                    status.AppendLine();
+                    status.AppendLine($"        Input measurements: {InputMeasurementKeys.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
                         status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
 
                     if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
                         status.AppendLine("...".CenterText(50));
@@ -743,16 +578,13 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if ((object)RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                if (RequestedInputMeasurementKeys is not null && RequestedInputMeasurementKeys.Length > 0)
                 {
-                    status.AppendFormat("      Requested input keys: {0:N0} defined measurements", RequestedInputMeasurementKeys.Length);
-                    status.AppendLine();
+                    status.AppendLine($"      Requested input keys: {RequestedInputMeasurementKeys.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
                         status.AppendLine(RequestedInputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
 
                     if (RequestedInputMeasurementKeys.Length > MaxMeasurementsToShow)
                         status.AppendLine("...".CenterText(50));
@@ -760,16 +592,13 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if ((object)RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                if (RequestedOutputMeasurementKeys is not null && RequestedOutputMeasurementKeys.Length > 0)
                 {
-                    status.AppendFormat("     Requested output keys: {0:N0} defined measurements", RequestedOutputMeasurementKeys.Length);
-                    status.AppendLine();
+                    status.AppendLine($"     Requested output keys: {RequestedOutputMeasurementKeys.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
                         status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
 
                     if (RequestedOutputMeasurementKeys.Length > MaxMeasurementsToShow)
                         status.AppendLine("...".CenterText(50));
@@ -777,8 +606,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat(" Minimum measurements used: {0:N0}", MinimumMeasurementsToUse);
-                status.AppendLine();
+                status.Append($" Minimum measurements used: {MinimumMeasurementsToUse:N0}");
                 status.Append(base.Status);
 
                 return status.ToString();
@@ -795,11 +623,11 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                m_disposed = true;          // Prevent duplicate dispose.
-                base.Dispose(disposing);    // Call base class Dispose().
-            }
+            if (IsDisposed)
+                return;
+
+            IsDisposed = true;          // Prevent duplicate dispose.
+            base.Dispose(disposing);    // Call base class Dispose().
         }
 
         /// <summary>
@@ -811,10 +639,9 @@ namespace GSF.TimeSeries.Adapters
 
             Dictionary<string, string> settings = Settings;
             const string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
-            string setting;
 
             // Load required parameters
-            if (!settings.TryGetValue("framesPerSecond", out setting))
+            if (!settings.TryGetValue("framesPerSecond", out string setting))
                 throw new ArgumentException(string.Format(errorMessage, "framesPerSecond"));
 
             base.FramesPerSecond = int.Parse(setting);
@@ -842,10 +669,9 @@ namespace GSF.TimeSeries.Adapters
             if (settings.TryGetValue("allowSortsByArrival", out setting))
                 AllowSortsByArrival = setting.ParseBoolean();
 
-            if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, setting);
-            else
-                InputMeasurementKeys = new MeasurementKey[0];
+            InputMeasurementKeys = settings.TryGetValue("inputMeasurementKeys", out setting) ? 
+                AdapterBase.ParseInputMeasurementKeys(DataSource, true, setting) : 
+                Array.Empty<MeasurementKey>();
 
             if (settings.TryGetValue("outputMeasurements", out setting))
                 OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, true, setting);
@@ -873,9 +699,7 @@ namespace GSF.TimeSeries.Adapters
 
             if (settings.TryGetValue("downsamplingMethod", out setting))
             {
-                DownsamplingMethod method;
-
-                if (Enum.TryParse(setting, true, out method))
+                if (Enum.TryParse(setting, true, out DownsamplingMethod method))
                 {
                     DownsamplingMethod = method;
                 }
@@ -897,37 +721,26 @@ namespace GSF.TimeSeries.Adapters
             else
                 AutoStart = true;
 
-            if (settings.TryGetValue("respectInputDemands", out setting))
-                RespectInputDemands = setting.ParseBoolean();
-            else
-                RespectInputDemands = false;
+            RespectInputDemands = settings.TryGetValue("respectInputDemands", out setting) && setting.ParseBoolean();
+            RespectOutputDemands = !settings.TryGetValue("respectOutputDemands", out setting) || setting.ParseBoolean();
 
-            if (settings.TryGetValue("respectOutputDemands", out setting))
-                RespectOutputDemands = setting.ParseBoolean();
-            else
-                RespectOutputDemands = true;
-
-            string startTime, stopTime, parameters;
-
-            bool startTimeDefined = settings.TryGetValue("startTimeConstraint", out startTime);
-            bool stopTimeDefined = settings.TryGetValue("stopTimeConstraint", out stopTime);
+            bool startTimeDefined = settings.TryGetValue("startTimeConstraint", out string startTime);
+            bool stopTimeDefined = settings.TryGetValue("stopTimeConstraint", out string stopTime);
 
             if (startTimeDefined || stopTimeDefined)
             {
-                settings.TryGetValue("timeConstraintParameters", out parameters);
+                settings.TryGetValue("timeConstraintParameters", out string parameters);
                 SetTemporalConstraint(startTime, stopTime, parameters);
             }
 
-            int processingInterval;
-
-            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
+            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out int processingInterval))
                 ProcessingInterval = processingInterval;
         }
 
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        public bool IsDisposed => m_disposed;
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Starts the <see cref="ActionAdapterBase"/> or restarts it if it is already running.
@@ -946,19 +759,15 @@ namespace GSF.TimeSeries.Adapters
         /// Stops the <see cref="ActionAdapterBase"/>.
         /// </summary>
         [AdapterCommand("Stops the action adapter.", "Administrator", "Editor")]
-        public override void Stop()
-        {
+        public override void Stop() => 
             base.Stop();
-        }
 
         /// <summary>
         /// Examines the concentrator frame queue state of the <see cref="ActionAdapterBase"/>.
         /// </summary>
         [AdapterCommand("Examines concentration frame queue state.", "Administrator", "Editor", "Viewer")]
-        public void ExamineQueueState()
-        {
+        public void ExamineQueueState() => 
             OnStatusMessage(MessageLevel.Info, QueueState);
-        }
 
         /// <summary>
         /// Resets the statistics of the <see cref="ActionAdapterBase"/>.
@@ -977,10 +786,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="initialized">Desired initialized state.</param>
         [AdapterCommand("Manually sets the initialized state of the action adapter.", "Administrator", "Editor")]
-        public virtual void SetInitializedState(bool initialized)
-        {
-            this.Initialized = initialized;
-        }
+        public virtual void SetInitializedState(bool initialized) => 
+            Initialized = initialized;
 
         /// <summary>
         /// Gets a short one-line status of this <see cref="ActionAdapterBase"/>.
@@ -991,13 +798,13 @@ namespace GSF.TimeSeries.Adapters
         {
             int inputCount = 0, outputCount = 0;
 
-            if ((object)InputMeasurementKeys != null)
+            if (InputMeasurementKeys is not null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if ((object)OutputMeasurements != null)
+            if (OutputMeasurements is not null)
                 outputCount = OutputMeasurements.Length;
 
-            return $"Total input measurements: {inputCount}, total output measurements: {outputCount}".PadLeft(maxLength);
+            return $"Total input measurements: {inputCount:N0}, total output measurements: {outputCount:N0}".PadLeft(maxLength);
         }
 
         /// <summary>
@@ -1009,7 +816,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if (m_disposed)
+            if (IsDisposed)
                 return;
 
             SortMeasurements(measurements);
@@ -1067,22 +874,20 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Defines a temporal processing constraint for the adapter.", "Administrator", "Editor", "Viewer")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
-            if (!string.IsNullOrWhiteSpace(startTime))
-                m_startTimeConstraint = AdapterBase.ParseTimeTag(startTime);
-            else
-                m_startTimeConstraint = DateTime.MinValue;
+            m_startTimeConstraint = string.IsNullOrWhiteSpace(startTime) ? 
+                DateTime.MinValue : 
+                AdapterBase.ParseTimeTag(startTime);
 
-            if (!string.IsNullOrWhiteSpace(stopTime))
-                m_stopTimeConstraint = AdapterBase.ParseTimeTag(stopTime);
-            else
-                m_stopTimeConstraint = DateTime.MaxValue;
+            m_stopTimeConstraint = string.IsNullOrWhiteSpace(stopTime) ? 
+                DateTime.MaxValue : 
+                AdapterBase.ParseTimeTag(stopTime);
+
+            if (!this.TemporalConstraintIsDefined())
+                return;
 
             // When processing historical data, timestamps should not be evaluated for reasonability
-            if (this.TemporalConstraintIsDefined())
-            {
-                PerformTimestampReasonabilityCheck = false;
-                LeadTime = double.MaxValue;
-            }
+            PerformTimestampReasonabilityCheck = false;
+            LeadTime = double.MaxValue;
         }
 
         /// <summary>
@@ -1114,15 +919,16 @@ namespace GSF.TimeSeries.Adapters
             IDictionary<MeasurementKey, IMeasurement> frameMeasurements = frame.Measurements;
             MeasurementKey[] measurementKeys = InputMeasurementKeys;
 
-            if ((object)measurements == null || measurements.Length < minNeeded)
+            if (measurements is null || measurements.Length < minNeeded)
                 measurements = new IMeasurement[minNeeded];
 
-            if ((object)measurementKeys == null)
+            if (measurementKeys is null)
             {
                 // No input measurements are defined, just get first set of measurements in this frame
                 foreach (IMeasurement measurement in frameMeasurements.Values)
                 {
                     measurements[index++] = measurement;
+                    
                     if (index == minNeeded)
                         break;
                 }
@@ -1130,16 +936,15 @@ namespace GSF.TimeSeries.Adapters
             else
             {
                 // Loop through all input measurements to see if they exist in this frame
-                IMeasurement measurement;
-
                 foreach (MeasurementKey key in measurementKeys)
                 {
-                    if (frameMeasurements.TryGetValue(key, out measurement))
-                    {
-                        measurements[index++] = measurement;
-                        if (index == minNeeded)
-                            break;
-                    }
+                    if (!frameMeasurements.TryGetValue(key, out IMeasurement measurement))
+                        continue;
+
+                    measurements[index++] = measurement;
+
+                    if (index == minNeeded)
+                        break;
                 }
             }
 
@@ -1158,7 +963,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(NewMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1167,10 +972,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="status">New status message.</param>
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnStatusMessage(string status)
-        {
+        protected void OnStatusMessage(string status) => 
             OnStatusMessage(MessageLevel.Info, status, "Unclassified Status");
-        }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event with a formatted status message.
@@ -1180,11 +983,10 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
-        [StringFormatMethod("formattedStatus"), Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnStatusMessage(string formattedStatus, params object[] args)
-        {
+        [StringFormatMethod("formattedStatus")]
+        [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
+        protected void OnStatusMessage(string formattedStatus, params object[] args) => 
             OnStatusMessage(MessageLevel.Info, string.Format(formattedStatus, args), "Unclassified Status");
-        }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
@@ -1210,7 +1012,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(StatusMessage)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1226,7 +1028,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(InputMeasurementKeysUpdated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1242,7 +1044,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(OutputMeasurementsUpdated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1258,15 +1060,13 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ConfigurationChanged)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
-        private void GenHashCode()
-        {
-            // We cache hash code during construction or after element value change to speed usage
+        // We cache hash code during construction or after element value change to speed usage
+        private void GenHashCode() => 
             m_hashCode = (Name + ID).GetHashCode();
-        }
 
         #endregion
     }

@@ -54,85 +54,51 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="IClientSubscription"/>.
         /// </summary>
-        Guid ClientID
-        {
-            get;
-        }
+        Guid ClientID { get; }
 
         /// <summary>
         /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="IClientSubscription"/>.
         /// </summary>
-        Guid SubscriberID
-        {
-            get;
-        }
+        Guid SubscriberID { get; }
 
         /// <summary>
         /// Gets the current signal index cache of this <see cref="IClientSubscription"/>.
         /// </summary>
-        SignalIndexCache SignalIndexCache
-        {
-            get;
-        }
+        SignalIndexCache SignalIndexCache { get; }
 
         /// <summary>
         /// Gets the input filter requested by the subscriber when establishing this <see cref="IClientSubscription"/>.
         /// </summary>
-        string RequestedInputFilter
-        {
-            get;
-        }
+        string RequestedInputFilter { get; }
 
         /// <summary>
         /// Gets or sets flag that determines if payload compression should be enabled in data packets of this <see cref="IClientSubscription"/>.
         /// </summary>
-        bool UsePayloadCompression
-        {
-            get;
-            set;
-        }
+        bool UsePayloadCompression { get; set; }
 
         /// <summary>
         /// Gets or sets the compression strength value to use when <see cref="UsePayloadCompression"/> is <c>true</c> for this <see cref="IClientSubscription"/>.
         /// </summary>
-        int CompressionStrength
-        {
-            get;
-            set;
-        }
+        int CompressionStrength { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="IClientSubscription"/>.
         /// </summary>
-        bool UseCompactMeasurementFormat
-        {
-            get;
-            set;
-        }
+        bool UseCompactMeasurementFormat { get; set; }
 
         /// <summary>
         /// Gets size of timestamp in bytes.
         /// </summary>
-        int TimestampSize
-        {
-            get;
-        }
+        int TimestampSize { get; }
 
         /// <summary>
         /// Gets the status of the active temporal session, if any.
         /// </summary>
-        string TemporalSessionStatus
-        {
-            get;
-        }
+        string TemporalSessionStatus { get; }
         /// <summary>
         /// Gets or sets the measurement reporting interval.
         /// </summary>
-        int MeasurementReportingInterval
-        {
-            get;
-            set;
-        }
+        int MeasurementReportingInterval { get; set; }
 
         /// <summary>
         /// Handles the confirmation message received from the
@@ -174,9 +140,9 @@ namespace GSF.TimeSeries.Transport
     public static class IClientSubscriptionExtensions
     {
         // Define cache of dynamically defined event handlers associated with each client subscription
-        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>> s_statusMessageHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>>();
-        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>> s_processExceptionHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>>();
-        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler> s_processingCompletedHandlers = new ConcurrentDictionary<IClientSubscription, EventHandler>();
+        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<string, UpdateType>>> s_statusMessageHandlers = new();
+        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler<EventArgs<Exception>>> s_processExceptionHandlers = new();
+        private static readonly ConcurrentDictionary<IClientSubscription, EventHandler> s_processingCompletedHandlers = new();
 
         /// <summary>
         /// Returns a new temporal <see cref="IaonSession"/> for a <see cref="IClientSubscription"/>.
@@ -185,8 +151,6 @@ namespace GSF.TimeSeries.Transport
         /// <returns>New temporal <see cref="IaonSession"/> for a <see cref="IClientSubscription"/>.</returns>
         public static IaonSession CreateTemporalSession(this IClientSubscription clientSubscription)
         {
-            IaonSession session;
-
             // Cache the specified input measurement keys requested by the remote subscription
             // internally since these will only be needed in the private Iaon session
             MeasurementKey[] inputMeasurementKeys = clientSubscription.InputMeasurementKeys;
@@ -199,22 +163,26 @@ namespace GSF.TimeSeries.Transport
             clientSubscription.OutputMeasurements = new IMeasurement[] { Measurement.Undefined };
 
             // Create a new Iaon session
-            session = new IaonSession();
-            session.Name = "<" + clientSubscription.Name.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss");
+            IaonSession session = new()
+            {
+                Name = "<" + clientSubscription.Name.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss"),
 
-            // Assign requested input measurement keys as a routing restriction
-            session.InputMeasurementKeysRestriction = inputMeasurementKeys;
+                // Assign requested input measurement keys as a routing restriction
+                InputMeasurementKeysRestriction = inputMeasurementKeys
+            };
 
             // Setup default bubbling event handlers associated with the client session adapter
-            EventHandler<EventArgs<string, UpdateType>> statusMessageHandler = (sender, e) =>
+            void statusMessageHandler(object sender, EventArgs<string, UpdateType> e)
             {
                 if (e.Argument2 == UpdateType.Information)
                     clientSubscription.OnStatusMessage(MessageLevel.Info, e.Argument1);
                 else
                     clientSubscription.OnStatusMessage(MessageLevel.Warning, "0x" + (int)e.Argument2 + e.Argument1);
-            };
+            }
 
-            EventHandler<EventArgs<Exception>> processExceptionHandler = (sender, e) => clientSubscription.OnProcessException(MessageLevel.Warning, e.Argument);
+            void processExceptionHandler(object sender, EventArgs<Exception> e) => 
+                clientSubscription.OnProcessException(MessageLevel.Warning, e.Argument);
+            
             EventHandler processingCompletedHandler = clientSubscription.OnProcessingCompleted;
 
             // Cache dynamic event handlers so they can be detached later
@@ -230,10 +198,8 @@ namespace GSF.TimeSeries.Transport
             // Send the first message indicating a new temporal session is being established
             statusMessageHandler(null, new EventArgs<string, UpdateType>(
                 // ReSharper disable once UseStringInterpolation
-                string.Format("Initializing temporal session for host \"{0}\" spanning {1} to {2} processing data {3}...",
-                    clientSubscription.Name.ToNonNullString("unknown"),
-                    clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-                    clientSubscription.StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                string.Format("Initializing temporal session for host \"{0}\" spanning {1:yyyy-MM-dd HH:mm:ss.fff} to {2:yyyy-MM-dd HH:mm:ss.fff} processing data {3}...",
+                    clientSubscription.Name.ToNonNullString("unknown"), clientSubscription.StartTimeConstraint, clientSubscription.StopTimeConstraint,
                     clientSubscription.ProcessingInterval == 0 ? "as fast as possible" :
                     clientSubscription.ProcessingInterval == -1 ? "at the default rate" : "at " + clientSubscription.ProcessingInterval + "ms intervals"),
                 UpdateType.Information));
@@ -253,7 +219,7 @@ namespace GSF.TimeSeries.Transport
             // the default settings of not respecting input demands and the proxy adapter not producing any points, the Iaon session
             // would ignore the adapter's input needs. In this case we want Iaon session to recognize the inputs of the proxy adapter
             // as important to the connect-on-demand dependency chain, so we request respect for the input demands.
-            TemporalClientSubscriptionProxy proxyAdapter = new TemporalClientSubscriptionProxy
+            TemporalClientSubscriptionProxy proxyAdapter = new()
             {
                 // Assign critical adapter properties
                 ID = 0,
@@ -272,11 +238,10 @@ namespace GSF.TimeSeries.Transport
 
             // Load current temporal constraint parameters
             Dictionary<string, string> settings = clientSubscription.Settings;
-            string startTime, stopTime, parameters;
 
-            settings.TryGetValue("startTimeConstraint", out startTime);
-            settings.TryGetValue("stopTimeConstraint", out stopTime);
-            settings.TryGetValue("timeConstraintParameters", out parameters);
+            settings.TryGetValue("startTimeConstraint", out string startTime);
+            settings.TryGetValue("stopTimeConstraint", out string stopTime);
+            settings.TryGetValue("timeConstraintParameters", out string parameters);
 
             // Assign requested temporal constraints to all private session adapters
             session.AllAdapters.SetTemporalConstraint(startTime, stopTime, parameters);
@@ -299,20 +264,16 @@ namespace GSF.TimeSeries.Transport
         /// <param name="session"><see cref="IaonSession"/> instance to dispose.</param>
         public static void DisposeTemporalSession(this IClientSubscription adapter, ref IaonSession session)
         {
-            if ((object)session != null)
+            if (session is not null)
             {
-                EventHandler<EventArgs<string, UpdateType>> statusMessageFunction;
-                EventHandler<EventArgs<Exception>> processExceptionFunction;
-                EventHandler processingCompletedFunction;
-
                 // Remove and detach from event handlers
-                if (s_statusMessageHandlers.TryRemove(adapter, out statusMessageFunction))
+                if (s_statusMessageHandlers.TryRemove(adapter, out EventHandler<EventArgs<string, UpdateType>> statusMessageFunction))
                     session.StatusMessage -= statusMessageFunction;
 
-                if (s_processExceptionHandlers.TryRemove(adapter, out processExceptionFunction))
+                if (s_processExceptionHandlers.TryRemove(adapter, out EventHandler<EventArgs<Exception>> processExceptionFunction))
                     session.ProcessException -= processExceptionFunction;
 
-                if (s_processingCompletedHandlers.TryRemove(adapter, out processingCompletedFunction))
+                if (s_processingCompletedHandlers.TryRemove(adapter, out EventHandler processingCompletedFunction))
                     session.ProcessingComplete -= processingCompletedFunction;
 
                 session.Dispose();

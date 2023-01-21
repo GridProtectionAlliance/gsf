@@ -62,7 +62,7 @@ namespace GSF.TimeSeries.Transport
 
         private class DateTimeConverter : TypeConverter
         {
-            TypeConverter defaultConverter = TypeDescriptor.GetConverter(typeof(DateTime));
+            readonly TypeConverter defaultConverter = TypeDescriptor.GetConverter(typeof(DateTime));
 
             public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
             {

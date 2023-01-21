@@ -56,7 +56,7 @@ namespace GSF.TimeSeries
         {
             m_serviceHost = serviceHost;
             m_originalForegroundColor = System.Console.ForegroundColor;
-            m_consoleHostPrincipal = new GenericPrincipal(new GenericIdentity("ConsoleHost"), new[] { "Administrator" });
+            m_consoleHostPrincipal = new GenericPrincipal(new GenericIdentity(nameof(ConsoleHost)), new[] { "Administrator" });
             m_clientID = Guid.NewGuid();
             m_displayLock = new object();
         }
@@ -70,7 +70,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public void Run()
         {
-            if ((object)m_serviceHost == null)
+            if (m_serviceHost is null)
                 throw new NullReferenceException("Service host reference is null");
 
             string userInput = "";
@@ -128,15 +128,12 @@ namespace GSF.TimeSeries
             lock (m_displayLock)
             {
                 // Output status updates from the service to the console window.
-                switch (e.Argument3)
+                System.Console.ForegroundColor = e.Argument3 switch
                 {
-                    case UpdateType.Alarm:
-                        System.Console.ForegroundColor = ConsoleColor.Red;
-                        break;
-                    case UpdateType.Warning:
-                        System.Console.ForegroundColor = ConsoleColor.Yellow;
-                        break;
-                }
+                    UpdateType.Alarm => ConsoleColor.Red,
+                    UpdateType.Warning => ConsoleColor.Yellow,
+                    _ => System.Console.ForegroundColor
+                };
 
                 Write(e.Argument2);
                 System.Console.ForegroundColor = m_originalForegroundColor;
@@ -145,7 +142,7 @@ namespace GSF.TimeSeries
 
         private void DisplayHelp()
         {
-            StringBuilder help = new StringBuilder();
+            StringBuilder help = new();
 
             help.AppendFormat("Commands supported by {0}:", AssemblyInfo.EntryAssembly.Name);
             help.AppendLine();

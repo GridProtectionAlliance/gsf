@@ -135,8 +135,6 @@ namespace GSF.TimeSeries.Transport
         private readonly UnsynchronizedSubscriptionInfo m_subscriptionInfo;
         private readonly ManualResetEventSlim m_dataGapRecoveryCompleted;
         private DataSubscriber m_temporalSubscription;
-        private OutageLogProcessor m_dataGapLogProcessor;
-        private OutageLog m_dataGapLog;
         private SharedTimer m_dataStreamMonitor;
         private DataSet m_dataSource;
         private string m_loggingPath;
@@ -152,7 +150,6 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_abnormalTermination;
         private volatile bool m_enabled;
         private volatile bool m_connected;
-        private bool m_disposed;
 
         #endregion
 
@@ -216,10 +213,7 @@ namespace GSF.TimeSeries.Transport
         /// <exception cref="ArgumentOutOfRangeException">Value cannot be null or an empty string.</exception>
         public string SourceConnectionName
         {
-            get
-            {
-                return m_sourceConnectionName;
-            }
+            get => m_sourceConnectionName;
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -234,15 +228,12 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public DataSet DataSource
         {
-            get
-            {
-                return m_dataSource;
-            }
+            get => m_dataSource;
             set
             {
                 m_dataSource = value;
 
-                if ((object)m_temporalSubscription != null)
+                if (m_temporalSubscription is not null)
                     m_temporalSubscription.DataSource = m_dataSource;
             }
         }
@@ -253,10 +244,7 @@ namespace GSF.TimeSeries.Transport
         /// <exception cref="ArgumentOutOfRangeException">Value cannot be null or an empty string.</exception>
         public string ConnectionString
         {
-            get
-            {
-                return m_connectionString;
-            }
+            get => m_connectionString;
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -285,10 +273,7 @@ namespace GSF.TimeSeries.Transport
         /// <exception cref="ArgumentOutOfRangeException">Value cannot be a negative number.</exception>
         public Time RecoveryStartDelay
         {
-            get
-            {
-                return m_recoveryStartDelay;
-            }
+            get => m_recoveryStartDelay;
             set
             {
                 if (value < 0.0D)
@@ -315,13 +300,10 @@ namespace GSF.TimeSeries.Transport
         /// <exception cref="ArgumentOutOfRangeException">Value cannot be zero or a negative number.</exception>
         public Time DataMonitoringInterval
         {
-            get
-            {
-                return m_dataStreamMonitor.Interval / 1000.0D;
-            }
+            get => m_dataStreamMonitor.Interval / 1000.0D;
             set
             {
-                if ((object)m_dataStreamMonitor == null)
+                if (m_dataStreamMonitor is null)
                     throw new ArgumentNullException();
 
                 if (value <= 0.0D)
@@ -338,10 +320,7 @@ namespace GSF.TimeSeries.Transport
         /// <exception cref="ArgumentOutOfRangeException">Value cannot be a negative number.</exception>
         public Time MinimumRecoverySpan
         {
-            get
-            {
-                return m_minimumRecoverySpan;
-            }
+            get => m_minimumRecoverySpan;
             set
             {
                 if (value < 0.0D)
@@ -358,10 +337,7 @@ namespace GSF.TimeSeries.Transport
         /// <exception cref="ArgumentOutOfRangeException">Value cannot be zero or a negative number.</exception>
         public Time MaximumRecoverySpan
         {
-            get
-            {
-                return m_maximumRecoverySpan;
-            }
+            get => m_maximumRecoverySpan;
             set
             {
                 if (value <= 0.0D)
@@ -382,10 +358,7 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         public string LoggingPath
         {
-            get
-            {
-                return m_loggingPath;
-            }
+            get => m_loggingPath;
             set
             {
                 if (!string.IsNullOrWhiteSpace(value))
@@ -405,14 +378,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public string FilterExpression
         {
-            get
-            {
-                return m_subscriptionInfo.FilterExpression;
-            }
-            set
-            {
-                m_subscriptionInfo.FilterExpression = value;
-            }
+            get => m_subscriptionInfo.FilterExpression;
+            set => m_subscriptionInfo.FilterExpression = value;
         }
 
         /// <summary>
@@ -431,14 +398,8 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         public int RecoveryProcessingInterval
         {
-            get
-            {
-                return m_subscriptionInfo.ProcessingInterval;
-            }
-            set
-            {
-                m_subscriptionInfo.ProcessingInterval = value;
-            }
+            get => m_subscriptionInfo.ProcessingInterval;
+            set => m_subscriptionInfo.ProcessingInterval = value;
         }
 
         /// <summary>
@@ -454,33 +415,19 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         public bool UseMillisecondResolution
         {
-            get
-            {
-                return m_subscriptionInfo.UseMillisecondResolution;
-            }
-            set
-            {
-                m_subscriptionInfo.UseMillisecondResolution = value;
-            }
+            get => m_subscriptionInfo.UseMillisecondResolution;
+            set => m_subscriptionInfo.UseMillisecondResolution = value;
         }
 
         /// <summary>
         /// Gets or sets start buffer time, in seconds, to add to start of outage window to ensure all missing data is recovered.
         /// </summary>
-        public double StartRecoveryBuffer
-        {
-            get;
-            set;
-        }
+        public double StartRecoveryBuffer { get; set; }
 
         /// <summary>
         /// Gets or sets end buffer time, in seconds, to add to end of outage window to ensure all missing data is recovered.
         /// </summary>
-        public double EndRecoveryBuffer
-        {
-            get;
-            set;
-        }
+        public double EndRecoveryBuffer { get; set; }
 
         /// <summary>
         /// Gets or sets any additional constraint parameters that will be supplied to adapters in temporal
@@ -488,14 +435,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public string ConstraintParameters
         {
-            get
-            {
-                return m_subscriptionInfo.ConstraintParameters;
-            }
-            set
-            {
-                m_subscriptionInfo.ConstraintParameters = value;
-            }
+            get => m_subscriptionInfo.ConstraintParameters;
+            set => m_subscriptionInfo.ConstraintParameters = value;
         }
 
         /// <summary>
@@ -503,18 +444,15 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 m_enabled = value;
 
-                if ((object)m_dataGapLogProcessor != null)
-                    m_dataGapLogProcessor.Enabled = m_enabled;
+                if (DataGapLogProcessor is not null)
+                    DataGapLogProcessor.Enabled = m_enabled;
 
-                if ((object)m_temporalSubscription != null)
+                if (m_temporalSubscription is not null)
                     m_temporalSubscription.Enabled = m_enabled;
             }
         }
@@ -522,24 +460,24 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        public bool IsDisposed => m_disposed;
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Gets reference to the data gap <see cref="OutageLog"/> for this <see cref="DataGapRecoverer"/>.
         /// </summary>
-        protected OutageLog DataGapLog => m_dataGapLog;
+        protected OutageLog DataGapLog { get; private set; }
 
         /// <summary>
         /// Gets reference to the data gap <see cref="OutageLogProcessor"/> for this <see cref="DataGapRecoverer"/>.
         /// </summary>
-        protected OutageLogProcessor DataGapLogProcessor => m_dataGapLogProcessor;
+        protected OutageLogProcessor DataGapLogProcessor { get; private set; }
 
         // Gets the name of the data gap recoverer.
         string IProvideStatus.Name
         {
             get
             {
-                if ((object)m_temporalSubscription != null)
+                if (m_temporalSubscription is not null)
                     return m_temporalSubscription.Name;
 
                 return GetType().Name;
@@ -549,7 +487,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the status of the temporal <see cref="DataSubscriber"/> used to query historical data.
         /// </summary>
-        public string TemporalSubscriptionStatus => (object)m_temporalSubscription != null ? m_temporalSubscription.Status : "undefined";
+        public string TemporalSubscriptionStatus => m_temporalSubscription is not null ? m_temporalSubscription.Status : "undefined";
 
         /// <summary>
         /// Gets the status of this <see cref="DataGapRecoverer"/>.
@@ -558,7 +496,7 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.AppendFormat(" Data recovery start delay: {0}", RecoveryStartDelay.ToString(3));
                 status.AppendLine();
@@ -585,13 +523,13 @@ namespace GSF.TimeSeries.Transport
 
                 Outage currentDataGap = m_currentDataGap;
 
-                if ((object)currentDataGap != null)
+                if (currentDataGap is not null)
                 {
                     status.AppendFormat("      Currently recovering: {0};{1}", currentDataGap.Start.ToString(OutageLog.DateTimeFormat), currentDataGap.End.ToString(OutageLog.DateTimeFormat));
                     status.AppendLine();
                 }
 
-                if ((object)m_temporalSubscription != null)
+                if (m_temporalSubscription is not null)
                 {
                     status.AppendLine();
                     status.AppendLine("Data Gap Temporal Subscription Status".CenterText(50));
@@ -599,12 +537,12 @@ namespace GSF.TimeSeries.Transport
                     status.AppendFormat(m_temporalSubscription.Status);
                 }
 
-                if ((object)m_dataGapLog != null)
+                if (DataGapLog is not null)
                 {
                     status.AppendLine();
                     status.AppendLine("Data Gap Log Status".CenterText(50));
                     status.AppendLine("-------------------".CenterText(50));
-                    status.AppendFormat(m_dataGapLog.Status);
+                    status.AppendFormat(DataGapLog.Status);
                 }
 
                 return status.ToString();
@@ -630,13 +568,13 @@ namespace GSF.TimeSeries.Transport
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (!IsDisposed)
             {
                 try
                 {
                     if (disposing)
                     {
-                        if ((object)m_dataGapRecoveryCompleted != null)
+                        if (m_dataGapRecoveryCompleted is not null)
                         {
                             // Signal any waiting threads
                             m_abnormalTermination = true;
@@ -644,26 +582,26 @@ namespace GSF.TimeSeries.Transport
                             m_dataGapRecoveryCompleted.Dispose();
                         }
 
-                        if ((object)m_dataStreamMonitor != null)
+                        if (m_dataStreamMonitor is not null)
                         {
                             m_dataStreamMonitor.Elapsed -= DataStreamMonitor_Elapsed;
                             m_dataStreamMonitor.Dispose();
                             m_dataStreamMonitor = null;
                         }
 
-                        if ((object)m_dataGapLogProcessor != null)
+                        if (DataGapLogProcessor is not null)
                         {
-                            m_dataGapLogProcessor.Dispose();
-                            m_dataGapLogProcessor = null;
+                            DataGapLogProcessor.Dispose();
+                            DataGapLogProcessor = null;
                         }
 
-                        if ((object)m_dataGapLog != null)
+                        if (DataGapLog is not null)
                         {
-                            m_dataGapLog.ProcessException -= Common_ProcessException;
-                            m_dataGapLog = null;
+                            DataGapLog.ProcessException -= Common_ProcessException;
+                            DataGapLog = null;
                         }
 
-                        if ((object)m_temporalSubscription != null)
+                        if (m_temporalSubscription is not null)
                         {
                             m_temporalSubscription.StatusMessage -= Common_StatusMessage;
                             m_temporalSubscription.ProcessException -= Common_ProcessException;
@@ -678,9 +616,9 @@ namespace GSF.TimeSeries.Transport
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    IsDisposed = true;  // Prevent duplicate dispose.
 
-                    if ((object)Disposed != null)
+                    if ((object)Disposed is not null)
                         Disposed(this, EventArgs.Empty);
                 }
             }
@@ -691,18 +629,15 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public void Initialize()
         {
-            if (m_disposed)
+            if (IsDisposed)
                 throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot initialize.");
 
             Dictionary<string, string> settings = m_connectionString.ToNonNullString().ParseKeyValuePairs();
-            string setting;
-            double timeInterval;
-            int processingInterval;
 
-            if (settings.TryGetValue("sourceConnectionName", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue("sourceConnectionName", out string setting) && !string.IsNullOrWhiteSpace(setting))
                 m_sourceConnectionName = setting;
 
-            if (settings.TryGetValue("recoveryStartDelay", out setting) && double.TryParse(setting, out timeInterval))
+            if (settings.TryGetValue("recoveryStartDelay", out setting) && double.TryParse(setting, out double timeInterval))
                 RecoveryStartDelay = timeInterval;
 
             if (settings.TryGetValue("dataMonitoringInterval", out setting) && double.TryParse(setting, out timeInterval))
@@ -717,7 +652,7 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("filterExpression", out setting) && !string.IsNullOrWhiteSpace(setting))
                 FilterExpression = setting;
 
-            if (settings.TryGetValue("recoveryProcessingInterval", out setting) && int.TryParse(setting, out processingInterval))
+            if (settings.TryGetValue("recoveryProcessingInterval", out setting) && int.TryParse(setting, out int processingInterval))
                 RecoveryProcessingInterval = processingInterval;
 
             if (settings.TryGetValue("useMillisecondResolution", out setting))
@@ -757,13 +692,13 @@ namespace GSF.TimeSeries.Transport
             m_temporalSubscription.Initialize();
 
             // Setup data gap outage log to persist unprocessed outages between class life-cycles
-            m_dataGapLog = new OutageLog();
-            m_dataGapLog.FileName = GetLoggingPath(m_sourceConnectionName + "_OutageLog.txt");
-            m_dataGapLog.ProcessException += Common_ProcessException;
-            m_dataGapLog.Initialize();
+            DataGapLog = new OutageLog();
+            DataGapLog.FileName = GetLoggingPath(m_sourceConnectionName + "_OutageLog.txt");
+            DataGapLog.ProcessException += Common_ProcessException;
+            DataGapLog.Initialize();
 
             // Setup data gap processor to process items one at a time, a 5-second minimum period is established between each gap processing
-            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * 1000.0D)));
+            DataGapLogProcessor = new OutageLogProcessor(DataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * 1000.0D)));
         }
 
         /// <summary>
@@ -779,10 +714,10 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         public bool LogDataGap(DateTimeOffset startTime, DateTimeOffset endTime, bool forceLog = false)
         {
-            if (m_disposed)
+            if (IsDisposed)
                 throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot log data gap for processing.");
 
-            if ((object)m_dataGapLog == null)
+            if (DataGapLog is null)
                 throw new InvalidOperationException("Data gap recoverer has not been initialized. Cannot log data gap for processing.");
 
             OnStatusMessage(MessageLevel.Info, $"Data gap recovery requested for period \"{startTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\" - \"{endTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\"...");
@@ -793,7 +728,7 @@ namespace GSF.TimeSeries.Transport
             if (forceLog || dataGapSpan >= m_minimumRecoverySpan && dataGapSpan <= m_maximumRecoverySpan)
             {
                 // Since local clock may float we add some buffer around recovery window
-                m_dataGapLog.Add(new Outage(startTime.AddSeconds(StartRecoveryBuffer), endTime.AddSeconds(EndRecoveryBuffer)));
+                DataGapLog.Add(new Outage(startTime.AddSeconds(StartRecoveryBuffer), endTime.AddSeconds(EndRecoveryBuffer)));
                 return true;
             }
 
@@ -824,14 +759,14 @@ namespace GSF.TimeSeries.Transport
         /// <returns>True if the data gap was successfully removed; false otherwise.</returns>
         public bool RemoveDataGap(DateTimeOffset startTime, DateTimeOffset endTime)
         {
-            if (m_disposed)
+            if (IsDisposed)
                 throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot log data gap for processing.");
 
-            if ((object)m_dataGapLog == null)
+            if (DataGapLog is null)
                 throw new InvalidOperationException("Data gap recoverer has not been initialized. Cannot log data gap for processing.");
 
             // Since local clock may float we add some buffer around recovery window
-            return m_dataGapLog.Remove(new Outage(startTime, endTime));
+            return DataGapLog.Remove(new Outage(startTime, endTime));
         }
 
         /// <summary>
@@ -840,8 +775,8 @@ namespace GSF.TimeSeries.Transport
         /// <returns>The contents of the outage log.</returns>
         public string DumpOutageLog()
         {
-            List<Outage> outages = m_dataGapLog.Outages;
-            StringBuilder dump = new StringBuilder();
+            List<Outage> outages = DataGapLog.Outages;
+            StringBuilder dump = new();
 
             foreach (Outage outage in outages)
                 dump.AppendLine($"{outage.Start.ToString(OutageLog.DateTimeFormat)};{outage.End.ToString(OutageLog.DateTimeFormat)}");
@@ -900,7 +835,7 @@ namespace GSF.TimeSeries.Transport
                 dataGap = new Outage(new DateTime(GSF.Common.Max((Ticks)dataGap.Start.Ticks, m_mostRecentRecoveredTime - (m_subscriptionInfo.UseMillisecondResolution ? Ticks.PerMillisecond : 1L)), DateTimeKind.Utc), dataGap.End);
 
                 // Re-insert adjusted data gap at the top of the processing queue
-                m_dataGapLog.Add(dataGap);
+                DataGapLog.Add(dataGap);
 
                 if (m_measurementsRecoveredForDataGap == 0)
                     OnStatusMessage(MessageLevel.Warning, $"Failed to establish temporal session. Data recovery for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\" will be re-attempted.");
@@ -1012,7 +947,7 @@ namespace GSF.TimeSeries.Transport
                 m_dataStreamMonitor.Enabled = false;
 
                 // If temporal subscription is currently enabled - connection termination was not expected
-                if ((object)m_temporalSubscription != null)
+                if (m_temporalSubscription is not null)
                     m_abnormalTermination = m_temporalSubscription.Enabled;
             }
             finally

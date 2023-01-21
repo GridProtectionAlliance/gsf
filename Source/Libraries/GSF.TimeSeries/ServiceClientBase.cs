@@ -134,7 +134,7 @@ namespace GSF.TimeSeries
                 remotingClientSettings = null;
             }
 
-            if ((object)remotingClientSettings != null)
+            if (remotingClientSettings is not null)
             {
                 if (remotingClientSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
                     m_remotingClient = InitializeTlsClient();
@@ -182,7 +182,7 @@ namespace GSF.TimeSeries
         public virtual void Start(string[] args)
         {
             string userInput = string.Empty;
-            Arguments arguments = new Arguments(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
+            Arguments arguments = new(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
 
             // Handle external service restart requests
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
@@ -220,7 +220,7 @@ namespace GSF.TimeSeries
                     // Attempt to access service controller for the specified Windows service
                     ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, StringComparison.OrdinalIgnoreCase) == 0);
 
-                    if (serviceController != null)
+                    if (serviceController is not null)
                     {
                         try
                         {
@@ -282,7 +282,7 @@ namespace GSF.TimeSeries
                     }
 
                     // Attempt to restart Windows service...
-                    if (serviceController != null)
+                    if (serviceController is not null)
                     {
                         try
                         {
@@ -343,7 +343,7 @@ namespace GSF.TimeSeries
             long lastConnectAttempt = 0;
 
             // Connect to service and send commands.
-            while ((object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+            while ((object)userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
@@ -376,8 +376,8 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        StringBuilder username = new StringBuilder();
-                        StringBuilder password = new StringBuilder();
+                        StringBuilder username = new();
+                        StringBuilder password = new();
 
                         // If there has been an authentication failure,
                         // prompt the user for new credentials
@@ -386,11 +386,10 @@ namespace GSF.TimeSeries
                         try
                         {
                             // Attempt to set network credentials used when attempting AD authentication
-                            using (UserInfo userInfo = new UserInfo(username.ToString()))
-                            {
-                                userInfo.Initialize();
-                                SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password.ToString()));
-                            }
+                            using UserInfo userInfo = new(username.ToString());
+
+                            userInfo.Initialize();
+                            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password.ToString()));
                         }
                         catch (Exception ex)
                         {
@@ -404,7 +403,7 @@ namespace GSF.TimeSeries
 
                     timeoutCancellationToken.Cancel();
 
-                    while (m_authenticated && m_clientHelper.Enabled && (object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                    while (m_authenticated && m_clientHelper.Enabled && (object)userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                     {
                         // Wait for a command from the user. 
                         userInput = System.Console.ReadLine()?.Trim();
@@ -501,7 +500,7 @@ namespace GSF.TimeSeries
 
         private TcpClient InitializeTcpClient()
         {
-            TcpClient remotingClient = new TcpClient
+            TcpClient remotingClient = new()
             {
                 ConnectionString = "Server=localhost:8500",
                 IgnoreInvalidCredentials = true,
@@ -517,7 +516,7 @@ namespace GSF.TimeSeries
 
         private TlsClient InitializeTlsClient()
         {
-            TlsClient remotingClient = new TlsClient
+            TlsClient remotingClient = new()
             {
                 ConnectionString = "Server=localhost:8500",
                 IgnoreInvalidCredentials = true,
@@ -573,7 +572,7 @@ namespace GSF.TimeSeries
 
         private void PromptForCredentials(StringBuilder username, StringBuilder password)
         {
-            StringBuilder prompt = new StringBuilder();
+            StringBuilder prompt = new();
 
             lock (m_displayLock)
             {
@@ -640,14 +639,14 @@ namespace GSF.TimeSeries
                 if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
                 {
                     // Create an exception and do not check policy for localhost
-                    IPHostEntry localhost = Dns.GetHostEntry("localhost");
+                    IPHostEntry localhost = Dns.GetHostEntry(nameof(localhost));
 
                     if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
                         return true;
                 }
 
                 // Not connected to localhost, so use the policy checker
-                SimplePolicyChecker policyChecker = new SimplePolicyChecker
+                SimplePolicyChecker policyChecker = new()
                 {
                     ValidPolicyErrors = remotingClient.ValidPolicyErrors,
                     ValidChainFlags = remotingClient.ValidChainFlags
@@ -661,12 +660,12 @@ namespace GSF.TimeSeries
 
         private void DisplayHelp()
         {
-            StringBuilder help = new StringBuilder();
+            StringBuilder help = new();
 
             help.AppendFormat("Commands supported by {0}:", AssemblyInfo.EntryAssembly.Name);
             help.AppendLine();
             help.AppendLine();
-            help.Append("Command".PadRight(20));
+            help.Append(nameof(Command).PadRight(20));
             help.Append(" ");
             help.Append("Description".PadRight(55));
             help.AppendLine();
@@ -722,18 +721,13 @@ namespace GSF.TimeSeries
             lock (m_displayLock)
             {
                 // Output status updates from the service to the console window.
-                switch (e.Argument1)
+                System.Console.ForegroundColor = e.Argument1 switch
                 {
-                    case UpdateType.Alarm:
-                        System.Console.ForegroundColor = ConsoleColor.Red;
-                        break;
-                    case UpdateType.Information:
-                        System.Console.ForegroundColor = m_originalFgColor;
-                        break;
-                    case UpdateType.Warning:
-                        System.Console.ForegroundColor = ConsoleColor.Yellow;
-                        break;
-                }
+                    UpdateType.Alarm => ConsoleColor.Red,
+                    UpdateType.Information => m_originalFgColor,
+                    UpdateType.Warning => ConsoleColor.Yellow,
+                    _ => System.Console.ForegroundColor
+                };
 
                 Write(e.Argument2);
                 System.Console.ForegroundColor = m_originalFgColor;

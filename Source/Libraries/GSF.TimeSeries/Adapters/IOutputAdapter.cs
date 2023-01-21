@@ -54,20 +54,12 @@ namespace GSF.TimeSeries.Adapters
         /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
-        string[] InputSourceIDs
-        {
-            get;
-            set;
-        }
+        string[] InputSourceIDs { get; set; }
 
         /// <summary>
         /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        MeasurementKey[] RequestedInputMeasurementKeys
-        {
-            get;
-            set;
-        }
+        MeasurementKey[] RequestedInputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Returns a flag that determines if measurements sent to this <see cref="IOutputAdapter"/> are
@@ -78,10 +70,7 @@ namespace GSF.TimeSeries.Adapters
         /// many measurements have been archived per minute. Historians would normally set this property
         /// to <c>true</c>; other custom exports would set this property to <c>false</c>.
         /// </remarks>
-        bool OutputIsForArchive
-        {
-            get;
-        }
+        bool OutputIsForArchive { get; }
 
         /// <summary>
         /// Queues measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.

@@ -62,11 +62,9 @@ namespace GSF.TimeSeries.Adapters
 
         // Fields
         private List<string> m_outputSourceIDs;
-        private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private readonly LongSynchronizedOperation m_connectionOperation;
         private SharedTimer m_connectionTimer;
         private string m_connectionInfo;
-        private bool m_isConnected;
         private bool m_disposed;
 
         #endregion
@@ -103,16 +101,10 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string[] OutputSourceIDs
         {
-            get
-            {
-                if ((object)m_outputSourceIDs == null)
-                    return null;
-
-                return m_outputSourceIDs.ToArray();
-            }
+            get => m_outputSourceIDs?.ToArray();
             set
             {
-                if ((object)value == null)
+                if (value is null)
                 {
                     m_outputSourceIDs = null;
                 }
@@ -130,32 +122,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
-        {
-            get
-            {
-                return m_requestedOutputMeasurementKeys;
-            }
-            set
-            {
-                m_requestedOutputMeasurementKeys = value;
-            }
-        }
+        public virtual MeasurementKey[] RequestedOutputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets flag that determines if <see cref="InputAdapterBase"/> is connected.
         /// </summary>
-        public virtual bool IsConnected
-        {
-            get
-            {
-                return m_isConnected;
-            }
-            protected set
-            {
-                m_isConnected = value;
-            }
-        }
+        public virtual bool IsConnected { get; protected set; }
 
         /// <summary>
         /// Gets flag that determines if the data input connects asynchronously.
@@ -163,10 +135,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Derived classes should return true when data input source is connects asynchronously, otherwise return false.
         /// </remarks>
-        protected abstract bool UseAsyncConnect
-        {
-            get;
-        }
+        protected abstract bool UseAsyncConnect { get; }
 
         /// <summary>
         /// Gets or sets the connection attempt interval, in milliseconds, for the data input source.
@@ -175,14 +144,14 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                if (m_connectionTimer != null)
+                if (m_connectionTimer is not null)
                     return m_connectionTimer.Interval;
 
                 return 2000.0D;
             }
             set
             {
-                if (m_connectionTimer != null)
+                if (m_connectionTimer is not null)
                     m_connectionTimer.Interval = (int)value;
             }
         }
@@ -199,20 +168,17 @@ namespace GSF.TimeSeries.Adapters
             {
                 const int MaxMeasurementsToShow = 10;
 
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
 
-                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                if (RequestedOutputMeasurementKeys is not null && RequestedOutputMeasurementKeys.Length > 0)
                 {
-                    status.AppendFormat("     Requested output keys: {0:N0} defined measurements", RequestedOutputMeasurementKeys.Length);
-                    status.AppendLine();
+                    status.AppendLine($"     Requested output keys: {RequestedOutputMeasurementKeys.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
                         status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
 
                     if (RequestedOutputMeasurementKeys.Length > MaxMeasurementsToShow)
                         status.AppendLine("...".CenterText(50));
@@ -220,10 +186,8 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("    Connection established: {0}", IsConnected);
-                status.AppendLine();
-                status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
-                status.AppendLine();
+                status.AppendLine($"    Connection established: {IsConnected}");
+                status.AppendLine($"   Asynchronous connection: {UseAsyncConnect}");
 
                 return status.ToString();
             }
@@ -237,14 +201,8 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public new virtual MeasurementKey[] InputMeasurementKeys
         {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
-            set
-            {
-                base.InputMeasurementKeys = value;
-            }
+            get => base.InputMeasurementKeys;
+            set => base.InputMeasurementKeys = value;
         }
 
         /// <summary>
@@ -262,25 +220,25 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                if (m_connectionTimer is not null)
                 {
-                    if (disposing)
-                    {
-                        if (m_connectionTimer != null)
-                        {
-                            m_connectionTimer.Elapsed -= m_connectionTimer_Elapsed;
-                            m_connectionTimer.Dispose();
-                        }
-                        m_connectionTimer = null;
-                    }
+                    m_connectionTimer.Elapsed -= m_connectionTimer_Elapsed;
+                    m_connectionTimer.Dispose();
                 }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                m_connectionTimer = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -292,10 +250,9 @@ namespace GSF.TimeSeries.Adapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Load optional parameters
-            if (settings.TryGetValue("outputSourceIDs", out setting) || settings.TryGetValue("sourceids", out setting))
+            if (settings.TryGetValue("outputSourceIDs", out string setting) || settings.TryGetValue("sourceids", out setting))
                 OutputSourceIDs = setting.Split(',');
             else
                 OutputSourceIDs = null;
@@ -312,7 +269,7 @@ namespace GSF.TimeSeries.Adapters
             base.Start();
 
             // Start the connection cycle
-            if (m_connectionTimer != null)
+            if (m_connectionTimer is not null)
                 m_connectionTimer.Enabled = true;
         }
 
@@ -347,7 +304,7 @@ namespace GSF.TimeSeries.Adapters
                 bool performedDisconnect = Enabled;
 
                 // Stop the connection cycle
-                if ((object)m_connectionTimer != null)
+                if (m_connectionTimer is not null)
                     m_connectionTimer.Enabled = false;
 
                 base.Stop();
@@ -400,7 +357,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(NewMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -416,7 +373,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ProcessingComplete)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -430,20 +387,19 @@ namespace GSF.TimeSeries.Adapters
                 m_connectionInfo = ConnectionInfo;
 
                 // So long as user hasn't requested to stop, attempt connection
-                if (Enabled)
-                {
-                    OnStatusMessage(MessageLevel.Info, $"Attempting connection{(m_connectionInfo is null ? "" : $" to {m_connectionInfo}")}...") ;
+                if (!Enabled)
+                    return;
 
-                    // Attempt connection to data source
-                    AttemptConnection();
+                OnStatusMessage(MessageLevel.Info, $"Attempting connection{(m_connectionInfo is null ? "" : $" to {m_connectionInfo}")}...") ;
 
-                    // Try to update connection info after successful connection attempt in case info is now available
-                    if (m_connectionInfo is null)
-                        m_connectionInfo = ConnectionInfo;
+                // Attempt connection to data source
+                AttemptConnection();
 
-                    if (!UseAsyncConnect)
-                        OnConnected();
-                }
+                // Try to update connection info after successful connection attempt in case info is now available
+                m_connectionInfo ??= ConnectionInfo;
+
+                if (!UseAsyncConnect)
+                    OnConnected();
             }
             catch (Exception ex)
             {
@@ -456,10 +412,8 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
-        {
+        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e) => 
             m_connectionOperation.TryRunOnceAsync();
-        }
 
         #endregion
     }

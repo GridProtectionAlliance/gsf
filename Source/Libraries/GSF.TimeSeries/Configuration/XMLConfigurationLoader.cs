@@ -37,7 +37,6 @@ namespace GSF.TimeSeries.Configuration
         #region [ Members ]
 
         // Fields
-        private string m_filePath;
 
         #endregion
 
@@ -46,17 +45,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets or sets the path to the XML file.
         /// </summary>
-        public string FilePath
-        {
-            get
-            {
-                return m_filePath;
-            }
-            set
-            {
-                m_filePath = value;
-            }
-        }
+        public string FilePath { get; set; }
 
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
@@ -73,12 +62,10 @@ namespace GSF.TimeSeries.Configuration
         /// <returns>The configuration data set.</returns>
         public override DataSet Load()
         {
-            DataSet configuration;
+            OnStatusMessage(MessageLevel.Info, $"Loading XML based configuration from \"{FilePath}\".");
 
-            OnStatusMessage(MessageLevel.Info, $"Loading XML based configuration from \"{m_filePath}\".");
-
-            configuration = new DataSet();
-            configuration.ReadXml(m_filePath);
+            DataSet configuration = new();
+            configuration.ReadXml(FilePath);
 
             OnStatusMessage(MessageLevel.Info, "XML based configuration successfully loaded.");
 

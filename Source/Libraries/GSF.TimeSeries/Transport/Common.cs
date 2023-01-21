@@ -35,7 +35,6 @@ namespace GSF.TimeSeries.Transport
     public static class Common
     {
         // Flag that determines if managed encryption wrappers should be used over FIPS-compliant algorithms.
-        private static readonly bool s_useManagedEncryption;
 
         // Static Constructor
         static Common()
@@ -47,20 +46,14 @@ namespace GSF.TimeSeries.Transport
             const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
 
             // Determine if the operating system configuration to set to use FIPS-compliant algorithms
-            s_useManagedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
+            UseManagedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
 #endif
         }
 
         /// <summary>
         /// Gets flag that determines if managed encryption should be used.
         /// </summary>
-        public static bool UseManagedEncryption
-        {
-            get
-            {
-                return s_useManagedEncryption;
-            }
-        }
+        public static bool UseManagedEncryption { get; }
 
         /// <summary>
         /// Gets an AES symmetric algorithm to use for encryption or decryption.
@@ -71,7 +64,7 @@ namespace GSF.TimeSeries.Transport
             {
                 Aes symmetricAlgorithm;
 
-                if (s_useManagedEncryption)
+                if (UseManagedEncryption)
                     symmetricAlgorithm = new AesManaged();
                 else
                     symmetricAlgorithm = new AesCryptoServiceProvider();

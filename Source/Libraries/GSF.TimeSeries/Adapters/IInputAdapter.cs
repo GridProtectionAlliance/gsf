@@ -57,19 +57,11 @@ namespace GSF.TimeSeries.Adapters
         /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
-        string[] OutputSourceIDs
-        {
-            get;
-            set;
-        }
+        string[] OutputSourceIDs { get; set; }
 
         /// <summary>
         /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        MeasurementKey[] RequestedOutputMeasurementKeys
-        {
-            get;
-            set;
-        }
+        MeasurementKey[] RequestedOutputMeasurementKeys { get; set; }
     }
 }

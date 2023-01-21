@@ -111,8 +111,6 @@ namespace GSF.TimeSeries
 
         // Fields
         private IaonSession m_iaonSession;
-        private string m_nodeIDQueryString;
-        private ConfigurationType m_configurationType;
         private IConfigurationLoader m_configurationLoader;
         private BinaryFileConfigurationLoader m_binaryCacheConfigurationLoader;
         private XMLConfigurationLoader m_xmlCacheConfigurationLoader;
@@ -197,6 +195,11 @@ namespace GSF.TimeSeries
         protected OutputAdapterCollection OutputAdapters => m_iaonSession.OutputAdapters;
 
         /// <summary>
+        /// Gets reference to the <see cref="FilterAdapterCollection"/>.
+        /// </summary>
+        protected FilterAdapterCollection FilterAdapters => m_iaonSession.FilterAdapters;
+
+        /// <summary>
         /// Gets the current node ID.
         /// </summary>
         protected Guid NodeID => m_iaonSession.NodeID;
@@ -204,7 +207,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the current node ID formatted for use in a SQL query string based on <see cref="ServiceHostBase.ConfigurationType"/>.
         /// </summary>
-        protected string NodeIDQueryString => m_nodeIDQueryString;
+        protected string NodeIDQueryString { get; private set; }
 
         /// <summary>
         /// Gets the currently loaded system configuration <see cref="DataSet"/>.
@@ -214,7 +217,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the defined system <see cref="GSF.TimeSeries.ConfigurationType"/>.
         /// </summary>
-        protected ConfigurationType ConfigurationType => m_configurationType;
+        protected ConfigurationType ConfigurationType { get; private set; }
 
         #endregion
 
@@ -260,8 +263,8 @@ namespace GSF.TimeSeries
             string defaultLogPath = string.Format("{0}{1}Logs{1}", servicePath, Path.DirectorySeparatorChar);
 
             // System settings
-            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-            systemSettings.Add("ConfigurationType", "Database", "Specifies type of configuration: Database, WebService, BinaryFile or XmlFile");
+            CategorizedSettingsElementCollection systemSettings = configFile.Settings[nameof(systemSettings)];
+            systemSettings.Add(nameof(ConfigurationType), "Database", "Specifies type of configuration: Database, WebService, BinaryFile or XmlFile");
             systemSettings.Add("ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=IaonHost.mdb", "Configuration database connection string");
             systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter", "Configuration database ADO.NET data provider assembly type creation string");
             systemSettings.Add("ConfigurationCachePath", cachePath, "Defines the path used to cache serialized configurations");
@@ -379,7 +382,7 @@ namespace GSF.TimeSeries
             }
 
             // Initialize system settings
-            m_configurationType = systemSettings["ConfigurationType"].ValueAs<ConfigurationType>();
+            ConfigurationType = systemSettings[nameof(ConfigurationType)].ValueAs<ConfigurationType>();
             m_cachedXmlConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             m_cachedBinaryConfigurationFile = FilePath.AddPathSuffix(cachePath) + FilePath.GetFileNameWithoutExtension(m_cachedXmlConfigurationFile) + ".bin";
             m_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs(DefaultConfigurationBackups);
@@ -408,46 +411,18 @@ namespace GSF.TimeSeries
             }
 
             // Define guid with query string delimiters according to database needs
-            if (string.IsNullOrWhiteSpace(m_nodeIDQueryString))
-                m_nodeIDQueryString = "'" + m_iaonSession.NodeID + "'";
+            if (string.IsNullOrWhiteSpace(NodeIDQueryString))
+                NodeIDQueryString = "'" + m_iaonSession.NodeID + "'";
 
             // Set up the configuration loader
-            switch (m_configurationType)
+            m_configurationLoader = ConfigurationType switch
             {
-                case ConfigurationType.Database:
-                    m_configurationLoader = new DatabaseConfigurationLoader
-                    {
-                        ConnectionString = systemSettings["ConnectionString"].Value,
-                        DataProviderString = systemSettings["DataProviderString"].Value,
-                        NodeIDQueryString = m_nodeIDQueryString
-                    };
-
-                    break;
-
-                case ConfigurationType.WebService:
-                    m_configurationLoader = new WebServiceConfigurationLoader
-                    {
-                        URI = systemSettings["ConnectionString"].Value
-                    };
-
-                    break;
-
-                case ConfigurationType.BinaryFile:
-                    m_configurationLoader = new BinaryFileConfigurationLoader
-                    {
-                        FilePath = systemSettings["ConnectionString"].Value
-                    };
-
-                    break;
-
-                case ConfigurationType.XmlFile:
-                    m_configurationLoader = new XMLConfigurationLoader
-                    {
-                        FilePath = systemSettings["ConnectionString"].Value
-                    };
-
-                    break;
-            }
+                ConfigurationType.Database => new DatabaseConfigurationLoader { ConnectionString = systemSettings["ConnectionString"].Value, DataProviderString = systemSettings["DataProviderString"].Value, NodeIDQueryString = NodeIDQueryString },
+                ConfigurationType.WebService => new WebServiceConfigurationLoader { URI = systemSettings["ConnectionString"].Value },
+                ConfigurationType.BinaryFile => new BinaryFileConfigurationLoader { FilePath = systemSettings["ConnectionString"].Value },
+                ConfigurationType.XmlFile => new XMLConfigurationLoader { FilePath = systemSettings["ConnectionString"].Value },
+                _ => m_configurationLoader
+            };
 
             m_binaryCacheConfigurationLoader = new BinaryFileConfigurationLoader
             {
@@ -459,9 +434,9 @@ namespace GSF.TimeSeries
                 FilePath = m_cachedXmlConfigurationFile
             };
 
-            m_configurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
-            m_binaryCacheConfigurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
-            m_xmlCacheConfigurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
+            m_configurationLoader.StatusMessage += (_, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
+            m_binaryCacheConfigurationLoader.StatusMessage += (_, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
+            m_xmlCacheConfigurationLoader.StatusMessage += (_, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
 
             m_configurationLoader.ProcessException += ConfigurationLoader_ProcessException;
             m_binaryCacheConfigurationLoader.ProcessException += ConfigurationLoader_ProcessException;
@@ -494,7 +469,7 @@ namespace GSF.TimeSeries
         protected virtual void ServiceStartedHandler(object sender, EventArgs e)
         {
             // Define a line of asterisks for emphasis
-            string stars = new string('*', 79);
+            string stars = new('*', 79);
 
             // Get current process memory usage
             long processMemory = GSF.Common.GetProcessMemory();
@@ -569,6 +544,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.InputAdapters);
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.ActionAdapters);
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.OutputAdapters);
+            m_serviceHelper.ServiceComponents.Add(m_iaonSession.FilterAdapters);
 
             // Define remote client requests (i.e., console commands)
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("List", "Displays status for specified adapter or collection", ListRequestHandler, new[] { "ls", "dir" }));
@@ -609,7 +585,7 @@ namespace GSF.TimeSeries
         protected virtual void ServiceStoppingHandler(object sender, EventArgs e)
         {
             // Dispose system health exporter
-            if (!(m_healthExporter is null))
+            if (m_healthExporter is not null)
             {
                 m_healthExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_healthExporter);
@@ -620,7 +596,7 @@ namespace GSF.TimeSeries
             }
 
             // Dispose system status exporter
-            if (!(m_statusExporter is null))
+            if (m_statusExporter is not null)
             {
                 m_statusExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_statusExporter);
@@ -631,7 +607,7 @@ namespace GSF.TimeSeries
             }
 
             // Dispose reload config queue
-            if (!(m_reloadConfigQueue is null))
+            if (m_reloadConfigQueue is not null)
             {
                 m_reloadConfigQueue.ProcessException -= m_iaonSession.ProcessExceptionHandler;
                 m_reloadConfigQueue.Dispose();
@@ -639,18 +615,19 @@ namespace GSF.TimeSeries
             }
 
             // Dispose reporting processes
-            if (!(m_reportingProcesses is null))
+            if (m_reportingProcesses is not null)
             {
                 m_serviceHelper.ServiceComponents.Remove(m_reportingProcesses);
                 m_reportingProcesses = null;
             }
 
             // Dispose Iaon session
-            if (!(m_iaonSession is null))
+            if (m_iaonSession is not null)
             {
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.OutputAdapters);
+                m_serviceHelper.ServiceComponents.Remove(m_iaonSession.FilterAdapters);
 
                 m_iaonSession.Dispose();
                 m_iaonSession.StatusMessage -= StatusMessageHandler;
@@ -660,7 +637,7 @@ namespace GSF.TimeSeries
             }
 
             // Dispose of run-time log
-            if (!(m_runTimeLog is null))
+            if (m_runTimeLog is not null)
             {
                 m_serviceHelper.ServiceComponents.Remove(m_runTimeLog);
                 m_runTimeLog.ProcessException -= ProcessExceptionHandler;
@@ -674,19 +651,19 @@ namespace GSF.TimeSeries
             m_serviceHelper.UpdatedStatus -= UpdatedStatusHandler;
             m_serviceHelper.LoggedException -= LoggedExceptionHandler;
 
-            if (!(m_serviceHelper.StatusLog is null))
+            if (m_serviceHelper.StatusLog is not null)
             {
                 m_serviceHelper.StatusLog.Flush();
                 m_serviceHelper.StatusLog.LogException -= StatusLogExceptionHandler;
             }
 
-            if (!(m_serviceHelper.ErrorLogger?.ErrorLog is null))
+            if (m_serviceHelper.ErrorLogger?.ErrorLog is not null)
             {
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= ErrorLogExceptionHandler;
             }
 
-            if (!(m_serviceHelper.ConnectionErrorLogger?.ErrorLog is null))
+            if (m_serviceHelper.ConnectionErrorLogger?.ErrorLog is not null)
             {
                 m_serviceHelper.ConnectionErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException -= ConnectionErrorLogExceptionHandler;
@@ -720,7 +697,7 @@ namespace GSF.TimeSeries
             try
             {
                 ConfigurationFile configurationFile = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection remotingServer = configurationFile.Settings["remotingServer"];
+                CategorizedSettingsElementCollection remotingServer = configurationFile.Settings[nameof(remotingServer)];
                 X509Certificate2 certificate = null;
 
                 remotingServer.Add("CertificateFile", $"{ServiceName}.cer", "Path to the local certificate used by this server for authentication.");
@@ -834,14 +811,12 @@ namespace GSF.TimeSeries
 
         private TcpServer InitializeTcpServer()
         {
-            TcpServer remotingServer;
-
-            remotingServer = new TcpServer();
+            TcpServer remotingServer = new();
             remotingServer.ConfigurationString = "Port=8500";
             remotingServer.IgnoreInvalidCredentials = true;
             remotingServer.PayloadAware = true;
             remotingServer.PersistSettings = true;
-            remotingServer.SettingsCategory = "RemotingServer";
+            remotingServer.SettingsCategory = nameof(RemotingServer);
             remotingServer.Initialize();
 
             return remotingServer;
@@ -849,19 +824,17 @@ namespace GSF.TimeSeries
 
         private TlsServer InitializeTlsServer()
         {
-            TlsServer remotingServer;
-
-            remotingServer = new TlsServer();
+            TlsServer remotingServer = new();
             remotingServer.CertificateFile = "Internal.cer";
             remotingServer.ConfigurationString = "Port=8500";
             remotingServer.IgnoreInvalidCredentials = true;
             remotingServer.PayloadAware = true;
             remotingServer.PersistSettings = true;
-            remotingServer.SettingsCategory = "RemotingServer";
+            remotingServer.SettingsCategory = nameof(RemotingServer);
             remotingServer.TrustedCertificatesPath = $"Certs{Path.DirectorySeparatorChar}Remotes";
             remotingServer.Initialize();
 
-            remotingServer.RemoteCertificateValidationCallback = (o, certificate, chain, errors) => true;
+            remotingServer.RemoteCertificateValidationCallback = (_, _, _, _) => true;
 
             return remotingServer;
         }
@@ -921,13 +894,13 @@ namespace GSF.TimeSeries
             {
                 string typeInner = type;
 
-                if (type == m_configurationType.ToString())
+                if (type == ConfigurationType.ToString())
                 {
                     DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
                     configuration = GetConfigurationDataSet();
 
                     // Update data source on all adapters in all collections
-                    if (!(configuration is null))
+                    if (configuration is not null)
                         PropagateDataSource(configuration);
                 }
                 else if (type == "Augmented")
@@ -936,7 +909,7 @@ namespace GSF.TimeSeries
                     configuration = AugmentConfigurationDataSet(DataSource);
 
                     // Update data source on all adapters in all collections
-                    if (!(configuration is null))
+                    if (configuration is not null)
                         PropagateDataSource(configuration);
                 }
                 else if (type == "BinaryCache")
@@ -945,7 +918,7 @@ namespace GSF.TimeSeries
                     configuration = GetBinaryCachedConfigurationDataSet();
 
                     // Update data source on all adapters in all collections
-                    if (!(configuration is null))
+                    if (configuration is not null)
                         PropagateDataSource(configuration);
                 }
                 else if (type == "XmlCache")
@@ -954,7 +927,7 @@ namespace GSF.TimeSeries
                     configuration = GetXMLCachedConfigurationDataSet();
 
                     // Update data source on all adapters in all collections
-                    if (!(configuration is null))
+                    if (configuration is not null)
                         PropagateDataSource(configuration);
                 }
                 else if (type == "Startup")
@@ -972,7 +945,7 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        callback(systemConfigurationLoaded || !(configuration is null));
+                        callback(systemConfigurationLoaded || configuration is not null);
                     }
                     catch (Exception ex)
                     {
@@ -1043,7 +1016,7 @@ namespace GSF.TimeSeries
                     // Get the current running configuration
                     configuration = DataSource;
 
-                    if (!(configuration is null))
+                    if (configuration is not null)
                     {
                         // Existing configuration is available so we attempt to augment that
                         DisplayStatusMessage("Attempting to augment existing configuration data set...", UpdateType.Information);
@@ -1055,7 +1028,7 @@ namespace GSF.TimeSeries
                         binaryCache = GetBinaryCachedConfigurationDataSet();
                         binaryCacheLoadAttempted = true;
 
-                        if (!(binaryCache is null))
+                        if (binaryCache is not null)
                         {
                             // Binary cached configuration is available so we attempt to augment that
                             DisplayStatusMessage("Attempting to augment binary cached configuration data set...", UpdateType.Information);
@@ -1067,7 +1040,7 @@ namespace GSF.TimeSeries
                             xmlCache = GetXMLCachedConfigurationDataSet();
                             xmlCacheLoadAttempted = true;
 
-                            if (!(xmlCache is null))
+                            if (xmlCache is not null)
                             {
                                 // XML cached configuration is available so we attempt to augment that
                                 DisplayStatusMessage("Attempting to augment XML cached configuration data set...", UpdateType.Information);
@@ -1077,12 +1050,9 @@ namespace GSF.TimeSeries
                     }
                 }
 
-                if (configuration is null)
-                {
-                    // Either we cannot augment configuration or augmentation failed,
-                    // so we attempt to load the whole configuration from the source
-                    configuration = GetConfigurationDataSet();
-                }
+                // Either we cannot augment configuration or augmentation failed,
+                // so we attempt to load the whole configuration from the source
+                configuration ??= GetConfigurationDataSet();
 
                 if (configuration is null)
                 {
@@ -1091,12 +1061,9 @@ namespace GSF.TimeSeries
                     configuration = binaryCacheLoadAttempted ? binaryCache : GetBinaryCachedConfigurationDataSet();
                 }
 
-                if (configuration is null)
-                {
-                    // If we even failed to load from the
-                    // binary cache, load from the XML cache
-                    configuration = xmlCacheLoadAttempted ? xmlCache : GetXMLCachedConfigurationDataSet();
-                }
+                // If we even failed to load from the
+                // binary cache, load from the XML cache
+                configuration ??= xmlCacheLoadAttempted ? xmlCache : GetXMLCachedConfigurationDataSet();
 
                 // Attempt to update data source on all adapters in all collections
                 if (configuration is null || !PropagateDataSource(configuration))
@@ -1119,16 +1086,9 @@ namespace GSF.TimeSeries
                 // database. In that case, we simply attempt to load the cached configuration and use that instead
                 DisplayStatusMessage("Failed to open a connection to the database. Falling back on cached configuration...", UpdateType.Warning);
 
-                if (configuration is null)
-                    configuration = GetBinaryCachedConfigurationDataSet();
+                configuration ??= GetBinaryCachedConfigurationDataSet() ?? GetXMLCachedConfigurationDataSet();
 
-                if (configuration is null)
-                    configuration = GetXMLCachedConfigurationDataSet();
-
-                if (!(configuration is null))
-                    return PropagateDataSource(configuration);
-
-                return false;
+                return configuration is not null && PropagateDataSource(configuration);
             }
             finally
             {
@@ -1144,7 +1104,7 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                DisplayStatusMessage("Failed to load {0} configuration due to exception: {1}", UpdateType.Warning, m_configurationType, ex.Message);
+                DisplayStatusMessage("Failed to load {0} configuration due to exception: {1}", UpdateType.Warning, ConfigurationType, ex.Message);
                 LogException(ex);
                 return null;
             }
@@ -1346,19 +1306,19 @@ namespace GSF.TimeSeries
                 if (!disposing)
                     return;
 
-                if (!(components is null))
+                if (components is not null)
                 {
                     components.Dispose();
                     components = null;
                 }
 
-                if (!(m_serviceHelper is null))
+                if (m_serviceHelper is not null)
                 {
                     m_serviceHelper.Dispose();
                     m_serviceHelper = null;
                 }
 
-                if (!(m_remotingServer is null))
+                if (m_remotingServer is not null)
                 {
                     m_remotingServer.Dispose();
                     m_remotingServer = null;
@@ -1400,8 +1360,8 @@ namespace GSF.TimeSeries
             }
             else
             {
-                ClientInfo clientInfo = new ClientInfo() {ClientID = clientID};
-                ClientRequestInfo clientRequestInfo = new ClientRequestInfo(clientInfo, request);
+                ClientInfo clientInfo = new() {ClientID = clientID};
+                ClientRequestInfo clientRequestInfo = new(clientInfo, request);
                 clientInfo.SetClientUser(principal);
                 requestHandler.HandlerMethod(clientRequestInfo);
             }
@@ -1428,13 +1388,13 @@ namespace GSF.TimeSeries
                 m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
                 m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
-                if (!(m_serviceHelper.StatusLog is null))
+                if (m_serviceHelper.StatusLog is not null)
                     m_serviceHelper.StatusLog.LogException += StatusLogExceptionHandler;
 
-                if (!(m_serviceHelper.ErrorLogger?.ErrorLog is null))
+                if (m_serviceHelper.ErrorLogger?.ErrorLog is not null)
                     m_serviceHelper.ErrorLogger.ErrorLog.LogException += ErrorLogExceptionHandler;
 
-                if (!(m_serviceHelper.ConnectionErrorLogger?.ErrorLog is null))
+                if (m_serviceHelper.ConnectionErrorLogger?.ErrorLog is not null)
                     m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException += ConnectionErrorLogExceptionHandler;
 
                 m_serviceHelper.OnStart(args);
@@ -1465,16 +1425,15 @@ namespace GSF.TimeSeries
             {
                 if (GSF.Common.IsPosixEnvironment)
                 {
-                    using (Process shell = new Process())
-                    {
-                        shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
-                        {
-                            CreateNoWindow = true,
-                            Arguments = "-clearCache"
-                        };
+                    using Process shell = new();
 
-                        shell.Start();
-                    }
+                    shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
+                    {
+                        CreateNoWindow = true,
+                        Arguments = "-clearCache"
+                    };
+
+                    shell.Start();
                 }
                 else
                 {
@@ -1578,7 +1537,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         private void ConfigurationChangedHandler(object sender, EventArgs e)
         {
-            m_reloadConfigQueue.Add(Tuple.Create("System", (Action<bool>)(success => {})));
+            m_reloadConfigQueue.Add(Tuple.Create(nameof(System), (Action<bool>)(_ => {})));
         }
 
         // Handle task scheduler exceptions
@@ -1781,7 +1740,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays status of specified adapter or collection.");
                 helpMessage.AppendLine();
@@ -1813,7 +1772,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                StringBuilder adapterList = new StringBuilder();
+                StringBuilder adapterList = new();
                 IAdapterCollection collection = GetRequestedCollection(requestInfo);
                 IEnumerable<IAdapter> listItems = collection;
                 bool idArgExists = requestInfo.Request.Arguments.Exists("OrderedArg1");
@@ -1832,9 +1791,9 @@ namespace GSF.TimeSeries
                 if (idArgExists)
                 {
                     IAdapter adapter = GetRequestedAdapter(requestInfo);
-                    List<IAdapter> singleItemList = new List<IAdapter>();
+                    List<IAdapter> singleItemList = new();
 
-                    if (!(adapter is null))
+                    if (adapter is not null)
                         singleItemList.Add(adapter);
 
                     listItems = singleItemList;
@@ -1906,7 +1865,7 @@ namespace GSF.TimeSeries
 
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.AppendFormat("Handles {0} command for specified adapter.", actionName);
                 helpMessage.AppendLine();
@@ -1970,7 +1929,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Invokes specified adapter command.");
                 helpMessage.AppendLine();
@@ -2010,7 +1969,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                Thread invocationThread = new Thread(() =>
+                Thread invocationThread = new(() =>
                 {
                     IAdapter adapter = null;
                     string command = null;
@@ -2043,7 +2002,7 @@ namespace GSF.TimeSeries
                         MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
                         // Invoke method
-                        if (!(method is null))
+                        if (method is not null)
                         {
                             // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
                             if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role))))
@@ -2122,7 +2081,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Lists possible commands of specified adapter.");
                 helpMessage.AppendLine();
@@ -2173,7 +2132,7 @@ namespace GSF.TimeSeries
                     MethodInfo[] methods = adapter.GetType().GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
                     // Invoke method
-                    StringBuilder methodList = new StringBuilder();
+                    StringBuilder methodList = new();
 
                     methodList.AppendFormat("Adapter \"{0}\" [Type = {1}] Command List:", adapter.Name, adapter.GetType().Name);
                     methodList.AppendLine();
@@ -2247,7 +2206,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Performs (re)initialization of specified adapter or collection.");
                 helpMessage.AppendLine();
@@ -2299,7 +2258,7 @@ namespace GSF.TimeSeries
                 }
                 else
                 {
-                    m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success =>
+                    m_reloadConfigQueue.Add(Tuple.Create(nameof(System), new Action<bool>(success =>
                     {
                         if (!success)
                         {
@@ -2374,7 +2333,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Returns a list of reports that are available from the report location.");
                 helpMessage.AppendLine();
@@ -2408,22 +2367,17 @@ namespace GSF.TimeSeries
                 if (reportingProcess is null)
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
-                StringBuilder listBuilder;
-                List<string> reportsList;
-                List<string> pendingReportsList;
-
-                int fileColumnWidth;
                 string reportPath;
                 FileInfo info;
                 TimeSpan expiration;
 
                 reportingProcess.CleanReportLocation();
 
-                reportsList = reportingProcess.GetReportsList();
-                pendingReportsList = reportingProcess.GetPendingReportsList();
-                fileColumnWidth = Math.Max(6, reportsList.Concat(pendingReportsList).Select(report => report.Length).DefaultIfEmpty(0).Max()) / 4 * 4 + 4;
+                List<string> reportsList = reportingProcess.GetReportsList();
+                List<string> pendingReportsList = reportingProcess.GetPendingReportsList();
+                int fileColumnWidth = Math.Max(6, reportsList.Concat(pendingReportsList).Select(report => report.Length).DefaultIfEmpty(0).Max()) / 4 * 4 + 4;
 
-                listBuilder = new StringBuilder();
+                StringBuilder listBuilder = new();
                 listBuilder.Append("Report".PadRight(fileColumnWidth));
                 listBuilder.AppendLine("Status");
                 listBuilder.Append("------".PadRight(fileColumnWidth));
@@ -2465,7 +2419,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Gets a report for the specified date.");
                 helpMessage.AppendLine();
@@ -2541,7 +2495,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Gets a reporting process status.");
                 helpMessage.AppendLine();
@@ -2590,7 +2544,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Generates a report for the specified date.");
                 helpMessage.AppendLine();
@@ -2659,7 +2613,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays or modifies the configuration of the reporting process.");
                 helpMessage.AppendLine();
@@ -2739,7 +2693,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Logs remote entry to event log.");
                 helpMessage.AppendLine();
@@ -2774,7 +2728,7 @@ namespace GSF.TimeSeries
                     {
                         string message = requestInfo.Request.Arguments["Message"];
 
-                        if (!(requestInfo.Request.Arguments.TryGetValue("Type", out string type) && Enum.TryParse(type, out EventLogEntryType entryType)))
+                        if (!(requestInfo.Request.Arguments.TryGetValue(nameof(Type), out string type) && Enum.TryParse(type, out EventLogEntryType entryType)))
                             entryType = EventLogEntryType.Information;
 
                         if (!(requestInfo.Request.Arguments.TryGetValue("ID", out string id) && ushort.TryParse(id, out ushort eventID)))
@@ -2803,7 +2757,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Gets adapter input measurements.");
                 helpMessage.AppendLine();
@@ -2852,7 +2806,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Gets adapter output measurements.");
                 helpMessage.AppendLine();
@@ -2901,7 +2855,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Checks support for temporal processing.");
                 helpMessage.AppendLine();
@@ -2933,7 +2887,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                if (requestInfo.Request.Arguments.Exists("System"))
+                if (requestInfo.Request.Arguments.Exists(nameof(System)))
                 {
                     bool supported = m_iaonSession.TemporalProcessingSupportExists();
                     SendResponseWithAttachment(requestInfo, true, supported, "Temporal processing support {0}", supported ? "exists" : "does not exist");
@@ -2955,7 +2909,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Recalculates routing tables.");
                 helpMessage.AppendLine();
@@ -2995,7 +2949,7 @@ namespace GSF.TimeSeries
 
             if (arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Manually reloads system configuration.");
                 helpMessage.AppendLine();
@@ -3014,10 +2968,10 @@ namespace GSF.TimeSeries
                 helpMessage.AppendFormat("Invokes another command once the reload config is complete");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -Augmented".PadRight(20));
-                helpMessage.AppendFormat("Augments the current running configuration from the {0}, if supported", m_configurationType);
+                helpMessage.AppendFormat("Augments the current running configuration from the {0}, if supported", ConfigurationType);
                 helpMessage.AppendLine();
-                helpMessage.Append($"       -{m_configurationType}".PadRight(20));
-                helpMessage.AppendFormat("Loads configuration from the {0}", m_configurationType);
+                helpMessage.Append($"       -{ConfigurationType}".PadRight(20));
+                helpMessage.AppendFormat("Loads configuration from the {0}", ConfigurationType);
                 helpMessage.AppendLine();
                 helpMessage.Append("       -BinaryCache".PadRight(20));
                 helpMessage.Append("Loads configuration from the latest cached binary file");
@@ -3050,7 +3004,7 @@ namespace GSF.TimeSeries
 
                 if (arguments.Count == (invoking ? 2 : 1))
                 {
-                    if (!arguments.Exists(m_configurationType.ToString()) && !arguments.Exists("Augmented") && !arguments.Exists("BinaryCache") && !arguments.Exists("XmlCache"))
+                    if (!arguments.Exists(ConfigurationType.ToString()) && !arguments.Exists("Augmented") && !arguments.Exists("BinaryCache") && !arguments.Exists("XmlCache"))
                     {
                         SendResponse(requestInfo, false, "Invalid argument supplied to ReloadConfig command.");
                         return;
@@ -3086,8 +3040,8 @@ namespace GSF.TimeSeries
             if (arguments.Exists("Augmented"))
                 return "Augmented";
 
-            if (arguments.Exists(m_configurationType.ToString()))
-                return m_configurationType.ToString();
+            if (arguments.Exists(ConfigurationType.ToString()))
+                return ConfigurationType.ToString();
 
             if (arguments.Exists("BinaryCache"))
                 return "BinaryCache";
@@ -3095,7 +3049,7 @@ namespace GSF.TimeSeries
             if (arguments.Exists("XmlCache"))
                 return "XmlCache";
 
-            return "System";
+            return nameof(System);
         }
 
         /// <summary>
@@ -3111,7 +3065,7 @@ namespace GSF.TimeSeries
 
             if (requestInfo.Request.Arguments.ContainsHelpRequest || (!listSetting && orderedArgCount < 2) || (!listSetting && !deleteSetting && orderedArgCount < 3))
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Updates an option in the configuration file.");
                 helpMessage.AppendLine();
@@ -3155,17 +3109,17 @@ namespace GSF.TimeSeries
                 {
                     if (orderedArgCount == 0)
                     {
-                        StringBuilder categoryList = new StringBuilder();
+                        StringBuilder categoryList = new();
                         categoryList.Append("List of categories in the configuration file:");
                         categoryList.AppendLine();
                         categoryList.AppendLine();
 
                         string xml = config.Settings.SectionInformation.GetRawXml();
-                        XmlDocument xmlDoc = new XmlDocument();
+                        XmlDocument xmlDoc = new();
                         xmlDoc.LoadXml(xml);
 
                         // List settings categories.
-                        if (!(xmlDoc.DocumentElement is null))
+                        if (xmlDoc.DocumentElement is not null)
                         {
                             foreach (XmlNode node in xmlDoc.DocumentElement)
                             {
@@ -3181,7 +3135,7 @@ namespace GSF.TimeSeries
                     else
                     {
                         CategorizedSettingsElementCollection settings = config.Settings[categoryName];
-                        StringBuilder settingsList = new StringBuilder();
+                        StringBuilder settingsList = new();
                         settingsList.Append($"List of settings under the category {categoryName}:");
                         settingsList.AppendLine();
                         settingsList.AppendLine();
@@ -3268,14 +3222,14 @@ namespace GSF.TimeSeries
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void ManageCertificateHandler(ClientRequestInfo requestInfo)
         {
-            bool import = requestInfo.Request.Arguments.Exists("import");
-            bool export = requestInfo.Request.Arguments.Exists("export");
+            bool import = requestInfo.Request.Arguments.Exists(nameof(import));
+            bool export = requestInfo.Request.Arguments.Exists(nameof(export));
             string certificateFile = requestInfo.Request.Arguments["OrderedArg1"];
             SecureString password = requestInfo.Request.Arguments["OrderedArg2"].ToSecureString();
 
             if (requestInfo.Request.Arguments.ContainsHelpRequest || !(import ^ export) || string.IsNullOrEmpty(certificateFile) || (password?.Length ?? 0) == 0)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Updates an option in the configuration file.");
                 helpMessage.AppendLine();
@@ -3303,12 +3257,12 @@ namespace GSF.TimeSeries
             else
             {
                 ConfigurationFile configurationFile = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection remotingServer = configurationFile.Settings["remotingServer"];
+                CategorizedSettingsElementCollection remotingServer = configurationFile.Settings[nameof(remotingServer)];
                 remotingServer.Add("CertificateFile", $"{ServiceName}.cer", "Path to the local certificate used by this server for authentication.");
 
                 string certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
 
-                CertificateGenerator certificateGenerator = new CertificateGenerator()
+                CertificateGenerator certificateGenerator = new()
                 {
                     Issuer = ServiceName,
                     CertificatePath = certificatePath
@@ -3332,7 +3286,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Attempts to (re)authenticate to network shares.");
                 helpMessage.AppendLine();
@@ -3375,7 +3329,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Attempts to restart the host service.");
                 helpMessage.AppendLine();
@@ -3402,16 +3356,15 @@ namespace GSF.TimeSeries
                     {
                         if (GSF.Common.IsPosixEnvironment)
                         {
-                            using (Process shell = new Process())
-                            {
-                                shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
-                                {
-                                    CreateNoWindow = true,
-                                    Arguments = $"{ServiceName} -restart"
-                                };
+                            using Process shell = new();
 
-                                shell.Start();
-                            }
+                            shell.StartInfo = new ProcessStartInfo(ConsoleApplicationName)
+                            {
+                                CreateNoWindow = true,
+                                Arguments = $"{ServiceName} -restart"
+                            };
+
+                            shell.Start();
                         }
                         else
                         {
@@ -3485,7 +3438,7 @@ namespace GSF.TimeSeries
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Attempts to ping a device.");
                 helpMessage.AppendLine();
@@ -3517,7 +3470,7 @@ namespace GSF.TimeSeries
 
                     try
                     {
-                        ProcessStartInfo psi = new ProcessStartInfo(ConsoleApplicationName)
+                        ProcessStartInfo psi = new(ConsoleApplicationName)
                         {
                             CreateNoWindow = true,
                             FileName = "ping",
@@ -3528,11 +3481,11 @@ namespace GSF.TimeSeries
 
                         Task.Run(() =>
                         {
-                            using (Process shell = new Process())
+                            using (Process shell = new())
                             {
                                 shell.StartInfo = psi;
 
-                                shell.OutputDataReceived += (sender, processArgs) =>
+                                shell.OutputDataReceived += (_, processArgs) =>
                                 {
                                     if (string.IsNullOrWhiteSpace(processArgs.Data))
                                         return;
@@ -3540,7 +3493,7 @@ namespace GSF.TimeSeries
                                     SendResponse(requestInfo, true, processArgs.Data);
                                 };
 
-                                shell.ErrorDataReceived += (sender, processArgs) =>
+                                shell.ErrorDataReceived += (_, processArgs) =>
                                 {
                                     if (string.IsNullOrWhiteSpace(processArgs.Data))
                                         return;
@@ -3621,7 +3574,7 @@ namespace GSF.TimeSeries
                     string arguments = requestInfo.Request.Arguments.ToString();
                     string message = $"{responseType}{(string.IsNullOrWhiteSpace(arguments) ? "" : $"({arguments})")}";
 
-                    if (!(status is null))
+                    if (status is not null)
                         message = $"{message} - {(args.Length == 0 ? status : string.Format(status, args))}";
 
                     m_serviceHelper.StatusLog.WriteTimestampedLine(message);
@@ -3723,7 +3676,7 @@ namespace GSF.TimeSeries
             if (m_serviceHelper is null)
             {
                 Logger.CreatePublisher(typeof(ServiceHostBase), MessageClass.Framework).
-                    Publish(MessageLevel.Critical, "Service Initialization", "LogException", exception: ex);
+                    Publish(MessageLevel.Critical, "Service Initialization", nameof(LogException), exception: ex);
             }
             else
             {

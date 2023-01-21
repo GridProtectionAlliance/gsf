@@ -68,7 +68,7 @@ namespace GSF.TimeSeries
         {
             m_parent = parent;
 
-            if (m_parent != null)
+            if (m_parent is not null)
             {
                 m_parent.LagTimeUpdated += OnLagTimeUpdated;
                 m_parent.LeadTimeUpdated += OnLeadTimeUpdated;
@@ -91,31 +91,13 @@ namespace GSF.TimeSeries
         /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
         /// <param name="id">A <see cref="Guid"/> representing the measurement ID.</param>
         /// <returns>A <see cref="Double"/> representing the adjusted measurement value.</returns>
-        public double this[MeasurementKey id]
-        {
-            get
-            {
-                return Measurement(id).GetAdjustedValue(m_realTimeFunction());
-            }
-        }
+        public double this[MeasurementKey id] => Measurement(id).GetAdjustedValue(m_realTimeFunction());
 
         /// <summary>Returns collection of measurement ID's.</summary>
-        public ICollection<MeasurementKey> MeasurementIDs
-        {
-            get
-            {
-                return m_measurements.Keys;
-            }
-        }
+        public ICollection<MeasurementKey> MeasurementIDs => m_measurements.Keys;
 
         /// <summary>Returns ID collection for measurement tags.</summary>
-        public ICollection<string> Tags
-        {
-            get
-            {
-                return m_taggedMeasurements.Keys;
-            }
-        }
+        public ICollection<string> Tags => m_taggedMeasurements.Keys;
 
         /// <summary>Returns the minimum value of all measurements.</summary>
         /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
@@ -172,10 +154,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public Func<Ticks> RealTimeFunction
         {
-            get
-            {
-                return m_realTimeFunction;
-            }
+            get => m_realTimeFunction;
             set
             {
                 m_realTimeFunction = value ?? (() => DateTime.UtcNow.Ticks);
@@ -192,10 +171,7 @@ namespace GSF.TimeSeries
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
         public double LagTime
         {
-            get
-            {
-                return m_lagTime;
-            }
+            get => m_lagTime;
             set
             {
                 if (value <= 0)
@@ -220,10 +196,7 @@ namespace GSF.TimeSeries
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         public double LeadTime
         {
-            get
-            {
-                return m_leadTime;
-            }
+            get => m_leadTime;
             set
             {
                 if (value <= 0)
@@ -263,19 +236,19 @@ namespace GSF.TimeSeries
                 {
                     if (disposing)
                     {
-                        if (m_parent != null)
+                        if (m_parent is not null)
                         {
                             m_parent.LagTimeUpdated -= OnLagTimeUpdated;
                             m_parent.LeadTimeUpdated -= OnLagTimeUpdated;
                         }
                         m_parent = null;
 
-                        if (m_measurements != null)
+                        if (m_measurements is not null)
                             m_measurements.Clear();
 
                         m_measurements = null;
 
-                        if (m_taggedMeasurements != null)
+                        if (m_taggedMeasurements is not null)
                             m_taggedMeasurements.Clear();
 
                         m_taggedMeasurements = null;
@@ -471,7 +444,7 @@ namespace GSF.TimeSeries
         /// <param name="lagTime">New lag time.</param>
         protected void OnLagTimeUpdated(double lagTime)
         {
-            this.LagTime = lagTime;
+            LagTime = lagTime;
         }
 
         /// <summary>
@@ -480,7 +453,7 @@ namespace GSF.TimeSeries
         /// <param name="leadTime">New lead time.</param>
         protected void OnLeadTimeUpdated(double leadTime)
         {
-            this.LeadTime = leadTime;
+            LeadTime = leadTime;
         }
 
         IEnumerator<TemporalMeasurement> IEnumerable<TemporalMeasurement>.GetEnumerator()

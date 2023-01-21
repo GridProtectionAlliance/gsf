@@ -50,13 +50,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets associated application configuration file name.
         /// </summary>
-        protected virtual string ConfigurationName
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected virtual string ConfigurationName => null;
 
         #endregion
 
@@ -79,7 +73,8 @@ namespace GSF.TimeSeries
         /// Installs the class.
         /// </summary>
         /// <param name="stateSaver">Current state information.</param>
-        [SuppressMessage("Microsoft.Security", "CA2122"), SuppressMessage("Microsoft.Globalization", "CA1300")]
+        [SuppressMessage("Microsoft.Security", "CA2122")]
+        [SuppressMessage("Microsoft.Globalization", "CA1300")]
         public override void Install(IDictionary stateSaver)
         {
             base.Install(stateSaver);
@@ -95,12 +90,12 @@ namespace GSF.TimeSeries
 
                     if (File.Exists(configFilePath))
                     {
-                        XmlDocument configurationFile = new XmlDocument();
+                        XmlDocument configurationFile = new();
                         configurationFile.Load(configFilePath);
                         XmlNode systemSettingsNode = configurationFile.SelectSingleNode("configuration/categorizedSettings/systemSettings");
 
                         // Allow user to add or update custom configuration settings if desired
-                        if (systemSettingsNode != null)
+                        if (systemSettingsNode is not null)
                             OnSystemSettingsLoaded(configurationFile, systemSettingsNode);
 
                         // Save any updates to configuration file
@@ -145,7 +140,7 @@ namespace GSF.TimeSeries
         //// Lookup installed bit size in configuration file, if defined
         //XmlNode installedBitSizeNode = systemSettingsNode.SelectSingleNode("add[@name = 'InstalledBitSize']");
 
-        //if (installedBitSizeNode != null)
+        //if (installedBitSizeNode is not null)
         //{
         //    installedBitSize = installedBitSizeNode.Attributes["value"].Value;
 
@@ -185,7 +180,7 @@ namespace GSF.TimeSeries
         //    }
         //    finally
         //    {
-        //        if (configurationSetup != null)
+        //        if (configurationSetup is not null)
         //            configurationSetup.Close();
         //    }
         //}

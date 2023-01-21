@@ -557,7 +557,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             return adapterType
                 .LoadImplementations(searchDirectory, true, false, true)
                 .Distinct()
-                .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
+                .Where(type => GetEditorBrowsableState(type, adapterType) == EditorBrowsableState.Always)
                 .Select(type => Tuple.Create(type, GetDescription(type)))
                 .OrderByDescending(pair => pair.Item1.TryGetAttribute(out DescriptionAttribute _))
                 .ThenBy(pair => pair.Item2.ToString())
@@ -570,13 +570,19 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// If none is found, it will default to <see cref="EditorBrowsableState.Always"/>.
         /// </summary>
         /// <param name="type">The type for which an editor browsable state is found.</param>
+        /// <param name="adapterType">The type to be searched for in the assemblies.</param>
         /// <returns>
         /// Either the editor browsable state as defined by an <see cref="EditorBrowsableAttribute"/>
         /// or else <see cref="EditorBrowsableState.Always"/>.
         /// </returns>
-        private EditorBrowsableState GetEditorBrowsableState(Type type) => 
-            type.TryGetAttribute(out EditorBrowsableAttribute editorBrowsableAttribute) ? 
-                editorBrowsableAttribute.State : 
+        /// <remarks>
+        /// For IFilterAdapters derived from IActionAdapters, the editor browsable state of advanced
+        /// will give precedence to IFilterAdapter over IActionAdapter, i.e., adapter will only be
+        /// visible on the Filter Adapters screen.
+        /// </remarks>
+        private EditorBrowsableState GetEditorBrowsableState(Type type, Type adapterType) => 
+            type.TryGetAttribute(out EditorBrowsableAttribute editorBrowsableAttribute) ?
+                editorBrowsableAttribute.State == EditorBrowsableState.Advanced && adapterType == typeof(IFilterAdapter) ? EditorBrowsableState.Always : editorBrowsableAttribute.State :
                 EditorBrowsableState.Always;
 
         /// <summary>

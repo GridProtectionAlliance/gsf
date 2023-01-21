@@ -36,7 +36,7 @@ namespace GSF.TimeSeries.Data
     {
         private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(DataSourceLookups), MessageClass.Framework);
 
-        private static readonly List<WeakReference<DataSourceLookupCache>> s_dataSetLookups = new List<WeakReference<DataSourceLookupCache>>();
+        private static readonly List<WeakReference<DataSourceLookupCache>> s_dataSetLookups = new();
 
         /// <summary>
         /// Gets/Creates the lookup cache for the provided dataset.
@@ -45,7 +45,7 @@ namespace GSF.TimeSeries.Data
         /// <returns>Lookup cache for the provided dataset.</returns>
         public static DataSourceLookupCache GetLookupCache(DataSet dataSet)
         {
-            if (dataSet == null)
+            if (dataSet is null)
                 throw new ArgumentNullException(nameof(dataSet));
 
             // Since adding datasets will be rare, the penalty associated with a lock on the entire set will be minor.
@@ -57,7 +57,7 @@ namespace GSF.TimeSeries.Data
                 {
                     WeakReference<DataSourceLookupCache> item = s_dataSetLookups[index];
 
-                    if (item.TryGetTarget(out target) && target.DataSet != null)
+                    if (item.TryGetTarget(out target) && target.DataSet is not null)
                     {
                         if (ReferenceEquals(target.DataSet, dataSet))
                         {
@@ -95,9 +95,9 @@ namespace GSF.TimeSeries.Data
         /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
         /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
         /// <returns>Metadata data row, if found; otherwise, <c>null</c>.</returns>
-        public static DataRow LookupMetadata(this DataSet dataSource, Guid signalID, string measurementTable = "ActiveMeasurements")
+        public static DataRow LookupMetadata(this DataSet dataSource, Guid signalID, string measurementTable = nameof(ActiveMeasurements))
         {
-            if (dataSource == null)
+            if (dataSource is null)
                 throw new ArgumentNullException(nameof(dataSource));
 
             DataRow[] records = dataSource.Tables[measurementTable].Select($"SignalID = '{signalID}'");
@@ -112,14 +112,14 @@ namespace GSF.TimeSeries.Data
         /// <param name="key">Source <see cref="MeasurementKey"/>.</param>
         /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
         /// <returns><see cref="SignalType"/> as defined for measurement key in data source.</returns>
-        public static SignalType GetSignalType(this DataSet dataSource, MeasurementKey key, string measurementTable = "ActiveMeasurements")
+        public static SignalType GetSignalType(this DataSet dataSource, MeasurementKey key, string measurementTable = nameof(ActiveMeasurements))
         {
-            if (dataSource == null)
+            if (dataSource is null)
                 throw new ArgumentNullException(nameof(dataSource));
 
             DataRow record = dataSource.LookupMetadata(key.SignalID, measurementTable);
 
-            if (record != null && Enum.TryParse(record["SignalType"].ToString(), out SignalType signalType))
+            if (record is not null && Enum.TryParse(record[nameof(SignalType)].ToString(), out SignalType signalType))
                 return signalType;
 
             return SignalType.NONE;
@@ -132,12 +132,12 @@ namespace GSF.TimeSeries.Data
         /// <param name="keys">Source set of <see cref="MeasurementKey"/> values.</param>
         /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
         /// <returns><see cref="SignalType"/> values for each defined measurement key as configured in data source.</returns>
-        public static SignalType[] GetSignalTypes(this DataSet dataSource, MeasurementKey[] keys, string measurementTable = "ActiveMeasurements")
+        public static SignalType[] GetSignalTypes(this DataSet dataSource, MeasurementKey[] keys, string measurementTable = nameof(ActiveMeasurements))
         {
-            if (dataSource == null)
+            if (dataSource is null)
                 throw new ArgumentNullException(nameof(dataSource));
 
-            if (keys == null || keys.Length == 0)
+            if (keys is null || keys.Length == 0)
                 return Array.Empty<SignalType>();
 
             SignalType[] signalTypes = new SignalType[keys.Length];
@@ -155,12 +155,12 @@ namespace GSF.TimeSeries.Data
         /// <param name="measurements">Source set of <see cref="IMeasurement"/> values.</param>
         /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
         /// <returns><see cref="SignalType"/> values for each defined measurement key as configured in data source.</returns>
-        public static SignalType[] GetSignalTypes(this DataSet dataSource, IMeasurement[] measurements, string measurementTable = "ActiveMeasurements")
+        public static SignalType[] GetSignalTypes(this DataSet dataSource, IMeasurement[] measurements, string measurementTable = nameof(ActiveMeasurements))
         {
-            if (dataSource == null)
+            if (dataSource is null)
                 throw new ArgumentNullException(nameof(dataSource));
 
-            if (measurements == null || measurements.Length == 0)
+            if (measurements is null || measurements.Length == 0)
                 return Array.Empty<SignalType>();
 
             SignalType[] signalTypes = new SignalType[measurements.Length];
