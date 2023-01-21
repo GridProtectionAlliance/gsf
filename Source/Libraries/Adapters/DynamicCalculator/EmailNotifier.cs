@@ -60,10 +60,8 @@ namespace DynamicCalculator
         /// <summary>
         /// Creates a new instance of the <see cref="EmailNotifier"/>.
         /// </summary>
-        public EmailNotifier()
-        {
+        public EmailNotifier() => 
             m_mailClient = new Mail();
-        }
 
         #endregion
 
@@ -85,8 +83,8 @@ namespace DynamicCalculator
         /// Gets or sets the e-mail address of the message sender.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being assigned is a null or empty string.</exception>
-        [ConnectionStringParameter,
-        Description("Define the e-mail address of the message sender.")]
+        [ConnectionStringParameter]
+        [Description("Define the e-mail address of the message sender.")]
         public string From
         {
             get => m_mailClient.From;
@@ -97,9 +95,9 @@ namespace DynamicCalculator
         /// Gets or sets the comma-separated or semicolon-separated e-mail address list of the message recipients.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being assigned is a null or empty string.</exception>
-        [ConnectionStringParameter,
-        Description("Define the comma-separated or semicolon-separated e-mail address list of the e-mail message recipients."),
-        DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Define the comma-separated or semicolon-separated e-mail address list of the e-mail message recipients.")]
+        [DefaultValue("")]
         public string ToRecipients
         {
             get => m_mailClient.ToRecipients;
@@ -109,9 +107,9 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the comma-separated or semicolon-separated e-mail address list of the message carbon copy (CC) recipients.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the comma-separated or semicolon-separated e-mail address list of the e-mail message carbon copy (CC) recipients."),
-        DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Define the comma-separated or semicolon-separated e-mail address list of the e-mail message carbon copy (CC) recipients.")]
+        [DefaultValue("")]
         public string CcRecipients
         {
             get => m_mailClient.CcRecipients;
@@ -121,9 +119,9 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the comma-separated or semicolon-separated e-mail address list of the message blank carbon copy (BCC) recipients.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the comma-separated or semicolon-separated e-mail address list of the e-mail message blank carbon copy (BCC) recipients."),
-        DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Define the comma-separated or semicolon-separated e-mail address list of the e-mail message blank carbon copy (BCC) recipients.")]
+        [DefaultValue("")]
         public string BccRecipients
         {
             get => m_mailClient.BccRecipients;
@@ -133,8 +131,8 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the subject of the message.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the subject of the e-mail message.")]
+        [ConnectionStringParameter]
+        [Description("Define the subject of the e-mail message.")]
         public string Subject
         {
             get => m_mailClient.Subject;
@@ -144,16 +142,16 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the body of the message.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the body of the e-mail message.")]
+        [ConnectionStringParameter]
+        [Description("Define the body of the e-mail message.")]
         public string Body { get; set; }
 
         /// <summary>
         /// Gets or sets the name or IP address of the SMTP server to be used for sending the message.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being assigned is a null or empty string.</exception>
-        [ConnectionStringParameter,
-        Description("Define the name or IP address of the SMTP server to be used for sending the e-mail message.")]
+        [ConnectionStringParameter]
+        [Description("Define the name or IP address of the SMTP server to be used for sending the e-mail message.")]
         public string SmtpServer
         {
             get => m_mailClient.SmtpServer;
@@ -163,9 +161,9 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets a boolean value that indicating whether the message body is to be formatted as HTML.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the boolean value that indicating whether the message body is to be formatted as HTML."),
-        DefaultValue(false)]
+        [ConnectionStringParameter]
+        [Description("Define the boolean value that indicating whether the message body is to be formatted as HTML.")]
+        [DefaultValue(false)]
         public bool IsBodyHtml
         {
             get => m_mailClient.IsBodyHtml;
@@ -175,9 +173,9 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the username used to authenticate to the SMTP server.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the username used to authenticate to the SMTP server."),
-        DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Define the username used to authenticate to the SMTP server.")]
+        [DefaultValue("")]
         public string Username
         {
             get => m_mailClient.Username;
@@ -187,9 +185,9 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the password used to authenticate to the SMTP server.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the password used to authenticate to the SMTP server."),
-        DefaultValue("")]
+        [ConnectionStringParameter]
+        [Description("Define the password used to authenticate to the SMTP server.")]
+        [DefaultValue("")]
         public string Password
         {
             get => m_mailClient.Password;
@@ -199,15 +197,15 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the flag that determines whether to use SSL when communicating with the SMTP server.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the flag that determines whether to use SSL when communicating with the SMTP server."),
-        DefaultValue(false)]
+        [ConnectionStringParameter]
+        [Description("Define the flag that determines whether to use SSL when communicating with the SMTP server.")]
+        [DefaultValue(false)]
         public bool EnableSSL
         {
             get => m_mailClient.EnableSSL;
             set => m_mailClient.EnableSSL = value;
         }
-
+        
         /// <summary>
         /// Gets or sets the number of frames per second.
         /// </summary>
@@ -259,6 +257,8 @@ namespace DynamicCalculator
             set => base.LeadTime = value;
         }
 
+        #region [ Hidden Properties ]
+
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
         /// </summary>
@@ -272,11 +272,14 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
         /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new TimestampSource TimestampSource // Redeclared to hide property - not relevant to this adapter
         {
             get => base.TimestampSource;
             set => base.TimestampSource = value;
         }
+
+        #endregion
 
         /// <summary>
         /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
@@ -294,12 +297,9 @@ namespace DynamicCalculator
 
                 status.Append(base.Status);
                 status.AppendLine();
-                status.AppendFormat("      Expression Successes: {0:N0}", m_expressionSuccesses);
-                status.AppendLine();
-                status.AppendFormat("       Expression Failures: {0:N0}", m_expressionFailures);
-                status.AppendLine();
-                status.AppendFormat("   Total E-mail Operations: {0:N0}", m_totalEmailOperations);
-                status.AppendLine();
+                status.AppendLine($"      Expression Successes: {m_expressionSuccesses:N0}");
+                status.AppendLine($"       Expression Failures: {m_expressionFailures:N0}");
+                status.AppendLine($"   Total E-mail Operations: {m_totalEmailOperations:N0}");
 
                 return status.ToString();
             }
@@ -332,49 +332,49 @@ namespace DynamicCalculator
             base.Initialize();
 
             // Load required mail settings
-            if (settings.TryGetValue("from", out string setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(From), out string setting) && !string.IsNullOrWhiteSpace(setting))
                 From = setting;
             else
-                throw new ArgumentException(string.Format(MissingRequiredMailSetting, "from"));
+                throw new ArgumentException(string.Format(MissingRequiredMailSetting, nameof(From)));
 
-            if (settings.TryGetValue("subject", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(Subject), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Subject = setting;
             else
-                throw new ArgumentException(string.Format(MissingRequiredMailSetting, "subject"));
+                throw new ArgumentException(string.Format(MissingRequiredMailSetting, nameof(Subject)));
 
-            if (settings.TryGetValue("body", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(Body), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Body = setting;
             else
-                throw new ArgumentException(string.Format(MissingRequiredMailSetting, "body"));
+                throw new ArgumentException(string.Format(MissingRequiredMailSetting, nameof(Body)));
 
-            if (settings.TryGetValue("smtpServer", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(SmtpServer), out setting) && !string.IsNullOrWhiteSpace(setting))
                 SmtpServer = setting;
             else
-                throw new ArgumentException(string.Format(MissingRequiredMailSetting, "smtpServer"));
+                throw new ArgumentException(string.Format(MissingRequiredMailSetting, nameof(SmtpServer)));
 
             // Load optional mail settings
-            if (settings.TryGetValue("toRecipients", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(ToRecipients), out setting) && !string.IsNullOrWhiteSpace(setting))
                 ToRecipients = setting;
 
-            if (settings.TryGetValue("ccRecipients", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(CcRecipients), out setting) && !string.IsNullOrWhiteSpace(setting))
                 CcRecipients = setting;
 
-            if (settings.TryGetValue("bccRecipients", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(BccRecipients), out setting) && !string.IsNullOrWhiteSpace(setting))
                 BccRecipients = setting;
 
             if (string.IsNullOrWhiteSpace(ToRecipients) && string.IsNullOrWhiteSpace(CcRecipients) && string.IsNullOrWhiteSpace(BccRecipients))
-                throw new ArgumentException("At least one destination e-mail address for one of ToRecipients, CcRecipients or BccRecipients must be defined");
+                throw new ArgumentException($"At least one destination e-mail address for one of {nameof(ToRecipients)}, {nameof(CcRecipients)} or {nameof(BccRecipients)} must be defined");
 
-            if (settings.TryGetValue("isBodyHtml", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(IsBodyHtml), out setting) && !string.IsNullOrWhiteSpace(setting))
                 IsBodyHtml = setting.ParseBoolean();
 
-            if (settings.TryGetValue("username", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(Username), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Username = setting;
 
-            if (settings.TryGetValue("password", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(Password), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Password = setting;
 
-            if (settings.TryGetValue("enableSSL", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(EnableSSL), out setting) && !string.IsNullOrWhiteSpace(setting))
                 EnableSSL = setting.ParseBoolean();
         }
 

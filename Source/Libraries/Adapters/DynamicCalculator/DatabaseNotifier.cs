@@ -85,11 +85,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines the connection string used for database operation. Leave blank to use local configuration database defined in \"systemSettings\".")]
         [DefaultValue(DefaultDatabaseConnectionString)]
-        public string DatabaseConnnectionString
-        {
-            get;
-            set;
-        }
+        public string DatabaseConnnectionString { get; set; }
 
         /// <summary>
         /// Gets or sets the provider string used for database operation. Defaults to a SQL Server provider string.
@@ -97,11 +93,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines the provider string used for database operation. Defaults to a SQL Server provider string.")]
         [DefaultValue(DefaultDatabaseProviderString)]
-        public string DatabaseProviderString
-        {
-            get;
-            set;
-        }
+        public string DatabaseProviderString { get; set; }
 
         /// <summary>
         /// Gets or sets the command used for database operation, e.g., a stored procedure name or SQL expression like "INSERT".
@@ -109,11 +101,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines the command used for database operation, e.g., a stored procedure name or SQL expression like \"INSERT\".")]
         [DefaultValue(DefaultDatabaseCommand)]
-        public string DatabaseCommand
-        {
-            get;
-            set;
-        }
+        public string DatabaseCommand { get; set; }
 
         /// <summary>
         /// Gets or sets the parameters for the command that includes any desired value substitutions used for database operation. Available substitutions: {Acronym} and {Timestamp}.
@@ -121,11 +109,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines the parameters for the command that includes any desired value substitutions used for database operation. Available substitutions: {Acronym} and {Timestamp}.")]
         [DefaultValue(DefaultDatabaseCommandParameters)]
-        public string DatabaseCommandParameters
-        {
-            get;
-            set;
-        }
+        public string DatabaseCommandParameters { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.
@@ -133,11 +117,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines the maximum interval, in seconds, at which the adapter can execute database operations. Set to zero for no delay.")]
         [DefaultValue(DefaultDatabaseMaximumWriteInterval)]
-        public double DatabaseMaximumWriteInterval
-        {
-            get;
-            set;
-        }
+        public double DatabaseMaximumWriteInterval { get; set; }
 
         /// <summary>
         /// Gets or sets the number of frames per second.
@@ -190,6 +170,8 @@ namespace DynamicCalculator
             set => base.LeadTime = value;
         }
 
+        #region [ Hidden Properties ]
+        
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
         /// </summary>
@@ -209,6 +191,8 @@ namespace DynamicCalculator
             get => base.TimestampSource;
             set => base.TimestampSource = value;
         }
+
+        #endregion
 
         /// <summary>
         /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
