@@ -52,16 +52,19 @@ namespace DynamicCalculator
         /// <summary>
         /// An incoming frame timestamp.
         /// </summary>
+        [Description("Sets measurement timestamps to the timestamp of the incoming frame.")]
         Frame,
 
         /// <summary>
         /// Real-time as defined by the concentration engine.
         /// </summary>
+        [Description("Sets measurement timestamps to the current time based on latest received timestamp as determined by concentration engine.")]
         RealTime,
 
         /// <summary>
         /// The system's local clock.
         /// </summary>
+        [Description("Sets measurement timestamps to the current time derived from system clock.")]
         LocalClock
     }
 

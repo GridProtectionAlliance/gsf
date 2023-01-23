@@ -44,13 +44,15 @@ namespace DynamicCalculator
     public enum FilterOperation
     {
         /// <summary>
-        /// 
+        /// Defines filter operation that removes measurements from process when expression evaluates to true.
         /// </summary>
+        [Description("Removes measurements from process when expression evaluates to true.")]
         RemoveWhenTrue,
 
         /// <summary>
-        /// 
+        /// Defines filter operation that changes measurement values based on expression evaluation.
         /// </summary>
+        [Description("Changes measurement values based on expression evaluation.")]
         ValueAugmentation
     }    
 
