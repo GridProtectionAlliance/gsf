@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using System.Xml;
 using GSF.IO;
 
+// ReSharper disable LocalizableElement
 namespace GSF.TimeSeries
 {
     /// <summary>
@@ -83,31 +84,31 @@ namespace GSF.TimeSeries
             {
                 string targetDir = FilePath.AddPathSuffix(Context.Parameters["DP_TargetDir"]).Replace("\\\\", "\\");
 
-                if (!string.IsNullOrEmpty(ConfigurationName))
-                {
-                    // Open the configuration file as an XML document.
-                    string configFilePath = targetDir + ConfigurationName;
+                if (string.IsNullOrEmpty(ConfigurationName))
+                    return;
 
-                    if (File.Exists(configFilePath))
-                    {
-                        XmlDocument configurationFile = new();
-                        configurationFile.Load(configFilePath);
-                        XmlNode systemSettingsNode = configurationFile.SelectSingleNode("configuration/categorizedSettings/systemSettings");
+                // Open the configuration file as an XML document.
+                string configFilePath = targetDir + ConfigurationName;
 
-                        // Allow user to add or update custom configuration settings if desired
-                        if (systemSettingsNode is not null)
-                            OnSystemSettingsLoaded(configurationFile, systemSettingsNode);
+                if (!File.Exists(configFilePath))
+                    return;
 
-                        // Save any updates to configuration file
-                        configurationFile.Save(configFilePath);
-                    }
-                }
+                XmlDocument configurationFile = new();
+                configurationFile.Load(configFilePath);
+                XmlNode systemSettingsNode = configurationFile.SelectSingleNode("configuration/categorizedSettings/systemSettings");
+
+                // Allow user to add or update custom configuration settings if desired
+                if (systemSettingsNode is not null)
+                    OnSystemSettingsLoaded(configurationFile, systemSettingsNode);
+
+                // Save any updates to configuration file
+                configurationFile.Save(configFilePath);
 
             }
             catch (Exception ex)
             {
                 // Not failing install if we can't perform these steps...
-                MessageBox.Show("There was an exception detected during the install process: " + ex.Message);
+                MessageBox.Show($"There was an exception detected during the install process: {ex.Message}");
             }
         }
 

@@ -91,10 +91,8 @@ namespace GSF.TimeSeries.Transport
             /// <summary>
             /// Creates a new local concentrator.
             /// </summary>
-            public LocalConcentrator(DataSubscriber parent)
-            {
+            public LocalConcentrator(DataSubscriber parent) => 
                 m_parent = parent;
-            }
 
             #endregion
 
@@ -106,18 +104,18 @@ namespace GSF.TimeSeries.Transport
             /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
             protected override void Dispose(bool disposing)
             {
-                if (!m_disposed)
+                if (m_disposed)
+                    return;
+
+                try
                 {
-                    try
-                    {
-                        if (disposing)
-                            m_parent = null;
-                    }
-                    finally
-                    {
-                        m_disposed = true;          // Prevent duplicate dispose.
-                        base.Dispose(disposing);    // Call base class Dispose().
-                    }
+                    if (disposing)
+                        m_parent = null;
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
 
@@ -127,12 +125,8 @@ namespace GSF.TimeSeries.Transport
             /// </summary>
             /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
             /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
-            protected override void PublishFrame(IFrame frame, int index)
-            {
-                // Publish locally sorted measurements
-                if (m_parent is not null)
-                    m_parent.OnNewMeasurements(frame.Measurements.Values);
-            }
+            protected override void PublishFrame(IFrame frame, int index) => 
+                m_parent?.OnNewMeasurements(frame.Measurements.Values); // Publish locally sorted measurements
 
             #endregion
         }
@@ -159,20 +153,15 @@ namespace GSF.TimeSeries.Transport
 
             public SubscribedDevice(string name)
             {
-                if ((object)name is null)
-                    throw new ArgumentNullException(nameof(name));
-
-                Name = name;
+                Name = name ?? throw new ArgumentNullException(nameof(name));
                 StatisticsEngine.Register(this, name, "Device", "PMU");
             }
 
             /// <summary>
             /// Releases the unmanaged resources before the <see cref="SubscribedDevice"/> object is reclaimed by <see cref="GC"/>.
             /// </summary>
-            ~SubscribedDevice()
-            {
+            ~SubscribedDevice() => 
                 Unregister();
-            }
 
             #endregion
 
@@ -234,13 +223,12 @@ namespace GSF.TimeSeries.Transport
 
             public override bool Equals(object obj)
             {
-                return obj is SubscribedDevice subscribedDevice && Name.Equals(subscribedDevice.Name);
+                SubscribedDevice subscribedDevice = obj as SubscribedDevice;
+                return subscribedDevice is not null && Name.Equals(subscribedDevice.Name);
             }
 
-            public override int GetHashCode()
-            {
-                return Name.GetHashCode();
-            }
+            public override int GetHashCode() => 
+                Name.GetHashCode();
 
             /// <summary>
             /// Releases all the resources used by the <see cref="SubscribedDevice"/> object.
@@ -253,16 +241,16 @@ namespace GSF.TimeSeries.Transport
 
             private void Unregister()
             {
-                if (!m_disposed)
+                if (m_disposed)
+                    return;
+
+                try
                 {
-                    try
-                    {
-                        StatisticsEngine.Unregister(this);
-                    }
-                    finally
-                    {
-                        m_disposed = true;  // Prevent duplicate dispose.
-                    }
+                    StatisticsEngine.Unregister(this);
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
 
@@ -443,6 +431,7 @@ namespace GSF.TimeSeries.Transport
         private long m_lastMissingCacheWarning;
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
+        private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
         private bool m_requestNaNValueFilter;
         private string m_sharedSecret;
@@ -469,6 +458,7 @@ namespace GSF.TimeSeries.Transport
         private int m_parsingExceptionCount;
         private long m_lastParsingExceptionTime;
 
+        private bool m_supportsTemporalProcessing;
         //private Ticks m_lastMeasurementCheck;
         //private Ticks m_minimumMissingMeasurementThreshold = 5;
         //private double m_transmissionDelayTimeAdjustment = 5.0;
@@ -515,11 +505,11 @@ namespace GSF.TimeSeries.Transport
                 IsBackground = true
             };
 
-            m_encoding = Encoding.Unicode;
+            Encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
-            m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
-            m_allowedParsingExceptions = DefaultAllowedParsingExceptions;
-            m_parsingExceptionWindow = DefaultParsingExceptionWindow;
+            MetadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
+            AllowedParsingExceptions = DefaultAllowedParsingExceptions;
+            ParsingExceptionWindow = DefaultParsingExceptionWindow;
 
             string loggingPath = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(DefaultLoggingPath));
 
@@ -531,18 +521,18 @@ namespace GSF.TimeSeries.Transport
             {
                 using AdoDataConnection database = new("systemSettings");
 
-                m_useTransactionForMetadata = database.DatabaseType != DatabaseType.SQLServer;
+                UseTransactionForMetadata = database.DatabaseType != DatabaseType.SQLServer;
             }
             catch
             {
-                m_useTransactionForMetadata = DefaultUseTransactionForMetadata;
+                UseTransactionForMetadata = DefaultUseTransactionForMetadata;
             }
 
             DataLossInterval = 10.0D;
 
             m_bufferBlockCache = new List<BufferBlockMeasurement>();
-            m_useLocalClockAsRealTime = true;
-            m_useSourcePrefixNames = true;
+            UseLocalClockAsRealTime = true;
+            UseSourcePrefixNames = true;
         }
 
         #endregion
@@ -552,15 +542,19 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets the security mode used for communications over the command channel.
         /// </summary>
-        public SecurityMode SecurityMode { get; set; }
+        public SecurityMode SecurityMode
+        {
+            get => m_securityMode;
+            set => m_securityMode = value;
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if <see cref="DataPublisher"/> requires subscribers to authenticate before making data requests.
         /// </summary>
         public bool RequireAuthentication
         {
-            get => SecurityMode != SecurityMode.None;
-            set => SecurityMode = value ? SecurityMode.Gateway : SecurityMode.None;
+            get => m_securityMode != SecurityMode.None;
+            set => m_securityMode = value ? SecurityMode.Gateway : SecurityMode.None;
         }
 
         /// <summary>
@@ -683,20 +677,14 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets total data packet bytes received during this session.
         /// </summary>
-        public long TotalBytesReceived { get; }
+        public long TotalBytesReceived { get; private set; }
 
         /// <summary>
         /// Gets or sets data loss monitoring interval, in seconds. Set to zero to disable monitoring.
         /// </summary>
         public double DataLossInterval
         {
-            get
-            {
-                if (m_dataStreamMonitor is not null)
-                    return m_dataStreamMonitor.Interval / 1000.0D;
-
-                return 0.0D;
-            }
+            get => m_dataStreamMonitor is not null ? m_dataStreamMonitor.Interval / 1000.0D : 0.0D;
             set
             {
                 if (value > 0.0D)
@@ -736,9 +724,11 @@ namespace GSF.TimeSeries.Transport
             get => m_operationalModes;
             set
             {
+                OperationalEncoding operationalEncoding;
+
                 m_operationalModes = value;
-                OperationalEncoding operationalEncoding = (OperationalEncoding)(value & OperationalModes.EncodingMask);
-                m_encoding = GetCharacterEncoding(operationalEncoding);
+                operationalEncoding = (OperationalEncoding)(value & OperationalModes.EncodingMask);
+                Encoding = GetCharacterEncoding(operationalEncoding);
             }
         }
 
@@ -842,7 +832,7 @@ namespace GSF.TimeSeries.Transport
             {
                 m_operationalModes &= ~OperationalModes.EncodingMask;
                 m_operationalModes |= (OperationalModes)value;
-                m_encoding = GetCharacterEncoding(value);
+                Encoding = GetCharacterEncoding(value);
             }
         }
 
@@ -871,7 +861,7 @@ namespace GSF.TimeSeries.Transport
         /// Gets the character encoding defined by the
         /// <see cref="OperationalEncoding"/> of the communications stream.
         /// </summary>
-        public Encoding Encoding { get; }
+        public Encoding Encoding { get; private set; }
 
         /// <summary>
         /// Gets flag indicating if this adapter supports real-time processing.
@@ -882,7 +872,7 @@ namespace GSF.TimeSeries.Transport
         /// data streams and one to the historian for historical data streams. In this scenario, the assumption is that the PDC is
         /// the data source for the historian, implying that only local data is destined for archival.
         /// </remarks>
-        public bool SupportsRealTimeProcessing { get; }
+        public bool SupportsRealTimeProcessing { get; private set; }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -904,7 +894,7 @@ namespace GSF.TimeSeries.Transport
         /// (2) only enabled in the end-most system that most needs the recovered data, like a historian.
         /// </para>
         /// </remarks>
-        public override bool SupportsTemporalProcessing { get; }
+        public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
         /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
@@ -994,11 +984,11 @@ namespace GSF.TimeSeries.Transport
 
                 base.RequestedOutputMeasurementKeys = value;
 
-                if (!AutoStart && Enabled && CommandChannelConnected && !oldKeySet.SetEquals(newKeys))
-                {
-                    OnStatusMessage(MessageLevel.Info, "Requested measurements have changed, adjusting active subscription...");
-                    SubscribeToOutputMeasurements(true);
-                }
+                if (AutoStart || !Enabled || !CommandChannelConnected || oldKeySet.SetEquals(newKeys))
+                    return;
+
+                OnStatusMessage(MessageLevel.Info, "Requested measurements have changed, adjusting active subscription...");
+                SubscribeToOutputMeasurements(true);
             }
         }
 
@@ -1053,47 +1043,28 @@ namespace GSF.TimeSeries.Transport
             {
                 StringBuilder status = new();
 
-                status.AppendFormat("         Subscription mode: {0}", m_synchronizedSubscription ? "Remotely Synchronized" : m_localConcentrator is null ? "Unsynchronized" : "Locally Synchronized");
-                status.AppendLine();
-                status.AppendFormat("             Authenticated: {0}", m_authenticated);
-                status.AppendLine();
-                status.AppendFormat("                Subscribed: {0}", m_subscribed);
-                status.AppendLine();
-                status.AppendFormat("             Security mode: {0}", SecurityMode);
-                status.AppendLine();
-                status.AppendFormat("         Compression modes: {0}", CompressionModes);
-                status.AppendLine();
-                status.AppendFormat("       Mutual Subscription: {0}{1}", MutualSubscription, MutualSubscription ? $" - system is {(m_internal ? "owner" : "renter")}" : "");
-                status.AppendLine();
-                status.AppendFormat(" Mark Received as Internal: {0}", m_internal);
-                status.AppendLine();
-                status.AppendFormat(" Receive Internal Metadata: {0}", ReceiveInternalMetadata);
-                status.AppendLine();
-                status.AppendFormat(" Receive External Metadata: {0}", ReceiveExternalMetadata);
-                status.AppendLine();
-                status.AppendFormat("      Total Bytes Received: {0:N0}", TotalBytesReceived);
-                status.AppendLine();
+                status.AppendLine($"         Subscription mode: {(m_synchronizedSubscription ? "Remotely Synchronized" : m_localConcentrator is null ? "Unsynchronized" : "Locally Synchronized")}");
+                status.AppendLine($"             Authenticated: {m_authenticated}");
+                status.AppendLine($"                Subscribed: {m_subscribed}");
+                status.AppendLine($"             Security mode: {SecurityMode}");
+                status.AppendLine($"         Compression modes: {CompressionModes}");
+                status.AppendLine($"       Mutual Subscription: {MutualSubscription}{(MutualSubscription ? $" - system is {(m_internal ? "owner" : "renter")}" : "")}");
+                status.AppendLine($" Mark Received as Internal: {m_internal}");
+                status.AppendLine($" Receive Internal Metadata: {ReceiveInternalMetadata}");
+                status.AppendLine($" Receive External Metadata: {ReceiveExternalMetadata}");
+                status.AppendLine($"      Total Bytes Received: {TotalBytesReceived:N0}");
 
                 if (m_dataChannel is not null)
-                {
-                    status.AppendFormat("  UDP Data packet security: {0}", m_keyIVs is null ? "Unencrypted" : "Encrypted");
-                    status.AppendLine();
-                }
-                
-                status.AppendFormat("      Data monitor enabled: {0}", m_dataStreamMonitor is not null && m_dataStreamMonitor.Enabled);
-                status.AppendLine();
-                status.AppendFormat("              Logging path: {0}", FilePath.TrimFileName(m_loggingPath.ToNonNullNorWhiteSpace(FilePath.GetAbsolutePath("")), 51));
-                status.AppendLine();
+                    status.AppendLine($"  UDP Data packet security: {(m_keyIVs is null ? "Unencrypted" : "Encrypted")}");
 
-                if (DataLossInterval > 0.0D)
-                    status.AppendFormat("No data reconnect interval: {0:0.000} seconds", DataLossInterval);
-                else
-                    status.Append("No data reconnect interval: disabled");
+                status.AppendLine($"      Data monitor enabled: {m_dataStreamMonitor is not null && m_dataStreamMonitor.Enabled}");
+                status.AppendLine($"              Logging path: {FilePath.TrimFileName(m_loggingPath.ToNonNullNorWhiteSpace(FilePath.GetAbsolutePath("")), 51)}");
 
-                status.AppendLine();
+                status.AppendLine(DataLossInterval > 0.0D ? 
+                    $"No data reconnect interval: {DataLossInterval:0.000} seconds" : 
+                    "No data reconnect interval: disabled");
 
-                status.AppendFormat("    Data gap recovery mode: {0}", m_dataGapRecoveryEnabled ? nameof(Enabled) : "Disabled");
-                status.AppendLine();
+                status.AppendLine($"    Data gap recovery mode: {(m_dataGapRecoveryEnabled ? "Enabled" : "Disabled")}");
 
                 if (m_dataGapRecoveryEnabled && m_dataGapRecoverer is not null)
                     status.Append(m_dataGapRecoverer.Status);
@@ -1218,31 +1189,22 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the total number of measurements processed through this data publisher over the lifetime of the subscriber.
         /// </summary>
-        public long LifetimeMeasurements { get; }
+        public long LifetimeMeasurements { get; private set; }
 
         /// <summary>
         /// Gets the minimum value of the measurements per second calculation.
         /// </summary>
-        public long MinimumMeasurementsPerSecond { get; }
+        public long MinimumMeasurementsPerSecond { get; private set; }
 
         /// <summary>
         /// Gets the maximum value of the measurements per second calculation.
         /// </summary>
-        public long MaximumMeasurementsPerSecond { get; }
+        public long MaximumMeasurementsPerSecond { get; private set; }
 
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
         /// </summary>
-        public long AverageMeasurementsPerSecond
-        {
-            get
-            {
-                if (m_measurementsPerSecondCount == 0L)
-                    return 0L;
-
-                return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
-            }
-        }
+        public long AverageMeasurementsPerSecond => m_measurementsPerSecondCount == 0L ? 0L : m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
 
         /// <summary>
         /// Gets the minimum latency calculated over the full lifetime of the subscriber.
@@ -1257,21 +1219,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the average latency calculated over the full lifetime of the subscriber.
         /// </summary>
-        public int LifetimeAverageLatency
-        {
-            get
-            {
-                if (m_lifetimeLatencyMeasurements == 0)
-                    return -1;
-
-                return (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
-            }
-        }
+        public int LifetimeAverageLatency => m_lifetimeLatencyMeasurements == 0 ? -1 : (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
 
         /// <summary>
         /// Gets real-time as determined by either the local clock or the latest measurement received.
         /// </summary>
-        protected Ticks RealTime => UseLocalClockAsRealTime ? (Ticks)DateTime.UtcNow.Ticks : m_realTime;
+        protected Ticks RealTime => UseLocalClockAsRealTime ? DateTime.UtcNow.Ticks : m_realTime;
 
         #endregion
 
@@ -1283,46 +1236,46 @@ namespace GSF.TimeSeries.Transport
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                DataLossInterval = 0.0D;
+                CommandChannel = null;
+                DataChannel = null;
+                DisposeLocalConcentrator();
+
+                if (m_dataGapRecoverer is not null)
                 {
-                    if (disposing)
-                    {
-                        DataLossInterval = 0.0D;
-                        CommandChannel = null;
-                        DataChannel = null;
-                        DisposeLocalConcentrator();
-
-                        if (m_dataGapRecoverer is not null)
-                        {
-                            m_dataGapRecoverer.RecoveredMeasurements -= m_dataGapRecoverer_RecoveredMeasurements;
-                            m_dataGapRecoverer.StatusMessage -= m_dataGapRecoverer_StatusMessage;
-                            m_dataGapRecoverer.ProcessException -= m_dataGapRecoverer_ProcessException;
-                            m_dataGapRecoverer.Dispose();
-                            m_dataGapRecoverer = null;
-                        }
-
-                        if (m_runTimeLog is not null)
-                        {
-                            m_runTimeLog.ProcessException -= m_runTimeLog_ProcessException;
-                            m_runTimeLog.Dispose();
-                            m_runTimeLog = null;
-                        }
-
-                        if (m_subscribedDevicesTimer is not null)
-                        {
-                            m_subscribedDevicesTimer.Elapsed -= SubscribedDevicesTimer_Elapsed;
-                            m_subscribedDevicesTimer.Dispose();
-                            m_subscribedDevicesTimer = null;
-                        }
-                    }
+                    m_dataGapRecoverer.RecoveredMeasurements -= m_dataGapRecoverer_RecoveredMeasurements;
+                    m_dataGapRecoverer.StatusMessage -= m_dataGapRecoverer_StatusMessage;
+                    m_dataGapRecoverer.ProcessException -= m_dataGapRecoverer_ProcessException;
+                    m_dataGapRecoverer.Dispose();
+                    m_dataGapRecoverer = null;
                 }
-                finally
+
+                if (m_runTimeLog is not null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_runTimeLog.ProcessException -= m_runTimeLog_ProcessException;
+                    m_runTimeLog.Dispose();
+                    m_runTimeLog = null;
                 }
+
+                if (m_subscribedDevicesTimer is not null)
+                {
+                    m_subscribedDevicesTimer.Elapsed -= SubscribedDevicesTimer_Elapsed;
+                    m_subscribedDevicesTimer.Dispose();
+                    m_subscribedDevicesTimer = null;
+                }
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -1336,36 +1289,36 @@ namespace GSF.TimeSeries.Transport
             Dictionary<string, string> settings = Settings;
 
             // Setup connection to data publishing server with or without authentication required
-            if (settings.TryGetValue("requireAuthentication", out string setting))
+            if (settings.TryGetValue(nameof(RequireAuthentication), out string setting))
                 RequireAuthentication = setting.ParseBoolean();
 
             // See if user has opted for different operational modes
-            if (settings.TryGetValue("operationalModes", out setting) && Enum.TryParse(setting, true, out OperationalModes operationalModes))
+            if (settings.TryGetValue(nameof(OperationalModes), out setting) && Enum.TryParse(setting, true, out OperationalModes operationalModes))
                 OperationalModes = operationalModes;
 
             // Set the security mode if explicitly defined
-            if (!settings.TryGetValue("securityMode", out setting) || !Enum.TryParse(setting, true, out m_securityMode))
+            if (!settings.TryGetValue(nameof(SecurityMode), out setting) || !Enum.TryParse(setting, true, out m_securityMode))
                 m_securityMode = SecurityMode.None;
 
             // Apply gateway compression mode to operational mode flags
-            if (settings.TryGetValue("compressionModes", out setting) && Enum.TryParse(setting, true, out CompressionModes compressionModes))
+            if (settings.TryGetValue(nameof(CompressionModes), out setting) && Enum.TryParse(setting, true, out CompressionModes compressionModes))
                 CompressionModes = compressionModes;
 
             // Check if output measurements should be filtered to only those belonging to the subscriber
             m_filterOutputMeasurements = !settings.TryGetValue("filterOutputMeasurements", out setting) || setting.ParseBoolean();
 
             // Check if the subscriber supports real-time and historical processing
-            m_supportsRealTimeProcessing = !settings.TryGetValue("supportsRealTimeProcessing", out setting) || setting.ParseBoolean();
-            m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out setting) && setting.ParseBoolean();
+            SupportsRealTimeProcessing = !settings.TryGetValue(nameof(SupportsRealTimeProcessing), out setting) || setting.ParseBoolean();
+            m_supportsTemporalProcessing = settings.TryGetValue(nameof(SupportsTemporalProcessing), out setting) && setting.ParseBoolean();
 
-            if (settings.TryGetValue("useSimpleTcpClient", out setting))
+            if (settings.TryGetValue(nameof(UseSimpleTcpClient), out setting))
                 UseSimpleTcpClient = setting.ParseBoolean();
 
-            if (settings.TryGetValue("useZeroMQChannel", out setting))
-                m_useZeroMQChannel = setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(UseZeroMQChannel), out setting))
+                UseZeroMQChannel = setting.ParseBoolean();
 
             // FUTURE: Remove this exception when CURVE is enabled in GSF ZeroMQ library
-            if (m_useZeroMQChannel && m_securityMode == SecurityMode.TLS)
+            if (UseZeroMQChannel && m_securityMode == SecurityMode.TLS)
                 throw new ArgumentException("CURVE security settings are not yet available for GSF ZeroMQ client channel.");
 
             // Settings specific to Gateway security
@@ -1404,11 +1357,11 @@ namespace GSF.TimeSeries.Transport
                 m_internal = setting.ParseBoolean();
 
             // Check if user has explicitly defined the ReceiveInternalMetadata flag
-            if (settings.TryGetValue("receiveInternalMetadata", out setting))
+            if (settings.TryGetValue(nameof(ReceiveInternalMetadata), out setting))
                 ReceiveInternalMetadata = setting.ParseBoolean();
 
             // Check if user has explicitly defined the ReceiveExternalMetadata flag
-            if (settings.TryGetValue("receiveExternalMetadata", out setting))
+            if (settings.TryGetValue(nameof(ReceiveExternalMetadata), out setting))
                 ReceiveExternalMetadata = setting.ParseBoolean();
 
             // Check if user has explicitly defined the MutualSubscription flag
@@ -1421,62 +1374,64 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Check if user has defined a meta-data synchronization timeout
-            if (settings.TryGetValue("metadataSynchronizationTimeout", out setting) && int.TryParse(setting, out int metadataSynchronizationTimeout))
-                m_metadataSynchronizationTimeout = metadataSynchronizationTimeout;
+            if (settings.TryGetValue(nameof(MetadataSynchronizationTimeout), out setting) && int.TryParse(setting, out int metadataSynchronizationTimeout))
+                MetadataSynchronizationTimeout = metadataSynchronizationTimeout;
 
             // Check if user has defined a flag for using a transaction during meta-data synchronization
-            if (settings.TryGetValue("useTransactionForMetadata", out setting))
-                m_useTransactionForMetadata = setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(UseTransactionForMetadata), out setting))
+                UseTransactionForMetadata = setting.ParseBoolean();
 
             // Check if user wants to request that publisher use millisecond resolution to conserve bandwidth
-            if (settings.TryGetValue("useMillisecondResolution", out setting))
-                m_useMillisecondResolution = setting.ParseBoolean();
+        #pragma warning disable CS0618
+            if (settings.TryGetValue(nameof(UseMillisecondResolution), out setting))
+                UseMillisecondResolution = setting.ParseBoolean();
+        #pragma warning restore CS0618
 
             // Check if user wants to request that publisher remove NaN from the data stream to conserve bandwidth
             if (settings.TryGetValue("requestNaNValueFilter", out setting))
                 m_requestNaNValueFilter = setting.ParseBoolean();
 
             // Check if user has defined any meta-data filter expressions
-            if (settings.TryGetValue("metadataFilters", out setting))
-                m_metadataFilters = setting;
+            if (settings.TryGetValue(nameof(MetadataFilters), out setting))
+                MetadataFilters = setting;
 
             // Define auto connect setting
-            if (settings.TryGetValue("autoConnect", out setting))
+            if (settings.TryGetValue(nameof(AutoConnect), out setting))
             {
-                m_autoConnect = setting.ParseBoolean();
+                AutoConnect = setting.ParseBoolean();
 
-                if (m_autoConnect)
-                    m_autoSynchronizeMetadata = true;
+                if (AutoConnect)
+                    AutoSynchronizeMetadata = true;
             }
 
             // Define the maximum allowed exceptions before resetting the connection
-            if (settings.TryGetValue("allowedParsingExceptions", out setting))
-                m_allowedParsingExceptions = int.Parse(setting);
+            if (settings.TryGetValue(nameof(AllowedParsingExceptions), out setting))
+                AllowedParsingExceptions = int.Parse(setting);
 
             // Define the window of time over which parsing exceptions are tolerated
-            if (settings.TryGetValue("parsingExceptionWindow", out setting))
-                m_parsingExceptionWindow = Ticks.FromSeconds(double.Parse(setting));
+            if (settings.TryGetValue(nameof(ParsingExceptionWindow), out setting))
+                ParsingExceptionWindow = Ticks.FromSeconds(double.Parse(setting));
 
             // Check if synchronize meta-data is explicitly enabled or disabled
             if (settings.TryGetValue("synchronizeMetadata", out setting))
-                m_autoSynchronizeMetadata = setting.ParseBoolean();
+                AutoSynchronizeMetadata = setting.ParseBoolean();
 
             // Determine if source name prefixes should be applied during metadata synchronization
-            if (settings.TryGetValue("useSourcePrefixNames", out setting))
-                m_useSourcePrefixNames = setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(UseSourcePrefixNames), out setting))
+                UseSourcePrefixNames = setting.ParseBoolean();
 
             // Define data loss interval
-            if (settings.TryGetValue("dataLossInterval", out setting) && double.TryParse(setting, out double interval))
+            if (settings.TryGetValue(nameof(DataLossInterval), out setting) && double.TryParse(setting, out double interval))
                 DataLossInterval = interval;
 
             // Define buffer size
             if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out int bufferSize))
                 bufferSize = ClientBase.DefaultReceiveBufferSize;
 
-            if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
-                m_useLocalClockAsRealTime = setting.ParseBoolean();
+            if (settings.TryGetValue(nameof(UseLocalClockAsRealTime), out setting))
+                UseLocalClockAsRealTime = setting.ParseBoolean();
 
-            if (m_autoConnect)
+            if (AutoConnect)
             {
                 // Connect to local events when automatically engaging connection cycle
                 ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
@@ -1485,7 +1440,7 @@ namespace GSF.TimeSeries.Transport
                 // Update output measurements to include "subscribed" points
                 UpdateOutputMeasurements(true);
             }
-            else if (m_autoSynchronizeMetadata)
+            else if (AutoSynchronizeMetadata)
             {
                 // Output measurements do not include "subscribed" points,
                 // but should still be filtered if applicable
@@ -1494,7 +1449,7 @@ namespace GSF.TimeSeries.Transport
 
             if (m_securityMode != SecurityMode.TLS)
             {
-                if (m_useZeroMQChannel)
+                if (UseZeroMQChannel)
                 {
                     // Create a new ZeroMQ Dealer
                     ZeroMQClient commandChannel = new();
@@ -1543,7 +1498,7 @@ namespace GSF.TimeSeries.Transport
             }
             else
             {
-                if (m_useZeroMQChannel)
+                if (UseZeroMQChannel)
                 {
                     // Create a new ZeroMQ Dealer with CURVE security enabled
                     ZeroMQClient commandChannel = new();
@@ -1587,7 +1542,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Get proper connection string - either from specified command channel or from base connection string
-            if (settings.TryGetValue("commandChannel", out setting))
+            if (settings.TryGetValue(nameof(CommandChannel), out setting))
                 m_commandChannel.ConnectionString = setting;
             else
                 m_commandChannel.ConnectionString = ConnectionString;
@@ -1600,7 +1555,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Get logging path, if any has been defined
-            if (settings.TryGetValue("loggingPath", out setting))
+            if (settings.TryGetValue(nameof(LoggingPath), out setting))
             {
                 setting = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(setting));
 
@@ -1615,7 +1570,7 @@ namespace GSF.TimeSeries.Transport
             {
                 // Make sure setting exists to allow user to by-pass phasor data source validation at startup
                 ConfigurationFile configFile = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection systemSettings = configFile.Settings[nameof(systemSettings)];
+                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
                 CategorizedSettingsElement dataGapRecoveryEnabledSetting = systemSettings["DataGapRecoveryEnabled"];
 
                 // See if this node should process phasor source validation
@@ -1638,14 +1593,19 @@ namespace GSF.TimeSeries.Transport
                         // Note that the data gap recoverer will connect on the same command channel port as
                         // the real-time subscriber (TCP only)
                         m_dataGapRecoveryEnabled = true;
-                        m_dataGapRecoverer = new DataGapRecoverer();
-                        m_dataGapRecoverer.SourceConnectionName = Name;
-                        m_dataGapRecoverer.DataSource = DataSource;
-                        m_dataGapRecoverer.ConnectionString = string.Join("; ", $"autoConnect=false; synchronizeMetadata=false{(string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath)}", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
-                        m_dataGapRecoverer.FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';');
+                        
+                        m_dataGapRecoverer = new DataGapRecoverer
+                        {
+                            SourceConnectionName = Name,
+                            DataSource = DataSource,
+                            ConnectionString = string.Join("; ", $"autoConnect=false; synchronizeMetadata=false{(string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath)}", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs()),
+                            FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';')
+                        };
+                        
                         m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
                         m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
                         m_dataGapRecoverer.ProcessException += m_dataGapRecoverer_ProcessException;
+                        
                         m_dataGapRecoverer.Initialize();
                     }
                     else
@@ -1659,16 +1619,19 @@ namespace GSF.TimeSeries.Transport
                 m_dataGapRecoveryEnabled = false;
             }
 
-            if (!settings.TryGetValue("BypassStatistics", out setting) || !setting.ParseBoolean())
+            if (settings.TryGetValue("BypassStatistics", out setting) && setting.ParseBoolean())
             {
-                void statisticsCalculated(object sender, EventArgs args) => ResetMeasurementsPerSecondCounters();
-                StatisticsEngine.Register(this, "Subscriber", "SUB");
-                StatisticsEngine.Calculated += statisticsCalculated;
-                Disposed += (_, _) => StatisticsEngine.Calculated -= statisticsCalculated;
+                m_bypassingStatistics = true;
             }
             else
             {
-                m_bypassingStatistics = true;
+                void statisticsCalculated(object sender, EventArgs args) => 
+                    ResetMeasurementsPerSecondCounters();
+                
+                StatisticsEngine.Register(this, "Subscriber", "SUB");
+                StatisticsEngine.Calculated += statisticsCalculated;
+                
+                Disposed += (_, _) => StatisticsEngine.Calculated -= statisticsCalculated;
             }
 
             if (PersistConnectionForMetadata)
@@ -1686,7 +1649,7 @@ namespace GSF.TimeSeries.Transport
             if (localCertificateElement is not null)
                 localCertificate = localCertificateElement.Value;
 
-            if ((object)localCertificate is null || !File.Exists(FilePath.GetAbsolutePath(localCertificate)))
+            if (localCertificate is null || !File.Exists(FilePath.GetAbsolutePath(localCertificate)))
                 throw new InvalidOperationException("Unable to find local certificate. Local certificate file must exist when using TLS security mode.");
 
             return localCertificate;
@@ -1695,21 +1658,17 @@ namespace GSF.TimeSeries.Transport
         // Checks if the specified certificate exists
         private bool RemoteCertificateExists()
         {
-            string fullPath = FilePath.GetAbsolutePath(m_remoteCertificate);
-            CategorizedSettingsElement remoteCertificateElement;
+            if (File.Exists(FilePath.GetAbsolutePath(m_remoteCertificate)))
+                return true;
 
-            if (!File.Exists(fullPath))
-            {
-                remoteCertificateElement = ConfigurationFile.Current.Settings["systemSettings"]["RemoteCertificatesPath"];
+            CategorizedSettingsElement remoteCertificateElement = ConfigurationFile.Current.Settings["systemSettings"]["RemoteCertificatesPath"];
 
-                if (remoteCertificateElement is not null)
-                {
-                    m_remoteCertificate = Path.Combine(remoteCertificateElement.Value, m_remoteCertificate);
-                    fullPath = FilePath.GetAbsolutePath(m_remoteCertificate);
-                }
-            }
+            if (remoteCertificateElement is null)
+                return false;
 
-            return File.Exists(fullPath);
+            m_remoteCertificate = Path.Combine(remoteCertificateElement.Value, m_remoteCertificate);
+
+            return File.Exists(FilePath.GetAbsolutePath(m_remoteCertificate));
         }
 
         // Initialize (or reinitialize) the output measurements associated with the data subscriber.
@@ -1737,7 +1696,6 @@ namespace GSF.TimeSeries.Transport
                     // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
                     DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0");
                     List<IMeasurement> subscribedMeasurements = new();
-                    Guid signalID;
 
                     foreach (DataRow row in filteredRows)
                     {
@@ -1745,10 +1703,10 @@ namespace GSF.TimeSeries.Transport
                         Measurement measurement = new();
 
                         // Parse primary measurement identifier
-                        signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                        Guid signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
                         // Set measurement key if defined
-                        MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row[nameof(ID)].ToString());
+                        MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
                         measurement.Metadata = key.Metadata;
                         subscribedMeasurements.Add(measurement);
                     }
@@ -1756,10 +1714,9 @@ namespace GSF.TimeSeries.Transport
                     if (subscribedMeasurements.Count > 0)
                     {
                         // Combine subscribed output measurement with any existing output measurement and return unique set
-                        if (OutputMeasurements is null)
-                            OutputMeasurements = subscribedMeasurements.ToArray();
-                        else
-                            OutputMeasurements = subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
+                        OutputMeasurements = OutputMeasurements is null ? 
+                            subscribedMeasurements.ToArray() : 
+                            subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
                     }
                 }
                 catch (Exception ex)
@@ -1785,25 +1742,24 @@ namespace GSF.TimeSeries.Transport
             if (!m_filterOutputMeasurements)
                 return;
 
-            IEnumerable<Guid> measurementIDs;
             ISet<Guid> measurementIDSet;
             Guid signalID = Guid.Empty;
 
             try
             {
-                if (OutputMeasurements is not null && DataSource is not null && DataSource.Tables.Contains("ActiveMeasurements"))
-                {
-                    // Have to use a Convert expression for DeviceID column in Select function
-                    // here since SQLite doesn't report data types for COALESCE based columns
-                    measurementIDs = DataSource.Tables["ActiveMeasurements"]
-                        .Select($"Convert(DeviceID, 'System.String') = '{ID}'")
-                        .Where(row => Guid.TryParse(row["SignalID"].ToNonNullString(), out signalID))
-                        .Select(_ => signalID);
+                if (OutputMeasurements is null || DataSource is null || !DataSource.Tables.Contains("ActiveMeasurements"))
+                    return;
 
-                    measurementIDSet = new HashSet<Guid>(measurementIDs);
+                // Have to use a Convert expression for DeviceID column in Select function
+                // here since SQLite doesn't report data types for COALESCE based columns
+                IEnumerable<Guid> measurementIDs = DataSource.Tables["ActiveMeasurements"]
+                    .Select($"Convert(DeviceID, 'System.String') = '{ID}'")
+                    .Where(row => Guid.TryParse(row["SignalID"].ToNonNullString(), out signalID))
+                    .Select(_ => signalID);
 
-                    OutputMeasurements = OutputMeasurements.Where(measurement => measurementIDSet.Contains(measurement.ID)).ToArray();
-                }
+                measurementIDSet = new HashSet<Guid>(measurementIDs);
+
+                OutputMeasurements = OutputMeasurements.Where(measurement => measurementIDSet.Contains(measurement.ID)).ToArray();
             }
             catch (Exception ex)
             {
@@ -1819,43 +1775,40 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if authentication transmission was successful; otherwise <c>false</c>.</returns>
         public virtual bool Authenticate(string sharedSecret, string authenticationID)
         {
-            if (!string.IsNullOrWhiteSpace(authenticationID))
-            {
-                try
-                {
-                    using BlockAllocatedMemoryStream buffer = new();
-
-                    byte[] salt = new byte[DataPublisher.CipherSaltLength];
-
-                    // Generate some random prefix data to make sure auth key transmission is always unique
-                    Random.GetBytes(salt);
-
-                    // Get encoded bytes of authentication key
-                    byte[] bytes = salt.Combine(m_encoding.GetBytes(authenticationID));
-
-                    // Encrypt authentication key
-                    bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);
-
-                    // Write encoded authentication key length into buffer
-                    buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
-
-                    // Encode encrypted authentication key into buffer
-                    buffer.Write(bytes, 0, bytes.Length);
-
-                    // Send authentication command to server with associated command buffer
-                    return SendServerCommand(ServerCommand.Authenticate, buffer.ToArray());
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(MessageLevel.Error, new InvalidOperationException("Exception occurred while trying to authenticate publisher subscription: " + ex.Message, ex));
-                }
-            }
-            else
+            if (string.IsNullOrWhiteSpace(authenticationID))
             {
                 OnProcessException(MessageLevel.Error, new InvalidOperationException("Cannot authenticate subscription without a connection string."));
+                return false;
             }
 
-            return false;
+            try
+            {
+                using BlockAllocatedMemoryStream buffer = new();
+                byte[] salt = new byte[DataPublisher.CipherSaltLength];
+
+                // Generate some random prefix data to make sure auth key transmission is always unique
+                Random.GetBytes(salt);
+
+                // Get encoded bytes of authentication key
+                byte[] bytes = salt.Combine(Encoding.GetBytes(authenticationID));
+
+                // Encrypt authentication key
+                bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);
+
+                // Write encoded authentication key length into buffer
+                buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
+
+                // Encode encrypted authentication key into buffer
+                buffer.Write(bytes, 0, bytes.Length);
+
+                // Send authentication command to server with associated command buffer
+                return SendServerCommand(ServerCommand.Authenticate, buffer.ToArray());
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Error, new InvalidOperationException("Exception occurred while trying to authenticate publisher subscription: " + ex.Message, ex));
+                return false;
+            }
         }
 
         /// <summary>
@@ -1863,16 +1816,13 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="info">Configuration object that defines the subscription.</param>
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        public bool Subscribe(SubscriptionInfo info)
-        {
-            if (info is SynchronizedSubscriptionInfo synchronizedSubscriptionInfo)
-                return SynchronizedSubscribe(synchronizedSubscriptionInfo);
-
-            if (info is UnsynchronizedSubscriptionInfo unsynchronizedSubscriptionInfo)
-                return UnsynchronizedSubscribe(unsynchronizedSubscriptionInfo);
-
-            throw new NotSupportedException("Type of subscription used is not supported");
-        }
+        public bool Subscribe(SubscriptionInfo info) =>
+            info switch
+            {
+                SynchronizedSubscriptionInfo synchronizedSubscriptionInfo => SynchronizedSubscribe(synchronizedSubscriptionInfo),
+                UnsynchronizedSubscriptionInfo unsynchronizedSubscriptionInfo => UnsynchronizedSubscribe(unsynchronizedSubscriptionInfo),
+                _ => throw new NotSupportedException("Type of subscription used is not supported")
+            };
 
         /// <summary>
         /// Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
@@ -1889,84 +1839,91 @@ namespace GSF.TimeSeries.Transport
 
             if (info.RemotelySynchronized)
             {
-                connectionString.AppendFormat("framesPerSecond={0};", info.FramesPerSecond);
-                connectionString.AppendFormat("lagTime={0};", info.LagTime);
-                connectionString.AppendFormat("leadTime={0};", info.LeadTime);
-                connectionString.AppendFormat("includeTime=false;");
-                connectionString.AppendFormat("useLocalClockAsRealTime={0};", info.UseLocalClockAsRealTime);
-                connectionString.AppendFormat("ignoreBadTimestamps={0};", info.IgnoreBadTimestamps);
-                connectionString.AppendFormat("allowSortsByArrival={0};", info.AllowSortsByArrival);
-                connectionString.AppendFormat("timeResolution={0};", info.TimeResolution);
-                connectionString.AppendFormat("allowPreemptivePublishing={0};", info.AllowPreemptivePublishing);
-                connectionString.AppendFormat("requestNaNValueFilter={0};", info.RequestNaNValueFilter);
-                connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod);
-                connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
-                connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4:yyyy-MM-dd HH:mm:ss}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
+                connectionString.Append($"framesPerSecond={info.FramesPerSecond};");
+                connectionString.Append($"lagTime={info.LagTime};");
+                connectionString.Append($"leadTime={info.LeadTime};");
+                connectionString.Append("includeTime=false;");
+                connectionString.Append($"useLocalClockAsRealTime={info.UseLocalClockAsRealTime};");
+                connectionString.Append($"ignoreBadTimestamps={info.IgnoreBadTimestamps};");
+                connectionString.Append($"allowSortsByArrival={info.AllowSortsByArrival};");
+                connectionString.Append($"timeResolution={info.TimeResolution};");
+                connectionString.Append($"allowPreemptivePublishing={info.AllowPreemptivePublishing};");
+                connectionString.Append($"requestNaNValueFilter={info.RequestNaNValueFilter};");
+                connectionString.Append($"downsamplingMethod={info.DownsamplingMethod};");
+                connectionString.Append($"processingInterval={info.ProcessingInterval};");
+                connectionString.Append($"assemblyInfo={{source={assemblyInfo.Name};version={assemblyInfo.Version.Major}.{assemblyInfo.Version.Minor}.{assemblyInfo.Version.Build};buildDate={assemblyInfo.BuildDate:yyyy-MM-dd HH:mm:ss}}};");
 
                 if (!string.IsNullOrWhiteSpace(info.FilterExpression))
-                    connectionString.AppendFormat("inputMeasurementKeys={{{0}}};", info.FilterExpression);
+                    connectionString.Append($"inputMeasurementKeys={{{info.FilterExpression}}};");
 
                 if (info.UdpDataChannel)
-                    connectionString.AppendFormat("dataChannel={{localport={0}}};", info.DataChannelLocalPort);
+                    connectionString.Append($"dataChannel={{localport={info.DataChannelLocalPort}}};");
 
                 if (!string.IsNullOrWhiteSpace(info.StartTime))
-                    connectionString.AppendFormat("startTimeConstraint={0};", info.StartTime);
+                    connectionString.Append($"startTimeConstraint={info.StartTime};");
 
                 if (!string.IsNullOrWhiteSpace(info.StopTime))
-                    connectionString.AppendFormat("stopTimeConstraint={0};", info.StopTime);
+                    connectionString.Append($"stopTimeConstraint={info.StopTime};");
 
                 if (!string.IsNullOrWhiteSpace(info.ConstraintParameters))
-                    connectionString.AppendFormat("timeConstraintParameters={0};", info.ConstraintParameters);
+                    connectionString.Append($"timeConstraintParameters={info.ConstraintParameters};");
 
                 if (!string.IsNullOrWhiteSpace(info.ExtraConnectionStringParameters))
-                    connectionString.AppendFormat("{0};", info.ExtraConnectionStringParameters);
+                    connectionString.Append($"{info.ExtraConnectionStringParameters};");
 
                 return Subscribe(true, info.UseCompactMeasurementFormat, connectionString.ToString());
             }
 
             // Locally concentrated subscription simply uses an unsynchronized subscription and concentrates the
             // measurements on the subscriber side
-            if (Subscribe(FromLocallySynchronizedInfo(info)))
+            if (!Subscribe(FromLocallySynchronizedInfo(info)))
+                return false;
+
+            // Establish a local concentrator to synchronize received measurements
+            LocalConcentrator localConcentrator = new(this)
             {
-                // Establish a local concentrator to synchronize received measurements
-                LocalConcentrator localConcentrator = new(this);
-                localConcentrator.ProcessException += m_localConcentrator_ProcessException;
-                localConcentrator.FramesPerSecond = info.FramesPerSecond;
-                localConcentrator.LagTime = info.LagTime;
-                localConcentrator.LeadTime = info.LeadTime;
-                localConcentrator.UseLocalClockAsRealTime = info.UseLocalClockAsRealTime;
-                localConcentrator.IgnoreBadTimestamps = info.IgnoreBadTimestamps;
-                localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
-                localConcentrator.TimeResolution = info.TimeResolution;
-                localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
-                localConcentrator.DownsamplingMethod = info.DownsamplingMethod;
-                localConcentrator.UsePrecisionTimer = false;
+                FramesPerSecond = info.FramesPerSecond,
+                LagTime = info.LagTime,
+                LeadTime = info.LeadTime,
+                UseLocalClockAsRealTime = info.UseLocalClockAsRealTime,
+                IgnoreBadTimestamps = info.IgnoreBadTimestamps,
+                AllowSortsByArrival = info.AllowSortsByArrival,
+                TimeResolution = info.TimeResolution,
+                AllowPreemptivePublishing = info.AllowPreemptivePublishing,
+                DownsamplingMethod = info.DownsamplingMethod,
+                UsePrecisionTimer = false
+            };
+                
+            localConcentrator.ProcessException += m_localConcentrator_ProcessException;
 
-                // Parse time constraints, if defined
-                DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? ParseTimeTag(info.StartTime) : DateTime.MinValue;
-                DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? ParseTimeTag(info.StopTime) : DateTime.MaxValue;
+            // Parse time constraints, if defined
+            DateTime startTimeConstraint = string.IsNullOrWhiteSpace(info.StartTime) ? 
+                DateTime.MinValue : 
+                ParseTimeTag(info.StartTime);
+            
+            DateTime stopTimeConstraint = string.IsNullOrWhiteSpace(info.StopTime) ? 
+                DateTime.MaxValue : 
+                ParseTimeTag(info.StopTime);
 
-                // When processing historical data, timestamps should not be evaluated for reasonability
-                if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
-                {
-                    localConcentrator.PerformTimestampReasonabilityCheck = false;
-                    localConcentrator.LeadTime = double.MaxValue;
-                }
-
-                // Assign alternate processing interval, if defined
-                if (info.ProcessingInterval != -1)
-                    localConcentrator.ProcessingInterval = info.ProcessingInterval;
-
-                // Start local concentrator
-                localConcentrator.Start();
-
-                // Move concentrator to member variable
-                Interlocked.Exchange(ref m_localConcentrator, localConcentrator);
-
-                return true;
+            // When processing historical data, timestamps should not be evaluated for reasonability
+            if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
+            {
+                localConcentrator.PerformTimestampReasonabilityCheck = false;
+                localConcentrator.LeadTime = double.MaxValue;
             }
 
-            return false;
+            // Assign alternate processing interval, if defined
+            if (info.ProcessingInterval != -1)
+                localConcentrator.ProcessingInterval = info.ProcessingInterval;
+
+            // Start local concentrator
+            localConcentrator.Start();
+
+            // Move concentrator to member variable
+            Interlocked.Exchange(ref m_localConcentrator, localConcentrator);
+
+            return true;
+
         }
 
         /// <summary>
@@ -1982,34 +1939,34 @@ namespace GSF.TimeSeries.Transport
             StringBuilder connectionString = new();
             AssemblyInfo assemblyInfo = new(typeof(DataSubscriber).Assembly);
 
-            connectionString.AppendFormat("trackLatestMeasurements={0};", info.Throttled);
-            connectionString.AppendFormat("publishInterval={0};", info.PublishInterval);
-            connectionString.AppendFormat("includeTime={0};", info.IncludeTime);
-            connectionString.AppendFormat("lagTime={0};", info.LagTime);
-            connectionString.AppendFormat("leadTime={0};", info.LeadTime);
-            connectionString.AppendFormat("useLocalClockAsRealTime={0};", info.UseLocalClockAsRealTime);
-            connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
-            connectionString.AppendFormat("useMillisecondResolution={0};", info.UseMillisecondResolution);
-            connectionString.AppendFormat("requestNaNValueFilter={0};", info.RequestNaNValueFilter);
-            connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4:yyyy-MM-dd HH:mm:ss}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
+            connectionString.Append($"trackLatestMeasurements={info.Throttled};");
+            connectionString.Append($"publishInterval={info.PublishInterval};");
+            connectionString.Append($"includeTime={info.IncludeTime};");
+            connectionString.Append($"lagTime={info.LagTime};");
+            connectionString.Append($"leadTime={info.LeadTime};");
+            connectionString.Append($"useLocalClockAsRealTime={info.UseLocalClockAsRealTime};");
+            connectionString.Append($"processingInterval={info.ProcessingInterval};");
+            connectionString.Append($"useMillisecondResolution={info.UseMillisecondResolution};");
+            connectionString.Append($"requestNaNValueFilter={info.RequestNaNValueFilter};");
+            connectionString.Append($"assemblyInfo={{source={assemblyInfo.Name};version={assemblyInfo.Version.Major}.{assemblyInfo.Version.Minor}.{assemblyInfo.Version.Build};buildDate={assemblyInfo.BuildDate:yyyy-MM-dd HH:mm:ss}}};");
 
             if (!string.IsNullOrWhiteSpace(info.FilterExpression))
-                connectionString.AppendFormat("inputMeasurementKeys={{{0}}};", info.FilterExpression);
+                connectionString.Append($"inputMeasurementKeys={{{info.FilterExpression}}};");
 
             if (info.UdpDataChannel)
-                connectionString.AppendFormat("dataChannel={{localport={0}}};", info.DataChannelLocalPort);
+                connectionString.Append($"dataChannel={{localport={info.DataChannelLocalPort}}};");
 
             if (!string.IsNullOrWhiteSpace(info.StartTime))
-                connectionString.AppendFormat("startTimeConstraint={0};", info.StartTime);
+                connectionString.Append($"startTimeConstraint={info.StartTime};");
 
             if (!string.IsNullOrWhiteSpace(info.StopTime))
-                connectionString.AppendFormat("stopTimeConstraint={0};", info.StopTime);
+                connectionString.Append($"stopTimeConstraint={info.StopTime};");
 
             if (!string.IsNullOrWhiteSpace(info.ConstraintParameters))
-                connectionString.AppendFormat("timeConstraintParameters={0};", info.ConstraintParameters);
+                connectionString.Append($"timeConstraintParameters={info.ConstraintParameters};");
 
             if (!string.IsNullOrWhiteSpace(info.ExtraConnectionStringParameters))
-                connectionString.AppendFormat("{0};", info.ExtraConnectionStringParameters);
+                connectionString.Append($"{info.ExtraConnectionStringParameters};");
 
             // Make sure not to monitor for data loss any faster than down-sample time on throttled connections - additionally
             // you will want to make sure data stream monitor is twice lag-time to allow time for initial points to arrive.
@@ -2017,7 +1974,9 @@ namespace GSF.TimeSeries.Transport
                 m_dataStreamMonitor.Interval = (int)(2.0D * info.LagTime * 1000.0D);
 
             // Set millisecond resolution member variable for compact measurement parsing
-            m_useMillisecondResolution = info.UseMillisecondResolution;
+        #pragma warning disable CS0618
+            UseMillisecondResolution = info.UseMillisecondResolution;
+        #pragma warning restore CS0618
 
             return Subscribe(false, info.UseCompactMeasurementFormat, connectionString.ToString());
         }
@@ -2099,28 +2058,28 @@ namespace GSF.TimeSeries.Transport
             StringBuilder connectionString = new();
             AssemblyInfo assemblyInfo = new(typeof(DataSubscriber).Assembly);
 
-            connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
-            connectionString.AppendFormat("lagTime={0}; ", lagTime);
-            connectionString.AppendFormat("leadTime={0}; ", leadTime);
-            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
-            connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
-            connectionString.AppendFormat("includeTime=false; ");
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
-            connectionString.AppendFormat("ignoreBadTimestamps={0}; ", ignoreBadTimestamps);
-            connectionString.AppendFormat("allowSortsByArrival={0}; ", allowSortsByArrival);
-            connectionString.AppendFormat("timeResolution={0}; ", timeResolution);
-            connectionString.AppendFormat("allowPreemptivePublishing={0}; ", allowPreemptivePublishing);
-            connectionString.AppendFormat("downsamplingMethod={0}; ", downsamplingMethod.ToString());
-            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4:yyyy-MM-dd HH:mm:ss}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
+            connectionString.Append($"framesPerSecond={framesPerSecond}; ");
+            connectionString.Append($"lagTime={lagTime}; ");
+            connectionString.Append($"leadTime={leadTime}; ");
+            connectionString.Append($"inputMeasurementKeys={{{filterExpression.ToNonNullString()}}}; ");
+            connectionString.Append($"dataChannel={{{dataChannel.ToNonNullString()}}}; ");
+            connectionString.Append("includeTime=false; ");
+            connectionString.Append($"useLocalClockAsRealTime={useLocalClockAsRealTime}; ");
+            connectionString.Append($"ignoreBadTimestamps={ignoreBadTimestamps}; ");
+            connectionString.Append($"allowSortsByArrival={allowSortsByArrival}; ");
+            connectionString.Append($"timeResolution={timeResolution}; ");
+            connectionString.Append($"allowPreemptivePublishing={allowPreemptivePublishing}; ");
+            connectionString.Append($"downsamplingMethod={downsamplingMethod}; ");
+            connectionString.Append($"startTimeConstraint={startTime.ToNonNullString()}; ");
+            connectionString.Append($"stopTimeConstraint={stopTime.ToNonNullString()}; ");
+            connectionString.Append($"timeConstraintParameters={constraintParameters.ToNonNullString()}; ");
+            connectionString.Append($"processingInterval={processingInterval}; ");
+            connectionString.Append($"assemblyInfo={{source={assemblyInfo.Name}; version={assemblyInfo.Version.Major}.{assemblyInfo.Version.Minor}.{assemblyInfo.Version.Build}; buildDate={assemblyInfo.BuildDate:yyyy-MM-dd HH:mm:ss}}}");
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
-                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
-                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
+                connectionString.Append($"; waitHandleNames={waitHandleNames}");
+                connectionString.Append($"; waitHandleTimeout={waitHandleTimeout}");
             }
 
             return Subscribe(true, compactFormat, connectionString.ToString());
@@ -2201,22 +2160,30 @@ namespace GSF.TimeSeries.Transport
             DisposeLocalConcentrator();
 
             // Establish a local concentrator to synchronize received measurements
-            m_localConcentrator = new LocalConcentrator(this);
+            m_localConcentrator = new LocalConcentrator(this)
+            {
+                FramesPerSecond = framesPerSecond,
+                LagTime = lagTime,
+                LeadTime = leadTime,
+                UseLocalClockAsRealTime = useLocalClockAsRealTime,
+                IgnoreBadTimestamps = ignoreBadTimestamps,
+                AllowSortsByArrival = allowSortsByArrival,
+                TimeResolution = timeResolution,
+                AllowPreemptivePublishing = allowPreemptivePublishing,
+                DownsamplingMethod = downsamplingMethod,
+                UsePrecisionTimer = false
+            };
+            
             m_localConcentrator.ProcessException += m_localConcentrator_ProcessException;
-            m_localConcentrator.FramesPerSecond = framesPerSecond;
-            m_localConcentrator.LagTime = lagTime;
-            m_localConcentrator.LeadTime = leadTime;
-            m_localConcentrator.UseLocalClockAsRealTime = useLocalClockAsRealTime;
-            m_localConcentrator.IgnoreBadTimestamps = ignoreBadTimestamps;
-            m_localConcentrator.AllowSortsByArrival = allowSortsByArrival;
-            m_localConcentrator.TimeResolution = timeResolution;
-            m_localConcentrator.AllowPreemptivePublishing = allowPreemptivePublishing;
-            m_localConcentrator.DownsamplingMethod = downsamplingMethod;
-            m_localConcentrator.UsePrecisionTimer = false;
 
             // Parse time constraints, if defined
-            DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(startTime) ? ParseTimeTag(startTime) : DateTime.MinValue;
-            DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(stopTime) ? ParseTimeTag(stopTime) : DateTime.MaxValue;
+            DateTime startTimeConstraint = string.IsNullOrWhiteSpace(startTime) ? 
+                DateTime.MinValue : 
+                ParseTimeTag(startTime);
+            
+            DateTime stopTimeConstraint = string.IsNullOrWhiteSpace(stopTime) ? 
+                DateTime.MaxValue : 
+                ParseTimeTag(stopTime);
 
             // When processing historical data, timestamps should not be evaluated for reasonability
             if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
@@ -2233,35 +2200,33 @@ namespace GSF.TimeSeries.Transport
             StringBuilder connectionString = new();
             AssemblyInfo assemblyInfo = new(typeof(DataSubscriber).Assembly);
 
-            connectionString.AppendFormat("trackLatestMeasurements={0}; ", false);
-            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
-            connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
-            connectionString.AppendFormat("includeTime={0}; ", true);
-            connectionString.AppendFormat("lagTime={0}; ", 10.0D);
-            connectionString.AppendFormat("leadTime={0}; ", 5.0D);
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", false);
-            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4:yyyy-MM-dd HH:mm:ss}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
+            connectionString.Append($"trackLatestMeasurements={false}; ");
+            connectionString.Append($"inputMeasurementKeys={{{filterExpression.ToNonNullString()}}}; ");
+            connectionString.Append($"dataChannel={{{dataChannel.ToNonNullString()}}}; ");
+            connectionString.Append($"includeTime={true}; ");
+            connectionString.Append($"lagTime={10.0D}; ");
+            connectionString.Append($"leadTime={5.0D}; ");
+            connectionString.Append($"useLocalClockAsRealTime={false}; ");
+            connectionString.Append($"startTimeConstraint={startTime.ToNonNullString()}; ");
+            connectionString.Append($"stopTimeConstraint={stopTime.ToNonNullString()}; ");
+            connectionString.Append($"timeConstraintParameters={constraintParameters.ToNonNullString()}; ");
+            connectionString.Append($"processingInterval={processingInterval}; ");
+            connectionString.Append($"useMillisecondResolution={UseMillisecondResolution}; ");
+            connectionString.Append($"assemblyInfo={{source={assemblyInfo.Name}; version={assemblyInfo.Version.Major}.{assemblyInfo.Version.Minor}.{assemblyInfo.Version.Build}; buildDate={assemblyInfo.BuildDate:yyyy-MM-dd HH:mm:ss}}}");
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
-                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
-                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
+                connectionString.Append($"; waitHandleNames={waitHandleNames}");
+                connectionString.Append($"; waitHandleTimeout={waitHandleTimeout}");
             }
 
             // Start subscription process
-            if (Subscribe(false, compactFormat, connectionString.ToString()))
-            {
-                // If subscription succeeds, start local concentrator
-                m_localConcentrator.Start();
-                return true;
-            }
+            if (!Subscribe(false, compactFormat, connectionString.ToString()))
+                return false;
 
-            return false;
+            // If subscription succeeds, start local concentrator
+            m_localConcentrator.Start();
+            return true;
         }
 
         /// <summary>
@@ -2337,25 +2302,25 @@ namespace GSF.TimeSeries.Transport
             StringBuilder connectionString = new();
             AssemblyInfo assemblyInfo = new(typeof(DataSubscriber).Assembly);
 
-            connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
-            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
-            connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
-            connectionString.AppendFormat("includeTime={0}; ", includeTime);
-            connectionString.AppendFormat("lagTime={0}; ", lagTime);
-            connectionString.AppendFormat("leadTime={0}; ", leadTime);
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
-            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
-            connectionString.AppendFormat("requestNaNValueFilter={0}; ", m_requestNaNValueFilter);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4:yyyy-MM-dd HH:mm:ss}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate);
+            connectionString.Append($"trackLatestMeasurements={throttled}; ");
+            connectionString.Append($"inputMeasurementKeys={{{filterExpression.ToNonNullString()}}}; ");
+            connectionString.Append($"dataChannel={{{dataChannel.ToNonNullString()}}}; ");
+            connectionString.Append($"includeTime={includeTime}; ");
+            connectionString.Append($"lagTime={lagTime}; ");
+            connectionString.Append($"leadTime={leadTime}; ");
+            connectionString.Append($"useLocalClockAsRealTime={useLocalClockAsRealTime}; ");
+            connectionString.Append($"startTimeConstraint={startTime.ToNonNullString()}; ");
+            connectionString.Append($"stopTimeConstraint={stopTime.ToNonNullString()}; ");
+            connectionString.Append($"timeConstraintParameters={constraintParameters.ToNonNullString()}; ");
+            connectionString.Append($"processingInterval={processingInterval}; ");
+            connectionString.Append($"useMillisecondResolution={UseMillisecondResolution}; ");
+            connectionString.Append($"requestNaNValueFilter={m_requestNaNValueFilter}; ");
+            connectionString.Append($"assemblyInfo={{source={assemblyInfo.Name}; version={assemblyInfo.Version.Major}.{assemblyInfo.Version.Minor}.{assemblyInfo.Version.Build}; buildDate={assemblyInfo.BuildDate:yyyy-MM-dd HH:mm:ss}}}");
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))
             {
-                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
-                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
+                connectionString.Append($"; waitHandleNames={waitHandleNames}");
+                connectionString.Append($"; waitHandleTimeout={waitHandleTimeout}");
             }
 
             // Make sure not to monitor for data loss any faster than down-sample time on throttled connections - additionally
@@ -2386,12 +2351,9 @@ namespace GSF.TimeSeries.Transport
                     UdpClient dataChannel = null;
 
                     // Track specified time inclusion for later deserialization
-                    if (settings.TryGetValue("includeTime", out string setting))
-                        m_includeTime = setting.ParseBoolean();
-                    else
-                        m_includeTime = true;
+                    m_includeTime = !settings.TryGetValue("includeTime", out string setting) || setting.ParseBoolean();
 
-                    settings.TryGetValue(nameof(dataChannel), out setting);
+                    settings.TryGetValue("dataChannel", out setting);
 
                     if (!string.IsNullOrWhiteSpace(setting))
                     {
@@ -2404,10 +2366,12 @@ namespace GSF.TimeSeries.Transport
                             CompressionModes &= ~CompressionModes.TSSC;
                         }
 
-                        dataChannel = new UdpClient(setting);
-
-                        dataChannel.ReceiveBufferSize = ushort.MaxValue;
-                        dataChannel.MaxConnectionAttempts = -1;
+                        dataChannel = new UdpClient(setting)
+                        {
+                            ReceiveBufferSize = ushort.MaxValue,
+                            MaxConnectionAttempts = -1
+                        };
+                        
                         dataChannel.ConnectAsync();
                     }
 
@@ -2429,7 +2393,7 @@ namespace GSF.TimeSeries.Transport
                     buffer.WriteByte((byte)flags);
 
                     // Get encoded bytes of connection string
-                    byte[] bytes = m_encoding.GetBytes(connectionString);
+                    byte[] bytes = Encoding.GetBytes(connectionString);
 
                     // Write encoded connection string length into buffer
                     buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
@@ -2455,9 +2419,7 @@ namespace GSF.TimeSeries.Transport
 
             // Reset decompressor on successful resubscription
             if (success)
-            {
                 m_tsscResetRequested = true;
-            }
 
             return success;
         }
@@ -2466,35 +2428,26 @@ namespace GSF.TimeSeries.Transport
         /// Unsubscribes from a data publisher.
         /// </summary>
         /// <returns><c>true</c> if unsubscribe transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool Unsubscribe()
-        {
-            // Send unsubscribe server command
-            return SendServerCommand(ServerCommand.Unsubscribe);
-        }
+        public virtual bool Unsubscribe() => 
+            SendServerCommand(ServerCommand.Unsubscribe); // Send unsubscribe server command
 
         /// <summary>
         /// Returns the measurements signal IDs that were authorized after the last successful subscription request.
         /// </summary>
         [AdapterCommand("Gets authorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
-        public virtual Guid[] GetAuthorizedSignalIDs()
-        {
-            if (m_signalIndexCache is not null)
-                return m_signalIndexCache.AuthorizedSignalIDs;
-
-            return Array.Empty<Guid>();
-        }
+        public virtual Guid[] GetAuthorizedSignalIDs() =>
+            m_signalIndexCache is null ? 
+                Array.Empty<Guid>() : 
+                m_signalIndexCache.AuthorizedSignalIDs;
 
         /// <summary>
         /// Returns the measurements signal IDs that were unauthorized after the last successful subscription request.
         /// </summary>
         [AdapterCommand("Gets unauthorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
-        public virtual Guid[] GetUnauthorizedSignalIDs()
-        {
-            if (m_signalIndexCache is not null)
-                return m_signalIndexCache.UnauthorizedSignalIDs;
-
-            return Array.Empty<Guid>();
-        }
+        public virtual Guid[] GetUnauthorizedSignalIDs() => 
+            m_signalIndexCache is null ? 
+                Array.Empty<Guid>() : 
+                m_signalIndexCache.UnauthorizedSignalIDs;
 
         /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
@@ -2502,8 +2455,8 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
-            m_lifetimeMeasurements = 0L;
-            m_totalBytesReceived = 0L;
+            LifetimeMeasurements = 0L;
+            TotalBytesReceived = 0L;
             m_lifetimeTotalLatency = 0L;
             m_lifetimeMinimumLatency = 0L;
             m_lifetimeMaximumLatency = 0L;
@@ -2514,10 +2467,8 @@ namespace GSF.TimeSeries.Transport
         /// Initiate a meta-data refresh.
         /// </summary>
         [AdapterCommand("Initiates a meta-data refresh.", "Administrator", "Editor")]
-        public virtual void RefreshMetadata()
-        {
-            SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
-        }
+        public virtual void RefreshMetadata() => 
+            SendServerCommand(ServerCommand.MetaDataRefresh, MetadataFilters);
 
         /// <summary>
         /// Log a data gap for data gap recovery.
@@ -2526,7 +2477,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
         public virtual void LogDataGap(string timeString)
         {
-            DateTimeOffset end = default(DateTimeOffset);
+            DateTimeOffset end = default;
             string[] split = timeString.Split(';');
 
             if (!m_dataGapRecoveryEnabled)
@@ -2555,7 +2506,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Removes a data gap from data gap recovery.", "Administrator", "Editor")]
         public virtual string RemoveDataGap(string timeString)
         {
-            DateTimeOffset end = default(DateTimeOffset);
+            DateTimeOffset end = default;
             string[] split = timeString.Split(';');
 
             if (!m_dataGapRecoveryEnabled)
@@ -2574,10 +2525,9 @@ namespace GSF.TimeSeries.Transport
             if (!parserSuccessful)
                 throw new FormatException("Invalid format for time string - ex: 2014-03-27 02:10:47.566;2014-03-27 02:10:59.733");
 
-            if (m_dataGapRecoverer?.RemoveDataGap(start, end) ?? false)
-                return "Data gap successfully removed.";
-            else
-                return "Data gap not found.";
+            return m_dataGapRecoverer?.RemoveDataGap(start, end) ?? false ? 
+                "Data gap successfully removed." : 
+                "Data gap not found.";
         }
 
         /// <summary>
@@ -2585,26 +2535,20 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <returns>The contents of the outage log.</returns>
         [AdapterCommand("Displays data gaps queued for data gap recovery.", "Administrator", "Editor", "Viewer")]
-        public virtual string DumpOutageLog()
-        {
-            if (m_dataGapRecoveryEnabled && m_dataGapRecoverer is not null)
-                return Environment.NewLine + m_dataGapRecoverer.DumpOutageLog();
-
-            throw new InvalidOperationException("Data gap recovery not enabled");
-        }
+        public virtual string DumpOutageLog() => 
+            m_dataGapRecoveryEnabled && m_dataGapRecoverer is not null ? 
+                Environment.NewLine + m_dataGapRecoverer.DumpOutageLog() : 
+                throw new InvalidOperationException("Data gap recovery not enabled");
 
         /// <summary>
         /// Gets the status of the temporal <see cref="DataSubscriber"/> used by the data gap recovery module.
         /// </summary>
         /// <returns>Status of the temporal <see cref="DataSubscriber"/> used by the data gap recovery module.</returns>
         [AdapterCommand("Gets the status of the temporal subscription used by the data gap recovery module.", "Administrator", "Editor", "Viewer")]
-        public virtual string GetDataGapRecoverySubscriptionStatus()
-        {
-            if (m_dataGapRecoveryEnabled && m_dataGapRecoverer is not null)
-                return m_dataGapRecoverer.TemporalSubscriptionStatus;
-
-            return "Data gap recovery not enabled";
-        }
+        public virtual string GetDataGapRecoverySubscriptionStatus() => 
+            m_dataGapRecoveryEnabled && m_dataGapRecoverer is not null ? 
+                m_dataGapRecoverer.TemporalSubscriptionStatus : 
+                "Data gap recovery not enabled";
 
         /// <summary>
         /// Spawn meta-data synchronization.
@@ -2635,19 +2579,16 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         public virtual bool SendServerCommand(ServerCommand commandCode, string message)
         {
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                using BlockAllocatedMemoryStream buffer = new();
+            if (string.IsNullOrWhiteSpace(message))
+                return SendServerCommand(commandCode);
 
-                byte[] bytes = m_encoding.GetBytes(message);
+            using BlockAllocatedMemoryStream buffer = new();
+            byte[] bytes = Encoding.GetBytes(message);
 
-                buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
-                buffer.Write(bytes, 0, bytes.Length);
+            buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
+            buffer.Write(bytes, 0, bytes.Length);
 
-                return SendServerCommand(commandCode, buffer.ToArray());
-            }
-
-            return SendServerCommand(commandCode);
+            return SendServerCommand(commandCode, buffer.ToArray());
         }
 
         /// <summary>
@@ -2683,7 +2624,9 @@ namespace GSF.TimeSeries.Transport
                 }
             }
             else
+            {
                 OnProcessException(MessageLevel.Error, new InvalidOperationException($"Subscriber is currently unconnected. Cannot send server command \"{commandCode}\" to publisher."));
+            }
 
             return false;
         }
@@ -2693,10 +2636,10 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
-            if (!this.TemporalConstraintIsDefined() && !m_supportsRealTimeProcessing)
+            if (!this.TemporalConstraintIsDefined() && !SupportsRealTimeProcessing)
                 return;
 
-            long now = m_useLocalClockAsRealTime ? DateTime.UtcNow.Ticks : 0L;
+            long now = UseLocalClockAsRealTime ? DateTime.UtcNow.Ticks : 0L;
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
 
             m_registerStatisticsOperation.RunOnceAsync();
@@ -2707,14 +2650,14 @@ namespace GSF.TimeSeries.Transport
             m_authenticated = m_securityMode == SecurityMode.TLS;
             m_subscribed = false;
             m_keyIVs = null;
-            m_totalBytesReceived = 0L;
+            TotalBytesReceived = 0L;
             m_monitoredBytesReceived = 0L;
             m_lastBytesReceived = 0;
 
-            if (!PersistConnectionForMetadata)
-                m_commandChannel.ConnectAsync();
-            else
+            if (PersistConnectionForMetadata)
                 OnConnected();
+            else
+                m_commandChannel.ConnectAsync();
 
             if (PersistConnectionForMetadata && CommandChannelConnected)
             {
@@ -2725,7 +2668,7 @@ namespace GSF.TimeSeries.Transport
                     SubscribeToOutputMeasurements(true);
             }
 
-            if (m_useLocalClockAsRealTime && m_subscribedDevicesTimer is null)
+            if (UseLocalClockAsRealTime && m_subscribedDevicesTimer is null)
             {
                 m_subscribedDevicesTimer = Common.TimerScheduler.CreateTimer(1000);
                 m_subscribedDevicesTimer.Elapsed += SubscribedDevicesTimer_Elapsed;
@@ -2740,7 +2683,7 @@ namespace GSF.TimeSeries.Transport
                     statisticsHelper.Reset(now);
             }
 
-            if (m_useLocalClockAsRealTime)
+            if (UseLocalClockAsRealTime)
                 m_subscribedDevicesTimer.Start();
         }
 
@@ -2760,8 +2703,7 @@ namespace GSF.TimeSeries.Transport
             if (!PersistConnectionForMetadata && m_commandChannel is not null)
                 m_commandChannel.Disconnect();
 
-            if (m_subscribedDevicesTimer is not null)
-                m_subscribedDevicesTimer.Stop();
+            m_subscribedDevicesTimer?.Stop();
 
             m_metadataRefreshPending = false;
         }
@@ -2771,13 +2713,10 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="maxLength">Maximum length of the status message.</param>
         /// <returns>Text of the status message.</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            if (m_commandChannel is not null && m_commandChannel.CurrentState == ClientState.Connected)
-                return $"Subscriber is connected and receiving {(m_synchronizedSubscription ? "synchronized" : "unsynchronized")} data points".CenterText(maxLength);
-
-            return "Subscriber is not connected.".CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) =>
+            m_commandChannel is not null && m_commandChannel.CurrentState == ClientState.Connected ? 
+                $"Subscriber is connected and receiving {(m_synchronizedSubscription ? "synchronized" : "unsynchronized")} data points".CenterText(maxLength) : 
+                "Subscriber is not connected.".CenterText(maxLength);
 
         /// <summary>
         /// Get message from string based response.
@@ -2786,10 +2725,8 @@ namespace GSF.TimeSeries.Transport
         /// <param name="startIndex">Start index of response message.</param>
         /// <param name="length">Length of response message.</param>
         /// <returns>Decoded response string.</returns>
-        protected string InterpretResponseMessage(byte[] buffer, int startIndex, int length)
-        {
-            return m_encoding.GetString(buffer, startIndex, length);
-        }
+        protected string InterpretResponseMessage(byte[] buffer, int startIndex, int length) => 
+            Encoding.GetString(buffer, startIndex, length);
 
         // Restarts the subscriber.
         private void Restart()
@@ -2808,518 +2745,518 @@ namespace GSF.TimeSeries.Transport
         {
             // Currently this work is done on the async socket completion thread, make sure work to be done is timely and if the response processing
             // is coming in via the command channel and needs to send a command back to the server, it should be done on a separate thread...
-            if (buffer is not null && length > 0)
+            if (buffer is null || length <= 0)
+                return;
+
+            try
             {
-                try
+                Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup;
+                DeviceStatisticsHelper<SubscribedDevice> statisticsHelper;
+
+                ServerResponse responseCode = (ServerResponse)buffer[0];
+                ServerCommand commandCode = (ServerCommand)buffer[1];
+                int responseLength = BigEndian.ToInt32(buffer, 2);
+                int responseIndex = DataPublisher.ClientResponseHeaderSize;
+                byte[][][] keyIVs;
+
+                // Disconnect any established UDP data channel upon successful unsubscribe
+                if (commandCode == ServerCommand.Unsubscribe && responseCode == ServerResponse.Succeeded)
+                    DataChannel = null;
+
+                if (!IsUserCommand(commandCode))
+                    OnReceivedServerResponse(responseCode, commandCode);
+                else
+                    OnReceivedUserCommandResponse(commandCode, responseCode, buffer, responseIndex, length);
+
+                switch (responseCode)
                 {
-                    Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup;
-                    DeviceStatisticsHelper<SubscribedDevice> statisticsHelper;
-
-                    ServerResponse responseCode = (ServerResponse)buffer[0];
-                    ServerCommand commandCode = (ServerCommand)buffer[1];
-                    int responseLength = BigEndian.ToInt32(buffer, 2);
-                    int responseIndex = DataPublisher.ClientResponseHeaderSize;
-                    byte[][][] keyIVs;
-
-                    // Disconnect any established UDP data channel upon successful unsubscribe
-                    if (commandCode == ServerCommand.Unsubscribe && responseCode == ServerResponse.Succeeded)
-                        DataChannel = null;
-
-                    if (!IsUserCommand(commandCode))
-                        OnReceivedServerResponse(responseCode, commandCode);
-                    else
-                        OnReceivedUserCommandResponse(commandCode, responseCode, buffer, responseIndex, length);
-
-                    switch (responseCode)
-                    {
-                        case ServerResponse.Succeeded:
-                            switch (commandCode)
-                            {
-                                case ServerCommand.Authenticate:
-                                    OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
-                                    m_authenticated = true;
-                                    OnConnectionAuthenticated();
-                                    break;
-                                case ServerCommand.Subscribe:
-                                    OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
-                                    m_subscribed = true;
-                                    break;
-                                case ServerCommand.Unsubscribe:
-                                    OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
-                                    m_subscribed = false;
-                                    if (m_dataStreamMonitor is not null)
-                                        m_dataStreamMonitor.Enabled = false;
-                                    break;
-                                case ServerCommand.RotateCipherKeys:
-                                    OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
-                                    break;
-                                case ServerCommand.MetaDataRefresh:
-                                    OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": latest meta-data received.");
-                                    OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
-                                    m_metadataRefreshPending = false;
-                                    break;
-                            }
-                            break;
-                        case ServerResponse.Failed:
-                            OnStatusMessage(MessageLevel.Info, $"Failure code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
-
-                            if (commandCode == ServerCommand.MetaDataRefresh)
+                    case ServerResponse.Succeeded:
+                        switch (commandCode)
+                        {
+                            case ServerCommand.Authenticate:
+                                OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
+                                m_authenticated = true;
+                                OnConnectionAuthenticated();
+                                break;
+                            case ServerCommand.Subscribe:
+                                OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
+                                m_subscribed = true;
+                                break;
+                            case ServerCommand.Unsubscribe:
+                                OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
+                                m_subscribed = false;
+                                if (m_dataStreamMonitor is not null)
+                                    m_dataStreamMonitor.Enabled = false;
+                                break;
+                            case ServerCommand.RotateCipherKeys:
+                                OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
+                                break;
+                            case ServerCommand.MetaDataRefresh:
+                                OnStatusMessage(MessageLevel.Info, $"Success code received in response to server command \"{commandCode}\": latest meta-data received.");
+                                OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
                                 m_metadataRefreshPending = false;
-                            break;
-                        case ServerResponse.DataPacket:
-                            long now = DateTime.UtcNow.Ticks;
+                                break;
+                        }
+                        break;
+                    case ServerResponse.Failed:
+                        OnStatusMessage(MessageLevel.Info, $"Failure code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
 
-                            // Deserialize data packet
-                            List<IMeasurement> measurements = new();
-                            Ticks timestamp = 0;
+                        if (commandCode == ServerCommand.MetaDataRefresh)
+                            m_metadataRefreshPending = false;
+                        break;
+                    case ServerResponse.DataPacket:
+                        long now = DateTime.UtcNow.Ticks;
 
-                            if (m_totalBytesReceived == 0)
+                        // Deserialize data packet
+                        List<IMeasurement> measurements = new();
+                        Ticks timestamp = 0;
+
+                        if (TotalBytesReceived == 0)
+                        {
+                            // At the point when data is being received, data monitor should be enabled
+                            if (m_dataStreamMonitor is not null && !m_dataStreamMonitor.Enabled)
+                                m_dataStreamMonitor.Enabled = true;
+
+                            // Establish run-time log for subscriber
+                            if (AutoConnect || m_dataGapRecoveryEnabled)
                             {
-                                // At the point when data is being received, data monitor should be enabled
-                                if (m_dataStreamMonitor is not null && !m_dataStreamMonitor.Enabled)
-                                    m_dataStreamMonitor.Enabled = true;
-
-                                // Establish run-time log for subscriber
-                                if (m_autoConnect || m_dataGapRecoveryEnabled)
+                                if (m_runTimeLog is null)
                                 {
-                                    if (m_runTimeLog is null)
-                                    {
-                                        m_runTimeLog = new RunTimeLog();
-                                        m_runTimeLog.FileName = GetLoggingPath(Name + "_RunTimeLog.txt");
-                                        m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
-                                        m_runTimeLog.Initialize();
-                                    }
-                                    else
-                                    {
-                                        // Mark the start of any data transmissions
-                                        m_runTimeLog.StartTime = DateTimeOffset.UtcNow;
-                                        m_runTimeLog.Enabled = true;
-                                    }
+                                    m_runTimeLog = new RunTimeLog();
+                                    m_runTimeLog.FileName = GetLoggingPath(Name + "_RunTimeLog.txt");
+                                    m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
+                                    m_runTimeLog.Initialize();
                                 }
-
-                                // The duration between last disconnection and start of data transmissions
-                                // represents a gap in data - if data gap recovery is enabled, we log
-                                // this as a gap for recovery:
-                                if (m_dataGapRecoveryEnabled && m_dataGapRecoverer is not null)
-                                    m_dataGapRecoverer.LogDataGap(m_runTimeLog.StopTime, DateTimeOffset.UtcNow);
+                                else
+                                {
+                                    // Mark the start of any data transmissions
+                                    m_runTimeLog.StartTime = DateTimeOffset.UtcNow;
+                                    m_runTimeLog.Enabled = true;
+                                }
                             }
 
-                            // Track total data packet bytes received from any channel
-                            m_totalBytesReceived += m_lastBytesReceived;
-                            m_monitoredBytesReceived += m_lastBytesReceived;
+                            // The duration between last disconnection and start of data transmissions
+                            // represents a gap in data - if data gap recovery is enabled, we log
+                            // this as a gap for recovery:
+                            if (m_dataGapRecoveryEnabled && m_dataGapRecoverer is not null)
+                                m_dataGapRecoverer.LogDataGap(m_runTimeLog.StopTime, DateTimeOffset.UtcNow);
+                        }
 
-                            // Get data packet flags
-                            DataPacketFlags flags = (DataPacketFlags)buffer[responseIndex];
-                            responseIndex++;
+                        // Track total data packet bytes received from any channel
+                        TotalBytesReceived += m_lastBytesReceived;
+                        m_monitoredBytesReceived += m_lastBytesReceived;
 
-                            bool synchronizedMeasurements = (byte)(flags & DataPacketFlags.Synchronized) > 0;
-                            bool compactMeasurementFormat = (byte)(flags & DataPacketFlags.Compact) > 0;
-                            bool compressedPayload = (byte)(flags & DataPacketFlags.Compressed) > 0;
-                            int cipherIndex = (flags & DataPacketFlags.CipherIndex) > 0 ? 1 : 0;
+                        // Get data packet flags
+                        DataPacketFlags flags = (DataPacketFlags)buffer[responseIndex];
+                        responseIndex++;
 
-                            // Decrypt data packet payload if keys are available
-                            if (m_keyIVs is not null)
+                        bool synchronizedMeasurements = (byte)(flags & DataPacketFlags.Synchronized) > 0;
+                        bool compactMeasurementFormat = (byte)(flags & DataPacketFlags.Compact) > 0;
+                        bool compressedPayload = (byte)(flags & DataPacketFlags.Compressed) > 0;
+                        int cipherIndex = (flags & DataPacketFlags.CipherIndex) > 0 ? 1 : 0;
+
+                        // Decrypt data packet payload if keys are available
+                        if (m_keyIVs is not null)
+                        {
+                            // Get a local copy of volatile keyIVs reference since this can change at any time
+                            keyIVs = m_keyIVs;
+
+                            // Decrypt payload portion of data packet
+                            buffer = Common.SymmetricAlgorithm.Decrypt(buffer, responseIndex, responseLength - 1, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
+                            responseIndex = 0;
+                            responseLength = buffer.Length;
+                        }
+
+                        // Synchronized packets contain a frame level timestamp
+                        if (synchronizedMeasurements)
+                        {
+                            timestamp = BigEndian.ToInt64(buffer, responseIndex);
+                            responseIndex += 8;
+                        }
+
+                        // Deserialize number of measurements that follow
+                        int count = BigEndian.ToInt32(buffer, responseIndex);
+                        responseIndex += 4;
+
+                        if (compressedPayload)
+                        {
+                            if (CompressionModes.HasFlag(CompressionModes.TSSC))
                             {
-                                // Get a local copy of volatile keyIVs reference since this can change at any time
-                                keyIVs = m_keyIVs;
-
-                                // Decrypt payload portion of data packet
-                                buffer = Common.SymmetricAlgorithm.Decrypt(buffer, responseIndex, responseLength - 1, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
-                                responseIndex = 0;
-                                responseLength = buffer.Length;
+                                try
+                                {
+                                    // Decompress TSSC serialized measurements from payload
+                                    ParseTSSCMeasurements(buffer, responseLength, ref responseIndex, measurements);
+                                }
+                                catch (Exception ex)
+                                {
+                                    OnProcessException(MessageLevel.Error, new InvalidOperationException($"Decompression failure: (Decoded {measurements.Count} of {count} measurements)" + ex.Message, ex));
+                                }
                             }
-
-                            // Synchronized packets contain a frame level timestamp
-                            if (synchronizedMeasurements)
+                            else
                             {
-                                timestamp = BigEndian.ToInt64(buffer, responseIndex);
-                                responseIndex += 8;
-                            }
+                                if (m_signalIndexCache is null && m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
+                                {
+                                    // Warning message for missing signal index cache
+                                    if (m_lastMissingCacheWarning != 0L)
+                                        OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
 
-                            // Deserialize number of measurements that follow
-                            int count = BigEndian.ToInt32(buffer, responseIndex);
-                            responseIndex += 4;
-
-                            if (compressedPayload)
-                            {
-                                if (CompressionModes.HasFlag(CompressionModes.TSSC))
+                                    m_lastMissingCacheWarning = now;
+                                }
+                                else
                                 {
                                     try
                                     {
-                                        // Decompress TSSC serialized measurements from payload
-                                        ParseTSSCMeasurements(buffer, responseLength, ref responseIndex, measurements);
+                                        // Decompress compact measurements from payload
+                                        measurements.AddRange(buffer.DecompressPayload(m_signalIndexCache, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize, count, m_includeTime, flags));
                                     }
                                     catch (Exception ex)
                                     {
                                         OnProcessException(MessageLevel.Error, new InvalidOperationException($"Decompression failure: (Decoded {measurements.Count} of {count} measurements)" + ex.Message, ex));
                                     }
                                 }
-                                else
+                            }
+                        }
+                        else
+                        {
+                            // Deserialize measurements
+                            for (int i = 0; i < count; i++)
+                            {
+                                if (!compactMeasurementFormat)
                                 {
-                                    if (m_signalIndexCache is null && m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
-                                    {
-                                        // Warning message for missing signal index cache
-                                        if (m_lastMissingCacheWarning != 0L)
-                                            OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
+                                    // Deserialize full measurement format
+                                    SerializableMeasurement measurement = new(Encoding);
+                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
+                                    measurements.Add(measurement);
+                                }
+                                else if (m_signalIndexCache is not null)
+                                {
+                                    // Deserialize compact measurement format
+                                #pragma warning disable CS0618
+                                    CompactMeasurement measurement = new(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, UseMillisecondResolution);
+                                #pragma warning restore CS0618
+                                    responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
 
-                                        m_lastMissingCacheWarning = now;
-                                    }
-                                    else
-                                    {
-                                        try
-                                        {
-                                            // Decompress compact measurements from payload
-                                            measurements.AddRange(buffer.DecompressPayload(m_signalIndexCache, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize, count, m_includeTime, flags));
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Decompression failure: (Decoded {measurements.Count} of {count} measurements)" + ex.Message, ex));
-                                        }
-                                    }
+                                    // Apply timestamp from frame if not included in transmission
+                                    if (!measurement.IncludeTime)
+                                        measurement.Timestamp = timestamp;
+
+                                    measurements.Add(measurement);
+                                }
+                                else if (m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
+                                {
+                                    // Warning message for missing signal index cache
+                                    if (m_lastMissingCacheWarning != 0L)
+                                        OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
+
+                                    m_lastMissingCacheWarning = now;
                                 }
                             }
-                            else
+                        }
+
+                        // Calculate statistics
+                        subscribedDevicesLookup = m_subscribedDevicesLookup;
+                        statisticsHelper = null;
+
+                        if (subscribedDevicesLookup is not null)
+                        {
+                            IEnumerable<IGrouping<DeviceStatisticsHelper<SubscribedDevice>, IMeasurement>> deviceGroups = measurements
+                                .Where(measurement => subscribedDevicesLookup.TryGetValue(measurement.ID, out statisticsHelper))
+                                .Select(measurement => Tuple.Create(statisticsHelper, measurement))
+                                .ToList()
+                                .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2);
+
+                            foreach (IGrouping<DeviceStatisticsHelper<SubscribedDevice>, IMeasurement> deviceGroup in deviceGroups)
                             {
-                                // Deserialize measurements
-                                for (int i = 0; i < count; i++)
+                                statisticsHelper = deviceGroup.Key;
+
+                                foreach (IGrouping<Ticks, IMeasurement> frame in deviceGroup.GroupBy(measurement => measurement.Timestamp))
                                 {
-                                    if (!compactMeasurementFormat)
+                                    // Determine the number of measurements received with valid values
+                                    const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
+                                    bool hasError(MeasurementStateFlags stateFlags) => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
+                                    int measurementsReceived = frame.Count(measurement => !double.IsNaN(measurement.Value));
+                                    int measurementsWithError = frame.Count(measurement => !double.IsNaN(measurement.Value) && hasError(measurement.StateFlags));
+
+                                    IMeasurement statusFlags = null;
+                                    IMeasurement frequency = null;
+                                    IMeasurement deltaFrequency = null;
+
+                                    // Attempt to update real-time
+                                    if (!UseLocalClockAsRealTime && frame.Key > m_realTime)
+                                        m_realTime = frame.Key;
+
+                                    // Search the frame for status flags, frequency, and delta frequency
+                                    foreach (IMeasurement measurement in frame)
                                     {
-                                        // Deserialize full measurement format
-                                        SerializableMeasurement measurement = new(m_encoding);
-                                        responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
-                                        measurements.Add(measurement);
+                                        if (measurement.ID == statisticsHelper.Device.StatusFlagsID)
+                                            statusFlags = measurement;
+                                        else if (measurement.ID == statisticsHelper.Device.FrequencyID)
+                                            frequency = measurement;
+                                        else if (measurement.ID == statisticsHelper.Device.DeltaFrequencyID)
+                                            deltaFrequency = measurement;
                                     }
-                                    else if (m_signalIndexCache is not null)
+
+                                    // If we are receiving status flags for this device,
+                                    // count the data quality, time quality, and device errors
+                                    if (statusFlags is not null)
                                     {
-                                        // Deserialize compact measurement format
-                                        CompactMeasurement measurement = new(m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
-                                        responseIndex += measurement.ParseBinaryImage(buffer, responseIndex, responseLength - responseIndex);
+                                        uint commonStatusFlags = (uint)statusFlags.Value;
 
-                                        // Apply timestamp from frame if not included in transmission
-                                        if (!measurement.IncludeTime)
-                                            measurement.Timestamp = timestamp;
+                                        if ((commonStatusFlags & (uint)Bits.Bit19) > 0)
+                                            statisticsHelper.Device.DataQualityErrors++;
 
-                                        measurements.Add(measurement);
+                                        if ((commonStatusFlags & (uint)Bits.Bit18) > 0)
+                                            statisticsHelper.Device.TimeQualityErrors++;
+
+                                        if ((commonStatusFlags & (uint)Bits.Bit16) > 0)
+                                            statisticsHelper.Device.DeviceErrors++;
+
+                                        measurementsReceived--;
+
+                                        if (hasError(statusFlags.StateFlags))
+                                            measurementsWithError--;
                                     }
-                                    else if (m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
+
+                                    // Zero is not a valid value for frequency.
+                                    // If frequency is zero, invalidate both frequency and delta frequency
+                                    if (frequency is not null)
                                     {
-                                        // Warning message for missing signal index cache
-                                        if (m_lastMissingCacheWarning != 0L)
-                                            OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
+                                        if (!this.TemporalConstraintIsDefined())
+                                            statisticsHelper.MarkDeviceTimestamp(frequency.Timestamp);
 
-                                        m_lastMissingCacheWarning = now;
-                                    }
-                                }
-                            }
-
-                            // Calculate statistics
-                            subscribedDevicesLookup = m_subscribedDevicesLookup;
-                            statisticsHelper = null;
-
-                            if (subscribedDevicesLookup is not null)
-                            {
-                                IEnumerable<IGrouping<DeviceStatisticsHelper<SubscribedDevice>, IMeasurement>> deviceGroups = measurements
-                                    .Where(measurement => subscribedDevicesLookup.TryGetValue(measurement.ID, out statisticsHelper))
-                                    .Select(measurement => Tuple.Create(statisticsHelper, measurement))
-                                    .ToList()
-                                    .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2);
-
-                                foreach (IGrouping<DeviceStatisticsHelper<SubscribedDevice>, IMeasurement> deviceGroup in deviceGroups)
-                                {
-                                    statisticsHelper = deviceGroup.Key;
-
-                                    foreach (IGrouping<Ticks, IMeasurement> frame in deviceGroup.GroupBy(measurement => measurement.Timestamp))
-                                    {
-                                        // Determine the number of measurements received with valid values
-                                        const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
-                                        bool hasError(MeasurementStateFlags stateFlags) => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
-                                        int measurementsReceived = frame.Count(measurement => !double.IsNaN(measurement.Value));
-                                        int measurementsWithError = frame.Count(measurement => !double.IsNaN(measurement.Value) && hasError(measurement.StateFlags));
-
-                                        IMeasurement statusFlags = null;
-                                        IMeasurement frequency = null;
-                                        IMeasurement deltaFrequency = null;
-
-                                        // Attempt to update real-time
-                                        if (!m_useLocalClockAsRealTime && frame.Key > m_realTime)
-                                            m_realTime = frame.Key;
-
-                                        // Search the frame for status flags, frequency, and delta frequency
-                                        foreach (IMeasurement measurement in frame)
+                                        if (frequency.Value == 0.0D)
                                         {
-                                            if (measurement.ID == statisticsHelper.Device.StatusFlagsID)
-                                                statusFlags = measurement;
-                                            else if (measurement.ID == statisticsHelper.Device.FrequencyID)
-                                                frequency = measurement;
-                                            else if (measurement.ID == statisticsHelper.Device.DeltaFrequencyID)
-                                                deltaFrequency = measurement;
-                                        }
+                                            if (deltaFrequency is not null && !double.IsNaN(deltaFrequency.Value))
+                                                measurementsReceived -= 2;
+                                            else
+                                                measurementsReceived--;
 
-                                        // If we are receiving status flags for this device,
-                                        // count the data quality, time quality, and device errors
-                                        if (statusFlags is not null)
-                                        {
-                                            uint commonStatusFlags = (uint)statusFlags.Value;
-
-                                            if ((commonStatusFlags & (uint)Bits.Bit19) > 0)
-                                                statisticsHelper.Device.DataQualityErrors++;
-
-                                            if ((commonStatusFlags & (uint)Bits.Bit18) > 0)
-                                                statisticsHelper.Device.TimeQualityErrors++;
-
-                                            if ((commonStatusFlags & (uint)Bits.Bit16) > 0)
-                                                statisticsHelper.Device.DeviceErrors++;
-
-                                            measurementsReceived--;
-
-                                            if (hasError(statusFlags.StateFlags))
-                                                measurementsWithError--;
-                                        }
-
-                                        // Zero is not a valid value for frequency.
-                                        // If frequency is zero, invalidate both frequency and delta frequency
-                                        if (frequency is not null)
-                                        {
-                                            if (!this.TemporalConstraintIsDefined())
-                                                statisticsHelper.MarkDeviceTimestamp(frequency.Timestamp);
-
-                                            if (frequency.Value == 0.0D)
+                                            if (hasError(frequency.StateFlags))
                                             {
                                                 if (deltaFrequency is not null && !double.IsNaN(deltaFrequency.Value))
-                                                    measurementsReceived -= 2;
+                                                    measurementsWithError -= 2;
                                                 else
-                                                    measurementsReceived--;
-
-                                                if (hasError(frequency.StateFlags))
-                                                {
-                                                    if (deltaFrequency is not null && !double.IsNaN(deltaFrequency.Value))
-                                                        measurementsWithError -= 2;
-                                                    else
-                                                        measurementsWithError--;
-                                                }
+                                                    measurementsWithError--;
                                             }
                                         }
-
-                                        // Track the number of measurements received
-                                        statisticsHelper.AddToMeasurementsReceived(measurementsReceived);
-                                        statisticsHelper.AddToMeasurementsWithError(measurementsWithError);
                                     }
+
+                                    // Track the number of measurements received
+                                    statisticsHelper.AddToMeasurementsReceived(measurementsReceived);
+                                    statisticsHelper.AddToMeasurementsWithError(measurementsWithError);
                                 }
                             }
+                        }
 
-                            // Provide new measurements to local concentrator, if defined, otherwise directly expose them to the consumer
-                            if (m_localConcentrator is not null)
-                                m_localConcentrator.SortMeasurements(measurements);
-                            else
-                                OnNewMeasurements(measurements);
+                        // Provide new measurements to local concentrator, if defined, otherwise directly expose them to the consumer
+                        if (m_localConcentrator is not null)
+                            m_localConcentrator.SortMeasurements(measurements);
+                        else
+                            OnNewMeasurements(measurements);
 
-                            // Gather statistics on received data
-                            DateTime timeReceived = RealTime;
+                        // Gather statistics on received data
+                        DateTime timeReceived = RealTime;
 
-                            if (!m_useLocalClockAsRealTime && timeReceived.Ticks - m_lastStatisticsHelperUpdate > Ticks.PerSecond)
+                        if (!UseLocalClockAsRealTime && timeReceived.Ticks - m_lastStatisticsHelperUpdate > Ticks.PerSecond)
+                        {
+                            UpdateStatisticsHelpers();
+                            m_lastStatisticsHelperUpdate = m_realTime;
+                        }
+
+                        LifetimeMeasurements += measurements.Count;
+                        UpdateMeasurementsPerSecond(timeReceived, measurements.Count);
+
+                        for (int x = 0; x < measurements.Count; x++)
+                        {
+                            long latency = timeReceived.Ticks - (long)measurements[x].Timestamp;
+
+                            // Throw out latencies that exceed one hour as invalid
+                            if (Math.Abs(latency) > Time.SecondsPerHour * Ticks.PerSecond)
+                                continue;
+
+                            if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
+                                m_lifetimeMinimumLatency = latency;
+
+                            if (m_lifetimeMaximumLatency < latency || m_lifetimeMaximumLatency == 0)
+                                m_lifetimeMaximumLatency = latency;
+
+                            m_lifetimeTotalLatency += latency;
+                            m_lifetimeLatencyMeasurements++;
+                        }
+                        break;
+                    case ServerResponse.BufferBlock:
+                        // Buffer block received - wrap as a buffer block measurement and expose back to consumer
+                        uint sequenceNumber = BigEndian.ToUInt32(buffer, responseIndex);
+                        int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
+
+                        // Check if this buffer block has already been processed (e.g., mistaken retransmission due to timeout)
+                        if (cacheIndex >= 0 && (cacheIndex >= m_bufferBlockCache.Count || m_bufferBlockCache[cacheIndex] is null))
+                        {
+                            // Send confirmation that buffer block is received
+                            SendServerCommand(ServerCommand.ConfirmBufferBlock, buffer.BlockCopy(responseIndex, 4));
+
+                            // Get measurement key from signal index cache
+                            ushort signalIndex = BigEndian.ToUInt16(buffer, responseIndex + 4);
+
+                            if (!m_signalIndexCache.Reference.TryGetValue(signalIndex, out MeasurementKey measurementKey))
+                                throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + signalIndex);
+
+                            // Skip the sequence number and signal index when creating the buffer block measurement
+                            BufferBlockMeasurement bufferBlockMeasurement = new(buffer, responseIndex + 6, responseLength - 6)
                             {
-                                UpdateStatisticsHelpers();
-                                m_lastStatisticsHelperUpdate = m_realTime;
-                            }
+                                Metadata = measurementKey.Metadata
+                            };
 
-                            m_lifetimeMeasurements += measurements.Count;
-                            UpdateMeasurementsPerSecond(timeReceived, measurements.Count);
-
-                            for (int x = 0; x < measurements.Count; x++)
+                            // Determine if this is the next buffer block in the sequence
+                            if (sequenceNumber == m_expectedBufferBlockSequenceNumber)
                             {
-                                long latency = timeReceived.Ticks - (long)measurements[x].Timestamp;
+                                List<IMeasurement> bufferBlockMeasurements = new();
+                                int i;
 
-                                // Throw out latencies that exceed one hour as invalid
-                                if (Math.Abs(latency) > Time.SecondsPerHour * Ticks.PerSecond)
-                                    continue;
+                                // Add the buffer block measurement to the list of measurements to be published
+                                bufferBlockMeasurements.Add(bufferBlockMeasurement);
+                                m_expectedBufferBlockSequenceNumber++;
 
-                                if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
-                                    m_lifetimeMinimumLatency = latency;
-
-                                if (m_lifetimeMaximumLatency < latency || m_lifetimeMaximumLatency == 0)
-                                    m_lifetimeMaximumLatency = latency;
-
-                                m_lifetimeTotalLatency += latency;
-                                m_lifetimeLatencyMeasurements++;
-                            }
-                            break;
-                        case ServerResponse.BufferBlock:
-                            // Buffer block received - wrap as a buffer block measurement and expose back to consumer
-                            uint sequenceNumber = BigEndian.ToUInt32(buffer, responseIndex);
-                            int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
-                            BufferBlockMeasurement bufferBlockMeasurement;
-                            ushort signalIndex;
-
-                            // Check if this buffer block has already been processed (e.g., mistaken retransmission due to timeout)
-                            if (cacheIndex >= 0 && (cacheIndex >= m_bufferBlockCache.Count || (object)m_bufferBlockCache[cacheIndex] is null))
-                            {
-                                // Send confirmation that buffer block is received
-                                SendServerCommand(ServerCommand.ConfirmBufferBlock, buffer.BlockCopy(responseIndex, 4));
-
-                                // Get measurement key from signal index cache
-                                signalIndex = BigEndian.ToUInt16(buffer, responseIndex + 4);
-
-                                if (!m_signalIndexCache.Reference.TryGetValue(signalIndex, out MeasurementKey measurementKey))
-                                    throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + signalIndex);
-
-                                // Skip the sequence number and signal index when creating the buffer block measurement
-                                bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
+                                // Add cached buffer block measurements to the list of measurements to be published
+                                for (i = 1; i < m_bufferBlockCache.Count; i++)
                                 {
-                                    Metadata = measurementKey.Metadata
-                                };
+                                    if (m_bufferBlockCache[i] is null)
+                                        break;
 
-                                // Determine if this is the next buffer block in the sequence
-                                if (sequenceNumber == m_expectedBufferBlockSequenceNumber)
-                                {
-                                    List<IMeasurement> bufferBlockMeasurements = new();
-                                    int i;
-
-                                    // Add the buffer block measurement to the list of measurements to be published
-                                    bufferBlockMeasurements.Add(bufferBlockMeasurement);
+                                    bufferBlockMeasurements.Add(m_bufferBlockCache[i]);
                                     m_expectedBufferBlockSequenceNumber++;
-
-                                    // Add cached buffer block measurements to the list of measurements to be published
-                                    for (i = 1; i < m_bufferBlockCache.Count; i++)
-                                    {
-                                        if ((object)m_bufferBlockCache[i] is null)
-                                            break;
-
-                                        bufferBlockMeasurements.Add(m_bufferBlockCache[i]);
-                                        m_expectedBufferBlockSequenceNumber++;
-                                    }
-
-                                    // Remove published measurements from the buffer block queue
-                                    if (m_bufferBlockCache.Count > 0)
-                                        m_bufferBlockCache.RemoveRange(0, i);
-
-                                    // Publish measurements
-                                    OnNewMeasurements(bufferBlockMeasurements);
                                 }
-                                else
-                                {
-                                    // Ensure that the list has at least as many
-                                    // elements as it needs to cache this measurement
-                                    for (int i = m_bufferBlockCache.Count; i <= cacheIndex; i++)
-                                        m_bufferBlockCache.Add(null);
 
-                                    // Insert this buffer block into the proper location in the list
-                                    m_bufferBlockCache[cacheIndex] = bufferBlockMeasurement;
-                                }
+                                // Remove published measurements from the buffer block queue
+                                if (m_bufferBlockCache.Count > 0)
+                                    m_bufferBlockCache.RemoveRange(0, i);
+
+                                // Publish measurements
+                                OnNewMeasurements(bufferBlockMeasurements);
                             }
+                            else
+                            {
+                                // Ensure that the list has at least as many
+                                // elements as it needs to cache this measurement
+                                for (int i = m_bufferBlockCache.Count; i <= cacheIndex; i++)
+                                    m_bufferBlockCache.Add(null);
 
-                            m_lifetimeMeasurements += 1;
-                            UpdateMeasurementsPerSecond(DateTime.UtcNow, 1);
-                            break;
-                        case ServerResponse.DataStartTime:
-                            // Raise data start time event
-                            OnDataStartTime(BigEndian.ToInt64(buffer, responseIndex));
-                            break;
-                        case ServerResponse.ProcessingComplete:
-                            // Raise input processing completed event
-                            OnProcessingComplete(InterpretResponseMessage(buffer, responseIndex, responseLength));
-                            break;
-                        case ServerResponse.UpdateSignalIndexCache:
-                            // Deserialize new signal index cache
-                            m_remoteSignalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
-                            m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
-                            FixExpectedMeasurementCounts();
-                            break;
-                        case ServerResponse.UpdateBaseTimes:
-                            // Get active time index
-                            m_timeIndex = BigEndian.ToInt32(buffer, responseIndex);
-                            responseIndex += 4;
+                                // Insert this buffer block into the proper location in the list
+                                m_bufferBlockCache[cacheIndex] = bufferBlockMeasurement;
+                            }
+                        }
 
-                            // Deserialize new base time offsets
-                            m_baseTimeOffsets = new[] { BigEndian.ToInt64(buffer, responseIndex), BigEndian.ToInt64(buffer, responseIndex + 8) };
-                            break;
-                        case ServerResponse.UpdateCipherKeys:
-                            // Move past active cipher index (not currently used anywhere else)
-                            responseIndex++;
+                        LifetimeMeasurements += 1;
+                        UpdateMeasurementsPerSecond(DateTime.UtcNow, 1);
+                        break;
+                    case ServerResponse.DataStartTime:
+                        // Raise data start time event
+                        OnDataStartTime(BigEndian.ToInt64(buffer, responseIndex));
+                        break;
+                    case ServerResponse.ProcessingComplete:
+                        // Raise input processing completed event
+                        OnProcessingComplete(InterpretResponseMessage(buffer, responseIndex, responseLength));
+                        break;
+                    case ServerResponse.UpdateSignalIndexCache:
+                        // Deserialize new signal index cache
+                        m_remoteSignalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
+                        m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
+                        FixExpectedMeasurementCounts();
+                        break;
+                    case ServerResponse.UpdateBaseTimes:
+                        // Get active time index
+                        m_timeIndex = BigEndian.ToInt32(buffer, responseIndex);
+                        responseIndex += 4;
 
-                            // Extract remaining response
-                            byte[] bytes = buffer.BlockCopy(responseIndex, responseLength - 1);
+                        // Deserialize new base time offsets
+                        m_baseTimeOffsets = new[] { BigEndian.ToInt64(buffer, responseIndex), BigEndian.ToInt64(buffer, responseIndex + 8) };
+                        break;
+                    case ServerResponse.UpdateCipherKeys:
+                        // Move past active cipher index (not currently used anywhere else)
+                        responseIndex++;
 
-                            // Decrypt response payload if subscription is authenticated
-                            if (m_authenticated)
-                                bytes = bytes.Decrypt(m_sharedSecret, CipherStrength.Aes256);
+                        // Extract remaining response
+                        byte[] bytes = buffer.BlockCopy(responseIndex, responseLength - 1);
 
-                            // Deserialize new cipher keys
-                            keyIVs = new byte[2][][];
-                            keyIVs[EvenKey] = new byte[2][];
-                            keyIVs[OddKey] = new byte[2][];
+                        // Decrypt response payload if subscription is authenticated
+                        if (m_authenticated)
+                            bytes = bytes.Decrypt(m_sharedSecret, CipherStrength.Aes256);
 
-                            int index = 0;
+                        // Deserialize new cipher keys
+                        keyIVs = new byte[2][][];
+                        keyIVs[EvenKey] = new byte[2][];
+                        keyIVs[OddKey] = new byte[2][];
 
-                            // Read even key size
-                            int bufferLen = BigEndian.ToInt32(bytes, index);
-                            index += 4;
+                        int index = 0;
 
-                            // Read even key
-                            keyIVs[EvenKey][KeyIndex] = new byte[bufferLen];
-                            Buffer.BlockCopy(bytes, index, keyIVs[EvenKey][KeyIndex], 0, bufferLen);
-                            index += bufferLen;
+                        // Read even key size
+                        int bufferLen = BigEndian.ToInt32(bytes, index);
+                        index += 4;
 
-                            // Read even initialization vector size
-                            bufferLen = BigEndian.ToInt32(bytes, index);
-                            index += 4;
+                        // Read even key
+                        keyIVs[EvenKey][KeyIndex] = new byte[bufferLen];
+                        Buffer.BlockCopy(bytes, index, keyIVs[EvenKey][KeyIndex], 0, bufferLen);
+                        index += bufferLen;
 
-                            // Read even initialization vector
-                            keyIVs[EvenKey][IVIndex] = new byte[bufferLen];
-                            Buffer.BlockCopy(bytes, index, keyIVs[EvenKey][IVIndex], 0, bufferLen);
-                            index += bufferLen;
+                        // Read even initialization vector size
+                        bufferLen = BigEndian.ToInt32(bytes, index);
+                        index += 4;
 
-                            // Read odd key size
-                            bufferLen = BigEndian.ToInt32(bytes, index);
-                            index += 4;
+                        // Read even initialization vector
+                        keyIVs[EvenKey][IVIndex] = new byte[bufferLen];
+                        Buffer.BlockCopy(bytes, index, keyIVs[EvenKey][IVIndex], 0, bufferLen);
+                        index += bufferLen;
 
-                            // Read odd key
-                            keyIVs[OddKey][KeyIndex] = new byte[bufferLen];
-                            Buffer.BlockCopy(bytes, index, keyIVs[OddKey][KeyIndex], 0, bufferLen);
-                            index += bufferLen;
+                        // Read odd key size
+                        bufferLen = BigEndian.ToInt32(bytes, index);
+                        index += 4;
 
-                            // Read odd initialization vector size
-                            bufferLen = BigEndian.ToInt32(bytes, index);
-                            index += 4;
+                        // Read odd key
+                        keyIVs[OddKey][KeyIndex] = new byte[bufferLen];
+                        Buffer.BlockCopy(bytes, index, keyIVs[OddKey][KeyIndex], 0, bufferLen);
+                        index += bufferLen;
 
-                            // Read odd initialization vector
-                            keyIVs[OddKey][IVIndex] = new byte[bufferLen];
-                            Buffer.BlockCopy(bytes, index, keyIVs[OddKey][IVIndex], 0, bufferLen);
-                            //index += bufferLen;
+                        // Read odd initialization vector size
+                        bufferLen = BigEndian.ToInt32(bytes, index);
+                        index += 4;
 
-                            // Exchange keys
-                            m_keyIVs = keyIVs;
+                        // Read odd initialization vector
+                        keyIVs[OddKey][IVIndex] = new byte[bufferLen];
+                        Buffer.BlockCopy(bytes, index, keyIVs[OddKey][IVIndex], 0, bufferLen);
+                        //index += bufferLen;
 
-                            OnStatusMessage(MessageLevel.Info, "Successfully established new cipher keys for data packet transmissions.");
-                            break;
-                        case ServerResponse.Notify:
-                            // Skip the 4-byte hash
-                            string message = m_encoding.GetString(buffer, responseIndex + 4, responseLength - 4);
+                        // Exchange keys
+                        m_keyIVs = keyIVs;
 
-                            // Display notification
-                            OnStatusMessage(MessageLevel.Info, $"NOTIFICATION: {message}");
-                            OnNotificationReceived(message);
+                        OnStatusMessage(MessageLevel.Info, "Successfully established new cipher keys for data packet transmissions.");
+                        break;
+                    case ServerResponse.Notify:
+                        // Skip the 4-byte hash
+                        string message = Encoding.GetString(buffer, responseIndex + 4, responseLength - 4);
 
-                            // Send confirmation of receipt of the notification
-                            SendServerCommand(ServerCommand.ConfirmNotification, buffer.BlockCopy(responseIndex, 4));
-                            break;
-                        case ServerResponse.ConfigurationChanged:
-                            OnStatusMessage(MessageLevel.Info, "Received notification from publisher that configuration has changed.");
-                            OnServerConfigurationChanged();
+                        // Display notification
+                        OnStatusMessage(MessageLevel.Info, $"NOTIFICATION: {message}");
+                        OnNotificationReceived(message);
 
-                            // Initiate meta-data refresh when publisher configuration has changed - we only do this
-                            // for automatic connections since API style connections have to manually initiate a
-                            // meta-data refresh. API style connection should attach to server configuration changed
-                            // event and request meta-data refresh to complete automated cycle.
-                            if (m_autoConnect && m_autoSynchronizeMetadata)
-                                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
-                            break;
-                    }
+                        // Send confirmation of receipt of the notification
+                        SendServerCommand(ServerCommand.ConfirmNotification, buffer.BlockCopy(responseIndex, 4));
+                        break;
+                    case ServerResponse.ConfigurationChanged:
+                        OnStatusMessage(MessageLevel.Info, "Received notification from publisher that configuration has changed.");
+                        OnServerConfigurationChanged();
+
+                        // Initiate meta-data refresh when publisher configuration has changed - we only do this
+                        // for automatic connections since API style connections have to manually initiate a
+                        // meta-data refresh. API style connection should attach to server configuration changed
+                        // event and request meta-data refresh to complete automated cycle.
+                        if (AutoConnect && AutoSynchronizeMetadata)
+                            SendServerCommand(ServerCommand.MetaDataRefresh, MetadataFilters);
+                        break;
                 }
-                catch (Exception ex)
-                {
-                    OnProcessException(MessageLevel.Error, new InvalidOperationException("Failed to process publisher response packet due to exception: " + ex.Message, ex));
-                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Error, new InvalidOperationException("Failed to process publisher response packet due to exception: " + ex.Message, ex));
             }
         }
 
@@ -3342,7 +3279,7 @@ namespace GSF.TimeSeries.Transport
 
             if (sequenceNumber == 0)
             {
-                OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", nameof(TSSC));
+                OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", "TSSC");
                 m_tsscDecoder = new TsscDecoder();
                 m_tsscSequenceNumber = 0;
                 m_tsscResetRequested = false;
@@ -3354,7 +3291,7 @@ namespace GSF.TimeSeries.Transport
                     throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {sequenceNumber}");
 
                 // Ignore packets until the reset has occurred.
-                LogEventPublisher publisher = Log.RegisterEvent(MessageLevel.Debug, nameof(TSSC), 0, MessageRate.EveryFewSeconds(1), 5);
+                LogEventPublisher publisher = Log.RegisterEvent(MessageLevel.Debug, "TSSC", 0, MessageRate.EveryFewSeconds(1), 5);
                 publisher.ShouldRaiseMessageSupressionNotifications = false;
                 publisher.Publish($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {sequenceNumber}");
                 return;
@@ -3362,20 +3299,18 @@ namespace GSF.TimeSeries.Transport
 
             m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength + DataPublisher.ClientResponseHeaderSize - responseIndex);
 
-            Measurement measurement;
-            MeasurementKey key = null;
-
             while (m_tsscDecoder.TryGetMeasurement(out ushort id, out long time, out uint quality, out float value))
             {
-                if (m_signalIndexCache?.Reference.TryGetValue(id, out key) ?? false)
+                if (!(m_signalIndexCache?.Reference.TryGetValue(id, out MeasurementKey key) ?? false))
+                    continue;
+
+                measurements.Add(new Measurement
                 {
-                    measurement = new Measurement();
-                    measurement.Metadata = key?.Metadata;
-                    measurement.Timestamp = time;
-                    measurement.StateFlags = (MeasurementStateFlags)quality;
-                    measurement.Value = value;
-                    measurements.Add(measurement);
-                }
+                    Metadata = key?.Metadata,
+                    Timestamp = time,
+                    StateFlags = (MeasurementStateFlags)quality,
+                    Value = value
+                });
             }
 
             m_tsscSequenceNumber++;
@@ -3413,11 +3348,11 @@ namespace GSF.TimeSeries.Transport
         // Handles auto-connection subscription initialization
         private void StartSubscription()
         {
-            SubscribeToOutputMeasurements(!m_autoSynchronizeMetadata);
+            SubscribeToOutputMeasurements(!AutoSynchronizeMetadata);
 
             // Initiate meta-data refresh
-            if (m_autoSynchronizeMetadata && !this.TemporalConstraintIsDefined())
-                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
+            if (AutoSynchronizeMetadata && !this.TemporalConstraintIsDefined())
+                SendServerCommand(ServerCommand.MetaDataRefresh, MetadataFilters);
         }
 
         private void SubscribeToOutputMeasurements(bool metaDataRefreshCompleted)
@@ -3455,7 +3390,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-                #pragma warning disable 0618
+            #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel, startTime: startTimeConstraint, stopTime: stopTimeConstraint, processingInterval: processingInterval);
             }
             else
@@ -3512,7 +3447,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     IDbTransaction transaction = null;
 
-                    if (m_useTransactionForMetadata)
+                    if (UseTransactionForMetadata)
                         transaction = database.Connection.BeginTransaction(database.DefaultIsolationLevel);
 
                     try
@@ -3521,7 +3456,7 @@ namespace GSF.TimeSeries.Transport
                             command.Transaction = transaction;
 
                         // Query the actual record ID based on the known run-time ID for this subscriber device
-                        object sourceID = command.ExecuteScalar($"SELECT SourceID FROM Runtime WHERE ID = {ID} AND SourceTable='Device'", m_metadataSynchronizationTimeout);
+                        object sourceID = command.ExecuteScalar($"SELECT SourceID FROM Runtime WHERE ID = {ID} AND SourceTable='Device'", MetadataSynchronizationTimeout);
 
                         if (sourceID is null || sourceID == DBNull.Value)
                             return;
@@ -3529,31 +3464,28 @@ namespace GSF.TimeSeries.Transport
                         int parentID = Convert.ToInt32(sourceID);
 
                         // Validate that the subscriber device is marked as a concentrator (we are about to associate children devices with it)
-                        if (!command.ExecuteScalar($"SELECT IsConcentrator FROM Device WHERE ID = {parentID}", m_metadataSynchronizationTimeout).ToString().ParseBoolean())
-                            command.ExecuteNonQuery($"UPDATE Device SET IsConcentrator = 1 WHERE ID = {parentID}", m_metadataSynchronizationTimeout);
+                        if (!command.ExecuteScalar($"SELECT IsConcentrator FROM Device WHERE ID = {parentID}", MetadataSynchronizationTimeout).ToString().ParseBoolean())
+                            command.ExecuteNonQuery($"UPDATE Device SET IsConcentrator = 1 WHERE ID = {parentID}", MetadataSynchronizationTimeout);
 
                         // Get any historian associated with the subscriber device
-                        object historianID = command.ExecuteScalar($"SELECT HistorianID FROM Device WHERE ID = {parentID}", m_metadataSynchronizationTimeout);
+                        object historianID = command.ExecuteScalar($"SELECT HistorianID FROM Device WHERE ID = {parentID}", MetadataSynchronizationTimeout);
 
                         // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                         if (m_nodeID == Guid.Empty)
-                            m_nodeID = Guid.Parse(command.ExecuteScalar($"SELECT NodeID FROM IaonInputAdapter WHERE ID = {(int)ID}", m_metadataSynchronizationTimeout).ToString());
+                            m_nodeID = Guid.Parse(command.ExecuteScalar($"SELECT NodeID FROM IaonInputAdapter WHERE ID = {(int)ID}", MetadataSynchronizationTimeout).ToString());
 
                         // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
                         if (m_gatewayProtocolID == 0)
-                            m_gatewayProtocolID = int.Parse(command.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='GatewayTransport'", m_metadataSynchronizationTimeout).ToString());
+                            m_gatewayProtocolID = int.Parse(command.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='GatewayTransport'", MetadataSynchronizationTimeout).ToString());
 
                         // Ascertain total number of actions required for all meta-data synchronization so some level feed back can be provided on progress
                         InitSyncProgress(metadata.Tables.Cast<DataTable>().Select(dataTable => (long)dataTable.Rows.Count).Sum() + 3);
 
                         // Prefix all children devices with the name of the parent since the same device names could appear in different connections (helps keep device names unique)
-                        string sourcePrefix = m_useSourcePrefixNames ? Name + "!" : "";
+                        string sourcePrefix = UseSourcePrefixNames ? Name + "!" : "";
                         Dictionary<string, int> deviceIDs = new(StringComparer.OrdinalIgnoreCase);
                         DateTime updateTime;
-                        string deviceAcronym, signalTypeAcronym;
-                        decimal longitude, latitude;
-                        decimal? location;
-                        object originalSource;
+                        string deviceAcronym;
                         int deviceID;
 
                         // Check to see if data for the "DeviceDetail" table was included in the meta-data
@@ -3567,23 +3499,23 @@ namespace GSF.TimeSeries.Transport
 
                             // Define SQL statement to insert new device record
                             string insertDeviceSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, HistorianID, Acronym, Name, ProtocolID, FramesPerSecond, OriginalSource, AccessID, Longitude, Latitude, ContactList, IsConcentrator, Enabled) " +
-                                                                                       "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, 0, 1)", "nodeID", nameof(parentID), nameof(historianID), "acronym", "name", "protocolID", "framesPerSecond", nameof(originalSource), "accessID", nameof(longitude), nameof(latitude), "contactList");
+                                                                                       "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, 0, 1)", "nodeID", "parentID", "historianID", "acronym", "name", "protocolID", "framesPerSecond", "originalSource", "accessID", "longitude", "latitude", "contactList");
 
                             // Define SQL statement to update device's guid-based unique ID after insert
                             string updateDeviceUniqueIDSql = database.ParameterizedQueryString("UPDATE Device SET UniqueID = {0} WHERE Acronym = {1}", "uniqueID", "acronym");
 
                             // Define SQL statement to query if a device can be safely updated
-                            string deviceIsUpdatableSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND (ParentID <> {1} OR ParentID IS NULL)", "uniqueID", nameof(parentID));
+                            string deviceIsUpdatableSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND (ParentID <> {1} OR ParentID IS NULL)", "uniqueID", "parentID");
 
                             // Define SQL statement to update existing device record
                             string updateDeviceSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, FramesPerSecond = {4}, HistorianID = {5}, AccessID = {6}, Longitude = {7}, Latitude = {8}, ContactList = {9} WHERE UniqueID = {10}",
-                                                                                       "acronym", "name", nameof(originalSource), "protocolID", "framesPerSecond", nameof(historianID), "accessID", nameof(longitude), nameof(latitude), "contactList", "uniqueID");
+                                                                                       "acronym", "name", "originalSource", "protocolID", "framesPerSecond", "historianID", "accessID", "longitude", "latitude", "contactList", "uniqueID");
 
                             // Define SQL statement to retrieve device's auto-inc ID based on its unique guid-based ID
                             string queryDeviceIDSql = database.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "uniqueID");
 
                             // Define SQL statement to retrieve all unique device ID's for the current parent to check for mismatches
-                            string queryUniqueDeviceIDsSql = database.ParameterizedQueryString("SELECT UniqueID FROM Device WHERE ParentID = {0}", nameof(parentID));
+                            string queryUniqueDeviceIDsSql = database.ParameterizedQueryString("SELECT UniqueID FROM Device WHERE ParentID = {0}", "parentID");
 
                             // Define SQL statement to remove device records that no longer exist in the meta-data
                             string deleteDeviceSql = database.ParameterizedQueryString("DELETE FROM Device WHERE UniqueID = {0}", "uniqueID");
@@ -3622,13 +3554,13 @@ namespace GSF.TimeSeries.Transport
                             {
                                 // ReSharper disable once AccessToDisposedClosure
                                 IEnumerable<Guid> retiredUniqueIDs = command
-                                    .RetrieveData(database.AdapterType, queryUniqueDeviceIDsSql, m_metadataSynchronizationTimeout, parentID)
+                                    .RetrieveData(database.AdapterType, queryUniqueDeviceIDsSql, MetadataSynchronizationTimeout, parentID)
                                     .Select()
                                     .Select(deviceRow => database.Guid(deviceRow, "UniqueID"))
                                     .Except(uniqueIDs);
 
                                 foreach (Guid retiredUniqueID in retiredUniqueIDs)
-                                    command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, database.Guid(retiredUniqueID));
+                                    command.ExecuteNonQuery(deleteDeviceSql, MetadataSynchronizationTimeout, database.Guid(retiredUniqueID));
 
                                 UpdateSyncProgress();
                             }
@@ -3666,8 +3598,10 @@ namespace GSF.TimeSeries.Transport
                                         accessID = row.ConvertField<int>("AccessID");
 
                                     // Get longitude and latitude values if they are defined
-                                    longitude = 0M;
-                                    latitude = 0M;
+                                    decimal longitude = 0M;
+                                    decimal latitude = 0M;
+
+                                    decimal? location;
 
                                     if (longitudeFieldExists)
                                     {
@@ -3710,35 +3644,35 @@ namespace GSF.TimeSeries.Transport
                                         // ownership is inferred by setting 'OriginalSource' to null. When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed
                                         // locally - from a device record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a mirrored source
                                         // restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection, if desired.
-                                        originalSource = m_internal ? DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym");
+                                        object originalSource = m_internal ? DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym");
 
                                         // Determine if device record already exists
-                                        if (Convert.ToInt32(command.ExecuteScalar(deviceExistsSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID))) == 0)
+                                        if (Convert.ToInt32(command.ExecuteScalar(deviceExistsSql, MetadataSynchronizationTimeout, database.Guid(uniqueID))) == 0)
                                         {
                                             // Insert new device record
-                                            command.ExecuteNonQuery(insertDeviceSql, m_metadataSynchronizationTimeout, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"),
-                                                row.Field<string>(nameof(Name)), m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"),
+                                            command.ExecuteNonQuery(insertDeviceSql, MetadataSynchronizationTimeout, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"),
+                                                row.Field<string>("Name"), m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"),
                                                 originalSource, accessID, longitude, latitude, contactList.JoinKeyValuePairs());
 
                                             // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                             // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
-                                            command.ExecuteNonQuery(updateDeviceUniqueIDSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"));
+                                            command.ExecuteNonQuery(updateDeviceUniqueIDSql, MetadataSynchronizationTimeout, database.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"));
                                         }
                                         else if (recordNeedsUpdating)
                                         {
                                             // Perform safety check to preserve device records which are not safe to overwrite
-                                            if (Convert.ToInt32(command.ExecuteScalar(deviceIsUpdatableSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
+                                            if (Convert.ToInt32(command.ExecuteScalar(deviceIsUpdatableSql, MetadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
                                                 continue;
 
                                             // Update existing device record
-                                            command.ExecuteNonQuery(updateDeviceSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>(nameof(Name)),
+                                            command.ExecuteNonQuery(updateDeviceSql, MetadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"),
                                                 originalSource, m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"), historianID, accessID, longitude, latitude, contactList.JoinKeyValuePairs(), database.Guid(uniqueID));
                                         }
                                     }
                                 }
 
                                 // Capture local device ID auto-inc value for measurement association
-                                deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(queryDeviceIDSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID)));
+                                deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(queryDeviceIDSql, MetadataSynchronizationTimeout, database.Guid(uniqueID)));
 
                                 // Periodically notify user about synchronization progress
                                 UpdateSyncProgress();
@@ -3757,18 +3691,18 @@ namespace GSF.TimeSeries.Transport
 
                             // Define SQL statement to insert new measurement record
                             string insertMeasurementSql = database.ParameterizedQueryString("INSERT INTO Measurement(DeviceID, HistorianID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Description, Internal, Subscribed, Enabled) " +
-                                                                                            "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, 0, 1)", nameof(deviceID), nameof(historianID), "pointTag", "alternateTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal");
+                                                                                            "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, 0, 1)", "deviceID", "historianID", "pointTag", "alternateTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal");
 
                             // Define SQL statement to update measurement's signal ID after insert
                             string updateMeasurementSignalIDSql = database.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0}, AlternateTag = NULL WHERE AlternateTag = {1}", "signalID", "alternateTag");
 
                             // Define SQL statement to update existing measurement record
                             string updateMeasurementSql = database.ParameterizedQueryString("UPDATE Measurement SET HistorianID = {0}, PointTag = {1}, SignalTypeID = {2}, PhasorSourceIndex = {3}, SignalReference = {4}, Description = {5}, Internal = {6} WHERE SignalID = {7}",
-                                                                                            nameof(historianID), "pointTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal", "signalID");
+                                                                                            "historianID", "pointTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal", "signalID");
 
                             // Define SQL statement to retrieve all measurement signal ID's for the current parent to check for mismatches - note that we use the ActiveMeasurements view
                             // since it associates measurements with their top-most parent runtime device ID, this allows us to easily query all measurements for the parent device
-                            string queryMeasurementSignalIDsSql = database.ParameterizedQueryString("SELECT SignalID FROM ActiveMeasurement WHERE DeviceID = {0}", nameof(deviceID));
+                            string queryMeasurementSignalIDsSql = database.ParameterizedQueryString("SELECT SignalID FROM ActiveMeasurement WHERE DeviceID = {0}", "deviceID");
 
                             // Define SQL statement to retrieve measurement's associated device ID, i.e., actual record ID, based on measurement's signal ID
                             string queryMeasurementDeviceIDSql = database.ParameterizedQueryString("SELECT DeviceID FROM Measurement WHERE SignalID = {0}", "signalID");
@@ -3776,12 +3710,14 @@ namespace GSF.TimeSeries.Transport
                             // Load signal type ID's from local database associated with their acronym for proper signal type translation
                             Dictionary<string, int> signalTypeIDs = new(StringComparer.OrdinalIgnoreCase);
 
-                            foreach (DataRow row in command.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM SignalType", m_metadataSynchronizationTimeout).Rows)
+                            string signalTypeAcronym;
+
+                            foreach (DataRow row in command.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM SignalType", MetadataSynchronizationTimeout).Rows)
                             {
                                 signalTypeAcronym = row.Field<string>("Acronym");
 
                                 if (!string.IsNullOrWhiteSpace(signalTypeAcronym))
-                                    signalTypeIDs[signalTypeAcronym] = row.ConvertField<int>(nameof(ID));
+                                    signalTypeIDs[signalTypeAcronym] = row.ConvertField<int>("ID");
                             }
 
                             // Define local signal type ID deletion exclusion set
@@ -3882,21 +3818,21 @@ namespace GSF.TimeSeries.Transport
                                     deviceID = deviceIDs[deviceAcronym];
 
                                     // Determine if measurement record already exists
-                                    if (Convert.ToInt32(command.ExecuteScalar(measurementExistsSql, m_metadataSynchronizationTimeout, database.Guid(signalID))) == 0)
+                                    if (Convert.ToInt32(command.ExecuteScalar(measurementExistsSql, MetadataSynchronizationTimeout, database.Guid(signalID))) == 0)
                                     {
                                         string alternateTag = Guid.NewGuid().ToString();
 
                                         // Insert new measurement record
-                                        command.ExecuteNonQuery(insertMeasurementSql, m_metadataSynchronizationTimeout, deviceID, historianID, pointTag, alternateTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
+                                        command.ExecuteNonQuery(insertMeasurementSql, MetadataSynchronizationTimeout, deviceID, historianID, pointTag, alternateTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
 
                                         // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                         // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
-                                        command.ExecuteNonQuery(updateMeasurementSignalIDSql, m_metadataSynchronizationTimeout, database.Guid(signalID), alternateTag);
+                                        command.ExecuteNonQuery(updateMeasurementSignalIDSql, MetadataSynchronizationTimeout, database.Guid(signalID), alternateTag);
                                     }
                                     else if (recordNeedsUpdating)
                                     {
                                         // Update existing measurement record. Note that this update assumes that measurements will remain associated with a static source device.
-                                        command.ExecuteNonQuery(updateMeasurementSql, m_metadataSynchronizationTimeout, historianID, pointTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
+                                        command.ExecuteNonQuery(updateMeasurementSql, MetadataSynchronizationTimeout, historianID, pointTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
                                     }
                                 }
 
@@ -3911,25 +3847,24 @@ namespace GSF.TimeSeries.Transport
                                 signalIDs.Sort();
 
                                 // Query all the guid-based signal ID's for all measurement records associated with the parent device using run-time ID
-                                DataTable measurementSignalIDs = command.RetrieveData(database.AdapterType, queryMeasurementSignalIDsSql, m_metadataSynchronizationTimeout, (int)ID);
-                                Guid signalID;
+                                DataTable measurementSignalIDs = command.RetrieveData(database.AdapterType, queryMeasurementSignalIDsSql, MetadataSynchronizationTimeout, (int)ID);
 
                                 // Walk through each database record and see if the measurement exists in the provided meta-data
                                 foreach (DataRow measurementRow in measurementSignalIDs.Rows)
                                 {
-                                    signalID = database.Guid(measurementRow, "SignalID");
+                                    Guid signalID = database.Guid(measurementRow, "SignalID");
 
                                     // Remove any measurements in the database that are associated with received devices and do not exist in the meta-data
                                     if (signalIDs.BinarySearch(signalID) < 0)
                                     {
                                         // Measurement was not in the meta-data, get the measurement's actual record based ID for its associated device
-                                        object measurementDeviceID = command.ExecuteScalar(queryMeasurementDeviceIDSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
+                                        object measurementDeviceID = command.ExecuteScalar(queryMeasurementDeviceIDSql, MetadataSynchronizationTimeout, database.Guid(signalID));
 
                                         // If the unknown measurement is directly associated with a device that exists in the meta-data it is assumed that this measurement
                                         // was removed from the publishing system and no longer exists therefore we remove it from the local measurement cache. If the user
                                         // needs custom local measurements associated with a remote device, they should be associated with the parent device only.
                                         if (measurementDeviceID is not null && measurementDeviceID is not DBNull && deviceIDs.ContainsValue(Convert.ToInt32(measurementDeviceID)))
-                                            command.ExecuteNonQuery(deleteMeasurementSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
+                                            command.ExecuteNonQuery(deleteMeasurementSql, MetadataSynchronizationTimeout, database.Guid(signalID));
                                     }
                                 }
 
@@ -3950,29 +3885,29 @@ namespace GSF.TimeSeries.Transport
                             // as two distinct angle and magnitude measurements.
 
                             // Define SQL statement to query if phasor record is already defined (no Guid is defined for these simple label records)
-                            string phasorExistsSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", nameof(deviceID), "sourceIndex");
+                            string phasorExistsSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
 
                             // Define SQL statement to insert new phasor record
-                            string insertPhasorSql = database.ParameterizedQueryString("INSERT INTO Phasor(DeviceID, Label, Type, Phase, SourceIndex) VALUES ({0}, {1}, {2}, {3}, {4})", nameof(deviceID), "label", "type", "phase", "sourceIndex");
+                            string insertPhasorSql = database.ParameterizedQueryString("INSERT INTO Phasor(DeviceID, Label, Type, Phase, SourceIndex) VALUES ({0}, {1}, {2}, {3}, {4})", "deviceID", "label", "type", "phase", "sourceIndex");
 
                             // Define SQL statement to update existing phasor record
-                            string updatePhasorSql = database.ParameterizedQueryString("UPDATE Phasor SET Label = {0}, Type = {1}, Phase = {2} WHERE DeviceID = {3} AND SourceIndex = {4}", "label", "type", "phase", nameof(deviceID), "sourceIndex");
+                            string updatePhasorSql = database.ParameterizedQueryString("UPDATE Phasor SET Label = {0}, Type = {1}, Phase = {2} WHERE DeviceID = {3} AND SourceIndex = {4}", "label", "type", "phase", "deviceID", "sourceIndex");
 
                             // Define SQL statement to delete a phasor record
-                            string deletePhasorSql = database.ParameterizedQueryString("DELETE FROM Phasor WHERE DeviceID = {0}", nameof(deviceID));
+                            string deletePhasorSql = database.ParameterizedQueryString("DELETE FROM Phasor WHERE DeviceID = {0}", "deviceID");
 
                             // Define SQL statement to query phasor record ID
-                            string queryPhasorIDSql = database.ParameterizedQueryString("SELECT ID FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", nameof(deviceID), "sourceIndex");
+                            string queryPhasorIDSql = database.ParameterizedQueryString("SELECT ID FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
 
                             // Define SQL statement to update destinationPhasorID field of existing phasor record
                             string updateDestinationPhasorIDSql = database.ParameterizedQueryString("UPDATE Phasor SET DestinationPhasorID = {0} WHERE ID = {1}", "destinationPhasorID", "id");
 
                             // Define SQL statement to update phasor BaseKV
-                            string updatePhasorBaseKVSql = database.ParameterizedQueryString("UPDATE Phasor SET BaseKV = {0} WHERE DeviceID = {1} AND SourceIndex = {2}", "baseKV", nameof(deviceID), "sourceIndex");
+                            string updatePhasorBaseKVSql = database.ParameterizedQueryString("UPDATE Phasor SET BaseKV = {0} WHERE DeviceID = {1} AND SourceIndex = {2}", "baseKV", "deviceID", "sourceIndex");
 
                             // Check existence of optional meta-data fields
                             DataColumnCollection phasorDetailColumns = phasorDetail.Columns;
-                            bool phasorIDFieldExists = phasorDetailColumns.Contains(nameof(ID));
+                            bool phasorIDFieldExists = phasorDetailColumns.Contains("ID");
                             bool destinationPhasorIDFieldExists = phasorDetailColumns.Contains("DestinationPhasorID");
                             bool baseKVFieldExists = phasorDetailColumns.Contains("BaseKV");
 
@@ -4006,25 +3941,25 @@ namespace GSF.TimeSeries.Transport
                                     bool updateRecord = false;
 
                                     // Determine if phasor record already exists
-                                    if (Convert.ToInt32(command.ExecuteScalar(phasorExistsSql, m_metadataSynchronizationTimeout, deviceID, sourceIndex)) == 0)
+                                    if (Convert.ToInt32(command.ExecuteScalar(phasorExistsSql, MetadataSynchronizationTimeout, deviceID, sourceIndex)) == 0)
                                     {
                                         // Insert new phasor record
-                                        command.ExecuteNonQuery(insertPhasorSql, m_metadataSynchronizationTimeout, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>(nameof(Type)) ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), sourceIndex);
+                                        command.ExecuteNonQuery(insertPhasorSql, MetadataSynchronizationTimeout, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), sourceIndex);
                                         updateRecord = true;
                                     }
                                     else if (recordNeedsUpdating)
                                     {
                                         // Update existing phasor record
-                                        command.ExecuteNonQuery(updatePhasorSql, m_metadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>(nameof(Type)) ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, sourceIndex);
+                                        command.ExecuteNonQuery(updatePhasorSql, MetadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, sourceIndex);
                                         updateRecord = true;
                                     }
 
                                     if (updateRecord && baseKVFieldExists)
-                                        command.ExecuteNonQuery(updatePhasorBaseKVSql, m_metadataSynchronizationTimeout, row.ConvertField<int>("BaseKV"), deviceID, sourceIndex);
+                                        command.ExecuteNonQuery(updatePhasorBaseKVSql, MetadataSynchronizationTimeout, row.ConvertField<int>("BaseKV"), deviceID, sourceIndex);
 
                                     if (phasorIDFieldExists && destinationPhasorIDFieldExists)
                                     {
-                                        int sourcePhasorID = row.ConvertField<int>(nameof(ID));
+                                        int sourcePhasorID = row.ConvertField<int>("ID");
 
                                         // Using ConvertNullableField extension since publisher could use SQLite database in which case
                                         // all integers would arrive in data set as longs and need to be converted back to integers
@@ -4034,7 +3969,7 @@ namespace GSF.TimeSeries.Transport
                                             sourceToDestinationIDMap[sourcePhasorID] = destinationPhasorID.Value;
 
                                         // Map all metadata phasor IDs to associated local database phasor IDs
-                                        metadataToDatabaseIDMap[sourcePhasorID] = Convert.ToInt32(command.ExecuteScalar(queryPhasorIDSql, m_metadataSynchronizationTimeout, deviceID, sourceIndex));
+                                        metadataToDatabaseIDMap[sourcePhasorID] = Convert.ToInt32(command.ExecuteScalar(queryPhasorIDSql, MetadataSynchronizationTimeout, deviceID, sourceIndex));
                                     }
 
                                     // Track defined phasors for each device
@@ -4049,7 +3984,7 @@ namespace GSF.TimeSeries.Transport
                             foreach (KeyValuePair<int, int> item in sourceToDestinationIDMap)
                             {
                                 if (metadataToDatabaseIDMap.TryGetValue(item.Key, out int sourcePhasorID) && metadataToDatabaseIDMap.TryGetValue(item.Value, out int destinationPhasorID))
-                                    command.ExecuteNonQuery(updateDestinationPhasorIDSql, m_metadataSynchronizationTimeout, destinationPhasorID, sourcePhasorID);
+                                    command.ExecuteNonQuery(updateDestinationPhasorIDSql, MetadataSynchronizationTimeout, destinationPhasorID, sourcePhasorID);
                             }
 
                             // For mutual subscriptions where this subscription is owner (i.e., internal is true), do not delete any phasor data - it will be managed by owner only
@@ -4059,15 +3994,14 @@ namespace GSF.TimeSeries.Transport
                                 foreach (int id in deviceIDs.Values)
                                 {
                                     if (definedSourceIndicies.TryGetValue(id, out List<int> sourceIndicies))
-                                        command.ExecuteNonQuery(deletePhasorSql + $" AND SourceIndex NOT IN ({string.Join(",", sourceIndicies)})", m_metadataSynchronizationTimeout, id);
+                                        command.ExecuteNonQuery(deletePhasorSql + $" AND SourceIndex NOT IN ({string.Join(",", sourceIndicies)})", MetadataSynchronizationTimeout, id);
                                     else
-                                        command.ExecuteNonQuery(deletePhasorSql, m_metadataSynchronizationTimeout, id);
+                                        command.ExecuteNonQuery(deletePhasorSql, MetadataSynchronizationTimeout, id);
                                 }
                             }
                         }
 
-                        if (transaction is not null)
-                            transaction.Commit();
+                        transaction?.Commit();
 
                         // Update local in-memory synchronized meta-data cache
                         m_synchronizedMetadata = metadata;
@@ -4092,8 +4026,7 @@ namespace GSF.TimeSeries.Transport
                     }
                     finally
                     {
-                        if (transaction is not null)
-                            transaction.Dispose();
+                        transaction?.Dispose();
                     }
                 }
 
@@ -4134,11 +4067,11 @@ namespace GSF.TimeSeries.Transport
         {
             m_syncProgressActionsCount++;
 
-            if (m_syncProgressActionsCount % m_syncProgressUpdateInterval == 0 || DateTime.UtcNow.Ticks - m_syncProgressLastMessage > 150000000)
-            {
-                OnStatusMessage(MessageLevel.Info, $"Meta-data synchronization is {m_syncProgressActionsCount / (double)m_syncProgressTotalActions:0.0%} complete...");
-                m_syncProgressLastMessage = DateTime.UtcNow.Ticks;
-            }
+            if (m_syncProgressActionsCount % m_syncProgressUpdateInterval != 0 && DateTime.UtcNow.Ticks - m_syncProgressLastMessage <= 150000000)
+                return;
+
+            OnStatusMessage(MessageLevel.Info, $"Meta-data synchronization is {m_syncProgressActionsCount / (double)m_syncProgressTotalActions:0.0%} complete...");
+            m_syncProgressLastMessage = DateTime.UtcNow.Ticks;
         }
 
         private SignalIndexCache DeserializeSignalIndexCache(byte[] buffer)
@@ -4148,7 +4081,6 @@ namespace GSF.TimeSeries.Transport
             bool compressSignalIndexCache = (m_operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
 
             SignalIndexCache deserializedCache;
-
             GZipStream inflater = null;
 
             if (compressSignalIndexCache && compressionModes.HasFlag(CompressionModes.GZip))
@@ -4162,15 +4094,13 @@ namespace GSF.TimeSeries.Transport
                 }
                 finally
                 {
-                    if (inflater is not null)
-                        inflater.Close();
+                    inflater?.Close();
                 }
             }
 
             if (useCommonSerializationFormat)
             {
-                deserializedCache = new SignalIndexCache();
-                deserializedCache.Encoding = m_encoding;
+                deserializedCache = new SignalIndexCache { Encoding = Encoding };
                 deserializedCache.ParseBinaryImage(buffer, 0, buffer.Length);
             }
             else
@@ -4203,8 +4133,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 finally
                 {
-                    if (inflater is not null)
-                        inflater.Close();
+                    inflater?.Close();
                 }
             }
 
@@ -4235,9 +4164,8 @@ namespace GSF.TimeSeries.Transport
             return deserializedMetadata;
         }
 
-        private UnsynchronizedSubscriptionInfo FromLocallySynchronizedInfo(SynchronizedSubscriptionInfo info)
-        {
-            return new UnsynchronizedSubscriptionInfo(false)
+        private UnsynchronizedSubscriptionInfo FromLocallySynchronizedInfo(SynchronizedSubscriptionInfo info) =>
+            new(false)
             {
                 FilterExpression = info.FilterExpression,
                 UseCompactMeasurementFormat = info.UseCompactMeasurementFormat,
@@ -4253,11 +4181,9 @@ namespace GSF.TimeSeries.Transport
                 ProcessingInterval = info.ProcessingInterval,
                 ExtraConnectionStringParameters = info.ExtraConnectionStringParameters
             };
-        }
 
-        private Encoding GetCharacterEncoding(OperationalEncoding operationalEncoding)
-        {
-            Encoding encoding = operationalEncoding switch
+        private Encoding GetCharacterEncoding(OperationalEncoding operationalEncoding) =>
+            operationalEncoding switch
             {
                 OperationalEncoding.Unicode => Encoding.Unicode,
                 OperationalEncoding.BigEndianUnicode => Encoding.BigEndianUnicode,
@@ -4265,9 +4191,6 @@ namespace GSF.TimeSeries.Transport
                 OperationalEncoding.ANSI => Encoding.Default,
                 _ => throw new InvalidOperationException($"Unsupported encoding detected: {operationalEncoding}")
             };
-
-            return encoding;
-        }
 
         // Socket exception handler
         private bool HandleSocketException(Exception ex)
@@ -4333,17 +4256,11 @@ namespace GSF.TimeSeries.Transport
 
         private void RegisterDeviceStatistics()
         {
-            long now = m_useLocalClockAsRealTime ? DateTime.UtcNow.Ticks : 0L;
-
-            Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup;
-            List<DeviceStatisticsHelper<SubscribedDevice>> subscribedDevices;
-            ISet<string> subscribedDeviceNames;
-            ISet<string> definedDeviceNames;
-            DataSet dataSource;
+            long now = UseLocalClockAsRealTime ? DateTime.UtcNow.Ticks : 0L;
 
             try
             {
-                dataSource = DataSource;
+                DataSet dataSource = DataSource;
 
                 if (dataSource is null || !dataSource.Tables.Contains("InputStreamDevices"))
                 {
@@ -4358,10 +4275,10 @@ namespace GSF.TimeSeries.Transport
                 }
                 else
                 {
-                    subscribedDevicesLookup = new Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>>();
-                    subscribedDevices = new List<DeviceStatisticsHelper<SubscribedDevice>>();
-                    subscribedDeviceNames = new HashSet<string>();
-                    definedDeviceNames = new HashSet<string>();
+                    Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup = new();
+                    List<DeviceStatisticsHelper<SubscribedDevice>> subscribedDevices = new();
+                    ISet<string> subscribedDeviceNames = new HashSet<string>();
+                    ISet<string> definedDeviceNames = new HashSet<string>();
 
                     foreach (DataRow deviceRow in dataSource.Tables["InputStreamDevices"].Select($"ParentID = {ID}"))
                         definedDeviceNames.Add($"LOCAL${deviceRow["Acronym"].ToNonNullString()}");
@@ -4384,12 +4301,12 @@ namespace GSF.TimeSeries.Transport
 
                     foreach (string definedDeviceName in definedDeviceNames)
                     {
-                        if (!subscribedDeviceNames.Contains(definedDeviceName))
-                        {
-                            DeviceStatisticsHelper<SubscribedDevice> statisticsHelper = new(new SubscribedDevice(definedDeviceName));
-                            subscribedDevices.Add(statisticsHelper);
-                            statisticsHelper.Reset(now);
-                        }
+                        if (subscribedDeviceNames.Contains(definedDeviceName))
+                            continue;
+
+                        DeviceStatisticsHelper<SubscribedDevice> statisticsHelper = new(new SubscribedDevice(definedDeviceName));
+                        subscribedDevices.Add(statisticsHelper);
+                        statisticsHelper.Reset(now);
                     }
 
                     if (dataSource.Tables.Contains("ActiveMeasurements"))
@@ -4443,14 +4360,14 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (m_statisticsHelpers is not null)
-                {
-                    foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
-                        statisticsHelper.Device.Dispose();
+                if (m_statisticsHelpers is null)
+                    return;
 
-                    m_statisticsHelpers = new List<DeviceStatisticsHelper<SubscribedDevice>>();
-                    m_subscribedDevicesLookup = new Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>>();
-                }
+                foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
+                    statisticsHelper.Device.Dispose();
+
+                m_statisticsHelpers = new List<DeviceStatisticsHelper<SubscribedDevice>>();
+                m_subscribedDevicesLookup = new Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>>();
             }
             catch (Exception ex)
             {
@@ -4514,18 +4431,15 @@ namespace GSF.TimeSeries.Transport
 
             if (row is not null)
             {
-                switch (row.Field<string>("SignalType").ToUpperInvariant())
+                return row.Field<string>("SignalType").ToUpperInvariant() switch
                 {
-                    case "FLAG":
-                    case "STAT":
-                    case "CALC":
-                    case "ALRM":
-                    case "QUAL":
-                        return 0;
-
-                    default:
-                        return row.ConvertField<int>("FramesPerSecond");
-                }
+                    "FLAG" => 0,
+                    "STAT" => 0,
+                    "CALC" => 0,
+                    "ALRM" => 0,
+                    "QUAL" => 0,
+                    _ => row.ConvertField<int>("FramesPerSecond")
+                };
             }
 
             return 0;
@@ -4534,7 +4448,7 @@ namespace GSF.TimeSeries.Transport
         // This method is called when connection has been authenticated
         private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
         {
-            if (m_autoConnect && Enabled)
+            if (AutoConnect && Enabled)
                 StartSubscription();
         }
 
@@ -4544,7 +4458,7 @@ namespace GSF.TimeSeries.Transport
             try
             {
                 // We handle synchronization on a separate thread since this process may be lengthy
-                if (m_autoSynchronizeMetadata)
+                if (AutoSynchronizeMetadata)
                     SynchronizeMetadata(e.Argument);
             }
             catch (Exception ex)
@@ -4567,7 +4481,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionEstablished event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ConnectionEstablished)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4583,7 +4497,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionTerminated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ConnectionTerminated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4599,7 +4513,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionAuthenticated event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ConnectionAuthenticated)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4617,7 +4531,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ReceivedServerResponse event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ReceivedServerResponse)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4656,7 +4570,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for MetaDataReceived event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(MetaDataReceived)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4673,7 +4587,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DataStartTime event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(DataStartTime)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4693,7 +4607,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ProcessingComplete)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4710,7 +4624,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NotificationReceived event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(NotificationReceived)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4726,7 +4640,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ServerConfigurationChanged event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ServerConfigurationChanged)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4744,7 +4658,7 @@ namespace GSF.TimeSeries.Transport
             // Just in case Log Message Suppression was turned on, turn it off so this code can raise messages
             using (Logger.OverrideSuppressLogMessages())
             {
-                if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
+                if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > ParsingExceptionWindow)
                 {
                     // Exception window has passed since last exception, so we reset counters
                     m_lastParsingExceptionTime = DateTime.UtcNow.Ticks;
@@ -4753,24 +4667,24 @@ namespace GSF.TimeSeries.Transport
 
                 m_parsingExceptionCount++;
 
-                if (m_parsingExceptionCount > m_allowedParsingExceptions)
+                if (m_parsingExceptionCount <= AllowedParsingExceptions)
+                    return;
+
+                try
                 {
-                    try
-                    {
-                        // When the parsing exception threshold has been exceeded, connection is restarted
-                        Start();
-                    }
-                    catch (Exception ex)
-                    {
-                        base.OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Error while restarting subscriber connection due to excessive exceptions: {ex.Message}", ex), nameof(DataSubscriber), MessageFlags.UsageIssue);
-                    }
-                    finally
-                    {
-                        // Notify consumer of parsing exception threshold deviation
-                        OnExceededParsingExceptionThreshold();
-                        m_lastParsingExceptionTime = 0;
-                        m_parsingExceptionCount = 0;
-                    }
+                    // When the parsing exception threshold has been exceeded, connection is restarted
+                    Start();
+                }
+                catch (Exception ex)
+                {
+                    base.OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Error while restarting subscriber connection due to excessive exceptions: {ex.Message}", ex), "DataSubscriber", MessageFlags.UsageIssue);
+                }
+                finally
+                {
+                    // Notify consumer of parsing exception threshold deviation
+                    OnExceededParsingExceptionThreshold();
+                    m_lastParsingExceptionTime = 0;
+                    m_parsingExceptionCount = 0;
                 }
             }
         }
@@ -4778,10 +4692,8 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Raises the <see cref="ExceededParsingExceptionThreshold"/> event.
         /// </summary>
-        private void OnExceededParsingExceptionThreshold()
-        {
+        private void OnExceededParsingExceptionThreshold() => 
             ExceededParsingExceptionThreshold?.Invoke(this, EventArgs.Empty);
-        }
 
         // Updates the measurements per second counters after receiving another set of measurements.
         private void UpdateMeasurementsPerSecond(DateTime now, int measurementCount)
@@ -4790,11 +4702,11 @@ namespace GSF.TimeSeries.Transport
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {
-                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
-                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+                if (m_measurementsInSecond < MinimumMeasurementsPerSecond || MinimumMeasurementsPerSecond == 0L)
+                    MinimumMeasurementsPerSecond = m_measurementsInSecond;
 
-                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
-                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+                if (m_measurementsInSecond > MaximumMeasurementsPerSecond || MaximumMeasurementsPerSecond == 0L)
+                    MaximumMeasurementsPerSecond = m_measurementsInSecond;
 
                 m_totalMeasurementsPerSecond += m_measurementsInSecond;
                 m_measurementsPerSecondCount++;
@@ -4809,8 +4721,8 @@ namespace GSF.TimeSeries.Transport
         // Resets the measurements per second counters after reading the values from the last calculation interval.
         private void ResetMeasurementsPerSecondCounters()
         {
-            m_minimumMeasurementsPerSecond = 0L;
-            m_maximumMeasurementsPerSecond = 0L;
+            MinimumMeasurementsPerSecond = 0L;
+            MaximumMeasurementsPerSecond = 0L;
             m_totalMeasurementsPerSecond = 0L;
             m_measurementsPerSecondCount = 0L;
         }
@@ -4838,10 +4750,8 @@ namespace GSF.TimeSeries.Transport
             //m_lastMeasurementCheck = now;
         }
 
-        private void SubscribedDevicesTimer_Elapsed(object sender, EventArgs<DateTime> elapsedEventArgs)
-        {
+        private void SubscribedDevicesTimer_Elapsed(object sender, EventArgs<DateTime> elapsedEventArgs) => 
             UpdateStatisticsHelpers();
-        }
 
         private bool SynchronizedMetadataChanged(DataSet newSynchronizedMetadata)
         {
@@ -4874,19 +4784,14 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="filePath">Path to acquire within logging path.</param>
         /// <returns>File path within any defined logging path.</returns>
-        protected string GetLoggingPath(string filePath)
-        {
-            if (string.IsNullOrWhiteSpace(m_loggingPath))
-                return FilePath.GetAbsolutePath(filePath);
+        protected string GetLoggingPath(string filePath) =>
+            string.IsNullOrWhiteSpace(m_loggingPath) ? 
+                FilePath.GetAbsolutePath(filePath) : 
+                Path.Combine(m_loggingPath, filePath);
 
-            return Path.Combine(m_loggingPath, filePath);
-        }
-
-        private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
-        {
-            // Make sure any exceptions reported by local concentrator get exposed as needed
+        // Make sure any exceptions reported by local concentrator get exposed as needed
+        private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e) => 
             OnProcessException(MessageLevel.Warning, e.Argument);
-        }
 
         private void m_dataStreamMonitor_Elapsed(object sender, EventArgs<DateTime> e)
         {
@@ -4907,25 +4812,17 @@ namespace GSF.TimeSeries.Transport
             m_monitoredBytesReceived = 0L;
         }
 
-        private void m_runTimeLog_ProcessException(object sender, EventArgs<Exception> e)
-        {
+        private void m_runTimeLog_ProcessException(object sender, EventArgs<Exception> e) => 
             OnProcessException(MessageLevel.Info, e.Argument);
-        }
 
-        private void m_dataGapRecoverer_RecoveredMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
-        {
+        private void m_dataGapRecoverer_RecoveredMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) => 
             OnNewMeasurements(e.Argument);
-        }
 
-        private void m_dataGapRecoverer_StatusMessage(object sender, EventArgs<string> e)
-        {
+        private void m_dataGapRecoverer_StatusMessage(object sender, EventArgs<string> e) => 
             OnStatusMessage(MessageLevel.Info, "[DataGapRecoverer] " + e.Argument);
-        }
 
-        private void m_dataGapRecoverer_ProcessException(object sender, EventArgs<Exception> e)
-        {
+        private void m_dataGapRecoverer_ProcessException(object sender, EventArgs<Exception> e) => 
             OnProcessException(MessageLevel.Warning, new InvalidOperationException("[DataGapRecoverer] " + e.Argument.Message, e.Argument.InnerException));
-        }
 
         #region [ Command Channel Event Handlers ]
 
@@ -4938,14 +4835,14 @@ namespace GSF.TimeSeries.Transport
             if (!PersistConnectionForMetadata)
                 OnConnected();
             else
-                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
+                SendServerCommand(ServerCommand.MetaDataRefresh, MetadataFilters);
 
             // Notify consumer that connection was successfully established
             OnConnectionEstablished();
 
             OnStatusMessage(MessageLevel.Info, "Data subscriber command channel connection to publisher was established.");
 
-            if (m_autoConnect && Enabled)
+            if (AutoConnect && Enabled)
             {
                 // Attempt authentication if required, remaining steps will happen on successful authentication
                 if (m_securityMode == SecurityMode.Gateway)

@@ -33,6 +33,7 @@ using GSF.Reflection;
 // Process start command parameters only applicable from manual debug run
 #pragma warning disable SG0001 // Potential command injection with Process.Start
 
+// ReSharper disable LocalizableElement
 namespace GSF.TimeSeries
 {
     /// <summary>
@@ -58,10 +59,8 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Creates a new instance of the <see cref="DebugHostBase"/> windows form.
         /// </summary>
-        public DebugHostBase()
-        {
+        public DebugHostBase() => 
             InitializeComponent();
-        }
 
         #endregion
 
@@ -84,73 +83,68 @@ namespace GSF.TimeSeries
             // Start remote console session
             string serviceClientName = ServiceClientName;
 
-            if (!string.IsNullOrWhiteSpace(serviceClientName))
-            {
-                m_processManager = new ChildProcessManager();
-                m_processManager.AddProcess(Process.Start(FilePath.GetAbsolutePath(serviceClientName)));
-            }
+            if (string.IsNullOrWhiteSpace(serviceClientName))
+                return;
+
+            m_processManager = new ChildProcessManager();
+            m_processManager.AddProcess(Process.Start(FilePath.GetAbsolutePath(serviceClientName)));
         }
 
         /// <summary>
         /// Invoked when the debug host is unloading. By default this shuts down the remote service client.
         /// </summary>
-        protected virtual void DebugHostUnloading()
-        {
-            // Close remote console session
-            m_processManager?.Dispose();
-        }
+        protected virtual void DebugHostUnloading() => 
+            m_processManager?.Dispose(); // Close remote console session
 
         private void DebugHost_Load(object sender, EventArgs e)
         {
-            if (!DesignMode)
-            {
-                // Call user overridable debug host loading method
-                DebugHostLoading();
+            if (DesignMode)
+                return;
 
-                // Initialize text.
-                m_productName = AssemblyInfo.EntryAssembly.Title;
-                Text = string.Format(Text, m_productName);
-                notifyIcon.Text = string.Format(notifyIcon.Text, m_productName);
-                notifyIcon.Icon = Icon;
-                LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
-                exitToolStripMenuItem.Text = string.Format(exitToolStripMenuItem.Text, m_productName);
+            // Call user overridable debug host loading method
+            DebugHostLoading();
 
-                // Minimize the window.
-                WindowState = FormWindowState.Minimized;
+            // Initialize text.
+            m_productName = AssemblyInfo.EntryAssembly.Title;
+            Text = string.Format(Text, m_productName);
+            notifyIcon.Text = string.Format(notifyIcon.Text, m_productName);
+            notifyIcon.Icon = Icon;
+            LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
+            exitToolStripMenuItem.Text = string.Format(exitToolStripMenuItem.Text, m_productName);
 
-                // Start the windows service.
-                ServiceHost.StartHostedService();
-            }
+            // Minimize the window.
+            WindowState = FormWindowState.Minimized;
+
+            // Start the windows service.
+            ServiceHost.StartHostedService();
         }
 
         private void DebugHost_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!DesignMode)
-            {
-                if (MessageBox.Show($"Are you sure you want to stop {m_productName} service? ",
-                    "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    // Stop the windows service.
-                    ServiceHost.StopHostedService();
+            if (DesignMode)
+                return;
 
-                    // Call user overridable debug host unloading method
-                    DebugHostUnloading();
-                }
-                else
-                {
-                    // Stop the application from exiting.
-                    e.Cancel = true;
-                }
+            if (MessageBox.Show($"Are you sure you want to stop {m_productName} service? ",
+                    "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                // Stop the windows service.
+                ServiceHost.StopHostedService();
+
+                // Call user overridable debug host unloading method
+                DebugHostUnloading();
+            }
+            else
+            {
+                // Stop the application from exiting.
+                e.Cancel = true;
             }
         }
 
         private void DebugHost_Resize(object sender, EventArgs e)
         {
+            // Don't show the window in task bar when minimized.
             if (WindowState == FormWindowState.Minimized)
-            {
-                // Don't show the window in task bar when minimized.
                 ShowInTaskbar = false;
-            }
         }
 
         private void showToolStripMenuItem_Click(object sender, EventArgs e)
@@ -160,11 +154,9 @@ namespace GSF.TimeSeries
             WindowState = FormWindowState.Normal;
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Close this window which will cause the application to exit.
+        // Close this window which will cause the application to exit.
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e) => 
             Close();
-        }
 
         #endregion
     }

@@ -150,10 +150,8 @@ namespace GSF.TimeSeries
         /// Creates a new <see cref="ServiceHostBase"/> from specified parameters.
         /// </summary>
         /// <param name="container">Service host <see cref="IContainer"/>.</param>
-        public ServiceHostBase(IContainer container) : this()
-        {
+        public ServiceHostBase(IContainer container) : this() => 
             container?.Add(this);
-        }
 
         #endregion
 
@@ -162,7 +160,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the related remote console application name.
         /// </summary>
-        protected virtual string ConsoleApplicationName => ServiceName + "Console.exe";
+        protected virtual string ConsoleApplicationName => $"{ServiceName}Console.exe";
 
         /// <summary>
         /// Gets access to the <see cref="GSF.ServiceProcess.ServiceHelper"/>.
@@ -384,7 +382,7 @@ namespace GSF.TimeSeries
             // Initialize system settings
             ConfigurationType = systemSettings[nameof(ConfigurationType)].ValueAs<ConfigurationType>();
             m_cachedXmlConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
-            m_cachedBinaryConfigurationFile = FilePath.AddPathSuffix(cachePath) + FilePath.GetFileNameWithoutExtension(m_cachedXmlConfigurationFile) + ".bin";
+            m_cachedBinaryConfigurationFile = $"{FilePath.AddPathSuffix(cachePath)}{FilePath.GetFileNameWithoutExtension(m_cachedXmlConfigurationFile)}.bin";
             m_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs(DefaultConfigurationBackups);
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
@@ -412,7 +410,7 @@ namespace GSF.TimeSeries
 
             // Define guid with query string delimiters according to database needs
             if (string.IsNullOrWhiteSpace(NodeIDQueryString))
-                NodeIDQueryString = "'" + m_iaonSession.NodeID + "'";
+                NodeIDQueryString = $"'{m_iaonSession.NodeID}'";
 
             // Set up the configuration loader
             m_configurationLoader = ConfigurationType switch
@@ -530,6 +528,7 @@ namespace GSF.TimeSeries
                 DisplayStatusMessage("Failed to load reporting process: {0}", UpdateType.Warning, ex.Message);
                 LogException(ex);
             });
+            
             m_serviceHelper.ServiceComponents.Add(m_reportingProcesses);
 
             // Define scheduled service processes
@@ -903,42 +902,51 @@ namespace GSF.TimeSeries
                     if (configuration is not null)
                         PropagateDataSource(configuration);
                 }
-                else if (type == "Augmented")
+                else switch (type)
                 {
-                    DisplayStatusMessage("Augmenting current system configuration...", UpdateType.Information);
-                    configuration = AugmentConfigurationDataSet(DataSource);
+                    case "Augmented":
+                    {
+                        DisplayStatusMessage("Augmenting current system configuration...", UpdateType.Information);
+                        configuration = AugmentConfigurationDataSet(DataSource);
 
-                    // Update data source on all adapters in all collections
-                    if (configuration is not null)
-                        PropagateDataSource(configuration);
-                }
-                else if (type == "BinaryCache")
-                {
-                    DisplayStatusMessage("Loading binary cached configuration...", UpdateType.Information);
-                    configuration = GetBinaryCachedConfigurationDataSet();
+                        // Update data source on all adapters in all collections
+                        if (configuration is not null)
+                            PropagateDataSource(configuration);
 
-                    // Update data source on all adapters in all collections
-                    if (configuration is not null)
-                        PropagateDataSource(configuration);
-                }
-                else if (type == "XmlCache")
-                {
-                    DisplayStatusMessage("Loading XML cached configuration...", UpdateType.Information);
-                    configuration = GetXMLCachedConfigurationDataSet();
+                        break;
+                    }
+                    case "BinaryCache":
+                    {
+                        DisplayStatusMessage("Loading binary cached configuration...", UpdateType.Information);
+                        configuration = GetBinaryCachedConfigurationDataSet();
 
-                    // Update data source on all adapters in all collections
-                    if (configuration is not null)
-                        PropagateDataSource(configuration);
-                }
-                else if (type == "Startup")
-                {
-                    systemConfigurationLoaded = LoadStartupConfiguration();
-                }
-                else
-                {
-                    // No specific reload command was issued;
-                    // load system configuration as normal
-                    systemConfigurationLoaded = LoadSystemConfiguration();
+                        // Update data source on all adapters in all collections
+                        if (configuration is not null)
+                            PropagateDataSource(configuration);
+
+                        break;
+                    }
+                    case "XmlCache":
+                    {
+                        DisplayStatusMessage("Loading XML cached configuration...", UpdateType.Information);
+                        configuration = GetXMLCachedConfigurationDataSet();
+
+                        // Update data source on all adapters in all collections
+                        if (configuration is not null)
+                            PropagateDataSource(configuration);
+
+                        break;
+                    }
+                    case "Startup":
+                        systemConfigurationLoaded = LoadStartupConfiguration();
+
+                        break;
+                    default:
+                        // No specific reload command was issued;
+                        // load system configuration as normal
+                        systemConfigurationLoaded = LoadSystemConfiguration();
+
+                        break;
                 }
 
                 foreach (Action<bool> callback in items.Where(tuple => tuple.Item1 == typeInner).Select(tuple => tuple.Item2))
@@ -1131,10 +1139,7 @@ namespace GSF.TimeSeries
         {
             try
             {
-                if (File.Exists(m_xmlCacheConfigurationLoader.FilePath))
-                    return m_xmlCacheConfigurationLoader.Load();
-
-                return null;
+                return File.Exists(m_xmlCacheConfigurationLoader.FilePath) ? m_xmlCacheConfigurationLoader.Load() : null;
             }
             catch (Exception ex)
             {
@@ -1214,9 +1219,7 @@ namespace GSF.TimeSeries
 
                 // Cache binary serialized version of data set
                 using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
-                {
                     configuration.SerializeToStream(configurationFileStream);
-                }
 
                 DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
             }
@@ -1253,12 +1256,12 @@ namespace GSF.TimeSeries
                 // Create multiple backup configurations, if requested
                 for (int i = m_configurationBackups; i > 0; i--)
                 {
-                    string origConfigFile = configurationFile + ".backup" + (i == 1 ? "" : (i - 1).ToString());
+                    string origConfigFile = $"{configurationFile}.backup{(i == 1 ? "" : (i - 1).ToString())}";
 
                     if (!File.Exists(origConfigFile))
                         continue;
 
-                    string nextConfigFile = configurationFile + ".backup" + i;
+                    string nextConfigFile = $"{configurationFile}.backup{i}";
 
                     if (File.Exists(nextConfigFile))
                         File.Delete(nextConfigFile);
@@ -1278,7 +1281,7 @@ namespace GSF.TimeSeries
                     return;
 
                 // Back up current configuration file
-                string backupConfigFile = configurationFile + ".backup";
+                string backupConfigFile = $"{configurationFile}.backup";
 
                 if (File.Exists(backupConfigFile))
                     File.Delete(backupConfigFile);
@@ -1335,15 +1338,11 @@ namespace GSF.TimeSeries
 
         #region [ Service Binding ]
 
-        internal void StartHostedService()
-        {
+        internal void StartHostedService() => 
             OnStart(Environment.CommandLine.Split(' '));
-        }
 
-        internal void StopHostedService()
-        {
+        internal void StopHostedService() => 
             OnStop();
-        }
 
         internal void SendRequest(IPrincipal principal, Guid clientID, string userInput)
         {
@@ -1509,10 +1508,8 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report adapter status messages (e.g., to a log file or console window).
         /// </remarks>
-        private void StatusMessageHandler(object sender, EventArgs<string, UpdateType> e)
-        {
+        private void StatusMessageHandler(object sender, EventArgs<string, UpdateType> e) => 
             DisplayStatusMessage(e.Argument1, e.Argument2);
-        }
 
         /// <summary>
         /// Event handler for processing reported exceptions.
@@ -1522,10 +1519,8 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report exceptions.
         /// </remarks>
-        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
-        {
+        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e) => 
             LogException(e.Argument);
-        }
 
         /// <summary>
         /// Event handler for processing notifications from adapters that configuration has changed.
@@ -1535,18 +1530,14 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report configuration changes.
         /// </remarks>
-        private void ConfigurationChangedHandler(object sender, EventArgs e)
-        {
+        private void ConfigurationChangedHandler(object sender, EventArgs e) => 
             m_reloadConfigQueue.Add(Tuple.Create(nameof(System), (Action<bool>)(_ => {})));
-        }
 
         // Handle task scheduler exceptions
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             foreach (Exception ex in e.Exception.Flatten().InnerExceptions)
-            {
                 LogException(ex);
-            }
 
             e.SetObserved();
         }
@@ -1571,7 +1562,7 @@ namespace GSF.TimeSeries
         /// <param name="e">Event arguments containing the exception to report.</param>
         protected virtual void StatusLogExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            DisplayStatusMessage("Status log file exception: " + e.Argument.Message, UpdateType.Alarm);
+            DisplayStatusMessage($"Status log file exception: {e.Argument.Message}", UpdateType.Alarm);
             LogExceptionHandler(sender, e);
         }
 
@@ -1582,7 +1573,7 @@ namespace GSF.TimeSeries
         /// <param name="e">Event arguments containing the exception to report.</param>
         protected virtual void ErrorLogExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            DisplayStatusMessage("Error log file exception: " + e.Argument.Message, UpdateType.Alarm);
+            DisplayStatusMessage($"Error log file exception: {e.Argument.Message}", UpdateType.Alarm);
             LogExceptionHandler(sender, e);
         }
 
@@ -1593,7 +1584,7 @@ namespace GSF.TimeSeries
         /// <param name="e">Event arguments containing the exception to report.</param>
         protected virtual void ConnectionErrorLogExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            DisplayStatusMessage("Connection log file exception: " + e.Argument.Message, UpdateType.Alarm);
+            DisplayStatusMessage($"Connection log file exception: {e.Argument.Message}", UpdateType.Alarm);
             LogExceptionHandler(sender, e);
         }
 
@@ -1679,10 +1670,8 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         /// <returns>Requested <see cref="IAdapter"/>.</returns>
-        protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo)
-        {
-            return GetRequestedAdapter(requestInfo, out IAdapterCollection _);
-        }
+        protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo) => 
+            GetRequestedAdapter(requestInfo, out IAdapterCollection _);
 
         /// <summary>
         /// Gets requested <see cref="IAdapter"/> and its containing <see cref="IAdapterCollection"/>.
@@ -1840,19 +1829,15 @@ namespace GSF.TimeSeries
         /// Starts specified adapter.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
-        protected virtual void StartRequestHandler(ClientRequestInfo requestInfo)
-        {
+        protected virtual void StartRequestHandler(ClientRequestInfo requestInfo) => 
             ActionRequestHandler(requestInfo, adapter => adapter.Start());
-        }
 
         /// <summary>
         /// Stops specified adapter.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
-        protected virtual void StopRequestHandler(ClientRequestInfo requestInfo)
-        {
+        protected virtual void StopRequestHandler(ClientRequestInfo requestInfo) => 
             ActionRequestHandler(requestInfo, adapter => adapter.Stop());
-        }
 
         /// <summary>
         /// Generic adapter request handler.
@@ -2042,14 +2027,14 @@ namespace GSF.TimeSeries
                                 }
 
                                 // If invoke was successful, return actionable response
-                                if (success)
-                                {
-                                    // Return value, if any, will be returned to requesting client as a response attachment
-                                    if (returnValue is null)
-                                        SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
-                                    else
-                                        SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
-                                }
+                                if (!success)
+                                    return;
+
+                                // Return value, if any, will be returned to requesting client as a response attachment
+                                if (returnValue is null)
+                                    SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
+                                else
+                                    SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
                             }
                             else
                             {
@@ -2115,13 +2100,11 @@ namespace GSF.TimeSeries
             }
             else
             {
-                IAdapter adapter;
-
                 // See if specific ID for an adapter was requested
-                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
-                    adapter = GetRequestedAdapter(requestInfo);
-                else
-                    adapter = GetRequestedCollection(requestInfo);
+                IAdapter adapter =
+                    requestInfo.Request.Arguments.Exists("OrderedArg1") ? 
+                    GetRequestedAdapter(requestInfo) : 
+                    GetRequestedCollection(requestInfo);
 
                 if (adapter is null)
                     return;
@@ -2142,48 +2125,48 @@ namespace GSF.TimeSeries
                     foreach (MethodInfo method in methods)
                     {
                         // Only display methods marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                        if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute))
+                        if (!method.TryGetAttribute(out AdapterCommandAttribute commandAttribute))
+                            continue;
+
+                        // Don't bother displaying commands to users who cannot invoke them
+                        if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role)))
+                            continue;
+
+                        bool firstParameter = true;
+
+                        methodList.Append("    ");
+                        methodList.Append(method.Name);
+                        methodList.Append('(');
+
+                        // Enumerate each method parameter
+                        foreach (ParameterInfo parameter in method.GetParameters())
                         {
-                            // Don't bother displaying commands to users who cannot invoke them
-                            if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role)))
-                                continue;
+                            if (!firstParameter)
+                                methodList.Append(", ");
 
-                            bool firstParameter = true;
+                            string typeName = parameter.ParameterType.ToString();
 
-                            methodList.Append("    ");
-                            methodList.Append(method.Name);
-                            methodList.Append('(');
+                            // Assume namespace for basic System types...
+                            if (typeName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && typeName.CharCount('.') == 1)
+                                typeName = typeName.Substring(7);
 
-                            // Enumerate each method parameter
-                            foreach (ParameterInfo parameter in method.GetParameters())
-                            {
-                                if (!firstParameter)
-                                    methodList.Append(", ");
+                            methodList.Append(typeName);
+                            methodList.Append(' ');
+                            methodList.Append(parameter.Name);
 
-                                string typeName = parameter.ParameterType.ToString();
-
-                                // Assume namespace for basic System types...
-                                if (typeName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && typeName.CharCount('.') == 1)
-                                    typeName = typeName.Substring(7);
-
-                                methodList.Append(typeName);
-                                methodList.Append(' ');
-                                methodList.Append(parameter.Name);
-
-                                firstParameter = false;
-                            }
-
-                            methodList.Append(')');
-                            methodList.AppendLine();
-
-                            if (!string.IsNullOrWhiteSpace(commandAttribute.Description))
-                            {
-                                methodList.Append("        ");
-                                methodList.Append(commandAttribute.Description);
-                            }
-
-                            methodList.AppendLine();
+                            firstParameter = false;
                         }
+
+                        methodList.Append(')');
+                        methodList.AppendLine();
+
+                        if (!string.IsNullOrWhiteSpace(commandAttribute.Description))
+                        {
+                            methodList.Append("        ");
+                            methodList.Append(commandAttribute.Description);
+                        }
+
+                        methodList.AppendLine();
                     }
 
                     methodList.AppendLine();
@@ -2367,10 +2350,6 @@ namespace GSF.TimeSeries
                 if (reportingProcess is null)
                     throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
-                string reportPath;
-                FileInfo info;
-                TimeSpan expiration;
-
                 reportingProcess.CleanReportLocation();
 
                 List<string> reportsList = reportingProcess.GetReportsList();
@@ -2385,11 +2364,11 @@ namespace GSF.TimeSeries
 
                 foreach (string report in reportsList)
                 {
-                    reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, report));
+                    string reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, report));
                     listBuilder.Append(report.PadRight(fileColumnWidth));
 
-                    info = new FileInfo(reportPath);
-                    expiration = TimeSpan.FromDays(reportingProcess.IdleReportLifetime) - (DateTime.UtcNow - info.LastAccessTimeUtc);
+                    FileInfo info = new(reportPath);
+                    TimeSpan expiration = TimeSpan.FromDays(reportingProcess.IdleReportLifetime) - (DateTime.UtcNow - info.LastAccessTimeUtc);
 
                     if (expiration.TotalSeconds <= 0.0D)
                         listBuilder.Append("Expired");
@@ -2458,7 +2437,6 @@ namespace GSF.TimeSeries
 
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
-                string reportPath;
 
                 try
                 {
@@ -2467,7 +2445,7 @@ namespace GSF.TimeSeries
 
                     if (reportDate < today)
                     {
-                        reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, $"{reportingProcess.Title} {reportDate:yyyy-MM-dd}.pdf"));
+                        string reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, $"{reportingProcess.Title} {reportDate:yyyy-MM-dd}.pdf"));
 
                         if (File.Exists(reportPath))
                         {
@@ -2944,7 +2922,6 @@ namespace GSF.TimeSeries
 
             ClientRequestInfo invokeInfo = null;
             ClientRequestHandler invokeHandler = null;
-            string resource;
             bool invoking;
 
             if (arguments.ContainsHelpRequest)
@@ -2989,7 +2966,7 @@ namespace GSF.TimeSeries
                 if (invoking)
                 {
                     invokeInfo = new ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse(arguments["Invoke"]));
-                    resource = invokeInfo.Request.Command;
+                    string resource = invokeInfo.Request.Command;
 
                     // Check if remote client has permission to invoke the requested command.
                     if (m_serviceHelper.SecureRemoteInteractions)
@@ -3400,30 +3377,30 @@ namespace GSF.TimeSeries
             string adapterID = requestInfo.Request.Arguments["OrderedArg1"];
             IAdapterCollection collection = GetRequestedCollection(requestInfo);
 
-            if (!string.IsNullOrWhiteSpace(adapterID))
+            if (string.IsNullOrWhiteSpace(adapterID))
+                return false;
+
+            adapterID = adapterID.Trim();
+
+            if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out uint id))
             {
-                adapterID = adapterID.Trim();
+                // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
+                if (collection.TryGetAdapterByID(id, out _))
+                    return true;
 
-                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out uint id))
-                {
-                    // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
-                    if (collection.TryGetAdapterByID(id, out _))
-                        return true;
+                // Try looking for ID in any collection if all runtime ID's are unique
+                if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out _, out _))
+                    return true;
+            }
+            else
+            {
+                // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
+                if (collection.TryGetAdapterByName(adapterID, out _))
+                    return true;
 
-                    // Try looking for ID in any collection if all runtime ID's are unique
-                    if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out _, out _))
-                        return true;
-                }
-                else
-                {
-                    // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
-                    if (collection.TryGetAdapterByName(adapterID, out _))
-                        return true;
-
-                    // Try looking for adapter name in any collection
-                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out _, out _))
-                        return true;
-                }
+                // Try looking for adapter name in any collection
+                if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out _, out _))
+                    return true;
             }
 
             return false;
@@ -3535,10 +3512,8 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         /// <param name="success">Flag that determines if this response to client request was a success.</param>
-        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success)
-        {
+        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success) => 
             SendResponseWithAttachment(requestInfo, success, null, null);
-        }
 
         /// <summary>
         /// Sends an actionable response to client with a formatted message.
@@ -3547,10 +3522,8 @@ namespace GSF.TimeSeries
         /// <param name="success">Flag that determines if this response to client request was a success.</param>
         /// <param name="status">Formatted status message to send with response.</param>
         /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args)
-        {
+        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args) => 
             SendResponseWithAttachment(requestInfo, success, null, status, args);
-        }
 
         /// <summary>
         /// Sends an actionable response to client with a formatted message and attachment.
@@ -3568,17 +3541,17 @@ namespace GSF.TimeSeries
                 m_serviceHelper.SendActionableResponse(requestInfo, success, attachment, status, args);
 
                 // Log details of client request as well as response
-                if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
-                {
-                    string responseType = $"{requestInfo.Request.Command}:{(success ? "Success" : "Failure")}";
-                    string arguments = requestInfo.Request.Arguments.ToString();
-                    string message = $"{responseType}{(string.IsNullOrWhiteSpace(arguments) ? "" : $"({arguments})")}";
+                if (!m_serviceHelper.LogStatusUpdates || !m_serviceHelper.StatusLog.IsOpen)
+                    return;
 
-                    if (status is not null)
-                        message = $"{message} - {(args.Length == 0 ? status : string.Format(status, args))}";
+                string responseType = $"{requestInfo.Request.Command}:{(success ? "Success" : "Failure")}";
+                string arguments = requestInfo.Request.Arguments.ToString();
+                string message = $"{responseType}{(string.IsNullOrWhiteSpace(arguments) ? "" : $"({arguments})")}";
 
-                    m_serviceHelper.StatusLog.WriteTimestampedLine(message);
-                }
+                if (status is not null)
+                    message = $"{message} - {(args.Length == 0 ? status : string.Format(status, args))}";
+
+                m_serviceHelper.StatusLog.WriteTimestampedLine(message);
             }
             catch (Exception ex)
             {
@@ -3611,10 +3584,8 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="status">Status message to send to all clients.</param>
         /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type)
-        {
+        protected virtual void DisplayStatusMessage(string status, UpdateType type) => 
             DisplayStatusMessage(status, type, true);
-        }
 
         /// <summary>
         /// Displays a broadcast message to all subscribed clients.
@@ -3642,10 +3613,8 @@ namespace GSF.TimeSeries
         /// <param name="status">Formatted status message to send to all clients.</param>
         /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
         /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args)
-        {
+        protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args) => 
             DisplayStatusMessage(status, type, true, args);
-        }
 
         /// <summary>
         /// Displays a broadcast message to all subscribed clients.

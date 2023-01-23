@@ -79,8 +79,7 @@ namespace GSF.TimeSeries
         /// Total number of measurements down-sampled by <see cref="TrackingFrame"/>.
         /// </summary>
         public long DownsampledMeasurements =>
-            // Only measurements that came in after initial sorts were downsampled...
-            m_derivedMeasurements - SourceFrame.SortedMeasurements;
+            m_derivedMeasurements - SourceFrame.SortedMeasurements; // Only measurements that came in after initial sorts were downsampled...
 
         /// <summary>
         /// Gets the <see cref="TrackingFrame"/> locking primitive.
@@ -159,11 +158,8 @@ namespace GSF.TimeSeries
                             if (derivedMeasurement is not null)
                             {
                                 // Get function defined for measurement value filtering
-                                MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
-
                                 // Default to average value filter if none is specified
-                                if ((object)measurementValueFilter is null)
-                                    measurementValueFilter = Measurement.AverageValueFilter;
+                                MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter ?? Measurement.AverageValueFilter;
 
                                 // Add new measurement to tracking collection
                                 values.Add(measurement);

@@ -24,8 +24,6 @@
 using System;
 using System.Security.Principal;
 using System.Text;
-using System.Threading;
-using GSF.Identity;
 using GSF.Reflection;
 
 namespace GSF.TimeSeries
@@ -183,9 +181,7 @@ namespace GSF.TimeSeries
         private void WriteLine()
         {
             lock (m_displayLock)
-            {
                 System.Console.WriteLine();
-            }
         }
 
         private void WriteLine(string format, params object[] args)

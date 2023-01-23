@@ -165,7 +165,7 @@ namespace GSF.TimeSeries.Transport
             // Create a new Iaon session
             IaonSession session = new()
             {
-                Name = "<" + clientSubscription.Name.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss"),
+                Name = $"<{clientSubscription.Name.ToNonNullString("unavailable")}>@{clientSubscription.StartTimeConstraint:yyyy-MM-dd HH:mm:ss}",
 
                 // Assign requested input measurement keys as a routing restriction
                 InputMeasurementKeysRestriction = inputMeasurementKeys
@@ -177,7 +177,7 @@ namespace GSF.TimeSeries.Transport
                 if (e.Argument2 == UpdateType.Information)
                     clientSubscription.OnStatusMessage(MessageLevel.Info, e.Argument1);
                 else
-                    clientSubscription.OnStatusMessage(MessageLevel.Warning, "0x" + (int)e.Argument2 + e.Argument1);
+                    clientSubscription.OnStatusMessage(MessageLevel.Warning, $"0x{(int)e.Argument2}{e.Argument1}");
             }
 
             void processExceptionHandler(object sender, EventArgs<Exception> e) => 
@@ -201,7 +201,7 @@ namespace GSF.TimeSeries.Transport
                 string.Format("Initializing temporal session for host \"{0}\" spanning {1:yyyy-MM-dd HH:mm:ss.fff} to {2:yyyy-MM-dd HH:mm:ss.fff} processing data {3}...",
                     clientSubscription.Name.ToNonNullString("unknown"), clientSubscription.StartTimeConstraint, clientSubscription.StopTimeConstraint,
                     clientSubscription.ProcessingInterval == 0 ? "as fast as possible" :
-                    clientSubscription.ProcessingInterval == -1 ? "at the default rate" : "at " + clientSubscription.ProcessingInterval + "ms intervals"),
+                    clientSubscription.ProcessingInterval == -1 ? "at the default rate" : $"at {clientSubscription.ProcessingInterval}ms intervals"),
                 UpdateType.Information));
 
             // Duplicate current real-time session configuration for adapters that report temporal support

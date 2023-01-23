@@ -519,7 +519,7 @@ namespace GSF.TimeSeries.Transport
         /// <remarks>
         /// This would represent unsynchronized, full fidelity measurement data packets.
         /// </remarks>
-        NoFlags = (Byte)Bits.Nil
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
@@ -672,10 +672,8 @@ namespace GSF.TimeSeries.Transport
 
         private sealed class LatestMeasurementCache : FacileActionAdapterBase
         {
-            public LatestMeasurementCache(string connectionString)
-            {
+            public LatestMeasurementCache(string connectionString) => 
                 ConnectionString = connectionString;
-            }
 
             public override DataSet DataSource
             {
@@ -697,14 +695,12 @@ namespace GSF.TimeSeries.Transport
 
             public override bool SupportsTemporalProcessing => false;
 
-            public override string GetShortStatus(int maxLength)
-            {
-                return "LatestMeasurementCache happily exists. :)";
-            }
+            public override string GetShortStatus(int maxLength) => 
+                "LatestMeasurementCache happily exists. :)";
 
             private void UpdateInputMeasurementKeys()
             {
-                if (Settings.TryGetValue("inputMeasurementKeys", out string inputMeasurementKeys))
+                if (Settings.TryGetValue(nameof(InputMeasurementKeys), out string inputMeasurementKeys))
                     InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, inputMeasurementKeys);
             }
         }
@@ -891,6 +887,7 @@ namespace GSF.TimeSeries.Transport
                     _ => new RoutingTables()
                 };
             }
+            
             m_routingTables.ActionAdapters = this;
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
@@ -911,10 +908,8 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="DataPublisher"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~DataPublisher()
-        {
+        ~DataPublisher() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -1109,16 +1104,16 @@ namespace GSF.TimeSeries.Transport
             get => base.DataSource;
             set
             {
-                if (DataSourceChanged(value))
-                {
-                    base.DataSource = value;
+                if (!DataSourceChanged(value))
+                    return;
 
-                    UpdateRights();
-                    UpdateCertificateChecker();
-                    UpdateClientNotifications();
-                    UpdateLatestMeasurementCache();
-                    NotifyClientsOfConfigurationChange();
-                }
+                base.DataSource = value;
+
+                UpdateRights();
+                UpdateCertificateChecker();
+                UpdateClientNotifications();
+                UpdateLatestMeasurementCache();
+                NotifyClientsOfConfigurationChange();
             }
         }
 
@@ -1138,12 +1133,9 @@ namespace GSF.TimeSeries.Transport
                     status.Append(m_commandChannel.Status);
 
                 status.Append(base.Status);
-                status.AppendFormat("       Mutual Subscription: {0}", MutualSubscription);
-                status.AppendLine();
-                status.AppendFormat("        Reporting interval: {0:N0} per subscriber", MeasurementReportingInterval);
-                status.AppendLine();
-                status.AppendFormat("  Buffer block retransmits: {0:N0}", BufferBlockRetransmissions);
-                status.AppendLine();
+                status.AppendLine($"       Mutual Subscription: {MutualSubscription}");
+                status.AppendLine($"        Reporting interval: {MeasurementReportingInterval:N0} per subscriber");
+                status.AppendLine($"  Buffer block retransmits: {BufferBlockRetransmissions:N0}");
 
                 return status.ToString();
             }
@@ -1285,16 +1277,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
         /// </summary>
-        public long AverageMeasurementsPerSecond
-        {
-            get
-            {
-                if (m_measurementsPerSecondCount == 0L)
-                    return 0L;
-
-                return m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
-            }
-        }
+        public long AverageMeasurementsPerSecond => m_measurementsPerSecondCount == 0L ? 0L : m_totalMeasurementsPerSecond / m_measurementsPerSecondCount;
 
         /// <summary>
         /// Gets the minimum latency calculated over the full lifetime of the publisher.
@@ -1309,16 +1292,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the average latency calculated over the full lifetime of the publisher.
         /// </summary>
-        public int LifetimeAverageLatency
-        {
-            get
-            {
-                if (m_lifetimeLatencyMeasurements == 0)
-                    return -1;
-
-                return (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
-            }
-        }
+        public int LifetimeAverageLatency => m_lifetimeLatencyMeasurements == 0 ? -1 : (int)Ticks.ToMilliseconds(m_lifetimeTotalLatency / m_lifetimeLatencyMeasurements);
 
         #endregion
 
@@ -1330,49 +1304,48 @@ namespace GSF.TimeSeries.Transport
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                CommandChannel = null;
+
+                ClientConnections?.Values.AsParallel().ForAll(cc => cc.Dispose());
+
+                ClientConnections = null;
+
+                if (m_routingTables is not null)
                 {
-                    if (disposing)
-                    {
-                        CommandChannel = null;
-
-                        if (ClientConnections is not null)
-                            ClientConnections.Values.AsParallel().ForAll(cc => cc.Dispose());
-
-                        ClientConnections = null;
-
-                        if (m_routingTables is not null)
-                        {
-                            m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
-                            m_routingTables.ProcessException -= m_routingTables_ProcessException;
-                            m_routingTables.Dispose();
-                        }
-                        m_routingTables = null;
-
-                        // Dispose command channel restart timer
-                        if (m_commandChannelRestartTimer is not null)
-                        {
-                            m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
-                            m_commandChannelRestartTimer.Dispose();
-                        }
-                        m_commandChannelRestartTimer = null;
-
-                        // Dispose the cipher key rotation timer
-                        if (m_cipherKeyRotationTimer is not null)
-                        {
-                            m_cipherKeyRotationTimer.Elapsed -= m_cipherKeyRotationTimer_Elapsed;
-                            m_cipherKeyRotationTimer.Dispose();
-                        }
-                        m_cipherKeyRotationTimer = null;
-                    }
+                    m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
+                    m_routingTables.ProcessException -= m_routingTables_ProcessException;
+                    m_routingTables.Dispose();
                 }
-                finally
+                m_routingTables = null;
+
+                // Dispose command channel restart timer
+                if (m_commandChannelRestartTimer is not null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
+                    m_commandChannelRestartTimer.Dispose();
                 }
+                m_commandChannelRestartTimer = null;
+
+                // Dispose the cipher key rotation timer
+                if (m_cipherKeyRotationTimer is not null)
+                {
+                    m_cipherKeyRotationTimer.Elapsed -= m_cipherKeyRotationTimer_Elapsed;
+                    m_cipherKeyRotationTimer.Dispose();
+                }
+                m_cipherKeyRotationTimer = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -1390,66 +1363,66 @@ namespace GSF.TimeSeries.Transport
             Dictionary<string, string> settings = Settings;
 
             // Setup data publishing server with or without required authentication 
-            if (settings.TryGetValue("requireAuthentication", out string setting))
+            if (settings.TryGetValue(nameof(RequireAuthentication), out string setting))
                 RequireAuthentication = setting.ParseBoolean();
 
             // Check flag that will determine if subscriber payloads should be encrypted by default
-            if (settings.TryGetValue("encryptPayload", out setting))
+            if (settings.TryGetValue(nameof(EncryptPayload), out setting))
                 m_encryptPayload = setting.ParseBoolean();
 
             // Check flag that indicates whether publisher is publishing data
             // that its node subscribed to from another node in a shared database
-            if (settings.TryGetValue("sharedDatabase", out setting))
+            if (settings.TryGetValue(nameof(SharedDatabase), out setting))
                 SharedDatabase = setting.ParseBoolean();
 
             // Extract custom metadata table expressions if provided
-            if (settings.TryGetValue("metadataTables", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(MetadataTables), out setting) && !string.IsNullOrWhiteSpace(setting))
                 MetadataTables = setting;
 
             // Check for mutual subscription flag
             MutualSubscription = settings.TryGetValue(nameof(MutualSubscription), out setting) && setting.ParseBoolean();
 
             // See if a user defined compression strength has been provided
-            if (settings.TryGetValue("compressionStrength", out setting) && int.TryParse(setting, out int strength))
+            if (settings.TryGetValue(nameof(CompressionStrength), out setting) && int.TryParse(setting, out int strength))
                 CompressionStrength = strength;
 
             // Check flag to see if payload compression is allowed
-            if (settings.TryGetValue("allowPayloadCompression", out setting))
+            if (settings.TryGetValue(nameof(AllowPayloadCompression), out setting))
                 AllowPayloadCompression = setting.ParseBoolean();
 
             // Check flag to see if synchronized subscriptions are allowed
-            if (settings.TryGetValue("allowSynchronizedSubscription", out setting))
+            if (settings.TryGetValue(nameof(AllowSynchronizedSubscription), out setting))
                 AllowSynchronizedSubscription = setting.ParseBoolean();
 
             // Check flag to see if metadata refresh commands are allowed
-            if (settings.TryGetValue("allowMetadataRefresh", out setting))
+            if (settings.TryGetValue(nameof(AllowMetadataRefresh), out setting))
                 AllowMetadataRefresh = setting.ParseBoolean();
 
             // Check flag to see if NaN value filtering is allowed
-            if (settings.TryGetValue("allowNaNValueFilter", out setting))
+            if (settings.TryGetValue(nameof(AllowNaNValueFilter), out setting))
                 AllowNaNValueFilter = setting.ParseBoolean();
 
             // Check flag to see if NaN value filtering is forced
-            if (settings.TryGetValue("forceNaNValueFilter", out setting))
+            if (settings.TryGetValue(nameof(ForceNaNValueFilter), out setting))
                 ForceNaNValueFilter = setting.ParseBoolean();
 
-            if (settings.TryGetValue("useBaseTimeOffsets", out setting))
+            if (settings.TryGetValue(nameof(UseBaseTimeOffsets), out setting))
                 UseBaseTimeOffsets = setting.ParseBoolean();
 
-            if (settings.TryGetValue("measurementReportingInterval", out setting))
+            if (settings.TryGetValue(nameof(MeasurementReportingInterval), out setting))
                 MeasurementReportingInterval = int.Parse(setting);
             else
                 MeasurementReportingInterval = AdapterBase.DefaultMeasurementReportingInterval;
 
             // Get user specified period for cipher key rotation
-            if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out double period))
+            if (settings.TryGetValue(nameof(CipherKeyRotationPeriod), out setting) && double.TryParse(setting, out double period))
                 CipherKeyRotationPeriod = period;
 
             // Get security mode used for the command channel
-            if (settings.TryGetValue("securityMode", out setting))
+            if (settings.TryGetValue(nameof(SecurityMode), out setting))
                 SecurityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
 
-            if (settings.TryGetValue("useZeroMQChannel", out setting))
+            if (settings.TryGetValue(nameof(UseZeroMQChannel), out setting))
                 UseZeroMQChannel = setting.ParseBoolean();
 
             // FUTURE: Option is to enable CURVE in GSF ZeroMQ library with same cert
@@ -1591,10 +1564,7 @@ namespace GSF.TimeSeries.Transport
         }
 
 
-        RoutingPassthroughMethod IOptimizedRoutingConsumer.GetRoutingPassthroughMethods()
-        {
-            return new RoutingPassthroughMethod(QueueMeasurementsForProcessing);
-        }
+        RoutingPassthroughMethod IOptimizedRoutingConsumer.GetRoutingPassthroughMethods() => new(QueueMeasurementsForProcessing);
 
         /// <summary>
         /// Queues a collection of measurements for processing to each <see cref="IActionAdapter"/> connected to this <see cref="DataPublisher"/>.
@@ -1614,13 +1584,11 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Start()
         {
-            if (!Enabled)
-            {
-                base.Start();
+            if (Enabled)
+                return;
 
-                if (m_commandChannel is not null)
-                    m_commandChannel.Start();
-            }
+            base.Start();
+            m_commandChannel?.Start();
         }
 
         /// <summary>
@@ -1629,9 +1597,7 @@ namespace GSF.TimeSeries.Transport
         public override void Stop()
         {
             base.Stop();
-
-            if (m_commandChannel is not null)
-                m_commandChannel.Stop();
+            m_commandChannel?.Stop();
         }
 
         /// <summary>
@@ -1639,37 +1605,29 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of the <see cref="DataPublisher"/>.</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            if (m_commandChannel is not null)
-                return $"Publishing data to {m_commandChannel.ClientIDs.Length} clients.".CenterText(maxLength);
-
-            return "Currently not connected".CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) =>
+            m_commandChannel is not null ? 
+                $"Publishing data to {m_commandChannel.ClientIDs.Length} clients.".CenterText(maxLength) : 
+                "Currently not connected".CenterText(maxLength);
 
         /// <summary>
         /// Enumerates connected clients.
         /// </summary>
         [AdapterCommand("Enumerates connected clients.", "Administrator", "Editor", "Viewer")]
-        public virtual void EnumerateClients()
-        {
+        public virtual void EnumerateClients() => 
             OnStatusMessage(MessageLevel.Info, EnumerateClients(false));
-        }
 
         /// <summary>
         /// Enumerates connected clients with active temporal sessions.
         /// </summary>
         [AdapterCommand("Enumerates connected clients with active temporal sessions.", "Administrator", "Editor", "Viewer")]
-        public virtual void EnumerateTemporalClients()
-        {
+        public virtual void EnumerateTemporalClients() => 
             OnStatusMessage(MessageLevel.Info, EnumerateClients(true));
-        }
 
         private string EnumerateClients(bool filterToTemporalSessions)
         {
             StringBuilder clientEnumeration = new();
             Guid[] clientIDs = (Guid[])m_commandChannel.ClientIDs.Clone();
-            bool hasActiveTemporalSession;
 
             if (filterToTemporalSessions)
                 clientEnumeration.AppendFormat("\r\nIndices for connected clients with active temporal sessions:\r\n\r\n");
@@ -1678,18 +1636,14 @@ namespace GSF.TimeSeries.Transport
 
             for (int i = 0; i < clientIDs.Length; i++)
             {
-                if (ClientConnections.TryGetValue(clientIDs[i], out ClientConnection connection) && connection is not null && connection.Subscription is not null)
-                {
-                    hasActiveTemporalSession = connection.Subscription.TemporalConstraintIsDefined();
+                if (!ClientConnections.TryGetValue(clientIDs[i], out ClientConnection connection) || connection?.Subscription is null)
+                    continue;
 
-                    if (!filterToTemporalSessions || hasActiveTemporalSession)
-                    {
-                        clientEnumeration.Append(
-                            $"  {(i+1).ToString().PadLeft(3)} - {connection.ConnectionID}\r\n" +
-                            $"          {connection.SubscriberInfo}\r\n" + GetOperationalModes(connection) +
-                            $"          Active Temporal Session = {(hasActiveTemporalSession ? "Yes" : "No")}\r\n\r\n");
-                    }
-                }
+                bool hasActiveTemporalSession = connection.Subscription.TemporalConstraintIsDefined();
+
+                if (!filterToTemporalSessions || hasActiveTemporalSession)
+                    clientEnumeration.Append(
+                        $"  {i + 1,3} - {connection.ConnectionID}\r\n          {connection.SubscriberInfo}\r\n{GetOperationalModes(connection)}          Active Temporal Session = {(hasActiveTemporalSession ? "Yes" : "No")}\r\n\r\n");
             }
 
             // Return enumeration
@@ -1706,35 +1660,33 @@ namespace GSF.TimeSeries.Transport
 
             if ((operationalModes & OperationalModes.CompressPayloadData) > 0)
             {
-                description.Append($"          CompressPayloadData[{(tsscEnabled ? nameof(TSSC) : "Pattern")}]\r\n");
+                description.AppendLine($"          CompressPayloadData[{(tsscEnabled ? nameof(TSSC) : "Pattern")}]");
             }
             else
             {
-                if (connection.Subscription.UseCompactMeasurementFormat)
-                    description.Append("          CompactPayloadData[");
-                else
-                    description.Append("          FullSizePayloadData[");
+                description.Append(connection.Subscription.UseCompactMeasurementFormat ? 
+                    "          CompactPayloadData[" : 
+                    "          FullSizePayloadData[");
 
-                if (connection.Subscription is UnsynchronizedClientSubscription)
-                    description.Append($"{connection.Subscription.TimestampSize}-byte Timestamps]\r\n");
-                else
-                    description.Append("8-byte Frame-level Timestamps]\r\n");
+                description.AppendLine(connection.Subscription is UnsynchronizedClientSubscription ? 
+                    $"{connection.Subscription.TimestampSize}-byte Timestamps]" : 
+                    "8-byte Frame-level Timestamps]");
             }
 
             if ((operationalModes & OperationalModes.CompressSignalIndexCache) > 0 && gzipEnabled)
-                description.Append("          CompressSignalIndexCache\r\n");
+                description.AppendLine($"          {nameof(OperationalModes.CompressSignalIndexCache)}");
 
             if ((operationalModes & OperationalModes.CompressMetadata) > 0 && gzipEnabled)
-                description.Append("          CompressMetadata\r\n");
+                description.AppendLine($"          {nameof(OperationalModes.CompressMetadata)}");
 
             if ((operationalModes & OperationalModes.UseCommonSerializationFormat) > 0)
-                description.Append("          UseCommonSerializationFormat\r\n");
+                description.AppendLine($"          {nameof(OperationalModes.UseCommonSerializationFormat)}");
 
             if ((operationalModes & OperationalModes.ReceiveExternalMetadata) > 0)
-                description.Append("          ReceiveExternalMetadata\r\n");
+                description.AppendLine($"          {nameof(OperationalModes.ReceiveExternalMetadata)}");
 
             if ((operationalModes & OperationalModes.ReceiveInternalMetadata) > 0)
-                description.Append("          ReceiveInternalMetadata\r\n");
+                description.AppendLine($"          {nameof(OperationalModes.ReceiveInternalMetadata)}");
 
             return description.ToString();
         }
@@ -1759,13 +1711,13 @@ namespace GSF.TimeSeries.Transport
                 OnStatusMessage(MessageLevel.Error, $"Failed to find connected client with enumerated index {clientIndex}");
             }
 
-            if (success)
-            {
-                if (ClientConnections.TryGetValue(clientID, out ClientConnection connection))
-                    connection.RotateCipherKeys();
-                else
-                    OnStatusMessage(MessageLevel.Error, $"Failed to find connected client {clientID}");
-            }
+            if (!success)
+                return;
+
+            if (ClientConnections.TryGetValue(clientID, out ClientConnection connection))
+                connection.RotateCipherKeys();
+            else
+                OnStatusMessage(MessageLevel.Error, $"Failed to find connected client {clientID}");
         }
 
         /// <summary>
@@ -1826,12 +1778,9 @@ namespace GSF.TimeSeries.Transport
                     string temporalStatus = null;
 
                     if (connection.Subscription is not null)
-                    {
-                        if (connection.Subscription.TemporalConstraintIsDefined())
-                            temporalStatus = connection.Subscription.TemporalSessionStatus;
-                        else
-                            temporalStatus = "Subscription does not have an active temporal session.";
-                    }
+                        temporalStatus = connection.Subscription.TemporalConstraintIsDefined() ?
+                            connection.Subscription.TemporalSessionStatus :
+                            "Subscription does not have an active temporal session.";
 
                     if (string.IsNullOrWhiteSpace(temporalStatus))
                         temporalStatus = "Temporal session status is unavailable.";
@@ -1891,10 +1840,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="subscriberID">Guid based subscriber ID for client connection.</param>
         [AdapterCommand("Gets subscriber status for client connection using its subscriber ID.", "Administrator", "Editor", "Viewer")]
-        public virtual Tuple<Guid, bool, string> GetSubscriberStatus(Guid subscriberID)
-        {
-            return new Tuple<Guid, bool, string>(subscriberID, GetConnectionProperty(subscriberID, cc => cc.IsConnected), GetConnectionProperty(subscriberID, cc => cc.SubscriberInfo));
-        }
+        public virtual Tuple<Guid, bool, string> GetSubscriberStatus(Guid subscriberID) => 
+            new(subscriberID, GetConnectionProperty(subscriberID, cc => cc.IsConnected), GetConnectionProperty(subscriberID, cc => cc.SubscriberInfo));
 
         /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
@@ -1943,11 +1890,10 @@ namespace GSF.TimeSeries.Transport
             List<Guid> unauthorizedKeys = new();
             ushort index = 0;
             Guid signalID;
-            Func<Guid, bool> hasRightsFunc;
 
             if (inputMeasurementKeys is not null)
             {
-                hasRightsFunc = RequireAuthentication
+                Func<Guid, bool> hasRightsFunc = RequireAuthentication
                     ? new SubscriberRightsLookup(DataSource, signalIndexCache.SubscriberID).HasRightsFunc
                     : _ => true;
 
@@ -1983,11 +1929,11 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (Settings.TryGetValue("cacheMeasurementKeys", out string cacheMeasurementKeys) && TryGetAdapterByName(nameof(LatestMeasurementCache), out IActionAdapter cache))
-                {
-                    cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
-                    m_routingTables.CalculateRoutingTables(null);
-                }
+                if (!Settings.TryGetValue("cacheMeasurementKeys", out string cacheMeasurementKeys) || !TryGetAdapterByName(nameof(LatestMeasurementCache), out IActionAdapter cache))
+                    return;
+
+                cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
+                m_routingTables.CalculateRoutingTables(null);
             }
             catch (Exception ex)
             {
@@ -2070,31 +2016,29 @@ namespace GSF.TimeSeries.Transport
         private void DeserializeClientNotifications()
         {
             string notificationsFileName = FilePath.GetAbsolutePath($"{Name}Notifications.txt");
-            string notification;
 
-            if (File.Exists(notificationsFileName))
+            if (!File.Exists(notificationsFileName))
+                return;
+
+            using FileStream fileStream = File.OpenRead(notificationsFileName);
+            using TextReader reader = new StreamReader(fileStream);
+
+            string line = reader.ReadLine();
+
+            while (line is not null)
             {
-                using FileStream fileStream = File.OpenRead(notificationsFileName);
+                int separatorIndex = line.IndexOf(',');
 
-                using TextReader reader = new StreamReader(fileStream);
-
-                string line = reader.ReadLine();
-
-                while ((object)line is not null)
+                if (Guid.TryParse(line.Substring(0, separatorIndex), out Guid subscriberID))
                 {
-                    int separatorIndex = line.IndexOf(',');
-
-                    if (Guid.TryParse(line.Substring(0, separatorIndex), out Guid subscriberID))
+                    if (m_clientNotifications.TryGetValue(subscriberID, out Dictionary<int, string> notifications))
                     {
-                        if (m_clientNotifications.TryGetValue(subscriberID, out Dictionary<int, string> notifications))
-                        {
-                            notification = line.Substring(separatorIndex + 1);
-                            notifications.Add(notification.GetHashCode(), notification);
-                        }
+                        string notification = line.Substring(separatorIndex + 1);
+                        notifications.Add(notification.GetHashCode(), notification);
                     }
-
-                    line = reader.ReadLine();
                 }
+
+                line = reader.ReadLine();
             }
         }
 
@@ -2106,23 +2050,20 @@ namespace GSF.TimeSeries.Transport
 
         private void SendNotifications(ClientConnection connection)
         {
-            byte[] hash;
-            byte[] message;
-
             using BlockAllocatedMemoryStream buffer = new();
 
-            if (m_clientNotifications.TryGetValue(connection.SubscriberID, out Dictionary<int, string> notifications))
-            {
-                foreach (KeyValuePair<int, string> pair in notifications)
-                {
-                    hash = BigEndian.GetBytes(pair.Key);
-                    message = connection.Encoding.GetBytes(pair.Value);
+            if (!m_clientNotifications.TryGetValue(connection.SubscriberID, out Dictionary<int, string> notifications))
+                return;
 
-                    buffer.Write(hash, 0, hash.Length);
-                    buffer.Write(message, 0, message.Length);
-                    SendClientResponse(connection.ClientID, ServerResponse.Notify, ServerCommand.Subscribe, buffer.ToArray());
-                    buffer.Position = 0;
-                }
+            foreach (KeyValuePair<int, string> pair in notifications)
+            {
+                byte[] hash = BigEndian.GetBytes(pair.Key);
+                byte[] message = connection.Encoding.GetBytes(pair.Value);
+
+                buffer.Write(hash, 0, hash.Length);
+                buffer.Write(message, 0, message.Length);
+                SendClientResponse(connection.ClientID, ServerResponse.Notify, ServerCommand.Subscribe, buffer.ToArray());
+                buffer.Position = 0;
             }
         }
 
@@ -2133,16 +2074,10 @@ namespace GSF.TimeSeries.Transport
         /// <returns>Text encoding associated with a particular client.</returns>
         protected internal Encoding GetClientEncoding(Guid clientID)
         {
-            if (ClientConnections.TryGetValue(clientID, out ClientConnection connection))
-            {
-                Encoding clientEncoding = connection.Encoding;
+            if (!ClientConnections.TryGetValue(clientID, out ClientConnection connection))
+                return Encoding.Unicode;
 
-                if (clientEncoding is not null)
-                    return clientEncoding;
-            }
-
-            // Default to Unicode
-            return Encoding.Unicode;
+            return connection.Encoding ?? Encoding.Unicode; // Default to Unicode
         }
 
         /// <summary>
@@ -2169,10 +2104,8 @@ namespace GSF.TimeSeries.Transport
         /// <param name="response">Server response.</param>
         /// <param name="command">In response to command.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command)
-        {
-            return SendClientResponse(clientID, response, command, (byte[])null);
-        }
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command) => 
+            SendClientResponse(clientID, response, command, (byte[])null);
 
         /// <summary>
         /// Sends response back to specified client with a message.
@@ -2182,13 +2115,10 @@ namespace GSF.TimeSeries.Transport
         /// <param name="command">In response to command.</param>
         /// <param name="status">Status message to return.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
-        {
-            if ((object)status is not null)
-                return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(status));
-
-            return SendClientResponse(clientID, response, command);
-        }
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status) =>
+            status is not null ? 
+                SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(status)) : 
+                SendClientResponse(clientID, response, command);
 
         /// <summary>
         /// Sends response back to specified client with a formatted message.
@@ -2199,13 +2129,10 @@ namespace GSF.TimeSeries.Transport
         /// <param name="formattedStatus">Formatted status message to return.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
-        {
-            if (!string.IsNullOrWhiteSpace(formattedStatus))
-                return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(string.Format(formattedStatus, args)));
-
-            return SendClientResponse(clientID, response, command);
-        }
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args) =>
+            !string.IsNullOrWhiteSpace(formattedStatus) ? 
+                SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(string.Format(formattedStatus, args))) : 
+                SendClientResponse(clientID, response, command);
 
         /// <summary>
         /// Sends response back to specified client with attached data.
@@ -2215,10 +2142,8 @@ namespace GSF.TimeSeries.Transport
         /// <param name="command">In response to command.</param>
         /// <param name="data">Data to return to client; null if none.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
-        {
-            return SendClientResponse(clientID, (byte)response, (byte)command, data);
-        }
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data) => 
+            SendClientResponse(clientID, (byte)response, (byte)command, data);
 
         /// <summary>
         /// Updates latency statistics based on the collection of latencies passed into the method.
@@ -2260,17 +2185,17 @@ namespace GSF.TimeSeries.Transport
             X509Certificate remoteCertificate = client.Provider.SslStream.RemoteCertificate;
             X509Certificate trustedCertificate = m_certificateChecker.GetTrustedCertificate(remoteCertificate);
 
-            if (trustedCertificate is not null)
-            {
-                if (m_subscriberIdentities.TryGetValue(trustedCertificate, out DataRow subscriber))
-                {
-                    // Load client details from subscriber identity
-                    connection.SubscriberID = Guid.Parse(subscriber[nameof(ID)].ToNonNullString(Guid.Empty.ToString()).Trim());
-                    connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
-                    connection.SubscriberName = subscriber[nameof(Name)].ToNonNullString().Trim();
-                    connection.ValidIPAddresses = ParseAddressList(subscriber["ValidIPAddresses"].ToNonNullString());
-                }
-            }
+            if (trustedCertificate is null)
+                return;
+
+            if (!m_subscriberIdentities.TryGetValue(trustedCertificate, out DataRow subscriber))
+                return;
+
+            // Load client details from subscriber identity
+            connection.SubscriberID = Guid.Parse(subscriber[nameof(ID)].ToNonNullString(Guid.Empty.ToString()).Trim());
+            connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
+            connection.SubscriberName = subscriber[nameof(Name)].ToNonNullString().Trim();
+            connection.ValidIPAddresses = ParseAddressList(subscriber["ValidIPAddresses"].ToNonNullString());
         }
 
         // Parses a list of IP addresses.
@@ -2278,7 +2203,6 @@ namespace GSF.TimeSeries.Transport
         {
             string[] splitList = addressList.Split(';', ',');
             List<IPAddress> ipAddressList = new();
-            string dualStackAddress;
 
             foreach (string address in splitList)
             {
@@ -2291,13 +2215,13 @@ namespace GSF.TimeSeries.Transport
 
                 // IPv4 addresses may connect as an IPv6 dual-stack equivalent,
                 // so attempt to add that equivalent address to the list as well
-                if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    dualStackAddress = $"::ffff:{address.Trim()}";
+                if (ipAddress.AddressFamily != AddressFamily.InterNetwork)
+                    continue;
 
-                    if (IPAddress.TryParse(dualStackAddress, out ipAddress))
-                        ipAddressList.Add(ipAddress);
-                }
+                string dualStackAddress = $"::ffff:{address.Trim()}";
+
+                if (IPAddress.TryParse(dualStackAddress, out ipAddress))
+                    ipAddressList.Add(ipAddress);
             }
 
             return ipAddressList;
@@ -2308,10 +2232,6 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                CertificatePolicy policy;
-                string remoteCertificateFile;
-                X509Certificate certificate;
-
                 if (m_certificateChecker is null || m_subscriberIdentities is null || SecurityMode != SecurityMode.TLS)
                     return;
 
@@ -2322,8 +2242,8 @@ namespace GSF.TimeSeries.Transport
                 {
                     try
                     {
-                        policy = new CertificatePolicy();
-                        remoteCertificateFile = subscriber["RemoteCertificateFile"].ToNonNullString();
+                        CertificatePolicy policy = new();
+                        string remoteCertificateFile = subscriber["RemoteCertificateFile"].ToNonNullString();
 
                         if (Enum.TryParse(subscriber["ValidPolicyErrors"].ToNonNullString(), out SslPolicyErrors validPolicyErrors))
                             policy.ValidPolicyErrors = validPolicyErrors;
@@ -2331,12 +2251,12 @@ namespace GSF.TimeSeries.Transport
                         if (Enum.TryParse(subscriber["ValidChainFlags"].ToNonNullString(), out X509ChainStatusFlags validChainFlags))
                             policy.ValidChainFlags = validChainFlags;
 
-                        if (File.Exists(remoteCertificateFile))
-                        {
-                            certificate = new X509Certificate2(remoteCertificateFile);
-                            m_certificateChecker.Trust(certificate, policy);
-                            m_subscriberIdentities.Add(certificate, subscriber);
-                        }
+                        if (!File.Exists(remoteCertificateFile))
+                            continue;
+
+                        X509Certificate certificate = new X509Certificate2(remoteCertificateFile);
+                        m_certificateChecker.Trust(certificate, policy);
+                        m_subscriberIdentities.Add(certificate, subscriber);
                     }
                     catch (Exception ex)
                     {
@@ -2359,43 +2279,38 @@ namespace GSF.TimeSeries.Transport
             try
             {
                 IClientSubscription subscription = connection.Subscription;
-                MeasurementKey[] requestedInputs;
-                HashSet<MeasurementKey> authorizedSignals;
-                Func<Guid, bool> hasRightsFunc;
-                Guid subscriberID;
-                string message;
 
                 // Determine if the connection has been disabled or removed - make sure to set authenticated to false if necessary
                 if (DataSource is not null && DataSource.Tables.Contains("Subscribers") &&
                     !DataSource.Tables["Subscribers"].Select($"ID = '{connection.SubscriberID}' AND Enabled <> 0").Any())
                     connection.Authenticated = false;
 
-                if (subscription is not null)
+                if (subscription is null)
+                    return;
+
+                // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
+                // from the remote subscription - this will prevent possible SQL injection attacks.
+                MeasurementKey[] requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
+                HashSet<MeasurementKey> authorizedSignals = new();
+                Guid subscriberID = subscription.SubscriberID;
+
+                Func<Guid, bool> hasRightsFunc = RequireAuthentication
+                    ? new SubscriberRightsLookup(DataSource, subscriberID).HasRightsFunc
+                    : _ => true;
+
+                foreach (MeasurementKey input in requestedInputs)
                 {
-                    // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
-                    // from the remote subscription - this will prevent possible SQL injection attacks.
-                    requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
-                    authorizedSignals = new HashSet<MeasurementKey>();
-                    subscriberID = subscription.SubscriberID;
-
-                    hasRightsFunc = RequireAuthentication
-                        ? new SubscriberRightsLookup(DataSource, subscriberID).HasRightsFunc
-                        : _ => true;
-
-                    foreach (MeasurementKey input in requestedInputs)
-                    {
-                        if (hasRightsFunc(input.SignalID))
-                            authorizedSignals.Add(input);
-                    }
-
-                    if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
-                    {
-                        // Update the subscription associated with this connection based on newly acquired or revoked rights
-                        message = $"Update to authorized signals caused subscription to change. Now subscribed to {authorizedSignals.Count} signals.";
-                        subscription.InputMeasurementKeys = authorizedSignals.ToArray();
-                        SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
-                    }
+                    if (hasRightsFunc(input.SignalID))
+                        authorizedSignals.Add(input);
                 }
+
+                if (authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
+                    return;
+
+                // Update the subscription associated with this connection based on newly acquired or revoked rights
+                string message = $"Update to authorized signals caused subscription to change. Now subscribed to {authorizedSignals.Count} signals.";
+                subscription.InputMeasurementKeys = authorizedSignals.ToArray();
+                SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
             }
             catch (Exception ex)
             {
@@ -2409,124 +2324,122 @@ namespace GSF.TimeSeries.Transport
         // Send binary response packet to client
         private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
+            // Attempt to lookup associated client connection
+            if (!ClientConnections.TryGetValue(clientID, out ClientConnection connection) || connection is null || connection.ClientNotFoundExceptionOccurred)
+                return false;
+
             bool success = false;
 
-            // Attempt to lookup associated client connection
-            if (ClientConnections.TryGetValue(clientID, out ClientConnection connection) && connection is not null && !connection.ClientNotFoundExceptionOccurred)
+            try
             {
-                try
+                // Create a new working buffer
+                using BlockAllocatedMemoryStream workingBuffer = new();
+
+                bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
+                bool useDataChannel = dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock;
+
+                // Add response code
+                workingBuffer.WriteByte(responseCode);
+
+                // Add original in response to command code
+                workingBuffer.WriteByte(commandCode);
+
+                if (data is null || data.Length == 0)
                 {
-                    // Create a new working buffer
-                    using BlockAllocatedMemoryStream workingBuffer = new();
-
-                    bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
-                    bool useDataChannel = dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock;
-
-                    // Add response code
-                    workingBuffer.WriteByte(responseCode);
-
-                    // Add original in response to command code
-                    workingBuffer.WriteByte(commandCode);
-
-                    if (data is null || data.Length == 0)
+                    // Add zero sized data buffer to response packet
+                    workingBuffer.Write(ZeroLengthBytes, 0, 4);
+                }
+                else
+                {
+                    // If response is for a data packet and a connection key is defined, encrypt the data packet payload
+                    if (dataPacketResponse && connection.KeyIVs is not null)
                     {
-                        // Add zero sized data buffer to response packet
+                        // Get a local copy of volatile keyIVs and cipher index since these can change at any time
+                        byte[][][] keyIVs = connection.KeyIVs;
+                        int cipherIndex = connection.CipherIndex;
+
+                        // Reserve space for size of data buffer to go into response packet
                         workingBuffer.Write(ZeroLengthBytes, 0, 4);
+
+                        // Get data packet flags
+                        DataPacketFlags flags = (DataPacketFlags)data[0];
+
+                        // Encode current cipher index into data packet flags
+                        if (cipherIndex > 0)
+                            flags |= DataPacketFlags.CipherIndex;
+
+                        // Write data packet flags into response packet
+                        workingBuffer.WriteByte((byte)flags);
+
+                        // Copy source data payload into a memory stream
+                        MemoryStream sourceData = new(data, 1, data.Length - 1);
+
+                        // Encrypt payload portion of data packet and copy into the response packet
+                        Common.SymmetricAlgorithm.Encrypt(sourceData, workingBuffer, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
+
+                        // Calculate length of encrypted data payload
+                        int payloadLength = (int)workingBuffer.Length - 6;
+
+                        // Move the response packet position back to the packet size reservation
+                        workingBuffer.Seek(2, SeekOrigin.Begin);
+
+                        // Add the actual size of payload length to response packet
+                        workingBuffer.Write(BigEndian.GetBytes(payloadLength), 0, 4);
                     }
                     else
                     {
-                        // If response is for a data packet and a connection key is defined, encrypt the data packet payload
-                        if (dataPacketResponse && connection.KeyIVs is not null)
-                        {
-                            // Get a local copy of volatile keyIVs and cipher index since these can change at any time
-                            byte[][][] keyIVs = connection.KeyIVs;
-                            int cipherIndex = connection.CipherIndex;
+                        // Add size of data buffer to response packet
+                        workingBuffer.Write(BigEndian.GetBytes(data.Length), 0, 4);
 
-                            // Reserve space for size of data buffer to go into response packet
-                            workingBuffer.Write(ZeroLengthBytes, 0, 4);
-
-                            // Get data packet flags
-                            DataPacketFlags flags = (DataPacketFlags)data[0];
-
-                            // Encode current cipher index into data packet flags
-                            if (cipherIndex > 0)
-                                flags |= DataPacketFlags.CipherIndex;
-
-                            // Write data packet flags into response packet
-                            workingBuffer.WriteByte((byte)flags);
-
-                            // Copy source data payload into a memory stream
-                            MemoryStream sourceData = new(data, 1, data.Length - 1);
-
-                            // Encrypt payload portion of data packet and copy into the response packet
-                            Common.SymmetricAlgorithm.Encrypt(sourceData, workingBuffer, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
-
-                            // Calculate length of encrypted data payload
-                            int payloadLength = (int)workingBuffer.Length - 6;
-
-                            // Move the response packet position back to the packet size reservation
-                            workingBuffer.Seek(2, SeekOrigin.Begin);
-
-                            // Add the actual size of payload length to response packet
-                            workingBuffer.Write(BigEndian.GetBytes(payloadLength), 0, 4);
-                        }
-                        else
-                        {
-                            // Add size of data buffer to response packet
-                            workingBuffer.Write(BigEndian.GetBytes(data.Length), 0, 4);
-
-                            // Add data buffer
-                            workingBuffer.Write(data, 0, data.Length);
-                        }
-                    }
-
-                    IServer publishChannel;
-
-                    // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
-                    if (useDataChannel)
-                        publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, _ => connection.PublishChannel);
-                    else
-                        publishChannel = m_commandChannel;
-
-                    // Send response packet
-                    if (publishChannel is not null && publishChannel.CurrentState == ServerState.Running)
-                    {
-                        byte[] responseData = workingBuffer.ToArray();
-
-                        if (publishChannel is UdpServer)
-                            publishChannel.MulticastAsync(responseData, 0, responseData.Length);
-                        else
-                            publishChannel.SendToAsync(clientID, responseData, 0, responseData.Length);
-
-                        TotalBytesSent += responseData.Length;
-                        success = true;
+                        // Add data buffer
+                        workingBuffer.Write(data, 0, data.Length);
                     }
                 }
-                catch (ObjectDisposedException)
+
+                // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
+                IServer publishChannel =
+                    useDataChannel ? 
+                    m_clientPublicationChannels.GetOrAdd(clientID, _ => connection.PublishChannel) : 
+                    m_commandChannel;
+
+                // Send response packet
+                if (publishChannel is not null && publishChannel.CurrentState == ServerState.Running)
                 {
-                    // This happens when there is still data to be sent to a disconnected client - we can safely ignore this exception
-                }
-                catch (NullReferenceException)
-                {
-                    // This happens when there is still data to be sent to a disconnected client - we can safely ignore this exception
-                }
-                catch (SocketException ex)
-                {
-                    if (!HandleSocketException(clientID, ex))
-                        OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to send response packet to client due to exception: {ex.Message}", ex));
-                }
-                catch (InvalidOperationException ex)
-                {
-                    // Could still be processing threads with client data after client has been disconnected, this can be safely ignored
-                    if (ex.Message.StartsWith("No client found") && !connection.IsConnected)
-                        connection.ClientNotFoundExceptionOccurred = true;
+                    byte[] responseData = workingBuffer.ToArray();
+
+                    if (publishChannel is UdpServer)
+                        publishChannel.MulticastAsync(responseData, 0, responseData.Length);
                     else
-                        OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to send response packet to client due to exception: {ex.Message}", ex));
+                        publishChannel.SendToAsync(clientID, responseData, 0, responseData.Length);
+
+                    TotalBytesSent += responseData.Length;
+                    success = true;
                 }
-                catch (Exception ex)
-                {
+            }
+            catch (ObjectDisposedException)
+            {
+                // This happens when there is still data to be sent to a disconnected client - we can safely ignore this exception
+            }
+            catch (NullReferenceException)
+            {
+                // This happens when there is still data to be sent to a disconnected client - we can safely ignore this exception
+            }
+            catch (SocketException ex)
+            {
+                if (!HandleSocketException(clientID, ex))
                     OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to send response packet to client due to exception: {ex.Message}", ex));
-                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Could still be processing threads with client data after client has been disconnected, this can be safely ignored
+                if (ex.Message.StartsWith("No client found") && !connection.IsConnected)
+                    connection.ClientNotFoundExceptionOccurred = true;
+                else
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to send response packet to client due to exception: {ex.Message}", ex));
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to send response packet to client due to exception: {ex.Message}", ex));
             }
 
             return success;
@@ -2589,30 +2502,28 @@ namespace GSF.TimeSeries.Transport
         {
             lock (this)
             {
-                if (TryGetClientSubscription(clientID, out IClientSubscription clientSubscription))
-                {
-                    clientSubscription.Stop();
-                    Remove(clientSubscription);
+                if (!TryGetClientSubscription(clientID, out IClientSubscription clientSubscription))
+                    return;
 
-                    try
-                    {
-                        // Notify system that subscriber disconnected therefore demanded measurements may have changed
-                        ThreadPool.QueueUserWorkItem(NotifyHostOfSubscriptionRemoval);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Process exception for logging
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to queue notification of subscription removal due to exception: {ex.Message}", ex));
-                    }
+                clientSubscription.Stop();
+                Remove(clientSubscription);
+
+                try
+                {
+                    // Notify system that subscriber disconnected therefore demanded measurements may have changed
+                    ThreadPool.QueueUserWorkItem(NotifyHostOfSubscriptionRemoval);
+                }
+                catch (Exception ex)
+                {
+                    // Process exception for logging
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to queue notification of subscription removal due to exception: {ex.Message}", ex));
                 }
             }
         }
 
         // Handle notification on input measurement key change
-        private void NotifyHostOfSubscriptionRemoval(object state)
-        {
+        private void NotifyHostOfSubscriptionRemoval(object state) => 
             OnInputMeasurementKeysUpdated();
-        }
 
         // Attempt to find client subscription
         private bool TryGetClientSubscription(Guid clientID, out IClientSubscription subscription)
@@ -2639,7 +2550,7 @@ namespace GSF.TimeSeries.Transport
         // Gets specified property from client connection based on subscriber ID
         private TResult GetConnectionProperty<TResult>(Guid subscriberID, Func<ClientConnection, TResult> predicate)
         {
-            TResult result = default(TResult);
+            TResult result = default;
 
             // Lookup client connection by subscriber ID
             ClientConnection connection = ClientConnections.Values.FirstOrDefault(cc => cc.SubscriberID == subscriberID);
@@ -2663,7 +2574,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ProcessingComplete)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -2682,43 +2593,45 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ClientConnected event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ClientConnected)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
         // Make sure to expose any routing table messages
-        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e) => OnStatusMessage(MessageLevel.Info, e.Argument);
+        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e) => 
+            OnStatusMessage(MessageLevel.Info, e.Argument);
 
         // Make sure to expose any routing table exceptions
-        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e) => OnProcessException(MessageLevel.Warning, e.Argument);
+        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e) => 
+            OnProcessException(MessageLevel.Warning, e.Argument);
 
         // Cipher key rotation timer handler
         private void m_cipherKeyRotationTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
-            if (ClientConnections is not null)
+            if (ClientConnections is null)
+                return;
+
+            foreach (ClientConnection connection in ClientConnections.Values)
             {
-                foreach (ClientConnection connection in ClientConnections.Values)
-                {
-                    if (connection is not null && connection.Authenticated)
-                        connection.RotateCipherKeys();
-                }
+                if (connection is not null && connection.Authenticated)
+                    connection.RotateCipherKeys();
             }
         }
 
         // Command channel restart timer handler
         private void m_commandChannelRestartTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
-            if (m_commandChannel is not null)
+            if (m_commandChannel is null)
+                return;
+
+            try
             {
-                try
-                {
-                    // After a short delay, we try to restart the command channel
-                    m_commandChannel.Start();
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to restart data publisher command channel: {ex.Message}", ex));
-                }
+                // After a short delay, we try to restart the command channel
+                m_commandChannel.Start();
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to restart data publisher command channel: {ex.Message}", ex));
             }
         }
 
@@ -2796,7 +2709,7 @@ namespace GSF.TimeSeries.Transport
                         startIndex += 4;
 
                         // Byte length should be reasonable
-                        if (byteLength >= 16 && byteLength <= 256)
+                        if (byteLength is >= 16 and <= 256)
                         {
                             if (length >= 5 + byteLength)
                             {
@@ -2885,7 +2798,7 @@ namespace GSF.TimeSeries.Transport
                     }
                     else
                     {
-                        bool usePayloadCompression = AllowPayloadCompression && ((connection.OperationalModes & OperationalModes.CompressPayloadData) > 0);
+                        bool usePayloadCompression = AllowPayloadCompression && (connection.OperationalModes & OperationalModes.CompressPayloadData) > 0;
                         CompressionModes compressionModes = (CompressionModes)(connection.OperationalModes & OperationalModes.CompressionModeMask);
                         bool useCompactMeasurementFormat = (byte)(flags & DataPacketFlags.Compact) > 0;
                         bool addSubscription = false;
@@ -2926,9 +2839,7 @@ namespace GSF.TimeSeries.Transport
                                         subscription.Stop();
 
                                         lock (this)
-                                        {
                                             Remove(subscription);
-                                        }
 
                                         // Create a new synchronized subscription
                                         subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID, compressionModes);
@@ -2943,9 +2854,7 @@ namespace GSF.TimeSeries.Transport
                                         subscription.Stop();
 
                                         lock (this)
-                                        {
                                             Remove(subscription);
-                                        }
 
                                         // Create a new unsynchronized subscription
                                         subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID, compressionModes);
@@ -3021,9 +2930,7 @@ namespace GSF.TimeSeries.Transport
                                 // Adding client subscription to collection will not automatically
                                 // initialize it because this class overrides the AutoInitialize property
                                 lock (this)
-                                {
                                     Add(subscription);
-                                }
 
                                 // Attach to processing completed notification
                                 subscription.BufferBlockRetransmission += subscription_BufferBlockRetransmission;
@@ -3085,16 +2992,11 @@ namespace GSF.TimeSeries.Transport
 
                             // Send success response
                             if (subscription.TemporalConstraintIsDefined())
-                            {
                                 message = $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized with a temporal constraint.";
-                            }
                             else
-                            {
-                                if (subscription.InputMeasurementKeys is not null)
-                                    message = $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized with {subscription.InputMeasurementKeys.Length} signals.";
-                                else
-                                    message = $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.";
-                            }
+                                message = subscription.InputMeasurementKeys is not null ?
+                                    $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized with {subscription.InputMeasurementKeys.Length} signals." :
+                                    $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.";
 
                             connection.IsSubscribed = true;
                             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
@@ -3102,10 +3004,9 @@ namespace GSF.TimeSeries.Transport
                         }
                         else
                         {
-                            if (byteLength > 0)
-                                message = "Not enough buffer was provided to parse client data subscription.";
-                            else
-                                message = "Cannot initialize client data subscription without a connection string.";
+                            message = byteLength > 0 ? 
+                                "Not enough buffer was provided to parse client data subscription." : 
+                                "Cannot initialize client data subscription without a connection string.";
 
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
                             OnProcessException(MessageLevel.Warning, new InvalidOperationException(message));
@@ -3160,9 +3061,6 @@ namespace GSF.TimeSeries.Transport
 
             IDbConnection dbConnection = adoDatabase.Connection;
             DataSet metadata = new();
-            DataTable table;
-            string sortField;
-            int takeCount;
 
             // Initialize active node ID
             Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar($"SELECT NodeID FROM IaonActionAdapter WHERE ID = {ID}").ToString());
@@ -3185,14 +3083,14 @@ namespace GSF.TimeSeries.Transport
                     continue;
 
                 // Query the table or view information from the database
-                table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
+                DataTable table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
 
                 // Remove any expression from table name
                 Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
                 table.TableName = regexMatch.Value.Split(' ')[1];
 
-                sortField = "";
-                takeCount = int.MaxValue;
+                string sortField = "";
+                int takeCount = int.MaxValue;
 
                 // Build filter list
                 List<string> filters = new();
@@ -3240,23 +3138,21 @@ namespace GSF.TimeSeries.Transport
                     // Apply any maximum row count that user may have specified
                     List<DataRow> filteredRowList = filteredRows.Take(takeCount).ToList();
 
-                    if (filteredRowList.Count > 0)
+                    if (filteredRowList.Count <= 0)
+                        continue;
+
+                    DataTable metadataTable = metadata.Tables[table.TableName];
+
+                    // Manually copy-in each row into table
+                    foreach (DataRow row in filteredRowList)
                     {
-                        DataTable metadataTable = metadata.Tables[table.TableName];
+                        DataRow newRow = metadataTable.NewRow();
 
-                        // Manually copy-in each row into table
-                        foreach (DataRow row in filteredRowList)
-                        {
-                            DataRow newRow = metadataTable.NewRow();
+                        // Copy each column of data in the current row
+                        for (int x = 0; x < table.Columns.Count; x++)
+                            newRow[x] = row[x];
 
-                            // Copy each column of data in the current row
-                            for (int x = 0; x < table.Columns.Count; x++)
-                            {
-                                newRow[x] = row[x];
-                            }
-
-                            metadataTable.Rows.Add(newRow);
-                        }
+                        metadataTable.Rows.Add(newRow);
                     }
                 }
             }
@@ -3264,51 +3160,49 @@ namespace GSF.TimeSeries.Transport
             // TODO: Although protected against unprovided tables and columns, this post-analysis operation is schema specific. This may need to be moved to an external function and executed via delegate to allow this kind of work for other schemas.
 
             // Do some post analysis on the meta-data to be delivered to the client, e.g., if a device exists with no associated measurements - don't send the device.
-            if (metadata.Tables.Contains("MeasurementDetail") && metadata.Tables["MeasurementDetail"].Columns.Contains("DeviceAcronym") && metadata.Tables.Contains("DeviceDetail") && metadata.Tables["DeviceDetail"].Columns.Contains("Acronym"))
+            if (!metadata.Tables.Contains("MeasurementDetail") || !metadata.Tables["MeasurementDetail"].Columns.Contains("DeviceAcronym") || !metadata.Tables.Contains("DeviceDetail") || !metadata.Tables["DeviceDetail"].Columns.Contains("Acronym"))
+                return metadata;
+
+            List<DataRow> rowsToRemove = new();
+            string deviceAcronym;
+
+            // Remove device records where no associated measurements records exist
+            foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
             {
-                List<DataRow> rowsToRemove = new();
-                string deviceAcronym;
-                int? phasorSourceIndex;
+                deviceAcronym = row["Acronym"].ToNonNullString();
 
-                // Remove device records where no associated measurements records exist
-                foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
+                if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["MeasurementDetail"].Compute("Count(DeviceAcronym)", $"DeviceAcronym = '{deviceAcronym}'") == 0)
+                    rowsToRemove.Add(row);
+            }
+
+            if (metadata.Tables.Contains("PhasorDetail") && metadata.Tables["PhasorDetail"].Columns.Contains("DeviceAcronym"))
+            {
+                // Remove phasor records where no associated device records exist
+                foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
                 {
-                    deviceAcronym = row["Acronym"].ToNonNullString();
+                    deviceAcronym = row["DeviceAcronym"].ToNonNullString();
 
-                    if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["MeasurementDetail"].Compute("Count(DeviceAcronym)", $"DeviceAcronym = '{deviceAcronym}'") == 0)
+                    if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", $"Acronym = '{deviceAcronym}'") == 0)
                         rowsToRemove.Add(row);
                 }
 
-                if (metadata.Tables.Contains("PhasorDetail") && metadata.Tables["PhasorDetail"].Columns.Contains("DeviceAcronym"))
+                if (metadata.Tables["PhasorDetail"].Columns.Contains("SourceIndex") && metadata.Tables["MeasurementDetail"].Columns.Contains("PhasorSourceIndex"))
                 {
-                    // Remove phasor records where no associated device records exist
-                    foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
+                    // Remove measurement records where no associated phasor records exist
+                    foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
                     {
                         deviceAcronym = row["DeviceAcronym"].ToNonNullString();
+                        int? phasorSourceIndex = row.ConvertField<int?>("PhasorSourceIndex");
 
-                        if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", $"Acronym = '{deviceAcronym}'") == 0)
+                        if (!string.IsNullOrEmpty(deviceAcronym) && phasorSourceIndex is not null && (int)metadata.Tables["PhasorDetail"].Compute("Count(DeviceAcronym)", $"DeviceAcronym = '{deviceAcronym}' AND SourceIndex = {phasorSourceIndex}") == 0)
                             rowsToRemove.Add(row);
                     }
-
-                    if (metadata.Tables["PhasorDetail"].Columns.Contains("SourceIndex") && metadata.Tables["MeasurementDetail"].Columns.Contains("PhasorSourceIndex"))
-                    {
-                        // Remove measurement records where no associated phasor records exist
-                        foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
-                        {
-                            deviceAcronym = row["DeviceAcronym"].ToNonNullString();
-                            phasorSourceIndex = row.ConvertField<int?>("PhasorSourceIndex");
-
-                            if (!string.IsNullOrEmpty(deviceAcronym) && (object)phasorSourceIndex is not null && (int)metadata.Tables["PhasorDetail"].Compute("Count(DeviceAcronym)", $"DeviceAcronym = '{deviceAcronym}' AND SourceIndex = {phasorSourceIndex}") == 0)
-                                rowsToRemove.Add(row);
-                        }
-                    }
                 }
-
-                // Remove any unnecessary rows
-                foreach (DataRow row in rowsToRemove)
-                    row.Delete();
-
             }
+
+            // Remove any unnecessary rows
+            foreach (DataRow row in rowsToRemove)
+                row.Delete();
 
             return metadata;
         }
@@ -3324,7 +3218,6 @@ namespace GSF.TimeSeries.Transport
 
             Guid clientID = connection.ClientID;
             Dictionary<string, Tuple<string, string, int>> filterExpressions = new(StringComparer.OrdinalIgnoreCase);
-            string message;
             Ticks startTime = DateTime.UtcNow.Ticks;
 
             // Attempt to parse out any subscriber provided meta-data filter expressions
@@ -3377,7 +3270,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                message = $"Failed to transfer meta-data due to exception: {ex.Message}";
+                string message = $"Failed to transfer meta-data due to exception: {ex.Message}";
                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.MetaDataRefresh, message);
                 OnProcessException(MessageLevel.Warning, new InvalidOperationException(message, ex));
             }
@@ -3421,17 +3314,15 @@ namespace GSF.TimeSeries.Transport
         // Handle request to define operational modes for client connection
         private void HandleDefineOperationalModes(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
-            uint operationalModes;
+            if (length < 4)
+                return;
 
-            if (length >= 4)
-            {
-                operationalModes = BigEndian.ToUInt32(buffer, startIndex);
+            uint operationalModes = BigEndian.ToUInt32(buffer, startIndex);
 
-                if ((operationalModes & (uint)OperationalModes.VersionMask) != 0u)
-                    OnStatusMessage(MessageLevel.Warning, $"Protocol version not supported. Operational modes may not be set correctly for client {connection.ClientID}.", flags: MessageFlags.UsageIssue);
+            if ((operationalModes & (uint)OperationalModes.VersionMask) != 0u)
+                OnStatusMessage(MessageLevel.Warning, $"Protocol version not supported. Operational modes may not be set correctly for client {connection.ClientID}.", flags: MessageFlags.UsageIssue);
 
-                connection.OperationalModes = (OperationalModes)operationalModes;
-            }
+            connection.OperationalModes = (OperationalModes)operationalModes;
         }
 
         // Handle confirmation of receipt of notification 
@@ -3470,13 +3361,11 @@ namespace GSF.TimeSeries.Transport
 
         private void HandleConfirmBufferBlock(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
-            uint sequenceNumber;
+            if (length < 4)
+                return;
 
-            if (length >= 4)
-            {
-                sequenceNumber = BigEndian.ToUInt32(buffer, startIndex);
-                connection.Subscription.ConfirmBufferBlock(sequenceNumber);
-            }
+            uint sequenceNumber = BigEndian.ToUInt32(buffer, startIndex);
+            connection.Subscription.ConfirmBufferBlock(sequenceNumber);
         }
 
         private void HandlePublishCommandMeasurements(ClientConnection connection, byte[] buffer, int startIndex)
@@ -3524,56 +3413,54 @@ namespace GSF.TimeSeries.Transport
         /// <param name="buffer">The buffer containing the entire message from the subscriber.</param>
         /// <param name="startIndex">The index indicating where to start reading from the buffer to skip past the message header.</param>
         /// <param name="length">The total number of bytes in the message, including the header.</param>
-        protected virtual void HandleUserCommand(ClientConnection connection, ServerCommand command, byte[] buffer, int startIndex, int length)
-        {
+        protected virtual void HandleUserCommand(ClientConnection connection, ServerCommand command, byte[] buffer, int startIndex, int length) => 
             OnStatusMessage(MessageLevel.Info, $"Received command code for user-defined command \"{command}\".");
-        }
 
         private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
         {
-            byte[] serializedSignalIndexCache = null;
+            if (!ClientConnections.TryGetValue(clientID, out ClientConnection connection))
+                return null;
 
-            if (ClientConnections.TryGetValue(clientID, out ClientConnection connection))
+            byte[] serializedSignalIndexCache;
+
+            OperationalModes operationalModes = connection.OperationalModes;
+            CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
+            bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+            bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
+
+            GZipStream deflater = null;
+
+            if (!useCommonSerializationFormat)
             {
-                OperationalModes operationalModes = connection.OperationalModes;
-                CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
-                bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
-                bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
+                // Use standard .NET BinaryFormatter
+                serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, SerializationFormat.Binary);
+            }
+            else
+            {
+                // Use ISupportBinaryImage implementation
+                signalIndexCache.Encoding = GetClientEncoding(clientID);
+                serializedSignalIndexCache = new byte[signalIndexCache.BinaryLength];
+                signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
+            }
 
-                GZipStream deflater = null;
+            if (!compressSignalIndexCache || !compressionModes.HasFlag(CompressionModes.GZip))
+                return serializedSignalIndexCache;
 
-                if (!useCommonSerializationFormat)
-                {
-                    // Use standard .NET BinaryFormatter
-                    serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, SerializationFormat.Binary);
-                }
-                else
-                {
-                    // Use ISupportBinaryImage implementation
-                    signalIndexCache.Encoding = GetClientEncoding(clientID);
-                    serializedSignalIndexCache = new byte[signalIndexCache.BinaryLength];
-                    signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
-                }
+            try
+            {
+                // Compress serialized signal index cache into compressed data buffer
+                using BlockAllocatedMemoryStream compressedData = new();
 
-                if (compressSignalIndexCache && compressionModes.HasFlag(CompressionModes.GZip))
-                {
-                    try
-                    {
-                        // Compress serialized signal index cache into compressed data buffer
-                        using BlockAllocatedMemoryStream compressedData = new();
+                deflater = new GZipStream(compressedData, CompressionMode.Compress, true);
+                deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
+                deflater.Close();
+                deflater = null;
 
-                        deflater = new GZipStream(compressedData, CompressionMode.Compress, true);
-                        deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
-                        deflater.Close();
-                        deflater = null;
-
-                        serializedSignalIndexCache = compressedData.ToArray();
-                    }
-                    finally
-                    {
-                        deflater?.Close();
-                    }
-                }
+                serializedSignalIndexCache = compressedData.ToArray();
+            }
+            finally
+            {
+                deflater?.Close();
             }
 
             return serializedSignalIndexCache;
@@ -3581,56 +3468,54 @@ namespace GSF.TimeSeries.Transport
 
         private byte[] SerializeMetadata(Guid clientID, DataSet metadata)
         {
-            byte[] serializedMetadata = null;
+            if (!ClientConnections.TryGetValue(clientID, out ClientConnection connection))
+                return null;
+            
+            byte[] serializedMetadata;
 
-            if (ClientConnections.TryGetValue(clientID, out ClientConnection connection))
+            OperationalModes operationalModes = connection.OperationalModes;
+            CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
+            bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
+            bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
+
+            GZipStream deflater = null;
+
+            if (!useCommonSerializationFormat)
             {
-                OperationalModes operationalModes = connection.OperationalModes;
-                CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
-                bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
-                bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
+                serializedMetadata = Serialization.Serialize(metadata, SerializationFormat.Binary);
+            }
+            else
+            {
+                // Encode XML into encoded data buffer
+                using BlockAllocatedMemoryStream encodedData = new();
+                using XmlTextWriter xmlWriter = new(encodedData, GetClientEncoding(clientID));
 
-                GZipStream deflater = null;
+                metadata.WriteXml(xmlWriter, XmlWriteMode.WriteSchema);
+                xmlWriter.Flush();
 
-                if (!useCommonSerializationFormat)
-                {
-                    serializedMetadata = Serialization.Serialize(metadata, SerializationFormat.Binary);
-                }
-                else
-                {
-                    // Encode XML into encoded data buffer
-                    using BlockAllocatedMemoryStream encodedData = new();
+                // Return result of encoding
+                serializedMetadata = encodedData.ToArray();
+            }
 
-                    using XmlTextWriter xmlWriter = new(encodedData, GetClientEncoding(clientID));
+            if (!compressMetadata || !compressionModes.HasFlag(CompressionModes.GZip))
+                return serializedMetadata;
 
-                    metadata.WriteXml(xmlWriter, XmlWriteMode.WriteSchema);
-                    xmlWriter.Flush();
+            try
+            {
+                // Compress serialized metadata into compressed data buffer
+                using BlockAllocatedMemoryStream compressedData = new();
 
-                    // Return result of encoding
-                    serializedMetadata = encodedData.ToArray();
-                }
+                deflater = new GZipStream(compressedData, CompressionMode.Compress, true);
+                deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
+                deflater.Close();
+                deflater = null;
 
-                if (compressMetadata && compressionModes.HasFlag(CompressionModes.GZip))
-                {
-                    try
-                    {
-                        // Compress serialized metadata into compressed data buffer
-                        using BlockAllocatedMemoryStream compressedData = new();
-
-                        deflater = new GZipStream(compressedData, CompressionMode.Compress, true);
-                        deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
-                        deflater.Close();
-                        deflater = null;
-
-                        // Return result of compression
-                        serializedMetadata = compressedData.ToArray();
-                    }
-                    finally
-                    {
-                        deflater?.Close();
-                    }
-                }
-
+                // Return result of compression
+                serializedMetadata = compressedData.ToArray();
+            }
+            finally
+            {
+                deflater?.Close();
             }
 
             return serializedMetadata;
@@ -3668,10 +3553,8 @@ namespace GSF.TimeSeries.Transport
             m_measurementsPerSecondCount = 0L;
         }
 
-        private void subscription_BufferBlockRetransmission(object sender, EventArgs eventArgs)
-        {
+        private void subscription_BufferBlockRetransmission(object sender, EventArgs eventArgs) => 
             BufferBlockRetransmissions++;
-        }
 
         // Bubble up processing complete notifications from subscriptions
         private void subscription_ProcessingComplete(object sender, EventArgs<IClientSubscription, EventArgs> e)
@@ -3700,116 +3583,116 @@ namespace GSF.TimeSeries.Transport
                 int length = e.Argument3;
                 int index = 0;
 
-                if (length > 0 && buffer is not null)
+                if (length <= 0 || buffer is null)
+                    return;
+
+                string message;
+                byte commandByte = buffer[index];
+                index++;
+
+                // Attempt to parse solicited server command
+                bool validServerCommand = Enum.TryParse(commandByte.ToString(), out ServerCommand command);
+
+                // Look up this client connection
+                if (!ClientConnections.TryGetValue(clientID, out ClientConnection connection))
                 {
-                    string message;
-                    byte commandByte = buffer[index];
-                    index++;
-
-                    // Attempt to parse solicited server command
-                    bool validServerCommand = Enum.TryParse(commandByte.ToString(), out ServerCommand command);
-
-                    // Look up this client connection
-                    if (!ClientConnections.TryGetValue(clientID, out ClientConnection connection))
+                    // Received a request from an unknown client, this request is denied
+                    OnStatusMessage(MessageLevel.Warning, $"Ignored {length} byte {(validServerCommand ? command.ToString() : "unidentified")} command request received from an unrecognized client: {clientID}", flags: MessageFlags.UsageIssue);
+                }
+                else if (validServerCommand)
+                {
+                    if (command != ServerCommand.DefineOperationalModes)
                     {
-                        // Received a request from an unknown client, this request is denied
-                        OnStatusMessage(MessageLevel.Warning, $"Ignored {length} byte {(validServerCommand ? command.ToString() : "unidentified")} command request received from an unrecognized client: {clientID}", flags: MessageFlags.UsageIssue);
-                    }
-                    else if (validServerCommand)
-                    {
-                        if (command != ServerCommand.DefineOperationalModes)
+                        if (command == ServerCommand.Authenticate)
                         {
-                            if (command == ServerCommand.Authenticate)
-                            {
-                                // Handle authenticate
-                                HandleAuthenticationRequest(connection, buffer, index, length);
-                                return;
-                            }
-
-                            if (RequireAuthentication && !connection.Authenticated)
-                            {
-                                message = $"Subscriber not authenticated - {command} request denied.";
-                                SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                OnStatusMessage(MessageLevel.Warning, $"Client {connection.ConnectionID} {command} command request denied - subscriber not authenticated.");
-                                return;
-                            }
+                            // Handle authenticate
+                            HandleAuthenticationRequest(connection, buffer, index, length);
+                            return;
                         }
 
-                        switch (command)
+                        if (RequireAuthentication && !connection.Authenticated)
                         {
-                            case ServerCommand.Subscribe:
-                                // Handle subscribe
-                                HandleSubscribeRequest(connection, buffer, index, length);
-                                break;
-
-                            case ServerCommand.Unsubscribe:
-                                // Handle unsubscribe
-                                HandleUnsubscribeRequest(connection);
-                                break;
-
-                            case ServerCommand.MetaDataRefresh:
-                                // Handle meta data refresh (per subscriber request)
-                                HandleMetadataRefresh(connection, buffer, index, length);
-                                break;
-
-                            case ServerCommand.RotateCipherKeys:
-                                // Handle rotation of cipher keys (per subscriber request)
-                                connection.RotateCipherKeys();
-                                break;
-
-                            case ServerCommand.UpdateProcessingInterval:
-                                // Handle request to update processing interval
-                                HandleUpdateProcessingInterval(connection, buffer, index, length);
-                                break;
-
-                            case ServerCommand.DefineOperationalModes:
-                                // Handle request to define operational modes
-                                HandleDefineOperationalModes(connection, buffer, index, length);
-                                break;
-
-                            case ServerCommand.ConfirmNotification:
-                                // Handle confirmation of receipt of notification
-                                HandleConfirmNotification(connection, buffer, index, length);
-                                break;
-
-                            case ServerCommand.ConfirmBufferBlock:
-                                // Handle confirmation of receipt of a buffer block
-                                HandleConfirmBufferBlock(connection, buffer, index, length);
-                                break;
-
-                            case ServerCommand.PublishCommandMeasurements:
-                                // Handle publication of command measurements
-                                HandlePublishCommandMeasurements(connection, buffer, index);
-                                break;
-
-                            case ServerCommand.UserCommand00:
-                            case ServerCommand.UserCommand01:
-                            case ServerCommand.UserCommand02:
-                            case ServerCommand.UserCommand03:
-                            case ServerCommand.UserCommand04:
-                            case ServerCommand.UserCommand05:
-                            case ServerCommand.UserCommand06:
-                            case ServerCommand.UserCommand07:
-                            case ServerCommand.UserCommand08:
-                            case ServerCommand.UserCommand09:
-                            case ServerCommand.UserCommand10:
-                            case ServerCommand.UserCommand11:
-                            case ServerCommand.UserCommand12:
-                            case ServerCommand.UserCommand13:
-                            case ServerCommand.UserCommand14:
-                            case ServerCommand.UserCommand15:
-                                // Handle confirmation of receipt of a user-defined command
-                                HandleUserCommand(connection, command, buffer, index, length);
-                                break;
+                            message = $"Subscriber not authenticated - {command} request denied.";
+                            SendClientResponse(clientID, ServerResponse.Failed, command, message);
+                            OnStatusMessage(MessageLevel.Warning, $"Client {connection.ConnectionID} {command} command request denied - subscriber not authenticated.");
+                            return;
                         }
                     }
-                    else
+
+                    switch (command)
                     {
-                        // Handle unrecognized commands
-                        message = $" sent an unrecognized server command: 0x{commandByte.ToString("X").PadLeft(2, '0')}";
-                        SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes($"Client{message}"));
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException(connection.ConnectionID + message));
+                        case ServerCommand.Subscribe:
+                            // Handle subscribe
+                            HandleSubscribeRequest(connection, buffer, index, length);
+                            break;
+
+                        case ServerCommand.Unsubscribe:
+                            // Handle unsubscribe
+                            HandleUnsubscribeRequest(connection);
+                            break;
+
+                        case ServerCommand.MetaDataRefresh:
+                            // Handle meta data refresh (per subscriber request)
+                            HandleMetadataRefresh(connection, buffer, index, length);
+                            break;
+
+                        case ServerCommand.RotateCipherKeys:
+                            // Handle rotation of cipher keys (per subscriber request)
+                            connection.RotateCipherKeys();
+                            break;
+
+                        case ServerCommand.UpdateProcessingInterval:
+                            // Handle request to update processing interval
+                            HandleUpdateProcessingInterval(connection, buffer, index, length);
+                            break;
+
+                        case ServerCommand.DefineOperationalModes:
+                            // Handle request to define operational modes
+                            HandleDefineOperationalModes(connection, buffer, index, length);
+                            break;
+
+                        case ServerCommand.ConfirmNotification:
+                            // Handle confirmation of receipt of notification
+                            HandleConfirmNotification(connection, buffer, index, length);
+                            break;
+
+                        case ServerCommand.ConfirmBufferBlock:
+                            // Handle confirmation of receipt of a buffer block
+                            HandleConfirmBufferBlock(connection, buffer, index, length);
+                            break;
+
+                        case ServerCommand.PublishCommandMeasurements:
+                            // Handle publication of command measurements
+                            HandlePublishCommandMeasurements(connection, buffer, index);
+                            break;
+
+                        case ServerCommand.UserCommand00:
+                        case ServerCommand.UserCommand01:
+                        case ServerCommand.UserCommand02:
+                        case ServerCommand.UserCommand03:
+                        case ServerCommand.UserCommand04:
+                        case ServerCommand.UserCommand05:
+                        case ServerCommand.UserCommand06:
+                        case ServerCommand.UserCommand07:
+                        case ServerCommand.UserCommand08:
+                        case ServerCommand.UserCommand09:
+                        case ServerCommand.UserCommand10:
+                        case ServerCommand.UserCommand11:
+                        case ServerCommand.UserCommand12:
+                        case ServerCommand.UserCommand13:
+                        case ServerCommand.UserCommand14:
+                        case ServerCommand.UserCommand15:
+                            // Handle confirmation of receipt of a user-defined command
+                            HandleUserCommand(connection, command, buffer, index, length);
+                            break;
                     }
+                }
+                else
+                {
+                    // Handle unrecognized commands
+                    message = $" sent an unrecognized server command: 0x{commandByte.ToString("X").PadLeft(2, '0')}";
+                    SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes($"Client{message}"));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException(connection.ConnectionID + message));
                 }
             }
             catch (Exception ex)
@@ -3875,10 +3758,8 @@ namespace GSF.TimeSeries.Transport
             OnProcessException(MessageLevel.Info, new ConnectionException($"Data publisher encountered an exception while connecting client to the command channel: {ex.Message}", ex));
         }
 
-        private void m_commandChannel_ServerStarted(object sender, EventArgs e)
-        {
+        private void m_commandChannel_ServerStarted(object sender, EventArgs e) => 
             OnStatusMessage(MessageLevel.Info, "Data publisher command channel started.");
-        }
 
         private void m_commandChannel_ServerStopped(object sender, EventArgs e)
         {
@@ -3887,8 +3768,7 @@ namespace GSF.TimeSeries.Transport
                 OnStatusMessage(MessageLevel.Info, "Data publisher command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
-                if (m_commandChannelRestartTimer is not null)
-                    m_commandChannelRestartTimer.Start();
+                m_commandChannelRestartTimer?.Start();
             }
             else
             {

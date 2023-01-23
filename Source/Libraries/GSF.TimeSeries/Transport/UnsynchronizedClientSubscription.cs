@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 // ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries.Transport
@@ -111,8 +112,7 @@ namespace GSF.TimeSeries.Transport
             SubscriberID = subscriberID;
             m_compressionModes = compressionModes;
 
-            SignalIndexCache = new SignalIndexCache();
-            SignalIndexCache.SubscriberID = subscriberID;
+            SignalIndexCache = new SignalIndexCache { SubscriberID = subscriberID };
 
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
@@ -236,7 +236,7 @@ namespace GSF.TimeSeries.Transport
                 base.ProcessingInterval = value;
 
                 // Update processing interval in private temporal session, if defined
-                if (m_iaonSession is not null && m_iaonSession.AllAdapters is not null)
+                if (m_iaonSession?.AllAdapters != null)
                     m_iaonSession.AllAdapters.ProcessingInterval = value;
             }
         }
@@ -306,16 +306,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the status of the active temporal session, if any.
         /// </summary>
-        public string TemporalSessionStatus
-        {
-            get
-            {
-                if (m_iaonSession is null)
-                    return null;
-
-                return m_iaonSession.Status;
-            }
-        }
+        public string TemporalSessionStatus => m_iaonSession?.Status;
 
         #endregion
 
@@ -327,30 +318,30 @@ namespace GSF.TimeSeries.Transport
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        m_parent = null;
+                if (!disposing)
+                    return;
 
-                        // Dispose base time rotation timer
-                        if (m_baseTimeRotationTimer is not null)
-                        {
-                            m_baseTimeRotationTimer.Dispose();
-                            m_baseTimeRotationTimer = null;
-                        }
+                m_parent = null;
 
-                        // Dispose Iaon session
-                        this.DisposeTemporalSession(ref m_iaonSession);
-                    }
-                }
-                finally
+                // Dispose base time rotation timer
+                if (m_baseTimeRotationTimer is not null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_baseTimeRotationTimer.Dispose();
+                    m_baseTimeRotationTimer = null;
                 }
+
+                // Dispose Iaon session
+                this.DisposeTemporalSession(ref m_iaonSession);
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -387,25 +378,16 @@ namespace GSF.TimeSeries.Transport
             if (!Settings.TryGetValue("publishInterval", out setting) || !double.TryParse(setting, out m_publishInterval))
                 m_publishInterval = -1;
 
-            if (Settings.TryGetValue("includeTime", out setting))
-                m_includeTime = setting.ParseBoolean();
-            else
-                m_includeTime = true;
+            m_includeTime = !Settings.TryGetValue("includeTime", out setting) || setting.ParseBoolean();
 
-            if (Settings.TryGetValue("useMillisecondResolution", out setting))
-                m_useMillisecondResolution = setting.ParseBoolean();
-            else
-                m_useMillisecondResolution = false;
+            m_useMillisecondResolution = Settings.TryGetValue("useMillisecondResolution", out setting) && setting.ParseBoolean();
 
             if (Settings.TryGetValue("requestNaNValueFilter", out setting))
                 m_isNaNFiltered = m_parent.AllowNaNValueFilter && setting.ParseBoolean();
             else
                 m_isNaNFiltered = false;
 
-            if (Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting))
-                m_bufferBlockRetransmissionTimeout = double.Parse(setting);
-            else
-                m_bufferBlockRetransmissionTimeout = 5.0D;
+            m_bufferBlockRetransmissionTimeout = Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting) ? double.Parse(setting) : 5.0D;
 
             if (m_parent.UseBaseTimeOffsets && m_includeTime)
             {
@@ -447,11 +429,11 @@ namespace GSF.TimeSeries.Transport
         {
             base.Stop();
 
-            if (m_baseTimeRotationTimer is not null)
-            {
-                m_baseTimeRotationTimer.Stop();
-                m_baseTimeOffsets = null;
-            }
+            if (m_baseTimeRotationTimer is null)
+                return;
+
+            m_baseTimeRotationTimer.Stop();
+            m_baseTimeOffsets = null;
         }
 
         /// <summary>
@@ -512,31 +494,30 @@ namespace GSF.TimeSeries.Transport
                 base.QueueMeasurementsForProcessing(measurements);
                 double publishInterval = m_publishInterval > 0 ? m_publishInterval : LagTime;
 
-                if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
+                if (DateTime.UtcNow.Ticks <= m_lastPublishTime + Ticks.FromSeconds(publishInterval))
+                    return;
+
+                List<IMeasurement> currentMeasurements = new();
+
+                // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
+                foreach (TemporalMeasurement measurement in LatestMeasurements)
                 {
-                    List<IMeasurement> currentMeasurements = new();
-                    Measurement newMeasurement;
+                    MeasurementStateFlags timeQuality = measurement.Timestamp.TimeIsValid(RealTime, measurement.LagTime, measurement.LeadTime)
+                        ? MeasurementStateFlags.Normal
+                        : MeasurementStateFlags.BadTime;
 
-                    // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
-                    foreach (TemporalMeasurement measurement in LatestMeasurements)
+                    Measurement newMeasurement = new()
                     {
-                        MeasurementStateFlags timeQuality = measurement.Timestamp.TimeIsValid(RealTime, measurement.LagTime, measurement.LeadTime)
-                            ? MeasurementStateFlags.Normal
-                            : MeasurementStateFlags.BadTime;
+                        Metadata = measurement.Metadata,
+                        Value = measurement.Value,
+                        Timestamp = measurement.Timestamp,
+                        StateFlags = measurement.StateFlags | timeQuality
+                    };
 
-                        newMeasurement = new Measurement
-                        {
-                            Metadata = measurement.Metadata,
-                            Value = measurement.Value,
-                            Timestamp = measurement.Timestamp,
-                            StateFlags = measurement.StateFlags | timeQuality
-                        };
-
-                        currentMeasurements.Add(newMeasurement);
-                    }
-
-                    ProcessMeasurements(currentMeasurements);
+                    currentMeasurements.Add(newMeasurement);
                 }
+
+                ProcessMeasurements(currentMeasurements);
             }
             else
             {
@@ -553,8 +534,6 @@ namespace GSF.TimeSeries.Transport
         public void ConfirmBufferBlock(uint sequenceNumber)
         {
             DataPublisher parent = m_parent;
-            int sequenceIndex;
-            int removalCount;
 
             // We are still receiving confirmations,
             // so stop the retransmission timer
@@ -563,7 +542,7 @@ namespace GSF.TimeSeries.Transport
             lock (m_bufferBlockCacheLock)
             {
                 // Find the buffer block's location in the cache
-                sequenceIndex = (int)(sequenceNumber - m_expectedBufferBlockConfirmationNumber);
+                int sequenceIndex = (int)(sequenceNumber - m_expectedBufferBlockConfirmationNumber);
 
                 if (sequenceIndex >= 0 && sequenceIndex < m_bufferBlockCache.Count && m_bufferBlockCache[sequenceIndex] is not null)
                 {
@@ -573,7 +552,7 @@ namespace GSF.TimeSeries.Transport
                     if (sequenceNumber == m_expectedBufferBlockConfirmationNumber)
                     {
                         // Get the number of elements to trim from the start of the cache
-                        removalCount = m_bufferBlockCache.TakeWhile(m => m is null).Count();
+                        int removalCount = m_bufferBlockCache.TakeWhile(m => m is null).Count();
 
                         // Trim the cache
                         m_bufferBlockCache.RemoveRange(0, removalCount);
@@ -586,11 +565,11 @@ namespace GSF.TimeSeries.Transport
                         // Retransmit if confirmations are received out of order
                         for (int i = 0; i < sequenceIndex; i++)
                         {
-                            if (m_bufferBlockCache[i] is not null)
-                            {
-                                parent?.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
-                                OnBufferBlockRetransmission();
-                            }
+                            if (m_bufferBlockCache[i] is null)
+                                continue;
+
+                            parent?.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
+                            OnBufferBlockRetransmission();
                         }
                     }
                 }
@@ -613,35 +592,20 @@ namespace GSF.TimeSeries.Transport
             // Includes data packet flags and measurement count
             const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 5;
 
-            List<IBinaryMeasurement> packet;
-            int packetSize;
-
-            bool usePayloadCompression;
-            bool useCompactMeasurementFormat;
-
-            BufferBlockMeasurement bufferBlockMeasurement;
-            byte[] bufferBlock;
-            ushort bufferBlockSignalIndex;
-
-            IBinaryMeasurement binaryMeasurement;
-            int binaryLength;
-
             try
             {
                 if (!Enabled)
                     return;
 
-                packet = new List<IBinaryMeasurement>();
-                packetSize = PacketHeaderSize;
+                List<IBinaryMeasurement> packet = new();
+                int packetSize = PacketHeaderSize;
 
-                usePayloadCompression = m_usePayloadCompression;
-                useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
+                bool usePayloadCompression = m_usePayloadCompression;
+                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
 
                 foreach (IMeasurement measurement in measurements)
                 {
-                    bufferBlockMeasurement = measurement as BufferBlockMeasurement;
-
-                    if ((object)bufferBlockMeasurement is not null)
+                    if (measurement is BufferBlockMeasurement bufferBlockMeasurement)
                     {
                         // Still sending buffer block measurements to client; we are expecting
                         // confirmations which will indicate whether retransmission is necessary,
@@ -650,25 +614,23 @@ namespace GSF.TimeSeries.Transport
 
                         // Handle buffer block measurements as a special case - this can be any kind of data,
                         // measurement subscriber will need to know how to interpret buffer
-                        bufferBlock = new byte[6 + bufferBlockMeasurement.Length];
+                        byte[] bufferBlock = new byte[6 + bufferBlockMeasurement.Length];
 
                         // Prepend sequence number
                         BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
                         m_bufferBlockSequenceNumber++;
 
                         // Copy signal index into buffer
-                        bufferBlockSignalIndex = SignalIndexCache.GetSignalIndex(bufferBlockMeasurement.Key);
+                        ushort bufferBlockSignalIndex = SignalIndexCache.GetSignalIndex(bufferBlockMeasurement.Key);
                         BigEndian.CopyBytes(bufferBlockSignalIndex, bufferBlock, 4);
 
                         // Append measurement data and send
                         Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 6, bufferBlockMeasurement.Length);
                         m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
 
+                        // Cache buffer block for retransmission
                         lock (m_bufferBlockCacheLock)
-                        {
-                            // Cache buffer block for retransmission
                             m_bufferBlockCache.Add(bufferBlock);
-                        }
 
                         // Start the retransmission timer in case we never receive a confirmation
                         m_bufferBlockRetransmissionTimer.Start();
@@ -676,13 +638,14 @@ namespace GSF.TimeSeries.Transport
                     else
                     {
                         // Serialize the current measurement.
+                        IBinaryMeasurement binaryMeasurement;
                         if (useCompactMeasurementFormat)
                             binaryMeasurement = new CompactMeasurement(measurement, SignalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
                         else
                             binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(ClientID));
 
                         // Determine the size of the measurement in bytes.
-                        binaryLength = binaryMeasurement.BinaryLength;
+                        int binaryLength = binaryMeasurement.BinaryLength;
 
                         // If the current measurement will not fit in the packet based on the max
                         // packet size, process the current packet and start a new packet.
@@ -750,8 +713,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Publish data packet to client
-            if (m_parent is not null)
-                m_parent.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
+            m_parent?.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
 
             // Track last publication time
             m_lastPublishTime = DateTime.UtcNow.Ticks;
@@ -824,16 +786,16 @@ namespace GSF.TimeSeries.Transport
 
             packet[1 + 4] = 85; // A version number
             BigEndian.CopyBytes(m_tsscSequenceNumber, packet, 5 + 1);
+            
             m_tsscSequenceNumber++;
+
+            //Do not increment to 0
             if (m_tsscSequenceNumber == 0)
-            {
-                //Do not increment to 0
                 m_tsscSequenceNumber = 1;
-            }
+
             Array.Copy(m_tsscWorkingBuffer, 0, packet, 8, length);
 
-            if (m_parent is not null)
-                m_parent.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
+            m_parent?.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
 
             // Track last publication time
             m_lastPublishTime = DateTime.UtcNow.Ticks;
@@ -844,13 +806,10 @@ namespace GSF.TimeSeries.Transport
         {
             lock (m_bufferBlockCacheLock)
             {
-                foreach (byte[] bufferBlock in m_bufferBlockCache)
+                foreach (byte[] bufferBlock in m_bufferBlockCache.Where(bufferBlock => bufferBlock is not null))
                 {
-                    if (bufferBlock is not null)
-                    {
-                        m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
-                        OnBufferBlockRetransmission();
-                    }
+                    m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                    OnBufferBlockRetransmission();
                 }
             }
 
@@ -861,67 +820,55 @@ namespace GSF.TimeSeries.Transport
         // Rotates base time offsets
         private void RotateBaseTimes()
         {
-            if (m_parent is not null && m_baseTimeRotationTimer is not null)
+            if (m_parent is null || m_baseTimeRotationTimer is null)
+                return;
+
+            if (m_baseTimeOffsets is null)
             {
-                if (m_baseTimeOffsets is null)
-                {
-                    m_baseTimeOffsets = new long[2];
-                    m_baseTimeOffsets[0] = RealTime;
-                    m_baseTimeOffsets[1] = RealTime + m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
-                    m_timeIndex = 0;
-                }
-                else
-                {
-                    int oldIndex = m_timeIndex;
-
-                    // Switch to newer timestamp
-                    m_timeIndex ^= 1;
-
-                    // Now make older timestamp the newer timestamp
-                    m_baseTimeOffsets[oldIndex] = RealTime + m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
-                }
-
-                // Since this function will only be called periodically, there is no real benefit
-                // to maintaining this memory stream at a member level
-                using BlockAllocatedMemoryStream responsePacket = new();
-
-                responsePacket.Write(BigEndian.GetBytes(m_timeIndex), 0, 4);
-                responsePacket.Write(BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
-                responsePacket.Write(BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
-
-                m_parent.SendClientResponse(ClientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
+                m_baseTimeOffsets = new long[2];
+                m_baseTimeOffsets[0] = RealTime;
+                m_baseTimeOffsets[1] = RealTime + m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
+                m_timeIndex = 0;
             }
+            else
+            {
+                int oldIndex = m_timeIndex;
+
+                // Switch to newer timestamp
+                m_timeIndex ^= 1;
+
+                // Now make older timestamp the newer timestamp
+                m_baseTimeOffsets[oldIndex] = RealTime + m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
+            }
+
+            // Since this function will only be called periodically, there is no real benefit
+            // to maintaining this memory stream at a member level
+            using BlockAllocatedMemoryStream responsePacket = new();
+
+            responsePacket.Write(BigEndian.GetBytes(m_timeIndex), 0, 4);
+            responsePacket.Write(BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
+            responsePacket.Write(BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
+
+            m_parent.SendClientResponse(ClientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
         }
 
-        private void OnBufferBlockRetransmission()
-        {
-            if ((object)BufferBlockRetransmission is not null)
-                BufferBlockRetransmission(this, EventArgs.Empty);
-        }
+        private void OnBufferBlockRetransmission() => 
+            BufferBlockRetransmission?.Invoke(this, EventArgs.Empty);
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnStatusMessage(MessageLevel level, string status, string eventName, MessageFlags flags)
-        {
+        void IClientSubscription.OnStatusMessage(MessageLevel level, string status, string eventName, MessageFlags flags) => 
             OnStatusMessage(level, status, eventName, flags);
-        }
 
         // Explicitly implement process exception event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnProcessException(MessageLevel level, Exception ex, string eventName, MessageFlags flags)
-        {
+        void IClientSubscription.OnProcessException(MessageLevel level, Exception ex, string eventName, MessageFlags flags) => 
             OnProcessException(level, ex, eventName, flags);
-        }
 
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e)
-        {
-            if ((object)ProcessingComplete is not null)
-                ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
-        }
+        void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e) => 
+            ProcessingComplete?.Invoke(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
 
-        private void BaseTimeRotationTimer_Elapsed(object sender, EventArgs<DateTime> e)
-        {
+        private void BaseTimeRotationTimer_Elapsed(object sender, EventArgs<DateTime> e) => 
             RotateBaseTimes();
-        }
 
         #endregion
     }

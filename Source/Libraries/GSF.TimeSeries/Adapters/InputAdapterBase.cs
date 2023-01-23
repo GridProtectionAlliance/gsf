@@ -252,12 +252,12 @@ namespace GSF.TimeSeries.Adapters
             Dictionary<string, string> settings = Settings;
 
             // Load optional parameters
-            if (settings.TryGetValue("outputSourceIDs", out string setting) || settings.TryGetValue("sourceids", out setting))
+            if (settings.TryGetValue(nameof(OutputSourceIDs), out string setting) || settings.TryGetValue("sourceids", out setting))
                 OutputSourceIDs = setting.Split(',');
             else
                 OutputSourceIDs = null;
 
-            if (settings.TryGetValue("enableConnectionErrors", out setting))
+            if (settings.TryGetValue(nameof(EnableConnectionErrors), out setting))
                 EnableConnectionErrors = setting.ParseBoolean();
         }
 

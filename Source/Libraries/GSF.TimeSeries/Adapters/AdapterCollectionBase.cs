@@ -592,13 +592,13 @@ namespace GSF.TimeSeries.Adapters
                 {
                     status.AppendLine($"     Start time constraint: {(StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
                     status.AppendLine($"      Stop time constraint: {(StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
-                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"))}");
+                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : ProcessingInterval == 0 ? "As fast as possible" : $"{ProcessingInterval} milliseconds")}");
                 }
 
                 if (MonitorTimerEnabled)
                 {
                     status.AppendLine($"    Processed measurements: {m_processedMeasurements:N0}");
-                    status.AppendLine($"   Average processing rate: {((int)(m_processedMeasurements / m_totalProcessTime)):N0} measurements / second");
+                    status.AppendLine($"   Average processing rate: {(int)(m_processedMeasurements / m_totalProcessTime):N0} measurements / second");
                 }
 
                 status.AppendLine($"       Data source defined: {dataSource is not null}");
@@ -625,7 +625,7 @@ namespace GSF.TimeSeries.Adapters
                     string value = item.Value.Trim();
                     
                     if (value.Length > 50)
-                        value = value.TruncateRight(47) + "...";
+                        value = $"{value.TruncateRight(47)}...";
 
                     status.AppendLine($"{new string(keyChars).TruncateRight(25),25} = {value,-50}");
                 }
@@ -745,7 +745,7 @@ namespace GSF.TimeSeries.Adapters
             Dictionary<string, string> settings = Settings;
 
             // Load the default initialization parameter for adapters in this collection
-            if (settings.TryGetValue("initializationTimeout", out string setting))
+            if (settings.TryGetValue(nameof(InitializationTimeout), out string setting))
                 InitializationTimeout = int.Parse(setting);
 
             lock (this)
@@ -810,7 +810,7 @@ namespace GSF.TimeSeries.Adapters
                 adapter.DataSource = DataSource;
 
                 // Assign adapter initialization timeout   
-                adapter.InitializationTimeout = adapter.Settings.TryGetValue("initializationTimeout", out string setting) ? 
+                adapter.InitializationTimeout = adapter.Settings.TryGetValue(nameof(InitializationTimeout), out string setting) ? 
                     int.Parse(setting) : 
                     InitializationTimeout;
 
@@ -822,7 +822,7 @@ namespace GSF.TimeSeries.Adapters
                 OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to load adapter \"{name}\" [{typeName}] from \"{assemblyName}\": {ex.Message}", ex));
             }
 
-            adapter = default(T);
+            adapter = default;
             return false;
         }
 
@@ -873,7 +873,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            adapter = default(T);
+            adapter = default;
             return false;
         }
 

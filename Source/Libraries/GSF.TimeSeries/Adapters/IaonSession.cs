@@ -486,7 +486,7 @@ namespace GSF.TimeSeries.Adapters
                 name = sender.GetType().Name;
 
             if (!string.IsNullOrWhiteSpace(m_name))
-                name += "#" + m_name;
+                name += $"#{m_name}";
 
             return name;
         }

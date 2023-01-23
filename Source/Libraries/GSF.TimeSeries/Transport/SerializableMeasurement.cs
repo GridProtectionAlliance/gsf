@@ -64,13 +64,8 @@ namespace GSF.TimeSeries.Transport
         /// Creates a new <see cref="SerializableMeasurement"/>.
         /// </summary>
         /// <param name="encoding">Character encoding used to convert strings to binary.</param>
-        public SerializableMeasurement(Encoding encoding)
-        {
-            if (encoding is null)
-                throw new ArgumentNullException(nameof(encoding), "Cannot create serializable measurement with no encoding.");
-
-            m_encoding = encoding;
-        }
+        public SerializableMeasurement(Encoding encoding) => 
+            m_encoding = encoding ?? throw new ArgumentNullException(nameof(encoding), "Cannot create serializable measurement with no encoding.");
 
         /// <summary>
         /// Creates a new <see cref="SerializableMeasurement"/> from an existing <see cref="IMeasurement"/> value.

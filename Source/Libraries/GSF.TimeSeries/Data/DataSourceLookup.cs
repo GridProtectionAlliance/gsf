@@ -60,9 +60,7 @@ namespace GSF.TimeSeries.Data
                     if (item.TryGetTarget(out target) && target.DataSet is not null)
                     {
                         if (ReferenceEquals(target.DataSet, dataSet))
-                        {
                             return target;
-                        }
                     }
                     else
                     {

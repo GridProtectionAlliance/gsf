@@ -174,7 +174,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to queue measurements to action adapters: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to queue measurements to action adapters: {ex.Message}", ex));
             }
         }
 

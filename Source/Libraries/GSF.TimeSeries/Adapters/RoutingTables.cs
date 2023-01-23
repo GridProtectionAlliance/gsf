@@ -98,10 +98,8 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="RoutingTables"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~RoutingTables()
-        {
+        ~RoutingTables() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -181,7 +179,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue routing table calculation: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to queue routing table calculation: {ex.Message}", ex));
             }
         }
 
@@ -264,7 +262,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Routing tables calculation error: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Routing tables calculation error: {ex.Message}", ex));
             }
         }
 
@@ -274,10 +272,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="sender">the sender object</param>
         /// <param name="measurements">the event arguments</param>
-        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
-        {
+        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements) => 
             m_routeMappingTables.InjectMeasurements(sender, measurements);
-        }
 
         /// <summary>
         /// Event handler for distributing new measurements in a broadcast fashion.
@@ -369,17 +365,13 @@ namespace GSF.TimeSeries.Adapters
             ISet<MeasurementKey> requestedInputSignals;
             ISet<MeasurementKey> requestedOutputSignals;
 
-            if (inputMeasurementKeysRestriction.Any())
-            {
+            dependencyChain = inputMeasurementKeysRestriction.Any() ?
                 // When an input signals restriction has been defined, determine the set of adapters
                 // by walking the dependency chain of the restriction
-                dependencyChain = TraverseDependencyChain(inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-            }
-            else
-            {
+                TraverseDependencyChain(inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection) :
+
                 // Determine the set of adapters in the dependency chain for all adapters in the system
-                dependencyChain = TraverseDependencyChain(inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-            }
+                TraverseDependencyChain(inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
 
             // Get the full set of requested input and output signals in the entire dependency chain
             ISet<MeasurementKey> inputSignals = new HashSet<MeasurementKey>(dependencyChain.SelectMany(adapter => adapter.InputMeasurementKeys()));

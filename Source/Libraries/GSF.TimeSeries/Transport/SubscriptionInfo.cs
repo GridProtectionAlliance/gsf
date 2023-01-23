@@ -37,12 +37,9 @@ namespace GSF.TimeSeries.Transport
         // Fields
 
         private bool m_useCompactMeasurementFormat;
-
         private int m_dataChannelLocalPort;
-
         private double m_lagTime;
         private double m_leadTime;
-
         private int m_processingInterval;
 
         #endregion
@@ -277,10 +274,8 @@ namespace GSF.TimeSeries.Transport
         /// <see cref="SubscriptionInfo"/> object.
         /// </summary>
         /// <returns>The copy of this object.</returns>
-        public virtual SubscriptionInfo Copy()
-        {
-            return (SubscriptionInfo)MemberwiseClone();
-        }
+        public virtual SubscriptionInfo Copy() => 
+            (SubscriptionInfo)MemberwiseClone();
 
         #endregion
     }
@@ -290,12 +285,6 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     public sealed class SynchronizedSubscriptionInfo : SubscriptionInfo
     {
-        #region [ Members ]
-
-        // Fields
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -306,11 +295,9 @@ namespace GSF.TimeSeries.Transport
         public SynchronizedSubscriptionInfo(bool remotelySynchronized, int framesPerSecond)
         {
             RemotelySynchronized = remotelySynchronized;
-
             FramesPerSecond = framesPerSecond;
             DownsamplingMethod = DownsamplingMethod.LastReceived;
             AllowPreemptivePublishing = true;
-
             AllowSortsByArrival = true;
             TimeResolution = Ticks.PerMillisecond;
         }
@@ -397,12 +384,6 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     public sealed class UnsynchronizedSubscriptionInfo : SubscriptionInfo
     {
-        #region [ Members ]
-
-        // Fields
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>

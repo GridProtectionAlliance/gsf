@@ -503,7 +503,7 @@ namespace GSF.TimeSeries.Adapters
                 if (dataSource is not null)
                     status.AppendLine($"    Referenced data source: {dataSource.DataSetName}, {dataSource.Tables.Count:N0} tables");
 
-                status.AppendLine($"    Initialization timeout: {(InitializationTimeout < 0 ? "Infinite" : InitializationTimeout + " milliseconds")}");
+                status.AppendLine($"    Initialization timeout: {(InitializationTimeout < 0 ? "Infinite" : $"{InitializationTimeout} milliseconds")}");
                 status.AppendLine($"       Adapter initialized: {Initialized}");
                 status.AppendLine($"         Operational state: {(Enabled ? "Running" : "Stopped")}");
                 status.AppendLine($"         Connect on demand: {!AutoStart}");
@@ -517,7 +517,7 @@ namespace GSF.TimeSeries.Adapters
                 {
                     status.AppendLine($"     Start time constraint: {(StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
                     status.AppendLine($"      Stop time constraint: {(StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
-                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"))}");
+                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : ProcessingInterval == 0 ? "As fast as possible" : $"{ProcessingInterval} milliseconds")}");
                 }
                 
                 status.AppendLine($"                Adapter ID: {ID}");
@@ -539,7 +539,7 @@ namespace GSF.TimeSeries.Adapters
                     string value = item.Value.Trim();
                     
                     if (value.Length > 50)
-                        value = value.TruncateRight(47) + "...";
+                        value = $"{value.TruncateRight(47)}...";
 
                     status.AppendLine($"{new string(keyChars).TruncateRight(25),25} = {value,-50}");
                 }
@@ -641,63 +641,63 @@ namespace GSF.TimeSeries.Adapters
             const string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
 
             // Load required parameters
-            if (!settings.TryGetValue("framesPerSecond", out string setting))
-                throw new ArgumentException(string.Format(errorMessage, "framesPerSecond"));
+            if (!settings.TryGetValue(nameof(FramesPerSecond), out string setting))
+                throw new ArgumentException(string.Format(errorMessage, nameof(FramesPerSecond)));
 
             base.FramesPerSecond = int.Parse(setting);
 
-            if (!settings.TryGetValue("lagTime", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "lagTime"));
+            if (!settings.TryGetValue(nameof(LagTime), out setting))
+                throw new ArgumentException(string.Format(errorMessage, nameof(LagTime)));
 
             base.LagTime = double.Parse(setting);
 
-            if (!settings.TryGetValue("leadTime", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "leadTime"));
+            if (!settings.TryGetValue(nameof(LeadTime), out setting))
+                throw new ArgumentException(string.Format(errorMessage, nameof(LeadTime)));
 
             base.LeadTime = double.Parse(setting);
 
             // Load optional parameters
-            if (settings.TryGetValue("usePrecisionTimer", out setting))
+            if (settings.TryGetValue(nameof(UsePrecisionTimer), out setting))
                 UsePrecisionTimer = setting.ParseBoolean();
 
-            if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
+            if (settings.TryGetValue(nameof(UseLocalClockAsRealTime), out setting))
                 UseLocalClockAsRealTime = setting.ParseBoolean();
 
-            if (settings.TryGetValue("ignoreBadTimestamps", out setting))
+            if (settings.TryGetValue(nameof(IgnoreBadTimestamps), out setting))
                 IgnoreBadTimestamps = setting.ParseBoolean();
 
-            if (settings.TryGetValue("allowSortsByArrival", out setting))
+            if (settings.TryGetValue(nameof(AllowSortsByArrival), out setting))
                 AllowSortsByArrival = setting.ParseBoolean();
 
-            InputMeasurementKeys = settings.TryGetValue("inputMeasurementKeys", out setting) ? 
+            InputMeasurementKeys = settings.TryGetValue(nameof(InputMeasurementKeys), out setting) ? 
                 AdapterBase.ParseInputMeasurementKeys(DataSource, true, setting) : 
                 Array.Empty<MeasurementKey>();
 
-            if (settings.TryGetValue("outputMeasurements", out setting))
+            if (settings.TryGetValue(nameof(OutputMeasurements), out setting))
                 OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, true, setting);
 
-            if (settings.TryGetValue("minimumMeasurementsToUse", out setting))
+            if (settings.TryGetValue(nameof(MinimumMeasurementsToUse), out setting))
                 MinimumMeasurementsToUse = int.Parse(setting);
 
-            if (settings.TryGetValue("timeResolution", out setting))
+            if (settings.TryGetValue(nameof(TimeResolution), out setting))
                 TimeResolution = long.Parse(setting);
 
-            if (settings.TryGetValue("roundToNearestTimestamp", out setting))
+            if (settings.TryGetValue(nameof(RoundToNearestTimestamp), out setting))
                 RoundToNearestTimestamp = setting.ParseBoolean();
 
-            if (settings.TryGetValue("allowPreemptivePublishing", out setting))
+            if (settings.TryGetValue(nameof(AllowPreemptivePublishing), out setting))
                 AllowPreemptivePublishing = setting.ParseBoolean();
 
-            if (settings.TryGetValue("performTimestampReasonabilityCheck", out setting))
+            if (settings.TryGetValue(nameof(PerformTimestampReasonabilityCheck), out setting))
                 PerformTimestampReasonabilityCheck = setting.ParseBoolean();
 
-            if (settings.TryGetValue("processByReceivedTimestamp", out setting))
+            if (settings.TryGetValue(nameof(ProcessByReceivedTimestamp), out setting))
                 ProcessByReceivedTimestamp = setting.ParseBoolean();
 
-            if (settings.TryGetValue("maximumPublicationTimeout", out setting))
+            if (settings.TryGetValue(nameof(MaximumPublicationTimeout), out setting))
                 MaximumPublicationTimeout = int.Parse(setting);
 
-            if (settings.TryGetValue("downsamplingMethod", out setting))
+            if (settings.TryGetValue(nameof(DownsamplingMethod), out setting))
             {
                 if (Enum.TryParse(setting, true, out DownsamplingMethod method))
                 {
@@ -705,15 +705,15 @@ namespace GSF.TimeSeries.Adapters
                 }
                 else
                 {
-                    OnStatusMessage(MessageLevel.Info, $"No down-sampling method labeled \"{setting}\" exists, \"LastReceived\" method was selected.", flags: MessageFlags.UsageIssue);
+                    OnStatusMessage(MessageLevel.Info, $"No down-sampling method labeled \"{setting}\" exists, \"{nameof(DownsamplingMethod.LastReceived)}\" method was selected.", flags: MessageFlags.UsageIssue);
                     DownsamplingMethod = DownsamplingMethod.LastReceived;
                 }
             }
 
-            if (settings.TryGetValue("inputSourceIDs", out setting))
+            if (settings.TryGetValue(nameof(InputSourceIDs), out setting))
                 InputSourceIDs = setting.Split(',');
 
-            if (settings.TryGetValue("outputSourceIDs", out setting))
+            if (settings.TryGetValue(nameof(OutputSourceIDs), out setting))
                 OutputSourceIDs = setting.Split(',');
 
             if (settings.TryGetValue("connectOnDemand", out setting))
@@ -721,11 +721,11 @@ namespace GSF.TimeSeries.Adapters
             else
                 AutoStart = true;
 
-            RespectInputDemands = settings.TryGetValue("respectInputDemands", out setting) && setting.ParseBoolean();
-            RespectOutputDemands = !settings.TryGetValue("respectOutputDemands", out setting) || setting.ParseBoolean();
+            RespectInputDemands = settings.TryGetValue(nameof(RespectInputDemands), out setting) && setting.ParseBoolean();
+            RespectOutputDemands = !settings.TryGetValue(nameof(RespectOutputDemands), out setting) || setting.ParseBoolean();
 
-            bool startTimeDefined = settings.TryGetValue("startTimeConstraint", out string startTime);
-            bool stopTimeDefined = settings.TryGetValue("stopTimeConstraint", out string stopTime);
+            bool startTimeDefined = settings.TryGetValue(nameof(StartTimeConstraint), out string startTime);
+            bool stopTimeDefined = settings.TryGetValue(nameof(StopTimeConstraint), out string stopTime);
 
             if (startTimeDefined || stopTimeDefined)
             {
@@ -733,7 +733,7 @@ namespace GSF.TimeSeries.Adapters
                 SetTemporalConstraint(startTime, stopTime, parameters);
             }
 
-            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out int processingInterval))
+            if (settings.TryGetValue(nameof(ProcessingInterval), out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out int processingInterval))
                 ProcessingInterval = processingInterval;
         }
 

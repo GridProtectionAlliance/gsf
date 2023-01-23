@@ -393,12 +393,12 @@ namespace GSF.TimeSeries.Adapters
             Dictionary<string, string> settings = Settings;
 
             // Load optional parameters
-            if (settings.TryGetValue("inputSourceIDs", out string setting) || settings.TryGetValue("sourceids", out setting))
+            if (settings.TryGetValue(nameof(InputSourceIDs), out string setting) || settings.TryGetValue("sourceids", out setting))
                 InputSourceIDs = setting.Split(',');
             else
                 InputSourceIDs = null;
 
-            if (settings.TryGetValue("requeueOnException", out setting))
+            if (settings.TryGetValue(nameof(RequeueOnException), out setting))
                 RequeueOnException = setting.ParseBoolean();
 
             // Start data monitor...
@@ -413,7 +413,7 @@ namespace GSF.TimeSeries.Adapters
         public void RefreshMetadata()
         {
             // Force a recalculation of input measurement keys so that system can appropriately update routing tables
-            InputMeasurementKeys = Settings.TryGetValue("inputMeasurementKeys", out string setting) ? 
+            InputMeasurementKeys = Settings.TryGetValue(nameof(InputMeasurementKeys), out string setting) ? 
                 ParseInputMeasurementKeys(DataSource, true, setting) : 
                 Array.Empty<MeasurementKey>();
 

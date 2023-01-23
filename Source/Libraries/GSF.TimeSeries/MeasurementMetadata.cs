@@ -100,14 +100,16 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="key">The key to set.</param>
         /// <returns>New instance of <see cref="MeasurementMetadata"/> using the provided measurement <paramref name="key"/>.</returns>
-        public MeasurementMetadata ChangeKey(MeasurementKey key) => Key == key ? this : new MeasurementMetadata(key, TagName, Adder, Multiplier, MeasurementValueFilter);
+        public MeasurementMetadata ChangeKey(MeasurementKey key) => 
+            Key == key ? this : new MeasurementMetadata(key, TagName, Adder, Multiplier, MeasurementValueFilter);
 
         /// <summary>
         /// Creates a new instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="adder"/>. All other fields remain the same.
         /// </summary>
         /// <param name="adder">The adder to set.</param>
         /// <returns>New instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="adder"/>.</returns>
-        public MeasurementMetadata ChangeAdder(double adder) => Adder == adder ? this : new MeasurementMetadata(Key, TagName, adder, Multiplier, MeasurementValueFilter);
+        public MeasurementMetadata ChangeAdder(double adder) => 
+            Adder == adder ? this : new MeasurementMetadata(Key, TagName, adder, Multiplier, MeasurementValueFilter);
 
         /// <summary>
         /// Creates a new instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="adder"/> and <paramref name="multiplier"/>. All other fields remain the same.
@@ -115,34 +117,36 @@ namespace GSF.TimeSeries
         /// <param name="adder">The adder to set.</param>
         /// <param name="multiplier">The multiplier to set.</param>
         /// <returns>New instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="adder"/> and <paramref name="multiplier"/>.</returns>
-        public MeasurementMetadata ChangeAdderMultiplier(double adder, double multiplier) => Adder == adder && Multiplier == multiplier ? this : new MeasurementMetadata(Key, TagName, adder, multiplier, MeasurementValueFilter);
+        public MeasurementMetadata ChangeAdderMultiplier(double adder, double multiplier) => 
+            Adder == adder && Multiplier == multiplier ? this : new MeasurementMetadata(Key, TagName, adder, multiplier, MeasurementValueFilter);
 
         /// <summary>
         /// Creates a new instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="multiplier"/>. All other fields remain the same.
         /// </summary>
         /// <param name="multiplier">The multiplier to set.</param>
         /// <returns>New instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="multiplier"/>.</returns>
-        public MeasurementMetadata ChangeMultiplier(double multiplier) => Multiplier == multiplier ? this : new MeasurementMetadata(Key, TagName, Adder, multiplier, MeasurementValueFilter);
+        public MeasurementMetadata ChangeMultiplier(double multiplier) => 
+            Multiplier == multiplier ? this : new MeasurementMetadata(Key, TagName, Adder, multiplier, MeasurementValueFilter);
 
         /// <summary>
         /// Creates a new instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="tagName"/>. All other fields remain the same.
         /// </summary>
         /// <param name="tagName">The tag name to set.</param>
         /// <returns>New instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="tagName"/>.</returns>
-        public MeasurementMetadata ChangeTagName(string tagName) => TagName == tagName ? this : new MeasurementMetadata(Key, tagName, Adder, Multiplier, MeasurementValueFilter);
+        public MeasurementMetadata ChangeTagName(string tagName) => 
+            TagName == tagName ? this : new MeasurementMetadata(Key, tagName, Adder, Multiplier, MeasurementValueFilter);
 
         /// <summary>
         /// Creates a new instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="measurementValueFilter"/>. All other fields remain the same.
         /// </summary>
         /// <param name="measurementValueFilter">the measurementValueFilter to set.</param>
         /// <returns>New instance of <see cref="MeasurementMetadata"/> using the provided <paramref name="measurementValueFilter"/>.</returns>
-        public MeasurementMetadata ChangeMeasurementValueFilter(MeasurementValueFilterFunction measurementValueFilter) => ReferenceEquals(MeasurementValueFilter, measurementValueFilter) ? this : new MeasurementMetadata(Key, TagName, Adder, Multiplier, measurementValueFilter);
+        public MeasurementMetadata ChangeMeasurementValueFilter(MeasurementValueFilterFunction measurementValueFilter) => 
+            ReferenceEquals(MeasurementValueFilter, measurementValueFilter) ? this : new MeasurementMetadata(Key, TagName, Adder, Multiplier, measurementValueFilter);
 
         #endregion
 
         #region [ Static ]
-
-        // Static Fields
 
         // Static Properties
 
@@ -154,10 +158,8 @@ namespace GSF.TimeSeries
         // Static Methods
 
         // Create measurement metadata for undefined
-        internal static void CreateUndefinedMeasurementMetadata()
-        {
-            Undefined = Undefined ?? new MeasurementMetadata(MeasurementKey.Undefined, null, 0, 1, null);
-        }
+        internal static void CreateUndefinedMeasurementMetadata() => 
+            Undefined ??= new MeasurementMetadata(MeasurementKey.Undefined, null, 0, 1, null);
 
         #endregion
     }

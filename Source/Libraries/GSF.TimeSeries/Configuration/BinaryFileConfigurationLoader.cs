@@ -69,9 +69,7 @@ namespace GSF.TimeSeries.Configuration
             OnStatusMessage(MessageLevel.Info, $"Loading binary based configuration from \"{FilePath}\".");
 
             using (FileStream stream = File.OpenRead(FilePath))
-            {
                 configuration = stream.DeserializeToDataSet();
-            }
 
             OnStatusMessage(MessageLevel.Info, "Binary based configuration successfully loaded.");
 
@@ -81,10 +79,8 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Not supported.
         /// </summary>
-        public override void Augment(DataSet configuration)
-        {
+        public override void Augment(DataSet configuration) => 
             throw new NotSupportedException();
-        }
 
         #endregion
     }

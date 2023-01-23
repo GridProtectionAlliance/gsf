@@ -74,9 +74,7 @@ namespace GSF.TimeSeries.Adapters
 
                 // Broadcast consumers receive all measurements, so add them to every signal route
                 foreach (List<Consumer> consumerList in GlobalSignalLookup.Values)
-                {
                     consumerList.AddRange(BroadcastConsumers);
-                }
             }
         }
 
@@ -211,8 +209,11 @@ namespace GSF.TimeSeries.Adapters
         }
 
         private GlobalCache m_globalCache;
+        
+        // ReSharper disable once NotAccessedField.Local
         private Action<string> m_onStatusMessage;
         private Action<Exception> m_onProcessException;
+        
         private readonly LocalCache m_injectMeasurementsLocalCache;
 
         /// <summary>
@@ -280,9 +281,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="sender">the sender object</param>
         /// <param name="measurements">the event arguments</param>
-        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
-        {
+        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements) => 
             m_injectMeasurementsLocalCache.Route(sender, measurements);
-        }
     }
 }

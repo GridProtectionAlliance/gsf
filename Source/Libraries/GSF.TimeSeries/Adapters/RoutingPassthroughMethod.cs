@@ -41,14 +41,11 @@ namespace GSF.TimeSeries.Adapters
         /// Creates <see cref="RoutingPassthroughMethod"/>.
         /// </summary>
         /// <param name="processMeasurementList"></param>
-        public RoutingPassthroughMethod(Action<List<IMeasurement>> processMeasurementList)
-        {
+        public RoutingPassthroughMethod(Action<List<IMeasurement>> processMeasurementList) => 
             ProcessMeasurementList = processMeasurementList ?? CallNothing;
-        }
 
-        void CallNothing(List<IMeasurement> measurement)
+        private void CallNothing(List<IMeasurement> measurement)
         {
-
         }
     }
 }

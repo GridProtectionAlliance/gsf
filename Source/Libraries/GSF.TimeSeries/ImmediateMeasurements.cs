@@ -68,21 +68,19 @@ namespace GSF.TimeSeries
         {
             m_parent = parent;
 
-            if (m_parent is not null)
-            {
-                m_parent.LagTimeUpdated += OnLagTimeUpdated;
-                m_parent.LeadTimeUpdated += OnLeadTimeUpdated;
-                m_realTimeFunction = () => m_parent.RealTime;
-            }
+            if (m_parent is null)
+                return;
+
+            m_parent.LagTimeUpdated += OnLagTimeUpdated;
+            m_parent.LeadTimeUpdated += OnLeadTimeUpdated;
+            m_realTimeFunction = () => m_parent.RealTime;
         }
 
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="ImmediateMeasurements"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~ImmediateMeasurements()
-        {
+        ~ImmediateMeasurements() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -106,18 +104,16 @@ namespace GSF.TimeSeries
             get
             {
                 double minValue = double.MaxValue;
-                double measurement;
 
                 foreach (MeasurementKey id in m_measurements.Keys)
                 {
-                    measurement = this[id];
-                    if (!double.IsNaN(measurement))
-                    {
-                        if (measurement < minValue)
-                        {
-                            minValue = measurement;
-                        }
-                    }
+                    double measurement = this[id];
+
+                    if (double.IsNaN(measurement))
+                        continue;
+
+                    if (measurement < minValue)
+                        minValue = measurement;
                 }
 
                 return minValue;
@@ -131,18 +127,16 @@ namespace GSF.TimeSeries
             get
             {
                 double maxValue = double.MinValue;
-                double measurement;
 
                 foreach (MeasurementKey id in m_measurements.Keys)
                 {
-                    measurement = this[id];
-                    if (!double.IsNaN(measurement))
-                    {
-                        if (measurement > maxValue)
-                        {
-                            maxValue = measurement;
-                        }
-                    }
+                    double measurement = this[id];
+
+                    if (double.IsNaN(measurement))
+                        continue;
+
+                    if (measurement > maxValue)
+                        maxValue = measurement;
                 }
 
                 return maxValue;
@@ -155,10 +149,7 @@ namespace GSF.TimeSeries
         public Func<Ticks> RealTimeFunction
         {
             get => m_realTimeFunction;
-            set
-            {
-                m_realTimeFunction = value ?? (() => DateTime.UtcNow.Ticks);
-            }
+            set => m_realTimeFunction = value ?? (() => DateTime.UtcNow.Ticks);
         }
 
         /// <summary>
@@ -175,14 +166,12 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), "LagTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), $"{nameof(LagTime)} must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
 
                 foreach (MeasurementKey id in m_measurements.Keys)
-                {
                     Measurement(id).LagTime = m_lagTime;
-                }
             }
         }
 
@@ -200,14 +189,12 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), "LeadTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), $"{nameof(LeadTime)} must be greater than zero, but it can be less than one");
 
                 m_leadTime = value;
 
                 foreach (MeasurementKey id in m_measurements.Keys)
-                {
                     Measurement(id).LeadTime = m_leadTime;
-                }
             }
         }
 
@@ -230,44 +217,38 @@ namespace GSF.TimeSeries
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                if (m_parent is not null)
                 {
-                    if (disposing)
-                    {
-                        if (m_parent is not null)
-                        {
-                            m_parent.LagTimeUpdated -= OnLagTimeUpdated;
-                            m_parent.LeadTimeUpdated -= OnLagTimeUpdated;
-                        }
-                        m_parent = null;
-
-                        if (m_measurements is not null)
-                            m_measurements.Clear();
-
-                        m_measurements = null;
-
-                        if (m_taggedMeasurements is not null)
-                            m_taggedMeasurements.Clear();
-
-                        m_taggedMeasurements = null;
-                    }
+                    m_parent.LagTimeUpdated -= OnLagTimeUpdated;
+                    m_parent.LeadTimeUpdated -= OnLagTimeUpdated;
                 }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                m_parent = null;
+
+                m_measurements?.Clear();
+                m_measurements = null;
+
+                m_taggedMeasurements?.Clear();
+                m_taggedMeasurements = null;
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
         /// <summary>Returns measurement list of specified tag, if it exists.</summary>
         /// <param name="tag">A <see cref="String"/> that indicates the tag to use.</param>
         /// <returns>A collection of measurement keys.</returns>
-        public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag)
-        {
-            return new ReadOnlyCollection<MeasurementKey>(m_taggedMeasurements[tag]);
-        }
+        public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag) => 
+            new(m_taggedMeasurements[tag]);
 
         /// <summary>Store new measurement.</summary>
         /// <param name="newMeasurement">New measurement value to update.</param>
@@ -277,23 +258,21 @@ namespace GSF.TimeSeries
             TemporalMeasurement measurement = Measurement(newMeasurement);
 
             // Set new value updating state flags if value was updated...
-            if (measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value))
-            {
-                measurement.Metadata = newMeasurement.Metadata;
-                measurement.StateFlags = newMeasurement.StateFlags;
-            }
+            if (!measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value))
+                return;
+
+            measurement.Metadata = newMeasurement.Metadata;
+            measurement.StateFlags = newMeasurement.StateFlags;
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
         /// <param name="id"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(MeasurementKey id)
-        {
-            return m_measurements.GetOrAdd(id, key => new TemporalMeasurement(m_lagTime, m_leadTime)
+        public TemporalMeasurement Measurement(MeasurementKey id) =>
+            m_measurements.GetOrAdd(id, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
                 Metadata = key.Metadata,
             });
-        }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
         /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
@@ -311,10 +290,8 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Clears the existing measurement cache.
         /// </summary>
-        public void ClearMeasurementCache()
-        {
+        public void ClearMeasurementCache() => 
             m_measurements.Clear();
-        }
 
         /// <summary>Defines tagged measurements from a data table.</summary>
         /// <remarks>Expects <see cref="String"/> based tag field to be aliased as "Tag" and <see cref="Guid"/> based measurement ID field to be aliased as "ID".</remarks>
@@ -325,10 +302,9 @@ namespace GSF.TimeSeries
             {
                 Guid id = row["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
                 MeasurementKey key = MeasurementKey.LookUpBySignalID(id);
+                
                 if (key != MeasurementKey.Undefined)
-                {
                     AddTaggedMeasurement(row["Tag"].ToNonNullString("_tag_"), key);
-                }
             }
         }
 
@@ -341,11 +317,11 @@ namespace GSF.TimeSeries
             // Get tag's measurement list
             List<MeasurementKey> measurements = m_taggedMeasurements.GetOrAdd(tag, new List<MeasurementKey>());
 
-            if (measurements.BinarySearch(id) < 0)
-            {
-                measurements.Add(id);
-                measurements.Sort();
-            }
+            if (measurements.BinarySearch(id) >= 0)
+                return;
+
+            measurements.Add(id);
+            measurements.Sort();
         }
 
         /// <summary>Calculates an average of all measurements.</summary>
@@ -354,17 +330,17 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Double"/> value representing the average of the measurements.</returns>
         public double CalculateAverage(ref int count)
         {
-            double measurement;
             double total = 0.0D;
 
             foreach (MeasurementKey id in m_measurements.Keys)
             {
-                measurement = this[id];
-                if (!double.IsNaN(measurement))
-                {
-                    total += measurement;
-                    count++;
-                }
+                double measurement = this[id];
+
+                if (double.IsNaN(measurement))
+                    continue;
+
+                total += measurement;
+                count++;
             }
 
             return total / count;
@@ -376,17 +352,17 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Double"/> value representing the average of the tags.</returns>
         public double CalculateTagAverage(string tag, ref int count)
         {
-            double measurement;
             double total = 0.0D;
 
             foreach (MeasurementKey id in m_taggedMeasurements[tag])
             {
-                measurement = this[id];
-                if (!double.IsNaN(measurement))
-                {
-                    total += measurement;
-                    count++;
-                }
+                double measurement = this[id];
+
+                if (double.IsNaN(measurement))
+                    continue;
+
+                total += measurement;
+                count++;
             }
 
             return total / count;
@@ -398,18 +374,16 @@ namespace GSF.TimeSeries
         public double TagMinimum(string tag)
         {
             double minValue = double.MaxValue;
-            double measurement;
 
             foreach (MeasurementKey id in m_taggedMeasurements[tag])
             {
-                measurement = this[id];
-                if (!double.IsNaN(measurement))
-                {
-                    if (measurement < minValue)
-                    {
-                        minValue = measurement;
-                    }
-                }
+                double measurement = this[id];
+
+                if (double.IsNaN(measurement))
+                    continue;
+
+                if (measurement < minValue)
+                    minValue = measurement;
             }
 
             return minValue;
@@ -421,18 +395,16 @@ namespace GSF.TimeSeries
         public double TagMaximum(string tag)
         {
             double maxValue = double.MinValue;
-            double measurement;
 
             foreach (MeasurementKey id in m_taggedMeasurements[tag])
             {
-                measurement = this[id];
-                if (!double.IsNaN(measurement))
-                {
-                    if (measurement > maxValue)
-                    {
-                        maxValue = measurement;
-                    }
-                }
+                double measurement = this[id];
+
+                if (double.IsNaN(measurement))
+                    continue;
+
+                if (measurement > maxValue)
+                    maxValue = measurement;
             }
 
             return maxValue;
@@ -442,29 +414,21 @@ namespace GSF.TimeSeries
         /// Updates the tracked temporal measurements lag time.
         /// </summary>
         /// <param name="lagTime">New lag time.</param>
-        protected void OnLagTimeUpdated(double lagTime)
-        {
+        protected void OnLagTimeUpdated(double lagTime) => 
             LagTime = lagTime;
-        }
 
         /// <summary>
         /// Updates the tracked temporal measurements lead time.
         /// </summary>
         /// <param name="leadTime">New lead time.</param>
-        protected void OnLeadTimeUpdated(double leadTime)
-        {
+        protected void OnLeadTimeUpdated(double leadTime) => 
             LeadTime = leadTime;
-        }
 
-        IEnumerator<TemporalMeasurement> IEnumerable<TemporalMeasurement>.GetEnumerator()
-        {
-            return m_measurements.Values.ToList().GetEnumerator();
-        }
+        IEnumerator<TemporalMeasurement> IEnumerable<TemporalMeasurement>.GetEnumerator() => 
+            m_measurements.Values.ToList().GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return m_measurements.Values.ToList().GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => 
+            m_measurements.Values.ToList().GetEnumerator();
 
         #endregion
     }

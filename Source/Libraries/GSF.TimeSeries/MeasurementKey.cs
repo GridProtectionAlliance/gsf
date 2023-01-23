@@ -123,19 +123,15 @@ namespace GSF.TimeSeries
         /// Returns a <see cref="string"/> that represents the current <see cref="MeasurementKey"/>.
         /// </summary>
         /// <returns>A <see cref="string"/> that represents the current <see cref="MeasurementKey"/>.</returns>
-        public override string ToString()
-        {
-            return $"{Source}:{ID}";
-        }
+        public override string ToString() => 
+            $"{Source}:{ID}";
 
         /// <summary>
         /// Serves as a hash function for the current <see cref="MeasurementKey"/>.
         /// </summary>
         /// <returns>A hash code for the current <see cref="MeasurementKey"/>.</returns>
-        public override int GetHashCode()
-        {
-            return m_hashCode;
-        }
+        public override int GetHashCode() => 
+            m_hashCode;
 
         #endregion
 
@@ -229,9 +225,7 @@ namespace GSF.TimeSeries
             // This lock prevents race conditions that might occur in the addValueFactory that
             // could cause different MeasurementKey objects to be written to the KeyCache and IDCache
             lock (s_syncEdits)
-            {
                 return s_idCache.AddOrUpdate(signalID, addValueFactory, updateValueFactory);
-            }
         }
 
         /// <summary>
@@ -335,13 +329,10 @@ namespace GSF.TimeSeries
         /// If creation succeeds, a new measurement key with matching signal ID, source, and ID.
         /// Otherwise, <see cref="Undefined"/>.
         /// </returns>
-        public static MeasurementKey LookUpOrCreate(Guid signalID, string value)
-        {
-            if (!TrySplit(value, out string source, out ulong id))
-                return LookUpOrCreate(signalID, Undefined.Source, Undefined.ID);
-
-            return LookUpOrCreate(signalID, source, id);
-        }
+        public static MeasurementKey LookUpOrCreate(Guid signalID, string value) => 
+            TrySplit(value, out string source, out ulong id) ? 
+                LookUpOrCreate(signalID, source, id) : 
+                LookUpOrCreate(signalID, Undefined.Source, Undefined.ID);
 
         /// <summary>
         /// Performs a lookup by signal ID and, failing that, attempts to
@@ -375,13 +366,10 @@ namespace GSF.TimeSeries
         /// If creation succeeds, a new measurement key with matching signal ID, source, and ID.
         /// Otherwise, <see cref="Undefined"/>.
         /// </returns>
-        public static MeasurementKey LookUpOrCreate(string value)
-        {
-            if (!TrySplit(value, out string source, out ulong id))
-                return Undefined;
-
-            return LookUpOrCreate(source, id);
-        }
+        public static MeasurementKey LookUpOrCreate(string value) => 
+            TrySplit(value, out string source, out ulong id) ? 
+                LookUpOrCreate(source, id) : 
+                Undefined;
 
         /// <summary>
         /// Performs a lookup by source and, failing that, attempts to create
@@ -432,18 +420,18 @@ namespace GSF.TimeSeries
                 // First attempt to look up an existing key
                 key = LookUpBySource(source, id);
 
-                if (key == Undefined)
+                if (key != Undefined)
+                    return key != Undefined;
+
+                try
                 {
-                    try
-                    {
-                        // Lookup failed - attempt to create it with a newly generated signal ID
-                        key = CreateOrUpdate(Guid.NewGuid(), source, id);
-                    }
-                    catch
-                    {
-                        // source is null or empty
-                        key = Undefined;
-                    }
+                    // Lookup failed - attempt to create it with a newly generated signal ID
+                    key = CreateOrUpdate(Guid.NewGuid(), source, id);
+                }
+                catch
+                {
+                    // source is null or empty
+                    key = Undefined;
                 }
             }
             else
@@ -484,6 +472,7 @@ namespace GSF.TimeSeries
         private static MeasurementKey CreateUndefinedMeasurementKey()
         {
             MeasurementKey key = new(Guid.Empty, ulong.MaxValue, "__");
+            
             // Lock on s_syncEdits is not required since method is only called by the static constructor
             s_keyCache.GetOrAdd(key.Source, _ => new ConcurrentDictionary<ulong, MeasurementKey>())[ulong.MaxValue] = key;
             return key;
@@ -495,11 +484,9 @@ namespace GSF.TimeSeries
         /// </summary>
         private static bool TrySplit(string value, out string source, out ulong id)
         {
-            string[] elem;
-
             if (!string.IsNullOrEmpty(value))
             {
-                elem = value.Split(':');
+                string[] elem = value.Split(':');
 
                 if (elem.Length == 2 && ulong.TryParse(elem[1].Trim(), out id))
                 {

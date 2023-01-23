@@ -309,7 +309,7 @@ namespace GSF.TimeSeries.Adapters
             enumeratedAdapters.AppendLine($"{instance.Name} Indexed Adapter Enumeration - {adapters.Length:N0} Total:\r\n");
 
             for (int i = 0; i < adapters.Length; i++)
-                enumeratedAdapters.AppendLine($"{i.ToString("N0").PadLeft(5)}: {adapters[i].Name}".TrimWithEllipsisMiddle(79));
+                enumeratedAdapters.AppendLine($"{i,5:N0}: {adapters[i].Name}".TrimWithEllipsisMiddle(79));
 
             instance.OnStatusMessage(MessageLevel.Info, enumeratedAdapters.ToString());
         }

@@ -100,10 +100,8 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="ServiceClientBase"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~ServiceClientBase()
-        {
+        ~ServiceClientBase() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -343,7 +341,7 @@ namespace GSF.TimeSeries
             long lastConnectAttempt = 0;
 
             // Connect to service and send commands.
-            while ((object)userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+            while (userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
@@ -403,7 +401,7 @@ namespace GSF.TimeSeries
 
                     timeoutCancellationToken.Cancel();
 
-                    while (m_authenticated && m_clientHelper.Enabled && (object)userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                    while (m_authenticated && m_clientHelper.Enabled && userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                     {
                         // Wait for a command from the user. 
                         userInput = System.Console.ReadLine()?.Trim();
@@ -476,25 +474,25 @@ namespace GSF.TimeSeries
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        m_clientHelper?.Dispose();
-                        m_remotingClient?.Dispose();
-                        m_errorLogger?.Dispose();
+            if (m_disposed)
+                return;
 
-                        m_clientHelper = null;
-                        m_remotingClient = null;
-                        m_errorLogger = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+            try
+            {
+                if (!disposing)
+                    return;
+
+                m_clientHelper?.Dispose();
+                m_remotingClient?.Dispose();
+                m_errorLogger?.Dispose();
+
+                m_clientHelper = null;
+                m_remotingClient = null;
+                m_errorLogger = null;
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -563,11 +561,11 @@ namespace GSF.TimeSeries
             // attempt to connect again with an encrypted password
             // because the server may only be authenticating against
             // the encrypted password
-            if (!m_clientHelper.RemotingClient.Enabled && !string.IsNullOrEmpty(password))
-            {
-                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
-                Connect();
-            }
+            if (m_clientHelper.RemotingClient.Enabled || string.IsNullOrEmpty(password))
+                return;
+
+            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
+            Connect();
         }
 
         private void PromptForCredentials(StringBuilder username, StringBuilder password)
@@ -634,28 +632,27 @@ namespace GSF.TimeSeries
 
         private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            if (m_remotingClient is TlsClient remotingClient)
+            if (m_remotingClient is not TlsClient remotingClient)
+                return false;
+
+            if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
             {
-                if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
-                {
-                    // Create an exception and do not check policy for localhost
-                    IPHostEntry localhost = Dns.GetHostEntry(nameof(localhost));
+                // Create an exception and do not check policy for localhost
+                IPHostEntry localhost = Dns.GetHostEntry(nameof(localhost));
 
-                    if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
-                        return true;
-                }
-
-                // Not connected to localhost, so use the policy checker
-                SimplePolicyChecker policyChecker = new()
-                {
-                    ValidPolicyErrors = remotingClient.ValidPolicyErrors,
-                    ValidChainFlags = remotingClient.ValidChainFlags
-                };
-
-                return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+                if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
+                    return true;
             }
 
-            return false;
+            // Not connected to localhost, so use the policy checker
+            SimplePolicyChecker policyChecker = new()
+            {
+                ValidPolicyErrors = remotingClient.ValidPolicyErrors,
+                ValidChainFlags = remotingClient.ValidChainFlags
+            };
+
+            return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+
         }
 
         private void DisplayHelp()
@@ -696,20 +693,16 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event argument.</param>
-        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e)
-        {
+        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e) => 
             m_authenticated = true;
-        }
 
         /// <summary>
         /// Client helper authentication failure reception handler.
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event argument.</param>
-        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e)
-        {
+        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e) => 
             m_authenticationFailure = true;
-        }
 
         /// <summary>
         /// Client helper service update reception handler.
@@ -774,13 +767,14 @@ namespace GSF.TimeSeries
                 if (!responseSuccess || !sourceCommand.Equals("GetReport", StringComparison.OrdinalIgnoreCase))
                     return;
 
-                if (e.Argument.Attachments[0] is byte[] reportData)
+                if (e.Argument.Attachments[0] is not byte[] reportData)
+                    return;
+
+                string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
+                File.WriteAllBytes(tempPath, reportData);
+                
+                using (Process.Start(tempPath))
                 {
-                    string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
-                    File.WriteAllBytes(tempPath, reportData);
-                    using (Process.Start(tempPath))
-                    {
-                    }
                 }
             }
             catch (Exception ex)
@@ -846,9 +840,7 @@ namespace GSF.TimeSeries
         private void WriteLine()
         {
             lock (m_displayLock)
-            {
                 System.Console.WriteLine();
-            }
         }
 
         private void WriteLine(string format, params object[] args)

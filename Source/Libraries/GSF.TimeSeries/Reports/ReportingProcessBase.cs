@@ -72,10 +72,10 @@ namespace GSF.TimeSeries.Reports
             };
 
             PersistSettings = true;
-            SettingsCategory = string.Format("{0}Reporting", ReportType);
+            SettingsCategory = $"{ReportType}Reporting";
             ArchiveFilePath = "Eval(statArchiveFile.FileName)";
             ReportLocation = nameof(Reports);
-            Title = string.Format("Eval(securityProvider.ApplicationName) {0} Report", ReportType);
+            Title = $"Eval(securityProvider.ApplicationName) {ReportType} Report";
             Company = "Eval(systemSettings.CompanyName)";
             IdleReportLifetime = 14.0D;
             EnableReportEmail = false;
@@ -183,37 +183,23 @@ namespace GSF.TimeSeries.Reports
             {
                 StringBuilder status = new();
 
-                status.AppendFormat("               Report type: {0}", ReportType ?? "undefined");
-                status.AppendLine();
-                status.AppendFormat("         Archive file path: {0}", FilePath.TrimFileName(ArchiveFilePath ?? "undefined", 51));
-                status.AppendLine();
-                status.AppendFormat("           Report location: {0}", FilePath.TrimFileName(ReportLocation ?? "undefined", 51));
-                status.AppendLine();
-                status.AppendFormat("              Report title: {0}", Title ?? "undefined");
-                status.AppendLine();
-                status.AppendFormat("      Idle report lifetime: {0:N2} days", IdleReportLifetime);
-                status.AppendLine();
-                status.AppendFormat("            Queued reports: {0:N0}", m_reportGenerationQueue.Count);
-                status.AppendLine();
-                status.AppendFormat("         Generated reports: {0:N0}", m_generatedReports);
-                status.AppendLine();
-                status.AppendFormat("    Last report generation: {0:yyyy-MM-dd HH:mm:ss} UTC", m_lastReportGenerationTime);
-                status.AppendLine();
-                status.AppendFormat("          Report e-mailing: {0}", EnableReportEmail ? "Enabled" : "Disabled");
-                status.AppendLine();
+                status.AppendLine($"               Report type: {ReportType ?? "undefined"}");
+                status.AppendLine($"         Archive file path: {FilePath.TrimFileName(ArchiveFilePath ?? "undefined", 51)}");
+                status.AppendLine($"           Report location: {FilePath.TrimFileName(ReportLocation ?? "undefined", 51)}");
+                status.AppendLine($"              Report title: {Title ?? "undefined"}");
+                status.AppendLine($"      Idle report lifetime: {IdleReportLifetime:N2} days");
+                status.AppendLine($"            Queued reports: {m_reportGenerationQueue.Count:N0}");
+                status.AppendLine($"         Generated reports: {m_generatedReports:N0}");
+                status.AppendLine($"    Last report generation: {m_lastReportGenerationTime:yyyy-MM-dd HH:mm:ss} UTC");
+                status.AppendLine($"          Report e-mailing: {(EnableReportEmail ? "Enabled" : "Disabled")}");
 
                 if (EnableReportEmail)
                 {
-                    status.AppendFormat("       Defined SMTP server: {0}", SmtpServer ?? "undefined");
-                    status.AppendLine();
-                    status.AppendFormat("              From address: {0}", FromAddress ?? "undefined");
-                    status.AppendLine();
-                    status.AppendFormat("              To addresses: {0}", ToAddresses ?? "undefined");
-                    status.AppendLine();
-                    status.AppendFormat("             SMTP username: {0}", SmtpUsername ?? "undefined");
-                    status.AppendLine();
-                    status.AppendFormat("             SMTP password: {0}", new string('*', SmtpSecurePassword?.Length ?? 0));
-                    status.AppendLine();
+                    status.AppendLine($"       Defined SMTP server: {SmtpServer ?? "undefined"}");
+                    status.AppendLine($"              From address: {FromAddress ?? "undefined"}");
+                    status.AppendLine($"              To addresses: {ToAddresses ?? "undefined"}");
+                    status.AppendLine($"             SMTP username: {SmtpUsername ?? "undefined"}");
+                    status.AppendLine($"             SMTP password: {new string('*', SmtpSecurePassword?.Length ?? 0)}");
                 }
 
                 return status.ToString();
@@ -248,12 +234,10 @@ namespace GSF.TimeSeries.Reports
         /// Returns the list of reports which are in the queue but are yet to be generated.
         /// </summary>
         /// <returns>The list of pending reports.</returns>
-        public List<string> GetPendingReportsList()
-        {
-            return m_reportGenerationQueue.ToArray()
-                .Select(reportDate => string.Format("{0} {1:yyyy-MM-dd}.pdf", Title, reportDate))
+        public List<string> GetPendingReportsList() =>
+            m_reportGenerationQueue.ToArray()
+                .Select(reportDate => $"{Title} {reportDate:yyyy-MM-dd}.pdf")
                 .ToList();
-        }
 
         /// <summary>
         /// Queues up a report to be generated on a separate thread.
@@ -267,11 +251,11 @@ namespace GSF.TimeSeries.Reports
 
             // ToArray is a thread-safe operation on ConcurrentQueue whereas using an enumerator
             // directly on a ConcurrentQueue can cause collection modified errors while iterating
-            if (m_reportGenerationQueue.ToArray().Count(tuple => tuple.Item1 == reportDate) == 0)
-            {
-                m_reportGenerationQueue.Enqueue(new Tuple<DateTime, bool>(reportDate, emailReport));
-                m_executeOperation.RunOnceAsync();
-            }
+            if (m_reportGenerationQueue.ToArray().Count(tuple => tuple.Item1 == reportDate) != 0)
+                return;
+
+            m_reportGenerationQueue.Enqueue(new Tuple<DateTime, bool>(reportDate, emailReport));
+            m_executeOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -280,17 +264,12 @@ namespace GSF.TimeSeries.Reports
         /// </summary>
         public void CleanReportLocation()
         {
-            FileInfo info;
-
-            foreach (string report in GetReportsList())
+            foreach (string report in GetReportsList().Where(IsReportFileName))
             {
-                if (IsReportFileName(report))
-                {
-                    info = new FileInfo(FilePath.GetAbsolutePath(Path.Combine(ReportLocation, report)));
+                FileInfo info = new(FilePath.GetAbsolutePath(Path.Combine(ReportLocation, report)));
 
-                    if ((DateTime.UtcNow - info.LastAccessTimeUtc).TotalDays > IdleReportLifetime)
-                        File.Delete(info.FullName);
-                }
+                if ((DateTime.UtcNow - info.LastAccessTimeUtc).TotalDays > IdleReportLifetime)
+                    File.Delete(info.FullName);
             }
         }
 
@@ -371,6 +350,7 @@ namespace GSF.TimeSeries.Reports
         {
             WindowsIdentity currentOwner = WindowsIdentity.GetCurrent();
 
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (currentOwner is not null)
             {
                 // Wait for existing processes to exit, for instance if the
@@ -396,7 +376,7 @@ namespace GSF.TimeSeries.Reports
 
                 // Dequeue only after the report is generated so that it
                 // remains in the list of pending reports during generation
-                m_reportGenerationQueue.TryDequeue(out tuple);
+                m_reportGenerationQueue.TryDequeue(out _);
                 m_generatedReports++;
                 m_lastReportGenerationTime = DateTime.UtcNow;
             }
@@ -464,22 +444,22 @@ namespace GSF.TimeSeries.Reports
         {
             string arg = args["reportLocation"];
 
-            if ((object)arg is not null)
+            if (arg is not null)
                 ReportLocation = arg.Trim();
 
             arg = args["title"];
 
-            if ((object)arg is not null)
+            if (arg is not null)
                 Title = arg.Trim();
 
             arg = args["company"];
 
-            if ((object)arg is not null)
+            if (arg is not null)
                 Company = arg.Trim();
 
             arg = args["idleReportLifetime"];
 
-            if ((object)arg is not null && double.TryParse(arg.Trim(), out double value))
+            if (arg is not null && double.TryParse(arg.Trim(), out double value))
                 IdleReportLifetime = value;
         }
 
@@ -488,7 +468,7 @@ namespace GSF.TimeSeries.Reports
         /// </summary>
         public virtual bool IsReportFileName(string fileName)
         {
-            string regex = string.Format(@"{0} (?<Date>[^.]+)\.pdf", Title);
+            string regex = $@"{Title} (?<Date>[^.]+)\.pdf";
             Match match = Regex.Match(fileName, regex);
 
             return match.Success && DateTime.TryParse(match.Groups["Date"].Value, out DateTime reportDate);
@@ -501,21 +481,18 @@ namespace GSF.TimeSeries.Reports
         {
             try
             {
-                string query = "Select * From Win32_Process Where ProcessID = " + processId;
+                string query = $"Select * From Win32_Process Where ProcessID = {processId}";
                 ManagementObjectSearcher searcher = new(query);
                 ManagementObjectCollection processList = searcher.Get();
-
-                object[] argList;
-                int returnVal;
 
                 // ReSharper disable once PossibleInvalidCastExceptionInForeachLoop
                 foreach (ManagementObject obj in processList)
                 {
-                    argList = new object[] { string.Empty, string.Empty };
-                    returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+                    object[] argList = { string.Empty, string.Empty };
+                    int returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
 
                     if (returnVal == 0)
-                        return argList[1] + "\\" + argList[0];
+                        return $"{argList[1]}\\{argList[0]}";
                 }
 
                 return "NO OWNER";

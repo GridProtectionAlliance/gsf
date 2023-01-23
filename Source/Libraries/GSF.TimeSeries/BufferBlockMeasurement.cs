@@ -30,22 +30,13 @@ namespace GSF.TimeSeries
     /// </summary>
     public class BufferBlockMeasurement : Measurement
     {
-        #region [ Members ]
-
-        // Members
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="BufferBlockMeasurement"/>.
         /// </summary>
-        public BufferBlockMeasurement()
-        {
-            // Value of measurement should be indeterminate since this a buffer
-            Value = double.NaN;
-        }
+        public BufferBlockMeasurement() => 
+            Value = double.NaN; // Value of measurement should be indeterminate since this a buffer
 
         /// <summary>
         /// Creates a new <see cref="BufferBlockMeasurement"/> from an existing buffer.

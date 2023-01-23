@@ -74,7 +74,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Defines the default value for the <see cref="IIndependentAdapterManager.SignalReferenceTemplate"/>.
         /// </summary>
-        public const string DefaultSignalReferenceTemplate = DefaultPointTagTemplate + "-CV";
+        public const string DefaultSignalReferenceTemplate = $"{DefaultPointTagTemplate}-CV";
 
         /// <summary>
         /// Defines the default value for the <see cref="IIndependentAdapterManager.DescriptionTemplate"/>.

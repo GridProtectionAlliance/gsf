@@ -50,45 +50,38 @@ namespace GSF.TimeSeries.Adapters
             public Consumer(IAdapter adapter)
             {
                 Methods = (adapter as IOptimizedRoutingConsumer)?.GetRoutingPassthroughMethods();
-                if (Methods is null)
-                {
-                    if (adapter is IActionAdapter actionAdapter)
-                    {
-                        m_callback = actionAdapter.QueueMeasurementsForProcessing;
-                    }
-                    else
-                    {
-                        m_callback = ((IOutputAdapter)adapter).QueueMeasurementsForProcessing;
-                    }
 
-                    m_task = new ScheduledTask();
-                    m_task.Running += m_task_Running;
-                    m_pendingMeasurements = new ConcurrentQueue<List<IMeasurement>>();
-                    MeasurementsToRoute = new List<IMeasurement>();
-                }
+                if (Methods is not null)
+                    return;
+
+                m_callback = adapter is IActionAdapter actionAdapter ? 
+                    actionAdapter.QueueMeasurementsForProcessing :
+                    ((IOutputAdapter)adapter).QueueMeasurementsForProcessing;
+
+                m_task = new ScheduledTask();
+                m_task.Running += m_task_Running;
+                m_pendingMeasurements = new ConcurrentQueue<List<IMeasurement>>();
+                MeasurementsToRoute = new List<IMeasurement>();
             }
 
             public void RoutingComplete()
             {
-                if (MeasurementsToRoute.Count > 0)
-                {
-                    m_pendingMeasurements.Enqueue(MeasurementsToRoute);
-                    MeasurementsToRoute = new List<IMeasurement>();
-                    m_task.Start();
-                }
+                if (MeasurementsToRoute.Count <= 0)
+                    return;
+
+                m_pendingMeasurements.Enqueue(MeasurementsToRoute);
+                MeasurementsToRoute = new List<IMeasurement>();
+                m_task.Start();
             }
 
-            void m_task_Running(object sender, EventArgs<ScheduledTaskRunningReason> e)
+            private void m_task_Running(object sender, EventArgs<ScheduledTaskRunningReason> e)
             {
                 if (e.Argument == ScheduledTaskRunningReason.Disposing)
                     return;
 
-                while (m_pendingMeasurements.TryDequeue(out List<IMeasurement> lst))
-                {
-                    m_callback(lst);
-                }
+                while (m_pendingMeasurements.TryDequeue(out List<IMeasurement> measurements))
+                    m_callback(measurements);
             }
-
         }
 
         private class GlobalCache
@@ -124,6 +117,7 @@ namespace GSF.TimeSeries.Adapters
                 {
                     IAdapter consumerAdapter = kvp.Key;
                     Consumer consumer = kvp.Value;
+                    
                     if (consumer.Methods is not null)
                     {
                         RoutingPassthroughAdapters.Add(consumer.Methods);
@@ -131,12 +125,14 @@ namespace GSF.TimeSeries.Adapters
                     else
                     {
                         NormalDestinationAdapters.Add(consumer);
+                        
                         if (consumerAdapter.InputMeasurementKeys is not null)
                         {
                             // Create routes for each of the consumer's input signals
                             foreach (MeasurementKey key in consumerAdapter.InputMeasurementKeys)
                             {
                                 List<Consumer> list = GlobalSignalLookup[key.RuntimeID];
+                                
                                 if (list is null)
                                 {
                                     list = new List<Consumer>();
@@ -228,6 +224,7 @@ namespace GSF.TimeSeries.Adapters
         {
             if (producerAdapters is null)
                 throw new ArgumentNullException(nameof(producerAdapters));
+            
             if (consumerAdapters is null)
                 throw new ArgumentNullException(nameof(consumerAdapters));
 
@@ -250,31 +247,22 @@ namespace GSF.TimeSeries.Adapters
             Dictionary<IAdapter, Consumer> consumerLookup = new(m_globalCache.GlobalDestinationLookup);
 
             foreach (IAdapter consumerAdapter in consumerAdapters.NewAdapter)
-            {
                 consumerLookup.Add(consumerAdapter, new Consumer(consumerAdapter));
-            }
 
             foreach (IAdapter consumerAdapter in consumerAdapters.OldAdapter)
-            {
                 consumerLookup.Remove(consumerAdapter);
-            }
 
             m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
             RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x is not null);
-
         }
 
-        void m_task_Disposing(object sender, EventArgs e)
-        {
+        private void m_task_Disposing(object sender, EventArgs e) => 
             m_onProcessException(new Exception("Routing table disposing."));
-        }
 
-        void m_task_UnhandledException(object sender, EventArgs<Exception> e)
-        {
+        private void m_task_UnhandledException(object sender, EventArgs<Exception> e) => 
             m_onProcessException(e.Argument);
-        }
 
-        void m_task_Running(object sender, EventArgs<ScheduledTaskRunningReason> e)
+        private void m_task_Running(object sender, EventArgs<ScheduledTaskRunningReason> e)
         {
             if (e.Argument == ScheduledTaskRunningReason.Disposing)
                 return;
@@ -287,10 +275,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 m_lastStatusUpdate = ShortTime.Now;
                 Log.Publish(MessageLevel.Info, MessageFlags.None, "Routing Update",
-                string.Format("Route Operations: {0}, Input Frames: {1}, Input Measurements: {2}, Output Measurements: {3}",
-                            m_routeOperations, m_measurementsRoutedInputFrames,
-                            m_measurementsRoutedInputMeasurements,
-                            m_measurementsRoutedOutput));
+                    $"Route Operations: {m_routeOperations}, Input Frames: {m_measurementsRoutedInputFrames}, Input Measurements: {m_measurementsRoutedInputMeasurements}, Output Measurements: {m_measurementsRoutedOutput}");
             }
 
             GlobalCache map = m_globalCache;
@@ -305,11 +290,10 @@ namespace GSF.TimeSeries.Adapters
                     Interlocked.Add(ref m_pendingMeasurements, -measurements.Count);
 
                     //For loops are faster than ForEach for List<T>
+                    
                     //Process Optimized Consumers
                     for (int x = 0; x < map.RoutingPassthroughAdapters.Count; x++)
-                    {
                         map.RoutingPassthroughAdapters[x].ProcessMeasurementList(measurements);
-                    }
 
                     //Process Broadcast Consumers
                     for (int x = 0; x < map.BroadcastConsumers.Count; x++)
@@ -320,10 +304,12 @@ namespace GSF.TimeSeries.Adapters
 
                     m_measurementsRoutedInputFrames++;
                     m_measurementsRoutedInputMeasurements += measurements.Count;
+                    
                     for (int x = 0; x < measurements.Count; x++)
                     {
                         IMeasurement measurement = measurements[x];
                         List<Consumer> consumers = map.GlobalSignalLookup[measurement.Key.RuntimeID];
+                        
                         if (consumers is not null)
                         {
                             for (int i = 0; i < consumers.Count; i++)
@@ -339,15 +325,16 @@ namespace GSF.TimeSeries.Adapters
                     if (measurementsRouted > m_batchSize)
                     {
                         measurementsRouted = 0;
+                        
                         foreach (Consumer consumer in map.NormalDestinationAdapters)
                         {
                             measurementsRouted = Math.Max(measurementsRouted, consumer.MeasurementsToRoute.Count);
+                            
                             if (consumer.MeasurementsToRoute.Count > m_batchSize)
                             {
                                 foreach (Consumer c2 in map.NormalDestinationAdapters)
-                                {
                                     c2.RoutingComplete();
-                                }
+                                
                                 measurementsRouted = 0;
                                 break;
                             }
@@ -358,23 +345,19 @@ namespace GSF.TimeSeries.Adapters
             finally
             {
                 foreach (Consumer consumer in map.NormalDestinationAdapters)
-                {
                     consumer.RoutingComplete();
-                }
             }
         }
-
-
+        
         private void Route(List<IMeasurement> measurements)
         {
-            if (measurements.Count > 0)
-            {
-                m_inboundQueue.Enqueue(measurements);
-                if (Interlocked.Add(ref m_pendingMeasurements, measurements.Count) > m_maxPendingMeasurements)
-                {
-                    m_task.Start();
-                }
-            }
+            if (measurements.Count <= 0)
+                return;
+
+            m_inboundQueue.Enqueue(measurements);
+            
+            if (Interlocked.Add(ref m_pendingMeasurements, measurements.Count) > m_maxPendingMeasurements)
+                m_task.Start();
         }
 
         private void Route(object sender, EventArgs<ICollection<IMeasurement>> measurements)
@@ -391,12 +374,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="sender">the sender object</param>
         /// <param name="measurements">the event arguments</param>
-        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
-        {
+        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements) => 
             Route(sender, measurements);
-        }
-
-
-
     }
 }

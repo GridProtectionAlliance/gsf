@@ -52,6 +52,7 @@ using Timer = System.Timers.Timer;
 // ReSharper disable UnusedMember.Local
 // ReSharper disable MemberHidesStaticFromOuterClass
 // ReSharper disable InconsistentlySynchronizedField
+// ReSharper disable MemberCanBePrivate.Local
 namespace GSF.TimeSeries.Statistics
 {
     /// <summary>
@@ -132,10 +133,8 @@ namespace GSF.TimeSeries.Statistics
 
             #region [ Constructors ]
 
-            public DBUpdateHelper(AdoDataConnection database)
-            {
+            public DBUpdateHelper(AdoDataConnection database) => 
                 m_database = database;
-            }
 
             #endregion
 
@@ -166,35 +165,35 @@ namespace GSF.TimeSeries.Statistics
                 }
             }
 
-            public string Name => m_name ?? (m_name = GetName());
+            public string Name => m_name ??= GetName();
 
             public int HistorianID => m_historianID ?? (int)(m_historianID = GetHistorianID());
 
-            public object DeviceID => m_deviceID ?? (m_deviceID = GetDeviceID());
+            public object DeviceID => m_deviceID ??= GetDeviceID();
 
-            public string PointTag => m_pointTag ?? (m_pointTag = GetPointTag());
+            public string PointTag => m_pointTag ??= GetPointTag();
 
             public int SignalTypeID => m_signalTypeID ?? (int)(m_signalTypeID = GetSignalTypeID());
 
-            public string SignalReference => m_signalReference ?? (m_signalReference = GetSignalReference());
+            public string SignalReference => m_signalReference ??= GetSignalReference();
 
-            public string Description => m_description ?? (m_description = GetDescription());
+            public string Description => m_description ??= GetDescription();
 
             public int Index => Convert.ToInt32(m_statistic["SignalIndex"]);
 
             private Guid NodeID => m_nodeID ?? (Guid)(m_nodeID = GetNodeID());
 
-            private string Company => m_company ?? (m_company = GetCompany());
+            private string Company => m_company ??= GetCompany();
 
-            private string NodeOwner => m_nodeOwner ?? (m_nodeOwner = GetNodeOwner());
+            private string NodeOwner => m_nodeOwner ??= GetNodeOwner();
 
             private string Category => m_source.SourceCategory;
 
             private string Acronym => m_source.SourceAcronym;
 
-            private Dictionary<string, DataRow> DeviceLookup => m_deviceLookup ?? (m_deviceLookup = GetDeviceLookup());
+            private Dictionary<string, DataRow> DeviceLookup => m_deviceLookup ??= GetDeviceLookup();
 
-            private Dictionary<int, string> CompanyLookup => m_companyLookup ?? (m_companyLookup = GetCompanyLookup());
+            private Dictionary<int, string> CompanyLookup => m_companyLookup ??= GetCompanyLookup();
 
             #endregion
 
@@ -221,7 +220,7 @@ namespace GSF.TimeSeries.Statistics
                         .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
                 }
 
-                substitutions = substitutions.ToDictionary(kvp => string.Concat("{", kvp.Key, "}"), kvp => kvp.Value);
+                substitutions = substitutions.ToDictionary(kvp => $"{{{kvp.Key}}}", kvp => kvp.Value);
                 substitutions["{}"] = m_source.SourceName;
 
                 return parser.Execute(substitutions);
@@ -302,19 +301,19 @@ namespace GSF.TimeSeries.Statistics
 
             public T ExecuteScalar<T>(string queryFormat, params object[] parameters)
             {
-                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => "p" + index).ToArray());
+                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => $"p{index}").ToArray());
                 return (T)Convert.ChangeType(m_database.Connection.ExecuteScalar(query, DataExtensions.DefaultTimeoutDuration, parameters), typeof(T));
             }
 
             public void ExecuteNonQuery(string queryFormat, params object[] parameters)
             {
-                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => "p" + index).ToArray());
+                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => $"p{index}").ToArray());
                 m_database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, parameters);
             }
 
             public DataTable RetrieveData(string queryFormat, params object[] parameters)
             {
-                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => "p" + index).ToArray());
+                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => $"p{index}").ToArray());
                 return m_database.Connection.RetrieveData(m_database.AdapterType, query, DataExtensions.DefaultTimeoutDuration, parameters);
             }
 
@@ -386,25 +385,25 @@ namespace GSF.TimeSeries.Statistics
 
             m_updateStatisticMeasurementsOperation = new LongSynchronizedOperation(UpdateStatisticMeasurements, ex =>
             {
-                string message = "An error occurred while attempting to update statistic measurement definitions: " + ex.Message;
+                string message = $"An error occurred while attempting to update statistic measurement definitions: {ex.Message}";
                 OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
             m_loadStatisticsOperation = new LongSynchronizedOperation(LoadStatistics, ex =>
             {
-                string message = "An error occurred while attempting to load statistic definitions: " + ex.Message;
+                string message = $"An error occurred while attempting to load statistic definitions: {ex.Message}";
                 OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
             m_calculateStatisticsOperation = new LongSynchronizedOperation(CalculateStatistics, ex =>
             {
-                string message = "An error occurred while attempting to calculate statistics: " + ex.Message;
+                string message = $"An error occurred while attempting to calculate statistics: {ex.Message}";
                 OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
             m_validateSourceReferencesOperation = new ShortSynchronizedOperation(ValidateSourceReferences, ex =>
             {
-                string message = "An error occurred while attempting to validate statistic source references: " + ex.Message;
+                string message = $"An error occurred while attempting to validate statistic source references: {ex.Message}";
                 OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
@@ -475,10 +474,7 @@ namespace GSF.TimeSeries.Statistics
             Dictionary<string, string> settings = Settings;
 
             // Load the statistic reporting interval
-            if (settings.TryGetValue("reportingInterval", out string setting))
-                m_reportingInterval = double.Parse(setting) * 1000.0;
-            else
-                m_reportingInterval = 10000.0;
+            m_reportingInterval = settings.TryGetValue("reportingInterval", out string setting) ? double.Parse(setting) * 1000.0 : 10000.0;
 
             if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
             {
@@ -501,16 +497,16 @@ namespace GSF.TimeSeries.Statistics
         {
             foreach (IMeasurement measurement in measurements)
             {
-                if (m_lastStatisticCalculationTime == default(DateTime))
+                if (m_lastStatisticCalculationTime == default)
                     m_lastStatisticCalculationTime = measurement.Timestamp;
 
                 base.QueueMeasurementsForProcessing(new [] { measurement });
 
-                if (!UseLocalClockAsRealTime && TrackLatestMeasurements)
-                {
-                    if (RealTime >= m_lastStatisticCalculationTime.AddMilliseconds(m_reportingInterval).Ticks)
-                        CalculateStatistics();
-                }
+                if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
+                    continue;
+
+                if (RealTime >= m_lastStatisticCalculationTime.AddMilliseconds(m_reportingInterval).Ticks)
+                    CalculateStatistics();
             }
         }
 
@@ -522,11 +518,11 @@ namespace GSF.TimeSeries.Statistics
         {
             base.Start();
 
-            if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
-            {
-                m_statisticCalculationTimer.Start();
-                OnStatusMessage(MessageLevel.Info, "Started statistics calculation timer.");
-            }
+            if (!UseLocalClockAsRealTime && TrackLatestMeasurements)
+                return;
+
+            m_statisticCalculationTimer.Start();
+            OnStatusMessage(MessageLevel.Info, "Started statistics calculation timer.");
         }
 
         /// <summary>
@@ -662,7 +658,7 @@ namespace GSF.TimeSeries.Statistics
                     }
 
                     // Get the statistic measurements from the database which have already been defined for this source
-                    string args = string.Join(",", signalReferences.Select((_, index) => string.Concat("{", index, "}")));
+                    string args = string.Join(",", signalReferences.Select((_, index) => $"{{{index}}}"));
                     List<DataRow> statisticMeasurements = helper.RetrieveData(string.Format(StatisticMeasurementSelectFormat, args), signalReferences.ToArray<object>()).Select().ToList();
 
                     // If the number of statistics for the source category matches
@@ -811,12 +807,12 @@ namespace GSF.TimeSeries.Statistics
 
             foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select("SignalType = 'STAT'"))
             {
-                if (sourceLookup.TryGetValue(row.Field<string>(nameof(SignalReference)), out StatisticSource source))
-                {
-                    List<DataRow> statisticMeasurements = activeMeasurementsLookup.GetOrAdd(source, _ => new List<DataRow>());
-                    statisticMeasurements.Add(row);
-                    statisticMeasurementCount++;
-                }
+                if (!sourceLookup.TryGetValue(row.Field<string>(nameof(SignalReference)), out StatisticSource source))
+                    continue;
+
+                List<DataRow> statisticMeasurements = activeMeasurementsLookup.GetOrAdd(source, _ => new List<DataRow>());
+                statisticMeasurements.Add(row);
+                statisticMeasurementCount++;
             }
 
             // Update StatisticMeasurements collections for all sources
@@ -884,9 +880,11 @@ namespace GSF.TimeSeries.Statistics
 
                 // Calculate statistics
                 if (measurements is not null)
+                {
                     return measurements
                         .Select(measurement => CalculateStatistic(statistics, serverTime, source, measurement))
                         .Where(calculatedStatistic => calculatedStatistic is not null);
+                }
             }
             catch (Exception ex)
             {
@@ -909,7 +907,7 @@ namespace GSF.TimeSeries.Statistics
                     int signalIndex = Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST", StringComparison.Ordinal) + 3));
 
                     // Find the statistic corresponding to the current measurement
-                    Statistic statistic = statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalIndex == stat.Index));
+                    Statistic statistic = statistics.FirstOrDefault(stat => source.SourceCategory == stat.Source && signalIndex == stat.Index);
 
                     if (statistic is not null)
                     {
@@ -939,7 +937,7 @@ namespace GSF.TimeSeries.Statistics
                             {
                                 OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to publish statistic \"{signalReference}\" via SNMP: {ex.Message}", ex));
                             }
-                        }    
+                        }
 
                         // Calculate the current value of the statistic measurement
                         return new Measurement()
@@ -986,11 +984,11 @@ namespace GSF.TimeSeries.Statistics
             {
                 Timer reloadStatisticsTimer = m_reloadStatisticsTimer;
 
-                if (reloadStatisticsTimer is not null)
-                {
-                    reloadStatisticsTimer.Stop();
-                    reloadStatisticsTimer.Start();
-                }
+                if (reloadStatisticsTimer is null)
+                    return;
+
+                reloadStatisticsTimer.Stop();
+                reloadStatisticsTimer.Start();
             }
             catch (ObjectDisposedException ex)
             {
@@ -1017,7 +1015,7 @@ namespace GSF.TimeSeries.Statistics
         {
             try
             {
-                BeforeCalculate?.Invoke(this, new EventArgs());
+                BeforeCalculate?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -1029,7 +1027,7 @@ namespace GSF.TimeSeries.Statistics
         {
             try
             {
-                Calculated?.Invoke(this, new EventArgs());
+                Calculated?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -1133,11 +1131,11 @@ namespace GSF.TimeSeries.Statistics
             {
                 for (int i = 0; i < StatisticSources.Count; i++)
                 {
-                    if (StatisticSources[i].SourceReference.TryGetTarget(out object target) && target == source)
-                    {
-                        StatisticSources.RemoveAt(i);
-                        break;
-                    }
+                    if (!StatisticSources[i].SourceReference.TryGetTarget(out object target) || target != source)
+                        continue;
+
+                    StatisticSources.RemoveAt(i);
+                    break;
                 }
             }
 
@@ -1183,11 +1181,11 @@ namespace GSF.TimeSeries.Statistics
             {
                 foreach (StatisticSource statisticSource in StatisticSources)
                 {
-                    if (statisticSource.SourceAcronym.Equals(acronym, StringComparison.OrdinalIgnoreCase))
-                    {
-                        sourceCategory = statisticSource.SourceCategory;
-                        return true;
-                    }
+                    if (!statisticSource.SourceAcronym.Equals(acronym, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    sourceCategory = statisticSource.SourceCategory;
+                    return true;
                 }
             }
 
@@ -1231,7 +1229,7 @@ namespace GSF.TimeSeries.Statistics
                     .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
             }
 
-            substitutions = substitutions.ToDictionary(kvp => string.Concat("{", kvp.Key, "}"), kvp => kvp.Value);
+            substitutions = substitutions.ToDictionary(kvp => $"{{{kvp.Key}}}", kvp => kvp.Value);
             substitutions["{}"] = source.SourceName;
 
             return $"{parser.Execute(substitutions)}!{source.SourceAcronym}-ST{statistic.Index}";

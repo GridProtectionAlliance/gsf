@@ -35,12 +35,6 @@ namespace GSF.TimeSeries.Transport
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class TemporalClientSubscriptionProxy : FacileActionAdapterBase
     {
-        #region [ Members ]
-
-        // Fields
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
@@ -61,11 +55,8 @@ namespace GSF.TimeSeries.Transport
         /// Proxies measurements to parent adapter for processing.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            if (Parent is not null)
-                Parent.QueueMeasurementsForProcessing(measurements);
-        }
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements) => 
+            Parent?.QueueMeasurementsForProcessing(measurements);
 
         /// <summary>
         /// Gets a short one-line status of this <see cref="TemporalClientSubscriptionProxy"/>.

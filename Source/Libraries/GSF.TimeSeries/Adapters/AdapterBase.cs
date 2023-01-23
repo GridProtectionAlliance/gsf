@@ -468,7 +468,7 @@ namespace GSF.TimeSeries.Adapters
                 if (dataSource is not null)
                     status.AppendLine($"    Referenced data source: {dataSource.DataSetName}, {dataSource.Tables.Count:N0} tables");
 
-                status.AppendLine($"    Initialization timeout: {(InitializationTimeout < 0 ? "Infinite" : InitializationTimeout + " milliseconds")}");
+                status.AppendLine($"    Initialization timeout: {(InitializationTimeout < 0 ? "Infinite" : $"{InitializationTimeout} milliseconds")}");
                 status.AppendLine($"       Adapter initialized: {Initialized}");
                 status.AppendLine($"         Operational state: {(Enabled ? "Running" : "Stopped")}");
                 status.AppendLine($"         Connect on demand: {!AutoStart}");
@@ -480,7 +480,7 @@ namespace GSF.TimeSeries.Adapters
                 {
                     status.AppendLine($"     Start time constraint: {(StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
                     status.AppendLine($"      Stop time constraint: {(StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"))}");
-                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"))}");
+                    status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? "Default" : ProcessingInterval == 0 ? "As fast as possible" : $"{ProcessingInterval} milliseconds")}");
                 }
                 
                 status.AppendLine($"   Item reporting interval: Every {MeasurementReportingInterval:N0} items");
@@ -503,7 +503,7 @@ namespace GSF.TimeSeries.Adapters
                     string value = item.Value.Trim();
                     
                     if (value.Length > 50)
-                        value = value.TruncateRight(47) + "...";
+                        value = $"{value.TruncateRight(47)}...";
 
                     status.AppendLine($"{new string(keyChars).TruncateRight(25),25} = {value,-50}");
                 }
@@ -586,14 +586,14 @@ namespace GSF.TimeSeries.Adapters
 
             Dictionary<string, string> settings = Settings;
 
-            InputMeasurementKeys = settings.TryGetValue("inputMeasurementKeys", out string setting) ? 
+            InputMeasurementKeys = settings.TryGetValue(nameof(InputMeasurementKeys), out string setting) ? 
                 ParseInputMeasurementKeys(DataSource, true, setting) : 
                 Array.Empty<MeasurementKey>();
 
-            if (settings.TryGetValue("outputMeasurements", out setting))
+            if (settings.TryGetValue(nameof(OutputMeasurements), out setting))
                 OutputMeasurements = ParseOutputMeasurements(DataSource, true, setting);
 
-            MeasurementReportingInterval = settings.TryGetValue("measurementReportingInterval", out setting) ? 
+            MeasurementReportingInterval = settings.TryGetValue(nameof(MeasurementReportingInterval), out setting) ? 
                 int.Parse(setting) : 
                 DefaultMeasurementReportingInterval;
 
@@ -602,8 +602,8 @@ namespace GSF.TimeSeries.Adapters
             else
                 AutoStart = true;
 
-            bool startTimeDefined = settings.TryGetValue("startTimeConstraint", out string startTime);
-            bool stopTimeDefined = settings.TryGetValue("stopTimeConstraint", out string stopTime);
+            bool startTimeDefined = settings.TryGetValue(nameof(StartTimeConstraint), out string startTime);
+            bool stopTimeDefined = settings.TryGetValue(nameof(StopTimeConstraint), out string stopTime);
 
             if (startTimeDefined || stopTimeDefined)
             {
@@ -611,7 +611,7 @@ namespace GSF.TimeSeries.Adapters
                 SetTemporalConstraint(startTime, stopTime, parameters);
             }
 
-            if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out int processingInterval))
+            if (settings.TryGetValue(nameof(ProcessingInterval), out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out int processingInterval))
                 ProcessingInterval = processingInterval;
         }
 
@@ -713,8 +713,13 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Defines a temporal processing constraint for the adapter.", "Administrator", "Editor", "Viewer")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
-            m_startTimeConstraint = string.IsNullOrWhiteSpace(startTime) ? DateTime.MinValue : ParseTimeTag(startTime);
-            m_stopTimeConstraint = string.IsNullOrWhiteSpace(stopTime) ? DateTime.MaxValue : ParseTimeTag(stopTime);
+            m_startTimeConstraint = string.IsNullOrWhiteSpace(startTime) ? 
+                DateTime.MinValue : 
+                ParseTimeTag(startTime);
+            
+            m_stopTimeConstraint = string.IsNullOrWhiteSpace(stopTime) ? 
+                DateTime.MaxValue : 
+                ParseTimeTag(stopTime);
         }
 
         /// <summary>

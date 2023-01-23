@@ -48,10 +48,8 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Creates a new instance of the <see cref="StatisticValueStateCache"/>.
         /// </summary>
-        public StatisticValueStateCache()
-        {
+        public StatisticValueStateCache() => 
             m_statisticValueStates = new Dictionary<object, Dictionary<string, StatisticValueState>>();
-        }
 
         #endregion
 
@@ -94,8 +92,7 @@ namespace GSF.TimeSeries.Statistics
                     // Attach to Disposed event of source, if defined
                     EventInfo disposedEvent = source.GetType().GetEvent("Disposed");
 
-                    if (disposedEvent is not null)
-                        disposedEvent.GetAddMethod().Invoke(source, new object[] { new EventHandler(StatisticSourceDisposed) });
+                    disposedEvent?.GetAddMethod().Invoke(source, new object[] { new EventHandler(StatisticSourceDisposed) });
                 }
             }
 

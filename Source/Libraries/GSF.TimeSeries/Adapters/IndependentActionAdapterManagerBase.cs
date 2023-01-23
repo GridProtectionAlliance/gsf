@@ -209,7 +209,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for output measurement point tag names.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for output measurement point tag names, typically an expression like \"" + DefaultPointTagTemplate + "\" where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
+        [Description($"Defines template for output measurement point tag names, typically an expression like \"{DefaultPointTagTemplate}\" where \"{{0}}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{{0}}\" token is not required, property can be overridden to provide desired value.")]
         [DefaultValue(DefaultPointTagTemplate)]
         public virtual string PointTagTemplate { get; set; } = DefaultPointTagTemplate;
 
@@ -225,7 +225,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for output measurement signal reference names.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for output measurement signal reference names, typically an expression like \"" + DefaultSignalReferenceTemplate + "\" where \"{0}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{0}\" token is not required, property can be overridden to provide desired value.")]
+        [Description($"Defines template for output measurement signal reference names, typically an expression like \"{DefaultSignalReferenceTemplate}\" where \"{{0}}\" is substituted with this adapter name, a dash and then the PerAdapterOutputNames value for the current measurement. Note that \"{{0}}\" token is not required, property can be overridden to provide desired value.")]
         [DefaultValue(DefaultSignalReferenceTemplate)]
         public virtual string SignalReferenceTemplate { get; set; } = DefaultSignalReferenceTemplate;
 
@@ -233,7 +233,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for output measurement descriptions.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for output measurement descriptions, typically an expression like \"" + DefaultDescriptionTemplate + "\".")]
+        [Description($"Defines template for output measurement descriptions, typically an expression like \"{DefaultDescriptionTemplate}\".")]
         [DefaultValue(DefaultDescriptionTemplate)]
         public virtual string DescriptionTemplate { get; set; } = DefaultDescriptionTemplate;
 
@@ -241,7 +241,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets template for the parent device acronym used to group associated output measurements.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines template for the parent device acronym used to group associated output measurements, typically an expression like \"" + DefaultParentDeviceAcronymTemplate + "\" where \"{0}\" is substituted with this adapter name. Set to blank value to create no parent device associated output measurements. Note that \"{0}\" token is not required, you can simply use a specific device acronym.")]
+        [Description($"Defines template for the parent device acronym used to group associated output measurements, typically an expression like \"{DefaultParentDeviceAcronymTemplate}\" where \"{{0}}\" is substituted with this adapter name. Set to blank value to create no parent device associated output measurements. Note that \"{{0}}\" token is not required, you can simply use a specific device acronym.")]
         [DefaultValue(DefaultParentDeviceAcronymTemplate)]
         public virtual string ParentDeviceAcronymTemplate { get; set; } = DefaultParentDeviceAcronymTemplate;
 

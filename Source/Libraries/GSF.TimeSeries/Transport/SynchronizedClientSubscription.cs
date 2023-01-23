@@ -35,6 +35,8 @@ using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Transport.TSSC;
 
+// ReSharper disable InconsistentlySynchronizedField
+// ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries.Transport
 {
     /// <summary>
@@ -103,8 +105,10 @@ namespace GSF.TimeSeries.Transport
             SubscriberID = subscriberID;
             m_compressionModes = compressionModes;
 
-            SignalIndexCache = new SignalIndexCache();
-            SignalIndexCache.SubscriberID = subscriberID;
+            SignalIndexCache = new SignalIndexCache
+            {
+                SubscriberID = subscriberID
+            };
 
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
@@ -202,7 +206,7 @@ namespace GSF.TimeSeries.Transport
                 base.ProcessingInterval = value;
 
                 // Update processing interval in private temporal session, if defined
-                if (m_iaonSession is not null && m_iaonSession.AllAdapters is not null)
+                if (m_iaonSession?.AllAdapters != null)
                     m_iaonSession.AllAdapters.ProcessingInterval = value;
             }
         }
@@ -272,16 +276,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the status of the active temporal session, if any.
         /// </summary>
-        public string TemporalSessionStatus
-        {
-            get
-            {
-                if (m_iaonSession is null)
-                    return null;
-
-                return m_iaonSession.Status;
-            }
-        }
+        public string TemporalSessionStatus => m_iaonSession?.Status;
 
         int IClientSubscription.MeasurementReportingInterval { get; set; }
 
@@ -295,24 +290,24 @@ namespace GSF.TimeSeries.Transport
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        // Remove reference to parent
-                        m_parent = null;
+            if (m_disposed)
+                return;
 
-                        // Dispose Iaon session
-                        this.DisposeTemporalSession(ref m_iaonSession);
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+            try
+            {
+                if (!disposing)
+                    return;
+
+                // Remove reference to parent
+                m_parent = null;
+
+                // Dispose Iaon session
+                this.DisposeTemporalSession(ref m_iaonSession);
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -347,10 +342,7 @@ namespace GSF.TimeSeries.Transport
             InputMeasurementKeys = inputMeasurementKeys;
             UsePrecisionTimer = false;
 
-            if (Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting))
-                m_bufferBlockRetransmissionTimeout = double.Parse(setting);
-            else
-                m_bufferBlockRetransmissionTimeout = 5.0D;
+            m_bufferBlockRetransmissionTimeout = Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting) ? double.Parse(setting) : 5.0D;
 
             if (Settings.TryGetValue("requestNaNValueFilter", out setting))
                 m_isNaNFiltered = m_parent.AllowNaNValueFilter && setting.ParseBoolean();
@@ -376,7 +368,6 @@ namespace GSF.TimeSeries.Transport
 
             // Reset compressor on successful resubscription
             m_resetTsscEncoder = true;
-
             m_tsscSequenceNumber = 0;
 
             base.Start();
@@ -426,9 +417,6 @@ namespace GSF.TimeSeries.Transport
         /// <returns>A list of buffer block sequence numbers for blocks that need to be retransmitted.</returns>
         public void ConfirmBufferBlock(uint sequenceNumber)
         {
-            int sequenceIndex;
-            int removalCount;
-
             // We are still receiving confirmations,
             // so stop the retransmission timer
             m_bufferBlockRetransmissionTimer.Stop();
@@ -436,7 +424,7 @@ namespace GSF.TimeSeries.Transport
             lock (m_bufferBlockCacheLock)
             {
                 // Find the buffer block's location in the cache
-                sequenceIndex = (int)(sequenceNumber - m_expectedBufferBlockConfirmationNumber);
+                int sequenceIndex = (int)(sequenceNumber - m_expectedBufferBlockConfirmationNumber);
 
                 if (sequenceIndex >= 0 && sequenceIndex < m_bufferBlockCache.Count && m_bufferBlockCache[sequenceIndex] is not null)
                 {
@@ -446,7 +434,7 @@ namespace GSF.TimeSeries.Transport
                     if (sequenceNumber == m_expectedBufferBlockConfirmationNumber)
                     {
                         // Get the number of elements to trim from the start of the cache
-                        removalCount = m_bufferBlockCache.TakeWhile(m => m is null).Count();
+                        int removalCount = m_bufferBlockCache.TakeWhile(m => m is null).Count();
 
                         // Trim the cache
                         m_bufferBlockCache.RemoveRange(0, removalCount);
@@ -459,11 +447,11 @@ namespace GSF.TimeSeries.Transport
                         // Retransmit if confirmations are received out of order
                         for (int i = 0; i < sequenceIndex; i++)
                         {
-                            if (m_bufferBlockCache[i] is not null)
-                            {
-                                m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
-                                OnBufferBlockRetransmission();
-                            }
+                            if (m_bufferBlockCache[i] is null)
+                                continue;
+
+                            m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
+                            OnBufferBlockRetransmission();
                         }
                     }
                 }
@@ -499,17 +487,11 @@ namespace GSF.TimeSeries.Transport
             bool usePayloadCompression = m_usePayloadCompression;
             bool useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
             long frameLevelTimestamp = frame.Timestamp;
-            BufferBlockMeasurement bufferBlockMeasurement;
-            IBinaryMeasurement binaryMeasurement;
-            byte[] bufferBlock;
-            int binaryLength;
             int packetSize = PacketHeaderSize;
 
             foreach (IMeasurement measurement in frame.Measurements.Values)
             {
-                bufferBlockMeasurement = measurement as BufferBlockMeasurement;
-
-                if ((object)bufferBlockMeasurement is not null)
+                if (measurement is BufferBlockMeasurement bufferBlockMeasurement)
                 {
                     // Still sending buffer block measurements to client; we are expecting
                     // confirmations which will indicate whether retransmission is necessary,
@@ -518,7 +500,7 @@ namespace GSF.TimeSeries.Transport
 
                     // Handle buffer block measurements as a special case - this can be any kind of data,
                     // measurement subscriber will need to know how to interpret buffer
-                    bufferBlock = new byte[4 + bufferBlockMeasurement.Length];
+                    byte[] bufferBlock = new byte[4 + bufferBlockMeasurement.Length];
 
                     // Prepend sequence number
                     BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
@@ -528,11 +510,9 @@ namespace GSF.TimeSeries.Transport
                     Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 4, bufferBlockMeasurement.Length);
                     m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
 
+                    // Cache buffer block for retransmission
                     lock (m_bufferBlockCacheLock)
-                    {
-                        // Cache buffer block for retransmission
                         m_bufferBlockCache.Add(bufferBlock);
-                    }
 
                     // Start the retransmission timer in case we never receive a confirmation
                     m_bufferBlockRetransmissionTimer.Start();
@@ -540,13 +520,12 @@ namespace GSF.TimeSeries.Transport
                 else
                 {
                     // Serialize the current measurement.
-                    if (useCompactMeasurementFormat)
-                        binaryMeasurement = new CompactMeasurement(measurement, SignalIndexCache, false);
-                    else
-                        binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(ClientID));
+                    IBinaryMeasurement binaryMeasurement = useCompactMeasurementFormat ? 
+                        new CompactMeasurement(measurement, SignalIndexCache, false) : 
+                        new SerializableMeasurement(measurement, m_parent.GetClientEncoding(ClientID));
 
                     // Determine the size of the measurement in bytes.
-                    binaryLength = binaryMeasurement.BinaryLength;
+                    int binaryLength = binaryMeasurement.BinaryLength;
 
                     // If the current measurement will not fit in the packet based on
                     // the max packet size, process the packet and start a new one.
@@ -611,8 +590,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Publish data packet to client
-            if (m_parent is not null)
-                m_parent.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
+            m_parent?.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
         }
 
         private void ProcessTSSCMeasurements(IFrame frame)
@@ -689,16 +667,14 @@ namespace GSF.TimeSeries.Transport
             packet[9 + 4] = 85; // A version number
             BigEndian.CopyBytes(m_tsscSequenceNumber, packet, 13 + 1);
             m_tsscSequenceNumber++;
+
+            //Do not increment to 0
             if (m_tsscSequenceNumber == 0)
-            {
-                //Do not increment to 0
                 m_tsscSequenceNumber = 1;
-            }
 
             Array.Copy(m_tsscWorkingBuffer, 0, packet, 16, length);
 
-            if (m_parent is not null)
-                m_parent.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
+            m_parent?.SendClientResponse(ClientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received
@@ -706,13 +682,10 @@ namespace GSF.TimeSeries.Transport
         {
             lock (m_bufferBlockCacheLock)
             {
-                foreach (byte[] bufferBlock in m_bufferBlockCache)
+                foreach (byte[] bufferBlock in m_bufferBlockCache.Where(bufferBlock => bufferBlock is not null))
                 {
-                    if (bufferBlock is not null)
-                    {
-                        m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
-                        OnBufferBlockRetransmission();
-                    }
+                    m_parent.SendClientResponse(ClientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                    OnBufferBlockRetransmission();
                 }
             }
 
@@ -720,30 +693,20 @@ namespace GSF.TimeSeries.Transport
             m_bufferBlockRetransmissionTimer.Start();
         }
 
-        private void OnBufferBlockRetransmission()
-        {
-            if ((object)BufferBlockRetransmission is not null)
-                BufferBlockRetransmission(this, EventArgs.Empty);
-        }
+        private void OnBufferBlockRetransmission() => 
+            BufferBlockRetransmission?.Invoke(this, EventArgs.Empty);
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnStatusMessage(MessageLevel level, string status, string eventName, MessageFlags flags)
-        {
+        void IClientSubscription.OnStatusMessage(MessageLevel level, string status, string eventName, MessageFlags flags) => 
             OnStatusMessage(level, status, eventName, flags);
-        }
 
         // Explicitly implement process exception event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnProcessException(MessageLevel level, Exception ex, string eventName, MessageFlags flags)
-        {
+        void IClientSubscription.OnProcessException(MessageLevel level, Exception ex, string eventName, MessageFlags flags) => 
             OnProcessException(level, ex, eventName, flags);
-        }
 
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e)
-        {
-            if ((object)ProcessingComplete is not null)
-                ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
-        }
+        void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e) => 
+            ProcessingComplete?.Invoke(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
 
         #endregion
     }

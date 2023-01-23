@@ -75,10 +75,8 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Not supported.
         /// </summary>
-        public override void Augment(DataSet configuration)
-        {
+        public override void Augment(DataSet configuration) => 
             throw new NotSupportedException();
-        }
 
         #endregion
     }

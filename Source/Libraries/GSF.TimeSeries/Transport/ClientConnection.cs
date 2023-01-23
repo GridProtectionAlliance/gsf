@@ -111,10 +111,9 @@ namespace GSF.TimeSeries.Transport
                 {
                     IPAddress = remoteEndPoint.Address;
 
-                    if (remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
-                        ConnectionID = "[" + IPAddress + "]:" + remoteEndPoint.Port;
-                    else
-                        ConnectionID = IPAddress + ":" + remoteEndPoint.Port;
+                    ConnectionID = remoteEndPoint.AddressFamily == AddressFamily.InterNetworkV6 ?
+                        $"[{IPAddress}]:{remoteEndPoint.Port}" :
+                        $"{IPAddress}:{remoteEndPoint.Port}";
 
                     try
                     {
@@ -123,7 +122,7 @@ namespace GSF.TimeSeries.Transport
                         if (!string.IsNullOrWhiteSpace(ipHost.HostName))
                         {
                             m_hostName = ipHost.HostName;
-                            ConnectionID = m_hostName + " (" + ConnectionID + ")";
+                            ConnectionID = $"{m_hostName} ({ConnectionID})";
                         }
                     }
 
@@ -157,23 +156,19 @@ namespace GSF.TimeSeries.Transport
 
             if (string.IsNullOrWhiteSpace(m_hostName))
             {
-                if (IPAddress is not null)
-                    m_hostName = IPAddress.ToString();
-                else
-                    m_hostName = ConnectionID;
+                m_hostName = IPAddress is not null ? 
+                    IPAddress.ToString() : 
+                    ConnectionID;
             }
 
-            if (IPAddress is null)
-                IPAddress = IPAddress.None;
+            IPAddress ??= IPAddress.None;
         }
 
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="ClientConnection"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~ClientConnection()
-        {
+        ~ClientConnection() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -240,12 +235,11 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                Socket commandChannelSocket;
                 bool isConnected = false;
 
                 try
                 {
-                    commandChannelSocket = GetCommandChannelSocket();
+                    Socket commandChannelSocket = GetCommandChannelSocket();
 
                     if (commandChannelSocket is not null)
                         isConnected = commandChannelSocket.Connected;
@@ -429,19 +423,13 @@ namespace GSF.TimeSeries.Transport
             get
             {
                 StringBuilder status = new();
-                const string formatString = "{0,26}: {1}";
 
                 status.AppendLine();
-                status.AppendFormat(formatString, "Subscriber ID", ConnectionID);
-                status.AppendLine();
-                status.AppendFormat(formatString, "Subscriber name", SubscriberName);
-                status.AppendLine();
-                status.AppendFormat(formatString, "Subscriber acronym", SubscriberAcronym);
-                status.AppendLine();
-                status.AppendFormat(formatString, "Publish channel protocol", PublishChannel.TransportProtocol);
-                status.AppendLine();
-                status.AppendFormat(formatString, "Data packet security", m_keyIVs is null ? "unencrypted" : "encrypted");
-                status.AppendLine();
+                status.AppendLine($"             Subscriber ID: {ConnectionID}");
+                status.AppendLine($"           Subscriber name: {SubscriberName}");
+                status.AppendLine($"        Subscriber acronym: {SubscriberAcronym}");
+                status.AppendLine($"  Publish channel protocol: {PublishChannel.TransportProtocol}");
+                status.AppendLine($"      Data packet security: {(m_keyIVs is null ? "unencrypted" : "encrypted")}");
 
                 if (m_dataChannel is not null)
                 {
@@ -472,37 +460,37 @@ namespace GSF.TimeSeries.Transport
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_pingTimer is not null)
-                        {
-                            m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
-                            m_pingTimer.Dispose();
-                            m_pingTimer = null;
-                        }
+                if (!disposing)
+                    return;
 
-                        if (m_reconnectTimer is not null)
-                        {
-                            m_reconnectTimer.Elapsed -= m_reconnectTimer_Elapsed;
-                            m_reconnectTimer.Dispose();
-                            m_reconnectTimer = null;
-                        }
-
-                        DataChannel = null;
-                        CommandChannel = null;
-                        IPAddress = null;
-                        m_subscription = null;
-                        m_parent = null;
-                    }
-                }
-                finally
+                if (m_pingTimer is not null)
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
+                    m_pingTimer.Dispose();
+                    m_pingTimer = null;
                 }
+
+                if (m_reconnectTimer is not null)
+                {
+                    m_reconnectTimer.Elapsed -= m_reconnectTimer_Elapsed;
+                    m_reconnectTimer.Dispose();
+                    m_reconnectTimer = null;
+                }
+
+                DataChannel = null;
+                CommandChannel = null;
+                IPAddress = null;
+                m_subscription = null;
+                m_parent = null;
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -563,7 +551,7 @@ namespace GSF.TimeSeries.Transport
                     // is no real benefit to maintaining these memory streams at a member level
                     using (BlockAllocatedMemoryStream response = new())
                     {
-                        byte[] bytes, bufferLen;
+                        byte[] bytes;
 
                         // Create or update cipher keys and initialization vectors 
                         UpdateKeyIVs();
@@ -575,7 +563,7 @@ namespace GSF.TimeSeries.Transport
                         using (BlockAllocatedMemoryStream buffer = new())
                         {
                             // Write even key
-                            bufferLen = BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
+                            byte[] bufferLen = BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
                             buffer.Write(bufferLen, 0, bufferLen.Length);
                             buffer.Write(m_keyIVs[EvenKey][KeyIndex], 0, m_keyIVs[EvenKey][KeyIndex].Length);
 
@@ -617,7 +605,7 @@ namespace GSF.TimeSeries.Transport
                 catch (Exception ex)
                 {
                     // Send failure message
-                    m_parent.SendClientResponse(ClientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Failed to establish new cipher keys: " + ex.Message);
+                    m_parent.SendClientResponse(ClientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, $"Failed to establish new cipher keys: {ex.Message}");
                     m_parent.OnStatusMessage(MessageLevel.Warning, $"Failed to establish new cipher keys for {ConnectionID}: {ex.Message}");
                     return false;
                 }
@@ -646,11 +634,9 @@ namespace GSF.TimeSeries.Transport
             return null;
         }
 
-        private void m_pingTimer_Elapsed(object sender, EventArgs<DateTime> e)
-        {
-            // Send a no-op keep-alive ping to make sure the client is still connected
+        // Send a no-op keep-alive ping to make sure the client is still connected
+        private void m_pingTimer_Elapsed(object sender, EventArgs<DateTime> e) => 
             m_parent.SendClientResponse(ClientID, ServerResponse.NoOP, ServerCommand.Subscribe);
-        }
 
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
@@ -664,19 +650,15 @@ namespace GSF.TimeSeries.Transport
             m_parent.OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{ConnectionID}\": {ex.Message}", ex));
         }
 
-        private void m_dataChannel_ServerStarted(object sender, EventArgs e)
-        {
+        private void m_dataChannel_ServerStarted(object sender, EventArgs e) => 
             m_parent.OnStatusMessage(MessageLevel.Info, "Data channel started.");
-        }
 
         private void m_dataChannel_ServerStopped(object sender, EventArgs e)
         {
             if (m_connectionEstablished)
             {
                 m_parent.OnStatusMessage(MessageLevel.Info, "Data channel stopped unexpectedly, restarting data channel...");
-
-                if (m_reconnectTimer is not null)
-                    m_reconnectTimer.Start();
+                m_reconnectTimer?.Start();
             }
             else
             {

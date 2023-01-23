@@ -41,12 +41,6 @@ namespace GSF.TimeSeries.Reports
     /// </summary>
     public class CompletenessReportingProcess : ReportingProcessBase
     {
-        #region [ Members ]
-
-        // Fields
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -100,14 +94,10 @@ namespace GSF.TimeSeries.Reports
             {
                 StringBuilder status = new(base.Status);
 
-                status.AppendFormat("         Level 4 threshold: {0:N2}%", Level4Threshold);
-                status.AppendLine();
-                status.AppendFormat("         Level 3 threshold: {0:N2}%", Level3Threshold);
-                status.AppendLine();
-                status.AppendFormat("             Level 4 alias: {0}", Level4Alias ?? "undefined");
-                status.AppendLine();
-                status.AppendFormat("             Level 3 alias: {0}", Level3Alias ?? "undefined");
-                status.AppendLine();
+                status.AppendLine($"         Level 4 threshold: {Level4Threshold:N2}%");
+                status.AppendLine($"         Level 3 threshold: {Level3Threshold:N2}%");
+                status.AppendLine($"             Level 4 alias: {Level4Alias ?? "undefined"}");
+                status.AppendLine($"             Level 3 alias: {Level3Alias ?? "undefined"}");
 
                 return status.ToString();
             }
@@ -193,27 +183,27 @@ namespace GSF.TimeSeries.Reports
 
             string arg = args["level4Threshold"];
 
-            if ((object)arg is not null && double.TryParse(arg.Trim(), out double value))
+            if (arg is not null && double.TryParse(arg.Trim(), out double value))
                 Level4Threshold = value;
 
             arg = args["level3Threshold"];
 
-            if ((object)arg is not null && double.TryParse(arg.Trim(), out value))
+            if (arg is not null && double.TryParse(arg.Trim(), out value))
                 Level3Threshold = value;
 
             arg = args["level4Alias"];
 
-            if ((object)arg is not null)
+            if (arg is not null)
                 Level4Alias = arg.Trim();
 
             arg = args["level3Alias"];
 
-            if ((object)arg is not null)
+            if (arg is not null)
                 Level3Alias = arg.Trim();
 
             arg = args[nameof(GenerateCsvReport)];
 
-            if ((object)arg is not null && bool.TryParse(arg.Trim(), out bool value2))
+            if (arg is not null && bool.TryParse(arg.Trim(), out bool value2))
                 GenerateCsvReport = value2;
         }
 
@@ -222,7 +212,7 @@ namespace GSF.TimeSeries.Reports
         /// </summary>
         public override bool IsReportFileName(string fileName)
         {
-            string regex = string.Format(@"{0} (?<Date>[^.]+)\.csv", Title);
+            string regex = $@"{Title} (?<Date>[^.]+)\.csv";
             Match match = Regex.Match(fileName, regex);
 
             return base.IsReportFileName(fileName) || match.Success && DateTime.TryParse(match.Groups["Date"].Value, out DateTime reportDate);

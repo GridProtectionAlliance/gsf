@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using GSF.TimeSeries.Adapters;
 
@@ -47,18 +48,15 @@ namespace GSF.TimeSeries.Reports
                 StringBuilder status = new();
 
                 // Show collection status
-                status.AppendFormat(" Total reporting processes: {0}", Count);
-                status.AppendLine();
+                status.AppendLine($" Total reporting processes: {Count}");
 
                 if (Count > 0)
                 {
                     int index = 0;
 
                     status.AppendLine();
-                    status.AppendFormat("Status of each reporting process:");
-                    status.AppendLine();
-                    status.Append(new string('-', 79));
-                    status.AppendLine();
+                    status.AppendLine("Status of each reporting process:");
+                    status.AppendLine(new string('-', 79));
 
                     // Show the status of registered components.
                     lock (this)
@@ -66,8 +64,7 @@ namespace GSF.TimeSeries.Reports
                         foreach (IReportingProcess item in this)
                         {
                             status.AppendLine();
-                            status.AppendFormat("Status of reporting process [{0}] \"{1}\":", ++index, item.Name);
-                            status.AppendLine();
+                            status.AppendLine($"Status of reporting process [{++index}] \"{item.Name}\":");
 
                             try
                             {
@@ -75,15 +72,13 @@ namespace GSF.TimeSeries.Reports
                             }
                             catch (Exception ex)
                             {
-                                status.AppendFormat("Failed to retrieve status due to exception: {0}", ex.Message);
-                                status.AppendLine();
+                                status.AppendLine($"Failed to retrieve status due to exception: {ex.Message}");
                             }
                         }
                     }
 
                     status.AppendLine();
-                    status.Append(new string('-', 79));
-                    status.AppendLine();
+                    status.AppendLine(new string('-', 79));
                 }
 
                 return status.ToString();
@@ -102,16 +97,8 @@ namespace GSF.TimeSeries.Reports
         /// The <see cref="IReportingProcess"/> for the specified <paramref name="reportType"/> name, if found;
         /// otherwise, <c>null</c> if not found.
         /// </returns>
-        public IReportingProcess FindReportType(string reportType)
-        {
-            foreach (IReportingProcess reportingProcess in this)
-            {
-                if (reportType.Equals(reportingProcess.ReportType, StringComparison.OrdinalIgnoreCase))
-                    return reportingProcess;
-            }
-
-            return null;
-        }
+        public IReportingProcess FindReportType(string reportType) => 
+            this.FirstOrDefault(reportingProcess => reportType.Equals(reportingProcess.ReportType, StringComparison.OrdinalIgnoreCase));
 
         /// <summary>
         /// Inserts an element into the <see cref="Collection{T}"/> at the specified index.
@@ -125,7 +112,7 @@ namespace GSF.TimeSeries.Reports
         protected override void InsertItem(int index, IReportingProcess item)
         {
             base.InsertItem(index, item);
-            item.LoadSettings();
+            item?.LoadSettings();
         }
 
         /// <summary>
@@ -140,7 +127,7 @@ namespace GSF.TimeSeries.Reports
         protected override void SetItem(int index, IReportingProcess item)
         {
             base.SetItem(index, item);
-            item.LoadSettings();
+            item?.LoadSettings();
         }
 
         #endregion
@@ -170,7 +157,7 @@ namespace GSF.TimeSeries.Reports
                 }
                 catch (Exception ex)
                 {
-                    if ((object)exceptionHandler is not null)
+                    if (exceptionHandler is not null)
                         exceptionHandler(ex);
                     else
                         throw;

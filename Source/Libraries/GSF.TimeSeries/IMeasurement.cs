@@ -248,9 +248,6 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
-        MeasurementValueFilterFunction MeasurementValueFilter
-        {   
-            get;
-        }
+        MeasurementValueFilterFunction MeasurementValueFilter { get; }
     }
 }

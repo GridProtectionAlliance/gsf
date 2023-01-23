@@ -76,10 +76,8 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="FrameQueue"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~FrameQueue()
-        {
+        ~FrameQueue() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -167,16 +165,16 @@ namespace GSF.TimeSeries
 
             try
             {
-                if (disposing)
-                {
-                    Clear();
-                    m_frameList = null;
-                    m_frameHash = null;
+                if (!disposing)
+                    return;
 
-                    m_createNewFrame = null;
-                    m_head = null;
-                    m_last = null;
-                }
+                Clear();
+                m_frameList = null;
+                m_frameHash = null;
+
+                m_createNewFrame = null;
+                m_head = null;
+                m_last = null;
             }
             finally
             {
@@ -202,36 +200,36 @@ namespace GSF.TimeSeries
                 status.AppendLine($" Ordered frame queue count: {m_frameList.Count}");
                 status.AppendLine($"    Frame hash-table count: {m_frameHash.Count}");
 
-                if (m_frameList.Count > 0)
+                if (m_frameList.Count <= 0)
+                    return status.ToString();
+
+                LinkedListNode<TrackingFrame> node = m_frameList.First;
+
+                status.AppendLine();
+
+                for (int i = 0; i < m_frameList.Count; i++)
                 {
-                    LinkedListNode<TrackingFrame> node = m_frameList.First;
-
-                    status.AppendLine();
-
-                    for (int i = 0; i < m_frameList.Count; i++)
+                    if (node is not null)
                     {
-                        if (node is not null)
+                        IFrame frame = node.Value?.SourceFrame;
+
+                        if (frame is null)
                         {
-                            IFrame frame = node.Value?.SourceFrame;
-
-                            if (frame is null)
-                            {
-                                status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
-                            }
-                            else
-                            {
-                                status.AppendFormat("Frame {0} @ {1:dd-MMM-yyyy HH:mm:ss.fff} - {2} measurements, {3:##0.00%} received",
-                                    i.ToString().PadLeft(4, '0'), new DateTime(frame.Timestamp),
-                                    frame.Measurements.Count, frame.Measurements.Count / (double)expectedMeasurements);
-                            }
-
-                            status.AppendLine();
-                            node = node.Next;
+                            status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
                         }
                         else
                         {
-                            break;
+                            status.AppendFormat("Frame {0} @ {1:dd-MMM-yyyy HH:mm:ss.fff} - {2} measurements, {3:##0.00%} received",
+                                i.ToString().PadLeft(4, '0'), new DateTime(frame.Timestamp),
+                                frame.Measurements.Count, frame.Measurements.Count / (double)expectedMeasurements);
                         }
+
+                        status.AppendLine();
+                        node = node.Next;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
 
@@ -254,12 +252,8 @@ namespace GSF.TimeSeries
             try
             {
                 m_queueLock.Enter(ref locked);
-
-                if (m_frameList is not null)
-                    m_frameList.Clear();
-
-                if (m_frameHash is not null)
-                    m_frameHash.Clear();
+                m_frameList?.Clear();
+                m_frameHash?.Clear();
             }
             finally
             {
@@ -323,7 +317,6 @@ namespace GSF.TimeSeries
         /// <returns>An existing or new <see cref="TrackingFrame"/> from the queue for the specified timestamp.</returns>
         public TrackingFrame GetFrame(long ticks)
         {
-            TrackingFrame frame = null;
             bool nodeAdded = false;
 
             // Calculate destination ticks for this frame
@@ -332,66 +325,66 @@ namespace GSF.TimeSeries
                 Ticks.AlignToSubsecondDistribution(ticks, m_framesPerSecond, TimeResolution);
 
             // Make sure ticks are newer than latest published ticks...
-            if (destinationTicks > Thread.VolatileRead(ref m_publishedTicks))
+            if (destinationTicks <= Thread.VolatileRead(ref m_publishedTicks))
+                return null;
+
+            // See if requested frame is already available (can do this outside lock with concurrent dictionary)
+            if (m_frameHash.TryGetValue(destinationTicks, out TrackingFrame frame))
+                return frame;
+
+            // Didn't find frame for this timestamp so we need to add a new one to the queue
+            bool locked = false;
+
+            try
             {
-                // See if requested frame is already available (can do this outside lock with concurrent dictionary)
+                m_queueLock.Enter(ref locked);
+
+                // Another thread may have gotten to this task already, so check for this contingency...
                 if (m_frameHash.TryGetValue(destinationTicks, out frame))
                     return frame;
 
-                // Didn't find frame for this timestamp so we need to add a new one to the queue
-                bool locked = false;
+                // TODO: Add a flag to add frames to publish even if no data arrives for them as an alternate mode
+                // TODO: of operation. In this mode pre-populate frame queue with at least one second of data from
+                // TODO: given start time (was thinking up next even second). This mode is useful for generically
+                // TODO: using concentrator to create a set of frame data from a data set with possible missing
+                // TODO: data (e.g., a historian) to create an evenly timestamped export
 
-                try
+                // Create a new frame for this timestamp
+                frame = new TrackingFrame(m_createNewFrame(destinationTicks), DownsamplingMethod);
+
+                if (m_frameList.Count > 0)
                 {
-                    m_queueLock.Enter(ref locked);
+                    // Insert frame into proper sorted position...
+                    LinkedListNode<TrackingFrame> node = m_frameList.Last;
 
-                    // Another thread may have gotten to this task already, so check for this contingency...
-                    if (m_frameHash.TryGetValue(destinationTicks, out frame))
-                        return frame;
-
-                    // TODO: Add a flag to add frames to publish even if no data arrives for them as an alternate mode
-                    // TODO: of operation. In this mode pre-populate frame queue with at least one second of data from
-                    // TODO: given start time (was thinking up next even second). This mode is useful for generically
-                    // TODO: using concentrator to create a set of frame data from a data set with possible missing
-                    // TODO: data (e.g., a historian) to create an evenly timestamped export
-
-                    // Create a new frame for this timestamp
-                    frame = new TrackingFrame(m_createNewFrame(destinationTicks), DownsamplingMethod);
-
-                    if (m_frameList.Count > 0)
+                    do
                     {
-                        // Insert frame into proper sorted position...
-                        LinkedListNode<TrackingFrame> node = m_frameList.Last;
-
-                        do
+                        if (destinationTicks > node.Value.Timestamp)
                         {
-                            if (destinationTicks > node.Value.Timestamp)
-                            {
-                                m_frameList.AddAfter(node, frame);
-                                nodeAdded = true;
-                                break;
-                            }
-
-                            node = node.Previous;
+                            m_frameList.AddAfter(node, frame);
+                            nodeAdded = true;
+                            break;
                         }
-                        while (node is not null);
-                    }
 
-                    if (!nodeAdded)
-                    {
-                        m_frameList.AddFirst(frame);
-                        m_head = frame;
+                        node = node.Previous;
                     }
-
-                    // Since we'll be requesting this frame over and over, we'll use
-                    // a hash table for quick frame lookups by timestamp
-                    m_frameHash[destinationTicks] = frame;
+                    while (node is not null);
                 }
-                finally
+
+                if (!nodeAdded)
                 {
-                    if (locked)
-                        m_queueLock.Exit();
+                    m_frameList.AddFirst(frame);
+                    m_head = frame;
                 }
+
+                // Since we'll be requesting this frame over and over, we'll use
+                // a hash table for quick frame lookups by timestamp
+                m_frameHash[destinationTicks] = frame;
+            }
+            finally
+            {
+                if (locked)
+                    m_queueLock.Exit();
             }
 
             return frame;

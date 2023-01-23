@@ -80,11 +80,11 @@ namespace GSF.TimeSeries
             // Determine whether the node exists in the database and create it if it doesn't.
             int nodeCount = Convert.ToInt32(database.Connection.ExecuteScalar(NodeCountFormat));
 
-            if (nodeCount == 0)
-            {
-                database.Connection.ExecuteNonQuery(NodeInsertFormat);
-                database.Connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
-            }
+            if (nodeCount != 0)
+                return;
+
+            database.Connection.ExecuteNonQuery(NodeInsertFormat);
+            database.Connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
         }
 
         /// <summary>
@@ -172,13 +172,13 @@ namespace GSF.TimeSeries
                     id = userAccountReader["ID"].ToNonNullString();
                     accountName = userAccountReader["Name"].ToNonNullString();
 
-                    if (userAccountReader["UseADAuthentication"].ToNonNullString().ParseBoolean())
-                    {
-                        sid = UserInfo.UserNameToSID(accountName);
+                    if (!userAccountReader["UseADAuthentication"].ToNonNullString().ParseBoolean())
+                        continue;
 
-                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsUserSID(sid))
-                            updateMap.Add(id, sid);
-                    }
+                    sid = UserInfo.UserNameToSID(accountName);
+
+                    if (!ReferenceEquals(accountName, sid) && UserInfo.IsUserSID(sid))
+                        updateMap.Add(id, sid);
                 }
             }
 
@@ -196,13 +196,13 @@ namespace GSF.TimeSeries
                     id = securityGroupReader["ID"].ToNonNullString();
                     accountName = securityGroupReader["Name"].ToNonNullString();
 
-                    if (accountName.Contains('\\'))
-                    {
-                        sid = UserInfo.GroupNameToSID(accountName);
+                    if (!accountName.Contains('\\'))
+                        continue;
 
-                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsGroupSID(sid))
-                            updateMap.Add(id, sid);
-                    }
+                    sid = UserInfo.GroupNameToSID(accountName);
+
+                    if (!ReferenceEquals(accountName, sid) && UserInfo.IsGroupSID(sid))
+                        updateMap.Add(id, sid);
                 }
             }
 
@@ -425,7 +425,8 @@ namespace GSF.TimeSeries
                 /* 25 */ "{0:N3} %"
             };
 
-            // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
+            // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result,
+            // do *not* leisurely change these statistic names without understanding the consequences
             string[] DeviceStatNames =
             { 
                 /* 01 */ "Data Quality Errors", 
@@ -830,30 +831,30 @@ namespace GSF.TimeSeries
                 alarmTableExists = false;
             }
 
-            if (alarmTableExists)
-            {
-                Guid nodeID = Guid.Parse(nodeIDQueryString.Trim('\''));
+            if (!alarmTableExists)
+                return;
 
-                // Ensure that the alarm adapter is defined.
-                int alarmAdapterCount = connection.ExecuteScalar<int>(AlarmAdapterCountFormat, nodeID);
+            Guid nodeID = Guid.Parse(nodeIDQueryString.Trim('\''));
 
-                if (alarmAdapterCount == 0)
-                    connection.ExecuteNonQuery(AlarmAdapterInsertFormat, nodeID);
+            // Ensure that the alarm adapter is defined.
+            int alarmAdapterCount = connection.ExecuteScalar<int>(AlarmAdapterCountFormat, nodeID);
 
-                // Ensure that the alarm record is defined in the ConfigurationEntity table.
-                int alarmConfigEntityCount = connection.ExecuteScalar<int>(AlarmConfigEntityCountFormat);
+            if (alarmAdapterCount == 0)
+                connection.ExecuteNonQuery(AlarmAdapterInsertFormat, nodeID);
 
-                if (alarmConfigEntityCount == 0)
-                    connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
+            // Ensure that the alarm record is defined in the ConfigurationEntity table.
+            int alarmConfigEntityCount = connection.ExecuteScalar<int>(AlarmConfigEntityCountFormat);
 
-                // Ensure that the alarm record is defined in the SignalType table.
-                int alarmSignalTypeCount = connection.ExecuteScalar<int>(AlarmSignalTypeCountFormat);
+            if (alarmConfigEntityCount == 0)
+                connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
 
-                if (alarmSignalTypeCount == 0)
-                    connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
+            // Ensure that the alarm record is defined in the SignalType table.
+            int alarmSignalTypeCount = connection.ExecuteScalar<int>(AlarmSignalTypeCountFormat);
 
-                ValidateAlarmStatistics(connection, nodeID, "Point");
-            }
+            if (alarmSignalTypeCount == 0)
+                connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
+
+            ValidateAlarmStatistics(connection, nodeID, "Point");
         }
 
         private static void ValidateAlarmStatistics(AdoDataConnection connection, Guid nodeID, string source)
@@ -866,19 +867,19 @@ namespace GSF.TimeSeries
             string methodName = $"Get{source}Statistic_MeasurementCountForSeverity";
             DataTable missingStatistics = connection.RetrieveData(MissingStatisticsFormat, source, methodName);
 
-            if (missingStatistics.Rows.Count > 0)
+            if (missingStatistics.Rows.Count == 0)
+                return;
+
+            int signalIndex = connection.ExecuteScalar<int>(MaxSignalIndexFormat, source);
+
+            foreach (DataRow missingStatistic in missingStatistics.Rows)
             {
-                int signalIndex = connection.ExecuteScalar<int>(MaxSignalIndexFormat, source);
+                signalIndex++;
+                int severity = missingStatistic.ConvertField<int>("Severity");
+                string name = $"Alarm Severity {severity}";
+                string description = $"Number of measurements received while alarm with severity {severity} was raised during the last reporting interval.";
 
-                foreach (DataRow missingStatistic in missingStatistics.Rows)
-                {
-                    signalIndex++;
-                    int severity = missingStatistic.ConvertField<int>("Severity");
-                    string name = $"Alarm Severity {severity}";
-                    string description = $"Number of measurements received while alarm with severity {severity} was raised during the last reporting interval.";
-
-                    connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, name, description, "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, severity, 1, "System.Int32", "{0:N0}", 0, 1001 - severity);
-                }
+                connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, name, description, "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, severity, 1, "System.Int32", "{0:N0}", 0, 1001 - severity);
             }
         }
     }

@@ -37,12 +37,6 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     public class SubscriberRightsLookup
     {
-        #region [ Members ]
-
-        // Fields
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -50,10 +44,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="dataSource">The source of metadata providing the tables required by the rights logic.</param>
         /// <param name="subscriberID">The ID of the subscriber whose rights are being looked up.</param>
-        public SubscriberRightsLookup(DataSet dataSource, Guid subscriberID)
-        {
+        public SubscriberRightsLookup(DataSet dataSource, Guid subscriberID) => 
             HasRightsFunc = BuildLookup(dataSource, subscriberID);
-        }
 
         #endregion
 
@@ -73,10 +65,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="signalID">The ID of the signal.</param>
         /// <returns>True if the subscriber has rights; false otherwise.</returns>
-        public bool HasRights(Guid signalID)
-        {
-            return HasRightsFunc(signalID);
-        }
+        public bool HasRights(Guid signalID) => 
+            HasRightsFunc(signalID);
 
         private Func<Guid, bool> BuildLookup(DataSet dataSource, Guid subscriberID)
         {
@@ -85,7 +75,7 @@ namespace GSF.TimeSeries.Transport
             const string filterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
 
             //==================================================================
-            //Check if subscriber is disabled or removed
+            // Check if subscriber is disabled or removed
 
             // If subscriber has been disabled or removed
             // from the list of valid subscribers,
@@ -119,7 +109,7 @@ namespace GSF.TimeSeries.Transport
                 .ForEach(grouping => authorizedSignals.Add(grouping.Key));
 
             //=================================================================
-            //Check implicitly authorized signals
+            // Check implicitly authorized signals
 
             List<Match> matches = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), filterRegex, RegexOptions.IgnoreCase)
                 .Cast<Match>()
@@ -148,7 +138,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             //==================================================================
-            //Check explicit group authorizations
+            // Check explicit group authorizations
 
             subscriberMeasurementGroups
                 .Join(dataSource.Tables["MeasurementGroupMeasurements"].Select(),

@@ -71,9 +71,7 @@ namespace GSF.TimeSeries.Configuration
             WebRequest request = WebRequest.Create(URI);
 
             using (response = request.GetResponse())
-            {
                 configuration.ReadXml(response.GetResponseStream());
-            }
 
             OnStatusMessage(MessageLevel.Info, "Webservice configuration successfully loaded.");
 
@@ -83,10 +81,8 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Not supported.
         /// </summary>
-        public override void Augment(DataSet configuration)
-        {
+        public override void Augment(DataSet configuration) => 
             throw new NotSupportedException();
-        }
 
         #endregion
     }

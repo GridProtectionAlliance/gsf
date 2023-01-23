@@ -192,10 +192,8 @@ namespace GSF.TimeSeries
         /// Returns a <see cref="String"/> that represents the current <see cref="Measurement"/>.
         /// </summary>
         /// <returns>A <see cref="String"/> that represents the current <see cref="Measurement"/>.</returns>
-        public override string ToString()
-        {
-            return ToString(this);
-        }
+        public override string ToString() => 
+            ToString(this);
 
         /// <summary>
         /// Determines whether the specified <see cref="ITimeSeriesValue"/> is equal to the current <see cref="Measurement"/>.
@@ -205,10 +203,8 @@ namespace GSF.TimeSeries
         /// true if the specified <see cref="ITimeSeriesValue"/> is equal to the current <see cref="Measurement"/>;
         /// otherwise, false.
         /// </returns>
-        public bool Equals(ITimeSeriesValue other)
-        {
-            return CompareTo(other) == 0;
-        }
+        public bool Equals(ITimeSeriesValue other) => 
+            CompareTo(other) == 0;
 
         /// <summary>
         /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="Measurement"/>.
@@ -218,13 +214,8 @@ namespace GSF.TimeSeries
         /// true if the specified <see cref="Object"/> is equal to the current <see cref="Measurement"/>;
         /// otherwise, false.
         /// </returns>
-        public override bool Equals(object obj)
-        {
-            if (obj is ITimeSeriesValue other)
-                return Equals(other);
-
-            return false;
-        }
+        public override bool Equals(object obj) => 
+            obj is ITimeSeriesValue other && Equals(other);
 
         /// <summary>
         /// Compares the <see cref="Measurement"/> with an <see cref="ITimeSeriesValue"/>.
@@ -232,13 +223,8 @@ namespace GSF.TimeSeries
         /// <param name="other">The <see cref="ITimeSeriesValue"/> to compare with the current <see cref="Measurement"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
-        public int CompareTo(ITimeSeriesValue other)
-        {
-            if (other is not null)
-                return GetHashCode().CompareTo(other.GetHashCode());
-
-            return 1;
-        }
+        public int CompareTo(ITimeSeriesValue other) => 
+            other is not null ? GetHashCode().CompareTo(other.GetHashCode()) : 1;
 
         /// <summary>
         /// Compares the <see cref="Measurement"/> with the specified <see cref="Object"/>.
@@ -260,10 +246,8 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <returns>A hash code for the current <see cref="Measurement"/>.</returns>
         /// <remarks>Hash code based on value of measurement.</remarks>
-        public override int GetHashCode()
-        {
-            return Key.GetHashCode();
-        }
+        public override int GetHashCode() => 
+            Key.GetHashCode();
 
         #endregion
 
@@ -275,10 +259,8 @@ namespace GSF.TimeSeries
         /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
         /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator ==(Measurement measurement1, Measurement measurement2)
-        {
-            return (object)measurement1 is not null && measurement1.Equals(measurement2);
-        }
+        public static bool operator ==(Measurement measurement1, Measurement measurement2) => 
+            measurement1 is not null && measurement1.Equals(measurement2);
 
         /// <summary>
         /// Compares two <see cref="Measurement"/> values for inequality.
@@ -286,10 +268,8 @@ namespace GSF.TimeSeries
         /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
         /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator !=(Measurement measurement1, Measurement measurement2)
-        {
-            return (object)measurement1 is not null && !measurement1.Equals(measurement2);
-        }
+        public static bool operator !=(Measurement measurement1, Measurement measurement2) => 
+            measurement1 is not null && !measurement1.Equals(measurement2);
 
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is greater than right <see cref="Measurement"/> value.
@@ -297,10 +277,8 @@ namespace GSF.TimeSeries
         /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
         /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator >(Measurement measurement1, Measurement measurement2)
-        {
-            return measurement1.CompareTo(measurement2) > 0;
-        }
+        public static bool operator >(Measurement measurement1, Measurement measurement2) => 
+            measurement1.CompareTo(measurement2) > 0;
 
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is greater than or equal to right <see cref="Measurement"/> value.
@@ -308,21 +286,17 @@ namespace GSF.TimeSeries
         /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
         /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator >=(Measurement measurement1, Measurement measurement2)
-        {
-            return measurement1.CompareTo(measurement2) >= 0;
-        }
-
+        public static bool operator >=(Measurement measurement1, Measurement measurement2) => 
+            measurement1.CompareTo(measurement2) >= 0;
+        
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is less than right <see cref="Measurement"/> value.
         /// </summary>
         /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
         /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator <(Measurement measurement1, Measurement measurement2)
-        {
-            return measurement1.CompareTo(measurement2) < 0;
-        }
+        public static bool operator <(Measurement measurement1, Measurement measurement2) => 
+            measurement1.CompareTo(measurement2) < 0;
 
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is less than or equal to right <see cref="Measurement"/> value.
@@ -330,10 +304,8 @@ namespace GSF.TimeSeries
         /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
         /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
         /// <returns>A boolean representing the result.</returns>
-        public static bool operator <=(Measurement measurement1, Measurement measurement2)
-        {
-            return measurement1.CompareTo(measurement2) <= 0;
-        }
+        public static bool operator <=(Measurement measurement1, Measurement measurement2) => 
+            measurement1.CompareTo(measurement2) <= 0;
 
         #endregion
 
@@ -356,16 +328,14 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        public static Measurement Clone(IMeasurement measurementToClone)
-        {
-            return new Measurement
+        public static Measurement Clone(IMeasurement measurementToClone) =>
+            new()
             {
                 Metadata = measurementToClone.Metadata,
                 Value = measurementToClone.Value,
                 Timestamp = measurementToClone.Timestamp,
                 StateFlags = measurementToClone.StateFlags
             };
-        }
 
         /// <summary>
         /// Creates a copy of the specified measurement using a new timestamp.
@@ -373,16 +343,14 @@ namespace GSF.TimeSeries
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
-        {
-            return new Measurement
+        public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp) =>
+            new()
             {
                 Metadata = measurementToClone.Metadata,
                 Value = measurementToClone.Value,
                 Timestamp = timestamp,
                 StateFlags = measurementToClone.StateFlags
             };
-        }
 
         /// <summary>
         /// Creates a copy of the specified measurement using a new value and timestamp.
@@ -391,16 +359,14 @@ namespace GSF.TimeSeries
         /// <param name="value">New value for cloned measurement.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
-        public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
-        {
-            return new Measurement
+        public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp) =>
+            new()
             {
                 Metadata = measurementToClone.Metadata,
                 Value = value,
                 Timestamp = timestamp,
                 StateFlags = measurementToClone.StateFlags
             };
-        }
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.
@@ -427,20 +393,16 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to run calculation.</param>
         /// <returns>Average of the specified sequence of <see cref="IMeasurement"/> values.</returns>
-        public static double AverageValueFilter(IEnumerable<IMeasurement> source)
-        {
-            return source.Select(m => m.Value).Average();
-        }
-
+        public static double AverageValueFilter(IEnumerable<IMeasurement> source) => 
+            source.Select(m => m.Value).Average();
+        
         /// <summary>
         /// Returns the majority value of the specified sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to run calculation.</param>
         /// <returns>Majority value of the specified sequence of <see cref="IMeasurement"/> values.</returns>
-        public static double MajorityValueFilter(IEnumerable<IMeasurement> source)
-        {
-            return source.Select(m => m.Value).Majority();
-        }
+        public static double MajorityValueFilter(IEnumerable<IMeasurement> source) => 
+            source.Select(m => m.Value).Majority();
 
         /// <summary>
         /// Calculates an average of the specified sequence of <see cref="IMeasurement"/> phase angle values.
@@ -450,10 +412,8 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// Phase angles wrap, so this algorithm takes the wrapping into account when calculating the average.
         /// </remarks>
-        public static double AverageAngleValueFilter(IEnumerable<IMeasurement> source)
-        {
-            return source.Select(m => Angle.FromDegrees(m.Value)).Average().ToDegrees();
-        }
+        public static double AverageAngleValueFilter(IEnumerable<IMeasurement> source) => 
+            source.Select(m => Angle.FromDegrees(m.Value)).Average().ToDegrees();
 
         #endregion
     }

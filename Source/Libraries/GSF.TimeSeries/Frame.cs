@@ -31,6 +31,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
+// ReSharper disable NonReadonlyMemberInGetHashCode
 namespace GSF.TimeSeries
 {
     /// <summary>
@@ -44,9 +45,9 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private Ticks m_timestamp;                                                          // Time, represented as 100-nanosecond ticks, of this frame of data
-        private ShortTime m_lifespan;                                                       // Elapsed time since creation of this frame of data
-        private int m_sortedMeasurements;                                                   // Total measurements sorted into this frame
+        private Ticks m_timestamp;          // Time, represented as 100-nanosecond ticks, of this frame of data
+        private ShortTime m_lifespan;       // Elapsed time since creation of this frame of data
+        private int m_sortedMeasurements;   // Total measurements sorted into this frame
 
         #endregion
 
@@ -62,10 +63,9 @@ namespace GSF.TimeSeries
             m_timestamp = timestamp;
             m_lifespan = ShortTime.Now;
 
-            if (expectedMeasurements > 0)
-                Measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(s_defaultConcurrencyLevel, expectedMeasurements * 2);
-            else
-                Measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
+            Measurements = expectedMeasurements > 0 ? 
+                new ConcurrentDictionary<MeasurementKey, IMeasurement>(s_defaultConcurrencyLevel, expectedMeasurements * 2) : 
+                new ConcurrentDictionary<MeasurementKey, IMeasurement>();
 
             m_sortedMeasurements = -1;
         }
@@ -105,13 +105,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         public int SortedMeasurements
         {
-            get
-            {
-                if (m_sortedMeasurements == -1)
-                    return Measurements.Count;
-
-                return m_sortedMeasurements;
-            }
+            get => m_sortedMeasurements == -1 ? Measurements.Count : m_sortedMeasurements;
             set => m_sortedMeasurements = value;
         }
 
@@ -156,9 +150,7 @@ namespace GSF.TimeSeries
         public virtual Frame Clone()
         {
             lock (Measurements)
-            {
                 return new Frame(m_timestamp, Measurements);
-            }
         }
 
         /// <summary>
@@ -169,10 +161,8 @@ namespace GSF.TimeSeries
         /// true if the specified <see cref="IFrame"/> is equal to the current <see cref="Frame"/>;
         /// otherwise, false.
         /// </returns>
-        public bool Equals(IFrame other)
-        {
-            return CompareTo(other) == 0;
-        }
+        public bool Equals(IFrame other) => 
+            CompareTo(other) == 0;
 
         /// <summary>
         /// Determines whether the specified <see cref="object"/> is equal to the current <see cref="Frame"/>.
@@ -182,13 +172,8 @@ namespace GSF.TimeSeries
         /// true if the specified <see cref="object"/> is equal to the current <see cref="Frame"/>;
         /// otherwise, false.
         /// </returns>
-        public override bool Equals(object obj)
-        {
-            if (obj is IFrame other)
-                return Equals(other);
-
-            return false;
-        }
+        public override bool Equals(object obj) => 
+            obj is IFrame other && Equals(other);
 
         /// <summary>
         /// Compares the <see cref="Frame"/> with an <see cref="IFrame"/>.
@@ -196,13 +181,8 @@ namespace GSF.TimeSeries
         /// <param name="other">The <see cref="IFrame"/> to compare with the current <see cref="Frame"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
-        public int CompareTo(IFrame other)
-        {
-            if (other is not null)
-                return m_timestamp.CompareTo(other.Timestamp);
-
-            return 1;
-        }
+        public int CompareTo(IFrame other) => 
+            other is not null ? m_timestamp.CompareTo(other.Timestamp) : 1;
 
         /// <summary>
         /// Compares the <see cref="Frame"/> with the specified <see cref="object"/>.
@@ -224,11 +204,8 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <returns>A hash code for the current <see cref="Frame"/>.</returns>
         /// <remarks>Hash code based on timestamp of frame.</remarks>
-        public override int GetHashCode()
-        {
-            // ReSharper disable once NonReadonlyMemberInGetHashCode
-            return m_timestamp.GetHashCode();
-        }
+        public override int GetHashCode() => 
+            m_timestamp.GetHashCode();
 
         #endregion
 
@@ -242,10 +219,10 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator ==(Frame frame1, Frame frame2)
         {
-            if ((object)frame1 is not null)
+            if (frame1 is not null)
                 return frame1.Equals(frame2);
 
-            return (object)frame2 is null;
+            return frame2 is null;
         }
 
         /// <summary>
@@ -256,10 +233,10 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator !=(Frame frame1, Frame frame2)
         {
-            if ((object)frame1 is not null)
+            if (frame1 is not null)
                 return !frame1.Equals(frame2);
 
-            return (object)frame2 is not null;
+            return frame2 is not null;
         }
 
         /// <summary>
@@ -270,7 +247,7 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >(Frame frame1, Frame frame2)
         {
-            if ((object)frame1 is not null)
+            if (frame1 is not null)
                 return frame1.CompareTo(frame2) > 0;
 
             return false;
@@ -284,10 +261,10 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >=(Frame frame1, Frame frame2)
         {
-            if ((object)frame1 is not null)
+            if (frame1 is not null)
                 return frame1.CompareTo(frame2) >= 0;
 
-            return (object)frame2 is null;
+            return frame2 is null;
         }
 
         /// <summary>
@@ -298,7 +275,7 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <(Frame frame1, Frame frame2)
         {
-            if ((object)frame1 is not null)
+            if (frame1 is not null)
                 return frame1.CompareTo(frame2) < 0;
 
             return false;
@@ -312,10 +289,10 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <=(Frame frame1, Frame frame2)
         {
-            if ((object)frame1 is not null)
+            if (frame1 is not null)
                 return frame1.CompareTo(frame2) <= 0;
 
-            return (object)frame2 is null;
+            return frame2 is null;
         }
 
         #endregion

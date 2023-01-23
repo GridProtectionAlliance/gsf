@@ -157,14 +157,13 @@ namespace GSF.TimeSeries
         public bool SetValue(Ticks timestamp, double value)
         {
             // We only store a value that is newer than the current value
-            if (timestamp > Timestamp && timestamp.UtcTimeIsValid(m_lagTime, m_leadTime))
-            {
-                Value = value;
-                Timestamp = timestamp;
-                return true;
-            }
+            if (timestamp <= Timestamp || !timestamp.UtcTimeIsValid(m_lagTime, m_leadTime))
+                return false;
 
-            return false;
+            Value = value;
+            Timestamp = timestamp;
+            return true;
+
         }
 
         #endregion
