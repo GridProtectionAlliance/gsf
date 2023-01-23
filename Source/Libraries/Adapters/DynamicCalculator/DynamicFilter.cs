@@ -44,9 +44,9 @@ namespace DynamicCalculator
     public enum FilterOperation
     {
         /// <summary>
-        /// Defines filter operation that removes measurements from process when expression evaluates to true.
+        /// Defines filter operation that removes measurements from processing when expression evaluates to true.
         /// </summary>
-        [Description("Removes measurements from process when expression evaluates to true.")]
+        [Description("Removes measurements from processing when expression evaluates to true.")]
         RemoveWhenTrue,
 
         /// <summary>
