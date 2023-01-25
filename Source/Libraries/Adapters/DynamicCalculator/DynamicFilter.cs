@@ -75,6 +75,8 @@ namespace DynamicCalculator
 
         // Constants
         private const int DefaultExecutionOrder = 0;
+        private const FilterOperation DefaultFilterOperation= FilterOperation.ValueAugmentation;
+        private const MeasurementStateFlags DefaultAugmentationFlags = MeasurementStateFlags.CalculatedValue;
 
         private const string IndexVariable = "INDEX";
 
@@ -148,9 +150,17 @@ namespace DynamicCalculator
         /// Gets or sets the operation type of the filter calculation.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines ValueAugmentation.")]
-        [DefaultValue(FilterOperation.ValueAugmentation)]
+        [Description("Defines operation type of the filter calculation.")]
+        [DefaultValue(DefaultFilterOperation)]
         public FilterOperation FilterOperation { get; set; }
+
+        /// <summary>
+        /// Gets or sets measurement state flags that are applied when a value has been replaced when filter operation is set to <see cref="FilterOperation.ValueAugmentation"/>.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines measurement state flags that are applied when a value has been replaced when filter operation is set to value augmentation.")]
+        [DefaultValue(DefaultAugmentationFlags)]
+        public MeasurementStateFlags AugmentationFlags { get; set; }
 
         /// <summary>
         /// Gets or sets the current enabled state of the <see cref="DynamicFilter"/>.
@@ -292,6 +302,7 @@ namespace DynamicCalculator
                 }
                 else
                 {
+                    status.AppendLine($"        Augmentation Flags: {AugmentationFlags}");
                     status.AppendLine($"    Augmented Measurements: {m_processedMeasurements:N0}");
                 }
 
@@ -325,7 +336,11 @@ namespace DynamicCalculator
 
             FilterOperation = settings.TryGetValue(nameof(FilterOperation), out setting) && Enum.TryParse(setting, out FilterOperation filterOperation) ? 
                 filterOperation : 
-                FilterOperation.ValueAugmentation;
+                DefaultFilterOperation;
+
+            AugmentationFlags = settings.TryGetValue(nameof(AugmentationFlags), out setting) && Enum.TryParse(setting, out MeasurementStateFlags augmentationFlags) ?
+                augmentationFlags :
+                DefaultAugmentationFlags;
 
             ReadOnlyCollection<string> variableNames = VariableNames;
 
@@ -374,7 +389,7 @@ namespace DynamicCalculator
             IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs = measurements
                 .Where(measurement => m_inputMeasurementKeys.Contains(measurement.Key))
                 .ToDictionary(measurement => measurement.Key);
-         
+
             if (inputs.Count == 0)
                 return;
 
@@ -382,9 +397,9 @@ namespace DynamicCalculator
 
             if (FilterOperation == FilterOperation.RemoveWhenTrue)
             {
-                // Iaon session will automatically convert readonly measurements to a list when filter adapters are defined,
+                // Iaon session will automatically convert readonly measurement sets to a list when filter adapters are defined,
                 // however, if user is manually injecting measurements or using a custom TSL implementation, it is still
-                // possible for measurements to be published from a readonly source, e.g., an array, so we check that here
+                // possible for measurements to be published from a readonly source, e.g., an array, so we check for that here
                 if (measurements.IsReadOnly)
                 {
                     // Cannot remove measurements when adapter publishes new measurements as a readonly collection, e.g., from an array
@@ -430,19 +445,20 @@ namespace DynamicCalculator
                     measurements.Add(measurement);
             }
 
-            if (m_valueIsArray)
+            switch (FilterOperation)
             {
-                if (FilterOperation == FilterOperation.RemoveWhenTrue)
+                case FilterOperation.RemoveWhenTrue when m_valueIsArray:
                     removeMeasurements(ProcessRemoveWhenTrueForArray(inputs, indexes));
-                else
+                    break;
+                case FilterOperation.ValueAugmentation when m_valueIsArray:
                     ProcessValueAugmentationForArray(inputs);
-            }
-            else
-            {
-                if (FilterOperation == FilterOperation.RemoveWhenTrue)
+                    break;
+                case FilterOperation.RemoveWhenTrue when !m_valueIsArray:
                     removeMeasurements(ProcessRemoveWhenTrueForSingleton(inputs, indexes));
-                else
+                    break;
+                case FilterOperation.ValueAugmentation when !m_valueIsArray:
                     ProcessValueAugmentationForSingleton(inputs);
+                    break;
             }
 
             Interlocked.Add(ref m_processedMeasurements, inputs.Count);
@@ -472,7 +488,11 @@ namespace DynamicCalculator
 
                 // If calculation result is a convertible type, we update measurement value
                 if (m_result is IConvertible result)
-                    inputs[m_variableKeys[$"value[{m_index}]"]].Value = Convert.ToDouble(result);
+                {
+                    IMeasurement measurement = inputs[m_variableKeys[$"value[{m_index}]"]];
+                    measurement.Value = Convert.ToDouble(result);
+                    measurement.StateFlags |= AugmentationFlags;
+                }
             }
         }
 
@@ -495,7 +515,11 @@ namespace DynamicCalculator
 
             // If calculation result is a convertible type, we update measurement value
             if (m_result is IConvertible result)
-                inputs[m_variableKeys["value"]].Value = Convert.ToDouble(result);
+            {
+                IMeasurement measurement = inputs[m_variableKeys["value"]];
+                measurement.Value = Convert.ToDouble(result);
+                measurement.StateFlags |= AugmentationFlags;
+            }
         }
 
         /// <summary>
