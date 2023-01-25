@@ -423,7 +423,7 @@ namespace DynamicCalculator
 
             for (m_index = 0; m_index < m_valueArrayLength; m_index++)
             {
-                Calculate(inputs, m_index);
+                Calculate(inputs, new Dictionary<string, int> { ["value"] = m_index });
 
                 // If calculation result is true, measurement is targeted for removal
                 if (m_result.ToString().ParseBoolean())
@@ -437,7 +437,7 @@ namespace DynamicCalculator
         {
             for (m_index = 0; m_index < m_valueArrayLength; m_index++)
             {
-                Calculate(inputs, m_index);
+                Calculate(inputs, new Dictionary<string, int> { ["value"] = m_index });
 
                 // If calculation result is a convertible type, we update measurement value
                 if (m_result is IConvertible result)

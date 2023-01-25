@@ -77,7 +77,7 @@ namespace DynamicCalculator
     public class DynamicCalculator : ActionAdapterBase
     {
         #region [ Members ]
-
+        
         // Nested Types
         private class Variable
         {
@@ -532,7 +532,12 @@ namespace DynamicCalculator
                 m_timerOperation.RunOnceAsync();
         }
 
-        internal void Calculate(IReadOnlyDictionary<MeasurementKey, IMeasurement> measurements, int indexRestriction = -1)
+        /// <summary>
+        /// Executes dynamic calculation for input measurements and any provided index restrictions.
+        /// </summary>
+        /// <param name="measurements">Measurement dictionary that contains inputs for calculation.</param>
+        /// <param name="indexRestrictions">Any index restrictions to apply to array inputs.</param>
+        protected void Calculate(IReadOnlyDictionary<MeasurementKey, IMeasurement> measurements, IReadOnlyDictionary<string, int> indexRestrictions = null)
         {
             Dictionary<string, SparseArray> arrayVariables = new();
 
@@ -544,9 +549,10 @@ namespace DynamicCalculator
                 MeasurementKey key = item.Key;
                 Variable variable = item.Value;
 
+                // Variables with non-negative indexes are arrays
                 if (variable.Index > -1)
                 {
-                    if (indexRestriction > -1 && indexRestriction != variable.Index)
+                    if ((indexRestrictions?.TryGetValue(variable.Name, out int index) ?? false) && index != variable.Index)
                         continue;
 
                     SparseArray array = arrayVariables.GetOrAdd(variable.Name, _ => new SparseArray());
@@ -571,10 +577,15 @@ namespace DynamicCalculator
                 string name = kvp.Key;
                 double[] array = kvp.Value;
                 int length = array.Length;
-
+                    
                 if (arrayVariables.TryGetValue(name, out SparseArray sparseArray))
                 {
-                    if (indexRestriction == -1)
+                    if (indexRestrictions?.TryGetValue(name, out int index) ?? false)
+                    {
+                        if (sparseArray.TryGetValue(index, out double value))
+                            array[index] = value;
+                    }
+                    else
                     {
                         for (int i = 0; i < length; i++)
                         {
@@ -583,11 +594,6 @@ namespace DynamicCalculator
                             else
                                 array[i] = SentinelValue;
                         }
-                    }
-                    else
-                    {
-                        if (sparseArray.TryGetValue(indexRestriction, out double value))
-                            array[indexRestriction] = value;
                     }
 
                     m_expressionContext.Variables[name] = array;
