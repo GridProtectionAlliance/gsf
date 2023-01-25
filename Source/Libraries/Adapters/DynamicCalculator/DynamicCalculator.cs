@@ -78,6 +78,13 @@ namespace DynamicCalculator
     {
         #region [ Members ]
 
+        // Nested Types
+        private class Variable
+        {
+            public string Name;
+            public int Index;
+        }
+
         // Constants
 
         /// <summary>
@@ -101,9 +108,9 @@ namespace DynamicCalculator
         private double m_latestValue;
 
         private readonly HashSet<string> m_variableNames;
-        private readonly Dictionary<string, int> m_arrayVariableLengths;
-        private readonly Dictionary<MeasurementKey, string> m_keyMapping;
+        private readonly Dictionary<MeasurementKey, Variable> m_keyMapping;
         private readonly SortedDictionary<int, string> m_nonAliasedTokens;
+        private readonly Dictionary<string, double[]> m_arrayCache;
 
         private string m_aliasedExpressionText;
         private readonly ExpressionContext m_expressionContext;
@@ -126,9 +133,9 @@ namespace DynamicCalculator
             };
 
             m_variableNames = new HashSet<string>();
-            m_arrayVariableLengths = new Dictionary<string, int>();
-            m_keyMapping = new Dictionary<MeasurementKey, string>();
+            m_keyMapping = new Dictionary<MeasurementKey, Variable>();
             m_nonAliasedTokens = new SortedDictionary<int, string>();
+            m_arrayCache = new Dictionary<string, double[]>();
             m_expressionContext = new ExpressionContext();
 
             m_timerOperation = new DelayedSynchronizedOperation(ProcessLatestMeasurements, ex => OnProcessException(MessageLevel.Error, ex));
@@ -197,9 +204,9 @@ namespace DynamicCalculator
 
                 // Empty the collection of variable names
                 m_variableNames.Clear();
-                m_arrayVariableLengths.Clear();
                 m_keyMapping.Clear();
                 m_nonAliasedTokens.Clear();
+                m_arrayCache.Clear();
 
                 // If the value is null, do not attempt to process it
                 if (value is null)
@@ -326,18 +333,22 @@ namespace DynamicCalculator
         /// Gets the configured list of variables names.
         /// </summary>
         protected ReadOnlyCollection<string> VariableNames => new(m_variableNames.ToList());
-        
+
         /// <summary>
         /// Gets array variables names mapped to their defined lengths.
         /// </summary>
-        protected ReadOnlyDictionary<string, int> ArrayVariableLengths => new(m_arrayVariableLengths);
+        protected ReadOnlyDictionary<string, int> ArrayVariableLengths =>
+            new(m_arrayCache.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Length));
 
         /// <summary>
         /// Gets variable names mapped to their <see cref="MeasurementKey"/> values.
         /// </summary>
         protected ReadOnlyDictionary<string, MeasurementKey> VariableKeys => 
-            new(m_keyMapping.ToDictionary(kvp => kvp.Value, kvp => kvp.Key));
+            new(m_keyMapping.ToDictionary(kvp => GetVariableName(kvp.Value), kvp => kvp.Key));
         
+        private static string GetVariableName(in Variable variable) => 
+            variable.Index > -1 ? $"{variable.Name}[{variable.Index}]" : variable.Name;
+
         /// <summary>
         /// Gets the list of reserved variable names.
         /// </summary>
@@ -528,45 +539,41 @@ namespace DynamicCalculator
             m_expressionContext.Variables.Clear();
 
             // Set the values of variables in the expression
-            foreach (MeasurementKey key in m_keyMapping.Keys)
+            foreach (KeyValuePair<MeasurementKey, Variable> item in m_keyMapping)
             {
-                string name = m_keyMapping[key];
-                int arrayMarkerIndex = name.IndexOf('[');
+                MeasurementKey key = item.Key;
+                Variable variable = item.Value;
 
-                if (arrayMarkerIndex > 0)
+                if (variable.Index > -1)
                 {
-                    string alias = name.Substring(0, arrayMarkerIndex);
-                    int index = int.Parse(name.Substring(arrayMarkerIndex + 1, name.Length - arrayMarkerIndex - 2));
-
-                    if (indexRestriction > -1 && indexRestriction != index)
+                    if (indexRestriction > -1 && indexRestriction != variable.Index)
                         continue;
 
-                    SparseArray array = arrayVariables.GetOrAdd(alias, _ => new SparseArray());
+                    SparseArray array = arrayVariables.GetOrAdd(variable.Name, _ => new SparseArray());
 
                     if (measurements.TryGetValue(key, out IMeasurement measurement))
-                        array[index] = measurement.AdjustedValue;
+                        array[variable.Index] = measurement.AdjustedValue;
                     else
-                        array[index] = SentinelValue;
+                        array[variable.Index] = SentinelValue;
                 }
                 else
                 {
                     if (measurements.TryGetValue(key, out IMeasurement measurement))
-                        m_expressionContext.Variables[name] = measurement.AdjustedValue;
+                        m_expressionContext.Variables[variable.Name] = measurement.AdjustedValue;
                     else
-                        m_expressionContext.Variables[name] = SentinelValue;
+                        m_expressionContext.Variables[variable.Name] = SentinelValue;
                 }
             }
 
             // Convert SparseArray instances to normal arrays
-            foreach (KeyValuePair<string, int> kvp in m_arrayVariableLengths)
+            foreach (KeyValuePair<string, double[]> kvp in m_arrayCache)
             {
-                string alias = kvp.Key;
-                int length = kvp.Value;
+                string name = kvp.Key;
+                double[] array = kvp.Value;
+                int length = array.Length;
 
-                if (arrayVariables.TryGetValue(alias, out SparseArray sparseArray))
+                if (arrayVariables.TryGetValue(name, out SparseArray sparseArray))
                 {
-                    double[] array = new double[length];
-
                     if (indexRestriction == -1)
                     {
                         for (int i = 0; i < length; i++)
@@ -583,15 +590,15 @@ namespace DynamicCalculator
                             array[indexRestriction] = value;
                     }
 
-                    m_expressionContext.Variables[alias] = array;
+                    m_expressionContext.Variables[name] = array;
                 }
                 else
                 {
-                    m_expressionContext.Variables[alias] = Enumerable.Repeat(SentinelValue, length).ToArray();
+                    m_expressionContext.Variables[name] = Enumerable.Repeat(SentinelValue, length).ToArray();
                 }
             }
 
-            // Assign special constant values
+            // Assign special values, e.g., constants, to the expression
             HandleSpecialVariables(m_expressionContext.Variables);
 
             // Compile the expression if it has not been compiled already
@@ -637,9 +644,9 @@ namespace DynamicCalculator
                 string[] targets =  parser.Split(target);
                 int index = 0;
 
-                for (int i = 0; i < targets.Length; i++)
+                foreach (string arrayTarget in targets)
                 {
-                    target = targets[i].Trim();
+                    target = arrayTarget.Trim();
 
                     if (string.IsNullOrEmpty(target))
                         continue;
@@ -649,16 +656,16 @@ namespace DynamicCalculator
                         MeasurementKey[] keys = AdapterBase.ParseInputMeasurementKeys(DataSource, false, target);
 
                         foreach (MeasurementKey key in keys)
-                            AddMapping(key, alias, $"{alias}[{index++}]");
+                            AddMapping(key, alias, index++);
                     }
                     else
                     {
                         MeasurementKey key = GetKey(target);
-                        AddMapping(key, alias, $"{alias}[{index++}]");
+                        AddMapping(key, alias, index++);
                     }
                 }
 
-                m_arrayVariableLengths[alias] = index;
+                m_arrayCache[alias] = new double[index];
             }
             else
             {
@@ -683,10 +690,10 @@ namespace DynamicCalculator
             AddMapping(key, alias);
         }
 
-        // Adds the given mapping to the key-variable map.
-        private void AddMapping(MeasurementKey key, string alias, string indexedAlias = null)
+        // Adds the measurement key to variable[index] mapping.
+        private void AddMapping(MeasurementKey key, string alias, int index = -1)
         {
-            if (indexedAlias is null && m_variableNames.Contains(alias))
+            if (index > -1 && m_variableNames.Contains(alias))
                 throw new ArgumentException($"Variable name is not unique: {alias}");
 
             foreach (string reservedName in ReservedVariableNames)
@@ -696,7 +703,12 @@ namespace DynamicCalculator
             }
 
             m_variableNames.Add(alias);
-            m_keyMapping.Add(key, indexedAlias ?? alias);
+            
+            m_keyMapping.Add(key, new Variable
+            {
+                Name = alias,
+                Index = index
+            });
         }
 
         // Performs alias replacement on tokens that were not explicitly aliased.
@@ -706,9 +718,8 @@ namespace DynamicCalculator
 
             foreach (string token in m_nonAliasedTokens.Values)
             {
-                MeasurementKey key = GetKey(token);
-                string alias = m_keyMapping[key];
-                aliasedExpressionTextBuilder.Replace(token, alias);
+                if (m_keyMapping.TryGetValue(GetKey(token), out Variable variable))
+                    aliasedExpressionTextBuilder.Replace(token, variable.Name);
             }
 
             m_aliasedExpressionText = aliasedExpressionTextBuilder.ToString();

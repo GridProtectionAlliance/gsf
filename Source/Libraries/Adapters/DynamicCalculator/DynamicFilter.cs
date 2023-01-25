@@ -275,7 +275,7 @@ namespace DynamicCalculator
 
                 status.Append(base.Status);
                 status.AppendLine();
-                status.AppendLine($"           Execution Order: {VariableList}");
+                status.AppendLine($"           Execution Order: {ExecutionOrder}");
                 status.AppendLine($"          Filter Operation: {FilterOperation}");
                 status.AppendLine($"         Target Value Type: {(m_valueIsArray ? "Array" : "Singleton")}");
 
@@ -283,13 +283,12 @@ namespace DynamicCalculator
                 {
                     status.AppendLine($"    Processed Measurements: {m_processedMeasurements:N0}");
                     status.AppendLine($"      Removed Measurements: {m_removedMeasurements:N0}");
+                    status.AppendLine($"      Skipped Removal Sets: {m_skippedRemovalSets:N0}");
                 }
                 else
                 {
                     status.AppendLine($"    Augmented Measurements: {m_processedMeasurements:N0}");
                 }
-
-                status.AppendLine($"      Skipped Removal Sets: {m_skippedRemovalSets:N0}");
 
                 return status.ToString();
             }
@@ -319,7 +318,9 @@ namespace DynamicCalculator
             if (settings.TryGetValue(nameof(ExecutionOrder), out string setting)  && int.TryParse(setting, out int executionOrder))
                 ExecutionOrder = executionOrder;
 
-            FilterOperation = settings.TryGetValue(nameof(FilterOperation), out setting) && Enum.TryParse(setting, out FilterOperation filterOperation) ? filterOperation : FilterOperation.ValueAugmentation;
+            FilterOperation = settings.TryGetValue(nameof(FilterOperation), out setting) && Enum.TryParse(setting, out FilterOperation filterOperation) ? 
+                filterOperation : 
+                FilterOperation.ValueAugmentation;
 
             ReadOnlyCollection<string> variableNames = VariableNames;
 
@@ -340,7 +341,7 @@ namespace DynamicCalculator
         {
             // Measurements are handled here prior to being routing, so manual filtering is required
             IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs = measurements
-                .Where(IsInputMeasurement)
+                .Where(measurement => m_inputMeasurementKeys.Contains(measurement.Key))
                 .ToDictionary(measurement => measurement.Key);
          
             if (inputs.Count == 0)
@@ -476,7 +477,9 @@ namespace DynamicCalculator
         protected override void HandleSpecialVariables(VariableCollection variables)
         {
             base.HandleSpecialVariables(variables);
-            variables[IndexVariable] = m_index;
+
+            if (m_valueIsArray)
+                variables[IndexVariable] = m_index;
         }
 
         /// <summary>
@@ -485,14 +488,6 @@ namespace DynamicCalculator
         /// <param name="value">The value calculated by the <see cref="DynamicCalculator"/>.</param>
         protected override void HandleCalculatedValue(object value) => 
             m_result = value;
-
-        /// <summary>
-        /// Determines if the given measurement represents a signal that is bound for this filter adapter.
-        /// </summary>
-        /// <param name="measurement">The source measurement to be checked.</param>
-        /// <returns><c>true</c> if <paramref name="measurement"/> is bound for this filter adapter.</returns>
-        public virtual bool IsInputMeasurement(IMeasurement measurement) => 
-            m_inputMeasurementKeys.Contains(measurement.Key);
 
         /// <summary>
         /// Gets a short one-line status of this <see cref="AdapterBase"/>.
