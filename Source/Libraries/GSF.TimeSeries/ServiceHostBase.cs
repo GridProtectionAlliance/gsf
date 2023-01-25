@@ -2128,6 +2128,10 @@ namespace GSF.TimeSeries
                         if (!method.TryGetAttribute(out AdapterCommandAttribute commandAttribute))
                             continue;
 
+                        // Don't display methods marked as hidden - allows derived classes to hide methods
+                        if (method.TryGetAttribute(out EditorBrowsableAttribute editorBrowsableAttribute) && editorBrowsableAttribute.State == EditorBrowsableState.Never)
+                            continue;
+
                         // Don't bother displaying commands to users who cannot invoke them
                         if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role)))
                             continue;
