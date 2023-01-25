@@ -45,7 +45,7 @@
     string clearCredentials = AuthenticationOptions.DefaultClearCredentialsParameter;
     string verificationHeader = AuthenticationOptions.DefaultRequestVerificationToken;
     string verificationValue = Html.RequestVerificationHeaderToken();
-    string useAjaxVerfication = AuthenticationOptions.DefaultAjaxRequestVerificationToken;
+    string useAjaxVerification = AuthenticationOptions.DefaultAjaxRequestVerificationToken;
     string loginHeader = "";
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
     bool isPOSIX = GSF.Common.IsPosixEnvironment;
@@ -95,7 +95,7 @@
         }
 
         if (!string.IsNullOrWhiteSpace(options.AjaxRequestVerificationToken)) {
-            useAjaxVerfication = options.AjaxRequestVerificationToken;
+            useAjaxVerification = options.AjaxRequestVerificationToken;
         }
 
         // Login header is used set custom logo and application title for page
@@ -112,7 +112,7 @@
         const unsecureConnection = {5};
         const verificationHeader = ""{6}"";
         const verificationValue = ""{7}"";
-        const useAjaxVerfication = ""{8}"";
+        const useAjaxVerification = ""{8}"";
         const redirectPageLabel = ""{9}"";
         const useAlternateSecurityProvider = {10};
         const oidcError = ""{11}"";
@@ -126,7 +126,7 @@
         /* 5 */ unsecureConnection.ToString().ToLowerInvariant(),
         /* 6 */ verificationHeader.JavaScriptEncode(),
         /* 7 */ verificationValue.JavaScriptEncode(),
-        /* 8 */ useAjaxVerfication.JavaScriptEncode(),
+        /* 8 */ useAjaxVerification.JavaScriptEncode(),
         /* 9 */ redirectPageLabel.JavaScriptEncode(),
         /* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant(),
         /* 11 */ oidcError.JavaScriptEncode(),

@@ -30,7 +30,7 @@
 //   boolean unsecureConnection: flag that indicates if connection is secure
 //   string verificationHeader: HTTP header name used to transmit anti-forgery value
 //   string verificationValue: server generated anti-forgery verification token value
-//   string useAjaxVerfication: HTTP header named use to indicate an AJAX post
+//   string useAjaxVerification: HTTP header named use to indicate an AJAX post
 //   string redirectPageLabel: user label for redirect location, e.g., main or target
 //   string oidcError: error Message from OIDC provider if en error occurred
 //   boolean isPOSIX: flag that indicates if host system is POSIX based, e.g., Linux or OSX
@@ -75,7 +75,7 @@ function authenticateBasic(username, password) {
 
             xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
             xhr.setRequestHeader(verificationHeader, verificationValue);
-            xhr.setRequestHeader(useAjaxVerfication, "true");
+            xhr.setRequestHeader(useAjaxVerification, "true");
         }
     });
 }
@@ -92,7 +92,7 @@ function authenticateNTLM(username, password) {
         else
             loginFailed(response);
     },
-    verificationHeader, verificationValue, useAjaxVerfication);
+    verificationHeader, verificationValue, useAjaxVerification);
 }
 
 // Authorize user with pass-through basic authentication without credentials
@@ -114,7 +114,7 @@ function passthroughBasic() {
         },
         beforeSend: function (xhr) {
             xhr.setRequestHeader(verificationHeader, verificationValue);
-            xhr.setRequestHeader(useAjaxVerfication, "true");
+            xhr.setRequestHeader(useAjaxVerification, "true");
         }
     });
 }
@@ -141,7 +141,7 @@ function passthroughNTLM() {
         },
         beforeSend: function (xhr) {
             xhr.setRequestHeader(verificationHeader, verificationValue);
-            xhr.setRequestHeader(useAjaxVerfication, "true");
+            xhr.setRequestHeader(useAjaxVerification, "true");
         }
     });
 }
