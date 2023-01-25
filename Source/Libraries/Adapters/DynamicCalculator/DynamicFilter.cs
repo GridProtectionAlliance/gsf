@@ -152,6 +152,11 @@ namespace DynamicCalculator
         [DefaultValue(FilterOperation.ValueAugmentation)]
         public FilterOperation FilterOperation { get; set; }
 
+        /// <summary>
+        /// Gets or sets the current enabled state of the <see cref="DynamicFilter"/>.
+        /// </summary>
+        public override bool Enabled { get; set; } // Overriding default Start/Stop behavior
+
         #region [ Hidden Properties ]
 
         /// <summary>
@@ -332,6 +337,32 @@ namespace DynamicCalculator
             m_valueArrayLength = m_valueIsArray ? ArrayVariableLengths["value"] : 0;
             m_variableKeys = VariableKeys;
         }
+        
+        #region [ Hidden Methods ]
+
+        /// <summary>
+        /// Starts the <see cref="DynamicCalculator"/> or restarts it if it is already running.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override void Start() => // Redeclared to hide invokable method - not relevant to this adapter
+            Enabled = true; // Not calling base method, filter adapter does not need to concentrate data
+
+        /// <summary>
+        /// Stops the <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override void Stop() => // Redeclared to hide invokable method - not relevant to this adapter
+            Enabled = false;
+
+        /// <summary>
+        /// Examines the concentrator frame queue state of the <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public new void ExamineQueueState() // Redeclared to hide invokable method - not relevant to this adapter
+        {
+        }
+
+        #endregion
 
         /// <summary>
         /// Handler for new measurements that have not yet been routed.
