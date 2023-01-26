@@ -342,14 +342,10 @@ namespace DynamicCalculator
                 augmentationFlags :
                 DefaultAugmentationFlags;
 
-            ReadOnlyCollection<string> variableNames = VariableNames;
-
-            m_valueIsArray = variableNames.Contains("value[]");
-
-            if (!variableNames.Contains("value") && !m_valueIsArray)
+            if (!VariableNames.Contains("value"))
                 throw new InvalidOperationException("Variable named 'value', or 'value[]' when defined as an array, is required.");
 
-            m_valueArrayLength = m_valueIsArray ? ArrayVariableLengths["value"] : 0;
+            m_valueIsArray = ArrayVariableLengths.TryGetValue("value", out m_valueArrayLength);
             m_variableKeys = VariableKeys;
         }
         
