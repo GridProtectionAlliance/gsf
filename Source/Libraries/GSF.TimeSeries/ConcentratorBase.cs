@@ -1250,7 +1250,7 @@ namespace GSF.TimeSeries
                 status.AppendLine($"   Wait handle expirations: {WaitHandleExpirations:N0}");
                 status.AppendLine($"    Total published frames: {PublishedFrames:N0}");
                 status.AppendLine($"        Defined frame rate: {m_framesPerSecond} frames/sec, {TicksPerFrame:0.00} ticks/frame");
-                status.AppendLine($" Estimated mean frame rate: {PublishedFrames / (RunTime - m_lagTime):0.00)} frames/sec");
+                status.AppendLine($" Estimated mean frame rate: {PublishedFrames / (RunTime - m_lagTime):0.00} frames/sec");
                 status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? $"{((Ticks)TicksPerFrame).ToMilliseconds():0.00} milliseconds" : ProcessingInterval == 0 ? "As fast as possible" : $"{ProcessingInterval} milliseconds")}");
 
                 lock (s_frameRateTimers)

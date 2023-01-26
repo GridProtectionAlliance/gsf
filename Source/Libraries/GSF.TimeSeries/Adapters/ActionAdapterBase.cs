@@ -606,7 +606,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                status.Append($" Minimum measurements used: {MinimumMeasurementsToUse:N0}");
+                status.AppendLine($" Minimum measurements used: {MinimumMeasurementsToUse:N0}");
                 status.Append(base.Status);
 
                 return status.ToString();
