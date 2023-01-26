@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="TagTemplateHeader" xml:space="preserve">
+    <value># File format is tab-delimited with the following columns:
+#     Tag Name-&gt;Inputs-&gt;Equation-&gt;Type-&gt;Description
+#
+# For custom action adapter types, the format can be interpreted as:
+#     Tag Name = Adapter Instance Name
+#     Inputs = Connection String
+#     Equation = Assembly Name (i.e., DLL file name)
+#     Type = Fully Qualified Type Name
+#     Description = Local Comments
+#
+# Otherwise format defines dynamic signal based calculations based on input configuration:
+#     Tag Name = Identifier that becomes part of the point tag name of the calculation result
+#     Inputs = Particular inputs for the specified calculation type
+#     Equation = Calculation equation, if applicable to the calculation type
+#     Type = Calculation type, one of: CalculatePower, SumPhase, DynamicCalculator, ValueAdjuster, or ValueFilter
+#     Description = Textual description of calculation purpose included in measurement description field
+#
+# CalculatePower type creates power calculations for paired voltage/current phasors where
+# Inputs column is one of: +, A, B or C
+#
+# SumPhase type creates a 3-phase power summation when A, B and C power calculations are available where
+# Inputs column is one of: MW, MVAR or MVA
+#     
+# DynamicCalculator type creates an equation-based calculation using one or more selected inputs separated by semi-colon where
+# Inputs column variables are as follows - note that phasor based inputs will create one calculation per phasor type (V or I):
+#     VNOM: Nominal Voltage = derived from per voltage phasor screen input in kV
+#      VAM: Voltage A-Phase Magnitude also VBM, VCM, VNM for B, C &amp; N phases and VPOSM, VNEGM, VZM for +, -, 0 sequence
+#      VAA: Voltage A-Phase Angle     also VBA, VCA, VNA            ^            VPOSA, VNEGA, VZA
+#      IAM: Current A-Phase Magnitude also IBM, ICM, INM         Neutral         IPOSM, INEGM, IZM
+#      IAA: Current A-Phase Angle     also IBA, ICA, INA                         IPOSA, INEGA, IZA
+#     FREQ: Frequency
+#     FNOM: Constant nominal frequency per defined global system configuration, defaults to 60
+#     FAVG: Current average frequency - must be pre-calculated with signal reference of "SYSTEM!FREQ-AVG-FQ"
+#    FLAGS: Status Flags, e.g., IEEE C37.118 STAT word
+#     ALOG: Analog value array
+#     DIGI: DIgital value array
+#
+# Phasor type variables and the Tag Name column, which become system output measurements, can also be used to create device
+# level aggregate equation-based calculations using one or more selected array type inputs. The aggregate equations still use
+# the DynamicCalculator type where the Inputs column variables are separated by semi-colon, however Inputs are always arrays.
+# When using outputs from previous calculations as inputs to an aggregation calculation, only those that can produce multiple
+# outputs per device can be used. Also, the outputs to be used as inputs must be defined in the same tag template file and be
+# defined before they are used as inputs. Names of Inputs should be the Inputs variable name or the Tag Name suffixed with an
+# array indicator "[]". For example, the VAM Inputs variable as an array Input would be VAM[]. All operations in the Equation
+# column are performed on array inputs and the following aggregate functions are defined: Count, Sum, Min, Max, Avg, and StDev
+# all of which operate on a single array input. There are also two special functions called "Any" and "All" which accepts an
+# array input and a string with a simple comparison equation, for example: Any(VPOSM, "&gt; 0").
+#
+# ValueAdjuster type creates an equation-based value calculation for changing input values using one or more selected inputs
+# separated by semi-colon. Inputs are the same as defined for the DynamicCalculator type but Inputs must always be arrays.
+# When using outputs from previous calculations as inputs to a ValueAdjuster calculation, only those that can produce multiple
+# outputs per device can be used. Also, the outputs to be used as inputs must be defined in the same tag template file and be
+# defined before they are used as inputs. Names of Inputs should be the Inputs variable name or the Tag Name suffixed with an
+# array indicator "[]". ValueAdjuster types create no new tags, so the Tag Name column is instead used to specify the name of
+# the Inputs array which will be used as the targets for value adjustment and should be referenced in the equation text with
+# an alias name of "value". The equation operates indepedently over each value in the target array by its index where active
+# value is referenced in the expression as "value[INDEX]". Equation result should be a double type such that the result of
+# the equation will be used to replace the measurement value before further system processing, i.e., from the perspective all
+# other system adapters, it will appear as if the new assigned value was the original received value except that the new value
+# will have the state flag of "CalculatedValue" assigned to its bit set.
+#
+# ValueFilter type creates an equation-based value calculation for removing input values using one or more selected inputs
+# separated by semi-colon. Inputs are the same as defined for the DynamicCalculator type but Inputs must always be arrays.
+# When using outputs from previous calculations as inputs to a ValueFilter calculation, only those that can produce multiple
+# outputs per device can be used. Also, the outputs to be used as inputs must be defined in the same tag template file and be
+# defined before they are used as inputs. Names of Inputs should be the Inputs variable name or the Tag Name suffixed with an
+# array indicator "[]". ValueFilter types create no new tags, so the Tag Name column is instead used to specify the name of
+# the Inputs array which will be used as the targets for value removal and should be referenced in the equation text with
+# an alias name of "value". The equation operates indepedently over each value in the target array by its index where active
+# value is referenced in the expression as "value[INDEX]". Equation result should be a boolean type such that the result of
+# the equation, when true, will be used to determine if the measurement should before removed from further system processing,
+# i.e., from the perspective all other system adapters, it will appear as if the the value was never received by the system.
+#
+# ValueAdjuster and ValueFilter types will be executed in the order in which they are defined in the tag template.
+#
+# Tag Name	Inputs	Equation	Type	Description</value>
+  </data>
+</root>
