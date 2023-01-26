@@ -65,16 +65,16 @@ namespace PhasorWebUI.Adapters
 
         public FrequencyDefinition FrequencyDefinition { get; set; }
 
-        public List<PhasorDefinition> PhasorDefinitions { get; } = new List<PhasorDefinition>();
+        public List<PhasorDefinition> PhasorDefinitions { get; } = new();
 
-        public List<AnalogDefinition> AnalogDefinitions { get; } = new List<AnalogDefinition>();
+        public List<AnalogDefinition> AnalogDefinitions { get; } = new();
 
-        public List<DigitalDefinition> DigitalDefinitions { get; } = new List<DigitalDefinition>();
+        public List<DigitalDefinition> DigitalDefinitions { get; } = new();
     }
 
     public class ConfigurationFrame
     {
-        public List<ConfigurationCell> Cells { get; } = new List<ConfigurationCell>();
+        public List<ConfigurationCell> Cells { get; } = new();
 
         public ushort IDCode { get; set; }
 
