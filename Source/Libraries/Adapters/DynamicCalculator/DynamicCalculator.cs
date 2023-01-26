@@ -332,7 +332,8 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets the configured list of variables names.
         /// </summary>
-        protected ReadOnlyCollection<string> VariableNames => new(m_variableNames.ToList());
+        protected ReadOnlyCollection<string> VariableNames =>
+            new(m_keyMapping.Select(kvp => GetVariableName(kvp.Value)).ToList());
 
         /// <summary>
         /// Gets array variables names mapped to their defined lengths.
