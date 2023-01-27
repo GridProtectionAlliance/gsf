@@ -370,14 +370,6 @@ namespace DynamicCalculator
         public override void Stop() => // Redeclared to hide invokable method - not relevant to this adapter
             Enabled = false;
 
-        /// <summary>
-        /// Examines the concentrator frame queue state of the <see cref="ActionAdapterBase"/>.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public new void ExamineQueueState() // Redeclared to hide invokable method - not relevant to this adapter
-        {
-        }
-
         #endregion
 
         /// <summary>
@@ -469,7 +461,7 @@ namespace DynamicCalculator
             Interlocked.Add(ref m_processedMeasurements, inputs.Count);
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context and m_index requires synchronization
+        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context, m_result and m_index requires synchronization
         private List<int> ProcessRemoveWhenTrueForArray(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs, IReadOnlyDictionary<MeasurementKey, int> indexes)
         {
             List<int> indexesToBeRemoved = new();
@@ -489,7 +481,7 @@ namespace DynamicCalculator
             return indexesToBeRemoved;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context and m_index requires synchronization
+        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context, m_result and m_index requires synchronization
         private void ProcessValueAugmentationForArray(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs)
         {
             for (m_index = 0; m_index < m_valueArrayLength; m_index++)
@@ -508,7 +500,7 @@ namespace DynamicCalculator
             }
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context requires synchronization
+        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context and m_result requires synchronization
         private List<int> ProcessRemoveWhenTrueForSingleton(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs, IReadOnlyDictionary<MeasurementKey, int> indexes)
         {
             List<int> indexesToBeRemoved = new(1);
@@ -525,7 +517,7 @@ namespace DynamicCalculator
             return indexesToBeRemoved;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context requires synchronization
+        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context and m_result requires synchronization
         private void ProcessValueAugmentationForSingleton(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs)
         {
             if (!inputs.TryGetValue(m_variableKeys["value"], out IMeasurement measurement))
