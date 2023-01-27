@@ -1234,7 +1234,11 @@ namespace GSF.TimeSeries
                 status.AppendLine($"  Average publication time: {AveragePublicationTimePerFrame / SI.Milli:0.0000)} milliseconds");
                 status.AppendLine($"  Pre-lag-time publication: {FramesAheadOfSchedule / (double)PublishedFrames:##0.0000%}");
                 status.AppendLine($" Down-sampling application: {DownsampledMeasurements / (double)ProcessedMeasurements:##0.0000%}");
-                status.AppendLine($" User function utilization: {1.0D - (TicksPerFrame - AveragePublicationTimePerFrame.ToTicks()) / TicksPerFrame:##0.0000%} of available time used");
+
+                status.AppendLine(" User function utilization: " + (PublishedFrames > 0 ? 
+                    $"{1.0D - (TicksPerFrame - AveragePublicationTimePerFrame.ToTicks()) / TicksPerFrame:##0.0000%} of available time used" : 
+                     "No frames published yet"));
+
                 status.AppendLine($"Published measurement loss: {DiscardedMeasurements / (double)ReceivedMeasurements:##0.0000%}");
 
                 if (m_allowSortsByArrival)
