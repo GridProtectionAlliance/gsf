@@ -700,6 +700,10 @@ namespace DynamicCalculator
         // Adds the measurement key to variable[index] mapping.
         private void AddMapping(MeasurementKey key, string alias, int index = -1)
         {
+            // Check for null key, typically means measurement no longer exists
+            if (key is null || string.IsNullOrWhiteSpace(alias))
+                return;
+
             if (index == -1 && m_variableNames.Contains(alias))
                 throw new ArgumentException($"Variable name is not unique: {alias}");
 

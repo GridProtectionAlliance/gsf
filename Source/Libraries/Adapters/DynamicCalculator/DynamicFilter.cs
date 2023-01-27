@@ -36,6 +36,8 @@ using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
+#pragma warning disable CS1574, CS1584, CS1581, CS1580
+
 namespace DynamicCalculator
 {
     /// <summary>
@@ -130,7 +132,8 @@ namespace DynamicCalculator
         (
             "Defines the unique list of variables used in the expression. Variable named 'value' is required and can be an array, as 'value[]'.\n" +
             "For array definition, use a comma separated list of targets or a filter expression.\n" +
-            "Example: value[]=FILTER ActiveMeasurements WHERE SignalType='DIGI'"
+            "Example: value[]=FILTER ActiveMeasurements WHERE SignalType='DIGI'\n" +
+            "Note that inputs will not be time aligned by adapter but may be grouped based on adapter publication processing."
         )]
         public new string VariableList // Redeclared to provide a more relevant description and example value for this adapter
         {
@@ -277,7 +280,12 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
         /// </summary>
-        protected override bool ExpectsOutputMeasurement => false; 
+        protected override bool ExpectsOutputMeasurement => false;
+
+        /// <summary>
+        /// Gets flags that determines if <see cref="ConcentratorBase"/> class status should be included in <see cref="ActionAdapterBase"/> status.
+        /// </summary>
+        protected override bool ShowConcentratorStatus => false;
 
         /// <summary>
         /// Returns the detailed status of the data input source.
@@ -483,12 +491,14 @@ namespace DynamicCalculator
                 Calculate(inputs, new Dictionary<string, int> { ["value"] = m_index });
 
                 // If calculation result is a convertible type, we update measurement value
-                if (m_result is IConvertible result)
-                {
-                    IMeasurement measurement = inputs[m_variableKeys[$"value[{m_index}]"]];
-                    measurement.Value = Convert.ToDouble(result);
-                    measurement.StateFlags |= AugmentationFlags;
-                }
+                if (m_result is not IConvertible result)
+                    continue;
+
+                if (!inputs.TryGetValue(m_variableKeys[$"value[{m_index}]"], out IMeasurement measurement))
+                    continue;
+
+                measurement.Value = Convert.ToDouble(result);
+                measurement.StateFlags |= AugmentationFlags;
             }
         }
 
@@ -510,12 +520,14 @@ namespace DynamicCalculator
             Calculate(inputs);
 
             // If calculation result is a convertible type, we update measurement value
-            if (m_result is IConvertible result)
-            {
-                IMeasurement measurement = inputs[m_variableKeys["value"]];
-                measurement.Value = Convert.ToDouble(result);
-                measurement.StateFlags |= AugmentationFlags;
-            }
+            if (m_result is not IConvertible result)
+                return;
+
+            if (!inputs.TryGetValue(m_variableKeys["value"], out IMeasurement measurement))
+                return;
+
+            measurement.Value = Convert.ToDouble(result);
+            measurement.StateFlags |= AugmentationFlags;
         }
 
         /// <summary>
