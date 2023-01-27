@@ -133,7 +133,7 @@ namespace DynamicCalculator
             "Defines the unique list of variables used in the expression. Variable named 'value' is required and can be an array, as 'value[]'.\n" +
             "For array definition, use a comma separated list of targets or a filter expression.\n" +
             "Example: value[]=FILTER ActiveMeasurements WHERE SignalType='DIGI'\n" +
-            "Note that inputs will not be time aligned by adapter but may be grouped based on adapter publication processing."
+            "Note that inputs will not be time aligned by DynamicFilter but may be grouped based on source adapter publication processing."
         )]
         public new string VariableList // Redeclared to provide a more relevant description and example value for this adapter
         {
@@ -147,7 +147,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines the value that determines the order in which filter adapters are executed.")]
         [DefaultValue(DefaultExecutionOrder)]
-        public virtual int ExecutionOrder { get; set; }
+        public virtual int ExecutionOrder { get; set; } = DefaultExecutionOrder;
 
         /// <summary>
         /// Gets or sets the operation type of the filter calculation.
@@ -155,7 +155,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines operation type of the filter calculation.")]
         [DefaultValue(DefaultFilterOperation)]
-        public FilterOperation FilterOperation { get; set; }
+        public FilterOperation FilterOperation { get; set; } = DefaultFilterOperation;
 
         /// <summary>
         /// Gets or sets measurement state flags that are applied when a value has been replaced when filter operation is set to <see cref="FilterOperation.ValueAugmentation"/>.
@@ -163,7 +163,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter]
         [Description("Defines measurement state flags that are applied when a value has been replaced when filter operation is set to value augmentation.")]
         [DefaultValue(DefaultAugmentationFlags)]
-        public MeasurementStateFlags AugmentationFlags { get; set; }
+        public MeasurementStateFlags AugmentationFlags { get; set; } = DefaultAugmentationFlags;
 
         /// <summary>
         /// Gets or sets the current enabled state of the <see cref="DynamicFilter"/>.
@@ -342,13 +342,11 @@ namespace DynamicCalculator
             if (settings.TryGetValue(nameof(ExecutionOrder), out string setting)  && int.TryParse(setting, out int executionOrder))
                 ExecutionOrder = executionOrder;
 
-            FilterOperation = settings.TryGetValue(nameof(FilterOperation), out setting) && Enum.TryParse(setting, out FilterOperation filterOperation) ? 
-                filterOperation : 
-                DefaultFilterOperation;
+            if (settings.TryGetValue(nameof(FilterOperation), out setting) && Enum.TryParse(setting, out FilterOperation filterOperation))
+                FilterOperation = filterOperation;
 
-            AugmentationFlags = settings.TryGetValue(nameof(AugmentationFlags), out setting) && Enum.TryParse(setting, out MeasurementStateFlags augmentationFlags) ?
-                augmentationFlags :
-                DefaultAugmentationFlags;
+            if (settings.TryGetValue(nameof(AugmentationFlags), out setting) && Enum.TryParse(setting, out MeasurementStateFlags augmentationFlags))
+                AugmentationFlags = augmentationFlags;
 
             if (!VariableNames.Contains("value"))
                 throw new InvalidOperationException("Variable named 'value', or 'value[]' when defined as an array, is required.");
