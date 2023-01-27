@@ -443,7 +443,7 @@ namespace DynamicCalculator
 
             SkipNaNOutput = settings.TryGetValue(nameof(SkipNaNOutput), out setting) && setting.ParseBoolean();
             TimestampSource = settings.TryGetValue(nameof(TimestampSource), out setting) && Enum.TryParse(setting, out TimestampSource timestampSource) ? timestampSource : TimestampSource.Frame;
-            CalculationInterval = settings.TryGetValue(nameof(CalculationInterval), out setting) ? double.Parse(setting) : 0;
+            CalculationInterval = settings.TryGetValue(nameof(CalculationInterval), out setting) ? double.Parse(setting) : 0.0D;
             UseLatestValues = !settings.TryGetValue(nameof(UseLatestValues), out setting) || setting.ParseBoolean();
             SentinelValue = settings.TryGetValue(nameof(SentinelValue), out setting) ? double.Parse(setting) : double.NaN;
 
@@ -514,7 +514,7 @@ namespace DynamicCalculator
                     m_latestTimestamp = measurement.Timestamp;
             }
 
-            if (m_timerOperation.Delay <= 0)
+            if (m_timerOperation.Delay == 0)
                 ProcessLatestMeasurements();
         }
 
@@ -685,9 +685,15 @@ namespace DynamicCalculator
         private void AddNotAliasedVariable(string token)
         {
             token = token.Trim();
-            m_nonAliasedTokens.Add(-token.Length, token);
 
             MeasurementKey key = GetKey(token);
+            
+            // Check for undefined key, typically means measurement no longer exists
+            if (key == MeasurementKey.Undefined)
+                return;
+            
+            m_nonAliasedTokens.Add(-token.Length, token);
+
             string alias = token.ReplaceCharacters('_', c => !char.IsLetterOrDigit(c));
 
             // Ensure that the generated alias is unique
@@ -700,10 +706,6 @@ namespace DynamicCalculator
         // Adds the measurement key to variable[index] mapping.
         private void AddMapping(MeasurementKey key, string alias, int index = -1)
         {
-            // Check for null key, typically means measurement no longer exists
-            if (key is null || string.IsNullOrWhiteSpace(alias))
-                return;
-
             if (index == -1 && m_variableNames.Contains(alias))
                 throw new ArgumentException($"Variable name is not unique: {alias}");
 
@@ -740,10 +742,17 @@ namespace DynamicCalculator
         // may be either a signal ID, measurement key or point tag.
         private MeasurementKey GetKey(string token)
         {
-            if (Guid.TryParse(token, out Guid signalID))
-                return MeasurementKey.LookUpBySignalID(signalID);
+            MeasurementKey key;
 
-            if (MeasurementKey.TryParse(token, out MeasurementKey key))
+            if (Guid.TryParse(token, out Guid signalID))
+            {
+                key = MeasurementKey.LookUpBySignalID(signalID);
+
+                if (key != MeasurementKey.Undefined)
+                    return key;
+            }
+
+            if (MeasurementKey.TryParse(token, out key))
                 return key;
 
             const string MeasurementTable = "ActiveMeasurements";
@@ -757,7 +766,7 @@ namespace DynamicCalculator
             }
 
             if (key == default || key == MeasurementKey.Undefined)
-                throw new InvalidOperationException($"Could not parse token \"{token}\" as a Guid, measurement key, or point tag");
+                throw new InvalidOperationException($"Could not find measurement for token \"{token}\". Attempted parse and/or lookup as Guid, measurement key and point tag.");
 
             return key;
         }
