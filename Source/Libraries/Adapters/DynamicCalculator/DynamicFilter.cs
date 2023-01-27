@@ -330,9 +330,9 @@ namespace DynamicCalculator
             Dictionary<string, string> settings = Settings;
 
             settings[nameof(FramesPerSecond)] = "1";
-            settings[nameof(LagTime)] = "5";
-            settings[nameof(LeadTime)] = "5";
-            settings[nameof(CalculationInterval)] = "0";
+            settings[nameof(LagTime)] = "5.0";
+            settings[nameof(LeadTime)] = "5.0";
+            settings[nameof(CalculationInterval)] = "0.0";
             settings[nameof(TimestampSource)] = nameof(TimestampSource.LocalClock);
             settings[nameof(UseLatestValues)] = false.ToString();
             settings[nameof(SkipNaNOutput)] = false.ToString();
@@ -463,6 +463,10 @@ namespace DynamicCalculator
                 case FilterOperation.ValueAugmentation when !m_valueIsArray:
                     ProcessValueAugmentationForSingleton(inputs);
                     break;
+                default:
+                    if (m_processedMeasurements == 0L)
+                        OnStatusMessage(MessageLevel.Warning, $"Filter operation \"{FilterOperation}\" is not supported by the {nameof(DynamicFilter)} \"{Name}\".");
+                    break;
             }
 
             Interlocked.Add(ref m_processedMeasurements, inputs.Count);
@@ -474,11 +478,14 @@ namespace DynamicCalculator
 
             for (m_index = 0; m_index < m_valueArrayLength; m_index++)
             {
+                if (!indexes.TryGetValue(m_variableKeys[$"value[{m_index}]"], out int index))
+                    continue;
+                
                 Calculate(inputs, new Dictionary<string, int> { ["value"] = m_index });
 
                 // If calculation result is true, measurement is targeted for removal
                 if (m_result.ToString().ParseBoolean())
-                    indexesToBeRemoved.Add(indexes[m_variableKeys[$"value[{m_index}]"]]);
+                    indexesToBeRemoved.Add(index);
             }
 
             return indexesToBeRemoved;
@@ -488,13 +495,13 @@ namespace DynamicCalculator
         {
             for (m_index = 0; m_index < m_valueArrayLength; m_index++)
             {
+                if (!inputs.TryGetValue(m_variableKeys[$"value[{m_index}]"], out IMeasurement measurement))
+                    continue;
+                
                 Calculate(inputs, new Dictionary<string, int> { ["value"] = m_index });
 
                 // If calculation result is a convertible type, we update measurement value
                 if (m_result is not IConvertible result)
-                    continue;
-
-                if (!inputs.TryGetValue(m_variableKeys[$"value[{m_index}]"], out IMeasurement measurement))
                     continue;
 
                 measurement.Value = Convert.ToDouble(result);
@@ -506,24 +513,27 @@ namespace DynamicCalculator
         {
             List<int> indexesToBeRemoved = new(1);
 
+            if (!indexes.TryGetValue(m_variableKeys["value"], out int index))
+                return indexesToBeRemoved;
+
             Calculate(inputs);
 
             // If calculation result is true, measurement is targeted for removal
             if (m_result.ToString().ParseBoolean())
-                indexesToBeRemoved.Add(indexes[m_variableKeys["value"]]);
+                indexesToBeRemoved.Add(index);
 
             return indexesToBeRemoved;
         }
 
         private void ProcessValueAugmentationForSingleton(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs)
         {
+            if (!inputs.TryGetValue(m_variableKeys["value"], out IMeasurement measurement))
+                return;
+            
             Calculate(inputs);
 
             // If calculation result is a convertible type, we update measurement value
             if (m_result is not IConvertible result)
-                return;
-
-            if (!inputs.TryGetValue(m_variableKeys["value"], out IMeasurement measurement))
                 return;
 
             measurement.Value = Convert.ToDouble(result);
