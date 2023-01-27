@@ -327,8 +327,11 @@ namespace DynamicCalculator
         /// <summary>
         /// Gets defined expression variable collection with current values.
         /// </summary>
+        /// <remarks>
+        /// Updates to variables outside <see cref="Calculate"/> method should be synchronized with <c>lock(this)</c>.
+        /// </remarks>
         protected IDictionary<string, object> Variables => m_expressionContext.Variables;
-        
+
         /// <summary>
         /// Gets the configured list of variables names.
         /// </summary>
@@ -630,13 +633,14 @@ namespace DynamicCalculator
         // Adds an explicitly aliased variable to the key-variable map.
         private void AddAliasedVariable(string token)
         {
-            string[] splitToken = token.Split('=');
+            // Only split on the first equals sign - FILTER expressions may contain equal signs
+            int equalsIndex = token.IndexOf('=');
 
-            if (splitToken.Length > 2)
-                throw new FormatException($"Too many equals signs: {token}");
+            if (equalsIndex < 1)
+                throw new FormatException($"Could not find variable name: {token}");
 
-            string alias = splitToken[0].Trim();
-            string target = splitToken[1].Trim();
+            string alias = token.Substring(0, equalsIndex).Trim();
+            string target = token.Substring(equalsIndex + 1).Trim();
 
             if (string.IsNullOrWhiteSpace(alias))
                 throw new FormatException($"Variable name cannot be empty: {token}");
