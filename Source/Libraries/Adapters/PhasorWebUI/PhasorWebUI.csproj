@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\ConfigurationFrame.cs" />
+    <Compile Include="Model\CustomFilterAdapter.cs" />
     <Compile Include="Model\CustomActionAdapter.cs" />
     <Compile Include="Model\Device.cs" />
     <Compile Include="Model\Measurement.cs" />

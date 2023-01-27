@@ -554,6 +554,73 @@ namespace PhasorWebUI
 
         #endregion
 
+        #region [ CustomFilterAdapter Table Operations ]
+
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.QueryRecordCount)]
+        public int QueryCustomFilterAdapterCount(string filterText)
+        {
+            return DataContext.Table<CustomFilterAdapter>().QueryRecordCount(filterText);
+        }
+
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.QueryRecords)]
+        public IEnumerable<CustomFilterAdapter> QueryCustomFilterAdapters(string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            return DataContext.Table<CustomFilterAdapter>().QueryRecords(sortField, ascending, page, pageSize, filterText);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.DeleteRecord)]
+        public void DeleteCustomFilterAdapter(int id)
+        {
+            DataContext.Table<CustomFilterAdapter>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.CreateNewRecord)]
+        public CustomFilterAdapter NewCustomFilterAdapter()
+        {
+            return DataContext.Table<CustomFilterAdapter>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.AddNewRecord)]
+        public void AddNewCustomFilterAdapter(CustomFilterAdapter customFilterAdapter)
+        {
+            DataContext.Table<CustomFilterAdapter>().AddNewRecord(customFilterAdapter);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.UpdateRecord)]
+        public void UpdateCustomFilterAdapter(CustomFilterAdapter customFilterAdapter)
+        {
+            DataContext.Table<CustomFilterAdapter>().UpdateRecord(customFilterAdapter);
+        }
+
+        public void AddNewOrUpdateCustomFilterAdapter(CustomFilterAdapter customFilterAdapter)
+        {
+            TableOperations<CustomFilterAdapter> customFilterAdapterTable = DataContext.Table<CustomFilterAdapter>();
+
+            if (customFilterAdapterTable.QueryRecordCountWhere("AdapterName = {0}", customFilterAdapter.AdapterName) == 0)
+            {
+                AddNewCustomFilterAdapter(customFilterAdapter);
+            }
+            else
+            {
+                CustomFilterAdapter existingFilterAdapter = customFilterAdapterTable.QueryRecordWhere("AdapterName = {0}", customFilterAdapter.AdapterName);
+
+                existingFilterAdapter.AssemblyName = customFilterAdapter.AssemblyName;
+                existingFilterAdapter.TypeName = customFilterAdapter.TypeName;
+                existingFilterAdapter.ConnectionString = customFilterAdapter.ConnectionString;
+                existingFilterAdapter.LoadOrder = customFilterAdapter.LoadOrder;
+                existingFilterAdapter.Enabled = customFilterAdapter.Enabled;
+                existingFilterAdapter.UpdatedBy = customFilterAdapter.UpdatedBy;
+                existingFilterAdapter.UpdatedOn = customFilterAdapter.UpdatedOn;
+
+                UpdateCustomFilterAdapter(existingFilterAdapter);
+            }
+        }
+
+        #endregion
+
         #region [ Synchrophasor Device Wizard Operations ]
 
         public IEnumerable<SignalType> LoadSignalTypes(string source)
