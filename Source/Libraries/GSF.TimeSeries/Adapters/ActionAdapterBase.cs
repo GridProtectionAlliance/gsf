@@ -484,6 +484,11 @@ namespace GSF.TimeSeries.Adapters
         public Dictionary<string, string> Settings { get; private set; }
 
         /// <summary>
+        /// Gets flags that determines if <see cref="ConcentratorBase"/> class status should be included in <see cref="ActionAdapterBase"/> status.
+        /// </summary>
+        protected virtual bool ShowConcentratorStatus => true;
+
+        /// <summary>
         /// Returns the detailed status of the action adapter.
         /// </summary>
         /// <remarks>
@@ -607,7 +612,9 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 status.AppendLine($" Minimum measurements used: {MinimumMeasurementsToUse:N0}");
-                status.Append(base.Status);
+
+                if (ShowConcentratorStatus)
+                    status.Append(base.Status);
 
                 return status.ToString();
             }
