@@ -140,6 +140,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Device Viability Calculations.TagTemplate" />
     <EmbeddedResource Include="Full Calculations.TagTemplate" />
+    <EmbeddedResource Include="Flip Digital Bits.TagTemplate" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
