@@ -138,6 +138,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Device Viability Calculations.TagTemplate" />
+    <EmbeddedResource Include="Full Calculations.TagTemplate" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -145,6 +147,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Views\AddSynchrophasorDevice.cshtml" />
+    <EmbeddedResource Include="Single Phase Power Calculations.TagTemplate" />
+    <EmbeddedResource Include="Three Phase Power Calculations with Time Sync.TagTemplate" />
+    <EmbeddedResource Include="Three Phase Power Calculations.TagTemplate" />
     <None Include="Web.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

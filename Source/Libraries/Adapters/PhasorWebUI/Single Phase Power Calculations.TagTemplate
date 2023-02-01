@@ -1,0 +1,4 @@
+MW_1	+		CalculatePower	Positive Sequence MW
+MW_A	A		CalculatePower	Single Phase MW A
+MW_B	B		CalculatePower	Single Phase MW B
+MW_C	C		CalculatePower	Single Phase MW C

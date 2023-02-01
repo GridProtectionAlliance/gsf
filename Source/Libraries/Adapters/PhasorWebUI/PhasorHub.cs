@@ -24,6 +24,7 @@
 using GSF;
 using GSF.ComponentModel;
 using GSF.Data.Model;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.IEEEC37_118;
@@ -34,12 +35,15 @@ using GSF.Web.Security;
 using PhasorProtocolAdapters;
 using PhasorWebUI.Adapters;
 using PhasorWebUI.Model;
+using PhasorWebUI.Properties;
 using PowerCalculations.PowerMultiCalculator;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 #if MONO
 using System.Xml.Linq;
@@ -180,6 +184,102 @@ namespace PhasorWebUI
 
         private const string SystemFrequencyDeviceName = "{0}SYSTEM!FREQ";
 
+        static PhasorHub()
+        {
+            RestoreEmbeddedResources();
+        }
+
+        private static void RestoreEmbeddedResources()
+        {
+            const string RootNamespace = $"{nameof(PhasorWebUI)}.";
+            const string TagTemplateExt = ".TagTemplate";
+
+            try
+            {
+                HashSet<string> textTypes = new(new[] { TagTemplateExt }, StringComparer.OrdinalIgnoreCase);
+                Assembly executingAssembly = typeof(PhasorHub).Assembly;
+                string targetPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(""));
+
+                // This simple file restoration assumes embedded resources to restore are in root namespace
+                foreach (string name in executingAssembly.GetManifestResourceNames())
+                {
+                    using Stream resourceStream = executingAssembly.GetManifestResourceStream(name);
+
+                    if (resourceStream is null)
+                        continue;
+
+                    string filePath = name;
+
+                    // Remove namespace prefix from resource file name
+                    if (filePath.StartsWith(RootNamespace))
+                        filePath = filePath.Substring(RootNamespace.Length);
+
+                    string targetFileName = Path.Combine(targetPath, filePath);
+                    string targetFileExt = Path.GetExtension(targetFileName);
+                    bool restoreFile = true;
+                    bool isTextType = textTypes.Contains(targetFileExt);
+
+                    if (File.Exists(targetFileName) && !isTextType)
+                    {
+                        string resourceMD5 = GetMD5HashFromStream(resourceStream);
+                        resourceStream.Seek(0, SeekOrigin.Begin);
+                        restoreFile = !resourceMD5.Equals(GetMD5HashFromFile(targetFileName));
+                    }
+
+                    if (!restoreFile)
+                        continue;
+
+                    byte[] buffer = new byte[resourceStream.Length];
+
+                    // ReSharper disable once MustUseReturnValue
+                    resourceStream.Read(buffer, 0, (int)resourceStream.Length);
+
+                    if (isTextType)
+                    {
+                        using StreamWriter writer = File.CreateText(targetFileName);
+                        
+                        if (targetFileExt.Equals(TagTemplateExt, StringComparison.OrdinalIgnoreCase))
+                        {
+                            StringBuilder tagTemplate = new();
+
+                            tagTemplate.AppendLine($"# {Path.GetFileNameWithoutExtension(filePath)} Template");
+                            tagTemplate.AppendLine("#");
+                            tagTemplate.AppendLine(Resources.TagTemplateHeader);
+                            tagTemplate.Append(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+
+                            writer.Write(tagTemplate.ToString());
+                        }
+                        else
+                        {
+                            writer.Write(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+                        }
+                    }
+                    else
+                    {
+                        using FileStream stream = File.Create(targetFileName);
+                        stream.Write(buffer);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogPublisher log = Logger.CreatePublisher(typeof(PhasorHub), MessageClass.Component);
+                log.Publish(MessageLevel.Error, "Error Message", "Failed to restore embedded resources", null, ex);
+            }
+        }
+
+        private static string GetMD5HashFromFile(string fileName)
+        {
+            using FileStream stream = File.OpenRead(fileName);
+            return GetMD5HashFromStream(stream);
+        }
+
+        private static string GetMD5HashFromStream(Stream stream)
+        {
+            using MD5 md5 = MD5.Create();
+            return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
+        }
+        
         #endregion
 
         // Client-side script functionality
