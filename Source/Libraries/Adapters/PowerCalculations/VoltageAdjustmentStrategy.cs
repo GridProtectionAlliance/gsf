@@ -23,42 +23,41 @@
 
 using System.ComponentModel;
 
-namespace PowerCalculations
+namespace PowerCalculations;
+
+/// <summary>
+/// Represents the strategy used to adjust voltage values for power
+/// calculations based on the nature of the voltage measurement.
+/// </summary>
+public enum VoltageAdjustmentStrategy
 {
     /// <summary>
-    /// Represents the strategy used to adjust voltage values for power
-    /// calculations based on the nature of the voltage measurement.
+    /// Factor of 3 adjustment (S=3*V*I)
     /// </summary>
-    public enum VoltageAdjustmentStrategy
-    {
-        /// <summary>
-        /// Factor of 3 adjustment (S=3*V*I)
-        /// </summary>
-        [Description("Estimated 3-phase line-to-neutral: factor of 3 adjustment (S=3*V*I)")]
-        LineToNeutral,
+    [Description("Estimated 3-phase line-to-neutral: factor of 3 adjustment (S=3*V*I)")]
+    LineToNeutral,
 
-        /// <summary>
-        /// Factor of Sqrt(3) adjustment (S=Sqrt(3)*V*I)
-        /// </summary>
-        [Description("Estimated 3-phase line-to-line: factor of Sqrt(3) adjustment (S=Sqrt(3)*V*I)")]
-        LineToLine,
+    /// <summary>
+    /// Factor of Sqrt(3) adjustment (S=Sqrt(3)*V*I)
+    /// </summary>
+    [Description("Estimated 3-phase line-to-line: factor of Sqrt(3) adjustment (S=Sqrt(3)*V*I)")]
+    LineToLine,
 
-        /// <summary>
-        /// Factor of 1 adjustment (S=1*V*I). Same as <see cref="None"/>.
-        /// </summary>
-        [Description("1-phase line-to-neutral: factor of 1 adjustment (S=1*V*I). Same as None")]
-        LineToNeutralSinglePhase,
+    /// <summary>
+    /// Factor of 1 adjustment (S=1*V*I). Same as <see cref="None"/>.
+    /// </summary>
+    [Description("1-phase line-to-neutral: factor of 1 adjustment (S=1*V*I). Same as None")]
+    LineToNeutralSinglePhase,
 
-        /// <summary>
-        /// Factor of 1/Sqrt(3) adjustment (S=V*I/Sqrt(3))
-        /// </summary>
-        [Description("1-phase line-to-line: factor of 1/Sqrt(3) adjustment (S=V*I/Sqrt(3))")]
-        LineToLineSinglePhase,
+    /// <summary>
+    /// Factor of 1/Sqrt(3) adjustment (S=V*I/Sqrt(3))
+    /// </summary>
+    [Description("1-phase line-to-line: factor of 1/Sqrt(3) adjustment (S=V*I/Sqrt(3))")]
+    LineToLineSinglePhase,
 
-        /// <summary>
-        /// No adjustment (S=V*I)
-        /// </summary>
-        [Description("No adjustment (S=V*I)")]
-        None
-    }
+    /// <summary>
+    /// No adjustment (S=V*I)
+    /// </summary>
+    [Description("No adjustment (S=V*I)")]
+    None
 }

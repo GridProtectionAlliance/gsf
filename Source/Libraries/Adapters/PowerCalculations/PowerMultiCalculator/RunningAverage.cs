@@ -21,46 +21,44 @@
 //
 //******************************************************************************************************
 
-namespace PowerCalculations.PowerMultiCalculator
+namespace PowerCalculations.PowerMultiCalculator;
+
+/// <summary>
+/// Calculates running average of a value
+/// </summary>
+public class RunningAverage
 {
+    #region [ Members ]
+
+    private double m_numberOfValues;
+
+    #endregion
+
+    #region [ Properties ]
+
     /// <summary>
-    /// Calculates running average of a value
+    /// Average calculated on values provided so far
     /// </summary>
-    public class RunningAverage
+    public double Average { get; private set; }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Calculates running average based on previous values and the new value
+    /// </summary>
+    /// <param name="value">Value to be added to the running average</param>
+    /// <returns>New running average</returns>
+    public double AddValue(double value)
     {
-        #region [ Members ]
+        double total = m_numberOfValues * Average + value;
 
-        private double m_numberOfValues;
-        private double m_average;
+        m_numberOfValues++;
+        Average = total / m_numberOfValues;
 
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Average calculated on values provided so far
-        /// </summary>
-        public double Average => m_average;
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Calculates running average based on previous values and the new value
-        /// </summary>
-        /// <param name="value">Value to be added to the running average</param>
-        /// <returns>New running average</returns>
-        public double AddValue(double value)
-        {
-            double total = m_numberOfValues * m_average + value;
-
-            m_numberOfValues++;
-            m_average = total / m_numberOfValues;
-
-            return m_average;
-        }
-
-        #endregion	
+        return Average;
     }
+
+    #endregion	
 }

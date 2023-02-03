@@ -25,81 +25,77 @@ using System;
 using System.Threading;
 using GSF.Data;
 
-namespace PowerCalculations.PowerMultiCalculator
+namespace PowerCalculations.PowerMultiCalculator;
+
+/// <summary>
+/// Class used to save measurement objects for power calculation adapter
+/// </summary>
+public class MeasurementRepository
 {
+    #region [ Methods ]
+
     /// <summary>
-    /// Class used to save measurement objects for power calculation adapter
+    /// Saves measurement back to the configuration database
     /// </summary>
-    public class MeasurementRepository
+    /// <param name="database">Database connection for query. Will be created from config if this value is null.</param>
+    /// <param name="measurement">Measurement to be inserted or updated</param>
+    public void Save(AdoDataConnection database, PowerMeasurement measurement)
     {
-        #region [ Methods ]
+        bool createdConnection = false;
 
-        /// <summary>
-        /// Saves measurement back to the configuration database
-        /// </summary>
-        /// <param name="database">Database connection for query. Will be created from config if this value is null.</param>
-        /// <param name="measurement">Measurement to be inserted or updated</param>
-        public void Save(AdoDataConnection database, PowerMeasurement measurement)
+        try
         {
-            var createdConnection = false;
+            createdConnection = CreateConnection(ref database);
 
-            try
+            if (measurement.SignalID == Guid.Empty)
             {
-                createdConnection = CreateConnection(ref database);
+                database.ExecuteNonQuery("INSERT INTO Measurement (DeviceID, PointTag, HistorianID, SignalTypeID, " +
+                                         "SignalReference, Adder, Multiplier, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES " + 
+                                         "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12})", ToNotNull(measurement.DeviceID), measurement.PointTag, measurement.HistorianID,
+                    measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, ToNotNull(measurement.Description), 
+                    database.Bool(measurement.Enabled), Thread.CurrentPrincipal.Identity.Name, database.UtcNow, Thread.CurrentPrincipal.Identity.Name, database.UtcNow);
 
-                if (measurement.SignalID == Guid.Empty)
-                {
-                    database.ExecuteNonQuery("INSERT INTO Measurement (DeviceID, PointTag, HistorianID, SignalTypeID, " +
-                        "SignalReference, Adder, Multiplier, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES " + 
-                        "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12})", ToNotNull(measurement.DeviceID), measurement.PointTag, measurement.HistorianID,
-                        measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, ToNotNull(measurement.Description), 
-                        database.Bool(measurement.Enabled), Thread.CurrentPrincipal.Identity.Name, database.UtcNow, Thread.CurrentPrincipal.Identity.Name, database.UtcNow);
-
-                    measurement.SignalID = database.ExecuteScalar<Guid>("SELECT SignalID FROM Measurement WHERE PointTag={0}", measurement.PointTag);
-                }
-                else
-                {
-                    database.ExecuteNonQuery("UPDATE Measurement SET DeviceID = {0}, PointTag = {1}, HistorianID = {2}, " +
-                        "SignalTypeID = {3}, SignalReference = {4}, Adder = {5}, Multiplier = {6}, Description = {7}, " +
-                        "Enabled = {8}, UpdatedBy = {9}, UpdatedOn = {10} WHERE SignalID = {11}", ToNotNull(measurement.DeviceID), measurement.PointTag, measurement.HistorianID,
-                        measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, ToNotNull(measurement.Description), 
-                        database.Bool(measurement.Enabled), Thread.CurrentPrincipal.Identity.Name, database.UtcNow, measurement.SignalID);
-                }
+                measurement.SignalID = database.ExecuteScalar<Guid>("SELECT SignalID FROM Measurement WHERE PointTag={0}", measurement.PointTag);
             }
-            finally
+            else
             {
-                if (createdConnection)
-                    database?.Dispose();
+                database.ExecuteNonQuery("UPDATE Measurement SET DeviceID = {0}, PointTag = {1}, HistorianID = {2}, " +
+                                         "SignalTypeID = {3}, SignalReference = {4}, Adder = {5}, Multiplier = {6}, Description = {7}, " +
+                                         "Enabled = {8}, UpdatedBy = {9}, UpdatedOn = {10} WHERE SignalID = {11}", ToNotNull(measurement.DeviceID), measurement.PointTag, measurement.HistorianID,
+                    measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, ToNotNull(measurement.Description), 
+                    database.Bool(measurement.Enabled), Thread.CurrentPrincipal.Identity.Name, database.UtcNow, measurement.SignalID);
             }
         }
-
-        private static bool CreateConnection(ref AdoDataConnection database)
+        finally
         {
-            if ((object)database != null)
-                return false;
-
-            try
-            {
-                database = new AdoDataConnection("systemSettings");
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            if (createdConnection)
+                database?.Dispose();
         }
-
-        private static object ToNotNull(object value)
-        {
-            if ((object)value == null)
-                return (object)DBNull.Value;
-
-            if (value is int i && i == 0)
-                return (object)DBNull.Value;
-
-            return value;
-        }
-
-        #endregion
     }
+
+    private static bool CreateConnection(ref AdoDataConnection database)
+    {
+        if (database != null)
+            return false;
+
+        try
+        {
+            database = new AdoDataConnection("systemSettings");
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static object ToNotNull(object value) =>
+        value switch
+        {
+            null => DBNull.Value,
+            0 => DBNull.Value,
+            _ => value
+        };
+
+    #endregion
 }

@@ -23,60 +23,59 @@
 
 using GSF.TimeSeries;
 
-namespace PowerCalculations.PowerMultiCalculator
+namespace PowerCalculations.PowerMultiCalculator;
+
+/// <summary>
+/// Model class for power calculations stored in the configuration repository
+/// </summary>
+public class PowerCalculation
 {
-	/// <summary>
-	/// Model class for power calculations stored in the configuration repository
-	/// </summary>
-	public class PowerCalculation
-	{
-		#region [ Properties ]
+    #region [ Properties ]
 
-		/// <summary>
-		/// ID field for the <see cref="PowerCalculation"/>
-		/// </summary>
-		public int PowerCalculationID { get; set; }
+    /// <summary>
+    /// ID field for the <see cref="PowerCalculation"/>
+    /// </summary>
+    public int PowerCalculationID { get; set; }
 
-		/// <summary>
-		/// Circuit Description field for the <see cref="PowerCalculation"/>
-		/// </summary>
-		public string CircuitDescription { get; set; }
+    /// <summary>
+    /// Circuit Description field for the <see cref="PowerCalculation"/>
+    /// </summary>
+    public string CircuitDescription { get; set; }
 
-		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Angle <see cref="PowerMeasurement"/> 
-		/// </summary>
-		public MeasurementKey VoltageAngleMeasurementKey { get; set; }
+    /// <summary>
+    /// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Angle <see cref="PowerMeasurement"/> 
+    /// </summary>
+    public MeasurementKey VoltageAngleMeasurementKey { get; set; }
 
-		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Magnitude <see cref="PowerMeasurement"/> 
-		/// </summary>
-		public MeasurementKey VoltageMagnitudeMeasurementKey { get; set; }
+    /// <summary>
+    /// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Magnitude <see cref="PowerMeasurement"/> 
+    /// </summary>
+    public MeasurementKey VoltageMagnitudeMeasurementKey { get; set; }
 
-		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Angle <see cref="PowerMeasurement"/> 
-		/// </summary>
-		public MeasurementKey CurrentAngleMeasurementKey { get; set; }
+    /// <summary>
+    /// Measurement key from the <see cref="PowerCalculation"/>'s Current Angle <see cref="PowerMeasurement"/> 
+    /// </summary>
+    public MeasurementKey CurrentAngleMeasurementKey { get; set; }
 
-		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Magnitude <see cref="PowerMeasurement"/> 
-		/// </summary>
-		public MeasurementKey CurrentMagnitudeMeasurementKey { get; set; }
+    /// <summary>
+    /// Measurement key from the <see cref="PowerCalculation"/>'s Current Magnitude <see cref="PowerMeasurement"/> 
+    /// </summary>
+    public MeasurementKey CurrentMagnitudeMeasurementKey { get; set; }
 
-		/// <summary>
-		/// Measurement template to be used for active power output values from the <see cref="PowerCalculation"/>
-		/// </summary>
-		public IMeasurement ActivePowerOutputMeasurement { get; set; }
+    /// <summary>
+    /// Measurement template to be used for active power output values from the <see cref="PowerCalculation"/>
+    /// </summary>
+    public IMeasurement ActivePowerOutputMeasurement { get; set; }
 
-		/// <summary>
-		/// Measurement template to be used for reactive power output values from the <see cref="PowerCalculation"/>
-		/// </summary>
-		public IMeasurement ReactivePowerOutputMeasurement { get; set; }
+    /// <summary>
+    /// Measurement template to be used for reactive power output values from the <see cref="PowerCalculation"/>
+    /// </summary>
+    public IMeasurement ReactivePowerOutputMeasurement { get; set; }
 
-		/// <summary>
-		/// Measurement template to be used for apparent power output values from the <see cref="PowerCalculation"/>
-		/// </summary>
-		public IMeasurement ApparentPowerOutputMeasurement { get; set; }
+    /// <summary>
+    /// Measurement template to be used for apparent power output values from the <see cref="PowerCalculation"/>
+    /// </summary>
+    public IMeasurement ApparentPowerOutputMeasurement { get; set; }
 
-		#endregion
-	}
+    #endregion
 }
