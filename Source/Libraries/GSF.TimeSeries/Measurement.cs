@@ -369,6 +369,24 @@ namespace GSF.TimeSeries
             };
 
         /// <summary>
+        /// Creates a copy of the specified measurement using a new value, timestamp and state flags.
+        /// </summary>
+        /// <param name="measurementToClone">Specified measurement to clone.</param>
+        /// <param name="value">New value for cloned measurement.</param>
+        /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        /// <param name="stateFlags">New state flags for cloned measurement.</param>
+        /// <param name="replaceFlags">Determines if <paramref name="stateFlags"/> should assigned as new (default) or be Or'd with existing flags.</param>
+        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
+        public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp, MeasurementStateFlags stateFlags, bool replaceFlags = true) =>
+            new()
+            {
+                Metadata = measurementToClone.Metadata,
+                Value = value,
+                Timestamp = timestamp,
+                StateFlags = replaceFlags ? stateFlags : measurementToClone.StateFlags | stateFlags
+            };
+
+        /// <summary>
         /// Returns a <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> to convert to a <see cref="String"/> representation.</param>
