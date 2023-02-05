@@ -30,6 +30,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
@@ -190,7 +191,10 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
 
             status.AppendLine($"               Total Calcs: {m_lastTotalCalculations:N0} for last frame");
             status.AppendLine($"       Average Total Calcs: {Math.Round(m_averageCalculationsPerFrame.Average):N3} per frame");
-            status.AppendLine($"         Average Calc Time: {m_averageCalculationTime.Average:N3} ms per V/I phasor pair");
+
+            lock (m_averageCalculationTime)
+                status.AppendLine($"         Average Calc Time: {m_averageCalculationTime.Average:N3} ms per V/I phasor pair");
+
             status.AppendLine($"           Total Calc Time: {m_lastTotalCalculationTime:N3} ms for last frame");
             status.AppendLine($"   Average Total Calc Time: {m_averageTotalCalculationTime.Average:N3} ms per frame");
 
@@ -259,14 +263,14 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
         m_averageCalculationsPerFrame = new RunningAverage();
         m_averageCalculationTime = new RunningAverage();
         m_averageTotalCalculationTime = new RunningAverage();
-        
+
         if (Settings.TryGetValue(nameof(TableName), out string tableName))
             TableName = tableName;
 
         //                     0           1                    2                     3                   4                     5
         string query = "SELECT ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
                        //            6                          7                           8
-                       "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID " + 
+                       "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID " +
                        $"FROM {TableName} WHERE NodeId = {{0}} AND Enabled <> 0";
 
         using (AdoDataConnection database = new("systemSettings"))
@@ -294,10 +298,10 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
         if (m_configuredCalculations.Length > 0)
         {
             InputMeasurementKeys = m_configuredCalculations.SelectMany(calculation => new[]
-            { 
-                calculation.CurrentAngleMeasurementKey, 
-                calculation.CurrentMagnitudeMeasurementKey, 
-                calculation.VoltageAngleMeasurementKey, 
+            {
+                calculation.CurrentAngleMeasurementKey,
+                calculation.CurrentMagnitudeMeasurementKey,
+                calculation.VoltageAngleMeasurementKey,
                 calculation.VoltageMagnitudeMeasurementKey
             })
             .ToArray();
@@ -359,7 +363,7 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
     }
 
     /// <summary>
-    /// Calculates MW, MVAR and MVA then publishes those measurements
+    /// Calculates MW, MVAR and MVA then publishes those measurements.
     /// </summary>
     /// <param name="frame">Input values for calculation</param>
     /// <param name="index">Index of frame within second.</param>
@@ -369,157 +373,166 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
         ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
         int calculations = 0;
 
-        foreach (PowerCalculation powerCalculation in m_configuredCalculations)
+        Parallel.ForEach(m_configuredCalculations, powerCalculation =>
         {
-            long powerCalculationStartTime = DateTime.UtcNow.Ticks;
-            bool calculateActivePower = powerCalculation.ActivePowerOutputMeasurement is not null;
-            bool calculateReactivePower = powerCalculation.ReactivePowerOutputMeasurement is not null;
-            bool calculateApparentPower = powerCalculation.ApparentPowerOutputMeasurement is not null;
-            double activePower = double.NaN, reactivePower = double.NaN, apparentPower = double.NaN;
-            bool badInputDetected = false;
-
-            bool includeInput(IMeasurement measurement)
-            {
-                bool qualityIsGood = measurement.ValueQualityIsGood();
-
-                if (BadDataStrategy == BadDataStrategy.DropData || qualityIsGood)
-                    return qualityIsGood;
-
-                badInputDetected = true;
-                return true;
-            }
-
             try
             {
-                double voltageMagnitude = 0.0D, voltageAngle = 0.0D, currentMagnitude = 0.0D, currentAngle = 0.0D;
-                bool allInputsReceived = false;
+                long powerCalculationStartTime = DateTime.UtcNow.Ticks;
+                bool calculateActivePower = powerCalculation.ActivePowerOutputMeasurement is not null;
+                bool calculateReactivePower = powerCalculation.ReactivePowerOutputMeasurement is not null;
+                bool calculateApparentPower = powerCalculation.ApparentPowerOutputMeasurement is not null;
+                double activePower = double.NaN, reactivePower = double.NaN, apparentPower = double.NaN;
+                bool badInputDetected = false;
 
-                if (measurements.TryGetValue(powerCalculation.VoltageMagnitudeMeasurementKey, out IMeasurement measurement) && includeInput(measurement))
+                bool includeInput(IMeasurement measurement)
                 {
-                    voltageMagnitude = measurement.AdjustedValue;
+                    bool qualityIsGood = measurement.ValueQualityIsGood();
 
-                    if (!m_adjustmentStrategies.TryGetValue(powerCalculation.VoltageMagnitudeMeasurementKey, out VoltageAdjustmentStrategy adjustmentStrategy))
-                        adjustmentStrategy = AdjustmentStrategy;
+                    if (BadDataStrategy == BadDataStrategy.DropData || qualityIsGood)
+                        return qualityIsGood;
 
-                    // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-                    switch (adjustmentStrategy)
+                    badInputDetected = true;
+                    return true;
+                }
+
+                try
+                {
+                    double voltageMagnitude = 0.0D, voltageAngle = 0.0D, currentMagnitude = 0.0D, currentAngle = 0.0D;
+                    bool allInputsReceived = false;
+
+                    if (measurements.TryGetValue(powerCalculation.VoltageMagnitudeMeasurementKey, out IMeasurement measurement) && includeInput(measurement))
                     {
-                        case VoltageAdjustmentStrategy.LineToNeutral:
-                            voltageMagnitude *= 3.0D;
-                            break;
+                        voltageMagnitude = measurement.AdjustedValue;
 
-                        case VoltageAdjustmentStrategy.LineToLine:
-                            voltageMagnitude *= SqrtOf3;
-                            break;
+                        if (!m_adjustmentStrategies.TryGetValue(powerCalculation.VoltageMagnitudeMeasurementKey, out VoltageAdjustmentStrategy adjustmentStrategy))
+                            adjustmentStrategy = AdjustmentStrategy;
 
-                        case VoltageAdjustmentStrategy.LineToLineSinglePhase:
-                            voltageMagnitude /= SqrtOf3;
-                            break;
-                    }
-
-                    if (measurements.TryGetValue(powerCalculation.VoltageAngleMeasurementKey, out measurement) && includeInput(measurement))
-                    {
-                        voltageAngle = measurement.AdjustedValue;
-
-                        if (measurements.TryGetValue(powerCalculation.CurrentMagnitudeMeasurementKey, out measurement) && includeInput(measurement))
+                        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+                        switch (adjustmentStrategy)
                         {
-                            currentMagnitude = measurement.AdjustedValue;
+                            case VoltageAdjustmentStrategy.LineToNeutral:
+                                voltageMagnitude *= 3.0D;
+                                break;
 
-                            if (measurements.TryGetValue(powerCalculation.CurrentAngleMeasurementKey, out measurement) && includeInput(measurement))
+                            case VoltageAdjustmentStrategy.LineToLine:
+                                voltageMagnitude *= SqrtOf3;
+                                break;
+
+                            case VoltageAdjustmentStrategy.LineToLineSinglePhase:
+                                voltageMagnitude /= SqrtOf3;
+                                break;
+                        }
+
+                        if (measurements.TryGetValue(powerCalculation.VoltageAngleMeasurementKey, out measurement) && includeInput(measurement))
+                        {
+                            voltageAngle = measurement.AdjustedValue;
+
+                            if (measurements.TryGetValue(powerCalculation.CurrentMagnitudeMeasurementKey, out measurement) && includeInput(measurement))
                             {
-                                currentAngle = measurement.AdjustedValue;
-                                allInputsReceived = true;
+                                currentMagnitude = measurement.AdjustedValue;
+
+                                if (measurements.TryGetValue(powerCalculation.CurrentAngleMeasurementKey, out measurement) && includeInput(measurement))
+                                {
+                                    currentAngle = measurement.AdjustedValue;
+                                    allInputsReceived = true;
+                                }
                             }
                         }
                     }
-                }
 
-                if (allInputsReceived)
+                    if (allInputsReceived)
+                    {
+                        // Calculate power (P), reactive power (Q) and apparent power (|S|)
+                        Phasor voltage = new(PhasorType.Voltage, Angle.FromDegrees(voltageAngle), voltageMagnitude);
+                        Phasor current = new(PhasorType.Current, Angle.FromDegrees(currentAngle), currentMagnitude);
+
+                        if (calculateActivePower)
+                            activePower = (double)Phasor.CalculateActivePower(voltage, current) / SIUnitsFactor;
+
+                        if (calculateReactivePower)
+                            reactivePower = (double)Phasor.CalculateReactivePower(voltage, current) / SIUnitsFactor;
+
+                        if (calculateApparentPower)
+                            apparentPower = (double)Phasor.CalculateApparentPower(voltage, current) / SIUnitsFactor;
+                    }
+                }
+                catch (Exception ex)
                 {
-                    // Calculate power (P), reactive power (Q) and apparent power (|S|)
-                    Phasor voltage = new(PhasorType.Voltage, Angle.FromDegrees(voltageAngle), voltageMagnitude);
-                    Phasor current = new(PhasorType.Current, Angle.FromDegrees(currentAngle), currentMagnitude);
+                    OnProcessException(MessageLevel.Warning, ex);
+                }
+                finally
+                {
+                    List<IMeasurement> outputMeasurements = new(3);
+                    MeasurementStateFlags flags = badInputDetected ? MeasurementStateFlags.BadData : MeasurementStateFlags.Normal;
 
                     if (calculateActivePower)
-                        activePower = (double)Phasor.CalculateActivePower(voltage, current) / SIUnitsFactor;
+                    {
+                        Measurement activePowerMeasurement = Measurement.Clone(powerCalculation.ActivePowerOutputMeasurement, activePower, frame.Timestamp, flags);
+
+                        if (AlwaysProduceResult || !double.IsNaN(activePowerMeasurement.Value))
+                        {
+                            outputMeasurements.Add(activePowerMeasurement);
+                            calculations++;
+
+                            if (TrackRecentValues)
+                            {
+                                m_lastActivePowerCalculations.Enqueue(activePowerMeasurement);
+
+                                while (m_lastActivePowerCalculations.Count > ValuesToTrack)
+                                    m_lastActivePowerCalculations.TryDequeue(out _);
+                            }
+                        }
+                    }
 
                     if (calculateReactivePower)
-                        reactivePower = (double)Phasor.CalculateReactivePower(voltage, current) / SIUnitsFactor;
+                    {
+                        Measurement reactivePowerMeasurement = Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp, flags);
+
+                        if (AlwaysProduceResult || !double.IsNaN(reactivePowerMeasurement.Value))
+                        {
+                            outputMeasurements.Add(reactivePowerMeasurement);
+                            calculations++;
+
+                            if (TrackRecentValues)
+                            {
+                                m_lastReactivePowerCalculations.Enqueue(reactivePowerMeasurement);
+
+                                while (m_lastReactivePowerCalculations.Count > ValuesToTrack)
+                                    m_lastReactivePowerCalculations.TryDequeue(out _);
+                            }
+                        }
+                    }
 
                     if (calculateApparentPower)
-                        apparentPower = (double)Phasor.CalculateApparentPower(voltage, current) / SIUnitsFactor;
+                    {
+                        Measurement apparentPowerMeasurement = Measurement.Clone(powerCalculation.ApparentPowerOutputMeasurement, apparentPower, frame.Timestamp, flags);
+
+                        if (AlwaysProduceResult || !double.IsNaN(apparentPowerMeasurement.Value))
+                        {
+                            outputMeasurements.Add(apparentPowerMeasurement);
+                            calculations++;
+
+                            if (TrackRecentValues)
+                            {
+                                m_lastApparentPowerCalculations.Enqueue(apparentPowerMeasurement);
+
+                                while (m_lastApparentPowerCalculations.Count > ValuesToTrack)
+                                    m_lastApparentPowerCalculations.TryDequeue(out _);
+                            }
+                        }
+                    }
+
+                    OnNewMeasurements(outputMeasurements);
+
+                    lock (m_averageCalculationTime)
+                        m_averageCalculationTime.AddValue(new Ticks(DateTime.UtcNow.Ticks - powerCalculationStartTime).ToMilliseconds());
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, ex);
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Failed to calculate power for {powerCalculation.CircuitDescription}: {ex.Message}", ex));
             }
-            finally
-            {
-                List<IMeasurement> outputMeasurements = new(3);
-                MeasurementStateFlags flags = badInputDetected ? MeasurementStateFlags.BadData : MeasurementStateFlags.Normal;
-
-                if (calculateActivePower)
-                {
-                    Measurement activePowerMeasurement = Measurement.Clone(powerCalculation.ActivePowerOutputMeasurement, activePower, frame.Timestamp, flags);
-
-                    if (AlwaysProduceResult || !double.IsNaN(activePowerMeasurement.Value))
-                    {
-                        outputMeasurements.Add(activePowerMeasurement);
-                        calculations++;
-
-                        if (TrackRecentValues)
-                        {
-                            m_lastActivePowerCalculations.Enqueue(activePowerMeasurement);
-
-                            while (m_lastActivePowerCalculations.Count > ValuesToTrack)
-                                m_lastActivePowerCalculations.TryDequeue(out _);
-                        }
-                    }
-                }
-
-                if (calculateReactivePower)
-                {
-                    Measurement reactivePowerMeasurement = Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp, flags);
-
-                    if (AlwaysProduceResult || !double.IsNaN(reactivePowerMeasurement.Value))
-                    {
-                        outputMeasurements.Add(reactivePowerMeasurement);
-                        calculations++;
-
-                        if (TrackRecentValues)
-                        {
-                            m_lastReactivePowerCalculations.Enqueue(reactivePowerMeasurement);
-
-                            while (m_lastReactivePowerCalculations.Count > ValuesToTrack)
-                                m_lastReactivePowerCalculations.TryDequeue(out _);
-                        }
-                    }
-                }
-
-                if (calculateApparentPower)
-                {
-                    Measurement apparentPowerMeasurement = Measurement.Clone(powerCalculation.ApparentPowerOutputMeasurement, apparentPower, frame.Timestamp, flags);
-
-                    if (AlwaysProduceResult || !double.IsNaN(apparentPowerMeasurement.Value))
-                    {
-                        outputMeasurements.Add(apparentPowerMeasurement);
-                        calculations++;
-                        
-                        if (TrackRecentValues)
-                        {
-                            m_lastApparentPowerCalculations.Enqueue(apparentPowerMeasurement);
-
-                            while (m_lastApparentPowerCalculations.Count > ValuesToTrack)
-                                m_lastApparentPowerCalculations.TryDequeue(out _);
-                        }
-                    }
-                }
-
-                OnNewMeasurements(outputMeasurements);
-                m_averageCalculationTime.AddValue(new Ticks(DateTime.UtcNow.Ticks - powerCalculationStartTime).ToMilliseconds());
-            }
-        }
+        });
 
         m_lastTotalCalculations = calculations;
         m_averageCalculationsPerFrame.AddValue(calculations);
