@@ -1397,7 +1397,6 @@ namespace GSF.TimeSeries
                     m_serviceHelper.ConnectionErrorLogger.ErrorLog.LogException += ConnectionErrorLogExceptionHandler;
 
                 m_serviceHelper.OnStart(args);
-
             }
             catch (Exception ex)
             {

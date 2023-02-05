@@ -19,6 +19,8 @@
 //  06/29/2016 - Steven E. Chisholm
 //       Generated original version of source code.
 //       Derived from code existing in RoutingTables.cs
+//  02/03/2023 - J. Ritchie Carroll
+//       Updated route locking to use ReaderWriterLockSlim for improved performance.
 //
 //******************************************************************************************************
 
@@ -34,8 +36,7 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// The standard and default routing table that uses double buffer queues to route measurements.
     /// </summary>
-    public class RouteMappingDoubleBufferQueue
-        : IRouteMappingTables
+    public class RouteMappingDoubleBufferQueue : IRouteMappingTables
     {
         // Nested Types
 
@@ -83,12 +84,12 @@ namespace GSF.TimeSeries.Adapters
             private readonly Dictionary<Guid, List<Producer>> m_localSignalLookup;
             private readonly Dictionary<Consumer, Producer> m_localDestinationLookup;
             private readonly RouteMappingDoubleBufferQueue m_routingTables;
-            private readonly object m_localCacheLock;
-            private int m_version;
+            private readonly ReaderWriterLockSlim m_localCacheLock;
+            private volatile int m_version;
 
             public LocalCache(RouteMappingDoubleBufferQueue routingTables, IAdapter producerAdapter)
             {
-                m_localCacheLock = new object();
+                m_localCacheLock = new ReaderWriterLockSlim();
                 m_localSignalLookup = new Dictionary<Guid, List<Producer>>();
                 m_localDestinationLookup = new Dictionary<Consumer, Producer>();
                 m_routingTables = routingTables;
@@ -103,66 +104,141 @@ namespace GSF.TimeSeries.Adapters
             {
                 ICollection<IMeasurement> measurements = e?.Argument;
 
-                if (measurements is null)
-                    return;
-
-                // Get the global cache from the routing tables
-                GlobalCache globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
-
-                // Return if routes are still being calculated
-                if (globalCache is null)
-                    return;
-
-                lock (m_localCacheLock)
+                while (true)
                 {
-                    // Check the version of the local cache against that of the global cache.
-                    // We need to clear the local cache if the versions don't match because
-                    // that means routes have changed
-                    if (m_version != globalCache.Version)
+                    if (measurements is null)
+                        return;
+
+                    GlobalCache globalCache;
+                    ICollection<IMeasurement> cacheMisses = null;
+
+                    // (1) Handle common case where measurements already have established routes:
+
+                    // Enter read lock which allows multiple threads to simultaneously publish measurements
+                    m_localCacheLock.EnterReadLock();
+
+                    try
                     {
-                        // Dump the signal lookup
-                        m_localSignalLookup.Clear();
+                        // Get the global cache from the routing tables
+                        globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
 
-                        // Best if we hang onto producers for adapters that still have routes
-                        foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.GlobalDestinationLookup.ContainsKey(consumer.Adapter)).ToList())
+                        // Return if routes are still being calculated (only expected shortly after startup, if at all)
+                        if (globalCache is null)
+                            return;
+
+                        // Check the version of the local cache against that of the global cache.
+                        // Will need to clear the local cache if the versions don't match because
+                        // that means routes have changed
+                        if (m_version == globalCache.Version)
                         {
-                            m_localDestinationLookup[consumer].QueueProducer.Dispose();
-                            m_localDestinationLookup.Remove(consumer);
-                        }
+                            Dictionary<Producer, List<IMeasurement>> producerMeasurements = new();
 
-                        // Update the local cache version
-                        m_version = globalCache.Version;
+                            foreach (IMeasurement measurement in measurements)
+                            {
+                                // Attempt to look up the signal in the local cache
+                                if (m_localSignalLookup.TryGetValue(measurement.ID, out List<Producer> producers))
+                                {
+                                    // Add this measurement to the producers' list
+                                    foreach (Producer producer in producers)
+                                        producerMeasurements.GetOrAdd(producer, _ => new List<IMeasurement>()).Add(measurement);
+                                }
+                                else
+                                {
+                                    // Track any local signal lookup cache misses
+                                    (cacheMisses ??= new List<IMeasurement>()).Add(measurement);
+                                }
+                            }
+
+                            // Produce measurements to consumers in the local destination
+                            // cache which have measurements to be received
+                            foreach (KeyValuePair<Producer, List<IMeasurement>> item in producerMeasurements)
+                                item.Key.QueueProducer.Produce(item.Value);
+                        }
+                        else
+                        {
+                            // Assign all measurements as a cache miss for version mismatch
+                            cacheMisses = measurements;
+                        }
+                    }
+                    finally
+                    {
+                        m_localCacheLock.ExitReadLock();
                     }
 
-                    foreach (IMeasurement measurement in measurements)
+                    // If all measurements were published, we are done
+                    if (cacheMisses is null || cacheMisses.Count == 0)
+                        return;
+
+                    // (2) Handle case where routes need to be updated, entering write lock only when necessary:
+
+                    // Make sure cache misses get published at next loop after following code ensures routes are available
+                    measurements = cacheMisses;
+                    
+                    // Enter upgradeable read lock, this will block all other threads waiting at this same point but will
+                    // still allow ongoing normal read lock operations above
+                    m_localCacheLock.EnterUpgradeableReadLock();
+
+                    try
                     {
-                        // Attempt to look up the signal in the local cache
-                        if (!m_localSignalLookup.TryGetValue(measurement.ID, out List<Producer> producers))
+                        // Refresh global cache from the routing tables in case it changed since upgradeable read lock was taken
+                        if ((globalCache = m_routingTables.m_globalCache) is null)
+                            continue;
+
+                        // Recheck route states after acquiring upgradeable read lock, a prior thread may have handled our needs
+                        if (m_version == globalCache.Version && measurements.All(measurement => m_localSignalLookup.ContainsKey(measurement.ID)))
+                            continue;
+
+                        // Enter write lock, route updates are needed
+                        m_localCacheLock.EnterWriteLock();
+
+                        try
                         {
-                            // Not in the local cache - check the global cache and fall back on broadcast consumers
-                            if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out List<Consumer> consumers))
-                                consumers = globalCache.BroadcastConsumers;
+                            // Refresh global cache from the routing tables in case it changed since write lock was taken
+                            if ((globalCache = m_routingTables.m_globalCache) is null)
+                                continue;
 
-                            // Get a producer for each of the consumers
-                            producers = consumers
-                                .Select(consumer => m_localDestinationLookup.GetOrAdd(consumer, c => new Producer(c.Manager)))
-                                .ToList();
+                            // Recheck version again, may have changed since write lock was taken
+                            if (m_version != globalCache.Version)
+                            {
+                                // Dump the signal lookup
+                                m_localSignalLookup.Clear();
 
-                            // Add this signal to the local cache
-                            m_localSignalLookup.Add(measurement.ID, producers);
+                                // Best if we hang onto producers for adapters that still have routes
+                                foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.GlobalDestinationLookup.ContainsKey(consumer.Adapter)).ToArray())
+                                {
+                                    m_localDestinationLookup[consumer].QueueProducer.Dispose();
+                                    m_localDestinationLookup.Remove(consumer);
+                                }
+
+                                // Update the local cache version
+                                m_version = globalCache.Version;
+                            }
+
+                            foreach (IMeasurement measurement in measurements)
+                            {
+                                // Attempt to look up the signal in the local cache again, items may be in here since write lock was taken
+                                if (m_localSignalLookup.TryGetValue(measurement.ID, out List<Producer> producers))
+                                    continue;
+
+                                // Not in the local cache - check the global cache and fall back on broadcast consumers
+                                if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out List<Consumer> consumers))
+                                    consumers = globalCache.BroadcastConsumers;
+
+                                // Get a producer for each of the consumers
+                                producers = consumers.Select(consumer => m_localDestinationLookup.GetOrAdd(consumer, c => new Producer(c.Manager))).ToList();
+
+                                // Add this signal to the local cache
+                                m_localSignalLookup.Add(measurement.ID, producers);
+                            }
                         }
-
-                        // Add this measurement to the producers' list
-                        foreach (Producer producer in producers)
-                            producer.Measurements.Add(measurement);
+                        finally
+                        {
+                            m_localCacheLock.ExitWriteLock();
+                        }
                     }
-
-                    // Produce measurements to consumers in the local destination
-                    // cache which have measurements to be received
-                    foreach (Producer producer in m_localDestinationLookup.Values.Where(producer => producer.Measurements.Count > 0))
+                    finally
                     {
-                        producer.QueueProducer.Produce(producer.Measurements);
-                        producer.Measurements.Clear();
+                        m_localCacheLock.ExitUpgradeableReadLock();
                     }
                 }
             }
@@ -170,15 +246,10 @@ namespace GSF.TimeSeries.Adapters
 
         private class Producer
         {
-            [SuppressMessage("SonarQube.Immutability", "S3887", Justification = "Internal use only. Reference marked as read-only for future code update safety.")]
-            public readonly List<IMeasurement> Measurements;
             public readonly DoubleBufferedQueueProducer<IMeasurement> QueueProducer;
 
-            public Producer(DoubleBufferedQueueManager<IMeasurement> manager)
-            {
-                Measurements = new List<IMeasurement>();
+            public Producer(DoubleBufferedQueueManager<IMeasurement> manager) => 
                 QueueProducer = manager.GetProducer();
-            }
         }
 
         private class Consumer
