@@ -405,12 +405,10 @@ namespace GSF.Security
                     userAccountID = Guid.Parse(Convert.ToString(userAccount["ID"]));
                 }
 
-                // Connect to AzureAD if configuration is defined
-                GraphServiceClient graphClient = null;
-
-                if (m_azureADSecret is not null)
+                // Connect to AzureAD if configuration is defined, user is external and username is an e-mail address
+                if (m_azureADSecret is not null && userData.IsExternal && userData.Username.Contains("@"))
                 {
-                    graphClient = new GraphServiceClient("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(async (requestMessage) =>
+                    GraphServiceClient graphClient = new("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(async requestMessage =>
                     {
                         AzureADSettings config = AzureADSettings.Load(SettingsCategory);
 
@@ -427,50 +425,46 @@ namespace GSF.Security
                         // Add the access token in the Authorization header of the API request.
                         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
                     }));
+
+                    try
+                    {
+                        // Load user details
+                        User user =  graphClient.Users[userData.Username].Request().GetAsync().Result;
+
+                        userData.IsAzureAD = true;
+                        userData.LoginID = user.UserPrincipalName;
+                        userData.FirstName = user.GivenName;
+                        userData.LastName = user.Surname;
+                        userData.PhoneNumber = user.MobilePhone;
+                        userData.EmailAddress = user.Mail;
+
+                        // Load user groups (direct or indirect membership)
+                        IUserTransitiveMemberOfCollectionWithReferencesPage userMemberCollection = 
+                            graphClient.Users[user.Id].TransitiveMemberOf.Request().GetAsync().Result;
+
+                        while (userMemberCollection.Count > 0)
+                        {
+                            foreach (DirectoryObject directoryObject in userMemberCollection)
+                            {
+                                if (directoryObject is Group group)
+                                    userData.Groups.Add(group.DisplayName);
+                            }
+
+                            if (userMemberCollection.NextPageRequest is not null)
+                                userMemberCollection = userMemberCollection.NextPageRequest.GetAsync().Result;
+                            else
+                                break;
+                        }                            
+                    }
+                    catch (ServiceException ex)
+                    {
+                        Logger.SwallowException(ex, $"User \"{userData.Username}\" not found in AzureAD, treating user as a database user.");
+                    }
                 }
                 
                 if (userData.IsExternal && userAccount is not null)
                 {
-                    // Check if external user is defined in AzureAD
-                    if (graphClient is not null && userData.Username.Contains("@"))
-                    {
-                        try
-                        {
-                            // Load user details
-                            User user =  graphClient.Users[userData.Username].Request().GetAsync().Result;
-
-                            userData.IsAzureAD = true;
-                            userData.LoginID = user.UserPrincipalName;
-                            userData.FirstName = user.GivenName;
-                            userData.LastName = user.Surname;
-                            userData.PhoneNumber = user.MobilePhone;
-                            userData.EmailAddress = user.Mail;
-
-                            // Load user groups (direct or indirect membership)
-                            IUserTransitiveMemberOfCollectionWithReferencesPage userMemberCollection = 
-                                graphClient.Users[user.Id].TransitiveMemberOf.Request().GetAsync().Result;
-
-                            while (userMemberCollection.Count > 0)
-                            {
-                                foreach (DirectoryObject directoryObject in userMemberCollection)
-                                {
-                                    if (directoryObject is Group group)
-                                        userData.Groups.Add(group.DisplayName);
-                                }
-
-                                if (userMemberCollection.NextPageRequest is not null)
-                                    userMemberCollection = userMemberCollection.NextPageRequest.GetAsync().Result;
-                                else
-                                    break;
-                            }                            
-                        }
-                        catch (ServiceException ex)
-                        {
-                            Logger.SwallowException(ex, $"User \"{userData.Username}\" not found in AzureAD, treating user as a database user.");
-                        }
-                    }
-                    
-                    // Load database user details (for AzureAD, these will be considered local overrides
+                    // Load database user details (for AzureAD, these will be considered local overrides)
                     if (string.IsNullOrEmpty(userData.LoginID))
                         userData.LoginID = userData.Username;
 
