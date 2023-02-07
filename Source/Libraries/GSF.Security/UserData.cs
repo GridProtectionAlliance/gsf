@@ -223,6 +223,16 @@ namespace GSF.Security
         }
 
         /// <summary>
+        /// Gets a boolean value that indicates whether the user is defined as an AzureAD account.
+        /// </summary>
+        [XmlElement, DataMember(Order = 17)]
+        public bool IsAzureAD
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets a boolean value that indicates whether the user account has been disabled.
         /// </summary>
         [XmlElement, DataMember(Order = 13)]

@@ -117,7 +117,7 @@ public class AzureADSettings
     /// <summary>
     /// Gets the Azure AD authority (Instance + TenantID).
     /// </summary>
-    public string Authority => $"{Instance}{TenantID}";
+    public Uri Authority => new($"{Instance}{TenantID}");
 
     /// <summary>
     /// Loads Azure AD settings. Source based on target configuration.

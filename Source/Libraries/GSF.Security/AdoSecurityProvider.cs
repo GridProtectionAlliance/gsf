@@ -39,6 +39,7 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -47,6 +48,11 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.Identity;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Web;
+using Group = Microsoft.Graph.Group;
+using Logger = GSF.Diagnostics.Logger;
 
 namespace GSF.Security
 {
@@ -209,6 +215,7 @@ namespace GSF.Security
         private string m_passwordRequirementsRegex;
         private string m_passwordRequirementsError;
         private bool? m_lastLoggedLoginResult;
+        private SecureString m_azureADSecret;
 
         #endregion
 
@@ -289,10 +296,15 @@ namespace GSF.Security
             settings.Add("PasswordRequirementsError", DefaultPasswordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
             settings.Add("UseDatabaseLogging", DefaultUseDatabaseLogging, "Flag that determines if provider should write logs to the database.");
             settings.Add("DefaultRoles", DefaultDefaultRoles, "If set this is a list of Roles assigned to a user that has no defined Roles.");
+            settings.Add("AzureADSecretValue", "", "Defines the Azure AD secret value to be used for user info and group lookups, post authentication.", true);
 
             DefaultRoles = settings["DefaultRoles"].ValueAs(DefaultRoles);
+            
             m_passwordRequirementsRegex = settings["PasswordRequirementsRegex"].ValueAs(m_passwordRequirementsRegex);
             m_passwordRequirementsError = settings["PasswordRequirementsError"].ValueAs(m_passwordRequirementsError);
+
+            string secret = settings["AzureADSecret"].ValueAs("");
+            m_azureADSecret = string.IsNullOrEmpty(secret) ? null : secret.ToSecureString();
         }
 
         /// <summary>
@@ -393,9 +405,72 @@ namespace GSF.Security
                     userAccountID = Guid.Parse(Convert.ToString(userAccount["ID"]));
                 }
 
+                // Connect to AzureAD if configuration is defined
+                GraphServiceClient graphClient = null;
+
+                if (m_azureADSecret is not null)
+                {
+                    graphClient = new GraphServiceClient("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(async (requestMessage) =>
+                    {
+                        AzureADSettings config = AzureADSettings.Load(SettingsCategory);
+
+                        IConfidentialClientApplication clientApplication = ConfidentialClientApplicationBuilder.Create(config.ClientID)
+                            .WithClientSecret(m_azureADSecret.ToUnsecureString())
+                            .WithAuthority(config.Authority)
+                            .Build();
+                    
+                        clientApplication.AddInMemoryTokenCache();
+
+                        // Retrieve an access token for Microsoft Graph (gets a fresh token if needed).
+                        AuthenticationResult result = await clientApplication.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).ExecuteAsync();
+
+                        // Add the access token in the Authorization header of the API request.
+                        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+                    }));
+                }
+                
                 if (userData.IsExternal && userAccount is not null)
                 {
-                    // Load database user details
+                    // Check if external user is defined in AzureAD
+                    if (graphClient is not null && userData.Username.Contains("@"))
+                    {
+                        try
+                        {
+                            // Load user details
+                            User user =  graphClient.Users[userData.Username].Request().GetAsync().Result;
+
+                            userData.IsAzureAD = true;
+                            userData.LoginID = user.UserPrincipalName;
+                            userData.FirstName = user.GivenName;
+                            userData.LastName = user.Surname;
+                            userData.PhoneNumber = user.MobilePhone;
+                            userData.EmailAddress = user.Mail;
+
+                            // Load user groups (direct or indirect membership)
+                            IUserTransitiveMemberOfCollectionWithReferencesPage userMemberCollection = 
+                                graphClient.Users[user.Id].TransitiveMemberOf.Request().GetAsync().Result;
+
+                            while (userMemberCollection.Count > 0)
+                            {
+                                foreach (DirectoryObject directoryObject in userMemberCollection)
+                                {
+                                    if (directoryObject is Group group)
+                                        userData.Groups.Add(group.DisplayName);
+                                }
+
+                                if (userMemberCollection.NextPageRequest is not null)
+                                    userMemberCollection = userMemberCollection.NextPageRequest.GetAsync().Result;
+                                else
+                                    break;
+                            }                            
+                        }
+                        catch (ServiceException ex)
+                        {
+                            Logger.SwallowException(ex, $"User \"{userData.Username}\" not found in AzureAD, treating user as a database user.");
+                        }
+                    }
+                    
+                    // Load database user details (for AzureAD, these will be considered local overrides
                     if (string.IsNullOrEmpty(userData.LoginID))
                         userData.LoginID = userData.Username;
 
