@@ -5,9 +5,9 @@ MW_C	C		CalculatePower	Single Phase MW C
 MW_3	MW		SumPhase	3-Phase MW
 MVAR_3	MVAR		SumPhase	3-Phase MVAR
 MVA_3	MVA		SumPhase	3-Phase MVA
-VMAG_DEV_VA	VNOM;VAM	100*((VAM-VNOM)/VNOM)	DynamicCalculator	Voltage Deviation from Nominal A
-VMAG_DEV_VB	VNOM;VBM	100*((VBM-VNOM)/VNOM)	DynamicCalculator	Voltage Deviation from Nominal B
-VMAG_DEV_VC	VNOM;VCM	100*((VCM-VNOM)/VNOM)	DynamicCalculator	Voltage Deviation from Nominal C
+VMAG_DEV_VA	VNOM;VAM	100*(Abs(VAM-VNOM)/VNOM)	DynamicCalculator	Voltage Deviation from Nominal A
+VMAG_DEV_VB	VNOM;VBM	100*(Abs(VBM-VNOM)/VNOM)	DynamicCalculator	Voltage Deviation from Nominal B
+VMAG_DEV_VC	VNOM;VCM	100*(Abs(VCM-VNOM)/VNOM)	DynamicCalculator	Voltage Deviation from Nominal C
 VMAG_DEV_XP	VAM;VBM;VCM	100*((Max(VAM,Max(VBM,VCM))-Min(VAM,Min(VBM,VCM)))/Min(VAM,Min(VBM,VCM)))	DynamicCalculator	Voltage Deviation across Phases
 VANG_DIFF_BA	VBA;VAA	IF(VBA-VAA > 180, VBA-VAA-360, VBA-VAA)	DynamicCalculator	Voltage Angle Difference B to A
 VANG_DIFF_CA	VCA;VAA	IF(VCA-VAA < 0, VCA-VAA+360, VCA-VAA)	DynamicCalculator	Voltage Angle Difference C to A
