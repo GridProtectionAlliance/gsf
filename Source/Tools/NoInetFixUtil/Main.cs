@@ -25,12 +25,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using System.Xml.XPath;
 using Microsoft.Win32;
 
 namespace NoInetFixUtil
@@ -54,7 +52,7 @@ namespace NoInetFixUtil
         // Fields
         private List<Product> m_products;
         private bool m_checkedEventsEnabled;
-        private bool applyAll;
+        private readonly bool m_applyAll;
         #endregion
 
         #region [ Constructors ]
@@ -62,7 +60,7 @@ namespace NoInetFixUtil
         public Main(bool applyAll)
         {
             InitializeComponent();
-            this.applyAll = applyAll;
+            m_applyAll = applyAll;
         }
 
         #endregion
@@ -72,65 +70,62 @@ namespace NoInetFixUtil
         // Sets the initial state of the checkboxes at startup.
         private void Main_Load(object sender, EventArgs e)
         {
-            object disableRootAutoUpdate;
-
             StatusTextBox.AppendText("Detecting GPA products that are installed on the system... ");
 
-            using (RegistryKey gpaKey = Registry.LocalMachine.OpenSubKey(@"Software\Grid Protection Alliance"))
+            using RegistryKey gpaKey = Registry.LocalMachine.OpenSubKey(@"Software\Grid Protection Alliance");
+
+            if (gpaKey is not null)
             {
-                if ((object)gpaKey != null)
+                // Populate the list of GPA products installed on the system
+                m_products = gpaKey.GetSubKeyNames()
+                    .Select(productName => ConvertToProductAndDispose(gpaKey.OpenSubKey(productName)))
+                    .ToList();
+
+                // Display the list of products that will be affected by the fixes that this tool provides
+                foreach (Product product in m_products)
                 {
-                    // Populate the list of GPA products installed on the system
-                    m_products = gpaKey.GetSubKeyNames()
-                        .Select(productName => ConvertToProductAndDispose(gpaKey.OpenSubKey(productName)))
-                        .ToList();
+                    GPAProductsTextBox.AppendText(Environment.NewLine);
+                    GPAProductsTextBox.AppendText(product.Name);
+                }
 
-                    // Display the list of products that will be affected by the fixes that this tool provides
-                    foreach (Product product in m_products)
+                // Determine whether the service OIDs are already registered for any products in the GPA product list
+                if (m_products.Any(product => product.ServiceOID is not null))
+                {
+                    ServiceOIDCheckBox.Checked = true;
+
+                    // Determine whether any GPA services have been installed or uninstalled since the last time the fix was applied
+                    if (m_products.Any(product => product.ServiceOID is null))
                     {
-                        GPAProductsTextBox.AppendText(Environment.NewLine);
-                        GPAProductsTextBox.AppendText(product.Name);
+                        AppendStatusMessage("NoInetFixUtil has detected that one or more GPA" +
+                                            " products have been installed since the service OID fix was last applied." +
+                                            " To correct this, double-click the \"Register OIDs used by GSF services\" checkbox.");
                     }
-
-                    // Determine whether the service OIDs are already registered for any products in the GPA product list
-                    if (m_products.Any(product => (object)product.ServiceOID != null))
+                    else if (m_products.Any(product => product.ServiceOID is not null && product.InstallPath is null))
                     {
-                        ServiceOIDCheckBox.Checked = true;
-
-                        // Determine whether any GPA services have been installed or uninstalled since the last time the fix was applied
-                        if (m_products.Any(product => (object)product.ServiceOID == null))
-                        {
-                            AppendStatusMessage("NoInetFixUtil has detected that one or more GPA" +
-                                " products have been installed since the service OID fix was last applied." +
-                                " To correct this, double-click the \"Register OIDs used by GSF services\" checkbox.");
-                        }
-                        else if (m_products.Any(product => (object)product.ServiceOID != null && (object)product.InstallPath == null))
-                        {
-                            AppendStatusMessage("NoInetFixUtil has detected that the service OID fix" +
-                                " has been applied to one or more GPA products that have since been uninstalled." +
-                                " To correct this, double-click the \"Register OIDs used by GSF services\" checkbox.");
-                        }
-                    }
-
-                    // Determine whether the publisher evidence fix is already registered for any products in the GPA product list
-                    if (m_products.Any(product => product.DisableGeneratePublisherEvidence != 0))
-                    {
-                        PublisherEvidenceCheckBox.Checked = true;
-
-                        // Determine whether any GPA services have been installed or uninstalled since the last time the fix was applied
-                        if (m_products.Any(product => product.DisableGeneratePublisherEvidence == 0))
-                        {
-                            AppendStatusMessage("NoInetFixUtil has detected that one or more GPA" +
-                                " products have been installed since the publisher evidence fix was last applied." +
-                                " To correct this, double-click the \"Disable publisher evidence generation\" checkbox.");
-                        }
+                        AppendStatusMessage("NoInetFixUtil has detected that the service OID fix" +
+                                            " has been applied to one or more GPA products that have since been uninstalled." +
+                                            " To correct this, double-click the \"Register OIDs used by GSF services\" checkbox.");
                     }
                 }
-                else
+
+                // Determine whether the publisher evidence fix is already registered for any products in the GPA product list
+                if (m_products.Any(product => product.DisableGeneratePublisherEvidence != 0))
                 {
-                    // No GPA products are installed
-                    m_products = new List<Product>();
+                    PublisherEvidenceCheckBox.Checked = true;
+
+                    // Determine whether any GPA services have been installed or uninstalled since the last time the fix was applied
+                    if (m_products.Any(product => product.DisableGeneratePublisherEvidence == 0))
+                    {
+                        AppendStatusMessage("NoInetFixUtil has detected that one or more GPA" +
+                                            " products have been installed since the publisher evidence fix was last applied." +
+                                            " To correct this, double-click the \"Disable publisher evidence generation\" checkbox.");
+                    }
                 }
+            }
+            else
+            {
+                // No GPA products are installed
+                m_products = new List<Product>();
             }
 
             AppendStatusMessage("Done.");
@@ -142,37 +137,39 @@ namespace NoInetFixUtil
             // Determine if the root certificate list auto update feature is already disabled on this system
             using (RegistryKey authRootKey = Registry.LocalMachine.OpenSubKey(@"Software\Policies\Microsoft\SystemCertificates\AuthRoot"))
             {
-                if ((object)authRootKey != null)
-                {
-                    disableRootAutoUpdate = authRootKey.GetValue("DisableRootAutoUpdate");
+                object disableRootAutoUpdate = authRootKey?.GetValue("DisableRootAutoUpdate");
 
-                    if ((object)disableRootAutoUpdate != null && !Equals(disableRootAutoUpdate, 0))
-                        RootCertificateListCheckBox.Checked = true;
-                }
+                if (disableRootAutoUpdate != null && !Equals(disableRootAutoUpdate, 0))
+                    RootCertificateListCheckBox.Checked = true;
             }
 
             // Enabled checkbox checked events
             m_checkedEventsEnabled = true;
 
-            if (applyAll)
+            if (!m_applyAll)
+                return;
+
+            try
             {
-                try
-                {
-                    if (!ServiceOIDCheckBox.Checked)
-                        ServiceOIDCheckBox.Checked = true;
-                    if (!PublisherEvidenceCheckBox.Checked)
-                        PublisherEvidenceCheckBox.Checked = true;
-                    if (!ClientOIDCheckBox.Checked)
-                        ClientOIDCheckBox.Checked = true;
-                    if (!RootCertificateListCheckBox.Checked)
-                        RootCertificateListCheckBox.Checked = true;
+                if (!ServiceOIDCheckBox.Checked)
+                    ServiceOIDCheckBox.Checked = true;
 
-                }
-                catch { }
+                if (!PublisherEvidenceCheckBox.Checked)
+                    PublisherEvidenceCheckBox.Checked = true;
 
-                this.Close();
+                if (!ClientOIDCheckBox.Checked)
+                    ClientOIDCheckBox.Checked = true;
+
+                if (!RootCertificateListCheckBox.Checked)
+                    RootCertificateListCheckBox.Checked = true;
 
             }
+            catch
+            {
+                // ignored
+            }
+
+            this.Close();
         }
 
         // Registers or unregisters the OIDs used by GPA services based on user selection.
@@ -223,26 +220,25 @@ namespace NoInetFixUtil
             if (!m_checkedEventsEnabled)
                 return;
 
-            StatusTextBox.AppendText(string.Format("{0} automatic root certificate list update through Windows Update... ", RootCertificateListCheckBox.Checked ? "Disabling" : "Enabling"));
+            StatusTextBox.AppendText($"{(RootCertificateListCheckBox.Checked ? "Disabling" : "Enabling")} automatic root certificate list update through Windows Update... ");
 
-            using (RegistryKey authRootKey = Registry.LocalMachine.CreateSubKey(@"Software\Policies\Microsoft\SystemCertificates\AuthRoot"))
+            using RegistryKey authRootKey = Registry.LocalMachine.CreateSubKey(@"Software\Policies\Microsoft\SystemCertificates\AuthRoot");
+
+            if (authRootKey is not null)
             {
-                if ((object)authRootKey != null)
-                {
-                    if (RootCertificateListCheckBox.Checked)
-                        authRootKey.SetValue("DisableRootAutoUpdate", 1);
-                    else
-                        authRootKey.DeleteValue("DisableRootAutoUpdate");
-
-                    AppendStatusMessage("Done.");
-                }
+                if (RootCertificateListCheckBox.Checked)
+                    authRootKey.SetValue("DisableRootAutoUpdate", 1);
                 else
-                {
-                    AppendStatusMessage("Failed. Unable to update the registry key.");
-                    m_checkedEventsEnabled = false;
-                    RootCertificateListCheckBox.Checked = !RootCertificateListCheckBox.Checked;
-                    m_checkedEventsEnabled = true;
-                }
+                    authRootKey.DeleteValue("DisableRootAutoUpdate");
+
+                AppendStatusMessage("Done.");
+            }
+            else
+            {
+                AppendStatusMessage("Failed. Unable to update the registry key.");
+                m_checkedEventsEnabled = false;
+                RootCertificateListCheckBox.Checked = !RootCertificateListCheckBox.Checked;
+                m_checkedEventsEnabled = true;
             }
         }
 
@@ -259,103 +255,96 @@ namespace NoInetFixUtil
         // Registers the service OID for the given product.
         private void RegisterServiceOID(Product product)
         {
-            List<Product> productsUsingThisOID;
-            X509Certificate2 certificate;
-            string certificatePath;
-            string keyAlgorithm;
-
             // If the service is already registered, don't need to do anything
-            if ((object)product.ServiceOID == null)
+            if (product.ServiceOID is not null)
+                return;
+
+            // Get the path to the certificate used to obtain the OID for this fix
+            string certificatePath = Path.Combine(product.InstallPath, product.Name + ".cer");
+
+            if (!File.Exists(certificatePath))
+                return;
+
+            StatusTextBox.AppendText($"Registering service OID for {product.Name}... ");
+
+            // Get the key algorithm of the certificate,
+            // which is the OID used by the service
+            X509Certificate2 certificate = new(certificatePath);
+            string keyAlgorithm = certificate.GetKeyAlgorithm();
+
+            // Determine which other products are sharing this service OID
+            List<Product> productsUsingThisOID = m_products
+                .Where(p => p.ServiceOID == keyAlgorithm)
+                .ToList();
+
+            // Set service OID to the key algorithm of the certificate
+            product.ServiceOID = keyAlgorithm;
+
+            // Store the OID of that certificate in case we need to unregister it later
+            using (RegistryKey productKey = Registry.LocalMachine.CreateSubKey($@"Software\Grid Protection Alliance\{product.Name}"))
+                productKey?.SetValue("ServiceOID", keyAlgorithm);
+
+            switch (productsUsingThisOID.Count)
             {
-                // Get the path to the certificate used to obtain the OID for this fix
-                certificatePath = Path.Combine(product.InstallPath, product.Name + ".cer");
-
-                if (File.Exists(certificatePath))
-                {
-                    StatusTextBox.AppendText(string.Format("Registering service OID for {0}... ", product.Name));
-
-                    // Get the key algorithm of the certificate,
-                    // which is the OID used by the service
-                    certificate = new X509Certificate2(certificatePath);
-                    keyAlgorithm = certificate.GetKeyAlgorithm();
-
-                    // Determine which other products are sharing this service OID
-                    productsUsingThisOID = m_products
-                        .Where(p => p.ServiceOID == keyAlgorithm)
-                        .ToList();
-
-                    // Set service OID to the key algorithm of the certificate
-                    product.ServiceOID = keyAlgorithm;
-
-                    // Store the OID of that certificate in case we need to unregister it later
-                    using (RegistryKey productKey = Registry.LocalMachine.CreateSubKey(string.Format(@"Software\Grid Protection Alliance\{0}", product.Name)))
-                    {
-                        if ((object)productKey != null)
-                            productKey.SetValue("ServiceOID", keyAlgorithm);
-                    }
-
-                    if (productsUsingThisOID.Count == 0)
-                    {
-                        RegisterOID(keyAlgorithm);
-                        AppendStatusMessage("Done.");
-                    }
-                    else if (productsUsingThisOID.Count == 1)
-                    {
-                        AppendStatusMessage(string.Format("Service OID already registered for {0}.", productsUsingThisOID[0].Name));
-                    }
-                    else
-                    {
-                        AppendStatusMessage(string.Format("Service OID already registered for {0} other products.", productsUsingThisOID.Count));
-                    }
-                }
+                case 0:
+                    RegisterOID(keyAlgorithm);
+                    AppendStatusMessage("Done.");
+                    break;
+                case 1:
+                    AppendStatusMessage($"Service OID already registered for {productsUsingThisOID[0].Name}.");
+                    break;
+                default:
+                    AppendStatusMessage($"Service OID already registered for {productsUsingThisOID.Count} other products.");
+                    break;
             }
         }
 
         // Unregisters the service OID for the given product.
         private void UnregisterServiceOID(Product product)
         {
-            List<Product> productsUsingThisOID;
-            string serviceOID;
+            if (product.ServiceOID is null)
+                return;
 
-            if ((object)product.ServiceOID != null)
-            {
-                StatusTextBox.AppendText(string.Format("Unregistering service OID for {0}... ", product.Name));
+            StatusTextBox.AppendText($"Unregistering service OID for {product.Name}... ");
                 
-                // Set service OID to null
-                serviceOID = product.ServiceOID;
-                product.ServiceOID = null;
+            // Set service OID to null
+            string serviceOID = product.ServiceOID;
+            product.ServiceOID = null;
 
-                // Delete the service OID key in the registry
-                using (RegistryKey productKey = Registry.LocalMachine.OpenSubKey(string.Format(@"Software\Grid Protection Alliance\{0}", product.Name), true))
-                {
-                    if ((object)productKey != null)
-                        productKey.DeleteValue("ServiceOID");
-                }
+            // Delete the service OID key in the registry
+            using (RegistryKey productKey = Registry.LocalMachine.OpenSubKey($@"Software\Grid Protection Alliance\{product.Name}", true))
+                productKey?.DeleteValue("ServiceOID");
 
-                // Determine which other products were sharing this service OID
-                productsUsingThisOID = m_products
-                    .Where(p => p.ServiceOID == serviceOID)
-                    .ToList();
+            // Determine which other products were sharing this service OID
+            List<Product> productsUsingThisOID = m_products
+                .Where(p => p.ServiceOID == serviceOID)
+                .ToList();
 
-                if (productsUsingThisOID.Count == 0)
-                {
+            switch (productsUsingThisOID.Count)
+            {
+                case 0:
                     // Unregister the service OID
                     UnregisterOID(serviceOID);
                     AppendStatusMessage("Done.");
-                }
-                else if (productsUsingThisOID.Count == 1)
-                {
-                    AppendStatusMessage(string.Format("Service OID still in use by {0}.", productsUsingThisOID[0].Name));
-                }
-                else
-                {
-                    AppendStatusMessage(string.Format("Service OID still in use by {0} other services.", productsUsingThisOID.Count));
-                }
+                    break;
+                case 1:
+                    AppendStatusMessage($"Service OID still in use by {productsUsingThisOID[0].Name}.");
+                    break;
+                default:
+                    AppendStatusMessage($"Service OID still in use by {productsUsingThisOID.Count} other services.");
+                    break;
             }
         }
 
+        // Appends the given status message to the text box.
+        private void AppendStatusMessage(string message)
+        {
+            StatusTextBox.AppendText(message);
+            StatusTextBox.AppendText(Environment.NewLine);
+        }
+
         // Disables publisher evidence generation for the given product.
-        private void SetDisableGeneratePublisherEvidence(Product product, bool value)
+        private static void SetDisableGeneratePublisherEvidence(Product product, bool value)
         {
             string xmlValue = value ? "false" : "true";
             int registryValue = value ? 1 : 0;
@@ -393,46 +382,36 @@ namespace NoInetFixUtil
             product.DisableGeneratePublisherEvidence = registryValue;
 
             // Store the OID of that certificate in case we need to unregister it later
-            using (RegistryKey productKey = Registry.LocalMachine.CreateSubKey(string.Format(@"Software\Grid Protection Alliance\{0}", product.Name)))
-            {
-                if ((object)productKey != null)
-                    productKey.SetValue("DisableGeneratePublisherEvidence", registryValue);
-            }
+            using RegistryKey productKey = Registry.LocalMachine.CreateSubKey($@"Software\Grid Protection Alliance\{product.Name}");
+            productKey?.SetValue("DisableGeneratePublisherEvidence", registryValue);
         }
 
         // Registers the given OID.
-        private void RegisterOID(string oid)
+        private static void RegisterOID(string oid)
         {
-            IntPtr info;
             WindowsApi.CRYPT_OID_INFO oidInfo;
 
             // Look up the OID
-            info = WindowsApi.CryptFindOIDInfo(WindowsApi.CRYPT_OID_INFO_OID_KEY, oid, WindowsApi.CRYPT_OID_DISABLE_SEARCH_DS_FLAG);
+            IntPtr info = WindowsApi.CryptFindOIDInfo(WindowsApi.CRYPT_OID_INFO_OID_KEY, oid, WindowsApi.CRYPT_OID_DISABLE_SEARCH_DS_FLAG);
 
-            if (!info.Equals(IntPtr.Zero))
-            {
-                // Register the OID
-                oidInfo = new WindowsApi.CRYPT_OID_INFO();
-                Marshal.PtrToStructure(info, oidInfo);
-                WindowsApi.CryptRegisterOIDInfo(info, WindowsApi.CRYPT_INSTALL_OID_INFO_BEFORE_FLAG);
+            if (info.Equals(IntPtr.Zero))
+                return;
 
-                // Add the name of the OID to the registry since the .NET libraries lookup by name
-                using (RegistryKey registryKey = Registry.LocalMachine.OpenSubKey(string.Format(@"Software\Wow6432Node\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{0}!{1}", oidInfo.pszOID, oidInfo.dwGroupId), true))
-                {
-                    if ((object)registryKey != null)
-                        registryKey.SetValue("Name", oidInfo.pszOID);
-                }
+            // Register the OID
+            oidInfo = new WindowsApi.CRYPT_OID_INFO();
+            Marshal.PtrToStructure(info, oidInfo);
+            WindowsApi.CryptRegisterOIDInfo(info, WindowsApi.CRYPT_INSTALL_OID_INFO_BEFORE_FLAG);
 
-                using (RegistryKey registryKey = Registry.LocalMachine.OpenSubKey(string.Format(@"Software\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{0}!{1}", oidInfo.pszOID, oidInfo.dwGroupId), true))
-                {
-                    if ((object)registryKey != null)
-                        registryKey.SetValue("Name", oidInfo.pszOID);
-                }
-            }
+            // Add the name of the OID to the registry since the .NET libraries lookup by name
+            using (RegistryKey registryKey = Registry.LocalMachine.OpenSubKey($@"Software\Wow6432Node\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{oidInfo.pszOID}!{oidInfo.dwGroupId}", true))
+                registryKey?.SetValue("Name", oidInfo.pszOID);
+
+            using (RegistryKey registryKey = Registry.LocalMachine.OpenSubKey($@"Software\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{oidInfo.pszOID}!{oidInfo.dwGroupId}", true))
+                registryKey?.SetValue("Name", oidInfo.pszOID);
         }
 
         // Unregisters the given OID.
-        private void UnregisterOID(string oid)
+        private static void UnregisterOID(string oid)
         {
             IntPtr info = WindowsApi.CryptFindOIDInfo(WindowsApi.CRYPT_OID_INFO_OID_KEY, oid, WindowsApi.CRYPT_OID_DISABLE_SEARCH_DS_FLAG);
 
@@ -441,90 +420,65 @@ namespace NoInetFixUtil
         }
 
         // Converts the given registry key into the product that it is associated with and disposes the registry key.
-        private Product ConvertToProductAndDispose(RegistryKey productKey)
+        private static Product ConvertToProductAndDispose(RegistryKey productKey)
         {
-            if ((object)productKey != null)
-            {
-                using (productKey)
-                {
-                    return new Product()
-                    {
-                        Name = Path.GetFileName(productKey.Name),
-                        InstallPath = GetInstallPath(productKey),
-                        ServiceOID = GetServiceOID(productKey),
-                        DisableGeneratePublisherEvidence = GetDisableGeneratePublisherEvidence(productKey)
-                    };
-                }
-            }
+            if (productKey is null)
+                return new Product();
 
-            return new Product();
+            using (productKey)
+            {
+                return new Product()
+                {
+                    Name = Path.GetFileName(productKey.Name),
+                    InstallPath = GetInstallPath(productKey),
+                    ServiceOID = GetServiceOID(productKey),
+                    DisableGeneratePublisherEvidence = GetDisableGeneratePublisherEvidence(productKey)
+                };
+            }
         }
 
         // Uses the given registry key to get the install path of the product.
-        private string GetInstallPath(RegistryKey productKey)
-        {
-            if ((object)productKey != null)
-                return (string)productKey.GetValue("InstallPath");
-
-            return null;
-        }
+        private static string GetInstallPath(RegistryKey productKey) => 
+            (string)productKey?.GetValue("InstallPath");
 
         // Uses the given registry key to get the certificate OID of the product.
-        private string GetServiceOID(RegistryKey productKey)
-        {
-            if ((object)productKey != null)
-                return (string)productKey.GetValue("ServiceOID");
-
-            return null;
-        }
+        private static string GetServiceOID(RegistryKey productKey) => 
+            (string)productKey?.GetValue("ServiceOID");
 
         // Uses the given registry key to get the certificate OID of the product.
-        private int GetDisableGeneratePublisherEvidence(RegistryKey productKey)
-        {
-            if ((object)productKey != null)
-                return (int)(productKey.GetValue("DisableGeneratePublisherEvidence") ?? 0);
-
-            return 0;
-        }
+        private static int GetDisableGeneratePublisherEvidence(RegistryKey productKey) => 
+            productKey is not null ? (int)(productKey.GetValue("DisableGeneratePublisherEvidence") ?? 0) : 0;
 
         // Determines whether the given OID is already registered.
-        private bool IsRegistered(string oid)
+        private static bool IsRegistered(string oid)
         {
-            IntPtr info;
             WindowsApi.CRYPT_OID_INFO oidInfo;
 
-            info = WindowsApi.CryptFindOIDInfo(WindowsApi.CRYPT_OID_INFO_OID_KEY, oid, WindowsApi.CRYPT_OID_DISABLE_SEARCH_DS_FLAG);
+            IntPtr info = WindowsApi.CryptFindOIDInfo(WindowsApi.CRYPT_OID_INFO_OID_KEY, oid, WindowsApi.CRYPT_OID_DISABLE_SEARCH_DS_FLAG);
 
-            if (!info.Equals(IntPtr.Zero))
+            if (info.Equals(IntPtr.Zero))
+                return false;
+
+            oidInfo = new WindowsApi.CRYPT_OID_INFO();
+            Marshal.PtrToStructure(info, oidInfo);
+
+            using (RegistryKey oidKey = Registry.LocalMachine.OpenSubKey($@"Software\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{oidInfo.pszOID}!{oidInfo.dwGroupId}"))
             {
-                oidInfo = new WindowsApi.CRYPT_OID_INFO();
-                Marshal.PtrToStructure(info, oidInfo);
+                if (oidKey is not null)
+                    return true;
+            }
 
-                using (RegistryKey oidKey = Registry.LocalMachine.OpenSubKey(string.Format(@"Software\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{0}!{1}", oidInfo.pszOID, oidInfo.dwGroupId)))
-                {
-                    if ((object)oidKey != null)
-                        return true;
-                }
-
-                using (RegistryKey oidKey = Registry.LocalMachine.OpenSubKey(string.Format(@"Software\Wow6432Node\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{0}!{1}", oidInfo.pszOID, oidInfo.dwGroupId)))
-                {
-                    if ((object)oidKey != null)
-                        return true;
-                }
+            using (RegistryKey oidKey = Registry.LocalMachine.OpenSubKey($@"Software\Wow6432Node\Microsoft\Cryptography\OID\EncodingType 0\CryptDllFindOIDInfo\{oidInfo.pszOID}!{oidInfo.dwGroupId}"))
+            {
+                if (oidKey is not null)
+                    return true;
             }
 
             return false;
         }
 
-        // Appends the given status message to the text box.
-        private void AppendStatusMessage(string message)
-        {
-            StatusTextBox.AppendText(message);
-            StatusTextBox.AppendText(Environment.NewLine);
-        }
-
         // Returns an enumerable collection of file names that match a search pattern in a specified path, and optionally searches subdirectories.
-        private IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        private static IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
         {
             try
             {
