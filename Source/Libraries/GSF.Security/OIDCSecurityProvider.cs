@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
@@ -31,7 +30,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.Caching;
-using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using GSF.Collections;
@@ -206,9 +204,9 @@ namespace GSF.Security
         {
             get 
             {
-                string val = m_clientRequestUri;
+                string requestedRedirect = m_clientRequestUri;
                 m_clientRequestUri = "";
-                return val;
+                return requestedRedirect;
             }
         }
 
@@ -329,11 +327,11 @@ namespace GSF.Security
             // Attempt to write success or failure to the database - we allow caller to catch any possible exceptions here so that
             // database exceptions can be tracked separately (via LastException property) from other login exceptions, e.g., when
             // a read-only database is being used or current user only has read-only access to database.
-            if (!string.IsNullOrWhiteSpace(SettingsCategory) && UseDatabaseLogging)
-            {
-                using AdoDataConnection connection = new(SettingsCategory);
-                connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess ? 1 : 0);
-            }
+            if (string.IsNullOrWhiteSpace(SettingsCategory) || !UseDatabaseLogging)
+                return;
+
+            using AdoDataConnection connection = new(SettingsCategory);
+            connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess ? 1 : 0);
         }
 
         /// <summary>
@@ -383,7 +381,7 @@ namespace GSF.Security
                 { "redirect_uri", RedirectURI }
             };
 
-            void ConfigureRequest(HttpRequestMessage request)
+            void configureRequest(HttpRequestMessage request)
             {
                 request.RequestUri = new Uri(TokenEndpoint);
                 request.Method = HttpMethod.Post;               
@@ -392,56 +390,61 @@ namespace GSF.Security
 
             using (HttpRequestMessage request = new())
             {
-                ConfigureRequest(request);
+                configureRequest(request);
 
-                using HttpResponseMessage response = await Client.SendAsync(request);
+                using HttpResponseMessage response = await s_client.SendAsync(request);
 
-                if (!response.IsSuccessStatusCode)
-                    return null;
-
-                return JsonConvert.DeserializeObject<TokenResponse>(await response.Content.ReadAsStringAsync());
+                return response.IsSuccessStatusCode ? 
+                    JsonConvert.DeserializeObject<TokenResponse>(await response.Content.ReadAsStringAsync()) : 
+                    null;
             }
         }
 
         private JObject DecodeJWT(string token)
         {
-            if (!token.Contains("."))
-                throw new InvalidExpressionException("A valid JWT token requires at least one '.'");
+            while (true)
+            {
+                if (!token.Contains("."))
+                    throw new InvalidExpressionException("A valid JWT token requires at least one '.'");
 
-            const int JOSEHeaderIndex = 0;
-            const int PayloadIndex = 1;
-            //const int SignatureIndex = 2;
+                const int JOSEHeaderIndex = 0;
+                const int PayloadIndex = 1;
+                //const int SignatureIndex = 2;
 
-            string[] splitToken = token.Split('.');
+                string[] splitToken = token.Split('.');
 
-            if (splitToken.Length <= PayloadIndex)
-                throw new FormatException("JWT token has no payload");
+                if (splitToken.Length <= PayloadIndex)
+                    throw new FormatException("JWT token has no payload");
 
-            string joseHeader = splitToken[JOSEHeaderIndex];
-            byte[] headerData = Convert.FromBase64String(joseHeader);
-            joseHeader = Encoding.UTF8.GetString(headerData);
-            JObject header = JObject.Parse(joseHeader);
+                string joseHeader = splitToken[JOSEHeaderIndex];
+                byte[] headerData = Convert.FromBase64String(joseHeader);
+                joseHeader = Encoding.UTF8.GetString(headerData);
+                JObject header = JObject.Parse(joseHeader);
 
-            if (header.TryGetValue("enc", out _))
-                throw new FormatException("JWE Tokens are not supported");
+                if (header.TryGetValue("enc", out _))
+                    throw new FormatException("JWE Tokens are not supported");
 
-            // TODO: Implement signature verifications based on config file setting
-            //if (SignatureIndex < splitToken.Length)
-            //{
-            //    // We are not validating signatures to allow openXDA to self-sign tokens
-            //    void ValidateToken(string _) { }
-            //    string signature = splitToken[SignatureIndex];
-            //    ValidateToken(signature);
-            //}
+                // TODO: Implement signature verifications based on config file setting
+                //if (SignatureIndex < splitToken.Length)
+                //{
+                //    // We are not validating signatures to allow openXDA to self-sign tokens
+                //    void ValidateToken(string _) { }
+                //    string signature = splitToken[SignatureIndex];
+                //    ValidateToken(signature);
+                //}
 
-            string payload = splitToken[PayloadIndex];
-            byte[] payloadData = Convert.FromBase64String(payload);
-            string payloadContent = Encoding.UTF8.GetString(payloadData);
+                string payload = splitToken[PayloadIndex];
+                byte[] payloadData = Convert.FromBase64String(payload);
+                string payloadContent = Encoding.UTF8.GetString(payloadData);
 
-            if (header.TryGetValue("cty", out JToken cty) && cty.ToString().ToLower() == "jwt")
-                return DecodeJWT(payloadContent);
+                if (header.TryGetValue("cty", out JToken cty) && cty.ToString().ToLower() == "jwt")
+                {
+                    token = payloadContent;
+                    continue;
+                }
 
-            return JObject.Parse(payloadContent);
+                return JObject.Parse(payloadContent);
+            }
         }
 
         /// <summary>
@@ -505,7 +508,8 @@ namespace GSF.Security
         /// <summary>
         /// Not implemented by <see cref="OIDCSecurityProvider"/>; always returns <c>false</c>.
         /// </summary>
-        public override bool CanRefreshData => false;
+        public override bool CanRefreshData =>
+            false;
 
         /// <summary>
         /// Obtains the Token from the OIDC Server using a code.
@@ -563,7 +567,7 @@ namespace GSF.Security
             try
             {
                 // Roles are obtained from a Claim
-                userData.Roles = tokenContent.GetOrDefault(RolesClaim).ToString().Split(',').ToList();
+                userData.Roles = tokenContent.GetOrDefault(RolesClaim)?.ToString().Split(',').ToList() ?? new List<string>();
             }
             catch (Exception ex)
             {
@@ -578,13 +582,15 @@ namespace GSF.Security
 
             UserData = userData;
 
-            if (s_nonceCache.Contains(nonce.ToString()))
-            {
-                string base64Path = WebUtility.UrlDecode((string)s_nonceCache.Get(nonce.ToString()));
-                byte[] pathBytes = Convert.FromBase64String(base64Path);
-                m_clientRequestUri = Encoding.UTF8.GetString(pathBytes);
-            }          
+            if (!s_nonceCache.Contains(nonce.ToString()))
+                return;
+
+            string base64Path = WebUtility.UrlDecode((string)s_nonceCache.Get(nonce.ToString()));
+            byte[] pathBytes = Convert.FromBase64String(base64Path);
+            
+            m_clientRequestUri = Encoding.UTF8.GetString(pathBytes);
         }
+
         #endregion
 
         #region [ Static ]
@@ -594,7 +600,7 @@ namespace GSF.Security
 
         private static readonly MemoryCache s_nonceCache = new("OIDC-NonceCache");
 
-        private static readonly HttpClient Client = new();
+        private static readonly HttpClient s_client = new();
        
         #endregion
     }

@@ -71,12 +71,11 @@ namespace GSF.Security
         private const string DefaultCacheFileName = "UserDataCache.bin";
 
         // Expected cache header bytes
-        private static readonly byte[] CacheHeaderBytes = { (byte)0x55, (byte)0x44, (byte)0x43 };
+        private static readonly byte[] s_cacheHeaderBytes = { 0x55, 0x44, 0x43 };
 
         // Fields
         private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
         private readonly object m_userDataTableLock;            // Lock object for internal dictionary
-        private int m_providerID;                               // Unique provider ID used to distinguish cached user data that may be different based on provider
 
         #endregion
 
@@ -99,7 +98,7 @@ namespace GSF.Security
         public UserDataCache(int providerID, int maximumConcurrentLocks)
             : base(maximumConcurrentLocks)
         {
-            m_providerID = providerID;
+            ProviderID = providerID;
             m_userDataTable = new Dictionary<string, UserData>(StringComparer.OrdinalIgnoreCase);
             m_userDataTableLock = new object();
         }
@@ -117,30 +116,16 @@ namespace GSF.Security
         {
             get
             {
-                UserData userData;
-                TryGetUserData(loginID, out userData);
+                TryGetUserData(loginID, out UserData userData);
                 return userData;
             }
-            set
-            {
-                SaveUserData(loginID, value);
-            }
+            set => SaveUserData(loginID, value);
         }
 
         /// <summary>
         /// Gets or sets unique provider ID used to distinguish cached user data that may be different based on provider.
         /// </summary>
-        public int ProviderID
-        {
-            get
-            {
-                return m_providerID;
-            }
-            set
-            {
-                m_providerID = value;
-            }
-        }
+        public int ProviderID{ get; set; }
 
         #endregion
 
@@ -267,10 +252,8 @@ namespace GSF.Security
         /// user data cache instead of the actual <paramref name="loginID"/>. This method allows the
         /// consumer to properly calculate this hash when directly using the user data cache.
         /// </remarks>
-        protected string HashLoginID(string loginID)
-        {
-            return Cipher.GetPasswordHash(loginID.ToLower(), m_providerID);
-        }
+        protected string HashLoginID(string loginID) => 
+            Cipher.GetPasswordHash(loginID.ToLower(), ProviderID);
 
         // Waits until the cache is loaded before attempting to access it
         private void WaitForDataReady()
@@ -300,7 +283,6 @@ namespace GSF.Security
         public static UserDataCache GetCurrentCache(int providerID)
         {
             // By default user data cache is stored in a path where user will have rights
-            UserDataCache userDataCache;
             string userCacheFolder = FilePath.GetApplicationDataFolder();
             string userCacheFileName = Path.Combine(userCacheFolder, FilePath.GetFileName(DefaultCacheFileName));
 
@@ -309,96 +291,90 @@ namespace GSF.Security
                 Directory.CreateDirectory(userCacheFolder);
 
             // Initialize user data cache for current local user
-            userDataCache = new UserDataCache(providerID);
-            userDataCache.FileName = userCacheFileName;
-
-            return userDataCache;
+            return new UserDataCache(providerID) { FileName = userCacheFileName };
         }
 
         [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         private static byte[] SerializeCache(Dictionary<string, UserData> cache)
         {
-            using (BlockAllocatedMemoryStream stream = new BlockAllocatedMemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.Default))
+            using BlockAllocatedMemoryStream stream = new();
+            using BinaryWriter writer = new(stream, Encoding.Default);
+
+            writer.Write(s_cacheHeaderBytes);
+            writer.Write(cache.Count);
+
+            foreach (KeyValuePair<string, UserData> data in cache)
             {
-                writer.Write(CacheHeaderBytes);
-                writer.Write(cache.Count);
+                UserData userData = data.Value;
 
-                foreach (KeyValuePair<string, UserData> data in cache)
-                {
-                    UserData userData = data.Value;
+                writer.Write(data.Key);
+                writer.Write(userData.Username);
+                writer.Write(userData.FirstName);
+                writer.Write(userData.LastName);
+                writer.Write(userData.CompanyName);
+                writer.Write(userData.PhoneNumber);
+                writer.Write(userData.EmailAddress);
+                writer.Write(userData.IsLockedOut);
+                writer.Write(userData.IsDisabled);
+                writer.Write(userData.PasswordChangeDateTime.Ticks);
+                writer.Write(userData.AccountCreatedDateTime.Ticks);
 
-                    writer.Write(data.Key);
-                    writer.Write(userData.Username);
-                    writer.Write(userData.FirstName);
-                    writer.Write(userData.LastName);
-                    writer.Write(userData.CompanyName);
-                    writer.Write(userData.PhoneNumber);
-                    writer.Write(userData.EmailAddress);
-                    writer.Write(userData.IsLockedOut);
-                    writer.Write(userData.IsDisabled);
-                    writer.Write(userData.PasswordChangeDateTime.Ticks);
-                    writer.Write(userData.AccountCreatedDateTime.Ticks);
+                writer.Write(userData.Roles.Count);
 
-                    writer.Write(userData.Roles.Count);
+                foreach (string role in userData.Roles)
+                    writer.Write(role);
 
-                    foreach (string role in userData.Roles)
-                        writer.Write(role);
+                writer.Write(userData.Groups.Count);
 
-                    writer.Write(userData.Groups.Count);
-
-                    foreach (string group in userData.Groups)
-                        writer.Write(group);
-                }
-
-                return stream.ToArray();
+                foreach (string group in userData.Groups)
+                    writer.Write(group);
             }
+
+            return stream.ToArray();
         }
 
         [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         private Dictionary<string, UserData> DeserializeCache(byte[] data)
         {
-            Dictionary<string, UserData> cache = new Dictionary<string, UserData>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, UserData> cache = new(StringComparer.OrdinalIgnoreCase);
 
-            using (MemoryStream stream = new MemoryStream(data))
-            using (BinaryReader reader = new BinaryReader(stream, Encoding.Default))
+            using MemoryStream stream = new(data);
+            using BinaryReader reader = new(stream, Encoding.Default);
+
+            if (reader.ReadBytes(s_cacheHeaderBytes.Length).CompareTo(s_cacheHeaderBytes) != 0)
+                throw new InvalidDataException("Unexpected data read from UserDataCache - file possibly corrupted.");
+
+            int cacheLength = reader.ReadInt32();
+
+            for (int i = 0; i < cacheLength; i++)
             {
-                if (reader.ReadBytes(CacheHeaderBytes.Length).CompareTo(CacheHeaderBytes) != 0)
-                    throw new InvalidDataException("Unexpected data read from UserDataCache - file possibly corrupted.");
+                UserData userData = new();
 
-                int listLength, cacheLength = reader.ReadInt32();
+                string loginID = reader.ReadString();
+                userData.Username = reader.ReadString();
+                userData.FirstName = reader.ReadString();
+                userData.LastName = reader.ReadString();
+                userData.CompanyName = reader.ReadString();
+                userData.PhoneNumber = reader.ReadString();
+                userData.EmailAddress = reader.ReadString();
+                userData.IsLockedOut = reader.ReadBoolean();
+                userData.IsDisabled = reader.ReadBoolean();
+                userData.PasswordChangeDateTime = new DateTime(reader.ReadInt64());
+                userData.AccountCreatedDateTime = new DateTime(reader.ReadInt64());
 
-                for (int i = 0; i < cacheLength; i++)
-                {
-                    UserData userData = new UserData();
-                    string loginID;
+                userData.Roles = new List<string>();
+                int listLength = reader.ReadInt32();
 
-                    loginID = reader.ReadString();
-                    userData.Username = reader.ReadString();
-                    userData.FirstName = reader.ReadString();
-                    userData.LastName = reader.ReadString();
-                    userData.CompanyName = reader.ReadString();
-                    userData.PhoneNumber = reader.ReadString();
-                    userData.EmailAddress = reader.ReadString();
-                    userData.IsLockedOut = reader.ReadBoolean();
-                    userData.IsDisabled = reader.ReadBoolean();
-                    userData.PasswordChangeDateTime = new DateTime(reader.ReadInt64());
-                    userData.AccountCreatedDateTime = new DateTime(reader.ReadInt64());
+                for (int j = 0; j < listLength; j++)
+                    userData.Roles.Add(reader.ReadString());
 
-                    userData.Roles = new List<string>();
-                    listLength = reader.ReadInt32();
+                userData.Groups = new List<string>();
+                listLength = reader.ReadInt32();
 
-                    for (int j = 0; j < listLength; j++)
-                        userData.Roles.Add(reader.ReadString());
+                for (int j = 0; j < listLength; j++)
+                    userData.Groups.Add(reader.ReadString());
 
-                    userData.Groups = new List<string>();
-                    listLength = reader.ReadInt32();
-
-                    for (int j = 0; j < listLength; j++)
-                        userData.Groups.Add(reader.ReadString());
-
-                    cache.Add(loginID, userData);
-                }
+                cache.Add(loginID, userData);
             }
 
             return cache;

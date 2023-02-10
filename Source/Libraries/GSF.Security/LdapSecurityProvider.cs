@@ -129,10 +129,6 @@ namespace GSF.Security
         public const int DefaultCacheMaximumRetryAttempts = 5;
 
         // Fields
-        private bool m_enableOfflineCaching;
-        private double m_cacheRetryDelayInterval;
-        private int m_cacheMaximumRetryAttempts;
-        private WindowsPrincipal m_windowsPrincipal;
 
         #endregion
 
@@ -157,9 +153,9 @@ namespace GSF.Security
         protected LdapSecurityProvider(string username, bool canRefreshData, bool canResetPassword, bool canChangePassword)
             : base(username, canRefreshData, canResetPassword, canChangePassword)
         {
-            m_enableOfflineCaching = DefaultEnableOfflineCaching;
-            m_cacheRetryDelayInterval = DefaultCacheRetryDelayInterval;
-            m_cacheMaximumRetryAttempts = DefaultCacheMaximumRetryAttempts;
+            EnableOfflineCaching = DefaultEnableOfflineCaching;
+            CacheRetryDelayInterval = DefaultCacheRetryDelayInterval;
+            CacheMaximumRetryAttempts = DefaultCacheMaximumRetryAttempts;
         }
 
         #endregion
@@ -169,62 +165,22 @@ namespace GSF.Security
         /// <summary>
         /// Gets or sets a boolean value that indicates whether user information is to be cached for offline authentication.
         /// </summary>
-        public bool EnableOfflineCaching
-        {
-            get
-            {
-                return m_enableOfflineCaching;
-            }
-            set
-            {
-                m_enableOfflineCaching = value;
-            }
-        }
+        public bool EnableOfflineCaching{ get; set; }
 
         /// <summary>
         /// Gets or sets the wait interval (in milliseconds) before retrying load of offline user data cache.
         /// </summary>
-        public double CacheRetryDelayInterval
-        {
-            get
-            {
-                return m_cacheRetryDelayInterval;
-            }
-            set
-            {
-                m_cacheRetryDelayInterval = value;
-            }
-        }
+        public double CacheRetryDelayInterval{ get; set; }
 
         /// <summary>
         /// Gets or sets the maximum retry attempts allowed for loading offline user data cache.
         /// </summary>
-        public int CacheMaximumRetryAttempts
-        {
-            get
-            {
-                return m_cacheMaximumRetryAttempts;
-            }
-            set
-            {
-                m_cacheMaximumRetryAttempts = value;
-            }
-        }
+        public int CacheMaximumRetryAttempts{ get; set; }
 
         /// <summary>
         /// Gets the original <see cref="WindowsPrincipal"/> of the user if the user exists in Active Directory.
         /// </summary>
-        public WindowsPrincipal WindowsPrincipal
-        {
-            get
-            {
-                return m_windowsPrincipal;
-            }
-            protected set
-            {
-                m_windowsPrincipal = value;
-            }
-        }
+        public WindowsPrincipal WindowsPrincipal { get; protected set; }
 
         #endregion
 
@@ -238,10 +194,8 @@ namespace GSF.Security
         /// <param name="securityAnswer">Answer to the user's security question.</param>
         /// <returns>true if the password is reset, otherwise false.</returns>
         /// <exception cref="NotSupportedException">Always</exception>
-        public override bool ResetPassword(string securityAnswer)
-        {
+        public override bool ResetPassword(string securityAnswer) => 
             throw new NotSupportedException();
-        }
 
         #endregion
 
@@ -252,16 +206,18 @@ namespace GSF.Security
         {
             base.SaveSettings();
 
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["EnableOfflineCaching", true].Update(m_enableOfflineCaching);
-                settings["CacheRetryDelayInterval", true].Update(m_cacheRetryDelayInterval);
-                settings["CacheMaximumRetryAttempts", true].Update(m_cacheMaximumRetryAttempts);
-                config.Save();
-            }
+            if (!PersistSettings)
+                return;
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            
+            settings["EnableOfflineCaching", true].Update(EnableOfflineCaching);
+            settings["CacheRetryDelayInterval", true].Update(CacheRetryDelayInterval);
+            settings["CacheMaximumRetryAttempts", true].Update(CacheMaximumRetryAttempts);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -271,18 +227,20 @@ namespace GSF.Security
         {
             base.LoadSettings();
 
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("EnableOfflineCaching", m_enableOfflineCaching, "True to enable caching of user group information for authentication in offline state, otherwise False.");
-                settings.Add("CacheRetryDelayInterval", m_cacheRetryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
-                settings.Add("CacheMaximumRetryAttempts", m_cacheMaximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
-                EnableOfflineCaching = settings["EnableOfflineCaching"].ValueAs(m_enableOfflineCaching);
-                CacheRetryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(m_cacheRetryDelayInterval);
-                CacheMaximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(m_cacheMaximumRetryAttempts);
-            }
+            if (!PersistSettings)
+                return;
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            
+            settings.Add("EnableOfflineCaching", EnableOfflineCaching, "True to enable caching of user group information for authentication in offline state, otherwise False.");
+            settings.Add("CacheRetryDelayInterval", CacheRetryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
+            settings.Add("CacheMaximumRetryAttempts", CacheMaximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
+            
+            EnableOfflineCaching = settings["EnableOfflineCaching"].ValueAs(EnableOfflineCaching);
+            CacheRetryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(CacheRetryDelayInterval);
+            CacheMaximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(CacheMaximumRetryAttempts);
         }
 
         /// <summary>
@@ -293,7 +251,7 @@ namespace GSF.Security
         {
             // Check prerequisites
             bool isValid =
-                (UserData.IsDefined && !UserData.IsDisabled && !UserData.IsLockedOut) &&
+                UserData.IsDefined && !UserData.IsDisabled && !UserData.IsLockedOut &&
                 (UserData.PasswordChangeDateTime == DateTime.MinValue || UserData.PasswordChangeDateTime > DateTime.UtcNow);
 
             if (!isValid)
@@ -302,20 +260,20 @@ namespace GSF.Security
             if (string.IsNullOrEmpty(Password))
             {
                 // Validate with passthrough credentials
-                m_windowsPrincipal = PassthroughPrincipal as WindowsPrincipal;
+                WindowsPrincipal = PassthroughPrincipal as WindowsPrincipal;
 
                 IsUserAuthenticated =
-                    (object)m_windowsPrincipal != null &&
-                    ((!string.IsNullOrEmpty(UserData.LoginID) && m_windowsPrincipal.Identity.Name.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(UserData.Username) && m_windowsPrincipal.Identity.Name.Equals(UserData.Username, StringComparison.OrdinalIgnoreCase))) &&
-                    m_windowsPrincipal.Identity.IsAuthenticated;
+                    WindowsPrincipal is not null &&
+                    ((!string.IsNullOrEmpty(UserData.LoginID) && WindowsPrincipal.Identity.Name.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(UserData.Username) && WindowsPrincipal.Identity.Name.Equals(UserData.Username, StringComparison.OrdinalIgnoreCase))) &&
+                    WindowsPrincipal.Identity.IsAuthenticated;
             }
             else
             {
                 // Validate by performing network logon
                 string[] userParts = UserData.LoginID.Split('\\');
-                m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], Password) as WindowsPrincipal;
-                IsUserAuthenticated = (object)m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
+                WindowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], Password) as WindowsPrincipal;
+                IsUserAuthenticated = WindowsPrincipal is not null && WindowsPrincipal.Identity.IsAuthenticated;
             }
 
             return IsUserAuthenticated;
@@ -328,17 +286,15 @@ namespace GSF.Security
         public override bool RefreshData()
         {
             // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
-            UserData userData = new UserData(UserData.Username);
+            UserData userData = new(UserData.Username);
             bool result = RefreshData(userData, userData.Roles, ProviderID);
 
             if (result)
             {
-                string[] parts;
-
                 // Remove domain name prefixes from user group names (again to match WindowIdentity principal implementation)
                 for (int i = 0; i < userData.Roles.Count; i++)
                 {
-                    parts = userData.Roles[i].Split('\\');
+                    string[] parts = userData.Roles[i].Split('\\');
 
                     if (parts.Length == 2)
                         userData.Roles[i] = parts[1];
@@ -359,7 +315,7 @@ namespace GSF.Security
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         protected virtual bool RefreshData(UserData userData, List<string> groupCollection, int providerID)
         {
-            if ((object)groupCollection == null)
+            if (groupCollection is null)
                 throw new ArgumentNullException(nameof(groupCollection));
 
             if (string.IsNullOrEmpty(userData.Username))
@@ -375,11 +331,11 @@ namespace GSF.Security
             try
             {
                 // Get current local user data cache
-                if (m_enableOfflineCaching)
+                if (EnableOfflineCaching)
                 {
                     userDataCache = UserDataCache.GetCurrentCache(providerID);
-                    userDataCache.RetryDelayInterval = m_cacheRetryDelayInterval;
-                    userDataCache.MaximumRetryAttempts = m_cacheMaximumRetryAttempts;
+                    userDataCache.RetryDelayInterval = CacheRetryDelayInterval;
+                    userDataCache.MaximumRetryAttempts = CacheMaximumRetryAttempts;
                     userDataCache.ReloadOnChange = false;
                     userDataCache.AutoSave = true;
                     userDataCache.Load();
@@ -388,10 +344,9 @@ namespace GSF.Security
                 // Create user info object using specified LDAP path if provided
                 string ldapPath = GetLdapPath();
 
-                if (string.IsNullOrEmpty(ldapPath))
-                    user = new UserInfo(userData.Username);
-                else
-                    user = new UserInfo(userData.Username, ldapPath);
+                user = string.IsNullOrEmpty(ldapPath) ? 
+                    new UserInfo(userData.Username) : 
+                    new UserInfo(userData.Username, ldapPath);
 
                 // Make sure to load privileged user credentials from config file if present.
                 user.PersistSettings = true;
@@ -408,9 +363,8 @@ namespace GSF.Security
                 if (!user.DomainRespondsForUser)
                 {
                     // Attempt to load previously cached user information when domain is offline
-                    UserData cachedUserData;
 
-                    if ((object)userDataCache != null && userDataCache.TryGetUserData(userData.LoginID, out cachedUserData))
+                    if (userDataCache is not null && userDataCache.TryGetUserData(userData.LoginID, out UserData cachedUserData))
                     {
                         // Copy relevant cached user information
                         userData.IsDefined = true;
@@ -471,7 +425,7 @@ namespace GSF.Security
                             groupCollection.Add(groupName);
                     }
 
-                    if ((object)userDataCache != null)
+                    if (userDataCache is not null)
                     {
                         // Cache user data so that information can be loaded later if domain is unavailable
                         userDataCache[userData.LoginID] = userData;
@@ -485,14 +439,13 @@ namespace GSF.Security
             }
             finally
             {
-                if ((object)user != null)
+                if (user is not null)
                 {
                     user.PersistSettings = false;
                     user.Dispose();
                 }
 
-                if ((object)userDataCache != null)
-                    userDataCache.Dispose();
+                userDataCache?.Dispose();
             }
         }
 
@@ -519,10 +472,9 @@ namespace GSF.Security
                 string ldapPath = GetLdapPath();
 
                 // Create user info object using specified LDAP path if provided
-                if (string.IsNullOrEmpty(ldapPath))
-                    user = new UserInfo(UserData.Username);
-                else
-                    user = new UserInfo(UserData.Username, ldapPath);
+                user = string.IsNullOrEmpty(ldapPath) ? 
+                    new UserInfo(UserData.Username) : 
+                    new UserInfo(UserData.Username, ldapPath);
 
                 // Initialize user entry
                 user.PersistSettings = true;
@@ -539,17 +491,16 @@ namespace GSF.Security
             catch (TargetInvocationException ex)
             {
                 // Propagate password change error
-                if ((object)ex.InnerException == null)
+                if (ex.InnerException is null)
                     throw new SecurityException(ex.Message, ex);
                 else
                     throw new SecurityException(ex.InnerException.Message, ex);
             }
             finally
             {
-                if ((object)user != null)
-                    user.Dispose();
+                user?.Dispose();
 
-                if ((object)context != null)
+                if (context is not null)
                     UserInfo.EndImpersonation(context);
 
                 RefreshData();
@@ -561,14 +512,10 @@ namespace GSF.Security
         /// </summary>
         /// <param name="role">The user role to be translated.</param>
         /// <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
-        public override string TranslateRole(string role)
-        {
-            // Perform a translation from SID to Role only if the input starts with 'SID:'
-            if (role.StartsWith("SID:", StringComparison.OrdinalIgnoreCase))
-                return new SecurityIdentifier(role.Remove(0, 4)).Translate(typeof(NTAccount)).ToString().Split('\\')[1];
-
-            return role;
-        }
+        public override string TranslateRole(string role) =>
+            role.StartsWith("SID:", StringComparison.OrdinalIgnoreCase) ? // Perform a translation from SID to Role only if the input starts with 'SID:'
+                new SecurityIdentifier(role.Remove(0, 4)).Translate(typeof(NTAccount)).ToString().Split('\\')[1] :
+                role;
 
         /// <summary>
         /// Gets the LDAP path.
@@ -595,10 +542,9 @@ namespace GSF.Security
         /// </summary>
         /// <param name="applicationId">The applicationId for the roles to be returned.</param>
         /// <returns>The roles that the specified user has.</returns>
-        public override List<string> GetUserRoles(string applicationId)
-        {
-            return UserData?.Roles ?? new List<string>();
-        }
+        public override List<string> GetUserRoles(string applicationId) => 
+            UserData?.Roles ?? new List<string>();
+
         #endregion
     }
 }

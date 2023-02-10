@@ -35,13 +35,6 @@ namespace GSF.Security
     /// <seealso cref="ISecurityProvider"/>
     public class SecurityIdentity : IIdentity
     {
-        #region [ Members ]
-
-        // Fields
-        private readonly ISecurityProvider m_provider;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -49,13 +42,8 @@ namespace GSF.Security
         /// </summary>
         /// <param name="provider">An <see cref="ISecurityProvider"/> of the user.</param>
         /// <exception cref="ArgumentNullException">Value specified for <paramref name="provider"/> is null.</exception>
-        public SecurityIdentity(ISecurityProvider provider)
-        {
-            if ((object)provider == null)
-                throw new ArgumentNullException(nameof(provider));
-
-            m_provider = provider;
-        }
+        public SecurityIdentity(ISecurityProvider provider) => 
+            Provider = provider ?? throw new ArgumentNullException(nameof(provider));
 
         #endregion
 
@@ -64,46 +52,22 @@ namespace GSF.Security
         /// <summary>
         /// Gets the type of authentication used to identify the user.
         /// </summary>
-        public string AuthenticationType
-        {
-            get
-            {
-                return m_provider.GetType().Name;
-            }
-        }
+        public string AuthenticationType => Provider.GetType().Name;
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user has been authenticated.
         /// </summary>
-        public bool IsAuthenticated
-        {
-            get
-            {
-                return m_provider.IsUserAuthenticated;
-            }
-        }
+        public bool IsAuthenticated => Provider.IsUserAuthenticated;
 
         /// <summary>
         /// Gets the user's login name.
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return m_provider.UserData.Username;
-            }
-        }
+        public string Name => Provider.UserData.Username;
 
         /// <summary>
         /// Gets the <see cref="ISecurityProvider"/> of the user.
         /// </summary>
-        public ISecurityProvider Provider
-        {
-            get
-            {
-                return m_provider;
-            }
-        }
+        public ISecurityProvider Provider { get; }
 
         #endregion
     }
