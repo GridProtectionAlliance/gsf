@@ -113,11 +113,29 @@
         const useAlternateSecurityProvider = {10};
         const oidcError = ""{11}"";
         const isPOSIX = {12};
-        const azureADAuthEnabled = {13};
+        const azureADAuthEnabled = {13};        
+    ",
+        /* 0 */ redirectPage.JavaScriptEncode(),
+        /* 1 */ Url.Content(authTestPage).JavaScriptEncode(),
+        /* 2 */ Url.Content(loginPage).JavaScriptEncode(),
+        /* 3 */ Url.Content(logoutPage).JavaScriptEncode(),
+        /* 4 */ clearCredentials.JavaScriptEncode(),
+        /* 5 */ unsecureConnection.ToString().ToLowerInvariant(),
+        /* 6 */ verificationHeader.JavaScriptEncode(),
+        /* 7 */ verificationValue.JavaScriptEncode(),
+        /* 8 */ useAjaxVerification.JavaScriptEncode(),
+        /* 9 */ redirectPageLabel.JavaScriptEncode(),
+        /* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant(),
+        /* 11 */ oidcError.JavaScriptEncode(),
+        /* 12 */ isPOSIX.ToString().ToLowerInvariant(),
+        /* 13 */ azureADAuthEnabled.ToString().ToLowerInvariant()
+    );
+
+    string msalConfig = string.Format(@"
         const msalConfig = {{
             auth: {{
-                clientId: ""{14}"",
-                authority: ""{15}""
+                clientId: ""{0}"",
+                authority: ""{1}""
             }},
             cache: {{
                 cacheLocation: ""sessionStorage"",
@@ -148,28 +166,14 @@
             }}
         }};
     ",
-        /* 0 */ redirectPage.JavaScriptEncode(),
-        /* 1 */ Url.Content(authTestPage).JavaScriptEncode(),
-        /* 2 */ Url.Content(loginPage).JavaScriptEncode(),
-        /* 3 */ Url.Content(logoutPage).JavaScriptEncode(),
-        /* 4 */ clearCredentials.JavaScriptEncode(),
-        /* 5 */ unsecureConnection.ToString().ToLowerInvariant(),
-        /* 6 */ verificationHeader.JavaScriptEncode(),
-        /* 7 */ verificationValue.JavaScriptEncode(),
-        /* 8 */ useAjaxVerification.JavaScriptEncode(),
-        /* 9 */ redirectPageLabel.JavaScriptEncode(),
-        /* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant(),
-        /* 11 */ oidcError.JavaScriptEncode(),
-        /* 12 */ isPOSIX.ToString().ToLowerInvariant(),
-        /* 13 */ azureADAuthEnabled.ToString().ToLowerInvariant(),
-        /* 14 */ azureADSettings.ClientID.JavaScriptEncode(),
-        /* 15 */ azureADSettings.Authority.ToString().JavaScriptEncode()
+        /* 0 */ azureADSettings.ClientID.JavaScriptEncode(),
+        /* 1 */ azureADSettings.Authority.ToString().JavaScriptEncode()
     );
 }
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf -8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -264,6 +268,7 @@
     </style>
     <script>
         @Raw(new Minifier().MinifyJavaScript(constants));
+        @Raw(msalConfig)
     </script>
 </head>
 <body role="document">
@@ -319,14 +324,14 @@
                                 </tr>
                             </table>
                             <div>
-                                <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
-                                @if (azureADAuthEnabled)                                
+                                @if (azureADAuthEnabled)
                                 {
                                 <text>
-                                    &nbsp;or&nbsp;
                                     <button type="button" class="btn btn-primary pull-right" id="msalAuth">Azure AD Auth</button>
+                                    <span class="pull-right" style="margin: 5px;">&nbsp;or&nbsp;</span>
                                 </text>
                                 }
+                                <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
                             </div>
                         </form>
                     }

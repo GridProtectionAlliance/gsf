@@ -47,15 +47,7 @@ function loadSettings() {
 
     if (!azureADAuthEnabled)
         return;
-
-    if (isIE)
-        msalConfig.cache.storeAuthStateInCookie = true;
-
     msalInstance = new msal.PublicClientApplication(msalConfig);
-
-    msalInstance.handleRedirectPromise().then(msalAuthResponse).catch(error => {
-        loginComplete(false, "Login attempt failed: " + error);
-    });
 }
 
 function saveSettings() {
@@ -298,12 +290,9 @@ function msalLogin() {
 
     $("#workingIcon").show();
 
-    if (isIE)
-        msalInstance.loginRedirect();
-    else
-        msalInstance.loginPopup().then(msalAuthResponse).catch(function (error) {
-            loginComplete(false, "Login attempt failed: " + error);
-        });
+    msalInstance.loginPopup().then(msalAuthResponse).catch(function (error) {
+        loginComplete(false, "Login attempt failed: " + error);
+    });
 }
 
 function msalAuthResponse(response) {
@@ -356,27 +345,11 @@ function msalAuthResponse(response) {
 async function getToken(request, account) {
     request.account = account;
 
-    return await isIE ?
-        getTokenRedirect(request) :
-        getTokenPopup(request);
-}
-
-async function getTokenPopup(request) {
     return await msalInstance.acquireTokenSilent(request).catch(async (error) => {
         if (error instanceof msal.InteractionRequiredAuthError) {
             return msalInstance.acquireTokenPopup(request).catch(error => {
                 console.error(error);
             });
-        } else {
-            console.error(error);
-        }
-    });
-}
-
-async function getTokenRedirect(request) {
-    return await msalInstance.acquireTokenSilent(request).catch(async (error) => {
-        if (error instanceof msal.InteractionRequiredAuthError) {
-            msalInstance.acquireTokenRedirect(request);
         } else {
             console.error(error);
         }
