@@ -34,13 +34,6 @@ namespace GSF.Security
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class RestrictAccessAttribute : Attribute
     {
-        #region [ Members ]
-
-        // Fields
-        private string[] m_roles;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -55,10 +48,8 @@ namespace GSF.Security
         /// Initializes a new instance of the <see cref="RestrictAccessAttribute"/> class.
         /// </summary>
         /// <param name="roles">List of either roles the current thread principal must have in order to have access.</param>
-        public RestrictAccessAttribute(params string[] roles)
-        {
-            m_roles = roles;
-        }
+        public RestrictAccessAttribute(params string[] roles) => 
+            Roles = roles;
 
         #endregion        
 
@@ -67,17 +58,7 @@ namespace GSF.Security
         /// <summary>
         /// Gets or sets the list of either roles the current thread principal must have in order to have access.
         /// </summary>
-        public string[] Roles
-        {
-            get
-            {
-                return m_roles;
-            }
-            set
-            {
-                m_roles = value;
-            }
-        }
+        public string[] Roles{ get; set; }
 
         #endregion
 
@@ -89,16 +70,16 @@ namespace GSF.Security
         /// <returns>true if the current thread principal has access, otherwise false.</returns>
         public bool CheckAccess()
         {
-            if (m_roles != null)
+            if (Roles is null)
+                return false;
+
+            // One or more roles have been specified.
+            foreach (string role in Roles)
             {
-                // One or more roles have been specified.
-                foreach (string role in m_roles)
-                {
-                    // Check role against principal's role membership.
-                    if (Thread.CurrentPrincipal.IsInRole(role))
-                        // Principal has membership to the role so allow access.
-                        return true;
-                }
+                // Check role against principal's role membership.
+                if (Thread.CurrentPrincipal.IsInRole(role))
+                    // Principal has membership to the role so allow access.
+                    return true;
             }
 
             return false;

@@ -70,10 +70,8 @@ namespace GSF.Security
         /// Initializes a new instance of the <see cref="UserData"/> class by copying an existing instance.
         /// </summary>
         /// <param name="userData">The existing instance of the <see cref="UserData"/> class.</param>
-        public UserData(UserData userData)
-        {
+        public UserData(UserData userData) => 
             Clone(userData);
-        }
 
         #endregion
 
@@ -82,21 +80,13 @@ namespace GSF.Security
         /// <summary>
         /// Gets the user's login ID.
         /// </summary>
-        public string LoginID
-        {
-            get;
-            set;
-        }
+        public string LoginID { get; set; }
 
         /// <summary>
         /// Gets the user's login name.
         /// </summary>
         [XmlElement, DataMember(Order = 0)]
-        public string Username
-        {
-            get;
-            set;
-        }
+        public string Username { get; set; }
 
         /// <summary>
         /// Gets the user's password.
@@ -106,171 +96,103 @@ namespace GSF.Security
         /// passwords which are stored in the database.
         /// </remarks>
         [XmlElement, DataMember(Order = 1)]
-        public string Password
-        {
-            get;
-            set;
-        }
+        public string Password { get; set; }
 
         /// <summary>
         /// Gets the user's first name.
         /// </summary>
         [XmlElement, DataMember(Order = 2)]
-        public string FirstName
-        {
-            get;
-            set;
-        }
+        public string FirstName { get; set; }
 
         /// <summary>
         /// Gets the user's last name.
         /// </summary>
         [XmlElement, DataMember(Order = 3)]
-        public string LastName
-        {
-            get;
-            set;
-        }
+        public string LastName { get; set; }
 
         /// <summary>
         /// Gets the user's company name.
         /// </summary>
         [XmlElement, DataMember(Order = 4)]
-        public string CompanyName
-        {
-            get;
-            set;
-        }
+        public string CompanyName { get; set; }
 
         /// <summary>
         /// Gets the user's phone number.
         /// </summary>
         [XmlElement, DataMember(Order = 5)]
-        public string PhoneNumber
-        {
-            get;
-            set;
-        }
+        public string PhoneNumber { get; set; }
 
         /// <summary>
         /// Gets the user's email address.
         /// </summary>
         [XmlElement, DataMember(Order = 6)]
-        public string EmailAddress
-        {
-            get;
-            set;
-        }
+        public string EmailAddress { get; set; }
 
         /// <summary>
         /// Gets the user's security question.
         /// </summary>
         [XmlElement, DataMember(Order = 7)]
-        public string SecurityQuestion
-        {
-            get;
-            set;
-        }
+        public string SecurityQuestion { get; set; }
 
         /// <summary>
         /// Gets the user's security answer.
         /// </summary>
         [XmlElement, DataMember(Order = 8)]
-        public string SecurityAnswer
-        {
-            get;
-            set;
-        }
+        public string SecurityAnswer { get; set; }
 
         /// <summary>
         /// Gets the UTC date and time when user must change the password.
         /// </summary>
         [XmlElement, DataMember(Order = 9)]
-        public DateTime PasswordChangeDateTime
-        {
-            get;
-            set;
-        }
+        public DateTime PasswordChangeDateTime { get; set; }
 
         /// <summary>
         /// Gets the UTC date and time when user account was created.
         /// </summary>
         [XmlElement, DataMember(Order = 10)]
-        public DateTime AccountCreatedDateTime
-        {
-            get;
-            set;
-        }
+        public DateTime AccountCreatedDateTime { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user is defined in the backend security data store.
         /// </summary>
         [XmlElement, DataMember(Order = 11)]
-        public bool IsDefined
-        {
-            get;
-            set;
-        }
+        public bool IsDefined { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user is defined as an external user in the backend security data store.
         /// </summary>
         [XmlElement, DataMember(Order = 12)]
-        public bool IsExternal
-        {
-            get;
-            set;
-        }
+        public bool IsExternal { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user is defined as an AzureAD account.
         /// </summary>
         [XmlElement, DataMember(Order = 17)]
-        public bool IsAzureAD
-        {
-            get;
-            set;
-        }
+        public bool IsAzureAD { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user account has been disabled.
         /// </summary>
         [XmlElement, DataMember(Order = 13)]
-        public bool IsDisabled
-        {
-            get;
-            set;
-        }
+        public bool IsDisabled { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user account has been locked due to numerous unsuccessful login attempts.
         /// </summary>
         [XmlElement, DataMember(Order = 14)]
-        public bool IsLockedOut
-        {
-            get;
-            set;
-        }
+        public bool IsLockedOut { get; set; }
 
         /// <summary>
         /// Gets a read-only list of all the groups the user belongs to.
         /// </summary>
         [XmlArray, XmlArrayItem("Group"), DataMember(Order = 15)]
-        public List<string> Groups
-        {
-            get;
-            set;
-        }
+        public List<string> Groups { get; set; }
 
         /// <summary>
         /// Gets a read-only list of all the roles assigned to the user.
         /// </summary>
         [XmlArray, XmlArrayItem("Role"), DataMember(Order = 16)]
-        public List<string> Roles
-        {
-            get;
-            set;
-        }
+        public List<string> Roles { get; set; }
 
         #endregion
 
@@ -293,6 +215,7 @@ namespace GSF.Security
             AccountCreatedDateTime = DateTime.MinValue;
             IsDefined = false;
             IsExternal = false;
+            IsAzureAD = false;
             IsDisabled = false;
             IsLockedOut = false;
             Groups.Clear();
@@ -319,6 +242,7 @@ namespace GSF.Security
             AccountCreatedDateTime = userData.AccountCreatedDateTime;
             IsDefined = userData.IsDefined;
             IsExternal = userData.IsExternal;
+            IsAzureAD = userData.IsAzureAD;
             IsDisabled = userData.IsDisabled;
             IsLockedOut = userData.IsLockedOut;
             Groups = new List<string>(userData.Groups);

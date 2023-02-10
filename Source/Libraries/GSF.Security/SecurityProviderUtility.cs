@@ -38,6 +38,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security.Principal;
@@ -84,6 +85,7 @@ namespace GSF.Security
             // Load settings from config file.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            
             settings.Add("IncludedResources", DefaultIncludedResources, "Semicolon delimited list of resources to be secured along with role names.");
             settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
             settings.Add("NotificationSmtpServer", DefaultNotificationSmtpServer, "SMTP server to be used for sending out email notification messages.");
@@ -93,7 +95,6 @@ namespace GSF.Security
             s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
             s_notificationSmtpServer = settings["NotificationSmtpServer"].ValueAsString();
             s_notificationSenderEmail = settings["NotificationSenderEmail"].ValueAsString();
-
         }
 
         // Static Properties
@@ -177,23 +178,12 @@ namespace GSF.Security
         public static bool IsResourceSecurable(string resource)
         {
             // Check if resource is excluded explicitly.
-            foreach (string exclusion in s_excludedResources)
-            {
-                if (IsRegexMatch(exclusion, resource))
-                    return false;
-            }
+            if (s_excludedResources.Any(exclusion => IsRegexMatch(exclusion, resource)))
+                return false;
 
             // Check if resource is included explicitly.
-            foreach (KeyValuePair<string, string> inclusion in s_includedResources)
-            {
-                foreach (string item in inclusion.Key.Split(','))
-                {
-                    if (IsRegexMatch(item.Trim(), resource))
-                        return true;
-                }
-            }
-
-            return false;
+            return s_includedResources.Any(inclusion => inclusion.Key.Split(',')
+                .Any(item => IsRegexMatch(item.Trim(), resource)));
         }
 
         /// <summary>
@@ -208,18 +198,8 @@ namespace GSF.Security
             // Check if the resource has a role-based access restriction on it.
             foreach (KeyValuePair<string, string> inclusion in s_includedResources)
             {
-                foreach (string item in inclusion.Key.Split(','))
-                {
-                    if (IsRegexMatch(item.Trim(), resource))
-                    {
-                        // Allow security to be implemented inside the resource.
-                        if (string.IsNullOrEmpty(inclusion.Value))
-                            return true;
-
-                        // Check resource role requirements against user's role subscription.
-                        return principal.IsInRole(inclusion.Value);
-                    }
-                }
+                if (inclusion.Key.Split(',').Any(item => IsRegexMatch(item.Trim(), resource)))
+                    return string.IsNullOrEmpty(inclusion.Value) || principal.IsInRole(inclusion.Value);
             }
 
             return false;
@@ -296,7 +276,6 @@ namespace GSF.Security
             return (Func<string, ISecurityProvider>)lambdaExpression.Compile();
         }
 
-
         private static Func<string, ISecurityProvider> ProviderFactory(string settingsCategory)
         {
             settingsCategory ??= SettingsCategory;
@@ -312,6 +291,7 @@ namespace GSF.Security
                 return s_providerFactory[settingsCategory];
             }
         }
+
         #endregion
     }
 }

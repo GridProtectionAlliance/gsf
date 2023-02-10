@@ -22,10 +22,14 @@
 //******************************************************************************************************
 
 using System;
-using System.IO;
+using System.Net.Http.Headers;
 using GSF.Configuration;
 using GSF.IO;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Web;
 using Newtonsoft.Json;
+using File = System.IO.File;
 
 namespace GSF.Security;
 
@@ -120,6 +124,46 @@ public class AzureADSettings
     public Uri Authority => new($"{Instance}{TenantID}");
 
     /// <summary>
+    /// Gets a new Azure Graph service client.
+    /// </summary>
+    /// <returns>New Graph service client when Azure AD is enabled; otherwise, <c>null</c>.</returns>
+    public GraphServiceClient GetGraphClient(string settingsCategory = null)
+    {
+        if (!Enabled)
+            return null;
+        
+        if (string.IsNullOrEmpty(settingsCategory))
+            settingsCategory = SecurityProviderBase.DefaultSettingsCategory;
+
+        // Make sure default settings exist
+        ConfigurationFile config = ConfigurationFile.Current;
+        CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
+
+        settings.Add("AzureADSecretValue", "", "Defines the Azure AD secret value to be used for user info and group lookups, post authentication.", true);
+
+        string secret = settings["AzureADSecret"].ValueAs("");
+
+        if (string.IsNullOrEmpty(secret))
+            throw new InvalidOperationException($"Cannot create GraphServiceClient: No Azure AD secret value is defined in \"{settingsCategory}\" settings category.");
+
+        return new GraphServiceClient("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(async requestMessage =>
+        {
+            IConfidentialClientApplication clientApplication = ConfidentialClientApplicationBuilder.Create(ClientID)
+                .WithClientSecret(secret)
+                .WithAuthority(Authority)
+                .Build();
+                        
+            clientApplication.AddInMemoryTokenCache();
+
+            // Retrieve an access token for Microsoft Graph (gets a fresh token if needed).
+            AuthenticationResult result = await clientApplication.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).ExecuteAsync();
+
+            // Add the access token in the Authorization header of the API request.
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+        }));
+    }
+
+    /// <summary>
     /// Loads Azure AD settings. Source based on target configuration.
     /// </summary>
     /// <param name="settingsCategory">Settings category to use for determine configuration location.</param>
@@ -144,7 +188,7 @@ public class AzureADSettings
     }
 
     /// <summary>
-    /// Loads Azure AD settings from the specified JSON app settings file.
+    /// Loads Azure AD settings from the specified JSON application settings file.
     /// </summary>
     /// <param name="filepath">JSON settings file to load. Defaults to local "appsettings.json".</param>
     /// <returns>Loaded <see cref="AzureADSettings"/> settings instance.</returns>

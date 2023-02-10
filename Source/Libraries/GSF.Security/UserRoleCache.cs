@@ -106,14 +106,10 @@ namespace GSF.Security
         {
             get
             {
-                string[] roles;
-                TryGetUserRole(userName, out roles);
+                TryGetUserRole(userName, out string[] roles);
                 return roles;
             }
-            set
-            {
-                SaveUserRole(userName, value);
-            }
+            set => SaveUserRole(userName, value);
         }
 
         #endregion
@@ -313,11 +309,10 @@ namespace GSF.Security
         public static UserRoleCache GetCurrentCache()
         {
             UserRoleCache currentCache;
-            UserRoleCache localUserRoleCache;
             string localCacheFileName = FilePath.GetAbsolutePath(DefaultCacheFileName);
 
             // Initialize local user role cache (application may only have read-only access to this cache)
-            localUserRoleCache = new UserRoleCache
+            UserRoleCache localUserRoleCache = new()
             {
                 FileName = localCacheFileName,
                 ReloadOnChange = false,
@@ -374,8 +369,7 @@ namespace GSF.Security
                 currentCache.MergeRight(localUserRoleCache);
             }
 
-            if ((object)localUserRoleCache != null)
-                localUserRoleCache.Dispose();
+            localUserRoleCache?.Dispose();
 
             return currentCache;
         }

@@ -124,11 +124,10 @@ namespace GSF.Security
             // Wait for thread level lock on data set
             lock (m_dataSetLock)
             {
-                using (BlockAllocatedMemoryStream stream = new BlockAllocatedMemoryStream())
-                {
-                    m_dataSet.SerializeToStream(stream);
-                    serializedDataSet = stream.ToArray();
-                }
+                using BlockAllocatedMemoryStream stream = new();
+
+                m_dataSet.SerializeToStream(stream);
+                serializedDataSet = stream.ToArray();
             }
 
             // File data is the serialized data set, assignment will initiate auto-save if needed
@@ -163,16 +162,12 @@ namespace GSF.Security
             byte[] serializedDataSet = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
             DataSet dataSet;
 
-            using (MemoryStream stream = new MemoryStream(serializedDataSet))
-            {
+            using (MemoryStream stream = new(serializedDataSet))
                 dataSet = stream.DeserializeToDataSet();
-            }
 
             // Wait for thread level lock on data set
             lock (m_dataSetLock)
-            {
                 m_dataSet = dataSet;
-            }
 
             return serializedDataSet;
         }
@@ -216,15 +211,15 @@ namespace GSF.Security
                 CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
                 CategorizedSettingsElement configurationCachePathSetting = systemSettings["ConfigurationCachePath"];
 
-                if ((object)configurationCachePathSetting != null)
+                if (configurationCachePathSetting is not null)
                     cachePath = FilePath.GetAbsolutePath(systemSettings["ConfigurationCachePath"].Value);
 
                 if (string.IsNullOrEmpty(cachePath))
-                    cachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
+                    cachePath = $"{FilePath.GetAbsolutePath("")}{Path.DirectorySeparatorChar}ConfigurationCache{Path.DirectorySeparatorChar}";
             }
             catch (ConfigurationErrorsException)
             {
-                cachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
+                cachePath = $"{FilePath.GetAbsolutePath("")}{Path.DirectorySeparatorChar}ConfigurationCache{Path.DirectorySeparatorChar}";
             }
 
             string localCacheFileName = Path.Combine(cachePath, DefaultCacheFileName);
@@ -288,12 +283,11 @@ namespace GSF.Security
                 currentCache.Load();
 
                 // Update user located security cache if locally located security cache is newer
-                if ((object)localSecurityCache != null && File.Exists(localCacheFileName) && File.Exists(userCacheFileName) && File.GetLastWriteTime(localCacheFileName) > File.GetLastWriteTime(userCacheFileName))
+                if (localSecurityCache is not null && File.Exists(localCacheFileName) && File.Exists(userCacheFileName) && File.GetLastWriteTime(localCacheFileName) > File.GetLastWriteTime(userCacheFileName))
                     currentCache.DataSet = localSecurityCache.DataSet;
             }
 
-            if ((object)localSecurityCache != null)
-                localSecurityCache.Dispose();
+            localSecurityCache?.Dispose();
 
             return currentCache;
         }

@@ -56,113 +56,69 @@ namespace GSF.Security
         /// <summary>
         /// Gets or sets the name of the application being secured as defined in the backend security data store.
         /// </summary>
-        string ApplicationName
-        {
-            get;
-            set;
-        }
+        string ApplicationName{ get; set; }
 
         /// <summary>
         /// Gets or sets the connection string to be used for connection to the backend security data store.
         /// </summary>
-        string ConnectionString
-        {
-            get;
-            set;
-        }
+        string ConnectionString{ get; set; }
 
         /// <summary>
         /// Gets or sets the principal used for passthrough authentication.
         /// </summary>
-        IPrincipal PassthroughPrincipal
-        {
-            get;
-            set;
-        }
+        IPrincipal PassthroughPrincipal{ get; set; }
 
         /// <summary>
         /// Gets or sets the password as a <see cref="SecureString"/>.
         /// </summary>
-        SecureString SecurePassword
-        {
-            get;
-            set;
-        }
+        SecureString SecurePassword{ get; set; }
 
         /// <summary>
         /// Gets or sets <see cref="SecurePassword"/> as clear text password.
         /// </summary>
-        string Password
-        {
-            get;
-            set;
-        }
+        string Password{ get; set; }
 
         /// <summary>
         /// Gets the <see cref="UserData"/> object containing information about the user.
         /// </summary>
-        UserData UserData
-        {
-            get;
-        }
+        UserData UserData{ get; }
 
         /// <summary>
         /// Gets the flag that indicates whether the user was
         /// authenticated during the last authentication attempt.
         /// </summary>
-        bool IsUserAuthenticated
-        {
-            get;
-        }
+        bool IsUserAuthenticated{ get; }
 
         /// <summary>
         /// Gets the flag that indicates whether the user 
         /// needs to be redirected after the Authentication attempt. 
         /// Could be used for asking Users to confirm Messages etc.
         /// </summary>
-        bool IsRedirectRequested
-        {
-            get;
-        }
+        bool IsRedirectRequested{ get; }
         /// <summary>
         /// Gets the URI that user will be redirected to if <see cref="IsRedirectRequested"/> is set.
         /// </summary>
-        string RequestedRedirect
-        {
-            get;
-        }       
+        string RequestedRedirect{ get; }       
         
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
         /// </summary>
-        bool CanRefreshData
-        {
-            get;
-        }
+        bool CanRefreshData{ get; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
         /// </summary>
-        bool CanResetPassword
-        {
-            get;
-        }
+        bool CanResetPassword{ get; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ChangePassword"/> operation is supported.
         /// </summary>
-        bool CanChangePassword
-        {
-            get;
-        }
+        bool CanChangePassword{ get; }
 
         /// <summary>
         /// Gets an authentication failure reason, if set by the provider when authentication fails.
         /// </summary>
-        string AuthenticationFailureReason
-        {
-            get;
-        }
+        string AuthenticationFailureReason{ get; }
 
         /// <summary>
         /// Gets or sets the <see cref="LogEventFunctionSignature"/> to use for logging security events for the <see cref="SecurityProviderBase"/> implementation.
@@ -170,11 +126,7 @@ namespace GSF.Security
         /// <remarks>
         /// Set <see cref="LogEvent"/> to <c>null</c> to use default handler, i.e., <see cref="EventLog.WriteEntry(string,string,EventLogEntryType,int)"/>.
         /// </remarks>
-        LogEventFunctionSignature LogEvent
-        {
-            get;
-            set;
-        }
+        LogEventFunctionSignature LogEvent{ get; set; }
 
         #endregion
 

@@ -48,6 +48,7 @@ using System.Security;
 using System.Security.Principal;
 using GSF.Configuration;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.Security
 {
     /// <summary>
@@ -174,18 +175,8 @@ namespace GSF.Security
         public const string DefaultSettingsCategory = "SecurityProvider";
 
         // Fields
-        private string m_applicationName;
-        private string m_connectionString;
-        private IPrincipal m_passthroughPrincipal;
         private SecureString m_securePassword;
-        private string m_authenticationFailureReason;
         private string m_settingsCategory;
-        private UserData m_userData;
-        private bool m_isUserAuthenticated;
-        private bool m_persistSettings;
-        private readonly bool m_canRefreshData;
-        private readonly bool m_canResetPassword;
-        private readonly bool m_canChangePassword;
         private LogEventFunctionSignature m_logEvent;
 
         #endregion
@@ -202,13 +193,13 @@ namespace GSF.Security
         protected SecurityProviderBase(string username, bool canRefreshData, bool canResetPassword, bool canChangePassword)
         {
             // Initialize member variables.
-            m_userData = new UserData(username);
-            m_canRefreshData = canRefreshData;
-            m_canResetPassword = canResetPassword;
-            m_canChangePassword = canChangePassword;
-            m_applicationName = DefaultApplicationName;
-            m_connectionString = DefaultConnectionString;
-            m_persistSettings = DefaultPersistSettings;
+            UserData = new UserData(username);
+            CanRefreshData = canRefreshData;
+            CanResetPassword = canResetPassword;
+            CanChangePassword = canChangePassword;
+            ApplicationName = DefaultApplicationName;
+            ConnectionString = DefaultConnectionString;
+            PersistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_logEvent = EventLog.WriteEntry;
         }
@@ -220,29 +211,17 @@ namespace GSF.Security
         /// <summary>
         /// Gets or sets the name of the application being secured as defined in the backend security datastore.
         /// </summary>
-        public string ApplicationName
-        {
-            get => m_applicationName;
-            set => m_applicationName = value;
-        }
+        public string ApplicationName{ get; set; }
 
         /// <summary>
         /// Gets or sets the connection string to be used for connection to the backend security datastore.
         /// </summary>
-        public string ConnectionString
-        {
-            get => m_connectionString;
-            set => m_connectionString = value;
-        }
+        public string ConnectionString{ get; set; }
 
         /// <summary>
         /// Gets or sets the principal used for passthrough authentication.
         /// </summary>
-        public IPrincipal PassthroughPrincipal
-        {
-            get => m_passthroughPrincipal;
-            set => m_passthroughPrincipal = value;
-        }
+        public IPrincipal PassthroughPrincipal{ get; set; }
 
         /// <summary>
         /// Gets or sets the password as a <see cref="SecureString"/>.
@@ -252,9 +231,7 @@ namespace GSF.Security
             get => m_securePassword;
             set
             {
-                if (m_securePassword is not null)
-                    m_securePassword.Dispose();
-
+                m_securePassword?.Dispose();
                 m_securePassword = value;
             }
         }
@@ -277,17 +254,13 @@ namespace GSF.Security
         public virtual LogEventFunctionSignature LogEvent
         {
             get => m_logEvent;
-            set => m_logEvent = value is null ? EventLog.WriteEntry : value;
+            set => m_logEvent = value ?? EventLog.WriteEntry;
         }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether security provider settings are to be saved to the config file.
         /// </summary>
-        public bool PersistSettings
-        {
-            get => m_persistSettings;
-            set => m_persistSettings = value;
-        }
+        public bool PersistSettings{ get; set; }
 
         /// <summary>
         /// Gets or sets the category under which security provider settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
@@ -308,45 +281,33 @@ namespace GSF.Security
         /// <summary>
         /// Gets the <see cref="UserData"/> object containing information about the user.
         /// </summary>
-        public virtual UserData UserData
-        {
-            get => m_userData;
-            protected set => m_userData = value;
-        }
+        public virtual UserData UserData{ get; protected set; }
 
         /// <summary>
         /// Gets the flag that indicates whether the user was
         /// authenticated during the last authentication attempt.
         /// </summary>
-        public virtual bool IsUserAuthenticated
-        {
-            get => m_isUserAuthenticated;
-            protected set => m_isUserAuthenticated = value;
-        }
+        public virtual bool IsUserAuthenticated{ get; protected set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
         /// </summary>
-        public virtual bool CanRefreshData => m_canRefreshData;
+        public virtual bool CanRefreshData{ get; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
         /// </summary>
-        public virtual bool CanResetPassword => m_canResetPassword;
+        public virtual bool CanResetPassword{ get; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ChangePassword"/> operation is supported.
         /// </summary>
-        public virtual bool CanChangePassword => m_canChangePassword;
+        public virtual bool CanChangePassword{ get; }
 
         /// <summary>
         /// Gets or allows derived classes to set an authentication failure reason.
         /// </summary>
-        public virtual string AuthenticationFailureReason
-        {
-            get => m_authenticationFailureReason;
-            protected set => m_authenticationFailureReason = value;
-        }
+        public virtual string AuthenticationFailureReason{ get; protected set; }
 
         /// <summary>
         /// Gets the flag that indicates whether the user 
@@ -400,7 +361,7 @@ namespace GSF.Security
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
-            if (!m_persistSettings)
+            if (!PersistSettings)
                 return;
 
             // Ensure that settings category is specified.
@@ -410,8 +371,9 @@ namespace GSF.Security
             // Save settings under the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-            settings["ApplicationName", true].Update(m_applicationName);
-            settings["ConnectionString", true].Update(m_connectionString);
+
+            settings["ApplicationName", true].Update(ApplicationName);
+            settings["ConnectionString", true].Update(ConnectionString);
 
             config.Save();
         }
@@ -422,7 +384,7 @@ namespace GSF.Security
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
-            if (!m_persistSettings)
+            if (!PersistSettings)
                 return;
 
             // Ensure that settings category is specified.
@@ -432,10 +394,12 @@ namespace GSF.Security
             // Load settings from the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-            settings.Add("ApplicationName", m_applicationName, "Name of the application being secured as defined in the backend security data store.");
-            settings.Add("ConnectionString", m_connectionString, "Connection string to be used for connection to the backend security data store.");
-            ApplicationName = settings["ApplicationName"].ValueAs(m_applicationName);
-            ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
+            
+            settings.Add("ApplicationName", ApplicationName, "Name of the application being secured as defined in the backend security data store.");
+            settings.Add("ConnectionString", ConnectionString, "Connection string to be used for connection to the backend security data store.");
+            
+            ApplicationName = settings["ApplicationName"].ValueAs(ApplicationName);
+            ConnectionString = settings["ConnectionString"].ValueAs(ConnectionString);
         }
 
         /// <summary>

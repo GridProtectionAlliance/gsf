@@ -37,6 +37,7 @@ using GSF.Collections;
 using GSF.Configuration;
 using GSF.Threading;
 
+// ReSharper disable MethodOverloadWithOptionalParameter
 namespace GSF.Security
 {
     /// <summary>
@@ -102,7 +103,7 @@ namespace GSF.Security
                 get
                 {
                     LastAccessTime = DateTime.UtcNow;
-                    return _Provider;
+                    return InternalProvider;
                 }
             }
 
@@ -117,17 +118,17 @@ namespace GSF.Security
             public DateTime LastAccessTime { get; private set; }
 
             // Gets the provider without updating LastAccessTime.
-            private ISecurityProvider _Provider
+            private ISecurityProvider InternalProvider
             {
                 get
                 {
                     if (m_disposed)
                         return null;
 
-                    if ((object)m_provider != null)
+                    if (m_provider is not null)
                         return m_provider;
 
-                    if ((object)m_weakProvider != null && m_weakProvider.TryGetTarget(out ISecurityProvider provider))
+                    if (m_weakProvider is not null && m_weakProvider.TryGetTarget(out ISecurityProvider provider))
                         return provider;
 
                     return null;
@@ -145,9 +146,9 @@ namespace GSF.Security
             {
                 try
                 {
-                    ISecurityProvider provider = _Provider;
+                    ISecurityProvider provider = InternalProvider;
 
-                    if ((object)provider == null)
+                    if (provider is null)
                         return false;
 
                     if (provider.CanRefreshData)
@@ -181,12 +182,12 @@ namespace GSF.Security
         private const int CacheMonitorTimerInterval = 60000;
 
         // Fields
-        private readonly Dictionary<string, CacheContext> s_cache;
-        private readonly List<CacheContext> s_autoRefreshProviders;
-        private readonly int s_userCacheTimeout;
-        private readonly Action s_cacheMonitorAction;
+        private readonly Dictionary<string, CacheContext> m_cache;
+        private readonly List<CacheContext> m_autoRefreshProviders;
+        private readonly int m_userCacheTimeout;
+        private readonly Action m_cacheMonitorAction;
+        private readonly string m_settingsCategory;
 
-        private string m_settingsCategory;
         #endregion
 
         #region [ Constructor ]
@@ -202,14 +203,14 @@ namespace GSF.Security
             CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
             settings.Add("UserCacheTimeout", DefaultUserCacheTimeout, "Defines the timeout, in whole minutes, for a user's provider cache. Any value less than 1 will cause cache reset every minute.");
 
-            s_userCacheTimeout = settings["UserCacheTimeout"].ValueAs(DefaultUserCacheTimeout);
+            m_userCacheTimeout = settings["UserCacheTimeout"].ValueAs(DefaultUserCacheTimeout);
 
             // Initialize static variables
-            s_cache = new Dictionary<string, CacheContext>();
-            s_autoRefreshProviders = new List<CacheContext>();
+            m_cache = new Dictionary<string, CacheContext>();
+            m_autoRefreshProviders = new List<CacheContext>();
 
-            s_cacheMonitorAction = new Action(ManageCachedCredentials);
-            s_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
+            m_cacheMonitorAction = ManageCachedCredentials;
+            m_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
 
             m_settingsCategory = settingsCategory;
         }
@@ -229,10 +230,8 @@ namespace GSF.Security
         {
             CacheContext cacheContext;
 
-            lock (s_cache)
-            {
-                cacheContext = s_cache.GetOrAdd(username, name => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal, m_settingsCategory)));
-            }
+            lock (m_cache)
+                cacheContext = m_cache.GetOrAdd(username, _ => new CacheContext(SecurityProviderUtility.CreateProvider(username, passthroughPrincipal, m_settingsCategory)));
 
             ISecurityProvider provider = SecurityProviderUtility.CreateProvider(cacheContext.Provider.UserData, m_settingsCategory);
             provider.PassthroughPrincipal = passthroughPrincipal;
@@ -249,10 +248,8 @@ namespace GSF.Security
         /// <param name="username">The username of the user to be flushed from the cache.</param>
         public void Flush(string username)
         {
-            lock (s_cache)
-            {
-                s_cache.Remove(username);
-            }
+            lock (m_cache)
+                m_cache.Remove(username);
         }
 
         /// <summary>
@@ -261,11 +258,11 @@ namespace GSF.Security
         /// <param name="provider">The security provider to be cached.</param>
         public void AutoRefresh(ISecurityProvider provider)
         {
-            lock (s_autoRefreshProviders)
+            lock (m_autoRefreshProviders)
             {
-                WeakReference<ISecurityProvider> weakProvider = new WeakReference<ISecurityProvider>(provider);
-                CacheContext cacheContext = new CacheContext(weakProvider);
-                s_autoRefreshProviders.Add(cacheContext);
+                WeakReference<ISecurityProvider> weakProvider = new(provider);
+                CacheContext cacheContext = new(weakProvider);
+                m_autoRefreshProviders.Add(cacheContext);
             }
         }
 
@@ -275,10 +272,8 @@ namespace GSF.Security
         /// <param name="provider">The provider to be removed.</param>
         public void DisableAutoRefresh(ISecurityProvider provider)
         {
-            lock (s_autoRefreshProviders)
-            {
-                s_autoRefreshProviders.RemoveAll(cacheContext => provider.Equals(cacheContext.Provider));
-            }
+            lock (m_autoRefreshProviders)
+                m_autoRefreshProviders.RemoveAll(cacheContext => provider.Equals(cacheContext.Provider));
         }
 
         /// <summary>
@@ -286,23 +281,21 @@ namespace GSF.Security
         /// </summary>
         public void RefreshAll()
         {
-            lock (s_cache)
-            {
-                s_cache.Clear();
-            }
+            lock (m_cache)
+                m_cache.Clear();
 
-            List<CacheContext> refreshedContexts = new List<CacheContext>();
+            List<CacheContext> refreshedContexts = new();
 
-            lock (s_autoRefreshProviders)
+            lock (m_autoRefreshProviders)
             {
-                for (int i = s_autoRefreshProviders.Count - 1; i >= 0; i--)
+                for (int i = m_autoRefreshProviders.Count - 1; i >= 0; i--)
                 {
-                    CacheContext cacheContext = s_autoRefreshProviders[i];
+                    CacheContext cacheContext = m_autoRefreshProviders[i];
 
-                    if ((object)cacheContext.Provider == null)
+                    if (cacheContext.Provider is null)
                     {
-                        s_autoRefreshProviders[i] = s_autoRefreshProviders[s_autoRefreshProviders.Count - 1];
-                        s_autoRefreshProviders.RemoveAt(s_autoRefreshProviders.Count - 1);
+                        m_autoRefreshProviders[i] = m_autoRefreshProviders[m_autoRefreshProviders.Count - 1];
+                        m_autoRefreshProviders.RemoveAt(m_autoRefreshProviders.Count - 1);
                     }
                     else
                     {
@@ -321,15 +314,16 @@ namespace GSF.Security
         {
             DateTime now = DateTime.UtcNow;
 
-            void RefreshCache()
+            void refreshCache()
             {
+                // ReSharper disable once RedundantAssignment
                 var cachedProviders = Enumerable.Empty<object>()
-                    .Select(obj => new { Username = "", Context = (CacheContext)null })
+                    .Select(_ => new { Username = "", Context = (CacheContext)null })
                     .ToList();
 
-                lock (s_cache)
+                lock (m_cache)
                 {
-                    foreach (var kvp in s_cache.ToList())
+                    foreach (KeyValuePair<string, CacheContext> kvp in m_cache.ToList())
                     {
                         string username = kvp.Key;
                         CacheContext context = kvp.Value;
@@ -337,13 +331,13 @@ namespace GSF.Security
                         // Because CacheContext.LastAccessTime is used to purge
                         // records from s_cache, it is important here not to invoke
                         // the CacheContext.Provider property on any contexts in s_cache
-                        if (now.Subtract(context.LastAccessTime).TotalMinutes >= s_userCacheTimeout)
-                            s_cache.Remove(username);
+                        if (now.Subtract(context.LastAccessTime).TotalMinutes >= m_userCacheTimeout)
+                            m_cache.Remove(username);
                     }
 
-                    cachedProviders = s_cache
+                    cachedProviders = m_cache
                         .Select(kvp => new { Username = kvp.Key, Context = kvp.Value })
-                        .Where(obj => now.Subtract(obj.Context.LastRefreshTime).TotalMinutes >= s_userCacheTimeout)
+                        .Where(obj => now.Subtract(obj.Context.LastRefreshTime).TotalMinutes >= m_userCacheTimeout)
                         .ToList();
                 }
 
@@ -353,34 +347,34 @@ namespace GSF.Security
                     .Where(obj => !obj.Context.Refresh())
                     .ToList();
 
-                lock (s_cache)
+                lock (m_cache)
                 {
                     // CacheContext.Refresh() failed due to an ObjectDisposedException, so it
                     // needs to be purged from the cache to prevent cached data from growing stale
                     foreach (var obj in purgedProviders)
                     {
-                        if (s_cache.TryGetValue(obj.Username, out CacheContext cachedContext) && ReferenceEquals(obj.Context, cachedContext))
-                            s_cache.Remove(obj.Username);
+                        if (m_cache.TryGetValue(obj.Username, out CacheContext cachedContext) && ReferenceEquals(obj.Context, cachedContext))
+                            m_cache.Remove(obj.Username);
                     }
                 }
             }
 
-            void RefreshAutoRefreshProviders()
+            void refreshAutoRefreshProviders()
             {
                 List<CacheContext> autoRefreshProviders;
 
-                lock (s_autoRefreshProviders)
+                lock (m_autoRefreshProviders)
                 {
                     // It is okay to access CacheContext.Provider here because
                     // CacheContext.LastAccessTime is not used to purge auto refresh providers
-                    bool ShouldRemove(CacheContext context) =>
-                        now.Subtract(context.LastRefreshTime).TotalMinutes >= s_userCacheTimeout &&
-                        context.Provider == null;
+                    bool shouldRemove(CacheContext context) =>
+                        now.Subtract(context.LastRefreshTime).TotalMinutes >= m_userCacheTimeout &&
+                        context.Provider is null;
 
-                    s_autoRefreshProviders.RemoveWhere(ShouldRemove);
+                    m_autoRefreshProviders.RemoveWhere(shouldRemove);
 
-                    autoRefreshProviders = s_autoRefreshProviders
-                        .Where(context => now.Subtract(context.LastRefreshTime).TotalMinutes >= s_userCacheTimeout)
+                    autoRefreshProviders = m_autoRefreshProviders
+                        .Where(context => now.Subtract(context.LastRefreshTime).TotalMinutes >= m_userCacheTimeout)
                         .ToList();
                 }
 
@@ -392,12 +386,12 @@ namespace GSF.Security
                     context.Refresh();
             }
 
-            RefreshCache();
-            RefreshAutoRefreshProviders();
+            refreshCache();
+            refreshAutoRefreshProviders();
 
             // The refresh could take several minutes so we should
             // wait to kick off the timer until after we are finished
-            s_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
+            m_cacheMonitorAction.DelayAndExecute(CacheMonitorTimerInterval);
         }
 
         #endregion
@@ -405,8 +399,8 @@ namespace GSF.Security
         #region [ Static ]
 
         // Static Fields
-        private static SecurityProviderCache s_primarySecurityProvider;
-        private static SecurityProviderCache s_alternateSecurityProvider;
+        private static readonly SecurityProviderCache s_primarySecurityProvider;
+        private static readonly SecurityProviderCache s_alternateSecurityProvider;
 
         /// <summary>
         /// Specifies the default value for the SettingsCategory property for the AlternateSecurityProvider.
@@ -441,13 +435,10 @@ namespace GSF.Security
         /// <param name="autoRefresh">Indicates whether the provider should be automatically refreshed on a timer.</param>
         /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
         /// <returns>A new provider initialized from cached data.</returns>
-        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal = null, bool autoRefresh = true, bool useAlternate = false)
-        {
-            if (useAlternate && (object)s_alternateSecurityProvider != null)
-                return s_alternateSecurityProvider.CreateProvider(username, passthroughPrincipal, autoRefresh);
-
-            return s_primarySecurityProvider.CreateProvider(username, passthroughPrincipal, autoRefresh);
-        }
+        public static ISecurityProvider CreateProvider(string username, IPrincipal passthroughPrincipal = null, bool autoRefresh = true, bool useAlternate = false) =>
+            useAlternate && s_alternateSecurityProvider is not null ? 
+                s_alternateSecurityProvider.CreateProvider(username, passthroughPrincipal, autoRefresh) : 
+                s_primarySecurityProvider.CreateProvider(username, passthroughPrincipal, autoRefresh);
 
         /// <summary>
         /// Removes any cached information about the user with the given username.
@@ -456,7 +447,7 @@ namespace GSF.Security
         /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
         public static void Flush(string username, bool useAlternate = false)
         {
-            if (useAlternate && (object)s_alternateSecurityProvider != null)
+            if (useAlternate && s_alternateSecurityProvider is not null)
                 s_alternateSecurityProvider.Flush(username);
             else
                 s_primarySecurityProvider.Flush(username);
@@ -469,7 +460,7 @@ namespace GSF.Security
         /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
         public static void AutoRefresh(ISecurityProvider provider, bool useAlternate = false)
         {
-            if (useAlternate && (object)s_alternateSecurityProvider != null)
+            if (useAlternate && s_alternateSecurityProvider is not null)
                 s_alternateSecurityProvider.AutoRefresh(provider);
             else
                 s_primarySecurityProvider.AutoRefresh(provider);
@@ -482,7 +473,7 @@ namespace GSF.Security
         /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
         public static void DisableAutoRefresh(ISecurityProvider provider, bool useAlternate = false)
         {
-            if (useAlternate && (object)s_alternateSecurityProvider != null)
+            if (useAlternate && s_alternateSecurityProvider is not null)
                 s_alternateSecurityProvider.DisableAutoRefresh(provider);
             else
                 s_primarySecurityProvider.DisableAutoRefresh(provider);
@@ -494,7 +485,7 @@ namespace GSF.Security
         /// <param name="useAlternate">Indicates whether the alternate <see cref="ISecurityProvider"/> should be used.</param>
         public static void RefreshAll(bool useAlternate = false)
         {
-            if (useAlternate && (object)s_alternateSecurityProvider != null)
+            if (useAlternate && s_alternateSecurityProvider is not null)
                 s_alternateSecurityProvider.RefreshAll();
             else
                 s_primarySecurityProvider.RefreshAll();              

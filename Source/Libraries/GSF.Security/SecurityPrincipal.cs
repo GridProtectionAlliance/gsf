@@ -38,13 +38,6 @@ namespace GSF.Security
     /// <seealso cref="ISecurityProvider"/>
     public class SecurityPrincipal : IPrincipal
     {
-        #region [ Members ]
-
-        // Fields
-        private readonly SecurityIdentity m_identity;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -52,13 +45,8 @@ namespace GSF.Security
         /// </summary>
         /// <param name="identity">An <see cref="SecurityIdentity"/> object.</param>
         /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        public SecurityPrincipal(SecurityIdentity identity)
-        {
-            if (identity == null)
-                throw new ArgumentNullException(nameof(identity));
-
-            m_identity = identity;
-        }
+        public SecurityPrincipal(SecurityIdentity identity) => 
+            Identity = identity ?? throw new ArgumentNullException(nameof(identity));
 
         #endregion
 
@@ -67,24 +55,12 @@ namespace GSF.Security
         /// <summary>
         /// Gets the <see cref="SecurityIdentity"/> object of the user.
         /// </summary>
-        public SecurityIdentity Identity
-        {
-            get
-            {
-                return m_identity;
-            }
-        }
+        public SecurityIdentity Identity{ get; }
 
         /// <summary>
         /// Gets the <see cref="IIdentity"/> object of the user.
         /// </summary>
-        IIdentity IPrincipal.Identity
-        {
-            get
-            {
-                return m_identity;
-            }
-        }
+        IIdentity IPrincipal.Identity => Identity;
 
         #endregion
 
@@ -97,8 +73,8 @@ namespace GSF.Security
         /// <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
         public bool IsInRole(string roles)
         {
-            if (!m_identity.Provider.UserData.IsDefined || !m_identity.Provider.IsUserAuthenticated ||
-                m_identity.Provider.UserData.IsDisabled || m_identity.Provider.UserData.IsLockedOut)
+            if (!Identity.Provider.UserData.IsDefined || !Identity.Provider.IsUserAuthenticated ||
+                Identity.Provider.UserData.IsDisabled || Identity.Provider.UserData.IsLockedOut)
             {
                 // No need to check user roles.
                 return false;
@@ -107,7 +83,7 @@ namespace GSF.Security
             // Check if user has any one of the specified roles.
             foreach (string role in roles.Split(','))
             {
-                if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(m_identity.Provider.TranslateRole(role.Trim()), currentRole))) != null)
+                if (Identity.Provider.UserData.Roles.FirstOrDefault(currentRole => SecurityProviderUtility.IsRegexMatch(Identity.Provider.TranslateRole(role.Trim()), currentRole)) is not null)
                     return true;
             }
 
@@ -133,7 +109,7 @@ namespace GSF.Security
         /// </remarks>
         public static string GetFailureReasonPhrase(SecurityPrincipal securityPrincipal, string authorizationScheme = "Basic", bool useProviderReason = false)
         {
-            if ((object)securityPrincipal == null)
+            if (securityPrincipal is null)
                 return "Invalid user name or password";
 
             if (useProviderReason)
@@ -145,10 +121,9 @@ namespace GSF.Security
                     return failureReason;
             }
 
-            if (authorizationScheme == "Basic")
-                return "Invalid user name or password";
-
-            return "Missing credentials";
+            return authorizationScheme == "Basic" ? 
+                "Invalid user name or password" : 
+                "Missing credentials";
         }
 
         #endregion
