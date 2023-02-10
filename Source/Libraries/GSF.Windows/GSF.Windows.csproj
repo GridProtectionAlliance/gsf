@@ -129,16 +129,19 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client">
-      <Version>4.47.0</Version>
+      <Version>4.49.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client.Desktop">
-      <Version>4.47.0</Version>
+      <Version>4.49.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client.Broker">
       <Version>4.47.0-preview</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client.NativeInterop">
-      <Version>0.12.4</Version>
+      <Version>0.13.5</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.IdentityModel.Abstractions">
+      <Version>6.23.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>

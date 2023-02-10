@@ -33,6 +33,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Principal;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -141,6 +142,8 @@ namespace GSF.Windows
                 TextBlockAccessDenied.Text = setting + " :: Access Denied";
                 TextBlockChangePassword.Text = setting + " :: Change Password";
             }
+
+            TextBlockGlobalMessage.Tag = TextBlockGlobalMessage.Foreground;
 
             // Load last user login ID setting
             settings.Add("LastLoginID", Thread.CurrentPrincipal.Identity.Name, "Last user login ID", false, SettingScope.User);
@@ -285,13 +288,28 @@ namespace GSF.Windows
         }
 
         /// <summary>
+        /// Displays status message.
+        /// </summary>
+        /// <param name="message">Error message to display.</param>
+        public Task DisplayStatusMessage(string message) => Task.Run(() =>
+        {
+            Dispatcher.Invoke(() => {
+                DisplayErrorMessage(message, new SolidColorBrush(Colors.Black));
+            });
+        });
+
+        /// <summary>
         /// Displays error message.
         /// </summary>
         /// <param name="message">Error message to display.</param>
-        public void DisplayErrorMessage(string message)
+        /// <param name="color">Target color for error messages.</param>
+        public void DisplayErrorMessage(string message, Brush color = null)
         {
             if (TextBlockGlobalMessage is null)
                 return;
+
+            TextBlockGlobalMessage.Foreground = color ?? 
+                TextBlockGlobalMessage.Tag as Brush ?? new SolidColorBrush(Colors.Red);
 
             if (string.IsNullOrWhiteSpace(message))
             {
@@ -452,6 +470,8 @@ namespace GSF.Windows
         /// <param name="e">Arguments of this event.</param>
         private async void ButtonAzAuth_Click(object sender, RoutedEventArgs e)
         {
+            await DisplayStatusMessage("Logging into Azure AD...");
+
             PublicClientApplicationBuilder appParams = PublicClientApplicationBuilder.Create(Settings.ClientID)
                 .WithAuthority(Settings.Authority)
                 .WithDefaultRedirectUri()
@@ -461,7 +481,7 @@ namespace GSF.Windows
             TokenCacheHelper.EnableSerialization(app.UserTokenCache);
 
             IAccount account = m_parent.ForceLoginDisplay ? null :
-                string.IsNullOrWhiteSpace(TextBoxUserName.Text) ?
+                string.IsNullOrWhiteSpace(TextBoxUserName.Text) || !TextBoxUserName.Text.Contains("@") ?
                     PublicClientApplication.OperatingSystemAccount :
                     app.GetAccountsAsync().Result.FirstOrDefault();
 
@@ -483,7 +503,7 @@ namespace GSF.Windows
                         .WithParentActivityOrWindow(new WindowInteropHelper(this).Handle)
                         .WithPrompt(Prompt.NoPrompt);
 
-                    if (!string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    if (!string.IsNullOrWhiteSpace(TextBoxUserName.Text) && TextBoxUserName.Text.Contains("@"))
                         authParams.WithLoginHint(TextBoxUserName.Text);
 
                     authResult = await authParams.ExecuteAsync();
@@ -526,12 +546,17 @@ namespace GSF.Windows
                 return;
             }
 
+            await DisplayStatusMessage("Azure AD login successful, querying user name...");
+
+            // After Azure AD pop-up, attempt restore this window to the foreground
+            Activate();
+
             string username;
             dynamic settings;
 
             try
             {
-                // At this point, user is authenticated so we use Microsoft Graph to get their username
+                // At this point, user is authenticated in Azure AD so we use Microsoft Graph to get their username
                 HttpRequestMessage request = new(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me");
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
 
@@ -568,22 +593,45 @@ namespace GSF.Windows
                 return;
             }
 
+            await DisplayStatusMessage($"Attempting to authenticate \"{username}\"...");
+
             try
             {
                 // Initialize the security provider
-                TextBoxUserName.Text = username;
                 ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username);
-                securityProvider.GetType().GetProperty(nameof(SecurityProviderBase.IsUserAuthenticated))?.SetValue(securityProvider, true);
+                securityProvider.Password = authResult.AccessToken;
 
-                // Setup security principal for subsequent uses
-                SecurityIdentity securityIdentity = new(securityProvider);
-                SecurityPrincipal = new SecurityPrincipal(securityIdentity);
-                ClearErrorMessage();
-                ExitSuccess = true;
+                // Attempt to authenticate user
+                if (securityProvider.Authenticate())
+                {
+                    // Setup security principal for subsequent uses
+                    SecurityIdentity securityIdentity = new(securityProvider);
+                    SecurityPrincipal = new SecurityPrincipal(securityIdentity);
+                    await DisplayStatusMessage($"Successfully authenticated \"{username}\"...");
+                    ExitSuccess = true;
+                }
+                else
+                {
+                    // Display authentication failure message
+                    DisplayErrorMessage($"Authentication failed: {securityProvider.AuthenticationFailureReason}");
+
+                    if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                        TextBoxUserName.Focus();
+                    else
+                        TextBoxPassword.Focus();
+                }
             }
             catch (Exception ex)
             {
-                DisplayErrorMessage($"Azure AD Failed to Establish Security Identity for \"{username}\":{Environment.NewLine}{ex.Message}");
+                if (ex is AggregateException aggex)
+                    ex = new InvalidOperationException(string.Join("; ", aggex.Flatten().InnerExceptions.Select(inex => inex.Message)), aggex);
+
+                DisplayErrorMessage("Login failed: " + ex.Message);
+
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
             }
         }
 
