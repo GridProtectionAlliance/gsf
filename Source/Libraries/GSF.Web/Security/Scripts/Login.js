@@ -34,12 +34,28 @@
 //   string redirectPageLabel: user label for redirect location, e.g., main or target
 //   string oidcError: error Message from OIDC provider if en error occurred
 //   boolean isPOSIX: flag that indicates if host system is POSIX based, e.g., Linux or OSX
+//   boolean azureADAuthEnabled: flag that indicates if Azure AD authentication is enabled
+//   json msalConfig: MSAL configuration object
+
+let msalInstance;
 
 function loadSettings() {
     $("#username").val(persistentStorage.getItem("username")).trigger("input");
     $("#iwa").prop("checked", !isPOSIX && persistentStorage.getItem("iwa") === "true").change();
     $("#remember").prop("checked", !isPOSIX && persistentStorage.getItem("remember") === "true").change();
     $("#ntlm").prop("checked", !isIE && !isPOSIX && persistentStorage.getItem("ntlm") !== "false").change();
+
+    if (!azureADAuthEnabled)
+        return;
+
+    if (isIE)
+        msalConfig.cache.storeAuthStateInCookie = true;
+
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+
+    msalInstance.handleRedirectPromise().then(msalAuthResponse).catch(error => {
+        loginComplete(false, "Login attempt failed: " + error);
+    });
 }
 
 function saveSettings() {
@@ -174,6 +190,7 @@ function loginComplete(success, response) {
         $("#username").focus();
         $("#username").select();
         $("#login").enable();
+        $("#msalAuth").enable();
     }
 }
 
@@ -273,6 +290,99 @@ function logout() {
     });
 }
 
+function msalLogin() {
+    if (!azureADAuthEnabled) {
+        loginComplete(false, "Login attempt failed: Azure AD authentication is disabled");
+        return;
+    }
+
+    $("#workingIcon").show();
+
+    if (isIE)
+        msalInstance.loginRedirect();
+    else
+        msalInstance.loginPopup().then(msalAuthResponse).catch(function (error) {
+            loginComplete(false, "Login attempt failed: " + error);
+        });
+}
+
+function msalAuthResponse(response) {
+    if (window.parent !== window)
+        return;
+
+    const loginRequest = {
+        scopes: ["User.Read"]
+    };
+
+    if (response) {
+        const currentAccount = response.account;
+
+        getToken(loginRequest, currentAccount).then(response => {
+            // Azure AD authentication succeeded, check if user is authorized
+            login(currentAccount.username, response.accessToken);
+        });
+    } else {
+        $("#response").text("Logging into Azure AD...");
+
+        const username = $("#username").val();
+
+        if (isEmpty(username) || username.indexOf("@") < 0) {
+            // When no user name is provided, show Azure AD auth dialog
+            msalLogin();
+        }
+        else {
+            // Attempt authentication with specified user name as login hint
+            const silentRequest = {
+                loginHint: username
+            };
+
+            msalInstance.ssoSilent(silentRequest).then(() => {
+                const currentAccount = msalInstance.getAllAccounts()[0];
+                
+                return getToken(loginRequest, currentAccount).then(response => {
+                    // Azure AD single sign on authentication succeeded, check if user is authorized
+                    login(currentAccount.username, response.accessToken);
+                });
+            }).catch(error => {
+                console.error("Silent Error: " + error);
+                if (error instanceof msal.InteractionRequiredAuthError) {
+                    msalLogin();
+                }
+            });
+        }
+    }
+}
+
+async function getToken(request, account) {
+    request.account = account;
+
+    return await isIE ?
+        getTokenRedirect(request) :
+        getTokenPopup(request);
+}
+
+async function getTokenPopup(request) {
+    return await msalInstance.acquireTokenSilent(request).catch(async (error) => {
+        if (error instanceof msal.InteractionRequiredAuthError) {
+            return msalInstance.acquireTokenPopup(request).catch(error => {
+                console.error(error);
+            });
+        } else {
+            console.error(error);
+        }
+    });
+}
+
+async function getTokenRedirect(request) {
+    return await msalInstance.acquireTokenSilent(request).catch(async (error) => {
+        if (error instanceof msal.InteractionRequiredAuthError) {
+            msalInstance.acquireTokenRedirect(request);
+        } else {
+            console.error(error);
+        }
+    });
+}
+
 // Select all text when entering input field
 $("input").on("click", function () {
     $(this).select();
@@ -286,12 +396,23 @@ $("#login").click(function (event) {
     event.preventDefault();
 
     $("#login").disable();
+    $("#msalAuth").disable();
     $("#responsePanel").hide();
 
     if ($("#iwa").prop("checked"))
         login();
     else
         login($("#username").val(), $("#password").val());
+});
+
+$("#msalAuth").click(function (event) {
+    event.preventDefault();
+
+    $("#msalAuth").disable();
+    $("#login").disable();
+    $("#responsePanel").hide();
+
+    msalLogin();
 });
 
 $("#username").on("input", function () {

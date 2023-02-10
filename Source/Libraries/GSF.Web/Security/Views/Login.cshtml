@@ -23,11 +23,11 @@
 @* ReSharper disable InlineOutVariableDeclaration *@
 @* ReSharper disable RedundantUsingDirective *@
 @* ReSharper disable UseStringInterpolation *@
-
 @using System.Net
 @using System.Net.Http
 @using System.Text
 @using System.Web.Hosting
+@using GSF.Security
 @using GSF.Web
 @using GSF.Web.Model
 @using GSF.Web.Security
@@ -37,6 +37,7 @@
 @{
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> queryParams = request.QueryParameters();
+    AzureADSettings azureADSettings = AzureADSettings.Load();
 
     string redirectPage;
     string authTestPage = AuthenticationOptions.DefaultAuthTestPage;
@@ -49,8 +50,8 @@
     string loginHeader = "";
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
     bool isPOSIX = GSF.Common.IsPosixEnvironment;
-    string oidcError;
-    
+    bool azureADAuthEnabled = azureADSettings.Enabled;
+
     if (queryParams.TryGetValue("redir", out redirectPage)) {
         string base64Path = WebUtility.UrlDecode(redirectPage);
         byte[] pathBytes = Convert.FromBase64String(base64Path);
@@ -59,17 +60,12 @@
     else {
         redirectPage = "/";
     }
-    
+
     if (HostingEnvironment.IsHosted && redirectPage.StartsWith("/")) {
         redirectPage = Url.Content("~" + redirectPage);
     }
 
-    if (queryParams.TryGetValue("oidcError", out oidcError)) {
-        oidcError = WebUtility.UrlDecode(oidcError);
-    } else {
-        oidcError = "";
-    }
-
+    string oidcError = queryParams.TryGetValue("oidcError", out oidcError) ? WebUtility.UrlDecode(oidcError) : "";
     string redirectPageLabel = redirectPage == "/" ? "main" : "target";
     ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
 
@@ -117,6 +113,40 @@
         const useAlternateSecurityProvider = {10};
         const oidcError = ""{11}"";
         const isPOSIX = {12};
+        const azureADAuthEnabled = {13};
+        const msalConfig = {{
+            auth: {{
+                clientId: ""{14}"",
+                authority: ""{15}""
+            }},
+            cache: {{
+                cacheLocation: ""sessionStorage"",
+                storeAuthStateInCookie: false
+            }},
+            system: {{
+                loggerOptions: {{
+                    loggerCallback: (level, message, containsPii) => {{
+                        if (containsPii) {{	
+                            return;	
+                        }}
+                        switch (level) {{
+                        case msal.LogLevel.Error:	
+                            console.error(message);	
+                            return;	
+                        case msal.LogLevel.Info:	
+                            console.info(message);	
+                            return;	
+                        case msal.LogLevel.Verbose:	
+                            console.debug(message);	
+                            return;	
+                        case msal.LogLevel.Warning:	
+                            console.warn(message);	
+                            return;	
+                        }}
+                    }}
+                }}
+            }}
+        }};
     ",
         /* 0 */ redirectPage.JavaScriptEncode(),
         /* 1 */ Url.Content(authTestPage).JavaScriptEncode(),
@@ -130,7 +160,10 @@
         /* 9 */ redirectPageLabel.JavaScriptEncode(),
         /* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant(),
         /* 11 */ oidcError.JavaScriptEncode(),
-        /* 12 */ isPOSIX.ToString().ToLowerInvariant()
+        /* 12 */ isPOSIX.ToString().ToLowerInvariant(),
+        /* 13 */ azureADAuthEnabled.ToString().ToLowerInvariant(),
+        /* 14 */ azureADSettings.ClientID.JavaScriptEncode(),
+        /* 15 */ azureADSettings.Authority.ToString().JavaScriptEncode()
     );
 }
 <!DOCTYPE html>
@@ -285,7 +318,16 @@
                                     </td>
                                 </tr>
                             </table>
-                            <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
+                            <div>
+                                <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
+                                @if (azureADAuthEnabled)                                
+                                {
+                                <text>
+                                    &nbsp;or&nbsp;
+                                    <button type="button" class="btn btn-primary pull-right" id="msalAuth">Azure AD Auth</button>
+                                </text>
+                                }
+                            </div>
                         </form>
                     }
                     </div>
@@ -306,6 +348,7 @@
     <script src="@Resources.Root/Security/Scripts/sha256.js"></script>
     <script src="@Resources.Root/Security/Scripts/enc-base64.js"></script>
     <script src="@Resources.Root/Security/Scripts/ntlm.js?ver=1"></script>
-    <script src="@Resources.Root/Security/Scripts/Login.js?ver=3"></script>
+    <script src="@Resources.Root/Security/Scripts/msal.js"></script>
+    <script src="@Resources.Root/Security/Scripts/Login.js?ver=4"></script>
 </body>
 </html>
