@@ -22,7 +22,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Linq;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using GSF.Configuration;
 using GSF.IO;
 using Microsoft.Graph;
@@ -124,11 +126,18 @@ public class AzureADSettings
     public Uri Authority => new($"{Instance}{TenantID}");
 
     /// <summary>
-    /// Gets a new Azure Graph service client.
+    /// Gets the last exception, if any, encountered after getting a new Graph service client.
+    /// </summary>
+    public Exception LastException { get; set; }
+
+    /// <summary>
+    /// Gets a new Graph service client.
     /// </summary>
     /// <returns>New Graph service client when Azure AD is enabled; otherwise, <c>null</c>.</returns>
     public GraphServiceClient GetGraphClient(string settingsCategory = null)
     {
+        const string AzureADSecretKey = "AzureADSecret";
+
         if (!Enabled)
             return null;
         
@@ -139,27 +148,42 @@ public class AzureADSettings
         ConfigurationFile config = ConfigurationFile.Current;
         CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
 
-        settings.Add("AzureADSecretValue", "", "Defines the Azure AD secret value to be used for user info and group lookups, post authentication.", true);
+        settings.Add(AzureADSecretKey, "", "Defines the Azure AD secret value to be used for user info and group lookups, post authentication.", true);
 
-        string secret = settings["AzureADSecret"].ValueAs("");
+        string secret = settings[AzureADSecretKey].ValueAs("");
 
         if (string.IsNullOrEmpty(secret))
             throw new InvalidOperationException($"Cannot create GraphServiceClient: No Azure AD secret value is defined in \"{settingsCategory}\" settings category.");
 
-        return new GraphServiceClient("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(async requestMessage =>
-        {
-            IConfidentialClientApplication clientApplication = ConfidentialClientApplicationBuilder.Create(ClientID)
-                .WithClientSecret(secret)
-                .WithAuthority(Authority)
-                .Build();
+        IConfidentialClientApplication clientApplication = ConfidentialClientApplicationBuilder.Create(ClientID)
+            .WithClientSecret(secret)
+            .WithAuthority(Authority)
+            .Build();
                         
-            clientApplication.AddInMemoryTokenCache();
+        clientApplication.AddInMemoryTokenCache();
 
-            // Retrieve an access token for Microsoft Graph (gets a fresh token if needed).
-            AuthenticationResult result = await clientApplication.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).ExecuteAsync();
+        LastException = null;
 
-            // Add the access token in the Authorization header of the API request.
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+        return new GraphServiceClient("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(requestMessage =>
+        {
+            try
+            {
+                // Retrieve an access token for Microsoft Graph (gets a fresh token if needed).
+                AuthenticationResult result = clientApplication.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).ExecuteAsync().Result;
+
+                // Add the access token in the Authorization header of the API request.
+                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+            }
+            catch (AggregateException ex)
+            {
+                LastException = new InvalidOperationException($"Failed to get client token: {string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message))}", ex);
+            }
+            catch (Exception ex)
+            {
+                LastException = new InvalidOperationException($"Failed to get client token: {ex.Message}", ex);
+            }
+
+            return Task.FromResult(0);
         }));
     }
 
