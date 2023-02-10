@@ -349,6 +349,7 @@
     <EmbeddedResource Include="Shared\Content\select2-bootstrap.css" />
     <EmbeddedResource Include="Shared\Content\leaflet.css" />
     <EmbeddedResource Include="Shared\Scripts\default.ployfill.js" />
+    <EmbeddedResource Include="Security\Scripts\msal.js" />
     <Content Include="Shared\Scripts\flot\LICENSE.txt" />
     <EmbeddedResource Include="Shared\Content\Images\loading.gif" />
     <EmbeddedResource Include="Shared\Content\Images\ui-icons_222222_256x240.png" />
