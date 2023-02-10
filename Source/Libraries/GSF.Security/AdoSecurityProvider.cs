@@ -39,9 +39,11 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
@@ -386,7 +388,7 @@ namespace GSF.Security
                     // may have an explicit role assignment. To test for this case we make the assumption that this is
                     // a Windows authenticated user and test for rights within groups
                     userData.IsDefined = true;
-                    userData.IsExternal = false;
+                    userData.IsExternal = userData.Username.Contains("@");
                 }
                 else
                 {
@@ -408,15 +410,21 @@ namespace GSF.Security
 
                         try
                         {
-                            // Load user details
-                            User user =  graphClient.Users[userData.Username].Request().GetAsync().Result;
+                            // Load user data - note that external users need to be looked up by userPrincipalName
+                            User user = userData.Username.Contains("#EXT#") ? 
+                                graphClient.Users.Request().Filter($"userPrincipalName eq '{userData.Username}'").GetAsync().Result.FirstOrDefault() : 
+                                graphClient.Users[userData.Username].Request().GetAsync().Result;
 
+                            if (user is null)
+                                throw new SecurityException($"Failed to load user \"{userData.Username}\" from Azure AD.");
+                            
                             userData.IsAzureAD = true;
                             userData.LoginID = user.UserPrincipalName;
                             userData.FirstName = user.GivenName;
                             userData.LastName = user.Surname;
                             userData.PhoneNumber = user.MobilePhone;
                             userData.EmailAddress = user.Mail;
+                            userData.PasswordChangeDateTime = DateTime.MinValue;
 
                             // Load user groups (direct or indirect membership)
                             IUserTransitiveMemberOfCollectionWithReferencesPage userMemberCollection = 
@@ -434,11 +442,18 @@ namespace GSF.Security
                                     userMemberCollection = userMemberCollection.NextPageRequest.GetAsync().Result;
                                 else
                                     break;
-                            }                            
+                            }
                         }
                         catch (ServiceException ex)
                         {
                             Logger.SwallowException(ex, $"User \"{userData.Username}\" not found in AzureAD, treating user as a database user.");
+                        }
+                        catch
+                        {
+                            if (config.LastException is null)
+                                throw;
+
+                            throw config.LastException;
                         }
                     }
                 }
@@ -478,7 +493,7 @@ namespace GSF.Security
                     //if (!Convert.IsDBNull(userDataRow["UserSecurityAnswer"]))
                     //    userData.SecurityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
                 }
-                else
+                else if (!userData.IsAzureAD)
                 {
                     // Load implicitly assigned groups - this happens via user's NT/AD groups that get loaded into the
                     // user data group collection. When database group definitions are defined with the same name as
@@ -675,13 +690,58 @@ namespace GSF.Security
             {
                 try
                 {
-                    // Determine if user is LDAP or database authenticated
+                    // Determine if user is LDAP, Azure AD or database authenticated
                     if (UserData.IsExternal)
                     {
-                        // Test password for database user authentication
-                        isAuthenticated =
-                            UserData.Password == Password ||
-                            UserData.Password == SecurityProviderUtility.EncryptPassword(Password);
+                        if (UserData.IsAzureAD)
+                        {
+                            Exception authEx = null;
+
+                            // Validate user access token from Azure AD authentication
+                            GraphServiceClient graphClient = new("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(requestMessage =>
+                            {
+                                try
+                                {
+                                    // Currently rights are managed by defined ADO database roles and a service account with a secret key. If future
+                                    // use cases desire to manage user roles from within Azure AD, then this user token will need to be cached.
+                                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", Password);
+                                }
+                                catch (AggregateException ex)
+                                {
+                                    authEx = new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
+                                }
+                                catch (Exception ex)
+                                {
+                                    authEx = ex;
+                                }
+
+                                return Task.FromResult(0);
+                            }));
+
+                            try
+                            {
+                                // Query user info from Graph using user's Azure AD login token
+                                User user = graphClient.Me.Request().GetAsync().Result;
+
+                                // If UserPrincipalName as queried from Graph using user's Azure AD login token matches the user name
+                                // as defined in the configured database security context, then user authentication is successful
+                                isAuthenticated = user.UserPrincipalName.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase);
+                            }
+                            catch
+                            {
+                                if (authEx is null)
+                                    throw;
+
+                                throw authEx;
+                            }
+                        }
+                        else
+                        {
+                            // Test password for database user authentication
+                            isAuthenticated =
+                                UserData.Password == Password ||
+                                UserData.Password == SecurityProviderUtility.EncryptPassword(Password);
+                        }
                     }
                     else
                     {
