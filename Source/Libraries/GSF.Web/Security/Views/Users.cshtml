@@ -146,7 +146,10 @@
                             <div class="col-md-4">
                                 <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: false, checked: UseDBAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Active&nbsp;Directory&nbsp;User</label>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-4">
+                                <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: true, checked: UseAzureADAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View || !viewModel.currentRecord().UseDBAuthentication() ? true : undefined)}">&nbsp;Azure&nbsp;AD&nbsp;User</label>
+                            </div>
+                            <div class="col-md-4">
                                 <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: true, checked: UseDBAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Database&nbsp;User</label>
                             </div>
                         </div>
@@ -158,18 +161,18 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <div data-bind="visible: UseDBAuthentication">
+                        <div data-bind="visible: viewModel.currentRecord().UseDBAuthentication() && !viewModel.currentRecord().UseAzureADAuthentication()">
                             @Raw(dataContext.AddInputField<UserAccount>("Password", "password", dependencyFieldName: "UseDBAuthentication"))
                         </div>
                         @Raw(dataContext.AddInputField<UserAccount>("FirstName"))
                         @Raw(dataContext.AddInputField<UserAccount>("LastName"))
                     </div>
                     <div class="col-md-6">
-                        <div data-bind="visible: UseDBAuthentication">
+                        <div data-bind="visible: viewModel.currentRecord().UseDBAuthentication() && !viewModel.currentRecord().UseAzureADAuthentication()">
                             @Raw(dataContext.AddInputField<UserAccount>("Phone", dependencyFieldName: "UseDBAuthentication"))
                         </div>
                         @Raw(dataContext.AddInputField<UserAccount>("Email"))
-                        <div data-bind="visible: UseDBAuthentication">
+                        <div data-bind="visible: viewModel.currentRecord().UseDBAuthentication() && !viewModel.currentRecord().UseAzureADAuthentication()">
                             @Raw(dataContext.AddDateField<UserAccount>("ChangePasswordOn", dependencyFieldName: "UseDBAuthentication"))
                             @{
                                 dataContext.AddPageDefinedFieldInitialization("Password", "\"\"",
@@ -251,28 +254,36 @@
         function validateAccount(observableRecord) {
             showAccountNameValidityFeedback(AccountState.Resolving);
 
-            if (observableRecord.UseDBAuthentication == null || observableRecord.UseDBAuthentication()) {
-                hideAccountNameValidityFeedback();
-            } else {
-                if (viewModel.dataHubIsConnected()) {
+            if (viewModel.dataHubIsConnected()) {
+                if (observableRecord.UseDBAuthentication() && !observableRecord.UseAzureADAuthentication()) {
+                    hideAccountNameValidityFeedback();
+                } else {
                     const accountName = observableRecord.Name();
 
                     if (isEmpty(accountName)) {
                         showAccountNameValidityFeedback(AccountState.Invalid);
                     } else {
-                        securityHub.userNameToSID(accountName).done(function(sid) {
-                            if (accountName !== sid && accountName.countOccurrences("\\") < 2) {
-                                securityHub.isUserSID(sid).done(function(isUser) {
-                                    showAccountNameValidityFeedback(isUser ? AccountState.Valid : AccountState.Unknown);
-                                });
-                            } else {
-                                showAccountNameValidityFeedback(AccountState.Invalid);
-                            }
-                        });
+                        if (observableRecord.UseAzureADAuthentication()) {
+                            securityHub.isValidAzureADUserName(accountName).done(function (isValid) {
+                                showAccountNameValidityFeedback(isValid ? AccountState.Valid : AccountState.Invalid);
+                            });
+                        }
+                        else {
+                            securityHub.userNameToSID(accountName).done(function (sid) {
+                                if (accountName !== sid && accountName.countOccurrences("\\") < 2) {
+                                    securityHub.isUserSID(sid).done(function (isUser) {
+                                        showAccountNameValidityFeedback(isUser ? AccountState.Valid : AccountState.Unknown);
+                                    });
+                                } else {
+                                    showAccountNameValidityFeedback(AccountState.Invalid);
+                                }
+                            });
+                        }
                     }
-                } else {
-                    hideAccountNameValidityFeedback();
                 }
+            }
+            else {
+                hideAccountNameValidityFeedback();
             }
 
             return undefined;
@@ -348,8 +359,39 @@
         });
 
         $(viewModel).on("beforeEdit", function(event, observableRecord) {
-            // Create a virtual UseDBAuthentication field that is negated state of actual UseADAuthentication field
-            observableRecord.UseDBAuthentication = ko.observable(!observableRecord.UseADAuthentication());
+            // Create backing field for virtual UseDBAuthentication computed property that is negated state of actual UseADAuthentication field
+            observableRecord._useDBAuthentication = ko.observable(!observableRecord.UseADAuthentication());
+
+            // Create a virtual UseDBAuthentication computed propery
+            observableRecord.UseDBAuthentication =  = ko.pureComputed({
+                read: observableRecord._useDBAuthentication,
+                write: function (value) {
+                    if (value === undefined)
+                        value = false;
+
+                    observableRecord._useDBAuthentication(value);
+
+                    if (!value)
+                        observableRecord._useAzureADAuthentication(false);
+                },
+                owner: observableRecord
+            });
+
+            // Create backing field for virtual UseAzureADAuthentication computed property
+            observableRecord._useAzureADAuthentication = ko.observable(observableRecord.UseDBAuthentication() && observableRecord.AccountName().includes("@@"));
+
+            // Create virtual UseAzureADAuthentication computed property
+            observableRecord.UseAzureADAuthentication = ko.pureComputed({
+                read: observableRecord._useAzureADAuthentication,
+                write: function (value) {
+                    if (value === undefined)
+                        value = false;
+
+                    observableRecord._useAzureADAuthentication(value);
+                    observableRecord.UseDBAuthentication(value);
+                },
+                owner: observableRecord
+            });
 
             // Load human readable account name into Name field
             if (observableRecord.AccountName)
@@ -366,6 +408,8 @@
 
             // Remove virtual observable fields before serialization for record updates
             delete observableRecord.UseDBAuthentication;
+            delete observableRecord._useAzureADAuthentication;
+            delete observableRecord.UseAzureADAuthentication;
             delete observableRecord.AccountName;
 
             // Push promise to convert user name back to SID before updating record
