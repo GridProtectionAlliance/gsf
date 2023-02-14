@@ -75,7 +75,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The greatest common denominator.</returns>
         public static int GreatestCommonDenominator(this IEnumerable<int> source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
@@ -88,7 +88,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The greatest common denominator.</returns>
         public static int GreatestCommonDenominator(params int[] source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
@@ -102,7 +102,15 @@ namespace GSF.NumericalAnalysis
         /// <returns>The greatest common denominator.</returns>
         public static int GreatestCommonDenominator(int a, int b)
         {
-            return (b != 0) ? GreatestCommonDenominator(b, a % b) : a;
+            while (true)
+            {
+                if (b == 0)
+                    return a;
+
+                int a1 = a;
+                a = b;
+                b = a1 % b;
+            }
         }
 
         /// <summary>
@@ -112,7 +120,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The greatest common denominator.</returns>
         public static long GreatestCommonDenominator(this IEnumerable<long> source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
@@ -125,7 +133,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The greatest common denominator.</returns>
         public static long GreatestCommonDenominator(params long[] source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
@@ -139,7 +147,15 @@ namespace GSF.NumericalAnalysis
         /// <returns>The greatest common denominator.</returns>
         public static long GreatestCommonDenominator(long a, long b)
         {
-            return (b != 0) ? GreatestCommonDenominator(b, a % b) : a;
+            while (true)
+            {
+                if (b == 0)
+                    return a;
+
+                long a1 = a;
+                a = b;
+                b = a1 % b;
+            }
         }
 
         /// <summary>
@@ -149,7 +165,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The least common multiple.</returns>
         public static int LeastCommonMultiple(this IEnumerable<int> source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
@@ -162,7 +178,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The least common multiple.</returns>
         public static int LeastCommonMultiple(params int[] source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
@@ -174,10 +190,8 @@ namespace GSF.NumericalAnalysis
         /// <param name="a">The first of the given integers.</param>
         /// <param name="b">The second of the given integers.</param>
         /// <returns>The least common multiple.</returns>
-        public static int LeastCommonMultiple(int a, int b)
-        {
-            return a * (b / GreatestCommonDenominator(a, b));
-        }
+        public static int LeastCommonMultiple(int a, int b) => 
+            a * (b / GreatestCommonDenominator(a, b));
 
         /// <summary>
         /// Gets the least common multiple of all the integers in the source collection.
@@ -186,7 +200,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The least common multiple.</returns>
         public static long LeastCommonMultiple(this IEnumerable<long> source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
@@ -199,7 +213,7 @@ namespace GSF.NumericalAnalysis
         /// <returns>The least common multiple.</returns>
         public static long LeastCommonMultiple(params long[] source)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
@@ -211,9 +225,7 @@ namespace GSF.NumericalAnalysis
         /// <param name="a">The first of the given integers.</param>
         /// <param name="b">The second of the given integers.</param>
         /// <returns>The least common multiple.</returns>
-        public static long LeastCommonMultiple(long a, long b)
-        {
-            return a * (b / GreatestCommonDenominator(a, b));
-        }
+        public static long LeastCommonMultiple(long a, long b) => 
+            a * (b / GreatestCommonDenominator(a, b));
     }
 }

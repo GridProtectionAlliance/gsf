@@ -16,135 +16,124 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  01/20/2023 - C. Lacker
+//  01/20/2023 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.ComponentModel;
-using System.Globalization;
-
 
 namespace GSF.NumericalAnalysis
 {
     /// <summary>
-    /// Contains an implementation of a digital LTI Filter
+    /// Contains an implementation of a digital LTI Filter.
     /// </summary>
     public class DigitalFilter
     {
         #region[ Properties ]
 
-        private double[] m_A;
-        private double[] m_B;
-        private double m_gain;
+        private readonly double[] m_a;
+        private readonly double[] m_b;
+        private readonly double m_gain;
 
         /// <summary>
-        /// The Input Coeficents used to multiply the input signal
+        /// The input coefficients used to multiply the input signal.
         /// </summary>
-        public double[] InputCoefficents => m_B;
+        public double[] InputCoefficients => m_b;
 
         /// <summary>
-        /// The Output Coeficents used to multiply the output signal
+        /// The output coefficients used to multiply the output signal.
         /// </summary>
-        public double[] OutputCoefficents => m_A.Select(a => a * m_gain).ToArray();
+        public double[] OutputCoefficients => m_a.Select(a => a * m_gain).ToArray();
 
         /// <summary>
-        /// The order of the filter
+        /// The order of the filter.
         /// </summary>
-        public int Order => Math.Max(m_A.Count(), m_B.Count()) - 1;
+        public int Order => Math.Max(m_a.Length, m_b.Length) - 1;
 
         #endregion
 
         #region [ Constructors ]
+        
         /// <summary>
-        /// Creates a new <see cref="DigitalFilter"/> based on the coeficents of
+        /// Creates a new <see cref="DigitalFilter"/> based on the coefficients of
         /// a[0] y[k] + a[1] y[k-1].... = b[0] x[k] + b[1] x[k-1]... b[n] x[k-n]
         /// </summary>
-        /// <param name="A"> the output coeficents (a[0] through a[n])</param>
-        /// <param name="B"> the input coefficents (b[0] through b[n])</param>
-        public DigitalFilter(double[] B, double[] A)
+        /// <param name="a"> the output coefficients (a[0] through a[n])</param>
+        /// <param name="b"> the input coefficients (b[0] through b[n])</param>
+        public DigitalFilter(double[] b, double[] a)
         {
-            m_A = A;
-            m_B = B;
+            m_a = a;
+            m_b = b;
             m_gain = 1.0;
         }
 
         /// <summary>
-        /// Creates a new <see cref="DigitalFilter"/> based on coeficents and Gain
-        /// a[0] y[k] + a[1] y[k-1].... = K * (b[0] x[k] + b[1] x[k-1]... b[n] x[k-n])
+        /// Creates a new <see cref="DigitalFilter"/> based on coeficents and gain
+        /// a[0] y[k] + a[1] y[k-1].... = K * (b[0] x[k] + b[1] x[k-1]... b[n] x[k-n]).
         /// </summary>
-        /// <param name="A"> the output coeficents (a[0] through a[n])</param>
-        /// <param name="B"> the input coefficents (b[0] through b[n])</param>
-        /// <param name="K"> The gain of the filter. </param>
-        public DigitalFilter(double[] B, double[] A, double K) : this(B, A)
-        {
-            m_gain = K;
-        }
+        /// <param name="a">The output coefficients (a[0] through a[n])</param>
+        /// <param name="b">The input coefficients (b[0] through b[n])</param>
+        /// <param name="k">The gain of the filter</param>
+        public DigitalFilter(double[] b, double[] a, double k) : this(b, a) => 
+            m_gain = k;
 
         #endregion
 
         #region[ Methods ]
 
         /// <summary>
-        /// applies this filter to an evenly sampled signal f(t)
+        /// applies this filter to an evenly sampled signal f(t).
         /// </summary>
-        /// <param name="signal"> f(t) for the signal </param>
-        /// <returns>The output of teh filter y(t) </returns>
-        public double[] Filt(double[] signal)
+        /// <param name="signal"> f(t) for the signal</param>
+        /// <returns>The output of teh filter y(t)</returns>
+        public double[] Filter(double[] signal)
         {
-            int n = signal.Count();
+            int n = signal.Length;
             double[] output = new double[n];
 
-            FilterState state = new FilterState();
+            FilterState state = new();
 
             for (int i = 0; i < n; i++)
-            {
-                output[i] = Filt(signal[i], state, out state);
-            }
+                output[i] = Filter(signal[i], state, out state);
 
             return output;
         }
 
         /// <summary>
-        /// Computes the output of the filter for the given single input and <see cref="FilterState"/>
+        /// Computes the output of the filter for the given single input and <see cref="FilterState"/>.
         /// </summary>
         /// <param name="value"> The input value </param>
         /// <param name="initialState">The initial state of the filter </param>
         /// <param name="finalState"> The final State of the Filter</param>
         /// <returns> the value of the filtered signal</returns>
-        public double Filt(double value, FilterState initialState, out FilterState finalState)
+        public double Filter(double value, FilterState initialState, out FilterState finalState)
         {
             double[] s = initialState.StateValue;
 
-            if (s.Length < (m_A.Length + m_B.Length - 2))
+            if (s.Length < m_a.Length + m_b.Length - 2)
             {
-                s = Enumerable.Repeat(0.0D, (m_A.Length + m_B.Length - 2) - s.Length).ToArray();
+                s = Enumerable.Repeat(0.0D, m_a.Length + m_b.Length - 2 - s.Length).ToArray();
                 s = initialState.StateValue.Concat(s).ToArray();
             }
 
-            double fx = value * m_B[0] + m_B.Select((z, i) => (i > 0 ? z * s[i - 1] : 0.0D)).Sum();
-            fx += m_A.Select((z, i) => (i > 0 ? z * -s[i + m_B.Length - 2] : 0.0D)).Sum();
-            fx = fx / m_A[0];
+            double fx = value * m_b[0] + m_b.Select((z, i) => i > 0 ? z * s[i - 1] : 0.0D).Sum();
+            fx += m_a.Select((z, i) => i > 0 ? z * -s[i + m_b.Length - 2] : 0.0D).Sum();
+            fx /= m_a[0];
 
-            finalState = new FilterState()
+            finalState = new FilterState
             {
                 StateValue = new double[] { value }
-                    .Concat(s.Take(m_B.Length - 2).ToArray())
+                    .Concat(s.Take(m_b.Length - 2).ToArray())
                     .Concat(new double[] { fx })
-                    .Concat(s.Skip(m_B.Length - 1).Take(m_A.Length - 2).ToArray())
+                    .Concat(s.Skip(m_b.Length - 1).Take(m_a.Length - 2).ToArray())
                     .ToArray()
             };
 
             return fx * m_gain;
-
         }
 
-
         #endregion
-
-
     }
 }

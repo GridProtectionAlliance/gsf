@@ -16,30 +16,26 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  01/20/2023 - C. Lacker
+//  01/20/2023 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace GSF.NumericalAnalysis
 {
     /// <summary>
-    /// Represents the internal state of a <see cref="DigitalFilter"/> or <see cref="AnalogFilter"/>
+    /// Represents the internal state of a <see cref="DigitalFilter"/> or <see cref="AnalogFilter"/>.
     /// </summary>
-    /// #ToDo Implement ability to derrive state from constant value (f(t) = 5 for infinity
+    // TODO: Implement ability to derive state from constant value (f(t) = 5 for infinity
     public class FilterState
     {
         /// <summary>
-        /// Creates a new <see cref="FilterState"/> with all internal states set to 0
+        /// Creates a new <see cref="FilterState"/> with all internal states set to 0.
         /// </summary>
-        public FilterState()
-        {
-            StateValue = new double[0];
-        }
+        public FilterState() => 
+            StateValue = Array.Empty<double>();
 
         public double[] StateValue { get; set; }
     }

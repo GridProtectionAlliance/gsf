@@ -56,11 +56,6 @@ namespace GSF.NumericalAnalysis.Interpolation
 
         // Fields
         private IDWFunc m_converter;
-        private DistanceFunc m_distanceFunction;
-        private double[] m_xCoordinates;
-        private double[] m_yCoordinates;
-        private double[] m_values;
-        private double m_power;
 
         #endregion
 
@@ -71,8 +66,8 @@ namespace GSF.NumericalAnalysis.Interpolation
         /// </summary>
         public InverseDistanceWeightingFunction()
         {
-            m_distanceFunction = DefaultDistanceFunction;
-            m_power = 1;
+            DistanceFunction = DefaultDistanceFunction;
+            Power = 1;
         }
 
         #endregion
@@ -82,57 +77,27 @@ namespace GSF.NumericalAnalysis.Interpolation
         /// <summary>
         /// Gets the collection of x-coordinates of points at which the values are known.
         /// </summary>
-        public double[] XCoordinates
-        {
-            get
-            {
-                return m_xCoordinates;
-            }
-        }
+        public double[] XCoordinates { get; private set; }
 
         /// <summary>
         /// Gets the collection of y-coordinates of points at which the values are known.
         /// </summary>
-        public double[] YCoordinates
-        {
-            get
-            {
-                return m_yCoordinates;
-            }
-        }
+        public double[] YCoordinates { get; private set; }
 
         /// <summary>
         /// Gets the collection of values of points at which the values are known.
         /// </summary>
-        public double[] Values
-        {
-            get
-            {
-                return m_values;
-            }
-        }
+        public double[] Values { get; private set; }
 
         /// <summary>
         /// Gets the power applied to the inverse distance to control the speed of value's decay.
         /// </summary>
-        public double Power
-        {
-            get
-            {
-                return m_power;
-            }
-        }
+        public double Power { get; private set; }
 
         /// <summary>
         /// Gets the function to be used to calculate the distance between two points.
         /// </summary>
-        public DistanceFunc DistanceFunction
-        {
-            get
-            {
-                return m_distanceFunction;
-            }
-        }
+        public DistanceFunc DistanceFunction { get; private set; }
 
         #endregion
 
@@ -146,7 +111,7 @@ namespace GSF.NumericalAnalysis.Interpolation
         public InverseDistanceWeightingFunction SetXCoordinates(params double[] xCoordinates)
         {
             m_converter = null;
-            m_xCoordinates = xCoordinates;
+            XCoordinates = xCoordinates;
             return this;
         }
 
@@ -158,7 +123,7 @@ namespace GSF.NumericalAnalysis.Interpolation
         public InverseDistanceWeightingFunction SetYCoordinates(params double[] yCoordinates)
         {
             m_converter = null;
-            m_yCoordinates = yCoordinates;
+            YCoordinates = yCoordinates;
             return this;
         }
 
@@ -170,7 +135,7 @@ namespace GSF.NumericalAnalysis.Interpolation
         public InverseDistanceWeightingFunction SetValues(params double[] values)
         {
             m_converter = null;
-            m_values = values;
+            Values = values;
             return this;
         }
 
@@ -183,7 +148,7 @@ namespace GSF.NumericalAnalysis.Interpolation
         public InverseDistanceWeightingFunction SetPower(double power)
         {
             m_converter = null;
-            m_power = power;
+            Power = power;
             return this;
         }
 
@@ -195,17 +160,17 @@ namespace GSF.NumericalAnalysis.Interpolation
         public InverseDistanceWeightingFunction SetDistanceFunction(DistanceFunc distanceFunction)
         {
             m_converter = null;
-            m_distanceFunction = distanceFunction ?? DefaultDistanceFunction;
+            DistanceFunction = distanceFunction ?? DefaultDistanceFunction;
             return this;
         }
 
         private IDWFunc GetConverter()
         {
-            DistanceFunc distanceFunction = m_distanceFunction;
-            double[] xCoordinates = m_xCoordinates ?? new double[0];
-            double[] yCoordinates = m_yCoordinates ?? new double[0];
-            double[] values = m_values ?? new double[0];
-            double power = m_power;
+            DistanceFunc distanceFunction = DistanceFunction;
+            double[] xCoordinates = XCoordinates ?? Array.Empty<double>();
+            double[] yCoordinates = YCoordinates ?? Array.Empty<double>();
+            double[] values = Values ?? Array.Empty<double>();
+            double power = Power;
 
             if (xCoordinates.Length != yCoordinates.Length)
                 throw new InvalidOperationException($"The number of x-coordinates must match the number of y-coordinates. ({xCoordinates.Length} != {yCoordinates.Length})");
@@ -214,9 +179,9 @@ namespace GSF.NumericalAnalysis.Interpolation
                 throw new InvalidOperationException($"The number of coordinates must match the number of values. ({xCoordinates.Length} != {values.Length})");
 
             if (xCoordinates.Length == 0)
-                return (x, y) => 0.0D;
+                return (_, _) => 0.0D;
 
-            return m_converter ?? (m_converter = (x, y) =>
+            return m_converter ??= (x, y) =>
             {
                 double numerator = 0.0D;
                 double denominator = 0.0D;
@@ -234,7 +199,7 @@ namespace GSF.NumericalAnalysis.Interpolation
                 }
 
                 return numerator / denominator;
-            });
+            };
         }
 
         #endregion
@@ -251,10 +216,8 @@ namespace GSF.NumericalAnalysis.Interpolation
         /// <para>- or -</para>
         /// <para>the number of coordinates does not equal the number of values</para>
         /// </exception>
-        public static implicit operator IDWFunc(InverseDistanceWeightingFunction idwFunction)
-        {
-            return idwFunction.GetConverter();
-        }
+        public static implicit operator IDWFunc(InverseDistanceWeightingFunction idwFunction) => 
+            idwFunction.GetConverter();
 
         #endregion
 

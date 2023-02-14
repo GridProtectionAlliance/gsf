@@ -48,7 +48,7 @@ namespace GSF.NumericalAnalysis
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
         public static double StandardDeviation(this IEnumerable<double> source, bool calculateForSample = false)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             double[] values = source as double[] ?? source.ToArray();
@@ -75,7 +75,7 @@ namespace GSF.NumericalAnalysis
         /// <typeparam name="T">Type of source used to extract double.</typeparam>
         public static double StandardDeviation<T>(this IEnumerable<T> source, Func<T, double> selector, bool calculateForSample = false)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Select(selector).StandardDeviation(calculateForSample);
@@ -91,7 +91,7 @@ namespace GSF.NumericalAnalysis
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
         public static decimal StandardDeviation(this IEnumerable<decimal> source, bool calculateForSample = false)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             decimal[] values = source as decimal[] ?? source.ToArray();
@@ -118,7 +118,7 @@ namespace GSF.NumericalAnalysis
         /// <typeparam name="T">Type of source used to extract decimal.</typeparam>
         public static decimal StandardDeviation<T>(this IEnumerable<T> source, Func<T, decimal> selector, bool calculateForSample = false)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Select(selector).StandardDeviation(calculateForSample);
@@ -134,7 +134,7 @@ namespace GSF.NumericalAnalysis
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
         public static float StandardDeviation(this IEnumerable<float> source, bool calculateForSample = false)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             float[] values = source as float[] ?? source.ToArray();
@@ -161,7 +161,7 @@ namespace GSF.NumericalAnalysis
         /// <typeparam name="T">Type of source used to extract float.</typeparam>
         public static float StandardDeviation<T>(this IEnumerable<T> source, Func<T, float> selector, bool calculateForSample = false)
         {
-            if ((object)source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Select(selector).StandardDeviation(calculateForSample);

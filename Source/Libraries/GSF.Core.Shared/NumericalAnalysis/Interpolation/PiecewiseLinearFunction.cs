@@ -61,8 +61,6 @@ namespace GSF.NumericalAnalysis.Interpolation
 
         // Fields
         private Func<double, double> m_converter;
-        private double[] m_domain;
-        private double[] m_range;
 
         #endregion
 
@@ -71,24 +69,12 @@ namespace GSF.NumericalAnalysis.Interpolation
         /// <summary>
         /// Gets the x-values of the pivot points in the piecewise linear function.
         /// </summary>
-        public double[] Domain
-        {
-            get
-            {
-                return m_domain;
-            }
-        }
+        public double[] Domain { get; private set; }
 
         /// <summary>
         /// Gets the y-values of the pivot points in the piecewise linear function.
         /// </summary>
-        public double[] Range
-        {
-            get
-            {
-                return m_range;
-            }
-        }
+        public double[] Range { get; private set; }
 
         #endregion
 
@@ -102,7 +88,7 @@ namespace GSF.NumericalAnalysis.Interpolation
         public PiecewiseLinearFunction SetDomain(params double[] domain)
         {
             m_converter = null;
-            m_domain = domain;
+            Domain = domain;
             return this;
         }
 
@@ -114,14 +100,14 @@ namespace GSF.NumericalAnalysis.Interpolation
         public PiecewiseLinearFunction SetRange(params double[] range)
         {
             m_converter = null;
-            m_range = range;
+            Range = range;
             return this;
         }
 
         private Func<double, double> GetConverter()
         {
-            double[] domain = m_domain ?? new double[0];
-            double[] range = m_range ?? new double[0];
+            double[] domain = Domain ?? Array.Empty<double>();
+            double[] range = Range ?? Array.Empty<double>();
 
             if (domain.Length != range.Length)
                 throw new InvalidOperationException($"Domain of size {domain.Length} does not match range of size {range.Length}.");
@@ -129,7 +115,7 @@ namespace GSF.NumericalAnalysis.Interpolation
             if (domain.Length < 2)
                 throw new InvalidOperationException($"At least two pivot points must be defined. Defined: {domain.Length}");
 
-            return m_converter ?? (m_converter = x =>
+            return m_converter ??= x =>
             {
                 int i = 0;
                 int j = domain.Length - 1;
@@ -158,8 +144,8 @@ namespace GSF.NumericalAnalysis.Interpolation
 
                 double ri = range[i];
                 double rj = range[j];
-                return (((x - di) / (dj - di)) * (rj - ri)) + ri;
-            });
+                return (x - di) / (dj - di) * (rj - ri) + ri;
+            };
         }
 
         #endregion
@@ -176,10 +162,8 @@ namespace GSF.NumericalAnalysis.Interpolation
         /// <para>- or -</para>
         /// <para>less than two pivot points are defined</para>
         /// </exception>
-        public static implicit operator Func<double, double>(PiecewiseLinearFunction func)
-        {
-            return func.GetConverter();
-        }
+        public static implicit operator Func<double, double>(PiecewiseLinearFunction func) => 
+            func.GetConverter();
 
         #endregion
     }
