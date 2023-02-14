@@ -37,6 +37,9 @@ namespace GSF.NumericalAnalysis
         public FilterState() => 
             StateValue = Array.Empty<double>();
 
+        /// <summary>
+        /// Gets or sets state value for the filter.
+        /// </summary>
         public double[] StateValue { get; set; }
     }
 }
