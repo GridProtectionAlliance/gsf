@@ -135,6 +135,31 @@ namespace GSF.NumericalAnalysis
         }
 
         /// <summary>
+        /// Computes the output of the filter for the given single input and <see cref="FilterState"/>.
+        /// </summary>
+        /// <param name="value"> The input value </param>
+        /// <param name="fs"> The sampling Frequency of the signal</param>
+        /// <param name="initialState">The initial state of the filter </param>
+        /// <param name="finalState"> The final State of the Filter</param>
+        /// <returns> the value of the filtered signal</returns>
+        public double Filter(double value, double fs, FilterState initialState, out FilterState finalState)
+        {
+            DigitalFilter filter = ContinuousToDiscrete(fs);
+            return filter.Filter(value, initialState, out finalState);
+        }
+
+        /// <summary>
+        /// applies this filter to an evenly sampled signal f(t).
+        /// </summary>
+        /// <param name="signal"> f(t) for the signal</param>
+        /// <param name="fs"> sampling frquency of the signal </param>
+        /// <returns>The output of the filter y(t)</returns>
+        public double[] Filter(double[] signal, double fs)
+        {
+            DigitalFilter filter = ContinuousToDiscrete(fs);
+            return filter.Filter(signal);
+        }
+        /// <summary>
         /// Turns poles into Polynomial coefficients.
         /// </summary>
         /// <param name="poles">The complex poles</param>
@@ -255,7 +280,7 @@ namespace GSF.NumericalAnalysis
         }
 
         /// <summary>
-        /// Generates a High Pass Butterworth Filter.
+        /// Generates a Low Pass Butterworth Filter.
         /// </summary>
         /// <param name="fc"> corner frequency in Hz</param>
         /// <param name="order"> Order of the Filter </param>
