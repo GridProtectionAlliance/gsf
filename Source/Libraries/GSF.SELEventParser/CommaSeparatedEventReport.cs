@@ -86,7 +86,16 @@ namespace GSF.SELEventParser
         public double SamplesPerCycleDigital { get; set; }
         public double NumberOfCycles { get; set; }
         public string Event { get; set; }
-        public double Location { get; set; }
+        public double Location { get; set; } = double.NaN;
+        public double VA { get; set; } = double.NaN;
+        public double VB { get; set; } = double.NaN;
+        public double VC { get; set; } = double.NaN;
+        public double IA { get; set; } = double.NaN;
+        public double IB { get; set; } = double.NaN;
+        public double IC { get; set; } = double.NaN;
+        public double IN { get; set; } = double.NaN;
+        public double IG { get; set; } = double.NaN;
+        public double INeg3 { get; set; } = double.NaN;
         public int TriggerIndex { get; set; }
         public int InitialReadingIndex { get; set; }
         public string[] SettingsRegions { get; set; }
@@ -401,8 +410,33 @@ namespace GSF.SELEventParser
                                 int labelIndex = StringParser.FindIndex("LOCATION", lastHeaderFields);
                                 if (labelIndex > 0 && double.TryParse(headerFields[labelIndex], out double location))
                                     cSER.Location = location;
-                                else
-                                    cSER.Location = double.NaN;
+                                labelIndex = StringParser.FindIndex("VA", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.VA = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("VB", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.VB = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("VC", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.VC = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("IA", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.IA = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("IB", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.IB = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("IC", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.IC = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("IG", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.IG = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("IN", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.IN = Convert.ToDouble(headerFields[labelIndex]);
+                                labelIndex = StringParser.FindIndex("3I2", lastHeaderFields);
+                                if (labelIndex > 0)
+                                    cSER.INeg3 = Convert.ToDouble(headerFields[labelIndex]);
                                 labelIndex = StringParser.FindIndex("SAM/CYC_A", lastHeaderFields);
                                 if (labelIndex > 0)
                                     cSER.SamplesPerCycleAnalog = Convert.ToDouble(headerFields[labelIndex]);
