@@ -178,7 +178,6 @@ namespace GSF.Configuration
         // Nested Types
         internal class UserConfigurationFile
         {
-            private readonly string m_fileName;
             private readonly XmlDocument m_settings;
             private bool m_settingsModified;
 
@@ -188,58 +187,52 @@ namespace GSF.Configuration
             public UserConfigurationFile()
             {
                 m_settings = new XmlDocument();
-                m_fileName = Path.Combine(FilePath.GetApplicationDataFolder(), Filename);
+                FileName = Path.Combine(FilePath.GetApplicationDataFolder(), Filename);
 
-                if (File.Exists(m_fileName))
+                if (File.Exists(FileName))
                 {
                     try
                     {
                         // Load existing settings.
-                        m_settings.Load(m_fileName);
+                        m_settings.Load(FileName);
                     }
                     catch (Exception)
                     {
                         // Create new settings file.
-                        m_settings.AppendChild(m_settings.CreateNode(XmlNodeType.XmlDeclaration, null, null));
+                        m_settings.AppendChild(m_settings.CreateNode(XmlNodeType.XmlDeclaration, null!, null));
                         m_settings.AppendChild(m_settings.CreateElement(RootNode));
                     }
                 }
                 else
                 {
                     // Create new settings file.
-                    m_settings.AppendChild(m_settings.CreateNode(XmlNodeType.XmlDeclaration, null, null));
+                    m_settings.AppendChild(m_settings.CreateNode(XmlNodeType.XmlDeclaration, null!, null));
                     m_settings.AppendChild(m_settings.CreateElement(RootNode));
                 }
             }
 
-            public string FileName
-            {
-                get
-                {
-                    return m_fileName;
-                }
-            }
+            public string FileName { get; }
 
             public void Save(bool forceSave)
             {
-                if (forceSave || m_settingsModified)
-                {
-                    // Create directory if missing.
-                    string folder = FilePath.GetDirectoryName(m_fileName);
+                if (!forceSave && !m_settingsModified)
+                    return;
 
-                    if (!Directory.Exists(folder))
-                        Directory.CreateDirectory(folder);
+                // Create directory if missing.
+                string folder = FilePath.GetDirectoryName(FileName);
 
-                    // Save settings to the file.
-                    m_settings.Save(m_fileName);
-                }
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                // Save settings to the file.
+                m_settings.Save(FileName);
             }
 
             public void Write(string category, string name, string value)
             {
                 XmlNode node = GetSetting(category, name);
 
-                if ((object)node != null)
+                if (node is not null)
                 {
                     // Setting exists so update it.
                     node.SetAttributeValue("value", value);
@@ -261,17 +254,15 @@ namespace GSF.Configuration
                 XmlNode node = GetSetting(category, name);
 
                 // If setting exists, return its value
-                if ((object)node != null && (object)node.Attributes != null)
+                if (node?.Attributes != null)
                     return node.Attributes["value"].Value;
 
                 // Setting doesn't exist so return the default
                 return defaultValue;
             }
 
-            public XmlNode GetSetting(string category, string name)
-            {
-                return m_settings.SelectSingleNode(string.Format("{0}/{1}/add[@name='{2}']", RootNode, category, name));
-            }
+            public XmlNode GetSetting(string category, string name) => 
+                m_settings.SelectSingleNode($"{RootNode}/{category}/add[@name='{name}']");
         }
 
         // Constants
@@ -281,8 +272,6 @@ namespace GSF.Configuration
         // Fields
         private string m_cryptoKey;
         private CultureInfo m_culture;
-        private System.Configuration.Configuration m_configuration;
-        private UserConfigurationFile m_userConfiguration;
         private volatile ConfigurationSaveMode m_saveMode;
         private readonly LongSynchronizedOperation m_saveOperation;
         internal bool m_forceSave;
@@ -306,15 +295,15 @@ namespace GSF.Configuration
                 IsBackground = false
             };
 
-            m_configuration = GetConfiguration(configFilePath);
+            Configuration = GetConfiguration(configFilePath);
 
-            if (m_configuration.HasFile && File.Exists(m_configuration.FilePath))
-                ValidateConfigurationFile(m_configuration.FilePath);
+            if (Configuration.HasFile && File.Exists(Configuration.FilePath))
+                ValidateConfigurationFile(Configuration.FilePath);
             else
-                CreateConfigurationFile(m_configuration.FilePath);
+                CreateConfigurationFile(Configuration.FilePath);
 
-            m_configuration = GetConfiguration(configFilePath);
-            m_userConfiguration = new UserConfigurationFile();
+            Configuration = GetConfiguration(configFilePath);
+            UserSettings = new UserConfigurationFile();
         }
 
         #endregion
@@ -326,29 +315,14 @@ namespace GSF.Configuration
         /// </summary>
         public CultureInfo Culture
         {
-            get
-            {
-                return m_culture;
-            }
-            set
-            {
-                if ((object)value != null)
-                    m_culture = value;
-                else
-                    m_culture = CultureInfo.InvariantCulture;
-            }
+            get => m_culture;
+            set => m_culture = value ?? CultureInfo.InvariantCulture;
         }
 
         /// <summary>
         /// Get the underlying <see cref="System.Configuration.Configuration"/> that can be accessed using this <see cref="ConfigurationFile"/> object.
         /// </summary>
-        public System.Configuration.Configuration Configuration
-        {
-            get
-            {
-                return m_configuration;
-            }
-        }
+        public System.Configuration.Configuration Configuration { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="CategorizedSettingsSection"/> object representing settings under the "categorizedSettings" section of the config file.
@@ -357,7 +331,7 @@ namespace GSF.Configuration
         {
             get
             {
-                CategorizedSettingsSection settings = (CategorizedSettingsSection)m_configuration.GetSection(CustomSectionName);
+                CategorizedSettingsSection settings = (CategorizedSettingsSection)Configuration.GetSection(CustomSectionName);
                 settings.File = this;
                 settings.SetCryptoKey(m_cryptoKey);
                 return settings;
@@ -367,19 +341,13 @@ namespace GSF.Configuration
         /// <summary>
         /// Gets the <see cref="UserConfigurationFile"/> where user specific settings are saved.
         /// </summary>
-        internal UserConfigurationFile UserSettings
-        {
-            get
-            {
-                return m_userConfiguration;
-            }
-        }
+        internal UserConfigurationFile UserSettings { get; private set; }
 
         private string BackupConfigFilePath
         {
             get
             {
-                string filePath = m_configuration.FilePath;
+                string filePath = Configuration.FilePath;
                 return Path.Combine(FilePath.GetDirectoryName(filePath), FilePath.GetFileNameWithoutExtension(filePath) + ".config.backup");
             }
         }
@@ -391,10 +359,8 @@ namespace GSF.Configuration
         /// <summary>
         /// Writes the configuration settings contained within this <see cref="ConfigurationFile"/> object to the configuration file that it represents.
         /// </summary>
-        public void Save()
-        {
+        public void Save() => 
             Save(m_forceSave ? ConfigurationSaveMode.Full : ConfigurationSaveMode.Modified);
-        }
 
         /// <summary>
         /// Writes the configuration settings contained within this <see cref="ConfigurationFile"/> object to the configuration file that it represents.
@@ -404,29 +370,29 @@ namespace GSF.Configuration
         {
             m_saveMode = saveMode;
 
-#if MONO
+        #if MONO
             // As of Mono v3.8.0, threads are killed even when marked as non-background (at least on Linux)
             m_saveOperation.Run();
-#else
+        #else
             m_saveOperation.RunOnceAsync();
-#endif
+        #endif
         }
 
         private void ExecuteConfigurationSave()
         {
             ConfigurationSaveMode saveMode = m_saveMode;
-            m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
-            m_configuration.Save(saveMode, m_forceSave);
+            UserSettings.Save(saveMode == ConfigurationSaveMode.Full);
+            Configuration.Save(saveMode, m_forceSave);
             m_forceSave = false;
 
             try
             {
                 // Attempt to create a backup configuration file
-#if MONO
+            #if MONO
                 m_configuration.SaveAs(BackupConfigFilePath, ConfigurationSaveMode.Full);
-#else
-                File.Copy(m_configuration.FilePath, BackupConfigFilePath, true);
-#endif
+            #else
+                File.Copy(Configuration.FilePath, BackupConfigFilePath, true);
+            #endif
             }
             catch
             {
@@ -438,18 +404,16 @@ namespace GSF.Configuration
         /// Writes the configuration settings contained within this <see cref="ConfigurationFile"/> object to the specified configuration file.
         /// </summary>
         /// <param name="fileName">The path and file name to save the configuration file to.</param>
-        public void SaveAs(string fileName)
-        {
-            m_configuration.SaveAs(fileName);
-        }
-
+        public void SaveAs(string fileName) => 
+            Configuration.SaveAs(fileName);
+        
         /// <summary>
         /// Reloads the current configuration settings from the configuration file that the <see cref="ConfigurationFile"/> represents.
         /// </summary>
         public void Reload()
         {
-            m_configuration = GetConfiguration(m_configuration.FilePath);
-            m_userConfiguration = new UserConfigurationFile();
+            Configuration = GetConfiguration(Configuration.FilePath);
+            UserSettings = new UserConfigurationFile();
         }
 
         /// <summary>
@@ -457,32 +421,30 @@ namespace GSF.Configuration
         /// </summary>
         public void RestoreDefaultUserSettings()
         {
-            if ((object)m_userConfiguration != null)
-            {
-                string fileName = m_userConfiguration.FileName;
+            if (UserSettings is null)
+                return;
 
-                if (File.Exists(fileName))
-                    File.Delete(fileName);
+            string fileName = UserSettings.FileName;
 
-                m_userConfiguration = new UserConfigurationFile();
-            }
+            if (File.Exists(fileName))
+                File.Delete(fileName);
+
+            UserSettings = new UserConfigurationFile();
         }
 
         /// <summary>
         /// Sets the key to be used for encrypting and decrypting values of <see cref="Settings"/>.
         /// </summary>
         /// <param name="cryptoKey">New crypto key.</param>
-        public void SetCryptoKey(string cryptoKey)
-        {
+        public void SetCryptoKey(string cryptoKey) => 
             m_cryptoKey = cryptoKey;
-        }
 
         private System.Configuration.Configuration GetConfiguration(string configFilePath)
         {
             ApplicationType appType = Common.GetApplicationType();
             System.Configuration.Configuration configuration;
 
-            if ((object)configFilePath != null)
+            if (configFilePath is not null)
             {
                 if (string.IsNullOrEmpty(configFilePath) || string.Compare(FilePath.GetExtension(configFilePath), ".config", StringComparison.OrdinalIgnoreCase) == 0)
                 {
@@ -518,7 +480,7 @@ namespace GSF.Configuration
         {
             if (!string.IsNullOrEmpty(configFilePath))
             {
-                XmlTextWriter configFileWriter = new XmlTextWriter(configFilePath, Encoding.UTF8);
+                XmlTextWriter configFileWriter = new(configFilePath, Encoding.UTF8);
                 configFileWriter.Indentation = 2;
                 configFileWriter.Formatting = Formatting.Indented;
 
@@ -535,7 +497,7 @@ namespace GSF.Configuration
             }
             else
             {
-                throw (new ArgumentNullException(nameof(configFilePath), "Path of configuration file path cannot be null"));
+                throw new ArgumentNullException(nameof(configFilePath), "Path of configuration file path cannot be null");
             }
         }
 
@@ -544,44 +506,37 @@ namespace GSF.Configuration
         {
             if (!string.IsNullOrEmpty(configFilePath))
             {
-                XmlDocument configFile = new XmlDocument();
+                XmlDocument configFile = new();
                 bool configFileModified = false;
                 configFile.Load(configFilePath);
 
                 // Make sure that the config file has the necessary section information under <customSections />
                 // that is required by the .Net configuration API to process our custom <categorizedSettings />
                 // section. The configuration API will raise an exception if it doesn't find this section.
-                if ((object)configFile.DocumentElement != null)
+                if (configFile.DocumentElement is not null)
                 {
                     XmlNodeList configSections = configFile.DocumentElement.SelectNodes("configSections");
 
-                    if ((object)configSections != null && configSections.Count == 0)
+                    if (configSections is not null && configSections.Count == 0)
                     {
                         // Add a <configSections> node, if one is not present.
-                        if ((object)configFile.DocumentElement != null)
-                        {
-                            // ReSharper disable once PossibleNullReferenceException
-                            configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), configFile.DocumentElement.FirstChild);
-                            configFileModified = true;
-                        }
+                        configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), configFile.DocumentElement.FirstChild);
+                        configFileModified = true;
                     }
 
                     XmlNode configSectionsNode = configFile.DocumentElement.SelectSingleNode("configSections");
 
-                    if ((object)configSectionsNode != null)
-                    {
-                        XmlNodeList section = configSectionsNode.SelectNodes("section[@name = \'" + CustomSectionName + "\']");
+                    XmlNodeList section = configSectionsNode?.SelectNodes("section[@name = \'" + CustomSectionName + "\']");
 
-                        if ((object)section != null && section.Count == 0)
-                        {
-                            // Adds the <section> node that specifies the DLL that handles the <categorizedSettings> node in
-                            // the config file, if one is not present.
-                            XmlNode node = configFile.CreateElement("section");
-                            node.SetAttributeValue("name", CustomSectionName);
-                            node.SetAttributeValue("type", CustomSectionType);
-                            configSectionsNode.AppendChild(node);
-                            configFileModified = true;
-                        }
+                    if (section != null && section.Count == 0)
+                    {
+                        // Adds the <section> node that specifies the DLL that handles the <categorizedSettings> node in
+                        // the config file, if one is not present.
+                        XmlNode node = configFile.CreateElement("section");
+                        node.SetAttributeValue("name", CustomSectionName);
+                        node.SetAttributeValue("type", CustomSectionType);
+                        configSectionsNode.AppendChild(node);
+                        configFileModified = true;
                     }
                 }
 
@@ -597,7 +552,7 @@ namespace GSF.Configuration
         }
 
         // Trim suffix from end of string
-        private string TrimEnd(string stringToTrim, string textToTrim)
+        private static string TrimEnd(string stringToTrim, string textToTrim)
         {
             int trimEndIndex = stringToTrim.LastIndexOf(textToTrim, StringComparison.CurrentCultureIgnoreCase);
 
@@ -625,13 +580,7 @@ namespace GSF.Configuration
         /// <summary>
         /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Windows or Web application.
         /// </summary>
-        public static ConfigurationFile Current
-        {
-            get
-            {
-                return Open(string.Empty);
-            }
-        }
+        public static ConfigurationFile Current => Open(string.Empty);
 
         // Static Methods
 

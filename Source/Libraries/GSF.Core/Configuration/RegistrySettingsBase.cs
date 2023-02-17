@@ -29,6 +29,7 @@ using System;
 using System.ComponentModel;
 using Microsoft.Win32;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.Configuration
 {
     /// <summary>
@@ -93,15 +94,6 @@ namespace GSF.Configuration
     /// </remarks>
     public abstract class RegistrySettingsBase : SettingsBase
     {
-        #region [ Members ]
-
-        // Fields
-        private string m_rootPath;
-        private string m_keyName;
-        private bool m_useCategoryAttributes;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -143,9 +135,9 @@ namespace GSF.Configuration
         protected RegistrySettingsBase(string rootPath, string keyName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
-            m_rootPath = rootPath;
-            m_keyName = keyName;
-            m_useCategoryAttributes = useCategoryAttributes;
+            RootPath = rootPath;
+            KeyName = keyName;
+            UseCategoryAttributes = useCategoryAttributes;
 
             // Make sure settings exist and load current values
             if (initialize)
@@ -160,33 +152,13 @@ namespace GSF.Configuration
         /// Gets or sets root registry path used to access settings in the registry (e.g., "HKEY_CURRENT_USER\\Software\\My Company\\My Product\\").
         /// </summary>
         [Browsable(false), SerializeSetting(false)]
-        public string RootPath
-        {
-            get
-            {
-                return m_rootPath;
-            }
-            set
-            {
-                m_rootPath = value;
-            }
-        }
+        public string RootPath { get; set; }
 
         /// <summary>
         /// Gets or sets name of default key used to access settings in the registry (e.g., "General Settings").
         /// </summary>
         [Browsable(false), SerializeSetting(false)]
-        public string KeyName
-        {
-            get
-            {
-                return m_keyName;
-            }
-            set
-            {
-                m_keyName = value;
-            }
-        }
+        public string KeyName { get; set; }
 
         /// <summary>
         /// Gets or sets value that determines whether a <see cref="CategoryAttribute"/> applied to a field or property
@@ -200,17 +172,7 @@ namespace GSF.Configuration
         /// will stored in the registry key identified by the <see cref="KeyName"/> value.
         /// </remarks>
         [Browsable(false), SerializeSetting(false)]
-        public bool UseCategoryAttributes
-        {
-            get
-            {
-                return m_useCategoryAttributes;
-            }
-            set
-            {
-                m_useCategoryAttributes = value;
-            }
-        }
+        public bool UseCategoryAttributes { get; set; }
 
         #endregion
 
@@ -228,7 +190,7 @@ namespace GSF.Configuration
         {
             string keyName = GetFieldKeyName(name);
 
-            if ((object)Registry.GetValue(keyName, setting, null) == null)
+            if (Registry.GetValue(keyName, setting, null) is null)
                 Registry.SetValue(keyName, setting, value, RegistryValueKind.String);
         }
 
@@ -240,10 +202,8 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <returns>Setting value.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override string RetrieveSetting(string name, string setting)
-        {
-            return (string)Registry.GetValue(GetFieldKeyName(name), setting, "");
-        }
+        protected override string RetrieveSetting(string name, string setting) => 
+            (string)Registry.GetValue(GetFieldKeyName(name), setting, "");
 
         /// <summary>
         /// Stores setting to registry.
@@ -253,10 +213,8 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override void StoreSetting(string name, string setting, string value)
-        {
+        protected override void StoreSetting(string name, string setting, string value) => 
             Registry.SetValue(GetFieldKeyName(name), setting, value, RegistryValueKind.String);
-        }
 
         /// <summary>
         /// Persist any pending changes to registry.
@@ -284,11 +242,11 @@ namespace GSF.Configuration
                 throw new ArgumentException("name cannot be null or empty");
 
             // If user wants to respect category attributes, we attempt to use those as configuration section names
-            if (m_useCategoryAttributes)
-                return m_rootPath + GetAttributeValue<CategoryAttribute, string>(name, m_keyName, attribute => attribute.Category);
+            if (UseCategoryAttributes)
+                return RootPath + GetAttributeValue<CategoryAttribute, string>(name, KeyName, attribute => attribute.Category);
 
             // Otherwise return default category name
-            return m_rootPath + m_keyName;
+            return RootPath + KeyName;
         }
 
         #endregion
