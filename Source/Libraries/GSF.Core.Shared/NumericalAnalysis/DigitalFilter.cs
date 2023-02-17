@@ -87,7 +87,7 @@ namespace GSF.NumericalAnalysis
         /// applies this filter to an evenly sampled signal f(t).
         /// </summary>
         /// <param name="signal"> f(t) for the signal</param>
-        /// <returns>The output of teh filter y(t)</returns>
+        /// <returns>The output of the filter y(t)</returns>
         public double[] Filter(double[] signal)
         {
             int n = signal.Length;
@@ -134,6 +134,18 @@ namespace GSF.NumericalAnalysis
             return fx * m_gain;
         }
 
+        /// <summary>
+        /// applies the filter to a signal and reverse signal to remove any Phasr shift
+        /// </summary>
+        /// <param name="signal"> f(t) for the signal</param>
+        /// <returns>The output of teh filter y(t)</returns>
+        ///<remarks> this is the equvivalent of Matlabs filtfilt </remarks>
+        public double FiltFilt(double[] signal)
+        {
+            double forwardFiltered = Filter(signal);
+            forwardFiltered.Reverse();
+            return Filter(forwardFiltered);
+        }
         #endregion
     }
 }
