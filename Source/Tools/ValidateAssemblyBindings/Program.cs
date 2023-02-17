@@ -33,9 +33,9 @@ namespace ValidateAssemblyBindings
     // NOTE: The build output folder for this application is intentionally the "Libraries" location
     // so that the tool will be available for GSF.Web dependent downstream applications as part of
     // the nightly build roll-down process.
-    class Program
+    internal class Program
     {
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             if (args.Length != 1)
             {
@@ -80,7 +80,7 @@ namespace ValidateAssemblyBindings
             if (!File.Exists(configFileName))
                 return false;
 
-            XmlDocument configFile = new XmlDocument();
+            XmlDocument configFile = new();
             configFile.Load(configFileName);
 
             XmlNode runTime = configFile.SelectSingleNode("configuration/runtime");
@@ -119,10 +119,10 @@ namespace ValidateAssemblyBindings
             }
 
             const string xmlns = "urn:schemas-microsoft-com:asm.v1";
-            XmlNamespaceManager nsmgr = new XmlNamespaceManager(configFile.NameTable);
+            XmlNamespaceManager nsmgr = new(configFile.NameTable);
             nsmgr.AddNamespace("s", xmlns);
 
-            XmlDocument assemblyBindingsXml = new XmlDocument();
+            XmlDocument assemblyBindingsXml = new();
             XmlElement assemblyBinding = assemblyBindingsXml.CreateElement("assemblyBinding", xmlns);
             string[] assemblyFileNames = FilePath.GetFileList(FilePath.GetAbsolutePath("*.dll"));
 
@@ -134,13 +134,13 @@ namespace ValidateAssemblyBindings
                     AssemblyName assemblyName = assembly.GetName();
                     string version = assemblyName.Version?.ToString();
 
-                    if (version is null || version.Equals("0.0.0.0") || version.Equals("1.0.0.0"))
+                    if (version is null or "0.0.0.0" or "1.0.0.0")
                         continue;
 
-                    StringBuilder keyTokenImage = new StringBuilder();
+                    StringBuilder keyTokenImage = new();
                     byte[] keyTokenBytes = assemblyName.GetPublicKeyToken();
 
-                    if (!(keyTokenBytes is null))
+                    if (keyTokenBytes is not null)
                     {
                         foreach (byte keyToken in keyTokenBytes)
                             keyTokenImage.Append($"{keyToken:x2}");
@@ -191,7 +191,7 @@ namespace ValidateAssemblyBindings
                 }
                 catch (Exception ex)
                 {
-                    if (!(ex is BadImageFormatException))
+                    if (ex is not BadImageFormatException)
                         Console.WriteLine($"Skipping \"{assemblyFileName}\": {ex.Message}");
                 }
             }
