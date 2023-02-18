@@ -47,6 +47,7 @@ function loadSettings() {
 
     if (!azureADAuthEnabled)
         return;
+
     msalInstance = new msal.PublicClientApplication(msalConfig);
 }
 

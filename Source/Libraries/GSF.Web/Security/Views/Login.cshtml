@@ -51,6 +51,7 @@
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
     bool isPOSIX = GSF.Common.IsPosixEnvironment;
     bool azureADAuthEnabled = azureADSettings.Enabled;
+    bool logoutPageRequested = queryParams.ContainsKey("logout");
 
     if (queryParams.TryGetValue("redir", out redirectPage)) {
         string base64Path = WebUtility.UrlDecode(redirectPage);
@@ -279,12 +280,11 @@
                 @Raw(loginHeader)
                 <div class="panel panel-default">
                     <div class="panel-heading text-center">
-                        <h4><span id="response">Enter credentials:
-                        </span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin" style="display: none"></span></h4>
+                        <h4><span id="response">@(logoutPageRequested ? "Attempting logout..." : "Enter credentials:")
+                        </span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin"@Raw(logoutPageRequested ? "" : "  style=\"display: none\"")></span></h4>
                     </div>
-                    <div class="panel-body" id="credentialsForm">
-                    @if (string.IsNullOrEmpty(oidcError))
-                    {
+                    <div class="panel-body" id="credentialsForm"@Raw(logoutPageRequested ? "  style=\"display: none\"": "")>
+                         @if (string.IsNullOrEmpty(oidcError)) {
                         <form role="form">
                             <div class="form-group">
                                 <label for="username">User name:</label>
@@ -336,7 +336,7 @@
                         </form>
                     }
                     </div>
-                    <div class="panel-body" id="reloginForm" style="display: none">
+                    <div class="panel-body" id="reloginForm"@Raw(logoutPageRequested ? "" : "  style=\"display: none\"")>
                         <button type="button" class="btn btn-primary pull-right" id="returnToLogin">Return to Login</button>
                     </div>
                     <div class="panel-footer panel-red text-center" id="responsePanel" style="display: none">
