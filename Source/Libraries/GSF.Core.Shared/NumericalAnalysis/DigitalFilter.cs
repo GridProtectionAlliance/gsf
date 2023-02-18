@@ -84,7 +84,7 @@ namespace GSF.NumericalAnalysis
         #region[ Methods ]
 
         /// <summary>
-        /// applies this filter to an evenly sampled signal f(t).
+        /// Applies this filter to an evenly sampled signal f(t).
         /// </summary>
         /// <param name="signal"> f(t) for the signal</param>
         /// <returns>The output of the filter y(t)</returns>
@@ -124,9 +124,9 @@ namespace GSF.NumericalAnalysis
 
             finalState = new FilterState
             {
-                StateValue = new double[] { value }
+                StateValue = new[] { value }
                     .Concat(s.Take(m_b.Length - 2).ToArray())
-                    .Concat(new double[] { fx })
+                    .Concat(new[] { fx })
                     .Concat(s.Skip(m_b.Length - 1).Take(m_a.Length - 2).ToArray())
                     .ToArray()
             };
@@ -135,17 +135,18 @@ namespace GSF.NumericalAnalysis
         }
 
         /// <summary>
-        /// applies the filter to a signal and reverse signal to remove any Phasr shift
+        /// Applies the filter to a signal and reverse signal to remove any Phasor shift
         /// </summary>
         /// <param name="signal"> f(t) for the signal</param>
-        /// <returns>The output of teh filter y(t)</returns>
-        ///<remarks> this is the equvivalent of Matlabs filtfilt </remarks>
-        public double FiltFilt(double[] signal)
+        /// <returns>The output of the filter y(t)</returns>
+        /// <remarks>This is the equivalent of MatLab <c>FiltFilt</c>.</remarks>
+        public double[] FiltFilt(double[] signal)
         {
-            double forwardFiltered = Filter(signal);
-            forwardFiltered.Reverse();
+            double[] forwardFiltered = Filter(signal);
+            Array.Reverse(forwardFiltered);
             return Filter(forwardFiltered);
         }
+        
         #endregion
     }
 }
