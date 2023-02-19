@@ -156,7 +156,6 @@ namespace GSF.Web.Security
 
             if (securityPrincipal is null)
             {
-                
                 // Pick the appropriate authentication logic based
                 // on the authorization type in the HTTP headers
                 // or in the URI Parameters if it is using OIDC.
@@ -165,8 +164,6 @@ namespace GSF.Web.Security
                 // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
                 else if (Request.QueryString.HasValue && queryParameters.AllKeys.Contains("code"))
                     securityPrincipal = AuthenticateCode(useAlternateSecurityProvider);
-                
-                    
                 else
                     securityPrincipal = AuthenticatePassthrough(useAlternateSecurityProvider);
 
@@ -212,7 +209,7 @@ namespace GSF.Web.Security
             bool useAlternateSecurityProvider = Options.IsAlternateSecurityProviderResource(Request.Path.Value);
             useAlternateSecurityProvider = useAlternateSecurityProvider || (AuthTestPath == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
 
-            if (Request.User is not null && Request.User.IsInRole("logout"))
+            if (Request.User is not null && UserHasLogoutRole(Request.User))
             {
                 string identityName = Request.User.Identity.Name;
 
@@ -250,8 +247,9 @@ namespace GSF.Web.Security
                     base64Path = Convert.ToBase64String(pathBytes);
                     encodedPath = WebUtility.UrlEncode(base64Path);
                     referrer = $"&referrer={encodedPath}";
+                    
                     if (useAlternateSecurityProvider)
-                        referrer = referrer + "&useAlternateSecurityProvider=1";
+                        referrer += "&useAlternateSecurityProvider=1";
                 }
                 else if (useAlternateSecurityProvider)
                 {
@@ -292,6 +290,29 @@ namespace GSF.Web.Security
             Log.Publish(MessageLevel.Info, "AuthenticationFailure", $"Failed to authenticate {currentIdentity} for {Request.Path}: {failureReason}");
                 
             return true; // Abort pipeline
+        }
+
+        private bool UserHasLogoutRole(IPrincipal user)
+        {
+            // In ASP.NET deployments using this pipeline that are not currently connected to an AD
+            // domain, IPrincipal.IsInRole implementations based on WindowsPrincipal can fail with
+            // "The trust relationship between this workstation and the primary domain failed".
+            // Since this can be a normal scenario, e.g., developing offline on a laptop that can
+            // still use cached domain credentials, we catch this exception and return false.
+            try
+            {
+                return user.IsInRole("logout");
+            }
+            catch (SystemException ex) when (user is WindowsPrincipal)
+            {
+                Log.Publish(MessageLevel.Info, nameof(UserHasLogoutRole), $"No domain access while checking user role for 'logout': {ex.Message}", exception: ex);
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Warning, nameof(UserHasLogoutRole), $"Failed while checking user role for 'logout': {ex.Message}", exception: ex);
+            }
+
+            return false;
         }
 
         private bool LogOut(Guid sessionID)
@@ -343,7 +364,7 @@ namespace GSF.Web.Security
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
-            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            SecurityIdentity securityIdentity = new(securityProvider);
             return new SecurityPrincipal(securityIdentity);
         }
 
@@ -360,7 +381,7 @@ namespace GSF.Web.Security
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
-            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            SecurityIdentity securityIdentity = new(securityProvider);
             return new SecurityPrincipal(securityIdentity);
         }
 
@@ -380,7 +401,7 @@ namespace GSF.Web.Security
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
-            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            SecurityIdentity securityIdentity = new(securityProvider);
             return new SecurityPrincipal(securityIdentity);
         }
 
@@ -401,7 +422,7 @@ namespace GSF.Web.Security
             securityProvider.Authenticate();
 
             // Return the security principal that will be used for role-based authorization
-            SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+            SecurityIdentity securityIdentity = new(securityProvider);
             return new SecurityPrincipal(securityIdentity);
         }
 
@@ -413,7 +434,7 @@ namespace GSF.Web.Security
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AuthenticationHandler), MessageClass.Framework);
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_alternateAuthorizationCache;
-        private static readonly Regex s_basePathRegex = new Regex("^~(?=/)", RegexOptions.Compiled);
+        private static readonly Regex s_basePathRegex = new("^~(?=/)", RegexOptions.Compiled);
 
         // Static Constructor
         static AuthenticationHandler()
