@@ -128,8 +128,6 @@ namespace GSF.Security
         /// </summary>
         public const int DefaultCacheMaximumRetryAttempts = 5;
 
-        // Fields
-
         #endregion
 
         #region [ Constructors ]
