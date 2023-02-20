@@ -35,7 +35,7 @@ namespace GSF.Web.Shared
         /// <summary>
         /// Defines default embedded resource root path.
         /// </summary>
-        public const string DefaultRoot = "/@" + nameof(GSF) + "/" + nameof(Web);
+        public const string DefaultRoot = $"/@{nameof(GSF)}/{nameof(Web)}";
         
         private static string s_rootPath;
         private static string s_headerIcons;
