@@ -416,7 +416,7 @@ namespace GSF.Security
                                 graphClient.Users[userData.Username].Request().GetAsync().Result;
 
                             if (user is null)
-                                throw new SecurityException($"Failed to load user \"{userData.Username}\" from Azure AD.");
+                                throw new SecurityException($"Failed to load user \"{userData.Username}\" from Azure AD application \"{config.ClientID}\".");
                             
                             userData.IsAzureAD = true;
                             userData.LoginID = user.UserPrincipalName;
@@ -446,7 +446,7 @@ namespace GSF.Security
                         }
                         catch (ServiceException ex)
                         {
-                            Logger.SwallowException(ex, $"User \"{userData.Username}\" not found in AzureAD, treating user as a database user.");
+                            throw new SecurityException($"User information load for \"{userData.Username}\" in AzureAD application \"{config.ClientID}\" failed: {ex.Message}", ex);
                         }
                         catch
                         {
@@ -464,7 +464,7 @@ namespace GSF.Security
                     if (string.IsNullOrEmpty(userData.LoginID))
                         userData.LoginID = userData.Username;
 
-                    if (!Convert.IsDBNull(userAccount["Password"]))
+                    if (!Convert.IsDBNull(userAccount["Password"]) && !userData.IsAzureAD)
                         userData.Password = Convert.ToString(userAccount["Password"]);
 
                     if (!Convert.IsDBNull(userAccount["FirstName"]))
@@ -479,7 +479,7 @@ namespace GSF.Security
                     if (!Convert.IsDBNull(userAccount["Email"]))
                         userData.EmailAddress = Convert.ToString(userAccount["Email"]);
 
-                    if (!Convert.IsDBNull(userAccount["ChangePasswordOn"]))
+                    if (!Convert.IsDBNull(userAccount["ChangePasswordOn"]) && !userData.IsAzureAD)
                         userData.PasswordChangeDateTime = Convert.ToDateTime(userAccount["ChangePasswordOn"]);
 
                     if (!Convert.IsDBNull(userAccount["CreatedOn"]))
@@ -501,7 +501,7 @@ namespace GSF.Security
                     base.RefreshData(userData, userData.Groups, ProviderID);
                 }
 
-                // Administrator can lock out NT/AD user as well as database-only user via database
+                // Administrator can lock out NT/AD, AzureAD or database user user via database
                 if (!userData.IsLockedOut && userAccount is not null && !Convert.IsDBNull(userAccount["LockedOut"]))
                     userData.IsLockedOut = Convert.ToBoolean(userAccount["LockedOut"]);
 
@@ -587,14 +587,14 @@ namespace GSF.Security
                         if (securityGroups.Length == 0)
                             securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupName)}'");
 
-                        if (securityGroups.Length > 0)
-                        {
-                            // Found security group by name, access group ID to lookup application roles defined for the group
-                            DataRow securityGroup = securityGroups[0];
+                        if (securityGroups.Length == 0)
+                            continue;
 
-                            if (!Convert.IsDBNull(securityGroup["ID"]))
-                                implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select($"SecurityGroupID = '{EncodeEscapeSequences(securityGroup["ID"].ToString())}'"));
-                        }
+                        // Found security group by name, access group ID to lookup application roles defined for the group
+                        DataRow securityGroup = securityGroups[0];
+
+                        if (!Convert.IsDBNull(securityGroup["ID"]))
+                            implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select($"SecurityGroupID = '{EncodeEscapeSequences(securityGroup["ID"].ToString())}'"));
                     }
 
                     userApplicationRoles = implicitRoles.ToArray();
@@ -695,44 +695,92 @@ namespace GSF.Security
                     {
                         if (UserData.IsAzureAD)
                         {
-                            Exception authEx = null;
-
-                            // Validate user access token from Azure AD authentication
-                            GraphServiceClient graphClient = new("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(requestMessage =>
+                            // AzureAD authentication is handled in client-side code, server side code simply validates that registered
+                            // application can access user information. Password property is used to temporarily hold user authentication
+                            // token during logon so that the token value can be validated by the server side app. Subsequent calls to
+                            // this Authenticate method will simply validate that user is still accessible to server application.
+                            if (IsUserAuthenticated && string.IsNullOrEmpty(Password))
                             {
+                                // Cached security providers will auto-refresh on a configurable schedule to validate that users still
+                                // have access to authentication servers. In the case of AzureAD, we will validate that user still has
+                                // rights to the configured AzureAD application as server admin may have removed user rights.
+                                AzureADSettings config = AzureADSettings.Load(SettingsCategory);
+
+                                // If AzureAD has been disabled via external configuration, user will no longer be authenticated
+                                if (config is not null && config.Enabled)
+                                {
+                                    // Create a Graph client - exceptions here are be exposed to outer try/catch
+                                    GraphServiceClient graphClient = config.GetGraphClient();
+                                    string username = UserData.LoginID;
+
+                                    try
+                                    {
+                                        // Load user data in application context - note that external users need to be looked up by userPrincipalName
+                                        User user = username.Contains("#EXT#") ?
+                                            graphClient.Users.Request().Filter($"userPrincipalName eq '{username}'").GetAsync().Result.FirstOrDefault() :
+                                            graphClient.Users[username].Request().GetAsync().Result;
+
+                                        isAuthenticated = user is not null;
+                                    }
+                                    catch (ServiceException ex)
+                                    {
+                                        throw new SecurityException($"Authorization validation for \"{username}\" in AzureAD application \"{config.ClientID}\" failed: {ex.Message}", ex);
+                                    }
+                                    catch
+                                    {
+                                        if (config.LastException is null)
+                                            throw;
+
+                                        throw config.LastException;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Exception graphEx = null;
+                                
+                                // Validate user access token from Azure AD authentication - this step prevents forgery attempts during login
+                                GraphServiceClient graphClient = new("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(requestMessage =>
+                                {
+                                    try
+                                    {
+                                        // Currently rights are managed by defined ADO database roles and an AzureAD service account with a secret key.
+                                        // If future use cases desire to manage user roles from within Azure AD, then this user token will need to be
+                                        // cached and automatically refreshed at the client level upon expiration.
+                                        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", Password);
+
+                                        // AzureAD user token is temporal, expiring on a schedule defined by AzureAD, so after initial validation, we
+                                        // do not cache value. Beyond initial use case of validating user token server side, we are done with token.
+                                        Password = "";
+                                    }
+                                    catch (AggregateException ex)
+                                    {
+                                        graphEx = new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        graphEx = ex;
+                                    }
+
+                                    return Task.FromResult(0);
+                                }));
+
                                 try
                                 {
-                                    // Currently rights are managed by defined ADO database roles and a service account with a secret key. If future
-                                    // use cases desire to manage user roles from within Azure AD, then this user token will need to be cached.
-                                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", Password);
+                                    // Query user info from Graph using user's Azure AD login token
+                                    User user = graphClient.Me.Request().GetAsync().Result;
+
+                                    // If UserPrincipalName as queried from Graph using user's Azure AD login token matches the user name
+                                    // as defined in the configured database security context, then user authentication is successful
+                                    isAuthenticated = user.UserPrincipalName.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase);
                                 }
-                                catch (AggregateException ex)
+                                catch
                                 {
-                                    authEx = new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
+                                    if (graphEx is null)
+                                        throw;
+
+                                    throw graphEx;
                                 }
-                                catch (Exception ex)
-                                {
-                                    authEx = ex;
-                                }
-
-                                return Task.FromResult(0);
-                            }));
-
-                            try
-                            {
-                                // Query user info from Graph using user's Azure AD login token
-                                User user = graphClient.Me.Request().GetAsync().Result;
-
-                                // If UserPrincipalName as queried from Graph using user's Azure AD login token matches the user name
-                                // as defined in the configured database security context, then user authentication is successful
-                                isAuthenticated = user.UserPrincipalName.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase);
-                            }
-                            catch
-                            {
-                                if (authEx is null)
-                                    throw;
-
-                                throw authEx;
                             }
                         }
                         else
