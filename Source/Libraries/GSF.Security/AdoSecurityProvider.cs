@@ -774,15 +774,17 @@ namespace GSF.Security
                 Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "Authenticate", "Failed to log authentication attempt to database.", "Database or AccessLog table may be read-only or inaccessible.", ex);
             }
 
-            // If an exception occurred during authentication, rethrow it after logging authentication attempt
-            if (authenticationException is not null)
-            {
-                LastException = authenticationException;
-                LogError(authenticationException.Source, authenticationException.ToString());
-                throw authenticationException;
-            }
+            if (authenticationException is null)
+                return IsUserAuthenticated;
 
-            return IsUserAuthenticated;
+            // Flatten aggregate exceptions common in AzureAD faults
+            if (authenticationException is AggregateException aggex)
+                authenticationException = new InvalidOperationException(string.Join("; ", aggex.Flatten().InnerExceptions.Select(inex => inex.Message)), aggex);
+
+            // If an exception occurred during authentication, rethrow it after logging authentication attempt
+            LastException = authenticationException;
+            LogError(authenticationException.Source, authenticationException.ToString());
+            throw authenticationException;
         }
 
         /// <summary>
@@ -925,28 +927,28 @@ namespace GSF.Security
         /// <returns>true if logging was successful, otherwise false.</returns>
         protected virtual bool LogError(string source, string message)
         {
-            if (!string.IsNullOrWhiteSpace(SettingsCategory) && !string.IsNullOrWhiteSpace(source) && !string.IsNullOrWhiteSpace(message))
+            if (string.IsNullOrWhiteSpace(SettingsCategory) || string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(message))
+                return false;
+
+            Log.Publish(MessageLevel.Error, MessageFlags.SecurityMessage, source, message);
+
+            if (!UseDatabaseLogging)
+                return false;
+
+            try
             {
-                Log.Publish(MessageLevel.Error, MessageFlags.SecurityMessage, source, message);
+                using AdoDataConnection connection = new(SettingsCategory);
 
-                if (UseDatabaseLogging)
-                {
-                    try
-                    {
-                        using AdoDataConnection connection = new(SettingsCategory);
+                connection.ExecuteNonQuery("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", source, message);
 
-                        connection.ExecuteNonQuery("INSERT INTO ErrorLog (Source, Message) VALUES ({0}, {1})", source, message);
-
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Writing data will fail for read-only databases;
-                        // all we can do is track last exception in this case
-                        LastException = ex;
-                        Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "LogErrorToDatabase", "Failed to log error to database.", "Database or ErrorLog table may be read-only or inaccessible.", ex);
-                    }
-                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Writing data will fail for read-only databases;
+                // all we can do is track last exception in this case
+                LastException = ex;
+                Log.Publish(MessageLevel.Warning, MessageFlags.SecurityMessage, "LogErrorToDatabase", "Failed to log error to database.", "Database or ErrorLog table may be read-only or inaccessible.", ex);
             }
 
             return false;
