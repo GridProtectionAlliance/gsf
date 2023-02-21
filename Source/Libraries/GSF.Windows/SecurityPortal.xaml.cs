@@ -269,6 +269,12 @@ namespace GSF.Windows
         {
             ClearErrorMessage();
 
+            if (!string.IsNullOrWhiteSpace(provider.AuthenticationFailureReason))
+            {
+                DisplayErrorMessage(provider.AuthenticationFailureReason);
+                return true;
+            }
+
             if (!provider.UserData.IsDefined)
                 // No such account.
                 DisplayErrorMessage("Account does not exist.");
