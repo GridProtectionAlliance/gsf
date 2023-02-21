@@ -114,7 +114,8 @@
         const useAlternateSecurityProvider = {10};
         const oidcError = ""{11}"";
         const isPOSIX = {12};
-        const azureADAuthEnabled = {13};        
+        const azureADAuthEnabled = {13};
+        const logoutPageRequested = {14};
     ",
         /* 0 */ redirectPage.JavaScriptEncode(),
         /* 1 */ Url.Content(authTestPage).JavaScriptEncode(),
@@ -129,7 +130,8 @@
         /* 10 */ useAlternateSecurityProvider.ToString().ToLowerInvariant(),
         /* 11 */ oidcError.JavaScriptEncode(),
         /* 12 */ isPOSIX.ToString().ToLowerInvariant(),
-        /* 13 */ azureADAuthEnabled.ToString().ToLowerInvariant()
+        /* 13 */ azureADAuthEnabled.ToString().ToLowerInvariant(),
+        /* 14 */ logoutPageRequested.ToString().ToLowerInvariant()
     );
 
     string msalConfig = string.Format(@"
@@ -139,7 +141,7 @@
                 authority: ""{1}""
             }},
             cache: {{
-                cacheLocation: ""sessionStorage"",
+                cacheLocation: ""localStorage"",
                 storeAuthStateInCookie: false
             }},
             system: {{
@@ -268,7 +270,7 @@
         }
     </style>
     <script>
-        @Raw(new Minifier().MinifyJavaScript(constants));
+        @Raw(new Minifier().MinifyJavaScript(constants))
         @Raw(msalConfig)
     </script>
 </head>
@@ -294,12 +296,20 @@
                                 <label for="password">Password:</label>
                                 <input type="password" class="form-control" id="password" />
                             </div>
-                            <table @Raw(isPOSIX ? "style=\"display: none\"" : "")>
+                            <table @Raw(isPOSIX && !azureADAuthEnabled ? "style=\"display: none\"" : "")>
                                 <tr>
                                     <td>
                                         <div class="form-group">
                                             <input type="checkbox" id="iwa" />
-                                            <label class="inline" for="iwa">Use Integrated Windows Authentication</label>
+                                            <label class="inline" for="iwa">
+                                                Use Integrated Windows&nbsp;Authentication
+                                                @if (azureADAuthEnabled)
+                                                {
+                                                    <text>
+                                                        or<wbr/> Azure&nbsp;AD Single-Sign&nbsp;On
+                                                    </text>
+                                                }
+                                            </label>
                                         </div>
                                     </td>
                                     <td style="text-align: center">
@@ -312,7 +322,7 @@
                                         <div class="form-group" id="ntlmRegion" title="Uncheck this box if you are logging in with cached domain&#13;credentials and do not have domain access - e.g., roaming&#13;with a laptop">
                                             <input type="checkbox" id="ntlm" checked disabled />
                                             <label class="inline disabled" for="ntlm" id="ntlmLabel">Use&nbsp;NTLM authentication</label>
-                                            <div id="ntlmMessage" style="color: red; display: none; max-width: 200px; float: right; overflow: hidden; margin-bottom: 10px">
+                                            <div id="ntlmMessage" style="color: crimson; display: none; max-width: 200px; float: right; overflow: hidden; margin-bottom: 10px">
                                                 <small>
                                                     WARNING: Unsecured&nbsp;connection,<br />any&nbsp;credentials passed&nbsp;to&nbsp;host
                                                     <span style="white-space: nowrap">"@request.RequestUri.Host"</span> will&nbsp;be&nbsp;sent
@@ -323,21 +333,32 @@
                                     </td>
                                 </tr>
                             </table>
-                            <div>
-                                @if (azureADAuthEnabled)
-                                {
-                                <text>
-                                    <button type="button" class="btn btn-primary pull-right" id="msalAuth">Azure AD Auth</button>
-                                    <span class="pull-right" style="margin: 5px;">&nbsp;or&nbsp;</span>
-                                </text>
-                                }
-                                <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
-                            </div>
+                            <table>
+                                <tr>
+                                    <td style="width: 100%">
+                                        <span id="azureADPasswordMessage" style="display: none; font-style: italic; color: crimson">
+                                            Provided password will be ignored by Azure AD authentication, however, full login
+                                            with required password will now be requested, negating single-sign on options.
+                                            Clear password text to re-enable single-sign capability.
+                                        </span>
+                                    </td>
+                                    <td style="width: 220px; text-align: right">
+                                        @if (azureADAuthEnabled)
+                                        {
+                                            <text>
+                                                <button type="button" class="btn btn-primary pull-right" id="msalAuth">Azure AD Auth</button>
+                                                <span class="pull-right" style="margin: 5px;">&nbsp;or&nbsp;</span>
+                                            </text>
+                                        }
+                                        <button type="button" class="btn btn-primary pull-right" id="login">Login</button>
+                                    </td>
+                                </tr>
+                            </table>
                         </form>
                     }
                     </div>
                     <div class="panel-body" id="reloginForm"@Raw(logoutPageRequested ? "" : "  style=\"display: none\"")>
-                        <button type="button" class="btn btn-primary pull-right" id="returnToLogin">Return to Login</button>
+                        <button type="button" class="btn btn-primary pull-right" id="returnToLogin" disabled>Return to Login</button>
                     </div>
                     <div class="panel-footer panel-red text-center" id="responsePanel" style="display: none">
                         <h5 id="message"></h5>
