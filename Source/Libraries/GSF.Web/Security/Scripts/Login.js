@@ -35,6 +35,7 @@
 //   string oidcError: error Message from OIDC provider if en error occurred
 //   boolean isPOSIX: flag that indicates if host system is POSIX based, e.g., Linux or OSX
 //   boolean azureADAuthEnabled: flag that indicates if Azure AD authentication is enabled
+//   boolean logoutPageRequested: flag that indicates if logout page was requested
 //   json msalConfig: MSAL configuration object
 
 let msalInstance;
@@ -63,7 +64,7 @@ function hashPassword(password) {
 }
 
 // Authorize user with basic authentication using provided credentials
-function authenticateBasic(username, password) {
+function authenticateBasic(username, password, skipHash) {
     $.ajax({
         cache: false,
         url: securePage + (useAlternateSecurityProvider ? "?useAlternate=1": ""),
@@ -78,8 +79,8 @@ function authenticateBasic(username, password) {
                     break;
             }
         },
-        beforeSend: function (xhr) {
-            if (username.indexOf("\\") <= 0)
+        beforeSend: function (xhr) {            
+            if (username.indexOf("\\") <= 0 && !skipHash)
                 password = hashPassword(password);
 
             xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
@@ -176,7 +177,7 @@ function loginComplete(success, response) {
         $("#credentialsForm").show();
 
         if (response) {
-            $("#message").text(response);
+            $("#message").html(response);
             $("#responsePanel").show();
         }
 
@@ -188,48 +189,51 @@ function loginComplete(success, response) {
 }
 
 function logoutComplete(success, response) {
-    $("#workingIcon").hide();
-    $("#reloginForm").show();
+    // Allow a moment for screen to complete refresh before displaying logout results
+    setTimeout(function () {
+        const sessionClearedParameter = getParameterByName("sessionCleared");
 
-    const sessionClearedParameter = getParameterByName("sessionCleared");
-
-    if (sessionClearedParameter && getBool(sessionClearedParameter)) {
-        if (success) {
-            $("#response").text("Logout Succeeded");
+        if (sessionClearedParameter && getBool(sessionClearedParameter)) {
+            if (success) {
+                $("#response").text("Logout Succeeded");
+            }
+            else {
+                $("#response").text("Partial Logout - Session Only");
+                $("#message").text("Client session cache cleared but failed to clear browser cached credentials");
+                $("#responsePanel").show();
+            }
+        }
+        else if (response) {
+            if (success && response === "Logout complete") {
+                $("#response").text("Logout Succeeded");
+            }
+            else if (success) {
+                $("#response").text("Partial Logout - Browser Credentials Only");
+                $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
+                $("#responsePanel").show();
+            }
+            else {
+                $("#response").text("Failed to Logout");
+                $("#message").text("Failed to clear client session cache and failed to clear browser cached credentials");
+                $("#responsePanel").show();
+            }
         }
         else {
-            $("#response").text("Partial Logout - Session Only");
-            $("#message").text("Client session cache cleared but failed to clear browser cached credentials");
-            $("#responsePanel").show();
-        }
-    }
-    else if (response) {
-        if (success && response === "Logout complete") {
-            $("#response").text("Logout Succeeded");
-        }
-        else if (success) {
-            $("#response").text("Partial Logout - Browser Credentials Only");
-            $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
-            $("#responsePanel").show();
-        }
-        else {
-            $("#response").text("Failed to Logout");
-            $("#message").text("Failed to clear client session cache and failed to clear browser cached credentials");
-            $("#responsePanel").show();
-        }
-    }
-    else {
-        if (success) {
-            $("#response").text("Partial Logout - Browser Credentials Only");
-            $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
-        }
-        else {
-            $("#response").text("Failed to Logout");
-            $("#message").text("Failed to clear client session cache and failed to clear browser cached credentials");
-        }
+            if (success) {
+                $("#response").text("Partial Logout - Browser Credentials Only");
+                $("#message").text("Cleared browser cached credentials but failed to clear client session cache");
+            }
+            else {
+                $("#response").text("Failed to Logout");
+                $("#message").text("Failed to clear client session cache and failed to clear browser cached credentials");
+            }
 
-        $("#responsePanel").show();
-    }
+            $("#responsePanel").show();
+        }
+        
+        $("#returnToLogin").enable();
+        $("#workingIcon").hide();
+    }, 500);
 }
 
 function loginFailed(response) {
@@ -240,13 +244,27 @@ function loginFailed(response) {
     else
         message = response.statusText + " (" + response.status + ")";
 
+    let responseText = response.responseText;
+    
+    if (responseText.length) {
+        responseText = responseText.split("<html>")[0];        
+        const doc = new DOMParser().parseFromString(responseText, "text/html");
+        const errorMessage = (doc.body.textContent || "").trim();
+
+        // Do not include InternalServerError response status for authentication errors:
+        if (errorMessage.startsWith("User Authentication Exception:"))
+            message = errorMessage.substring(30);
+        else
+            message += "<br/><br/>" + errorMessage;
+    }
+    
     if (oidcError.length > 0)
         message = oidcError;
 
     loginComplete(false, "Login attempt failed: " + message);
 }
 
-function login(username, password) {
+function login(username, password, skipHash) {
     $("#workingIcon").show();
 
     if (username) {
@@ -256,7 +274,7 @@ function login(username, password) {
         if (username.indexOf("\\") > 0 && $("#ntlm").prop("checked"))
             authenticateNTLM(username, password);
         else
-            authenticateBasic(username, password);
+            authenticateBasic(username, password, skipHash);
     }
     else {
         // When no user name is provided, attempt pass-through authentication
@@ -271,10 +289,6 @@ function login(username, password) {
 }
 
 function logout() {
-    $("#response").text("Logging out...");
-    $("#workingIcon").show();
-    $("#credentialsForm").hide();
-
     persistentStorage.removeItem("passthrough");
 
     // Attempt to clear any credentials cached by browser
@@ -283,68 +297,82 @@ function logout() {
     });
 }
 
-function msalLogin() {
+function getPromptOptions(showPopup) {
+    if ($("#iwa").prop("checked") && !showPopup)
+        return "none";
+
+    // Any provided password will be ignored, but will be treated
+    // as a user indication of desiring to re-authenticate, i.e.,
+    // bypassing single-sign on options:
+    if (isEmpty($("#password").val()))
+        return "select_account";
+
+    return "login";
+}
+
+function getLoginRequest(showPopup) {
+    const loginRequest = {
+        scopes: ["User.Read"],
+        prompt: getPromptOptions(showPopup)
+    };
+
+    return loginRequest;
+}
+
+function msalGetToken(currentAccount) {
+    // If Azure AD sign on authentication succeeded, validate token, make
+    // sure user is in database and redirect to main page if successful
+    return getToken(currentAccount).then(response => {
+        login(currentAccount.username, response.accessToken, true);
+    });
+}
+
+function msalLogin(showPopup) {
     if (!azureADAuthEnabled) {
         loginComplete(false, "Login attempt failed: Azure AD authentication is disabled");
         return;
     }
 
     $("#workingIcon").show();
+    $("#response").text("Logging into Azure AD...");
 
-    msalInstance.loginPopup().then(msalAuthResponse).catch(function (error) {
-        loginComplete(false, "Login attempt failed: " + error);
-    });
+    if (showPopup === undefined)
+        showPopup = !$("#iwa").prop("checked");
+
+    const loginRequest = getLoginRequest(showPopup);
+    
+    if (showPopup) {
+        msalInstance.loginPopup(loginRequest).then(msalAuthResponse).catch(function (error) {
+            loginComplete(false, "Login attempt failed: " + error);
+        });
+    }
+    else {
+        msalInstance.ssoSilent(loginRequest).then(() => {
+            return msalGetToken(msalInstance.getAllAccounts()[0]);
+        }).catch(error => {
+            console.error("Silent Error: " + error);
+            if (error instanceof msal.InteractionRequiredAuthError) {
+                msalLogin(true);
+            }
+        });
+    }
 }
 
 function msalAuthResponse(response) {
     if (window.parent !== window)
         return;
 
-    const loginRequest = {
-        scopes: ["User.Read"]
-    };
-
-    if (response) {
-        const currentAccount = response.account;
-
-        getToken(loginRequest, currentAccount).then(response => {
-            // Azure AD authentication succeeded, check if user is authorized
-            login(currentAccount.username, response.accessToken);
-        });
-    } else {
-        $("#response").text("Logging into Azure AD...");
-
-        const username = $("#username").val();
-
-        if (isEmpty(username) || username.indexOf("@") < 0) {
-            // When no user name is provided, show Azure AD auth dialog
-            msalLogin();
-        }
-        else {
-            // Attempt authentication with specified user name as login hint
-            const silentRequest = {
-                loginHint: username
-            };
-
-            msalInstance.ssoSilent(silentRequest).then(() => {
-                const currentAccount = msalInstance.getAllAccounts()[0];
-                
-                return getToken(loginRequest, currentAccount).then(response => {
-                    // Azure AD single sign on authentication succeeded, check if user is authorized
-                    login(currentAccount.username, response.accessToken);
-                });
-            }).catch(error => {
-                console.error("Silent Error: " + error);
-                if (error instanceof msal.InteractionRequiredAuthError) {
-                    msalLogin();
-                }
-            });
-        }
-    }
+    if (response)
+        msalGetToken(response.account);
+    else
+        msalLogin(true);
 }
 
-async function getToken(request, account) {
-    request.account = account;
+async function getToken(account) {
+    const request = {
+        scopes: ["User.Read"],
+        account: account
+    };
 
     return await msalInstance.acquireTokenSilent(request).catch(async (error) => {
         if (error instanceof msal.InteractionRequiredAuthError) {
@@ -355,6 +383,29 @@ async function getToken(request, account) {
             console.error(error);
         }
     });
+}
+
+function msalAuthMouseEnter() {
+    $("#username").disable();
+    $("#password").disable();
+    $("#ntlmRegion").hide();
+
+    if ($("#iwa").prop("checked") || isEmpty($("#password").val()))
+        return;
+
+    $("#azureADPasswordMessage").show();
+}
+
+function msalAuthMouseLeave() {
+    $("#azureADPasswordMessage").hide();
+
+    if (!$("#iwa").prop("checked")) {
+        $("#username").enable();
+        $("#password").enable();
+
+        if ($("#username").val().indexOf("\\") > 0)
+            $("#ntlmRegion").show();
+    }
 }
 
 // Select all text when entering input field
@@ -377,17 +428,26 @@ $("#login").click(function (event) {
         login();
     else
         login($("#username").val(), $("#password").val());
+
+    return false;
 });
 
 $("#msalAuth").click(function (event) {
     event.preventDefault();
 
+    msalAuthMouseLeave();
     $("#msalAuth").disable();
     $("#login").disable();
     $("#responsePanel").hide();
 
     msalLogin();
+
+    return false;
 });
+
+$("#msalAuth").mouseenter(msalAuthMouseEnter);
+
+$("#msalAuth").mouseleave(msalAuthMouseLeave);
 
 $("#username").on("input", function () {
     if ($("#username").val().indexOf("\\") > 0)
@@ -458,7 +518,7 @@ $("#ntlm").keyup(function (event) {
 });
 
 $(function () {
-    if (getParameterByName("logout") != null) {
+    if (logoutPageRequested) {
         logout();
         return;
     }
