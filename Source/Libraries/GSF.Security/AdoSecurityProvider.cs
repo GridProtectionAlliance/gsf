@@ -204,6 +204,12 @@ namespace GSF.Security
         /// </summary>
         public const bool DefaultUseDatabaseLogging = true;
 
+        private const string DefaultMessageUserNotDefined = "User \"{0}\" is not defined.";
+        private const string DefaultMessageUserIsDisabled = "User \"{0}\" is disabled.";
+        private const string DefaultMessageUserIsLockedOut = "User \"{0}\" is not locked out.";
+        private const string DefaultMessageUserPasswordExpired = "User \"{0}\" has an expired password or password has not been set.";
+        private const string DefaultMessageUserHasNoRoles = "User \"{0}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
+
         /// <summary>
         /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
         /// </summary>
@@ -293,6 +299,11 @@ namespace GSF.Security
             settings.Add("PasswordRequirementsError", DefaultPasswordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
             settings.Add("UseDatabaseLogging", DefaultUseDatabaseLogging, "Flag that determines if provider should write logs to the database.");
             settings.Add("DefaultRoles", DefaultDefaultRoles, "If set this is a list of Roles assigned to a user that has no defined Roles.");
+            settings.Add("MessageUserNotDefined", DefaultMessageUserNotDefined, "Defines the displayed message for user is not defined. Use '{0}' to insert user login ID into message.");
+            settings.Add("MessageUserIsDisabled", DefaultMessageUserIsDisabled, "Defines the displayed message for user is disabled. Use '{0}' to insert user login ID into message.");
+            settings.Add("MessageUserIsLockedOut", DefaultMessageUserIsLockedOut, "Defines the displayed message for user is locked out. Use '{0}' to insert user login ID into message.");
+            settings.Add("MessageUserPasswordExpired", DefaultMessageUserPasswordExpired, "Defines the displayed message for user has an expired password. Use '{0}' to insert user login ID into message.");
+            settings.Add("MessageUserHasNoRoles", DefaultMessageUserHasNoRoles, "Defines the displayed message for user has no roles. Use '{0}' to insert user login ID into message.");
 
             DefaultRoles = settings["DefaultRoles"].ValueAs(DefaultRoles);
             
@@ -664,27 +675,46 @@ namespace GSF.Security
             AuthenticationFailureReason = null;
             m_successfulPassThroughAuthentication = false;
 
+            string getUserAuthFailureReason(string settingName, string defaultValue)
+            {
+                string settingValue;
+                
+                try
+                {
+                    ConfigurationFile config = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                    settingValue = settings[settingName].ValueAs(defaultValue);
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex);
+                    settingValue = defaultValue;
+                }
+
+                return string.Format(settingValue, UserData.LoginID);
+            }
+
             // Test for pre-authentication failure modes. Note that blank password should be allowed so that LDAP
             // can authenticate current credentials for pass through authentication, if desired.
             if (!UserData.IsDefined)
             {
-                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" is not defined.";
+                AuthenticationFailureReason = getUserAuthFailureReason("MessageUserNotDefined", DefaultMessageUserNotDefined);
             }
             else if (UserData.IsDisabled)
             {
-                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" is disabled.";
+                AuthenticationFailureReason = getUserAuthFailureReason("MessageUserIsDisabled", DefaultMessageUserIsDisabled);
             }
             else if (UserData.IsLockedOut)
             {
-                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" is locked out.";
+                AuthenticationFailureReason = getUserAuthFailureReason("MessageUserIsLockedOut", DefaultMessageUserIsLockedOut);
             }
             else if (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow)
             {
-                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" has an expired password or password has not been set.";
+                AuthenticationFailureReason = getUserAuthFailureReason("MessageUserPasswordExpired", DefaultMessageUserPasswordExpired);
             }
             else if (UserData.Roles.Count == 0)
             {
-                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
+                AuthenticationFailureReason = getUserAuthFailureReason("MessageUserHasNoRoles", DefaultMessageUserHasNoRoles);
             }
             else
             {
