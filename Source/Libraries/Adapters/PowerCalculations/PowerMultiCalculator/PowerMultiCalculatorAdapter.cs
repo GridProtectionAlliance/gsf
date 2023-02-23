@@ -30,8 +30,10 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
@@ -369,8 +371,9 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
     /// <param name="index">Index of frame within second.</param>
     protected override void PublishFrame(IFrame frame, int index)
     {
-        long frameCalculationStartTime = DateTime.UtcNow.Ticks;
         ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+        AsyncDoubleBufferedQueue<IMeasurement> publicationBuffer = new() { ProcessItemsFunction = OnNewMeasurements };
+        long frameCalculationStartTime = DateTime.UtcNow.Ticks;
         int calculations = 0;
 
         Parallel.ForEach(m_configuredCalculations, powerCalculation =>
@@ -522,7 +525,7 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
                         }
                     }
 
-                    OnNewMeasurements(outputMeasurements);
+                    publicationBuffer.Enqueue(outputMeasurements);
 
                     lock (m_averageCalculationTime)
                         m_averageCalculationTime.AddValue(new Ticks(DateTime.UtcNow.Ticks - powerCalculationStartTime).ToMilliseconds());
@@ -533,6 +536,9 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
                 OnProcessException(MessageLevel.Error, new InvalidOperationException($"Failed to calculate power for {powerCalculation.CircuitDescription}: {ex.Message}", ex));
             }
         });
+
+        // Wait for all power calculations to publish
+        SpinWait.SpinUntil(() => publicationBuffer.Count == 0);
 
         m_lastTotalCalculations = calculations;
         m_averageCalculationsPerFrame.AddValue(calculations);
