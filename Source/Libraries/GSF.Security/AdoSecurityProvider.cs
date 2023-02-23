@@ -1156,33 +1156,53 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets a list of Roles for this user for a specified ApplicationId.
+        /// Gets a list of roles for this user for a specified application ID, i.e., target node ID.
         /// </summary>
-        /// <param name="applicationId">The applicationId for the roles to be returned.</param>
+        /// <param name="applicationId">The node ID for the roles to be returned.</param>
         /// <returns>The roles that the specified user has.</returns>
         public override List<string> GetUserRoles(string applicationId)
         {
             List<string> roles = new();
+            Guid targetNodeID = Guid.Parse(applicationId);
+            DataSet securityContext;
 
-            DataSet securityContext = new("AdoSecurityContext");
-
-           
-            try
+            if (targetNodeID == DefaultNodeID)
             {
-                Guid nodeId = new(applicationId);
-                // Attempt to extract current security context from the database
-                using AdoDataConnection database = new(SettingsCategory);
-
-                // Read the security context tables from the database connection
-                foreach (string securityTable in s_securityTables)
+                try
                 {
-                    AddSecurityContextTable(database.Connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? nodeId : default(Guid));
+                    // Attempt to extract current security context from the database
+                    using AdoDataConnection database = new(SettingsCategory);
+                    securityContext = ExtractSecurityContext(database.Connection, ex => LogError(ex.Source, ex.ToString()), UserData.Username);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Logger.SwallowException(ex);
+
+                    // Can fall back on cache when application ID matches DefaultNodeID
+                    using AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache();
+                    securityContext = cache.DataSet;
                 }
             }
-            catch (InvalidOperationException)
+            else
             {
-                // Failed to open ADO connection, return empty roleset instead
-                return roles;
+                try
+                {
+                    securityContext = new DataSet("AdoSecurityContext");
+
+                    // Read the security context tables from the database connection
+                    // Attempt to extract current security context from the database
+                    using AdoDataConnection database = new(SettingsCategory);
+
+                    foreach (string securityTable in s_securityTables)
+                        AddSecurityContextTable(database.Connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? targetNodeID : default(Guid));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Logger.SwallowException(ex);
+
+                    // For other nodes, have no option but to return empty role set
+                    return roles;
+                }
             }
 
             string userSID = UserInfo.UserNameToSID(UserData.Username);
