@@ -1200,8 +1200,8 @@ namespace GSF.Security
                 {
                     Logger.SwallowException(ex);
 
-                    // For other nodes, have no option but to return empty role set
-                    return roles;
+                    // For other nodes, have no option but to return default role set
+                    return new List<string>(DefaultRoles.Split(','));
                 }
             }
 
