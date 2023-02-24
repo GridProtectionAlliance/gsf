@@ -92,6 +92,17 @@ namespace GSF.EMAX
             Parse();
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ControlFile"/> for the specified <paramref name="stream"/> and attempts to parse.
+        /// </summary>
+        /// <param name="stream">Readable seekable stream.</param>
+        public ControlFile(Stream stream)
+            : this()
+        {
+            FileName = "StreamedFile";
+            Parse(stream);
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -180,184 +191,202 @@ namespace GSF.EMAX
             if (!File.Exists(FileName))
                 throw new FileNotFoundException(string.Format("EMAX control file {0} not found.", FileName));
 
+            using (FileStream stream = File.OpenRead(FileName))
+                Parse(stream);
+
+        }
+
+        /// <summary>
+        /// Parses the Stream provided/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Stream must be readable in order to parse EMAX control file data.</exception>
+        /// <exception cref="InvalidOperationException">Stream must be seekable in order to parse EMAX control file data.</exception>
+        public void Parse(Stream stream)
+        {
+            if ((object)stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
+            if (!stream.CanRead)
+                throw new InvalidOperationException("Stream must be readable in order to parse EMAX control file data.");
+
+            if (!stream.CanSeek)
+                throw new InvalidOperationException("Stream must be seekable in order to parse EMAX control file data.");
+
             m_parsedSuccesses.Clear();
             m_parsedFailures.Clear();
 
             byte byteValue;
 
-            using (FileStream stream = File.OpenRead(FileName))
+            // Read in header and file structure definitions
+            using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
-                // Read in header and file structure definitions
-                using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
+                // Read control header
+                Header = reader.ReadStructure<CTL_HEADER>();
+
+                // Read byte that defines number of analog channels
+                m_configuredAnalogChannels = BinaryCodedDecimal.Decode(Header.id.LowByte());
+
+                // Read byte that defines data size (i.e., 12 or 16 bits)
+                byteValue = Header.id.HighByte();
+
+                if (!Enum.IsDefined(typeof(DataSize), byteValue))
+                    throw new InvalidOperationException("Invalid EMAX data size code encountered: 0x" + byteValue.ToString("X").PadLeft(2, '0'));
+
+                DataSize = (DataSize)byteValue;
+
+                // Create array of file structures
+                List<CTL_FILE_STRUCT> fileStructures = new List<CTL_FILE_STRUCT>();
+                CTL_FILE_STRUCT fileStructure = new CTL_FILE_STRUCT(reader);
+
+                // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
+                while (fileStructure.type != StructureType.EndOfStructures)
                 {
-                    // Read control header
-                    Header = reader.ReadStructure<CTL_HEADER>();
+                    if (fileStructure.type != StructureType.Unknown)
+                        fileStructures.Add(fileStructure);
 
-                    // Read byte that defines number of analog channels
-                    m_configuredAnalogChannels = BinaryCodedDecimal.Decode(Header.id.LowByte());
-
-                    // Read byte that defines data size (i.e., 12 or 16 bits)
-                    byteValue = Header.id.HighByte();
-
-                    if (!Enum.IsDefined(typeof(DataSize), byteValue))
-                        throw new InvalidOperationException("Invalid EMAX data size code encountered: 0x" + byteValue.ToString("X").PadLeft(2, '0'));
-
-                    DataSize = (DataSize)byteValue;
-
-                    // Create array of file structures
-                    List<CTL_FILE_STRUCT> fileStructures = new List<CTL_FILE_STRUCT>();
-                    CTL_FILE_STRUCT fileStructure = new CTL_FILE_STRUCT(reader);
-
-                    // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
-                    while (fileStructure.type != StructureType.EndOfStructures)
-                    {
-                        if (fileStructure.type != StructureType.Unknown)
-                            fileStructures.Add(fileStructure);
-
-                        fileStructure = new CTL_FILE_STRUCT(reader);
-                    }
-
-                    FileStructures = fileStructures.ToArray();
+                    fileStructure = new CTL_FILE_STRUCT(reader);
                 }
 
-                // Read in actual file structures
-                for (int index = 0; index < FileStructures.Length; index++)
+                FileStructures = fileStructures.ToArray();
+            }
+
+            // Read in actual file structures
+            for (int index = 0; index < FileStructures.Length; index++)
+            {
+                CTL_FILE_STRUCT fileStructure = FileStructures[index];
+
+                if (fileStructure.type == StructureType.Unknown)
+                    continue;
+
+                // Set current type
+                m_currentType = fileStructure.type;
+
+                // Locate structure in the file
+                stream.Position = fileStructure.offset;
+
+                // Parse the structure type
+                using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
                 {
-                    CTL_FILE_STRUCT fileStructure = FileStructures[index];
-
-                    if (fileStructure.type == StructureType.Unknown)
-                        continue;
-
-                    // Set current type
-                    m_currentType = fileStructure.type;
-
-                    // Locate structure in the file
-                    stream.Position = fileStructure.offset;
-
-                    // Parse the structure type
-                    using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
+                    switch (m_currentType)
                     {
-                        switch (m_currentType)
-                        {
-                            case StructureType.SYSTEM_PARAMETERS:
-                                AttemptParse(() => SystemParameters = reader.ReadStructure<SYSTEM_PARAMETERS>());
-                                break;
-                            case StructureType.SYS_SETTINGS:
-                                AttemptParse(() => SystemSettings = reader.ReadStructure<SYS_SETTINGS>());
-                                break;
-                            case StructureType.A_E_RSLTS:
-                                AttemptParse(() => AnalogEventResults = new A_E_RSLTS(reader, m_configuredAnalogChannels, SystemParameters.analog_groups));
-                                break;
-                            case StructureType.ANALOG_GROUP:
-                                AttemptParse(() => AnalogGroup = new ANALOG_GROUP(reader, m_configuredAnalogChannels));
-                                break;
-                            case StructureType.EVENT_GROUP:
-                                AttemptParse(() => EventGroup = reader.ReadStructure<EVENT_GROUP>());
-                                break;
-                            case StructureType.ANLG_CHNL_NEW:
-                                AttemptParse(() =>
+                        case StructureType.SYSTEM_PARAMETERS:
+                            AttemptParse(() => SystemParameters = reader.ReadStructure<SYSTEM_PARAMETERS>());
+                            break;
+                        case StructureType.SYS_SETTINGS:
+                            AttemptParse(() => SystemSettings = reader.ReadStructure<SYS_SETTINGS>());
+                            break;
+                        case StructureType.A_E_RSLTS:
+                            AttemptParse(() => AnalogEventResults = new A_E_RSLTS(reader, m_configuredAnalogChannels, SystemParameters.analog_groups));
+                            break;
+                        case StructureType.ANALOG_GROUP:
+                            AttemptParse(() => AnalogGroup = new ANALOG_GROUP(reader, m_configuredAnalogChannels));
+                            break;
+                        case StructureType.EVENT_GROUP:
+                            AttemptParse(() => EventGroup = reader.ReadStructure<EVENT_GROUP>());
+                            break;
+                        case StructureType.ANLG_CHNL_NEW:
+                            AttemptParse(() =>
+                            {
+                                AnalogChannelSettings = new Dictionary<int, ANLG_CHNL_NEW>();
+                                ScalingFactors = new Dictionary<int, double>();
+                                ANLG_CHNL_NEW settings;
+
+                                uint nextOffset = (index + 1 < FileStructures.Length) ? FileStructures[index + 1].offset : (uint)stream.Length;
+                                uint length = nextOffset - fileStructure.offset;
+                                Func<ANLG_CHNL_NEW> channelFactory;
+
+                                if (Marshal.SizeOf<ANLG_CHNL_NEW2>() * ConfiguredAnalogChannels <= length)
+                                    channelFactory = () => reader.ReadStructure<ANLG_CHNL_NEW2>().ToAnlgChnlNew();
+                                else
+                                    channelFactory = () => reader.ReadStructure<ANLG_CHNL_NEW1>().ToAnlgChnlNew();
+
+                                for (int i = 0; i < ConfiguredAnalogChannels; i++)
                                 {
-                                    AnalogChannelSettings = new Dictionary<int, ANLG_CHNL_NEW>();
-                                    ScalingFactors = new Dictionary<int, double>();
-                                    ANLG_CHNL_NEW settings;
+                                    settings = channelFactory();
+                                    AnalogChannelSettings.Add(settings.ChannelNumber, settings);
+                                    ScalingFactors.Add(settings.ChannelNumber, settings.ScalingFactor);
+                                }
+                            });
+                            break;
+                        case StructureType.EVNT_CHNL_NEW:
+                            AttemptParse(() =>
+                            {
+                                EventChannelSettings = new Dictionary<int, EVNT_CHNL_NEW>();
+                                EVNT_CHNL_NEW settings;
 
-                                    uint nextOffset = (index + 1 < FileStructures.Length) ? FileStructures[index + 1].offset : (uint)stream.Length;
-                                    uint length = nextOffset - fileStructure.offset;
-                                    Func<ANLG_CHNL_NEW> channelFactory;
+                                uint nextOffset = (index + 1 < FileStructures.Length) ? FileStructures[index + 1].offset : (uint)stream.Length;
+                                uint length = nextOffset - fileStructure.offset;
+                                Func<EVNT_CHNL_NEW> channelFactory;
 
-                                    if (Marshal.SizeOf<ANLG_CHNL_NEW2>() * ConfiguredAnalogChannels <= length)
-                                        channelFactory = () => reader.ReadStructure<ANLG_CHNL_NEW2>().ToAnlgChnlNew();
-                                    else
-                                        channelFactory = () => reader.ReadStructure<ANLG_CHNL_NEW1>().ToAnlgChnlNew();
+                                if (Marshal.SizeOf<EVNT_CHNL_NEW2>() * ConfiguredDigitalChannels <= length)
+                                    channelFactory = () => reader.ReadStructure<EVNT_CHNL_NEW2>().ToEvntChnlNew();
+                                else
+                                    channelFactory = () => reader.ReadStructure<EVNT_CHNL_NEW1>().ToEvntChnlNew();
 
-                                    for (int i = 0; i < ConfiguredAnalogChannels; i++)
-                                    {
-                                        settings = channelFactory();
-                                        AnalogChannelSettings.Add(settings.ChannelNumber, settings);
-                                        ScalingFactors.Add(settings.ChannelNumber, settings.ScalingFactor);
-                                    }
-                                });
-                                break;
-                            case StructureType.EVNT_CHNL_NEW:
-                                AttemptParse(() =>
+                                for (int i = 0; i < ConfiguredDigitalChannels; i++)
                                 {
-                                    EventChannelSettings = new Dictionary<int, EVNT_CHNL_NEW>();
-                                    EVNT_CHNL_NEW settings;
-
-                                    uint nextOffset = (index + 1 < FileStructures.Length) ? FileStructures[index + 1].offset : (uint)stream.Length;
-                                    uint length = nextOffset - fileStructure.offset;
-                                    Func<EVNT_CHNL_NEW> channelFactory;
-
-                                    if (Marshal.SizeOf<EVNT_CHNL_NEW2>() * ConfiguredDigitalChannels <= length)
-                                        channelFactory = () => reader.ReadStructure<EVNT_CHNL_NEW2>().ToEvntChnlNew();
-                                    else
-                                        channelFactory = () => reader.ReadStructure<EVNT_CHNL_NEW1>().ToEvntChnlNew();
-
-                                    for (int i = 0; i < ConfiguredDigitalChannels; i++)
-                                    {
-                                        settings = channelFactory();
-                                        EventChannelSettings.Add(settings.EventNumber, settings);
-                                    }
-                                });
-                                break;
-                            case StructureType.ANLG_CHNLS:
-                                // TODO: Add decoder once structure definition is known...
-                                m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
-                                break;
-                            case StructureType.SHORT_HEADER:
-                                // TODO: Add decoder once structure definition is known...
-                                m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
-                                break;
-                            case StructureType.FAULT_HEADER:
-                                // TODO: Add decoder once structure definition is known...
-                                m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
-                                break;
-                            case StructureType.EVENT_DISPLAY:
-                                AttemptParse(() => EventDisplay = new EVENT_DISPLAY(reader, SystemParameters.event_groups));
-                                break;
-                            case StructureType.IDENTSTRING:
-                                AttemptParse(() =>
-                                {
-                                    IdentityString = reader.ReadStructure<IDENTSTRING>();
-                                    IdentityString.value.TruncateRight(IdentityString.length);
-                                });
-                                break;
-                            case StructureType.A_SELECTION:
-                                AttemptParse(() => AnalogSelection = new A_SELECTION(reader));
-                                break;
-                            case StructureType.E_GROUP_SELECT:
-                                AttemptParse(() => EventGroupSelection = new E_GRP_SELECT(reader));
-                                break;
-                            case StructureType.PHASOR_GROUP:
-                                AttemptParse(() => PhasorGroups = new PHASOR_GROUPS(reader));
-                                break;
-                            case StructureType.LINE_CONSTANTS:
-                                AttemptParse(() => LineConstants = new LINE_CONSTANTS(reader));
-                                break;
-                            case StructureType.LINE_NAMES:
-                                AttemptParse(() => LineNames = new LINE_NAMES(reader));
-                                break;
-                            case StructureType.FAULT_LOCATION:
-                                AttemptParse(() => FaultLocations = new FAULT_LOCATIONS(reader));
-                                break;
-                            case StructureType.SENS_RSLTS:
-                                AttemptParse(() => SensorResults = reader.ReadStructure<SENS_RSLTS>());
-                                break;
-                            case StructureType.SEQUENCE_CHANNELS:
-                                AttemptParse(() => SequenceChannels = new SEQUENCE_CHANNELS(reader));
-                                break;
-                            case StructureType.TPwrRcd:
-                                AttemptParse(() => PowerRecord = reader.ReadStructure<TPwrRcd>());
-                                break;
-                            case StructureType.BoardAnalogEventChannels:
-                                AttemptParse(() => BoardAnalogEventChannels = reader.ReadStructure<BoardAnalogEventChannels>());
-                                break;
-                            case StructureType.BREAKER_TRIP_TIMES:
-                                AttemptParse(() => BreakerTripTimes = new BREAKER_TRIP_TIMES(reader, m_configuredAnalogChannels, SystemParameters.analog_groups));
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
+                                    settings = channelFactory();
+                                    EventChannelSettings.Add(settings.EventNumber, settings);
+                                }
+                            });
+                            break;
+                        case StructureType.ANLG_CHNLS:
+                            // TODO: Add decoder once structure definition is known...
+                            m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
+                            break;
+                        case StructureType.SHORT_HEADER:
+                            // TODO: Add decoder once structure definition is known...
+                            m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
+                            break;
+                        case StructureType.FAULT_HEADER:
+                            // TODO: Add decoder once structure definition is known...
+                            m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
+                            break;
+                        case StructureType.EVENT_DISPLAY:
+                            AttemptParse(() => EventDisplay = new EVENT_DISPLAY(reader, SystemParameters.event_groups));
+                            break;
+                        case StructureType.IDENTSTRING:
+                            AttemptParse(() =>
+                            {
+                                IdentityString = reader.ReadStructure<IDENTSTRING>();
+                                IdentityString.value.TruncateRight(IdentityString.length);
+                            });
+                            break;
+                        case StructureType.A_SELECTION:
+                            AttemptParse(() => AnalogSelection = new A_SELECTION(reader));
+                            break;
+                        case StructureType.E_GROUP_SELECT:
+                            AttemptParse(() => EventGroupSelection = new E_GRP_SELECT(reader));
+                            break;
+                        case StructureType.PHASOR_GROUP:
+                            AttemptParse(() => PhasorGroups = new PHASOR_GROUPS(reader));
+                            break;
+                        case StructureType.LINE_CONSTANTS:
+                            AttemptParse(() => LineConstants = new LINE_CONSTANTS(reader));
+                            break;
+                        case StructureType.LINE_NAMES:
+                            AttemptParse(() => LineNames = new LINE_NAMES(reader));
+                            break;
+                        case StructureType.FAULT_LOCATION:
+                            AttemptParse(() => FaultLocations = new FAULT_LOCATIONS(reader));
+                            break;
+                        case StructureType.SENS_RSLTS:
+                            AttemptParse(() => SensorResults = reader.ReadStructure<SENS_RSLTS>());
+                            break;
+                        case StructureType.SEQUENCE_CHANNELS:
+                            AttemptParse(() => SequenceChannels = new SEQUENCE_CHANNELS(reader));
+                            break;
+                        case StructureType.TPwrRcd:
+                            AttemptParse(() => PowerRecord = reader.ReadStructure<TPwrRcd>());
+                            break;
+                        case StructureType.BoardAnalogEventChannels:
+                            AttemptParse(() => BoardAnalogEventChannels = reader.ReadStructure<BoardAnalogEventChannels>());
+                            break;
+                        case StructureType.BREAKER_TRIP_TIMES:
+                            AttemptParse(() => BreakerTripTimes = new BREAKER_TRIP_TIMES(reader, m_configuredAnalogChannels, SystemParameters.analog_groups));
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
                 }
             }
