@@ -81,7 +81,7 @@ function hashPassword(password) {
 }
 
 // Authorize user with basic authentication using provided credentials
-function authenticateBasic(username, password, skipHash) {
+function authenticateBasic(username, password, isAzureAD) {
     $.ajax({
         cache: false,
         url: securePage + (useAlternateSecurityProvider ? "?useAlternate=1": ""),
@@ -89,7 +89,7 @@ function authenticateBasic(username, password, skipHash) {
         complete: function (xhr) {
             switch (xhr.status) {
                 case 200:
-                    loginComplete(true);
+                    loginComplete(true, null, isAzureAD);
                     break;
                 default:
                     loginFailed(xhr.statusCode());
@@ -97,7 +97,7 @@ function authenticateBasic(username, password, skipHash) {
             }
         },
         beforeSend: function (xhr) {            
-            if (username.indexOf("\\") <= 0 && !skipHash)
+            if (username.indexOf("\\") <= 0 && !isAzureAD)
                 password = hashPassword(password);
 
             xhr.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
@@ -173,12 +173,19 @@ function passthroughNTLM() {
     });
 }
 
-function loginComplete(success, response) {
+function loginComplete(success, response, isAzureAD) {
     if (success) {
         $("#response").text("Authentication succeeded, loading " + redirectPageLabel + " page...");
 
-        if ($("#remember").prop("checked"))
+        if ($("#remember").prop("checked")) {
             persistentStorage.setItem("passthrough", "true");
+
+            // Uncheck integrated security for AzureAD authentication if 
+            // keep signed in is selected so that subsequent logins will
+            // attempt to use basic authentication
+            if (isAzureAD)
+                $("#iwa").prop("checked", false);
+        }
 
         setTimeout(function () {
             window.location = redirectPage;
@@ -281,7 +288,7 @@ function loginFailed(response) {
     loginComplete(false, "Login attempt failed: " + message);
 }
 
-function login(username, password, skipHash) {
+function login(username, password, isAzureAD) {
     $("#workingIcon").show();
 
     if (username) {
@@ -291,14 +298,14 @@ function login(username, password, skipHash) {
         if (username.indexOf("\\") > 0 && $("#ntlm").prop("checked"))
             authenticateNTLM(username, password);
         else
-            authenticateBasic(username, password, skipHash);
+            authenticateBasic(username, password, isAzureAD);
     }
     else {
         // When no user name is provided, attempt pass-through authentication
         $("#response").text("Checking authentication...");
 
         // Test pass-through authentication
-        if ($("#iwa").prop("checked"))
+        if ($("#iwa").prop("checked") && !isAzureAD)
             passthroughNTLM();
         else
             passthroughBasic();
