@@ -36,9 +36,11 @@
 //   boolean isPOSIX: flag that indicates if host system is POSIX based, e.g., Linux or OSX
 //   boolean azureADAuthEnabled: flag that indicates if Azure AD authentication is enabled
 //   boolean logoutPageRequested: flag that indicates if logout page was requested
+//   boolean msalUseRedirect: flag that indicates if MSAL should use redirect flow
 //   json msalConfig: MSAL configuration object
 
 let msalInstance;
+let msalLoading = msalUseRedirect;
 
 function loadSettings() {
     $("#username").val(persistentStorage.getItem("username")).trigger("input");
@@ -50,6 +52,21 @@ function loadSettings() {
         return;
 
     msalInstance = new msal.PublicClientApplication(msalConfig);
+
+    if (!msalUseRedirect)
+        return;
+
+    msalInstance.handleRedirectPromise()
+        .then(response => {
+            msalLoading = false;
+
+            if (response)
+                msalAuthResponse(response);
+        })
+        .catch(error => {
+            msalLoading = false;
+            loginComplete(false, "Login attempt failed: " + error);
+        });
 }
 
 function saveSettings() {
@@ -246,7 +263,7 @@ function loginFailed(response) {
 
     let responseText = response.responseText;
     
-    if (responseText.length) {
+    if (responseText && responseText.length) {
         responseText = responseText.split("<html>")[0];        
         const doc = new DOMParser().parseFromString(responseText, "text/html");
         const errorMessage = (doc.body.textContent || "").trim();
@@ -342,30 +359,41 @@ function msalLogin(showPopup) {
     const loginRequest = getLoginRequest(showPopup);
     
     if (showPopup) {
-        msalInstance.loginPopup(loginRequest).then(msalAuthResponse).catch(function (error) {
-            loginComplete(false, "Login attempt failed: " + error);
-        });
+        if (msalUseRedirect)
+            msalInstance.loginRedirect(loginRequest);
+        else
+            msalInstance.loginPopup(loginRequest).then(msalAuthResponse).catch(function (error) {
+                loginComplete(false, "Login attempt failed: " + error);
+            });
     }
     else {
         msalInstance.ssoSilent(loginRequest).then(() => {
             return msalGetToken(msalInstance.getAllAccounts()[0]);
         }).catch(error => {
             console.error("Silent Error: " + error);
-            if (error instanceof msal.InteractionRequiredAuthError) {
+            if (error instanceof msal.InteractionRequiredAuthError)
                 msalLogin(true);
-            }
+            else
+                loginComplete(false, "Login attempt failed: " + error);
         });
     }
 }
 
 function msalAuthResponse(response) {
-    if (window.parent !== window)
+    if (window.parent !== window || msalLoading)
         return;
 
-    if (response)
+    if (response) {
         msalGetToken(response.account);
-    else
-        msalLogin(true);
+    }
+    else {
+        const currentAccounts = msalInstance.getAllAccounts();
+
+        if (currentAccounts.length === 0)
+            msalLogin(true);
+        
+        msalGetToken(currentAccounts[0]);
+    }
 }
 
 async function getToken(account) {
@@ -376,11 +404,15 @@ async function getToken(account) {
 
     return await msalInstance.acquireTokenSilent(request).catch(async (error) => {
         if (error instanceof msal.InteractionRequiredAuthError) {
-            return msalInstance.acquireTokenPopup(request).catch(error => {
-                console.error(error);
-            });
+            if (msalUseRedirect)
+                return msalInstance.acquireTokenRedirect(request);
+            else
+                return msalInstance.acquireTokenPopup(request).catch(error => {
+                    loginComplete(false, "Login attempt failed: " + error);
+                });
         } else {
-            console.error(error);
+            loginComplete(false, "Login attempt failed: " + error);
+            return Promise.reject(error);
         }
     });
 }
