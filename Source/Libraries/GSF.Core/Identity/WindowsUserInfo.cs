@@ -375,7 +375,7 @@ namespace GSF.Identity
         {
             get
             {
-#if !MONO
+            #if !MONO
                 if (!Enabled)
                     return Array.Empty<string>();
 
@@ -469,9 +469,9 @@ namespace GSF.Identity
                         return OldGetGroups();
                     }
                 }
-#else
+            #else
                 return OldGetGroups();
-#endif
+            #endif
             }
         }
 
@@ -479,7 +479,7 @@ namespace GSF.Identity
         {
             get
             {
-#if !MONO
+            #if !MONO
                 if (!Enabled)
                     return Array.Empty<string>();
 
@@ -510,9 +510,9 @@ namespace GSF.Identity
                         return OldGetLocalGroups();
                     }
                 }
-#else
+            #else
                 return OldGetLocalGroups();
-#endif
+            #endif
             }
         }
 
