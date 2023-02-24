@@ -260,6 +260,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AzureADPassthroughPrincipal.cs" />
     <Compile Include="AzureADSettings.cs" />
     <Compile Include="OIDCSecurityProvider.cs" />
     <Compile Include="AdoSecurityProvider.cs" />
