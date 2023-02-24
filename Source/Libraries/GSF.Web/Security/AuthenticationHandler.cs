@@ -394,7 +394,8 @@ namespace GSF.Web.Security
             try
             {
                 // Create the security provider that will authenticate the user's credentials
-                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, autoRefresh: false, useAlternate: useAlternateSecurityProvider);
+                IPrincipal passthroughPrincipal = username.Contains("@") ? new AzureADPassthroughPrincipal(username) : null;
+                ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal, false, useAlternateSecurityProvider);
                 securityProvider.Password = password;
                 securityProvider.Authenticate();
 
