@@ -22,10 +22,13 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Xml;
+using GSF;
 using GSF.IO;
 
 namespace ValidateAssemblyBindings
@@ -37,11 +40,13 @@ namespace ValidateAssemblyBindings
     {
         private static int Main(string[] args)
         {
-            if (args.Length != 1)
+            if (args.Length is < 1 or > 2)
             {
-                Console.Error.WriteLine("USAGE: ValidateAssemblyBindings <appConfigFileName>");
+                Console.Error.WriteLine("USAGE: ValidateAssemblyBindings <appConfigFileName> <leaveExistingBindings=false;exceptions=name1:newVersion1,name2:newVersion2,...>");
                 Console.Error.WriteLine();
                 Console.Error.WriteLine("    Example: ValidateAssemblyBindings openPDC.exe.config");
+                Console.Error.WriteLine("    Example: ValidateAssemblyBindings openHistorian.exe.config exceptions=System.Diagnostics.DiagnosticSource:4.0.4.0");
+                Console.Error.WriteLine("    Example: ValidateAssemblyBindings SEBrowser.dll.config leaveExistingBindings=true;exceptions=System.Diagnostics.DiagnosticSource:4.0.4.0");
                 Console.Error.WriteLine();
                 return 1;
             }
@@ -49,13 +54,37 @@ namespace ValidateAssemblyBindings
             try
             {
                 string appConfigFileName = FilePath.GetAbsolutePath(args[0]);
+                Dictionary<string, string> exceptions = new(StringComparer.OrdinalIgnoreCase);
+                bool leaveExistingBindings = false;
 
                 if (!File.Exists(appConfigFileName))
                     throw new FileNotFoundException($"Application configuration file name \"{appConfigFileName}\" not found.");
 
+                if (args.Length == 2)
+                {
+                    Dictionary<string, string> parameters = args[1].ParseKeyValuePairs();
+
+                    leaveExistingBindings = parameters.TryGetValue("leaveExistingBindings", out string value) && value.ParseBoolean();
+
+                    if (parameters.TryGetValue("exceptions", out value))
+                    {
+                        string[] exceptionArgs = value.Split(',');
+
+                        foreach (string exceptionArg in exceptionArgs)
+                        {
+                            string[] parts = exceptionArg.Split(':');
+
+                            if (parts.Length != 2)
+                                throw new ArgumentException($"Invalid exception argument \"{exceptionArg}\".");
+
+                            exceptions.Add(parts[0], parts[1]);
+                        }
+                    }
+                }
+
                 Console.WriteLine($"Validating assembly bindings for \"{appConfigFileName}\"");
                 
-                if (ValidateAssemblyBindings(appConfigFileName))
+                if (ValidateAssemblyBindings(appConfigFileName, leaveExistingBindings, exceptions))
                 {
                     Console.WriteLine("Assembly bindings validation succeeded.");
                     return 0;
@@ -75,7 +104,7 @@ namespace ValidateAssemblyBindings
         }
 
         // Validates the assembly bindings for the specified application <paramref name="configFileName"/>.
-        private static bool ValidateAssemblyBindings(string configFileName)
+        private static bool ValidateAssemblyBindings(string configFileName, bool leaveExistingBindings, Dictionary<string, string> exceptions)
         {
             if (!File.Exists(configFileName))
                 return false;
@@ -121,6 +150,15 @@ namespace ValidateAssemblyBindings
             const string xmlns = "urn:schemas-microsoft-com:asm.v1";
             XmlNamespaceManager nsmgr = new(configFile.NameTable);
             nsmgr.AddNamespace("s", xmlns);
+
+            if (!leaveExistingBindings)
+            {
+                // Remove any existing assembly bindings
+                XmlElement[] existingAssemblyBindings = runTime.ChildNodes.Cast<XmlElement>().Where(node => node.Name == "assemblyBinding").ToArray();
+
+                foreach (XmlElement element in existingAssemblyBindings)
+                    runTime.RemoveChild(element);
+            }
 
             XmlDocument assemblyBindingsXml = new();
             XmlElement assemblyBinding = assemblyBindingsXml.CreateElement("assemblyBinding", xmlns);
@@ -181,7 +219,9 @@ namespace ValidateAssemblyBindings
                     bindingRedirect.Attributes.Append(oldVersion);
 
                     XmlAttribute newVersion = assemblyBindingsXml.CreateAttribute("newVersion");
-                    newVersion.Value = version;
+
+                    newVersion.Value = exceptions.TryGetValue(assemblyName.Name, out string exceptionVersion) ? exceptionVersion : version;
+
                     bindingRedirect.Attributes.Append(newVersion);
 
                     dependentAssembly.AppendChild(bindingRedirect);
