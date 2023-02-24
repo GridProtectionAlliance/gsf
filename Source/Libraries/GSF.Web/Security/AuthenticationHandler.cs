@@ -37,6 +37,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web.Hosting;
 using GSF.Diagnostics;
 using GSF.Reflection;
 using GSF.Security;
@@ -95,6 +96,10 @@ namespace GSF.Web.Security
             }
         }
 
+        // Gets the path that matches the AuthTest page
+        private string AuthTestPath =>
+            s_basePathRegex.Replace(Options.AuthTestPage, "");
+
         private string FaultReason { get; set; }
 
         #endregion
@@ -121,7 +126,7 @@ namespace GSF.Web.Security
                 NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
 
                 bool useAlternateSecurityProvider = Options.IsAlternateSecurityProviderResource(Request.Path.Value);
-                useAlternateSecurityProvider = useAlternateSecurityProvider || (Options.AuthTestPage == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
+                useAlternateSecurityProvider = useAlternateSecurityProvider || (AuthTestPath == Request.Path.Value && Request.QueryString.HasValue && queryParameters.AllKeys.Contains("useAlternate"));
 
                 // Attempt to read the session ID from the HTTP cookies
                 Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
@@ -198,6 +203,8 @@ namespace GSF.Web.Security
                 Request.User = null;
                 Faulted = true;
 
+                // Do not change text for user authentication exception prefix - this is searched
+                // for in Login.js to produce more concise authentication error messages
                 if (ex is AuthenticationException authEx)
                     FaultReason = $"User Authentication Exception: {authEx.Message}";
                 else
@@ -228,7 +235,7 @@ namespace GSF.Web.Security
                 using TextWriter writer = new StreamWriter(Response.Body, Encoding.UTF8, 4096, true);
                 await writer.WriteAsync(FaultReason);
                 Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                return false;
+                return !HostingEnvironment.IsHosted;
             }
 
             // Use Cases:
@@ -241,7 +248,7 @@ namespace GSF.Web.Security
             //  (5) Access all other resources - respond with 401 and abort pipeline
             SecurityPrincipal securityPrincipal = Request.User as SecurityPrincipal;
             string urlPath = Request.Path.Value;
-            bool isAuthTest = Options.AuthTestPage == Request.Path.Value;
+            bool isAuthTest = AuthTestPath == Request.Path.Value;
                 
             // If the resources contains a code make an Attempt to Authorize via OIDC Auth server
             NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);

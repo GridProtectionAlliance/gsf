@@ -136,6 +136,7 @@ namespace GSF.Web.Security
 
                 using BinaryWriter writer = new(stream, Encoding.Unicode, true);
                 writer.Write(protectedCredentials.Length);
+                writer.Write(protectedCredentials);
             }
 
             #endregion
@@ -246,7 +247,7 @@ namespace GSF.Web.Security
                 string username = securityIdentity?.Name;
                 string password = securityProvider?.Password;
 
-                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                if (!string.IsNullOrEmpty(username) && (!string.IsNullOrEmpty(password) || securityIdentity.Provider.UserData.IsAzureAD))
                 {
                     string authenticationToken = IssueAuthenticationToken(username, password);
 
@@ -372,7 +373,7 @@ namespace GSF.Web.Security
             settings.Add("ConfigurationCachePath", $"{FilePath.GetAbsolutePath("")}{Path.DirectorySeparatorChar}ConfigurationCache{Path.DirectorySeparatorChar}", "Defines the path used to cache serialized phasor protocol configurations");
             settings.Add("SessionCredentialCacheEnabled", true, "Defines flag that determines if session credentials cache is enabled");
             settings.Add("SessionCredentialCache", Path.Combine(settings["ConfigurationCachePath"].Value, "CredentialCache.bin"), "Path and file name of session credentials cache");
-            settings.Add("SessionExpirationDays", s_sessionExpirationDays, "Default number of days for session expirations");
+            settings.Add("SessionExpirationDays", DefaultSessionExpirationDays, "Default number of days for session expiration");
 
             SessionTimeout = settings["SessionTimeout"].ValueAs(DefaultSessionTimeout);
             SessionMonitorInterval = settings["SessionMonitorInterval"].ValueAs(DefaultSessionMonitorInterval);
