@@ -43,7 +43,7 @@ public class AzureADSettings
     /// <summary>
     /// Default category for Azure AD settings.
     /// </summary>
-    public const string DefaultSettingsCategory = "AzureAD";
+    public const string DefaultSettingsCategory = "AzureAd";
 
     /// <summary>
     /// Default value for <see cref="Instance"/> property.
