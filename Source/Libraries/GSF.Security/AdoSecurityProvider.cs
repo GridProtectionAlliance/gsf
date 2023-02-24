@@ -675,6 +675,10 @@ namespace GSF.Security
             AuthenticationFailureReason = null;
             m_successfulPassThroughAuthentication = false;
 
+            bool isAzureADPassthroughPrincipal() => 
+                PassthroughPrincipal is AzureADPassthroughPrincipal principal && 
+                principal.Identity.Name.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase);
+
             string getUserAuthFailureReason(string settingName, string defaultValue)
             {
                 string settingValue;
@@ -729,7 +733,7 @@ namespace GSF.Security
                             // application can access user information. Password property is used to temporarily hold user authentication
                             // token during logon so that the token value can be validated by the server side app. Subsequent calls to
                             // this Authenticate method will simply validate that user is still accessible to server application.
-                            if (IsUserAuthenticated && string.IsNullOrEmpty(Password))
+                            if (base.IsUserAuthenticated && string.IsNullOrEmpty(Password) || isAzureADPassthroughPrincipal())
                             {
                                 // Cached security providers will auto-refresh on a configurable schedule to validate that users still
                                 // have access to authentication servers. In the case of AzureAD, we will validate that user still has
@@ -768,7 +772,7 @@ namespace GSF.Security
                             else
                             {
                                 Exception graphEx = null;
-                                
+
                                 // Validate user access token from Azure AD authentication - this step prevents forgery attempts during login
                                 GraphServiceClient graphClient = new("https://graph.microsoft.com/V1.0/", new DelegateAuthenticationProvider(requestMessage =>
                                 {
