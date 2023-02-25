@@ -61,6 +61,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Security;
+using GSF.Diagnostics;
 
 namespace GSF.ServiceProcess
 {
@@ -104,36 +105,36 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Occurs when a status update is received from the <see cref="ServiceHelper"/>.
         /// </summary>
-        [Category("Client"),
-        Description("Occurs when a status update is received from the ServiceHelper.")]
+        [Category("Client")]
+        [Description("Occurs when a status update is received from the ServiceHelper.")]
         public event EventHandler<EventArgs<UpdateType, string>> ReceivedServiceUpdate;
 
         /// <summary>
         /// Occurs when a custom <see cref="ServiceResponse"/> is received from the <see cref="ServiceHelper"/>.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when a ServiceResponse is received from the ServiceHelper.")]
+        [Category("Service")]
+        [Description("Occurs when a ServiceResponse is received from the ServiceHelper.")]
         public event EventHandler<EventArgs<ServiceResponse>> ReceivedServiceResponse;
 
         /// <summary>
         /// Occurs when the state of the <see cref="ServiceHelper"/> is changed.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the state of the ServiceHelper is changed.")]
+        [Category("Service")]
+        [Description("Occurs when the state of the ServiceHelper is changed.")]
         public event EventHandler<EventArgs<ObjectState<ServiceState>>> ServiceStateChanged;
 
         /// <summary>
         /// Occurs when the state of a <see cref="ServiceProcess"/> is changed.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the state of a ServiceProcess is changed.")]
+        [Category("Service")]
+        [Description("Occurs when the state of a ServiceProcess is changed.")]
         public event EventHandler<EventArgs<ObjectState<ServiceProcessState>>> ProcessStateChanged;
 
         /// <summary>
         /// Occurs when the <see cref="ServiceHelper"/> successfully authenticates the <see cref="ClientHelper"/>.
         /// </summary>
-        [Category("Security"),
-        Description("Occurs when the ServiceHelper successfully authenticates the ClientHelper.")]
+        [Category("Security")]
+        [Description("Occurs when the ServiceHelper successfully authenticates the ClientHelper.")]
         public event EventHandler AuthenticationSuccess;
 
         /// <summary>
@@ -143,22 +144,22 @@ namespace GSF.ServiceProcess
         /// Set <see cref="CancelEventArgs.Cancel"/> to <b>true</b> to continue with connection attempts even after authentication fails. 
         /// This can be useful for re-authenticating the <see cref="ClientHelper"/> using different <see cref="Username"/> and <see cref="Password"/>.
         /// </remarks>
-        [Category("Security"),
-        Description("Occurs when the ServiceHelper fails to authenticate the ClientHelper.")]
+        [Category("Security")]
+        [Description("Occurs when the ServiceHelper fails to authenticate the ClientHelper.")]
         public event EventHandler<CancelEventArgs> AuthenticationFailure;
 
         /// <summary>
         /// Occurs when a telnet session has been established.
         /// </summary>
-        [Category("Command"),
-        Description("Occurs when a telnet session has been established.")]
+        [Category("Command")]
+        [Description("Occurs when a telnet session has been established.")]
         public event EventHandler TelnetSessionEstablished;
 
         /// <summary>
         /// Occurs when a telnet session has been terminated.
         /// </summary>
-        [Category("Command"),
-        Description("Occurs when a telnet session has been terminated.")]
+        [Category("Command")]
+        [Description("Occurs when a telnet session has been terminated.")]
         public event EventHandler TelnetSessionTerminated;
 
         // Fields
@@ -166,12 +167,9 @@ namespace GSF.ServiceProcess
         private string m_username;
         private SecureString m_password;
         private string m_statusMessageFilter;
-        private SerializationFormat m_serializationFormat;
-        private bool m_persistSettings;
         private string m_settingsCategory;
         private bool m_attemptReconnection;
         private bool m_authenticationComplete;
-        private bool m_disposed;
         private bool m_initialized;
 
         #endregion
@@ -185,10 +183,10 @@ namespace GSF.ServiceProcess
         {
             m_username = DefaultUsername;
             m_password = DefaultPassword.ToSecureString();
-            m_persistSettings = DefaultPersistSettings;
+            PersistSettings = DefaultPersistSettings;
             m_statusMessageFilter = DefaultStatusMessageFilter;
             m_settingsCategory = DefaultSettingsCategory;
-            m_serializationFormat = ServiceHelper.DefaultSerializationFormat;
+            SerializationFormat = ServiceHelper.DefaultSerializationFormat;
         }
 
         /// <summary>
@@ -198,8 +196,7 @@ namespace GSF.ServiceProcess
         public ClientHelper(IContainer container)
             : this()
         {
-            if ((object)container != null)
-                container.Add(this);
+            container?.Add(this);
         }
 
         #endregion
@@ -209,17 +206,14 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets or sets the <see cref="ClientBase"/> object used for communicating with the <see cref="ServiceHelper"/>.
         /// </summary>
-        [Category("Components"),
-        Description("ClientBase object used for communicating with the ServiceHelper.")]
+        [Category("Components")]
+        [Description("ClientBase object used for communicating with the ServiceHelper.")]
         public ClientBase RemotingClient
         {
-            get
-            {
-                return m_remotingClient;
-            }
+            get => m_remotingClient;
             set
             {
-                if ((object)m_remotingClient != null)
+                if (m_remotingClient is not null)
                 {
                     // Detach events from any existing instance
                     m_remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
@@ -231,15 +225,15 @@ namespace GSF.ServiceProcess
 
                 m_remotingClient = value;
 
-                if ((object)m_remotingClient != null)
-                {
-                    // Attach events to new instance
-                    m_remotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
-                    m_remotingClient.ConnectionAttempt += RemotingClient_ConnectionAttempt;
-                    m_remotingClient.ConnectionException += RemotingClient_ConnectionException;
-                    m_remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
-                    m_remotingClient.ReceiveDataComplete += RemotingClient_ReceiveDataComplete;
-                }
+                if (m_remotingClient is null)
+                    return;
+
+                // Attach events to new instance
+                m_remotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+                m_remotingClient.ConnectionAttempt += RemotingClient_ConnectionAttempt;
+                m_remotingClient.ConnectionException += RemotingClient_ConnectionException;
+                m_remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+                m_remotingClient.ReceiveDataComplete += RemotingClient_ReceiveDataComplete;
             }
         }
 
@@ -247,41 +241,26 @@ namespace GSF.ServiceProcess
         /// Gets or sets the username of the <see cref="ClientHelper"/>'s user to be used for authenticating with the <see cref="ServiceHelper"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being specified is a null string.</exception>
-        [Category("Security"),
-        DefaultValue(DefaultUsername),
-        Description("Username of the ClientHelper's user to be used for authenticating with the ServiceHelper.")]
+        [Category("Security")]
+        [DefaultValue(DefaultUsername)]
+        [Description("Username of the ClientHelper's user to be used for authenticating is null the ServiceHelper.")]
         public string Username
         {
-            get
-            {
-                return m_username;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_username = value;
-            }
+            get => m_username;
+            set => m_username = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
-        /// Gets or sets the password of the <see cref="ClientHelper"/>'s user to be used for authenticating with the <see cref="ServiceHelper"/>.
+        /// Gets or sets the password of the <see cref="ClientHelper"/>'s user to be used for authenticating is null the <see cref="ServiceHelper"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being specified is a null string.</exception>
-        [Category("Security"),
-        DefaultValue(DefaultPassword),
-        Description("Password of the ClientHelper's user to be used for authenticating with the ServiceHelper.")]
+        [Category("Security")]
+        [DefaultValue(DefaultPassword)]
+        [Description("Password of the ClientHelper's user to be used for authenticating with the ServiceHelper.")]
         public string Password
         {
-            get
-            {
-                return m_password.ToUnsecureString();
-            }
-            set
-            {
-                m_password = value.ToSecureString();
-            }
+            get => m_password.ToUnsecureString();
+            set => m_password = value.ToSecureString();
         }
 
         /// <summary>
@@ -290,87 +269,49 @@ namespace GSF.ServiceProcess
         /// <exception cref="ArgumentNullException">The value being specified is null.</exception>
         public SecureString SecurePassword
         {
-            get
-            {
-                return m_password;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                m_password = value;
-            }
+            get => m_password;
+            set => m_password = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         /// <summary>
         /// Gets or sets the command used to negotiate the status
         /// message filter with the service when the client connects.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultStatusMessageFilter),
-        Description("Command used to negotiate status message filter when client connects to the ServiceHelper.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultStatusMessageFilter)]
+        [Description("Command used to negotiate status message filter when client connects to the ServiceHelper.")]
         public string StatusMessageFilter
         {
-            get
-            {
-                return m_statusMessageFilter;
-            }
-            set
-            {
-                m_statusMessageFilter = value ?? DefaultStatusMessageFilter;
-            }
+            get => m_statusMessageFilter;
+            set => m_statusMessageFilter = value ?? DefaultStatusMessageFilter;
         }
 
         /// <summary>
         /// Gets or sets a value that indicates the desired message <see cref="GSF.SerializationFormat"/> for interaction with <see cref="ServiceHelper"/>.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(ServiceHelper.DefaultSerializationFormat),
-        Description("Indicates messaging serialization format for interactions with ServiceHelper.")]
-        public SerializationFormat SerializationFormat
-        {
-            get
-            {
-                return m_serializationFormat;
-            }
-            set
-            {
-                m_serializationFormat = value;
-            }
-        }
+        [Category("Settings")]
+        [DefaultValue(ServiceHelper.DefaultSerializationFormat)]
+        [Description("Indicates messaging serialization format for interactions with ServiceHelper.")]
+        public SerializationFormat SerializationFormat { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ClientHelper"/> are to be saved to the config file.
         /// </summary>
-        [Category("Persistence"),
-        DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the settings of ClientHelper are to be saved to the config file.")]
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
+        [Category("Persistence")]
+        [DefaultValue(DefaultPersistSettings)]
+        [Description("Indicates whether the settings of ClientHelper are to be saved to the config file.")]
+        public bool PersistSettings { get; set; }
 
         /// <summary>
         /// Gets or sets the category under which the settings of <see cref="ClientHelper"/> are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistence"),
-        DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the settings of ClientHelper are to be saved to the config file if the PersistSettings property is set to true.")]
+        [Category("Persistence")]
+        [DefaultValue(DefaultSettingsCategory)]
+        [Description("Category under which the settings of ClientHelper are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
-            get
-            {
-                return m_settingsCategory;
-            }
+            get => m_settingsCategory;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -386,21 +327,15 @@ namespace GSF.ServiceProcess
         /// <remarks>
         /// <see cref="Enabled"/> property is not be set by user-code directly.
         /// </remarks>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
-            get
-            {
-                if ((object)m_remotingClient == null)
-                    return false;
-
-                return m_remotingClient.Enabled;
-            }
+            get => m_remotingClient is not null && m_remotingClient.Enabled;
             set
             {
-                if ((object)m_remotingClient != null)
+                if (m_remotingClient is not null)
                     m_remotingClient.Enabled = value;
             }
         }
@@ -408,10 +343,10 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDisposed => m_disposed;
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed { get; private set; }
 
         #endregion
 
@@ -425,11 +360,11 @@ namespace GSF.ServiceProcess
         /// </remarks>
         public void Initialize()
         {
-            if (!m_initialized)
-            {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
+            if (m_initialized)
+                return;
+
+            LoadSettings();         // Load settings from the config file.
+            m_initialized = true;   // Initialize only once.
         }
 
         /// <summary>
@@ -442,16 +377,16 @@ namespace GSF.ServiceProcess
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-            if (!DesignMode)
+            if (DesignMode)
+                return;
+
+            try
             {
-                try
-                {
-                    // Nothing needs to be done before component is initialized.
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
             }
         }
 
@@ -465,16 +400,16 @@ namespace GSF.ServiceProcess
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (!DesignMode)
+            if (DesignMode)
+                return;
+
+            try
             {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
+                Initialize();
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
             }
         }
 
@@ -484,27 +419,27 @@ namespace GSF.ServiceProcess
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!PersistSettings)
+                return;
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
-                settings[nameof(Username), true].Update(m_username);
-                settings[nameof(Password), true].Update(Password);
-                settings[nameof(SerializationFormat), true].Update(m_serializationFormat);
-                settings[nameof(StatusMessageFilter), true].Update(m_statusMessageFilter);
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
-                settings[nameof(Username)].Scope = SettingScope.User;
-                settings[nameof(Password)].Scope = SettingScope.User;
-                settings[nameof(Password)].Encrypted = true;
+            settings[nameof(Username), true].Update(m_username);
+            settings[nameof(Password), true].Update(Password);
+            settings[nameof(SerializationFormat), true].Update(SerializationFormat);
+            settings[nameof(StatusMessageFilter), true].Update(m_statusMessageFilter);
 
-                config.Save();
-            }
+            settings[nameof(Username)].Scope = SettingScope.User;
+            settings[nameof(Password)].Scope = SettingScope.User;
+            settings[nameof(Password)].Encrypted = true;
+
+            config.Save();
         }
 
         /// <summary>
@@ -513,26 +448,38 @@ namespace GSF.ServiceProcess
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
-            if (m_persistSettings)
+            if (!PersistSettings)
+                return;
+
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
+            settings.Add(nameof(Username), m_username, "Username to be used for authentication with the service.", false, SettingScope.User);
+            settings.Add(nameof(Password), Password, "Password to be used for authentication with the service.", true, SettingScope.User);
+            settings.Add(nameof(SerializationFormat), SerializationFormat, "Message serialization format for interactions with service, one of: Xml, Json or Binary. Default is Binary.");
+            settings.Add(nameof(StatusMessageFilter), m_statusMessageFilter, "Command used to negotiate status message filter when client connects to the ServiceHelper.");
+
+            Username = settings[nameof(Username)].ValueAs(m_username);
+
+            // Changes in crypto keys can cause password decryption to fail, so continue with no
+            // password if decryption fails, but log the exception so it can be investigated.
+            try
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-
-                settings.Add(nameof(Username), m_username, "Username to be used for authentication with the service.", false, SettingScope.User);
-                settings.Add(nameof(Password), Password, "Password to be used for authentication with the service.", true, SettingScope.User);
-                settings.Add(nameof(SerializationFormat), m_serializationFormat, "Message serialization format for interactions with service, one of: Xml, Json or Binary. Default is Binary.");
-                settings.Add(nameof(StatusMessageFilter), m_statusMessageFilter, "Command used to negotiate status message filter when client connects to the ServiceHelper.");
-
-                Username = settings[nameof(Username)].ValueAs(m_username);
                 Password = settings[nameof(Password)].Value;
-                SerializationFormat = settings[nameof(SerializationFormat)].ValueAs(m_serializationFormat);
-                StatusMessageFilter = settings[nameof(StatusMessageFilter)].ValueAs(m_statusMessageFilter);
             }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+                Password = "";
+            }
+
+            SerializationFormat = settings[nameof(SerializationFormat)].ValueAs(SerializationFormat);
+            StatusMessageFilter = settings[nameof(StatusMessageFilter)].ValueAs(m_statusMessageFilter);
         }
 
         /// <summary>
@@ -542,7 +489,7 @@ namespace GSF.ServiceProcess
         {
             ClientBase remotingClient = m_remotingClient;
 
-            if ((object)remotingClient == null)
+            if (remotingClient is null)
                 throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set");
 
             m_authenticationComplete = false;
@@ -556,7 +503,7 @@ namespace GSF.ServiceProcess
                 Thread.Sleep(100);
 
                 // If remoting client has been disposed (and set to null) while sleeping, go ahead and exit...
-                if ((object)m_remotingClient == null)
+                if (m_remotingClient is null)
                     return;
             }
 
@@ -574,8 +521,7 @@ namespace GSF.ServiceProcess
         {
             m_attemptReconnection = false;
 
-            if ((object)m_remotingClient != null)
-                m_remotingClient.Disconnect();
+            m_remotingClient?.Disconnect();
         }
 
         /// <summary>
@@ -586,7 +532,7 @@ namespace GSF.ServiceProcess
         {
             ClientRequest requestInstance = ClientRequest.Parse(request);
 
-            if ((object)requestInstance != null)
+            if (requestInstance is not null)
                 SendRequest(requestInstance);
             else
                 UpdateStatus(UpdateType.Warning, "Request command \"{0}\" is invalid\r\n\r\n", request);
@@ -604,16 +550,12 @@ namespace GSF.ServiceProcess
                 if (request.Command == "TRANSFER" && request.Arguments.Exists("upload"))
                 {
                     string source = FilePath.GetAbsolutePath(request.Arguments["orderedarg1"]);
+
+                    // Attach the file content.
                     if (File.Exists(source))
-                    {
-                        // Attach the file content.
                         request.Attachments.Add(File.ReadAllBytes(source));
-                    }
                     else
-                    {
-                        // File does not exist.
                         throw new FileNotFoundException($"File '{source}' does not exist");
-                    }
                 }
 
                 // Pass the request along.
@@ -630,50 +572,36 @@ namespace GSF.ServiceProcess
         /// </summary>
         /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="update">Update message received.</param>
-        protected virtual void OnReceivedServiceUpdate(UpdateType type, string update)
-        {
-            if ((object)ReceivedServiceUpdate != null)
-                ReceivedServiceUpdate(this, new EventArgs<UpdateType, string>(type, update));
-        }
+        protected virtual void OnReceivedServiceUpdate(UpdateType type, string update) => 
+            ReceivedServiceUpdate?.Invoke(this, new EventArgs<UpdateType, string>(type, update));
 
         /// <summary>
         /// Raises the <see cref="ReceivedServiceResponse"/> event.
         /// </summary>
         /// <param name="response"><see cref="ServiceResponse"/> received.</param>
-        protected virtual void OnReceivedServiceResponse(ServiceResponse response)
-        {
-            if ((object)ReceivedServiceResponse != null)
-                ReceivedServiceResponse(this, new EventArgs<ServiceResponse>(response));
-        }
+        protected virtual void OnReceivedServiceResponse(ServiceResponse response) => 
+            ReceivedServiceResponse?.Invoke(this, new EventArgs<ServiceResponse>(response));
 
         /// <summary>
         /// Raises the <see cref="ServiceStateChanged"/> event.
         /// </summary>
         /// <param name="state">New <see cref="ServiceState"/>.</param>
-        protected virtual void OnServiceStateChanged(ObjectState<ServiceState> state)
-        {
-            if ((object)ServiceStateChanged != null)
-                ServiceStateChanged(this, new EventArgs<ObjectState<ServiceState>>(state));
-        }
+        protected virtual void OnServiceStateChanged(ObjectState<ServiceState> state) => 
+            ServiceStateChanged?.Invoke(this, new EventArgs<ObjectState<ServiceState>>(state));
 
         /// <summary>
         /// Raises the <see cref="ProcessStateChanged"/> event.
         /// </summary>
         /// <param name="state">New <see cref="ServiceProcessState"/>.</param>
-        protected virtual void OnProcessStateChanged(ObjectState<ServiceProcessState> state)
-        {
-            if ((object)ProcessStateChanged != null)
-                ProcessStateChanged(this, new EventArgs<ObjectState<ServiceProcessState>>(state));
-        }
+        protected virtual void OnProcessStateChanged(ObjectState<ServiceProcessState> state) => 
+            ProcessStateChanged?.Invoke(this, new EventArgs<ObjectState<ServiceProcessState>>(state));
 
         /// <summary>
         /// Raises the <see cref="AuthenticationSuccess"/> event.
         /// </summary>
         protected virtual void OnAuthenticationSuccess()
         {
-            if ((object)AuthenticationSuccess != null)
-                AuthenticationSuccess(this, EventArgs.Empty);
-
+            AuthenticationSuccess?.Invoke(this, EventArgs.Empty);
             m_authenticationComplete = true;
         }
 
@@ -682,36 +610,29 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnAuthenticationFailure()
         {
-            CancelEventArgs args = new CancelEventArgs(true);
+            CancelEventArgs args = new(true);
 
-            if ((object)AuthenticationFailure != null)
-                AuthenticationFailure(this, args);
+            AuthenticationFailure?.Invoke(this, args);
 
             // Continue connection attempts if requested.
-            if (args.Cancel)
-            {
-                m_attemptReconnection = false;
-                m_authenticationComplete = true;
-            }
+            if (!args.Cancel)
+                return;
+
+            m_attemptReconnection = false;
+            m_authenticationComplete = true;
         }
 
         /// <summary>
         /// Raises the <see cref="TelnetSessionEstablished"/> event.
         /// </summary>
-        protected virtual void OnTelnetSessionEstablished()
-        {
-            if ((object)TelnetSessionEstablished != null)
-                TelnetSessionEstablished(this, EventArgs.Empty);
-        }
+        protected virtual void OnTelnetSessionEstablished() => 
+            TelnetSessionEstablished?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Raises the <see cref="TelnetSessionTerminated"/> event.
         /// </summary>
-        protected virtual void OnTelnetSessionTerminated()
-        {
-            if ((object)TelnetSessionTerminated != null)
-                TelnetSessionTerminated(this, EventArgs.Empty);
-        }
+        protected virtual void OnTelnetSessionTerminated() => 
+            TelnetSessionTerminated?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="ClientHelper"/> object and optionally releases the managed resources.
@@ -719,45 +640,41 @@ namespace GSF.ServiceProcess
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Disconnect();
-                        SaveSettings();
+            if (IsDisposed)
+                return;
 
-                        if ((object)m_remotingClient != null)
-                        {
-                            // Detach events from any existing instance
-                            m_remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
-                            m_remotingClient.ConnectionAttempt -= RemotingClient_ConnectionAttempt;
-                            m_remotingClient.ConnectionException -= RemotingClient_ConnectionException;
-                            m_remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
-                            m_remotingClient.ReceiveDataComplete -= RemotingClient_ReceiveDataComplete;
-                        }
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+            try
+            {
+                // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
+
+                // This will be done only when the object is disposed by calling Dispose().
+                Disconnect();
+                SaveSettings();
+
+                if (m_remotingClient is null)
+                    return;
+
+                // Detach events from any existing instance
+                m_remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
+                m_remotingClient.ConnectionAttempt -= RemotingClient_ConnectionAttempt;
+                m_remotingClient.ConnectionException -= RemotingClient_ConnectionException;
+                m_remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+                m_remotingClient.ReceiveDataComplete -= RemotingClient_ReceiveDataComplete;
+            }
+            finally
+            {
+                IsDisposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
-        private void UpdateStatus(UpdateType type, string message, params object[] args)
-        {
+        private void UpdateStatus(UpdateType type, string message, params object[] args) => 
             OnReceivedServiceUpdate(type, string.Format(message, args));
-        }
 
-        private void RemotingClient_ConnectionAttempt(object sender, EventArgs e)
-        {
+        private void RemotingClient_ConnectionAttempt(object sender, EventArgs e) => 
             UpdateStatus(UpdateType.Information, "Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
-        }
 
         private void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
         {
@@ -765,181 +682,184 @@ namespace GSF.ServiceProcess
             // service so the service can keep track of all the client that are connected to its communication server.
             m_remotingClient.SendAsync(new ClientInfo(this));
 
-            StringBuilder status = new StringBuilder();
-            status.AppendFormat("Connected to {0}:", m_remotingClient.ServerUri);
-            status.AppendLine();
+            StringBuilder status = new();
+            
+            status.AppendLine($"Connected to {m_remotingClient.ServerUri}:");
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(UpdateType.Information, "{0}", status.ToString());
+            
+            UpdateStatus(UpdateType.Information, status.ToString());
         }
 
         private void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
-            StringBuilder status = new StringBuilder();
-            TcpClient tcpClient;
-            TlsClient tlsClient;
+            StringBuilder status = new();
 
             status.AppendFormat("Exception during connection attempt: {0}", e.Argument.Message);
             status.AppendLine();
             status.AppendLine();
-            UpdateStatus(UpdateType.Alarm, "{0}", status.ToString());
 
-            tlsClient = m_remotingClient as TlsClient;
+            UpdateStatus(UpdateType.Alarm, status.ToString());
 
-            if ((object)tlsClient != null)
+            switch (m_remotingClient)
             {
-                tlsClient.NetworkCredential = null;
-            }
-            else
-            {
-                tcpClient = m_remotingClient as TcpClient;
-
-                if ((object)tcpClient != null)
+                case TlsClient tlsClient:
+                    tlsClient.NetworkCredential = null;
+                    break;
+                case TcpClient tcpClient:
                     tcpClient.NetworkCredential = null;
+                    break;
             }
         }
 
         private void RemotingClient_ConnectionTerminated(object sender, EventArgs e)
         {
-            StringBuilder status = new StringBuilder();
-            status.AppendFormat("Disconnected from {0}:", m_remotingClient.ServerUri);
-            status.AppendLine();
+            StringBuilder status = new();
+
+            status.AppendLine($"Disconnected from {m_remotingClient.ServerUri}:");
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(UpdateType.Warning, "{0}", status.ToString());
+            
+            UpdateStatus(UpdateType.Warning, status.ToString());
 
             // Attempt reconnection on a separate thread.
-            if (m_attemptReconnection)
+            if (!m_attemptReconnection)
+                return;
+
+            new Thread(state =>
             {
-                new Thread(state =>
+                try
                 {
                     Thread.Sleep(1000);
                     Connect();
-                })
-                .Start();
-            }
+                }
+                catch (Exception ex)
+                {
+                    UpdateStatus(UpdateType.Alarm, "Exception during reconnection attempt: {0}", ex.Message);
+                }
+            })
+            .Start();
         }
 
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
-            ServiceResponse response;
+            Serialization.TryDeserialize(e.Argument1.BlockCopy(0, e.Argument2), SerializationFormat, out ServiceResponse response);
 
-            Serialization.TryDeserialize(e.Argument1.BlockCopy(0, e.Argument2), m_serializationFormat, out response);
+            if (response is null)
+                return;
 
-            if ((object)response != null)
+            switch (response.Type)
             {
-                switch (response.Type)
-                {
-                    case "UPDATECLIENTSTATUS-INFORMATION":
-                        UpdateStatus(UpdateType.Information, "{0}", response.Message);
-                        break;
-                    case "UPDATECLIENTSTATUS-WARNING":
-                        UpdateStatus(UpdateType.Warning, "{0}", response.Message);
-                        break;
-                    case "UPDATECLIENTSTATUS-ALARM":
-                        UpdateStatus(UpdateType.Alarm, "{0}", response.Message);
-                        break;
-                    case "AUTHENTICATIONSUCCESS":
-                        SendRequest(StatusMessageFilter);
-                        OnAuthenticationSuccess();
-                        break;
-                    case "AUTHENTICATIONFAILURE":
-                        OnAuthenticationFailure();
-                        break;
-                    case "SERVICESTATECHANGED":
-                        if (response.Attachments.Count > 0)
+                case "UPDATECLIENTSTATUS-INFORMATION":
+                    UpdateStatus(UpdateType.Information, "{0}", response.Message);
+                    break;
+                case "UPDATECLIENTSTATUS-WARNING":
+                    UpdateStatus(UpdateType.Warning, "{0}", response.Message);
+                    break;
+                case "UPDATECLIENTSTATUS-ALARM":
+                    UpdateStatus(UpdateType.Alarm, "{0}", response.Message);
+                    break;
+                case "AUTHENTICATIONSUCCESS":
+                    SendRequest(StatusMessageFilter);
+                    OnAuthenticationSuccess();
+                    break;
+                case "AUTHENTICATIONFAILURE":
+                    OnAuthenticationFailure();
+                    break;
+                case "SERVICESTATECHANGED":
+                    if (response.Attachments.Count > 0)
+                    {
+                        if (response.Attachments[0] is ObjectState<ServiceState> state)
                         {
-                            ObjectState<ServiceState> state = response.Attachments[0] as ObjectState<ServiceState>;
+                            // Notify change in service state by raising an event.
+                            OnServiceStateChanged(state);
 
-                            if ((object)state != null)
+                            // Provide a status update for change in state of the service.
+                            UpdateType type = UpdateType.Information;
+
+                            switch (state.CurrentState)
                             {
-                                // Notify change in service state by raising an event.
-                                OnServiceStateChanged(state);
-
-                                // Provide a status update for change in state of the service.
-                                UpdateType type = UpdateType.Information;
-                                switch (state.CurrentState)
-                                {
-                                    case ServiceState.Stopped:
-                                    case ServiceState.Paused:
-                                    case ServiceState.Shutdown:
-                                        type = UpdateType.Warning;
-                                        break;
-                                }
-                                UpdateStatus(type, "State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState);
+                                case ServiceState.Stopped:
+                                case ServiceState.Paused:
+                                case ServiceState.Shutdown:
+                                    type = UpdateType.Warning;
+                                    break;
                             }
+
+                            UpdateStatus(type, "State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState);
                         }
-                        break;
-                    case "PROCESSSTATECHANGED":
-                        if (response.Attachments.Count > 0)
+                    }
+                    break;
+                case "PROCESSSTATECHANGED":
+                    if (response.Attachments.Count > 0)
+                    {
+                        if (response.Attachments[0] is ObjectState<ServiceProcessState> state)
                         {
-                            ObjectState<ServiceProcessState> state = response.Attachments[0] as ObjectState<ServiceProcessState>;
+                            // Notify change in process state by raising an event.
+                            OnProcessStateChanged(state);
 
-                            if ((object)state != null)
+                            // Provide a status update for change in state of the service process.
+                            UpdateType type = UpdateType.Information;
+                            
+                            switch (state.CurrentState)
                             {
-                                // Notify change in process state by raising an event.
-                                OnProcessStateChanged(state);
+                                case ServiceProcessState.Aborted:
+                                case ServiceProcessState.Exception:
+                                    type = UpdateType.Alarm;
+                                    break;
 
-                                // Provide a status update for change in state of the service process.
-                                UpdateType type = UpdateType.Information;
-                                switch (state.CurrentState)
-                                {
-                                    case ServiceProcessState.Aborted:
-                                    case ServiceProcessState.Exception:
-                                        type = UpdateType.Alarm;
-                                        break;
-
-                                }
-                                UpdateStatus(type, "State of process \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState);
                             }
+                            
+                            UpdateStatus(type, "State of process \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState);
                         }
-                        break;
-                    case "TELNETSESSION":
-                        switch (response.Message.ToUpper())
-                        {
-                            case "ESTABLISHED":
-                                OnTelnetSessionEstablished();
-                                break;
-                            case "TERMINATED":
-                                OnTelnetSessionTerminated();
-                                break;
-                        }
-                        break;
-                    case "TRANSFER:SUCCESS":
-                        if (response.Attachments.Count == 2)
-                        {
-                            // Extract data from response.
-                            byte[] content = (byte[])response.Attachments[0];
-                            Arguments arguments = (Arguments)response.Attachments[1];
-                            string target = arguments["orderedarg2"];
-                            bool overwrite = arguments.Exists("overwrite");
+                    }
+                    break;
+                case "TELNETSESSION":
+                    switch (response.Message.ToUpper())
+                    {
+                        case "ESTABLISHED":
+                            OnTelnetSessionEstablished();
+                            break;
+                        case "TERMINATED":
+                            OnTelnetSessionTerminated();
+                            break;
+                    }
+                    break;
+                case "TRANSFER:SUCCESS":
+                    if (response.Attachments.Count == 2)
+                    {
+                        // Extract data from response.
+                        byte[] content = (byte[])response.Attachments[0];
+                        Arguments arguments = (Arguments)response.Attachments[1];
+                        string target = arguments["orderedarg2"];
+                        bool overwrite = arguments.Exists("overwrite");
 
-                            target = FilePath.GetAbsolutePath(target);
-                            if (!File.Exists(target) || overwrite)
-                            {
-                                // Save the received file.
-                                UpdateStatus(UpdateType.Information, "Saving file '{0}'...\r\n\r\n", target);
-                                File.WriteAllBytes(target, content);
-                                UpdateStatus(UpdateType.Information, "File '{0}' saved successfully.\r\n\r\n", target);
-                            }
-                            else
-                            {
-                                // File exists and cannot be overwritten.
-                                UpdateStatus(UpdateType.Alarm, "File '{0}' already exists.\r\n\r\n", target);
-                            }
+                        target = FilePath.GetAbsolutePath(target);
+
+                        if (!File.Exists(target) || overwrite)
+                        {
+                            // Save the received file.
+                            UpdateStatus(UpdateType.Information, "Saving file '{0}'...\r\n\r\n", target);
+                            File.WriteAllBytes(target, content);
+                            UpdateStatus(UpdateType.Information, "File '{0}' saved successfully.\r\n\r\n", target);
                         }
                         else
                         {
-                            // Response is malformed.
-                            UpdateStatus(UpdateType.Alarm, "{0} response is malformed.\r\n\r\n", response.Type);
+                            // File exists and cannot be overwritten.
+                            UpdateStatus(UpdateType.Alarm, "File '{0}' already exists.\r\n\r\n", target);
                         }
-                        break;
-                    default:
-                        OnReceivedServiceResponse(response);
-                        break;
-                }
+                    }
+                    else
+                    {
+                        // Response is malformed.
+                        UpdateStatus(UpdateType.Alarm, "{0} response is malformed.\r\n\r\n", response.Type);
+                    }
+                    break;
+                default:
+                    OnReceivedServiceResponse(response);
+                    break;
             }
         }
 
@@ -956,7 +876,7 @@ namespace GSF.ServiceProcess
         public static ClientRequestInfo PretendRequest(string requestCommand)
         {
             ClientRequest request = ClientRequest.Parse(requestCommand);
-            ClientRequestInfo requestInfo = new ClientRequestInfo(new ClientInfo(), request);
+            ClientRequestInfo requestInfo = new(new ClientInfo(), request);
 
             return requestInfo;
         }
