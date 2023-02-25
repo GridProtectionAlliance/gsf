@@ -56,7 +56,6 @@ namespace GSF.Security
                 // current user context will match the user system context, e.g., when using an Azure AD
                 // account or database user, so we will use the local machine to ensure consistent access.
                 lock (s_fileLock)
-                    msal = DataProtection.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.LocalMachine);
             }
 
             args.TokenCache.DeserializeMsalV3(msal);
