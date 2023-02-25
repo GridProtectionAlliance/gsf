@@ -780,7 +780,7 @@ namespace GSF.TimeSeries
             if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
             {
                 // Create an exception and do not check policy for localhost
-                IPHostEntry localhost = Dns.GetHostEntry(nameof(localhost));
+                IPHostEntry localhost = Dns.GetHostEntry("localhost");
 
                 if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
                     return true;
