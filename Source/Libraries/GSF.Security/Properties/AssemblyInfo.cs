@@ -25,7 +25,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+[assembly: InternalsVisibleTo("GSF.TimeSeries")]
 [assembly: InternalsVisibleTo("GSF.Web")]
+[assembly: InternalsVisibleTo("GSF.Windows")]
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("2.4.86.0")]
