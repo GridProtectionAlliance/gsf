@@ -101,7 +101,6 @@
     <Compile Include="SecurityPortal.xaml.cs" Condition=" '$(Configuration)' != 'Mono' ">
       <DependentUpon>SecurityPortal.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TokenCacheHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ErrorManagement\ErrorDialog.resx">
@@ -138,7 +137,7 @@
       <Version>4.47.0-preview</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client.NativeInterop">
-      <Version>0.13.5</Version>
+      <Version>0.12.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Abstractions">
       <Version>6.23.1</Version>
