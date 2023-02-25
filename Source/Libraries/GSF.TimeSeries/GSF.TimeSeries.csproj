@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{412F9F59-D9B9-4C8E-96D2-20492644198C}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -267,6 +267,26 @@
       <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
       <Name>GSF.ServiceProcess</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Identity.Client">
+      <Version>4.49.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Client.Desktop">
+      <Version>4.49.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Client.Broker">
+      <Version>4.47.0-preview</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Client.NativeInterop">
+      <Version>0.12.4</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.IdentityModel.Abstractions">
+      <Version>6.23.1</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\DatabaseUpdateReadme.txt">

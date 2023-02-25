@@ -24,12 +24,14 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
@@ -47,6 +49,9 @@ using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
 using GSF.Threading;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Broker;
+using Logger = GSF.Diagnostics.Logger;
 
 namespace GSF.TimeSeries
 {
@@ -61,6 +66,7 @@ namespace GSF.TimeSeries
         private bool m_telnetActive;
         private volatile bool m_authenticated;
         private volatile bool m_authenticationFailure;
+        private bool m_isAzureAD;
         private readonly object m_displayLock;
 
         private readonly ConsoleColor m_originalBgColor;
@@ -134,7 +140,7 @@ namespace GSF.TimeSeries
                 remotingClientSettings = null;
             }
 
-            if ((object)remotingClientSettings != null)
+            if (remotingClientSettings is not null)
             {
                 if (remotingClientSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
                     m_remotingClient = InitializeTlsClient();
@@ -155,8 +161,8 @@ namespace GSF.TimeSeries
 
             m_clientHelper = new ClientHelper
             {
-                PersistSettings = true, 
-                RemotingClient = m_remotingClient, 
+                PersistSettings = true,
+                RemotingClient = m_remotingClient,
                 StatusMessageFilter = filter
             };
 
@@ -164,8 +170,8 @@ namespace GSF.TimeSeries
 
             m_errorLogger = new ErrorLogger
             {
-                LogToEventLog = false, 
-                LogToUI = true, 
+                LogToEventLog = false,
+                LogToUI = true,
                 PersistSettings = true
             };
 
@@ -182,7 +188,7 @@ namespace GSF.TimeSeries
         public virtual void Start(string[] args)
         {
             string userInput = string.Empty;
-            Arguments arguments = new Arguments(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
+            Arguments arguments = new(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
 
             // Handle external service restart requests
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
@@ -199,8 +205,8 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = $"Failed to stop the {serviceName} daemon: {ex.Message}\r\n";
-                        WriteLine(errorMessage);
+                        string errorMessage = $"Failed to stop the {serviceName} daemon: {ex.Message}";
+                        WriteError(errorMessage);
                         Logger.SwallowException(ex, errorMessage);
                     }
 
@@ -210,8 +216,8 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = $"Failed to restart the {serviceName} daemon: {ex.Message}\r\n";
-                        WriteLine(errorMessage);
+                        string errorMessage = $"Failed to restart the {serviceName} daemon: {ex.Message}";
+                        WriteError(errorMessage);
                         Logger.SwallowException(ex, errorMessage);
                     }
                 }
@@ -220,13 +226,13 @@ namespace GSF.TimeSeries
                     // Attempt to access service controller for the specified Windows service
                     ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, StringComparison.OrdinalIgnoreCase) == 0);
 
-                    if (serviceController != null)
+                    if (serviceController is not null)
                     {
                         try
                         {
                             if (serviceController.Status == ServiceControllerStatus.Running)
                             {
-                                WriteLine("Attempting to stop the {0} Windows service...", serviceName);
+                                WriteLine($"Attempting to stop the {serviceName} Windows service...");
 
                                 serviceController.Stop();
 
@@ -234,18 +240,18 @@ namespace GSF.TimeSeries
                                 serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
 
                                 if (serviceController.Status == ServiceControllerStatus.Stopped)
-                                    WriteLine("Successfully stopped the {0} Windows service.", serviceName);
+                                    WriteLine($"Successfully stopped the {serviceName} Windows service.");
                                 else
-                                    WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
+                                    WriteLine($"Failed to stop the {serviceName} Windows service after trying for 20 seconds...");
 
                                 // Add an extra line for visual separation of service termination status
-                                WriteLine("");
+                                WriteLine();
                             }
                         }
                         catch (Exception ex)
                         {
-                            string errorMessage = $"Failed to stop the {serviceName} Windows service: {ex.Message}\r\n";
-                            WriteLine(errorMessage);
+                            string errorMessage = $"Failed to stop the {serviceName} Windows service: {ex.Message}";
+                            WriteError(errorMessage);
                             Logger.SwallowException(ex, errorMessage);
                         }
                     }
@@ -258,7 +264,7 @@ namespace GSF.TimeSeries
                         if (instances.Length > 0)
                         {
                             int total = 0;
-                            WriteLine("Attempting to stop running instances of the {0}...", serviceName);
+                            WriteLine($"Attempting to stop running instances of the {serviceName}...");
 
                             // Terminate all instances of service running on the local computer
                             foreach (Process process in instances)
@@ -268,21 +274,21 @@ namespace GSF.TimeSeries
                             }
 
                             if (total > 0)
-                                WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
+                                WriteLine($"Stopped {total:N0} {serviceName} instance{(total > 1 ? "s" : "")}.");
 
                             // Add an extra line for visual separation of process termination status
-                            WriteLine("");
+                            WriteLine();
                         }
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = $"Failed to terminate running instances of the {serviceName}: {ex.Message}\r\n";
-                        WriteLine(errorMessage);
+                        string errorMessage = $"Failed to terminate running instances of the {serviceName}: {ex.Message}";
+                        WriteError(errorMessage);
                         Logger.SwallowException(ex, errorMessage);
                     }
 
                     // Attempt to restart Windows service...
-                    if (serviceController != null)
+                    if (serviceController is not null)
                     {
                         try
                         {
@@ -294,8 +300,8 @@ namespace GSF.TimeSeries
                         }
                         catch (Exception ex)
                         {
-                            string errorMessage = $"Failed to restart the {serviceName} Windows service: {ex.Message}\r\n";
-                            WriteLine(errorMessage);
+                            string errorMessage = $"Failed to restart the {serviceName} Windows service: {ex.Message}";
+                            WriteError(errorMessage);
                             Logger.SwallowException(ex, errorMessage);
                         }
                     }
@@ -304,7 +310,7 @@ namespace GSF.TimeSeries
                 return;
             }
 
-            // Handle clearing of dynanmic RazorEngine assemblies
+            // Handle clearing of dynamic RazorEngine assemblies
             if (arguments.Exists("clearCache"))
             {
                 string assemblyDirectory = FilePath.GetAbsolutePath(Common.DynamicAssembliesFolderName);
@@ -343,7 +349,7 @@ namespace GSF.TimeSeries
             long lastConnectAttempt = 0;
 
             // Connect to service and send commands.
-            while ((object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+            while (userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
@@ -376,27 +382,29 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        StringBuilder username = new StringBuilder();
-                        StringBuilder password = new StringBuilder();
+                        StringBuilder username = new();
+                        StringBuilder password = new();
 
                         // If there has been an authentication failure,
                         // prompt the user for new credentials
                         PromptForCredentials(username, password);
 
-                        try
+                        // Skip setting network credentials if using Azure AD user
+                        if (!m_isAzureAD)
                         {
-                            // Attempt to set network credentials used when attempting AD authentication
-                            using (UserInfo userInfo = new UserInfo(username.ToString()))
+                            try
                             {
+                                // Attempt to set network credentials used when attempting AD authentication
+                                using UserInfo userInfo = new(username.ToString());
                                 userInfo.Initialize();
                                 SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password.ToString()));
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            // Even if this fails, we can still pass along default credentials
-                            SetNetworkCredential(null);
-                            Logger.SwallowException(ex);
+                            catch (Exception ex)
+                            {
+                                // Even if this fails, we can still pass along default credentials
+                                SetNetworkCredential(null);
+                                Logger.SwallowException(ex);
+                            }
                         }
 
                         Connect(username.ToString(), password.ToString());
@@ -404,7 +412,7 @@ namespace GSF.TimeSeries
 
                     timeoutCancellationToken.Cancel();
 
-                    while (m_authenticated && m_clientHelper.Enabled && (object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                    while (m_authenticated && m_clientHelper.Enabled && userInput is not null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                     {
                         // Wait for a command from the user. 
                         userInput = System.Console.ReadLine()?.Trim();
@@ -456,7 +464,6 @@ namespace GSF.TimeSeries
                     // Errors during the outer connection loop
                     // should simply force an attempt to reconnect
                     m_clientHelper.Disconnect();
-                    
                     Logger.SwallowException(ex);
                 }
             }
@@ -477,31 +484,31 @@ namespace GSF.TimeSeries
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        m_clientHelper?.Dispose();
-                        m_remotingClient?.Dispose();
-                        m_errorLogger?.Dispose();
+            if (m_disposed)
+                return;
 
-                        m_clientHelper = null;
-                        m_remotingClient = null;
-                        m_errorLogger = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+            try
+            {
+                if (!disposing)
+                    return;
+
+                m_clientHelper?.Dispose();
+                m_remotingClient?.Dispose();
+                m_errorLogger?.Dispose();
+
+                m_clientHelper = null;
+                m_remotingClient = null;
+                m_errorLogger = null;
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
         private TcpClient InitializeTcpClient()
         {
-            TcpClient remotingClient = new TcpClient
+            TcpClient remotingClient = new()
             {
                 ConnectionString = "Server=localhost:8500",
                 IgnoreInvalidCredentials = true,
@@ -517,7 +524,7 @@ namespace GSF.TimeSeries
 
         private TlsClient InitializeTlsClient()
         {
-            TlsClient remotingClient = new TlsClient
+            TlsClient remotingClient = new()
             {
                 ConnectionString = "Server=localhost:8500",
                 IgnoreInvalidCredentials = true,
@@ -528,7 +535,7 @@ namespace GSF.TimeSeries
                 ValidChainFlags = X509ChainStatusFlags.UntrustedRoot,
                 ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors
             };
-            
+
             remotingClient.Initialize();
 
             // Override remote certificate validation so that we always
@@ -573,7 +580,9 @@ namespace GSF.TimeSeries
 
         private void PromptForCredentials(StringBuilder username, StringBuilder password)
         {
-            StringBuilder prompt = new StringBuilder();
+            StringBuilder prompt = new();
+            AzureADSettings settings = Settings;
+            m_isAzureAD = false;
 
             lock (m_displayLock)
             {
@@ -581,6 +590,14 @@ namespace GSF.TimeSeries
                 prompt.AppendLine();
                 prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
                 prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
+
+                if (settings?.Enabled ?? false)
+                {
+                    prompt.AppendLine();
+                    prompt.AppendLine("To authenticate with Azure AD, enter 'azure' as the user name, without");
+                    prompt.AppendLine("quotes, this will pop-up a dialog to authenticate with Azure AD.");
+                }
+
                 prompt.AppendLine();
 
                 Write(prompt.ToString());
@@ -589,6 +606,91 @@ namespace GSF.TimeSeries
                 Write("Enter user name: ");
 
                 username.Append(System.Console.ReadLine());
+
+                // See if user requests Azure AD authentication
+                if ((settings?.Enabled ?? false) && username.ToString().Equals("azure", StringComparison.OrdinalIgnoreCase))
+                {
+                    WriteLine($"{Environment.NewLine}Logging into Azure AD...");
+
+                    IPublicClientApplication app = null;
+                    IAccount account;
+
+                    (AuthenticationResult, Exception) acquireTokenInteractive(IEnumerable<string> scopes)
+                    {
+                        try
+                        {
+                            [DllImport("kernel32.dll")]
+                            static extern IntPtr GetConsoleWindow();
+
+                            AcquireTokenInteractiveParameterBuilder authParams = app!.AcquireTokenInteractive(scopes)
+                                .WithAccount(account)
+                                .WithParentActivityOrWindow(GetConsoleWindow())
+                                .WithPrompt(Prompt.NoPrompt);
+
+                            return (authParams.ExecuteAsync().Result, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), "Azure AD Error Acquiring Token", exception: ex);
+                            WriteError($"Azure AD Error Acquiring Token:{Environment.NewLine}{ex.Message}");
+                            return (null, ex);
+                        }
+                    }
+
+                    try
+                    {
+                        PublicClientApplicationBuilder appParams = PublicClientApplicationBuilder.Create(settings.ClientID)
+                            .WithAuthority(settings.Authority)
+                            .WithDefaultRedirectUri()
+                            .WithBrokerPreview();
+
+                        app = appParams.Build();
+                        TokenCacheHelper.EnableSerialization(app.UserTokenCache);
+
+                        account = app.GetAccountsAsync().Result.FirstOrDefault();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), nameof(MsalUiRequiredException), exception: ex);
+                        account = PublicClientApplication.OperatingSystemAccount;
+                    }
+
+                    AuthenticationResult authResult;
+                    Exception exception = null;
+                    string[] scopes = { "user.read" };
+
+                    try
+                    {
+                        authResult = app?.AcquireTokenSilent(scopes, account).ExecuteAsync().Result;
+                    }
+                    catch (MsalUiRequiredException ex)
+                    {
+                        Log.Publish(MessageLevel.Info, nameof(PromptForCredentials), nameof(MsalUiRequiredException), exception: ex);
+                        (authResult, exception) = acquireTokenInteractive(scopes);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), "Azure AD Error Acquiring Token Silently", exception: ex);
+                        (authResult, exception) = acquireTokenInteractive(scopes);
+                    }
+
+                    if (authResult is null)
+                    {
+                        WriteError($"Azure AD Failed to Acquire Authorization Result:{Environment.NewLine}No result retrieved for silent nor interactive authorization: {exception?.Message}");
+                        return;
+                    }
+
+                    WriteLine($"Azure AD login successful, validating user \"{authResult.Account.Username}\" with security service...{Environment.NewLine}");
+
+                    username.Clear();
+                    username.Append(authResult.Account.Username);
+
+                    password.Clear();
+                    password.Append(authResult.AccessToken);
+
+                    m_isAzureAD = true;
+                    return;
+                }
 
                 // Capture the password.
                 Write("Enter password: ");
@@ -635,33 +737,32 @@ namespace GSF.TimeSeries
 
         private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            if (m_remotingClient is TlsClient remotingClient)
+            if (m_remotingClient is not TlsClient remotingClient)
+                return false;
+
+            if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
             {
-                if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
-                {
-                    // Create an exception and do not check policy for localhost
-                    IPHostEntry localhost = Dns.GetHostEntry("localhost");
+                // Create an exception and do not check policy for localhost
+                IPHostEntry localhost = Dns.GetHostEntry("localhost");
 
-                    if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
-                        return true;
-                }
-
-                // Not connected to localhost, so use the policy checker
-                SimplePolicyChecker policyChecker = new SimplePolicyChecker
-                {
-                    ValidPolicyErrors = remotingClient.ValidPolicyErrors,
-                    ValidChainFlags = remotingClient.ValidChainFlags
-                };
-
-                return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+                if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
+                    return true;
             }
 
-            return false;
+            // Not connected to localhost, so use the policy checker
+            SimplePolicyChecker policyChecker = new()
+            {
+                ValidPolicyErrors = remotingClient.ValidPolicyErrors,
+                ValidChainFlags = remotingClient.ValidChainFlags
+            };
+
+            return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+
         }
 
         private void DisplayHelp()
         {
-            StringBuilder help = new StringBuilder();
+            StringBuilder help = new();
 
             help.AppendFormat("Commands supported by {0}:", AssemblyInfo.EntryAssembly.Name);
             help.AppendLine();
@@ -697,20 +798,16 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event argument.</param>
-        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e)
-        {
+        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e) =>
             m_authenticated = true;
-        }
 
         /// <summary>
         /// Client helper authentication failure reception handler.
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event argument.</param>
-        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e)
-        {
+        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e) =>
             m_authenticationFailure = true;
-        }
 
         /// <summary>
         /// Client helper service update reception handler.
@@ -722,18 +819,13 @@ namespace GSF.TimeSeries
             lock (m_displayLock)
             {
                 // Output status updates from the service to the console window.
-                switch (e.Argument1)
+                System.Console.ForegroundColor = e.Argument1 switch
                 {
-                    case UpdateType.Alarm:
-                        System.Console.ForegroundColor = ConsoleColor.Red;
-                        break;
-                    case UpdateType.Information:
-                        System.Console.ForegroundColor = m_originalFgColor;
-                        break;
-                    case UpdateType.Warning:
-                        System.Console.ForegroundColor = ConsoleColor.Yellow;
-                        break;
-                }
+                    UpdateType.Alarm => ConsoleColor.Red,
+                    UpdateType.Information => m_originalFgColor,
+                    UpdateType.Warning => ConsoleColor.Yellow,
+                    _ => System.Console.ForegroundColor
+                };
 
                 Write(e.Argument2);
                 System.Console.ForegroundColor = m_originalFgColor;
@@ -757,20 +849,16 @@ namespace GSF.TimeSeries
                 if (responseSuccess)
                 {
                     if (string.IsNullOrWhiteSpace(message))
-                        Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
+                        WriteLine($"{sourceCommand} command processed successfully.{Environment.NewLine}");
                     else
-                        Write("{0}\r\n\r\n", message);
+                        WriteLine($"{message}{Environment.NewLine}");
                 }
                 else
                 {
-                    System.Console.ForegroundColor = ConsoleColor.Red;
-
                     if (string.IsNullOrWhiteSpace(message))
-                        Write("{0} failure.\r\n\r\n", sourceCommand);
+                        WriteError($"{sourceCommand} failure.");
                     else
-                        Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
-
-                    System.Console.ForegroundColor = m_originalFgColor;
+                        WriteError($"{sourceCommand} failure: {message}");
                 }
             }
 
@@ -780,23 +868,17 @@ namespace GSF.TimeSeries
                 if (!responseSuccess || !sourceCommand.Equals("GetReport", StringComparison.OrdinalIgnoreCase))
                     return;
 
-                if (e.Argument.Attachments[0] is byte[] reportData)
-                {
-                    string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
-                    File.WriteAllBytes(tempPath, reportData);
-                    using (Process.Start(tempPath))
-                    {
-                    }
-                }
+                if (e.Argument.Attachments[0] is not byte[] reportData)
+                    return;
+
+                string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
+                File.WriteAllBytes(tempPath, reportData);
+                Process.Start(tempPath);
             }
             catch (Exception ex)
             {
                 lock (m_displayLock)
-                {
-                    System.Console.ForegroundColor = ConsoleColor.Red;
-                    WriteLine("Unable to display report due to exception: {0}", ex.Message);
-                    System.Console.ForegroundColor = m_originalFgColor;
-                }
+                    WriteError($"Unable to display report due to exception: {ex.Message}");
 
                 Logger.SwallowException(ex);
             }
@@ -838,33 +920,45 @@ namespace GSF.TimeSeries
             }
         }
 
-        private void Write(string format, params object[] args)
+        private void Write(string message)
+        {
+            lock (m_displayLock)
+                System.Console.Write(message);
+        }
+
+        private void WriteLine(string message = "")
+        {
+            lock (m_displayLock)
+                System.Console.WriteLine(message);
+        }
+
+        private void WriteError(string message)
         {
             lock (m_displayLock)
             {
-                if (args.Length == 0)
-                    System.Console.Write(format);
-                else
-                    System.Console.Write(format, args);
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.WriteLine($"{message}{Environment.NewLine}");
+                System.Console.ForegroundColor = m_originalFgColor;
             }
         }
 
-        private void WriteLine()
-        {
-            lock (m_displayLock)
-            {
-                System.Console.WriteLine();
-            }
-        }
+        #endregion
 
-        private void WriteLine(string format, params object[] args)
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ServiceClientBase), MessageClass.Component);
+        private static readonly AzureADSettings Settings;
+
+        static ServiceClientBase()
         {
-            lock (m_displayLock)
+            try
             {
-                if (args.Length == 0)
-                    System.Console.WriteLine(format);
-                else
-                    System.Console.WriteLine(format, args);
+                Settings = AzureADSettings.Load();
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Info, $".cctor::{nameof(ServiceClientBase)}", "AzureADSettings.Load()", exception: ex);
             }
         }
 
