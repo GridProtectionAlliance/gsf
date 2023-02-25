@@ -592,8 +592,8 @@ namespace GSF.TimeSeries
                 if (settings?.Enabled ?? false)
                 {
                     prompt.AppendLine();
-                    prompt.AppendLine("To authenticate with Azure AD, enter 'azure' as the user name, without");
-                    prompt.AppendLine("quotes, this will pop-up a dialog to authenticate with Azure AD.");
+                    prompt.AppendLine("To authenticate with Azure AD, enter 'azure' as the user name, without quotes,");
+                    prompt.AppendLine("as needed this will pop-up a dialog to authenticate with Azure AD.");
                 }
 
                 prompt.AppendLine();
