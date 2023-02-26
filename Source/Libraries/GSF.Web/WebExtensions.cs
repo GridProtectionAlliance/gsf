@@ -35,7 +35,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using System.Xml;
 using GSF.IO;
 using GSF.Web.Model;
 using Newtonsoft.Json;

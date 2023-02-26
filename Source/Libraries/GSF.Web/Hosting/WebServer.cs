@@ -44,7 +44,7 @@ using GSF.IO.Checksums;
 using GSF.Reflection;
 using GSF.Web.Model;
 using GSF.Web.Security;
-using Microsoft.Ajax.Utilities;
+using Minifier = NUglify.Uglify;
 
 #pragma warning disable SG0018 // Path traversal prevented by web api controller
 
@@ -90,9 +90,7 @@ namespace GSF.Web.Hosting
         public WebServer(WebServerOptions options = null, IRazorEngine razorEngineCS = null, IRazorEngine razorEngineVB = null)
         {
             m_releaseMode = !AssemblyInfo.EntryAssembly.Debuggable;
-
-            if (options is null)
-                options = new WebServerOptions();
+            options ??= new WebServerOptions();
 
             m_options = options;
             RazorEngineCS = razorEngineCS ?? (m_releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
@@ -110,9 +108,9 @@ namespace GSF.Web.Hosting
                 EnableRaisingEvents = true
             };
 
-            m_fileWatcher.Changed += m_fileWatcher_FileChange;
-            m_fileWatcher.Deleted += m_fileWatcher_FileChange;
-            m_fileWatcher.Renamed += m_fileWatcher_FileChange;
+            m_fileWatcher.Changed += FileWatcher_FileChange;
+            m_fileWatcher.Deleted += FileWatcher_FileChange;
+            m_fileWatcher.Renamed += FileWatcher_FileChange;
         }
 
         #endregion
@@ -187,7 +185,7 @@ namespace GSF.Web.Hosting
         /// <returns>HTTP response for provided request.</returns>
         public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, CancellationToken cancellationToken, object model = null, Type modelType = null, AdoDataConnection database = null)
         {
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            HttpResponseMessage response = new(HttpStatusCode.OK);
             string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
             bool embeddedResource = pageName.StartsWith("@");
             Tuple<Type, Type> pagedViewModelTypes;
@@ -235,7 +233,7 @@ namespace GSF.Web.Hosting
                                 // Calculate check-sum for file
                                 const int BufferSize = 32768;
                                 byte[] buffer = new byte[BufferSize];
-                                Crc32 calculatedHash = new Crc32();
+                                Crc32 calculatedHash = new();
 
                                 int bytesRead = await source.ReadAsync(buffer, 0, BufferSize, cancellationToken);
 
@@ -292,7 +290,7 @@ namespace GSF.Web.Hosting
                 string handlerHeader;
 
                 // Parse class name from ASHX handler header parameters
-                using (StreamReader reader = new StreamReader(source))
+                using (StreamReader reader = new(source))
                     handlerHeader = (await reader.ReadToEndAsync()).RemoveCrLfs().Trim();
 
                 // Clean up header formatting to make parsing easier
@@ -319,7 +317,7 @@ namespace GSF.Web.Hosting
 
             IHostedHttpHandler handler = null;
 
-            if (!(handlerType is null))
+            if (handlerType is not null)
                 handler = Activator.CreateInstance(handlerType) as IHostedHttpHandler;
 
             if (handler is null)
@@ -360,15 +358,15 @@ namespace GSF.Web.Hosting
                 case ".js":
                     if (m_options.MinifyJavascriptResource(pageName))
                     {
-                        using StreamReader reader = new StreamReader(stream);
-                        minimizedStream = await new Minifier().MinifyJavaScript(await reader.ReadToEndAsync()).ToStreamAsync();
+                        using StreamReader reader = new(stream);
+                        minimizedStream = await Minifier.Js(await reader.ReadToEndAsync()).Code.ToStreamAsync();
                     }
                     break;
                 case ".css":
                     if (m_options.MinifyStyleSheetResource(pageName))
                     {
-                        using StreamReader reader = new StreamReader(stream);
-                        minimizedStream = await new Minifier().MinifyStyleSheet(await reader.ReadToEndAsync()).ToStreamAsync();
+                        using StreamReader reader = new(stream);
+                        minimizedStream = await Minifier.Css(await reader.ReadToEndAsync()).Code.ToStreamAsync();
                     }
                     break;
             }
@@ -385,11 +383,11 @@ namespace GSF.Web.Hosting
             // See if client's version of cached resource is up to date
             foreach (EntityTagHeaderValue headerValue in request.Headers.IfNoneMatch)
             {
-                if (long.TryParse(headerValue.Tag?.Substring(1, headerValue.Tag.Length - 2), out long requestHash) && responseHash == requestHash)
-                {
-                    response.StatusCode = HttpStatusCode.NotModified;
-                    return false;
-                }
+                if (!long.TryParse(headerValue.Tag?.Substring(1, headerValue.Tag.Length - 2), out long requestHash) || responseHash != requestHash)
+                    continue;
+
+                response.StatusCode = HttpStatusCode.NotModified;
+                return false;
             }
 
             response.Headers.CacheControl = new CacheControlHeaderValue
@@ -408,7 +406,7 @@ namespace GSF.Web.Hosting
         private void OnStatusMessage(string message) => 
             StatusMessage?.Invoke(this, new EventArgs<string>(message));
 
-        private void m_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
+        private void FileWatcher_FileChange(object sender, FileSystemEventArgs e)
         {
             if (m_etagCache.TryRemove(e.FullPath, out long responseHash))
                 OnStatusMessage($"Cache [{responseHash}] cleared for file \"{e.FullPath}\"");
@@ -471,7 +469,7 @@ namespace GSF.Web.Hosting
                     settings.Add(nameof(AuthenticationOptions.AuthTestPage), AuthenticationOptions.DefaultAuthTestPage, "Defines the page name for the web server to test if a user is authenticated.");
                     settings.Add(nameof(WebServerOptions.ErrorTemplateName), WebServerOptions.DefaultErrorTemplateName, "Defines the template file name to use when a Razor compile or execution exception occurs. Leave blank for none.");
 
-                    WebServerOptions options = new WebServerOptions
+                    WebServerOptions options = new()
                     {
                         WebRootPath = settings[nameof(WebServerOptions.WebRootPath)].ValueAs(WebServerOptions.DefaultWebRootPath),
                         ClientCacheEnabled = settings[nameof(WebServerOptions.ClientCacheEnabled)].ValueAsBoolean(WebServerOptions.DefaultClientCacheEnabled),

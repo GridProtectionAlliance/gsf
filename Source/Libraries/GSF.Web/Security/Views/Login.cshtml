@@ -33,7 +33,7 @@
 @using GSF.Web.Model
 @using GSF.Web.Security
 @using GSF.Web.Shared
-@using Microsoft.Ajax.Utilities
+@using Minifier = NUglify.Uglify
 @inherits ExtendedTemplateBase
 @{
     HttpRequestMessage request = ViewBag.Request;
@@ -280,8 +280,8 @@
         }
     </style>
     <script>
-        @Raw(new Minifier().MinifyJavaScript(constants))
-        @Raw(msalConfig)
+        @Raw(Minifier.Js(constants).Code)
+        @Raw(Minifier.Js(msalConfig).Code)
     </script>
 </head>
 <body role="document">
