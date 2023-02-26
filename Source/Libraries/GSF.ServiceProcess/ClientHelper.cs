@@ -430,14 +430,14 @@ namespace GSF.ServiceProcess
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
+            settings[nameof(Username)].Scope = SettingScope.User;
+            settings[nameof(Password)].Scope = SettingScope.User;
+            settings[nameof(Password)].Encrypted = true;
+
             settings[nameof(Username), true].Update(m_username);
             settings[nameof(Password), true].Update(Password);
             settings[nameof(SerializationFormat), true].Update(SerializationFormat);
             settings[nameof(StatusMessageFilter), true].Update(m_statusMessageFilter);
-
-            settings[nameof(Username)].Scope = SettingScope.User;
-            settings[nameof(Password)].Scope = SettingScope.User;
-            settings[nameof(Password)].Encrypted = true;
 
             config.Save();
         }
@@ -728,7 +728,7 @@ namespace GSF.ServiceProcess
             if (!m_attemptReconnection)
                 return;
 
-            new Thread(state =>
+            new Thread(_ =>
             {
                 try
                 {
@@ -753,13 +753,13 @@ namespace GSF.ServiceProcess
             switch (response.Type)
             {
                 case "UPDATECLIENTSTATUS-INFORMATION":
-                    UpdateStatus(UpdateType.Information, "{0}", response.Message);
+                    UpdateStatus(UpdateType.Information, response.Message);
                     break;
                 case "UPDATECLIENTSTATUS-WARNING":
-                    UpdateStatus(UpdateType.Warning, "{0}", response.Message);
+                    UpdateStatus(UpdateType.Warning, response.Message);
                     break;
                 case "UPDATECLIENTSTATUS-ALARM":
-                    UpdateStatus(UpdateType.Alarm, "{0}", response.Message);
+                    UpdateStatus(UpdateType.Alarm, response.Message);
                     break;
                 case "AUTHENTICATIONSUCCESS":
                     SendRequest(StatusMessageFilter);
