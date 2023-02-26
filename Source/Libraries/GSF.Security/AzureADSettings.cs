@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Configuration;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -149,6 +150,7 @@ public class AzureADSettings
         CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
 
         settings.Add(AzureADSecretKey, "", "Defines the Azure AD secret value to be used for user info and group lookups, post authentication.", true);
+        config.Save(ConfigurationSaveMode.Modified);
 
         string secret = settings[AzureADSecretKey].ValueAs("");
 
@@ -176,7 +178,7 @@ public class AzureADSettings
             }
             catch (AggregateException ex)
             {
-                LastException = new InvalidOperationException($"Failed to get client token: {string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message))}", ex);
+                throw new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
             }
             catch (Exception ex)
             {
