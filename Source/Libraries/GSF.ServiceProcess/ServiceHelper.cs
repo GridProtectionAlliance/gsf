@@ -254,8 +254,8 @@ namespace GSF.ServiceProcess
                 m_thread.Push(LowPriority, () =>
                 {
                     UpdateType type = UpdateType.Information;
-                    StringBuilder messageBuilder = new StringBuilder();
-                    List<StatusUpdate> messages = new List<StatusUpdate>();
+                    StringBuilder messageBuilder = new();
+                    List<StatusUpdate> messages = new();
                     int messageCount = GetRecentMessageCount();
                     int suppressedMessageCount = 0;
 
@@ -336,8 +336,8 @@ namespace GSF.ServiceProcess
             {
                 m_thread.Push(HighPriority, () =>
                 {
-                    StringBuilder messageBuilder = new StringBuilder();
-                    StringBuilder commandBuilder = new StringBuilder();
+                    StringBuilder messageBuilder = new();
+                    StringBuilder commandBuilder = new();
                     int i = 0;
 
                     commandBuilder.Append("Filter");
@@ -560,64 +560,64 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> is starting.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService is starting.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService is starting.")]
         public event EventHandler<EventArgs<string[]>> ServiceStarting;
 
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> has started.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService has started.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService has started.")]
         public event EventHandler ServiceStarted;
 
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> is stopping.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService is stopping.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService is stopping.")]
         public event EventHandler ServiceStopping;
 
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> has stopped.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService has stopped.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService has stopped.")]
         public event EventHandler ServiceStopped;
 
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> is pausing.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService is pausing.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService is pausing.")]
         public event EventHandler ServicePausing;
 
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> has paused.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService has paused.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService has paused.")]
         public event EventHandler ServicePaused;
 
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> is resuming.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService is resuming.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService is resuming.")]
         public event EventHandler ServiceResuming;
 
         /// <summary>
         /// Occurs when the <see cref="ParentService"/> has resumed.
         /// </summary>
-        [Category("Service"),
-        Description("Occurs when the ParentService has resumed.")]
+        [Category("Service")]
+        [Description("Occurs when the ParentService has resumed.")]
         public event EventHandler ServiceResumed;
 
         /// <summary>
         /// Occurs when the system is being shutdown.
         /// </summary>
-        [Category("System"),
-        Description("Occurs when the system is being shutdown.")]
+        [Category("System")]
+        [Description("Occurs when the system is being shutdown.")]
         public event EventHandler SystemShutdown;
 
         /// <summary>
@@ -627,8 +627,8 @@ namespace GSF.ServiceProcess
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the remote client that sent the request.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="ClientRequest"/> sent by the remote client.
         /// </remarks>
-        [Category("Client"),
-        Description("Occurs when a request is received from one of the RemoteClients.")]
+        [Category("Client")]
+        [Description("Occurs when a request is received from one of the RemoteClients.")]
         public event EventHandler<EventArgs<Guid, ClientRequest>> ReceivedClientRequest;
 
         /// <summary>
@@ -639,8 +639,8 @@ namespace GSF.ServiceProcess
         /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the <see cref="ServiceResponse"/> to be sent to the client.<br/>
         /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the assignable cancellation state, set to <c>true</c> to cancel send; otherwise, <c>false</c>
         /// </remarks>
-        [Category("Service"),
-         Description("Occurs when a response is being sent to one or more RemoteClients.")]
+        [Category("Service")]
+        [Description("Occurs when a response is being sent to one or more RemoteClients.")]
         public event EventHandler<EventArgs<Guid, ServiceResponse, bool>> SendingClientResponse;
 
         /// <summary>
@@ -650,8 +650,8 @@ namespace GSF.ServiceProcess
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="ServiceProcess.Name"/>.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="ServiceProcess.CurrentState"/>
         /// </remarks>
-        [Category("Process"),
-        Description("Occurs when the state of a defined ServiceProcess changes.")]
+        [Category("Process")]
+        [Description("Occurs when the state of a defined ServiceProcess changes.")]
         public event EventHandler<EventArgs<string, ServiceProcessState>> ProcessStateChanged;
 
         /// <summary>
@@ -662,8 +662,8 @@ namespace GSF.ServiceProcess
         /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the status message sent to consumer(s).<br/>
         /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the message <see cref="UpdateType"/>.
         /// </remarks>
-        [Category("Notification"),
-        Description("Occurs when there are status messages sent to consumer(s).")]
+        [Category("Notification")]
+        [Description("Occurs when there are status messages sent to consumer(s).")]
         public event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
 
         /// <summary>
@@ -672,8 +672,8 @@ namespace GSF.ServiceProcess
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the exception that was logged.
         /// </remarks>
-        [Category("Notification"),
-        Description("Occurs when there is an exception logged.")]
+        [Category("Notification")]
+        [Description("Occurs when there is an exception logged.")]
         public event EventHandler<EventArgs<Exception>> LoggedException;
 
         // Fields
@@ -783,18 +783,18 @@ namespace GSF.ServiceProcess
         /// Gets or sets a boolean value that indicates whether messages sent using <see cref="UpdateStatus(UpdateType,string,object[])"/> 
         /// or <see cref="UpdateStatus(Guid,UpdateType,string,object[])"/> are to be logged to the <see cref="StatusLog"/>.
         /// </summary>
-        [Category("Updates"),
-        DefaultValue(DefaultLogStatusUpdates),
-        Description("Indicates whether messages sent using UpdateStatus() method overloads are to be logged to the StatusLog.")]
+        [Category("Updates")]
+        [DefaultValue(DefaultLogStatusUpdates)]
+        [Description("Indicates whether messages sent using UpdateStatus() method overloads are to be logged to the StatusLog.")]
         public bool LogStatusUpdates { get; set; } = DefaultLogStatusUpdates;
 
         /// <summary>
         /// Gets or sets the maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is negative or zero.</exception>
-        [Category("Updates"),
-        DefaultValue(DefaultMaxStatusUpdatesLength),
-        Description("Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.")]
+        [Category("Updates")]
+        [DefaultValue(DefaultMaxStatusUpdatesLength)]
+        [Description("Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.")]
         public int MaxStatusUpdatesLength
         {
             get => m_maxStatusUpdatesLength;
@@ -811,9 +811,9 @@ namespace GSF.ServiceProcess
         /// Gets or sets the maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is negative or zero.</exception>
-        [Category("Updates"),
-        DefaultValue(DefaultMaxStatusUpdatesFrequency),
-        Description("Maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.")]
+        [Category("Updates")]
+        [DefaultValue(DefaultMaxStatusUpdatesFrequency)]
+        [Description("Maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.")]
         public int MaxStatusUpdatesFrequency
         {
             get => m_maxStatusUpdatesFrequency;
@@ -829,17 +829,17 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the health of the <see cref="ParentService"/> is to be monitored.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultMonitorServiceHealth),
-        Description("Indicates whether the health of the ParentService is to be monitored.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultMonitorServiceHealth)]
+        [Description("Indicates whether the health of the ParentService is to be monitored.")]
         public bool MonitorServiceHealth { get; set; } = DefaultMonitorServiceHealth;
 
         /// <summary>
         /// Gets or sets the interval, in seconds, over which to sample the performance monitor for health statistics.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultHealthMonitorInterval),
-        Description("Indicates the interval, in seconds, over which to sample the performance monitor for health statistics.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultHealthMonitorInterval)]
+        [Description("Indicates the interval, in seconds, over which to sample the performance monitor for health statistics.")]
         public double HealthMonitorInterval
         {
             get => m_healthMonitorInterval;
@@ -847,7 +847,7 @@ namespace GSF.ServiceProcess
             {
                 m_healthMonitorInterval = value <= 0.0D ? DefaultHealthMonitorInterval : value;
 
-                if (!(PerformanceMonitor is null))
+                if (PerformanceMonitor is not null)
                     PerformanceMonitor.SamplingInterval = m_healthMonitorInterval * 1000.0D;
             }
         }
@@ -856,9 +856,9 @@ namespace GSF.ServiceProcess
         /// Gets or sets the maximum number of <see cref="ClientRequest"/> entries to be maintained in the <see cref="ClientRequestHistory"/>.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
-        [Category("Settings"),
-        DefaultValue(DefaultRequestHistoryLimit),
-        Description("Maximum number of ClientRequest entries to be maintained in the ClientRequestHistory.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultRequestHistoryLimit)]
+        [Description("Maximum number of ClientRequest entries to be maintained in the ClientRequestHistory.")]
         public int RequestHistoryLimit
         {
             get => m_requestHistoryLimit;
@@ -874,49 +874,49 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets or sets boolean value that indicates whether the <see cref="ServiceHelper"/> will have support for file-management commands.
         /// </summary>
-        [Category("Security"),
-        DefaultValue(DefaultSupportFileManagementCommands),
-        Description("Indicates whether the ServiceHelper will have support for file-management commands.")]
+        [Category("Security")]
+        [DefaultValue(DefaultSupportFileManagementCommands)]
+        [Description("Indicates whether the ServiceHelper will have support for file-management commands.")]
         public bool SupportFileManagementCommands { get; set; } = DefaultSupportFileManagementCommands;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> will have support for remote telnet-like sessions.
         /// </summary>
-        [Category("Security"),
-        DefaultValue(DefaultSupportTelnetSessions),
-        Description("Indicates whether the ServiceHelper will have support for remote telnet-like sessions.")]
+        [Category("Security")]
+        [DefaultValue(DefaultSupportTelnetSessions)]
+        [Description("Indicates whether the ServiceHelper will have support for remote telnet-like sessions.")]
         public bool SupportTelnetSessions { get; set; } = DefaultSupportTelnetSessions;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether <see cref="ServiceHelper"/> commands will have support for system-level access (-system switch).
         /// </summary>
-        [Category("Security"),
-        DefaultValue(DefaultSupportSystemCommands),
-        Description("Indicates whether the ServiceHelper commands will have support for system-level access (-system switch).")]
+        [Category("Security")]
+        [DefaultValue(DefaultSupportSystemCommands)]
+        [Description("Indicates whether the ServiceHelper commands will have support for system-level access (-system switch).")]
         public bool SupportSystemCommands { get; set; } = DefaultSupportSystemCommands;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether <see cref="ServiceHelper"/> will secure remote interactions from <see cref="ClientHelper"/>.
         /// </summary>
-        [Category("Security"),
-        DefaultValue(DefaultSecureRemoteInteractions),
-        Description("Indicates whether ServiceHelper will secure remote interactions from ClientHelper.")]
+        [Category("Security")]
+        [DefaultValue(DefaultSecureRemoteInteractions)]
+        [Description("Indicates whether ServiceHelper will secure remote interactions from ClientHelper.")]
         public bool SecureRemoteInteractions { get; set; } = DefaultSecureRemoteInteractions;
 
         /// <summary>
         /// Gets or sets a value that indicates the desired message <see cref="GSF.SerializationFormat"/> for interaction with <see cref="ClientHelper"/>.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultSerializationFormat),
-        Description("Indicates messaging serialization format for interactions with ClientHelper.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultSerializationFormat)]
+        [Description("Indicates messaging serialization format for interactions with ClientHelper.")]
         public SerializationFormat SerializationFormat { get; set; } = DefaultSerializationFormat;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ServiceHelper"/> are to be saved to the config file.
         /// </summary>
-        [Category("Persistence"),
-        DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the settings of ServiceHelper are to be saved to the config file.")]
+        [Category("Persistence")]
+        [DefaultValue(DefaultPersistSettings)]
+        [Description("Indicates whether the settings of ServiceHelper are to be saved to the config file.")]
         public bool PersistSettings { get; set; } = DefaultPersistSettings;
 
         /// <summary>
@@ -924,9 +924,9 @@ namespace GSF.ServiceProcess
         /// if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistence"),
-        DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the settings of ServiceHelper are to be saved to the config file if the PersistSettings property is set to true.")]
+        [Category("Persistence")]
+        [DefaultValue(DefaultSettingsCategory)]
+        [Description("Category under which the settings of ServiceHelper are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get => m_settingsCategory;
@@ -942,25 +942,21 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets or sets the <see cref="ServiceBase"/> to which the <see cref="ServiceHelper"/> will provided added functionality.
         /// </summary>
-        [Category("Components"),
-        Description("ServiceBase to which the ServiceHelper will provided added functionality.")]
-        public ServiceBase ParentService
-        {
-            get;
-            set;
-        }
+        [Category("Components")]
+        [Description("ServiceBase to which the ServiceHelper will provided added functionality.")]
+        public ServiceBase ParentService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="ServerBase"/> component used for communicating with <see cref="RemoteClients"/>.
         /// </summary>
-        [Category("Components"),
-        Description("ServerBase component used for communicating with RemoteClients.")]
+        [Category("Components")]
+        [Description("ServerBase component used for communicating with RemoteClients.")]
         public ServerBase RemotingServer
         {
             get => m_remotingServer;
             set
             {
-                if (!(m_remotingServer is null))
+                if (m_remotingServer is not null)
                 {
                     // Detach events from any existing instance
                     m_remotingServer.ClientConnectingException -= RemotingServer_ClientConnectingException;
@@ -984,33 +980,33 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets the <see cref="ScheduleManager"/> component used for scheduling defined <see cref="ServiceProcess"/>.
         /// </summary>
-        [Category("Components"),
-        Description("ScheduleManager component used for scheduling defined ServiceProcess."),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [Category("Components")]
+        [Description("ScheduleManager component used for scheduling defined ServiceProcess.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ScheduleManager ProcessScheduler { get; }
 
         /// <summary>
         /// Gets the <see cref="LogFile"/> component used for logging status messages to a text file.
         /// </summary>
-        [Category("Components"),
-        Description("LogFile component used for logging status messages to a text file."),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [Category("Components")]
+        [Description("LogFile component used for logging status messages to a text file.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public LogFile StatusLog { get; }
 
         /// <summary>
         /// Gets the <see cref="ErrorLogger"/> component used for logging errors encountered in the <see cref="ParentService"/>.
         /// </summary>
-        [Category("Components"),
-        Description("ErrorLogger component used for logging errors encountered in the ParentService."),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [Category("Components")]
+        [Description("ErrorLogger component used for logging errors encountered in the ParentService.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ErrorLogger ErrorLogger { get; }
 
         /// <summary>
         /// Gets the <see cref="ErrorLogger"/> component used for logging connection related exceptions encountered in the <see cref="ParentService"/>.
         /// </summary>
-        [Category("Components"),
-        Description("ConnectionErrorLogger component used for logging connection related exceptions encountered in the ParentService."),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [Category("Components")]
+        [Description("ConnectionErrorLogger component used for logging connection related exceptions encountered in the ParentService.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ErrorLogger ConnectionErrorLogger { get; }
 
         /// <summary>
@@ -1019,9 +1015,9 @@ namespace GSF.ServiceProcess
         /// <remarks>
         /// <see cref="Enabled"/> property is not be set by user-code directly.
         /// </remarks>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
             get => m_enabled;
@@ -1034,7 +1030,7 @@ namespace GSF.ServiceProcess
                     {
                         foreach (object component in m_serviceComponents)
                         {
-                            if (!(component is ISupportLifecycle typedComponent))
+                            if (component is not ISupportLifecycle typedComponent)
                                 continue;
 
                             // Restore previous state.
@@ -1052,7 +1048,7 @@ namespace GSF.ServiceProcess
                     {
                         foreach (object component in m_serviceComponents)
                         {
-                            if (!(component is ISupportLifecycle typedComponent))
+                            if (component is not ISupportLifecycle typedComponent)
                                 continue;
 
                             // Save current state.
@@ -1069,51 +1065,51 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Gets a list of <see cref="ServiceProcess"/> defined in the <see cref="ServiceHelper"/>.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IList<ServiceProcess> Processes => m_processes.AsReadOnly();
 
         /// <summary>
         /// Gets a list of <see cref="ClientInfo"/> for remote clients connected to the <see cref="RemotingServer"/>.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IList<ClientInfo> RemoteClients => m_remoteClients.AsReadOnly();
 
         /// <summary>
         /// Gets a list of <see cref="ClientRequestInfo"/> for requests made by <see cref="RemoteClients"/>.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IList<ClientRequestInfo> ClientRequestHistory => m_clientRequestHistory.AsReadOnly();
 
         /// <summary>
         /// Gets a list of <see cref="ClientRequestHandler"/> registered for handling requests from <see cref="RemoteClients"/>.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IList<ClientRequestHandler> ClientRequestHandlers => m_clientRequestHandlers;
 
         /// <summary>
         /// Gets a list of components that implement the <see cref="ISupportLifecycle"/> interface used by the <see cref="ParentService"/>.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IList<object> ServiceComponents => m_serviceComponents;
 
         /// <summary>
         /// Gets the <see cref="PerformanceMonitor"/> object used for monitoring the health of the <see cref="ParentService"/>.
         /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public PerformanceMonitor PerformanceMonitor { get; private set; }
 
         /// <summary>
@@ -1130,10 +1126,10 @@ namespace GSF.ServiceProcess
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 // Show the uptime for the windows service.
-                if (!(m_remotingServer is null))
+                if (m_remotingServer is not null)
                 {
                     status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime.ToString(3));
                     status.AppendLine();
@@ -1149,7 +1145,7 @@ namespace GSF.ServiceProcess
                 {
                     foreach (object component in m_serviceComponents)
                     {
-                        if (!(component is IProvideStatus typedComponent))
+                        if (component is not IProvideStatus typedComponent)
                             continue;
 
                         // This component provides status information.                       
@@ -1313,7 +1309,7 @@ namespace GSF.ServiceProcess
             settings.Add("SecureRemoteInteractions", SecureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
             settings.Add("SerializationFormat", SerializationFormat, "Message serialization format for interactions with clients, one of: Xml, Json or Binary. Default is Binary.");
 
-            if (!(settings["TelnetSessionPassword"] is null))
+            if (settings["TelnetSessionPassword"] is not null)
                 m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
 
             LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(LogStatusUpdates);
@@ -1587,10 +1583,10 @@ namespace GSF.ServiceProcess
                 if (!string.IsNullOrWhiteSpace(status))
                     message = $"{(args.Length == 0 ? status : string.Format(status, args))}\r\n\r\n";
 
-                ServiceResponse response = new ServiceResponse(responseType, CurtailMessageLength(message));
+                ServiceResponse response = new(responseType, CurtailMessageLength(message));
 
                 // Add any specified attachment to the service response
-                if (!(attachment is null))
+                if (attachment is not null)
                     response.Attachments.Add(attachment);
 
                 // Add original command arguments as an attachment
@@ -1750,10 +1746,10 @@ namespace GSF.ServiceProcess
         {
             processName = processName.Trim();
 
-            if (!(FindProcess(processName) is null))
+            if (FindProcess(processName) is not null)
                 return false;
 
-            ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
+            ServiceProcess process = new(processExecutionMethod, processName, processArguments);
 
             process.StateChanged += Process_StateChanged;
 
@@ -1856,7 +1852,7 @@ namespace GSF.ServiceProcess
             // The specified process exists, so we'll schedule it, or update its schedule if it is scheduled already.
             Schedule existingSchedule = ProcessScheduler.FindSchedule(processName);
 
-            if (!(existingSchedule is null))
+            if (existingSchedule is not null)
             {
                 // Update the process schedule if it is already exists.
                 if (!updateExistingSchedule)
@@ -1917,7 +1913,7 @@ namespace GSF.ServiceProcess
             lock (m_clientRequestHandlers)
             {
                 return m_clientRequestHandlers.Find(handler => handler.Command.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase) ||
-                       (!(handler.Aliases is null) && handler.Aliases.Any(alias => alias.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase))));
+                       (handler.Aliases is not null && handler.Aliases.Any(alias => alias.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase))));
             }
         }
 
@@ -2166,7 +2162,7 @@ namespace GSF.ServiceProcess
         {
             try
             {
-                EventArgs<Guid, ServiceResponse, bool> args = new EventArgs<Guid, ServiceResponse, bool>(client, response, false);
+                EventArgs<Guid, ServiceResponse, bool> args = new(client, response, false);
                 SendingClientResponse?.Invoke(this, args);
                 return !args.Argument3;
             }
@@ -2253,25 +2249,25 @@ namespace GSF.ServiceProcess
                 // This will be done only when the object is disposed by calling Dispose().
                 SaveSettings();
 
-                if (!(StatusLog is null))
+                if (StatusLog is not null)
                 {
                     StatusLog.LogException -= StatusLog_LogException;
                     StatusLog.Dispose();
                 }
 
-                if (!(ProcessScheduler is null))
+                if (ProcessScheduler is not null)
                 {
                     ProcessScheduler.ScheduleDue -= Scheduler_ScheduleDue;
                     ProcessScheduler.Dispose();
                 }
 
-                if (!(ErrorLogger is null))
+                if (ErrorLogger is not null)
                 {
                     ErrorLogger.LoggingException -= ErrorLogger_LoggingException;
                     ErrorLogger.Dispose();
                 }
 
-                if (!(ConnectionErrorLogger is null))
+                if (ConnectionErrorLogger is not null)
                 {
                     ConnectionErrorLogger.LoggingException -= ConnectionErrorLogger_LoggingException;
                     ConnectionErrorLogger.Dispose();
@@ -2279,7 +2275,7 @@ namespace GSF.ServiceProcess
 
                 PerformanceMonitor?.Dispose();
 
-                if (!(m_remoteCommandProcess is null))
+                if (m_remoteCommandProcess is not null)
                 {
                     m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
                     m_remoteCommandProcess.OutputDataReceived -= RemoteCommandProcess_OutputDataReceived;
@@ -2293,7 +2289,7 @@ namespace GSF.ServiceProcess
                 m_queueCancellationToken?.Cancel();
 
                 // Service processes are created and owned by remoting server, so we dispose them
-                if (!(m_processes is null))
+                if (m_processes is not null)
                 {
                     lock (m_processes)
                     {
@@ -2323,18 +2319,18 @@ namespace GSF.ServiceProcess
                 throw new ArgumentNullException(nameof(client));
 
             // Attempt to find the TryGetClientPrincipal method using reflection - remoting server could be a TCP or TLS server
-            if (!(m_remotingServer is null) && m_tryGetClientPrincipalFunction is null)
+            if (m_remotingServer is not null && m_tryGetClientPrincipalFunction is null)
             {
                 MethodInfo tryGetClientPrincipalInfo = m_remotingServer.GetType().GetMethod("TryGetClientPrincipal", new[] { typeof(Guid), typeof(WindowsPrincipal).MakeByRefType() });
 
-                if (!(tryGetClientPrincipalInfo is null) && tryGetClientPrincipalInfo.ReturnType == typeof(bool))
+                if (tryGetClientPrincipalInfo is not null && tryGetClientPrincipalInfo.ReturnType == typeof(bool))
                     m_tryGetClientPrincipalFunction = (TryGetClientPrincipalFunctionSignature)Delegate.CreateDelegate(typeof(TryGetClientPrincipalFunctionSignature), m_remotingServer, tryGetClientPrincipalInfo);
             }
 
             // Attempt to get the client principal from the remoting server
-            if (!(m_tryGetClientPrincipalFunction is null) && m_tryGetClientPrincipalFunction(client.ClientID, out WindowsPrincipal clientPrincipal))
+            if (m_tryGetClientPrincipalFunction is not null && m_tryGetClientPrincipalFunction(client.ClientID, out WindowsPrincipal clientPrincipal))
             {
-                if (!(clientPrincipal is null))
+                if (clientPrincipal is not null)
                     return clientPrincipal;
             }
 
@@ -2406,7 +2402,7 @@ namespace GSF.ServiceProcess
 
         private void ProcessStatusUpdates()
         {
-            List<StatusUpdate> updates = new List<StatusUpdate>(m_statusUpdateQueue);
+            List<StatusUpdate> updates = new(m_statusUpdateQueue);
 
             foreach (ClientStatusUpdateConfiguration clientConfig in m_clientStatusUpdateLookup.Values)
                 clientConfig.SendBroadcastUpdates(updates);
@@ -2431,7 +2427,7 @@ namespace GSF.ServiceProcess
             if (string.IsNullOrEmpty(responseMessage) || (clientID == m_remoteCommandClientID && !telnetMessage))
                 return;
 
-            ServiceResponse response = new ServiceResponse();
+            ServiceResponse response = new();
             response.Type = $"UPDATECLIENTSTATUS-{type.ToString().ToUpper()}";
             response.Message = CurtailMessageLength(responseMessage);
             SendResponse(clientID, response);
@@ -2441,21 +2437,21 @@ namespace GSF.ServiceProcess
 
         private void SendServiceStateChangedResponse(ServiceState currentState)
         {
-            ServiceResponse response = new ServiceResponse("SERVICESTATECHANGED");
+            ServiceResponse response = new("SERVICESTATECHANGED");
             response.Attachments.Add(new ObjectState<ServiceState>(Name, currentState));
             SendResponse(response);
         }
 
         private void SendProcessStateChangedResponse(string processName, ServiceProcessState currentState)
         {
-            ServiceResponse response = new ServiceResponse("PROCESSSTATECHANGED");
+            ServiceResponse response = new("PROCESSSTATECHANGED");
             response.Attachments.Add(new ObjectState<ServiceProcessState>(processName, currentState));
             SendResponse(response);
         }
 
         private void Process_StateChanged(object sender, EventArgs e)
         {
-            if (!(sender is ServiceProcess process))
+            if (sender is not ServiceProcess process)
                 return; // Avoiding Null reference exception
 
             OnProcessStateChanged(process.Name, process.CurrentState);
@@ -2540,8 +2536,8 @@ namespace GSF.ServiceProcess
                             throw new SecurityException($"Authentication failed for user '{client.ClientUsername}'. Reason: {securityProvider.AuthenticationFailureReason}");
 
                         // Create the security principal to provide role-based authentication lookups
-                        SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
-                        SecurityPrincipal securityPrincipal = new SecurityPrincipal(securityIdentity);
+                        SecurityIdentity securityIdentity = new(securityProvider);
+                        SecurityPrincipal securityPrincipal = new(securityIdentity);
                         client.SetClientUser(securityPrincipal);
                     }
 
@@ -2563,7 +2559,7 @@ namespace GSF.ServiceProcess
 
                         m_remotingServer?.DisconnectOne(e.Argument1);
 
-                        if (!(client is null))
+                        if (client is not null)
                             UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} [{1}] from {2}\r\n\r\n", client.ClientName, client.ClientUser.Identity.Name, client.MachineName);
                     }
                     catch (Exception ex2)
@@ -2579,7 +2575,7 @@ namespace GSF.ServiceProcess
 
                 Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat, out ClientRequest request);
 
-                if (!(request is null))
+                if (request is not null)
                 {
                     try
                     {
@@ -2616,7 +2612,7 @@ namespace GSF.ServiceProcess
                             // Notify the consumer about the incoming request from client.
                             OnReceivedClientRequest(request, client);
 
-                            if (!(requestHandler is null))
+                            if (requestHandler is not null)
                             {
                                 // Request handler exists.
                                 requestHandler.HandlerMethod(requestInfo);
@@ -2642,7 +2638,7 @@ namespace GSF.ServiceProcess
                     {
                         LogException(ex);
 
-                        if (!(requestInfo is null))
+                        if (requestInfo is not null)
                             SendActionableResponse(requestInfo, false, null, "Failed to process request \"{0}\" - {1}\r\n\r\n", request.Command, ex.Message);
                         else
                             UpdateStatus(client.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}\r\n\r\n", request.Command, ex.Message);
@@ -2665,7 +2661,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays a list of clients currently connected to the service.");
                 helpMessage.AppendLine();
@@ -2689,7 +2685,7 @@ namespace GSF.ServiceProcess
                 if (m_remoteClients.Count > 0)
                 {
                     // Display info about all of the clients connected to the service.
-                    StringBuilder responseMessage = new StringBuilder();
+                    StringBuilder responseMessage = new();
 
                     responseMessage.AppendFormat("Clients connected to {0}:", Name);
                     responseMessage.AppendLine();
@@ -2753,7 +2749,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays a list of service settings from the config file.");
                 helpMessage.AppendLine();
@@ -2774,7 +2770,7 @@ namespace GSF.ServiceProcess
             }
             else
             {
-                StringBuilder responseMessage = new StringBuilder();
+                StringBuilder responseMessage = new();
                 responseMessage.AppendFormat("Settings for {0}:", Name);
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
@@ -2828,7 +2824,7 @@ namespace GSF.ServiceProcess
             {
                 bool showAdvancedHelp = requestInfo.Request.Arguments.Exists("advanced");
 
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays a list of defined service processes or running system processes.");
                 helpMessage.AppendLine();
@@ -2859,7 +2855,7 @@ namespace GSF.ServiceProcess
                 if (listSystemProcesses && SupportSystemCommands)
                 {
                     // Enumerate "system" processes when -system parameter is specified
-                    StringBuilder responseMessage = new StringBuilder();
+                    StringBuilder responseMessage = new();
 
                     responseMessage.AppendFormat("Processes running on {0}:", Environment.MachineName);
                     responseMessage.AppendLine();
@@ -2921,7 +2917,7 @@ namespace GSF.ServiceProcess
                     if (m_processes.Count > 0)
                     {
                         // Display info about all the processes defined in the service.
-                        StringBuilder responseMessage = new StringBuilder();
+                        StringBuilder responseMessage = new();
 
                         responseMessage.AppendFormat("Processes defined in {0}:", Name);
                         responseMessage.AppendLine();
@@ -2990,7 +2986,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays a list of schedules for processes defined in the service.");
                 helpMessage.AppendLine();
@@ -3014,7 +3010,7 @@ namespace GSF.ServiceProcess
                 if (ProcessScheduler.Schedules.Count > 0)
                 {
                     // Display info about all the process schedules defined in the service.
-                    StringBuilder responseMessage = new StringBuilder();
+                    StringBuilder responseMessage = new();
 
                     responseMessage.AppendFormat("Process schedules defined in {0}:", Name);
                     responseMessage.AppendLine();
@@ -3060,7 +3056,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays a list of recent requests received from the clients.");
                 helpMessage.AppendLine();
@@ -3081,7 +3077,7 @@ namespace GSF.ServiceProcess
             }
             else
             {
-                StringBuilder responseMessage = new StringBuilder();
+                StringBuilder responseMessage = new();
 
                 responseMessage.AppendFormat("History of requests received by {0}:", Name);
                 responseMessage.AppendLine();
@@ -3121,7 +3117,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays a list of commands supported by the service.");
                 helpMessage.AppendLine();
@@ -3144,7 +3140,7 @@ namespace GSF.ServiceProcess
             {
                 bool showAdvancedHelp = requestInfo.Request.Arguments.Exists("advanced");
 
-                StringBuilder responseMessage = new StringBuilder();
+                StringBuilder responseMessage = new();
 
                 responseMessage.AppendFormat("Commands supported by {0}:", Name);
                 responseMessage.AppendLine();
@@ -3184,7 +3180,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays a resource utilization report for the service.");
                 helpMessage.AppendLine();
@@ -3214,7 +3210,7 @@ namespace GSF.ServiceProcess
                 string message;
                 bool success;
 
-                if (!(PerformanceMonitor is null))
+                if (PerformanceMonitor is not null)
                 {
                     try
                     {
@@ -3251,7 +3247,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Resets the system resource utilization monitor.");
                 helpMessage.AppendLine();
@@ -3294,7 +3290,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Displays status of this service and its components.");
                 helpMessage.AppendLine();
@@ -3331,7 +3327,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Reloads the local system cryptography cache with data from the common cryptography cache.");
                 helpMessage.AppendLine();
@@ -3361,7 +3357,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Reloads settings of the component whose settings are saved under the specified category in the config file.");
                 helpMessage.AppendLine();
@@ -3413,7 +3409,7 @@ namespace GSF.ServiceProcess
             {
                 // We'll display help about the request since we either don't have the required arguments or the user
                 // has explicitly requested for the help to be displayed for this request type.
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Updates the specified setting under the specified category in the config file.");
                 helpMessage.AppendLine();
@@ -3490,7 +3486,7 @@ namespace GSF.ServiceProcess
                         else if (deleteSetting)
                         {
                             // Delete existing setting.
-                            if (!(setting is null))
+                            if (setting is not null)
                             {
                                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 settings.Remove(setting);
@@ -3506,7 +3502,7 @@ namespace GSF.ServiceProcess
                         else
                         {
                             // Update existing setting.
-                            if (!(setting is null))
+                            if (setting is not null)
                             {
                                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 setting.Value = settingValue;
@@ -3548,7 +3544,7 @@ namespace GSF.ServiceProcess
             {
                 bool showAdvancedHelp = requestInfo.Request.Arguments.Exists("advanced");
 
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Starts execution of the specified service or system process.");
                 helpMessage.AppendLine();
@@ -3604,7 +3600,7 @@ namespace GSF.ServiceProcess
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
                         Process startedProcess = Process.Start(processName, processArgs);
 
-                        if (!(startedProcess is null))
+                        if (startedProcess is not null)
                             UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started system process \"{0}\".\r\n\r\n", processName);
                         else
                             UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\".\r\n\r\n", processName);
@@ -3620,7 +3616,7 @@ namespace GSF.ServiceProcess
                     // Start service process.
                     ServiceProcess processToStart = FindProcess(processName);
 
-                    if (!(processToStart is null))
+                    if (processToStart is not null)
                     {
                         if (processToStart.CurrentState != ServiceProcessState.Processing)
                         {
@@ -3670,7 +3666,7 @@ namespace GSF.ServiceProcess
             {
                 bool showAdvancedHelp = requestInfo.Request.Arguments.Exists("advanced");
 
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Aborts the specified service or system process if executing.");
                 helpMessage.AppendLine();
@@ -3731,7 +3727,7 @@ namespace GSF.ServiceProcess
                         }
                     }
 
-                    if (!(processToAbort is null))
+                    if (processToAbort is not null)
                     {
                         try
                         {
@@ -3762,7 +3758,7 @@ namespace GSF.ServiceProcess
                     // Abort service process.
                     ServiceProcess processToAbort = FindProcess(processName);
 
-                    if (!(processToAbort is null))
+                    if (processToAbort is not null)
                     {
                         if (processToAbort.CurrentState == ServiceProcessState.Processing)
                         {
@@ -3793,7 +3789,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 2)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Schedules or re-schedules an existing process defined in the service.");
                 helpMessage.AppendLine();
@@ -3903,7 +3899,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Unschedules a scheduled process defined in the service.");
                 helpMessage.AppendLine();
@@ -3936,7 +3932,7 @@ namespace GSF.ServiceProcess
 
                 Schedule scheduleToRemove = ProcessScheduler.FindSchedule(processName);
 
-                if (!(scheduleToRemove is null))
+                if (scheduleToRemove is not null)
                 {
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to unschedule process \"{0}\"...\r\n\r\n", processName);
                     ProcessScheduler.Schedules.Remove(scheduleToRemove);
@@ -3965,7 +3961,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Saves all process schedules to the config file.");
                 helpMessage.AppendLine();
@@ -4007,7 +4003,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Loads all process schedules from the config file.");
                 helpMessage.AppendLine();
@@ -4051,7 +4047,7 @@ namespace GSF.ServiceProcess
 
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Filters status messages coming from the service.");
                 helpMessage.AppendLine();
@@ -4103,8 +4099,8 @@ namespace GSF.ServiceProcess
 
             string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
 
-            ClientFilter mergeFilter = new ClientFilter();
-            List<int> removalIDs = new List<int>();
+            ClientFilter mergeFilter = new();
+            List<int> removalIDs = new();
             bool argsContainsList = !args.Any();
 
             int i = 0;
@@ -4269,7 +4265,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 2)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Manages files on the server.");
                 helpMessage.AppendLine();
@@ -4348,7 +4344,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 2)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Transfers files to and from the server.");
                 helpMessage.AppendLine();
@@ -4441,7 +4437,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Shows the current service version.");
                 helpMessage.AppendLine();
@@ -4465,11 +4461,11 @@ namespace GSF.ServiceProcess
             }
             else
             {
-                StringBuilder versionInfo = new StringBuilder();
+                StringBuilder versionInfo = new();
                 AssemblyInfo serviceAssembly = AssemblyInfo.EntryAssembly;
                 string serviceName;
 
-                if (!(ParentService is null) && !string.IsNullOrWhiteSpace(ParentService.ServiceName))
+                if (ParentService is not null && !string.IsNullOrWhiteSpace(ParentService.ServiceName))
                     serviceName = ParentService.ServiceName;
                 else
                     serviceName = AppDomain.CurrentDomain.FriendlyName;
@@ -4502,7 +4498,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Shows the current system time.");
                 helpMessage.AppendLine();
@@ -4546,7 +4542,7 @@ namespace GSF.ServiceProcess
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Shows the current user information.");
                 helpMessage.AppendLine();
@@ -4572,15 +4568,25 @@ namespace GSF.ServiceProcess
             {
                 //          1         2         3         4         5         6         7         8
                 // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-                //   Current user: ABC\john
+                //   Current user: ABC\john (Local Account User)
                 //    Client name: openPDCConsole
                 //   From machine: JohnPC
                 // Connected time: xx days yy hours zz minutes ii seconds
                 //  Authenticated: true
 
                 ClientInfo info = requestInfo.Sender;
+                IIdentity identity = info.ClientUser.Identity;
 
-                string message = $"  Current user: {info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined")}\r\n   Client name: {info.ClientName.ToNonNullNorEmptyString("Undetermined")}\r\n  From machine: {info.MachineName.ToNonNullNorEmptyString("Undetermined")}\r\nConnected time: {(info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString())}\r\n Authenticated: {info.ClientUser.Identity.IsAuthenticated}";
+                string type = identity is SecurityIdentity securityIdentity ? 
+                    $"{securityIdentity.Type} User" : 
+                    "Undetermined User Type";
+
+                string message = 
+                    $"  Current user: {identity.Name.ToNonNullNorEmptyString("Undetermined")} ({type}){Environment.NewLine}" +
+                    $"   Client name: {info.ClientName.ToNonNullNorEmptyString("Undetermined")}{Environment.NewLine}"+
+                    $"  From machine: {info.MachineName.ToNonNullNorEmptyString("Undetermined")}{Environment.NewLine}" +
+                    $"Connected time: {(info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString(0))}{Environment.NewLine}" +
+                    $" Authenticated: {identity.IsAuthenticated}";
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, $"{message}\r\n\r\n");
 
@@ -4594,7 +4600,7 @@ namespace GSF.ServiceProcess
         {
             if (m_remoteCommandProcess is null && requestInfo.Request.Arguments.ContainsHelpRequest)
             {
-                StringBuilder helpMessage = new StringBuilder();
+                StringBuilder helpMessage = new();
 
                 helpMessage.Append("Allows for a telnet session to the service server.");
                 helpMessage.AppendLine();
@@ -4654,7 +4660,7 @@ namespace GSF.ServiceProcess
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
-                else if (string.Compare(requestInfo.Request.Command, "Telnet", StringComparison.OrdinalIgnoreCase) == 0 && !(m_remoteCommandProcess is null) && disconnectSession)
+                else if (string.Compare(requestInfo.Request.Command, "Telnet", StringComparison.OrdinalIgnoreCase) == 0 && m_remoteCommandProcess is not null && disconnectSession)
                 {
                     // User wants to terminate an established remote command session.                   
                     m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
@@ -4671,7 +4677,7 @@ namespace GSF.ServiceProcess
 
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Remote command session terminated - status updates are resumed.\r\n\r\n");
                 }
-                else if (!(m_remoteCommandProcess is null))
+                else if (m_remoteCommandProcess is not null)
                 {
                     // User has entered commands that must be redirected to the established command session.
                     string input = $"{requestInfo.Request.Command} {requestInfo.Request.Arguments}";
