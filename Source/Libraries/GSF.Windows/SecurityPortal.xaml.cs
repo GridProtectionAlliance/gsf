@@ -527,6 +527,10 @@ namespace GSF.Windows
                     return;
                 }
             }
+            catch (AggregateException ex)
+            {
+                throw new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
+            }
             catch (Exception ex)
             {
                 Log.Publish(MessageLevel.Error, nameof(ButtonAzAuth_Click), "Azure AD Error Acquiring Token Silently", exception: ex);
