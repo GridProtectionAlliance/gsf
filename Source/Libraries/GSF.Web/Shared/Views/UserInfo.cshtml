@@ -22,9 +22,9 @@
 //*****************************************************************************************************@
 @using System.Net.Http
 @using System.Net.Http.Headers
+@using System.Security.Principal
 @using System.Threading
 @using GSF.Security
-@using GSF.Identity
 @using GSF.Web.Model
 @using GSF.Web.Shared
 @inherits ExtendedTemplateBase
@@ -49,10 +49,17 @@
 @functions {
     public string GetCurrentUserID()
     {
-        if (Thread.CurrentPrincipal.Identity == null)
-            return UserInfo.CurrentUserID;
-
-        return Thread.CurrentPrincipal.Identity.Name;
+        try
+        {
+            IIdentity identity = Thread.CurrentPrincipal.Identity ?? WindowsIdentity.GetCurrent();
+            SecurityIdentity securityIdentity = identity as SecurityIdentity;
+            string type = (object)securityIdentity == null ? "Windows User" : securityIdentity.Type + " User";
+            return string.Format("{0} ({1})", identity.Name, type);
+        }
+        catch
+        {
+            return "Undetermined Identity";
+        }
     }
 
     public bool UserIsAdmin()
