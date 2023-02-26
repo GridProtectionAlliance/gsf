@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.props" Condition="Exists('..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -56,10 +57,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AjaxMin, Version=5.14.5506.26196, Culture=neutral, PublicKeyToken=21ef50ce11b5d80f, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Azure.Core, Version=1.25.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\Azure.Core.1.25.0\lib\net461\Azure.Core.dll</HintPath>
     </Reference>
@@ -171,6 +168,9 @@
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NUglify">
+      <HintPath>.\NUglify.dll</HintPath>
     </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\Owin.1.0\lib\net40\Owin.dll</HintPath>
@@ -331,6 +331,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\ModelController.cs" />
+    <Compile Include="ModuleInitializer.cs" />
     <Compile Include="Security\AntiForgery.cs" />
     <Compile Include="Security\AntiForgeryConfig.cs" />
     <Compile Include="Security\AntiCsrf\AntiForgeryToken.cs" />
@@ -519,6 +520,7 @@
     <EmbeddedResource Include="Model\Scripts\bootstrap-datepicker.js" />
     <EmbeddedResource Include="Model\Scripts\bootstrap-toolkit.js" />
     <EmbeddedResource Include="Model\Scripts\pagedViewModel.js" />
+    <EmbeddedResource Include="NUglify.dll" />
     <Content Include="Readme.txt" />
     <EmbeddedResource Include="Security\Scripts\Login.js" />
     <EmbeddedResource Include="Shared\Content\bootstrap4.css" />
@@ -640,7 +642,10 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\Dependencies\NuGet\System.Text.Json.6.0.6\build\System.Text.Json.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Dependencies\NuGet\System.Text.Json.6.0.6\build\System.Text.Json.targets'))" />
+    <Error Condition="!Exists('..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.props'))" />
+    <Error Condition="!Exists('..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.targets'))" />
   </Target>
+  <Import Project="..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.targets" Condition="Exists('..\..\Dependencies\NuGet\InjectModuleInitializer.2.0.3\build\InjectModuleInitializer.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

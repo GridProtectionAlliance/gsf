@@ -89,14 +89,15 @@ namespace GSF.Web.Model
 
                 try
                 {
-                    if ((object)m_fileWatcher != null)
-                    {
-                        m_fileWatcher.Changed -= m_fileWatcher_Changed;
-                        m_fileWatcher.Created -= m_fileWatcher_Changed;
-                        m_fileWatcher.Deleted -= m_fileWatcher_Changed;
-                        m_fileWatcher.Renamed -= m_fileWatcher_Changed;
-                        m_fileWatcher.Dispose();
-                    }
+                    if (m_fileWatcher is null)
+                        return;
+
+                    m_fileWatcher.Changed -= m_fileWatcher_Changed;
+                    m_fileWatcher.Created -= m_fileWatcher_Changed;
+                    m_fileWatcher.Deleted -= m_fileWatcher_Changed;
+                    m_fileWatcher.Renamed -= m_fileWatcher_Changed;
+
+                    m_fileWatcher.Dispose();
                 }
                 finally
                 {
@@ -104,31 +105,22 @@ namespace GSF.Web.Model
                 }
             }
 
-            public ITemplateSource Resolve(ITemplateKey key)
-            {
-                return m_templateManager.Resolve(key);
-            }
+            public ITemplateSource Resolve(ITemplateKey key) => 
+                m_templateManager.Resolve(key);
 
-            public ITemplateKey GetKey(string name, ResolveType resolveType, ITemplateKey context)
-            {
-                return m_templateManager.GetKey(name, resolveType, context);
-            }
+            public ITemplateKey GetKey(string name, ResolveType resolveType, ITemplateKey context) => 
+                m_templateManager.GetKey(name, resolveType, context);
 
-            public void AddDynamic(ITemplateKey key, ITemplateSource source)
-            {
+            public void AddDynamic(ITemplateKey key, ITemplateSource source) => 
                 m_templateManager.AddDynamic(key, source);
-            }
 
-            private void m_fileWatcher_Changed(object sender, FileSystemEventArgs e)
-            {
+            private void m_fileWatcher_Changed(object sender, FileSystemEventArgs e) => 
                 m_cachingProvider.InvalidateAll();
-            }
 
             #endregion
         }
 
         // Fields
-        private readonly IRazorEngineService m_engineService;
         private bool m_disposed;
 
         #endregion
@@ -144,7 +136,7 @@ namespace GSF.Web.Model
             if (string.IsNullOrEmpty(templatePath))
                 throw new ArgumentNullException(nameof(templatePath));
 
-            TLanguage languageType = new TLanguage();
+            TLanguage languageType = new();
 
             switch (languageType.ResolutionMode)
             {
@@ -155,7 +147,7 @@ namespace GSF.Web.Model
 
                     if (languageType.ResolutionMode == RazorViewResolutionMode.ResolvePath)
                     {
-                        m_engineService = RazorEngineService.Create(new TemplateServiceConfiguration
+                        EngineService = RazorEngineService.Create(new TemplateServiceConfiguration
                         {
                             Language = languageType.TargetLanguage,
                             TemplateManager = new ResolvePathTemplateManager(new[] { templatePath }),
@@ -168,9 +160,9 @@ namespace GSF.Web.Model
                         // assemblies cannot be unloaded from an AppDomain. Every time a change to a .cshtml
                         // file is picked up by the watcher it is compiled and loaded into the AppDomain and
                         // the old one cannot be removed (.NET restriction), the net result is a memory leak
-                        InvalidatingCachingProvider cachingProvider = new InvalidatingCachingProvider();
+                        InvalidatingCachingProvider cachingProvider = new();
 
-                        m_engineService = RazorEngineService.Create(new TemplateServiceConfiguration
+                        EngineService = RazorEngineService.Create(new TemplateServiceConfiguration
                         {
                             Language = languageType.TargetLanguage,
                             CachingProvider = cachingProvider,
@@ -180,7 +172,7 @@ namespace GSF.Web.Model
                     }
                     break;
                 case RazorViewResolutionMode.EmbeddedResource:
-                    m_engineService = RazorEngineService.Create(new TemplateServiceConfiguration
+                    EngineService = RazorEngineService.Create(new TemplateServiceConfiguration
                     {
                         Language = languageType.TargetLanguage,
                         TemplateManager = new DelegateTemplateManager(name =>
@@ -192,11 +184,11 @@ namespace GSF.Web.Model
 
                             Stream stream = WebExtensions.OpenEmbeddedResourceStream(resourceName);
 
-                            if ((object)stream == null)
+                            if (stream is null)
                                 return "";
 
-                            using (StreamReader reader = new StreamReader(stream))
-                                return reader.ReadToEnd();
+                            using StreamReader reader = new(stream);
+                            return reader.ReadToEnd();
                         }),
                         Debug = false
                     });
@@ -213,15 +205,12 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets the template path defined for this <see cref="RazorEngine{TLanguage}"/>.
         /// </summary>
-        public string TemplatePath
-        {
-            get;
-        }
+        public string TemplatePath { get; }
 
         /// <summary>
         /// Gets the <see cref="IRazorEngineService"/> instance used by the <see cref="RazorEngine{TLanguage}"/>.
         /// </summary>
-        public IRazorEngineService EngineService => m_engineService;
+        public IRazorEngineService EngineService { get; }
 
         #endregion
 
@@ -242,17 +231,17 @@ namespace GSF.Web.Model
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                        m_engineService?.Dispose();
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                if (disposing)
+                    EngineService?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -260,76 +249,58 @@ namespace GSF.Web.Model
         /// Gets a given key from the <see cref="ITemplateManager" /> implementation. See <see cref="ITemplateManager.GetKey(String,ResolveType,ITemplateKey)" />.
         /// </summary>
         /// <returns></returns>
-        public ITemplateKey GetKey(string name, ResolveType resolveType = ResolveType.Global, ITemplateKey context = null)
-        {
-            return m_engineService.GetKey(name, resolveType, context);
-        }
+        public ITemplateKey GetKey(string name, ResolveType resolveType = ResolveType.Global, ITemplateKey context = null) => 
+            EngineService.GetKey(name, resolveType, context);
 
         /// <summary>Checks if a given template is already cached.</summary>
         /// <returns></returns>
-        public bool IsTemplateCached(ITemplateKey key, Type modelType)
-        {
-            return m_engineService.IsTemplateCached(key, modelType);
-        }
+        public bool IsTemplateCached(ITemplateKey key, Type modelType) => 
+            EngineService.IsTemplateCached(key, modelType);
 
         /// <summary>
         /// Adds a given template to the template manager as dynamic template.
         /// </summary>
-        public void AddTemplate(ITemplateKey key, ITemplateSource templateSource)
-        {
-            m_engineService.AddTemplate(key, templateSource);
-        }
+        public void AddTemplate(ITemplateKey key, ITemplateSource templateSource) => 
+            EngineService.AddTemplate(key, templateSource);
 
         /// <summary>
         /// Compiles the specified template and caches it.
         /// </summary>
-        public void Compile(ITemplateKey key, Type modelType = null)
-        {
-            m_engineService.Compile(key, modelType);
-        }
+        public void Compile(ITemplateKey key, Type modelType = null) => 
+            EngineService.Compile(key, modelType);
 
         /// <summary>
         /// Compiles the specified template, by name, and caches it.
         /// </summary>
-        public void Compile(string name, Type modelType = null)
-        {
-            m_engineService.Compile(name, modelType);
-        }
+        public void Compile(string name, Type modelType = null) => 
+            EngineService.Compile(name, modelType);
 
         /// <summary>
         /// Runs the given cached template. When the cache does not contain the template it will be compiled and cached beforehand.
         /// </summary>
-        public void RunCompile(ITemplateKey key, TextWriter writer, Type modelType = null, object model = null, DynamicViewBag viewBag = null)
-        {
-            m_engineService.RunCompile(key, writer, modelType, model, viewBag);
-        }
+        public void RunCompile(ITemplateKey key, TextWriter writer, Type modelType = null, object model = null, DynamicViewBag viewBag = null) => 
+            EngineService.RunCompile(key, writer, modelType, model, viewBag);
 
         /// <summary>
         /// Runs the given cached template.
         /// </summary>
-        public void Run(ITemplateKey key, TextWriter writer, Type modelType = null, object model = null, DynamicViewBag viewBag = null)
-        {
-            m_engineService.Run(key, writer, modelType, model, viewBag);
-        }
+        public void Run(ITemplateKey key, TextWriter writer, Type modelType = null, object model = null, DynamicViewBag viewBag = null) => 
+            EngineService.Run(key, writer, modelType, model, viewBag);
 
         /// <summary>
         /// Kicks off a task to pre-compile Razor templates.
         /// </summary>
         /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
-        public Task PreCompile(Action<Exception> exceptionHandler)
-        {
-            return PreCompile(exceptionHandler, null);
-        }
+        public Task PreCompile(Action<Exception> exceptionHandler) => 
+            PreCompile(exceptionHandler, null);
 
         /// <summary>
         /// Kicks off a task to pre-compile Razor templates.
         /// </summary>
         /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
         /// <param name="templatePath">Template path is use; otherwise, set to <c>null</c> to use default path.</param>
-        public Task PreCompile(Action<Exception> exceptionHandler, string templatePath)
-        {
-            return PreCompile(null, exceptionHandler, templatePath);
-        }
+        public Task PreCompile(Action<Exception> exceptionHandler, string templatePath) => 
+            PreCompile(null, exceptionHandler, templatePath);
 
         /// <summary>
         /// Kicks off a task to pre-compile Razor templates.
@@ -344,7 +315,7 @@ namespace GSF.Web.Model
 
             return Task.Run(() =>
             {
-                TLanguage languageType = new TLanguage();
+                TLanguage languageType = new();
 
                 if (languageType.ResolutionMode == RazorViewResolutionMode.EmbeddedResource)
                 {
@@ -352,12 +323,11 @@ namespace GSF.Web.Model
                     {
                         try
                         {
-                            m_engineService.Compile(fileName, modelType);
+                            EngineService.Compile(fileName, modelType);
                         }
                         catch (Exception ex)
                         {
-                            if ((object)exceptionHandler != null)
-                                exceptionHandler(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
+                            exceptionHandler?.Invoke(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
                         }
                     }
                 }
@@ -370,12 +340,11 @@ namespace GSF.Web.Model
                     {
                         try
                         {
-                            m_engineService.Compile(FilePath.GetFileName(fileName), modelType);
+                            EngineService.Compile(FilePath.GetFileName(fileName), modelType);
                         }
                         catch (Exception ex)
                         {
-                            if ((object)exceptionHandler != null)
-                                exceptionHandler(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
+                            exceptionHandler?.Invoke(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
                         }
                     }
                 }
@@ -395,7 +364,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets default configured razor engine instance.
         /// </summary>
-        public static RazorEngine<TLanguage> Default => s_defaultEngine ?? (s_defaultEngine = GetConfiguredEngine());
+        public static RazorEngine<TLanguage> Default => s_defaultEngine ??= GetConfiguredEngine();
 
         // Static Constructor
         static RazorEngine()
@@ -425,7 +394,7 @@ namespace GSF.Web.Model
                     // Get configured template path
                     CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[category];
 
-                    TLanguage languageType = new TLanguage();
+                    TLanguage languageType = new();
 
                     switch (languageType.ResolutionMode)
                     {
