@@ -66,7 +66,8 @@ namespace GSF.TimeSeries
         private bool m_telnetActive;
         private volatile bool m_authenticated;
         private volatile bool m_authenticationFailure;
-        private bool m_isAzureAD;
+        private volatile bool m_authenticationReset;
+        private volatile bool m_isAzureAD;
         private readonly object m_displayLock;
 
         private readonly ConsoleColor m_originalBgColor;
@@ -237,10 +238,9 @@ namespace GSF.TimeSeries
                                 // Can't wait forever for service to stop, so we time-out after 20 seconds
                                 serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
 
-                                if (serviceController.Status == ServiceControllerStatus.Stopped)
-                                    WriteLine($"Successfully stopped the {serviceName} Windows service.");
-                                else
-                                    WriteLine($"Failed to stop the {serviceName} Windows service after trying for 20 seconds...");
+                                WriteLine(serviceController.Status == ServiceControllerStatus.Stopped ? 
+                                    $"Successfully stopped the {serviceName} Windows service." : 
+                                    $"Failed to stop the {serviceName} Windows service after trying for 20 seconds...");
 
                                 // Add an extra line for visual separation of service termination status
                                 WriteLine();
@@ -380,32 +380,59 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        StringBuilder username = new();
-                        StringBuilder password = new();
+                        AzureADSettings settings = null;
+                        m_isAzureAD = false;
 
-                        // If there has been an authentication failure,
-                        // prompt the user for new credentials
-                        PromptForCredentials(username, password);
-
-                        // Skip setting network credentials if using Azure AD user
-                        if (!m_isAzureAD)
+                        try
                         {
-                            try
+                            settings = AzureADSettings.Load();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Publish(MessageLevel.Info, $"{nameof(ServiceClientBase)}.{nameof(Start)}", "AzureADSettings.Load()", exception: ex);
+                        }
+
+                        // If last username was an Azure AD account, try login with cached MSAL user
+                        if (!m_authenticationReset && (settings?.Enabled ?? false) && (m_clientHelper.Username?.Contains('@') ?? false))
+                        {
+                            (string username, string password) result = LoginToAzureAD(settings);
+                
+                            if (!string.IsNullOrEmpty(result.username))
                             {
-                                // Attempt to set network credentials used when attempting AD authentication
-                                using UserInfo userInfo = new(username.ToString());
-                                userInfo.Initialize();
-                                SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password.ToString()));
-                            }
-                            catch (Exception ex)
-                            {
-                                // Even if this fails, we can still pass along default credentials
-                                SetNetworkCredential(null);
-                                Logger.SwallowException(ex);
+                                m_isAzureAD = true;
+                                Connect(result.username, result.password);
                             }
                         }
 
-                        Connect(username.ToString(), password.ToString());
+                        if (m_authenticationFailure)
+                        {
+                            StringBuilder username = new();
+                            StringBuilder password = new();
+
+                            // If there has been an authentication failure,
+                            // prompt the user for new credentials
+                            PromptForCredentials(settings, username, password);
+
+                            // Skip setting network credentials if using Azure AD user
+                            if (!m_isAzureAD)
+                            {
+                                try
+                                {
+                                    // Attempt to set network credentials used when attempting AD authentication
+                                    using UserInfo userInfo = new(username.ToString());
+                                    userInfo.Initialize();
+                                    SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password.ToString()));
+                                }
+                                catch (Exception ex)
+                                {
+                                    // Even if this fails, we can still pass along default credentials
+                                    SetNetworkCredential(null);
+                                    Logger.SwallowException(ex);
+                                }
+                            }
+
+                            Connect(username.ToString(), password.ToString());
+                        }
                     }
 
                     timeoutCancellationToken.Cancel();
@@ -442,6 +469,7 @@ namespace GSF.TimeSeries
                             case "LOGIN":
                                 m_authenticated = false;
                                 m_authenticationFailure = true;
+                                m_authenticationReset = true;
                                 break;
 
                             default:
@@ -547,6 +575,7 @@ namespace GSF.TimeSeries
         {
             m_authenticated = false;
             m_authenticationFailure = false;
+            
             m_clientHelper.Connect();
 
             if (m_authenticationFailure)
@@ -576,10 +605,9 @@ namespace GSF.TimeSeries
             Connect();
         }
 
-        private void PromptForCredentials(StringBuilder username, StringBuilder password)
+        private void PromptForCredentials(AzureADSettings settings, StringBuilder username, StringBuilder password)
         {
             StringBuilder prompt = new();
-            AzureADSettings settings = Settings;
             m_isAzureAD = false;
 
             lock (m_displayLock)
@@ -608,85 +636,15 @@ namespace GSF.TimeSeries
                 // See if user requests Azure AD authentication
                 if ((settings?.Enabled ?? false) && username.ToString().Equals("azure", StringComparison.OrdinalIgnoreCase))
                 {
-                    WriteLine($"{Environment.NewLine}Logging into Azure AD...");
+                    (string username, string password) result = LoginToAzureAD(settings);
 
-                    IPublicClientApplication app = null;
-                    IAccount account;
-
-                    (AuthenticationResult, Exception) acquireTokenInteractive(IEnumerable<string> scopes)
+                    if (!string.IsNullOrEmpty(result.username))
                     {
-                        try
-                        {
-                            [DllImport("kernel32.dll")]
-                            static extern IntPtr GetConsoleWindow();
-
-                            AcquireTokenInteractiveParameterBuilder authParams = app!.AcquireTokenInteractive(scopes)
-                                .WithAccount(account)
-                                .WithParentActivityOrWindow(GetConsoleWindow())
-                                .WithPrompt(Prompt.NoPrompt);
-
-                            return (authParams.ExecuteAsync().Result, null);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), "Azure AD Error Acquiring Token", exception: ex);
-                            WriteError($"Azure AD Error Acquiring Token:{Environment.NewLine}{ex.Message}");
-                            return (null, ex);
-                        }
+                        username.Clear().Append(result.username);
+                        password.Clear().Append(result.password);
+                        m_isAzureAD = true;
                     }
 
-                    try
-                    {
-                        PublicClientApplicationBuilder appParams = PublicClientApplicationBuilder.Create(settings.ClientID)
-                            .WithAuthority(settings.Authority)
-                            .WithDefaultRedirectUri()
-                            .WithBrokerPreview();
-
-                        app = appParams.Build();
-                        TokenCacheHelper.EnableSerialization(app.UserTokenCache);
-
-                        account = app.GetAccountsAsync().Result.FirstOrDefault();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), nameof(MsalUiRequiredException), exception: ex);
-                        account = PublicClientApplication.OperatingSystemAccount;
-                    }
-
-                    AuthenticationResult authResult;
-                    Exception exception = null;
-                    string[] scopes = { "user.read" };
-
-                    try
-                    {
-                        authResult = app?.AcquireTokenSilent(scopes, account).ExecuteAsync().Result;
-                    }
-                    catch (MsalUiRequiredException ex)
-                    {
-                        Log.Publish(MessageLevel.Info, nameof(PromptForCredentials), nameof(MsalUiRequiredException), exception: ex);
-                        (authResult, exception) = acquireTokenInteractive(scopes);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), "Azure AD Error Acquiring Token Silently", exception: ex);
-                        (authResult, exception) = acquireTokenInteractive(scopes);
-                    }
-
-                    if (authResult is null)
-                    {
-                        WriteError($"Azure AD Failed to Acquire Authorization Result:{Environment.NewLine}No result retrieved for silent nor interactive authorization: {exception?.Message}");
-                        return;
-                    }
-
-                    WriteLine($"Azure AD login successful, validating user \"{authResult.Account.Username}\" with security service...{Environment.NewLine}");
-
-                    username.Clear();
-                    username.Append(authResult.Account.Username);
-
-                    password.Clear();
-                    password.Append(authResult.AccessToken);
-
-                    m_isAzureAD = true;
                     return;
                 }
 
@@ -718,6 +676,87 @@ namespace GSF.TimeSeries
 
                 WriteLine();
             }
+        }
+
+        private (string, string) LoginToAzureAD(AzureADSettings settings)
+        {
+            WriteLine($"{Environment.NewLine}Logging into Azure AD...");
+
+            IPublicClientApplication app = null;
+            IAccount account;
+
+            (AuthenticationResult, Exception) acquireTokenInteractive(IEnumerable<string> scopes)
+            {
+                try
+                {
+                    [DllImport("kernel32.dll")]
+                    static extern IntPtr GetConsoleWindow();
+
+                    AcquireTokenInteractiveParameterBuilder authParams = app!.AcquireTokenInteractive(scopes)
+                        .WithAccount(account)
+                        .WithParentActivityOrWindow(GetConsoleWindow())
+                        .WithPrompt(Prompt.NoPrompt);
+
+                    return (authParams.ExecuteAsync().Result, null);
+                }
+                catch (AggregateException ex)
+                {
+                    throw new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
+                }
+                catch (Exception ex)
+                {
+                    Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), "Azure AD Error Acquiring Token", exception: ex);
+                    WriteError($"Azure AD Error Acquiring Token:{Environment.NewLine}{ex.Message}");
+                    return (null, ex);
+                }
+            }
+
+            try
+            {
+                PublicClientApplicationBuilder appParams = PublicClientApplicationBuilder.Create(settings.ClientID)
+                    .WithAuthority(settings.Authority)
+                    .WithDefaultRedirectUri()
+                    .WithBrokerPreview();
+
+                app = appParams.Build();
+                TokenCacheHelper.EnableSerialization(app.UserTokenCache);
+
+                account = app.GetAccountsAsync().Result.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), nameof(MsalUiRequiredException), exception: ex);
+                account = PublicClientApplication.OperatingSystemAccount;
+            }
+
+            AuthenticationResult authResult;
+            Exception exception = null;
+            string[] scopes = { "user.read" };
+
+            try
+            {
+                authResult = app?.AcquireTokenSilent(scopes, account).ExecuteAsync().Result;
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                Log.Publish(MessageLevel.Info, nameof(PromptForCredentials), nameof(MsalUiRequiredException), exception: ex);
+                (authResult, exception) = acquireTokenInteractive(scopes);
+            }
+            catch (Exception ex)
+            {
+                Log.Publish(MessageLevel.Error, nameof(PromptForCredentials), "Azure AD Error Acquiring Token Silently", exception: ex);
+                (authResult, exception) = acquireTokenInteractive(scopes);
+            }
+
+            if (authResult is null)
+            {
+                WriteError($"Azure AD Failed to Acquire Authorization Result:{Environment.NewLine}No result retrieved for silent nor interactive authorization: {exception?.Message}");
+                return (null, null);
+            }
+
+            WriteLine($"Azure AD login successful, validating user \"{authResult.Account.Username}\" with security service...{Environment.NewLine}");
+
+            return (authResult.Account.Username, authResult.AccessToken);
         }
 
         private void SetNetworkCredential(NetworkCredential credential)
@@ -796,16 +835,47 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event argument.</param>
-        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e) =>
+        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e)
+        {
+            // Post authentication operation for Azure AD clients, clear the password from
+            // the client helper so it will not be serialized to user configuration files.
+            // This client authentication token is temporal and will not be valid after it
+            // is expired by Azure AD. It is also not needed for subsequent operations.
+            if (m_isAzureAD)
+                m_clientHelper.Password = "";
+
             m_authenticated = true;
+            m_authenticationReset = false;
+
+            try
+            {
+                // As soon as client is successfully authenticated, flush user cache
+                // so that even a hard exit will allow auto-login user at next run
+                m_clientHelper.SaveSettings();
+            }
+            catch (Exception ex)
+            {
+                // Any failure here is not catastrophic
+                Logger.SwallowException(ex);
+            }
+        }
 
         /// <summary>
         /// Client helper authentication failure reception handler.
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event argument.</param>
-        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e) =>
+        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e)
+        {
+            // Post authentication operation for Azure AD clients, clear the password from
+            // the client helper so it will not be serialized to user configuration files.
+            // This client authentication token is temporal and will not be valid after it
+            // is expired by Azure AD. It is also not needed for subsequent operations.
+            if (m_isAzureAD)
+                m_clientHelper.Password = "";
+
             m_authenticationFailure = true;
+        }
 
         /// <summary>
         /// Client helper service update reception handler.
@@ -946,19 +1016,6 @@ namespace GSF.TimeSeries
 
         // Static Fields
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ServiceClientBase), MessageClass.Component);
-        private static readonly AzureADSettings Settings;
-
-        static ServiceClientBase()
-        {
-            try
-            {
-                Settings = AzureADSettings.Load();
-            }
-            catch (Exception ex)
-            {
-                Log.Publish(MessageLevel.Info, $".cctor::{nameof(ServiceClientBase)}", "AzureADSettings.Load()", exception: ex);
-            }
-        }
 
         #endregion
     }
