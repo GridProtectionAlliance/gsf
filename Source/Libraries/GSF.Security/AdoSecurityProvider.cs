@@ -789,7 +789,7 @@ namespace GSF.Security
                                     }
                                     catch (AggregateException ex)
                                     {
-                                        graphEx = new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
+                                        throw new InvalidOperationException(string.Join("; ", ex.Flatten().InnerExceptions.Select(inex => inex.Message)), ex);
                                     }
                                     catch (Exception ex)
                                     {
