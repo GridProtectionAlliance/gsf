@@ -25,6 +25,8 @@
 
 using System;
 using System.Security.Principal;
+using GSF.Diagnostics;
+using GSF.Identity;
 
 namespace GSF.Security
 {
@@ -63,6 +65,36 @@ namespace GSF.Security
         /// Gets the user's login name.
         /// </summary>
         public string Name => Provider.UserData.Username;
+
+        /// <summary>
+        /// Gets the user type.
+        /// </summary>
+        public string Type
+        {
+            get
+            {
+                try
+                {
+                    if (Provider.UserData.IsExternal)
+                        return Provider.UserData.IsAzureAD ? 
+                            "Azure AD" : 
+                            "Database";
+
+                    string[] accountParts = Provider.UserData.LoginID.Split('\\');
+
+                    if (accountParts.Length == 2)
+                        return UserInfo.IsLocalDomain(accountParts[0].Trim()) ? 
+                            "Local Account" :
+                            "Active Directory";
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex);
+                }
+
+                return "Local Account";
+            }
+        }
 
         /// <summary>
         /// Gets the <see cref="ISecurityProvider"/> of the user.
