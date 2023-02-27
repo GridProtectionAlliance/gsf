@@ -92,17 +92,6 @@ namespace GSF.EMAX
             Parse();
         }
 
-        /// <summary>
-        /// Creates a new <see cref="ControlFile"/> for the specified <paramref name="stream"/> and attempts to parse.
-        /// </summary>
-        /// <param name="stream">Readable seekable stream.</param>
-        public ControlFile(Stream stream)
-            : this()
-        {
-            FileName = "StreamedFile";
-            Parse(stream);
-        }
-
         #endregion
 
         #region [ Properties ]
