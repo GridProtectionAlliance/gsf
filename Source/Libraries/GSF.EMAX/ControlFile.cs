@@ -197,10 +197,10 @@ namespace GSF.EMAX
         }
 
         /// <summary>
-        /// Parses the Stream provided/>.
+        /// Parses the <see cref="ControlFile"/> from the given stream.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Stream must be readable in order to parse EMAX control file data.</exception>
-        /// <exception cref="InvalidOperationException">Stream must be seekable in order to parse EMAX control file data.</exception>
+        /// <param name="stream">A stream containing data for the EMAX control file.</param>
+        /// <exception cref="InvalidOperationException">Stream must be readable and seekable in order to parse EMAX control file data.</exception>
         public void Parse(Stream stream)
         {
             if ((object)stream == null)
