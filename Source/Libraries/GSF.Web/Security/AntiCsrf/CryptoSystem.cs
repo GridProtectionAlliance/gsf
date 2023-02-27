@@ -31,7 +31,7 @@
 
 using System.Security.Cryptography;
 using System.Web;
-using Random = GSF.Security.Cryptography.Random;
+using GSF.Security.Cryptography;
 
 // ReSharper disable AssignNullToNotNullAttribute
 namespace GSF.Web.Security.AntiCsrf
@@ -48,14 +48,14 @@ namespace GSF.Web.Security.AntiCsrf
 
         public static string Protect(byte[] data)
         {
-            byte[] rawProtectedBytes = ProtectedData.Protect(data, s_entropy, DataProtectionScope.LocalMachine);
+            byte[] rawProtectedBytes = DataProtection.Protect(data, s_entropy, DataProtectionScope.LocalMachine);
             return HttpServerUtility.UrlTokenEncode(rawProtectedBytes);
         }
 
         public static byte[] Unprotect(string protectedData)
         {
             byte[] rawProtectedBytes = HttpServerUtility.UrlTokenDecode(protectedData);
-            return ProtectedData.Unprotect(rawProtectedBytes, s_entropy, DataProtectionScope.LocalMachine);
+            return DataProtection.Unprotect(rawProtectedBytes, s_entropy, DataProtectionScope.LocalMachine);
         }
     }
 }
