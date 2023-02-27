@@ -61,7 +61,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainForm.cs" />
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
@@ -121,6 +123,10 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Security\GSF.Security.csproj">
+      <Project>{4060e729-effd-4e50-a0d5-99c0990ef7da}</Project>
+      <Name>GSF.Security</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\GSF.ServiceProcess\GSF.ServiceProcess.csproj">
       <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
       <Name>GSF.ServiceProcess</Name>
@@ -132,6 +138,10 @@
     <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj">
       <Project>{7ed01b57-dd71-4a38-bb29-65d629224a12}</Project>
       <Name>GSF.TimeSeries.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Windows\GSF.Windows.csproj">
+      <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>
+      <Name>GSF.Windows</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

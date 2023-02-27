@@ -121,6 +121,10 @@
       <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GSF.Security\GSF.Security.csproj">
+      <Project>{4060e729-effd-4e50-a0d5-99c0990ef7da}</Project>
+      <Name>GSF.Security</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client">

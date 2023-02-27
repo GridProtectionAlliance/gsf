@@ -116,9 +116,17 @@
       <Project>{54ca98cc-2f0a-41f2-879d-0e42b17e8544}</Project>
       <Name>GSF.PhasorProtocols</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\GSF.Security\GSF.Security.csproj">
+      <Project>{4060e729-effd-4e50-a0d5-99c0990ef7da}</Project>
+      <Name>GSF.Security</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.Web\GSF.Web.csproj">
+      <Project>{0501c2dc-3428-4413-ae92-f0d82ff3dbbc}</Project>
+      <Name>GSF.Web</Name>
     </ProjectReference>
     <ProjectReference Include="..\PhasorProtocolAdapters\PhasorProtocolAdapters.csproj">
       <Project>{c4f3c41d-d76a-4283-8732-681b67b7ad74}</Project>

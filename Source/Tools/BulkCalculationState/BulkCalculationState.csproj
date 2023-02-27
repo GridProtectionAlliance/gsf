@@ -115,6 +115,10 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Windows\GSF.Windows.csproj">
+      <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>
+      <Name>GSF.Windows</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

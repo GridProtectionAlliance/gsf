@@ -454,7 +454,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             // Just making some assumptions about font and size here for rough assertion on size - would be more accurate to pass in actual font info
             Typeface tf = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+        #pragma warning disable CS0618
             FormattedText ft = new(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, 14.0D, Brushes.Black, null, TextFormattingMode.Display);
+        #pragma warning restore CS0618
             return ft.WidthIncludingTrailingWhitespace;
 
             // Try this for Silverlight if prior doesn't work:
