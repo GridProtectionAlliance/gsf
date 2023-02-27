@@ -97,9 +97,20 @@
 
     // Get configured settings
     string applicationName = settings["ApplicationName"].ValueAs(SecurityProviderBase.DefaultApplicationName);
+    bool azureADEnabled = false;
+
+    try
+    {
+        AzureADSettings azureADSettings = AzureADSettings.Load();
+        azureADEnabled = azureADSettings.Enabled;
+    }
+    catch
+    {
+        azureADEnabled = false;
+    }
 
     ViewBag.BodyRows = BodyRows().ToString();
-    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext, azureADEnabled).ToString();
     ViewBag.AddNewEditTitle = "Group";
 }
 @helper BodyRows()
@@ -122,7 +133,7 @@
         <span id="accountUnknown" class="account-feedback-message"><span class="glyphicon glyphicon-warning-sign account-feedback-icon" data-bind="style: {color: $root.recordMode()===RecordMode.View ? 'gray' : 'orange'}"></span>&nbsp;<em class="small">Valid account name is not a group</em></span>
     </div>
 }
-@helper AddNewEditDialog(DataContext dataContext)
+@helper AddNewEditDialog(DataContext dataContext, bool azureADEnabled)
 {
     <div class="col-md-12">
         @Raw(dataContext.AddInputField<SecurityGroup>("Name", fieldLabel: "Name" + AccountValidationFeedback().ToString().Trim(), customDataBinding: "attr: {'acct-valid': validateAccount($data), 'autocomplete': 'off'}", initialFocus: true))
@@ -132,10 +143,13 @@
                     <div class="col-md-8">
                         <div class="row">
                             <div class="col-md-4">
-                                <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: false, checked: UseDBAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Active&nbsp;Directory&nbsp;Group</label>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Active&nbsp;Directory&nbsp;User</label>
                             </div>
-                            <div class="col-md-8">
-                                <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: true, checked: UseDBAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Database&nbsp;Group</label>
+                            <div class="col-md-4" @Raw(azureADEnabled ? "" : " style=\"display: none\"")>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AzureAD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Azure&nbsp;AD&nbsp;User</label>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="DB" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Database&nbsp;User</label>
                             </div>
                         </div>
                     </div>
@@ -143,7 +157,7 @@
                     </div>
                 </div>
             </div>
-            <div class="panel-body" data-bind="visible: UseDBAuthentication">
+            <div class="panel-body" data-bind="visible: viewModel.currentRecord().AuthOption() == 'DB'">
                 @Raw(dataContext.AddTextAreaField<SecurityGroup>("Description", 4, dependencyFieldName: "UseDBAuthentication"))
             </div>
         </div>
@@ -201,6 +215,8 @@
             Resolving: 3
         }
 
+        const azureADEnabled = @(azureADEnabled.ToString().ToLowerInvariant());
+
         function lookupAccountName(record) {
             if (viewModel.dataHubIsConnected()) {
                 securityHub.sidToAccountName(record.Name).done(function (accountName) {
@@ -209,39 +225,48 @@
             }
         }
 
-        function validateAccount(observableRecord) {
+        function validateAccount() {
+            const observableRecord = viewModel.currentRecord();
+
             showAccountNameValidityFeedback(AccountState.Resolving);
 
-            if (observableRecord.UseDBAuthentication == null || observableRecord.UseDBAuthentication()) {
-                hideAccountNameValidityFeedback();
-            }
-            else {
-                if (viewModel.dataHubIsConnected()) {
+            if (viewModel.dataHubIsConnected() && observableRecord.UseDBAuthentication) {
+                if (observableRecord.UseDBAuthentication()) {
+                    hideAccountNameValidityFeedback();
+                }
+                else {
                     const accountName = observableRecord.Name();
 
                     if (isEmpty(accountName)) {
                         showAccountNameValidityFeedback(AccountState.Invalid);
                     } else {
-                        securityHub.groupNameToSID(accountName).done(function (sid) {
-                            if (accountName !== sid && accountName.countOccurrences("\\") < 2) {
-                                if (accountName.startsWith("@UserInfo.NTAuthorityGroupName")) {
-                                    // This is a valid group source for things like "Authenticated Users", but is
-                                    // not technically a "group" - since SID validated, we report a valid account
-                                    showAccountNameValidityFeedback(AccountState.Valid);
+                        if (observableRecord.UseAzureADAuthentication()) {
+                            securityHub.isValidAzureADGroupName(accountName).done(function (isValid) {
+                                showAccountNameValidityFeedback(isValid ? AccountState.Valid : AccountState.Invalid);
+                            });
+                        }
+                        else {
+                            securityHub.groupNameToSID(accountName).done(function (sid) {
+                                if (accountName !== sid && accountName.countOccurrences("\\") < 2) {
+                                    if (accountName.startsWith("@UserInfo.NTAuthorityGroupName")) {
+                                        // This is a valid group source for things like "Authenticated Users", but is
+                                        // not technically a "group" - since SID validated, we report a valid account
+                                        showAccountNameValidityFeedback(AccountState.Valid);
+                                    } else {
+                                        securityHub.isGroupSID(sid).done(function (isGroup) {
+                                            showAccountNameValidityFeedback(isGroup ? AccountState.Valid : AccountState.Unknown);
+                                        });
+                                    }
                                 } else {
-                                    securityHub.isGroupSID(sid).done(function (isGroup) {
-                                        showAccountNameValidityFeedback(isGroup ? AccountState.Valid : AccountState.Unknown);
-                                    });
+                                    showAccountNameValidityFeedback(AccountState.Invalid);
                                 }
-                            } else {
-                                showAccountNameValidityFeedback(AccountState.Invalid);
-                            }
-                        });
+                            });
+                        }
                     }
                 }
-                else {
-                    hideAccountNameValidityFeedback();
-                }
+            }
+            else {
+                hideAccountNameValidityFeedback();
             }
 
             return undefined;
@@ -309,7 +334,7 @@
 
             // Just deriving if group is AD based by delimiters in group name
             if (groupName.length > 0)
-                return (groupName.indexOf("\\") > 0 || groupName.indexOf("@@") > 0 || groupName.startsWith("S-"));
+                return (groupName.indexOf("\\") > 0 || groupName.startsWith("S-"));
 
             return true; // Default to AD group
         }
@@ -325,22 +350,94 @@
         $(viewModel).on("newRecord", function (event, newRecord) {
             // Make sure new records get virtual fields
             newRecord.AccountName = ko.observable("");
+            newRecord.UseADAuthentication = false;
         });
 
         $(viewModel).on("beforeEdit", function (event, observableRecord) {
             // Load human readable account name into Name field
             if (observableRecord.AccountName)
                 observableRecord.Name(observableRecord.AccountName());
-                
-            // Create a virtual UseDBAuthentication field
-            observableRecord.UseDBAuthentication = ko.observable(!useADAuthentication(notNull(observableRecord.Name())));
+
+            observableRecord.UseADAuthentication = ko.observable(useADAuthentication(notNull(observableRecord.Name())));
+
+            // Create backing field for virtual UseDBAuthentication computed property that is negated state of actual UseADAuthentication field
+            observableRecord._useDBAuthentication = ko.observable(!observableRecord.UseADAuthentication() && (!azureADEnabled || !observableRecord.AccountName().includes("@@")));
+
+            // Create backing field for virtual UseAzureADAuthentication computed property
+            observableRecord._useAzureADAuthentication = ko.observable(!observableRecord.UseADAuthentication() && (azureADEnabled && observableRecord.AccountName().includes("@@")));
+
+            // Create a virtual UseDBAuthentication computed propery
+            observableRecord.UseDBAuthentication = ko.pureComputed({
+                read: observableRecord._useDBAuthentication,
+                write: function (value) {
+                    if (value === undefined)
+                        value = false;
+
+                    observableRecord._useDBAuthentication(value);
+                },
+                owner: observableRecord
+            });
+
+            // Create virtual UseAzureADAuthentication computed property
+            observableRecord.UseAzureADAuthentication = ko.pureComputed({
+                read: observableRecord._useAzureADAuthentication,
+                write: function (value) {
+                    if (value === undefined)
+                        value = false;
+
+                    observableRecord._useAzureADAuthentication(value);
+                },
+                owner: observableRecord
+            });
+
+            observableRecord.AuthOption = ko.pureComputed({
+                read: function () {
+                    if (observableRecord.UseDBAuthentication())
+                        return "DB";
+                    else if (observableRecord.UseAzureADAuthentication())
+                        return "AzureAD";
+                    else
+                        return "AD";
+                },
+                write: function (value) {
+                    if (value === undefined)
+                        value = "AD";
+
+                    switch (value) {
+                        case "DB":
+                            observableRecord.UseADAuthentication(false);
+                            observableRecord.UseDBAuthentication(true);
+                            observableRecord.UseAzureADAuthentication(false);
+                            break;
+                        case "AzureAD":
+                            observableRecord.UseADAuthentication(false);
+                            observableRecord.UseDBAuthentication(false);
+                            observableRecord.UseAzureADAuthentication(true);
+                            break;
+                        case "AD":
+                            observableRecord.UseADAuthentication(true);
+                            observableRecord.UseDBAuthentication(false);
+                            observableRecord.UseAzureADAuthentication(false);
+                            break;
+                    }
+                },
+                owner: observableRecord
+            });
         });
 
         $(viewModel).on("beforeSave", function (event, observableRecord, promises) {
-            const isADGroup = !observableRecord.UseDBAuthentication();
+            // Set state of actual field to be negated state of virtual field
+            observableRecord.UseADAuthentication(!observableRecord.UseDBAuthentication() && !observableRecord.UseAzureADAuthentication());
+
+            const isADGroup = observableRecord.UseADAuthentication();
 
             // Remove virtual observable fields before serialization for record updates
             delete observableRecord.UseDBAuthentication;
+            delete observableRecord.UseAzureADAuthentication;
+            delete observableRecord.UseADAuthentication;
+            delete observableRecord.AuthOption;
+            delete observableRecord._useDBAuthentication;
+            delete observableRecord._useAzureADAuthentication;
             delete observableRecord.AccountName;
 
             // Push promise to convert group name back to SID before updating record
@@ -384,6 +481,11 @@
         }
 
         $(function () {
+            $("#addNewEditDialog").on("show.bs.modal", function () {
+                $("form").attr("autocomplete", "off");
+                $("#inputName").attr("aria-autocomplete", "none");
+            });
+
             $("#editRolesDialog").modal({ show: false, backdrop: "static" });
 
             $("#saveRolesButton").click(function () {
