@@ -30,24 +30,13 @@ namespace GSF.TimeSeries
     /// </summary>
     public class BufferBlockMeasurement : Measurement
     {
-        #region [ Members ]
-
-        // Members
-        private byte[] m_buffer;
-        private readonly int m_length;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="BufferBlockMeasurement"/>.
         /// </summary>
-        public BufferBlockMeasurement()
-        {
-            // Value of measurement should be indeterminate since this a buffer
-            base.Value = double.NaN;
-        }
+        public BufferBlockMeasurement() => 
+            Value = double.NaN; // Value of measurement should be indeterminate since this a buffer
 
         /// <summary>
         /// Creates a new <see cref="BufferBlockMeasurement"/> from an existing buffer.
@@ -64,11 +53,11 @@ namespace GSF.TimeSeries
             buffer.ValidateParameters(startIndex, length);
 
             // We don't hold on to source buffer (we don't own it), so we instantiate a new one
-            m_buffer = new byte[length];
+            Buffer = new byte[length];
 
             // Copy buffer contents onto our local buffer
-            System.Buffer.BlockCopy(buffer, startIndex, m_buffer, 0, length);
-            m_length = length;
+            System.Buffer.BlockCopy(buffer, startIndex, Buffer, 0, length);
+            Length = length;
         }
 
         #endregion
@@ -78,24 +67,12 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Cached buffer image.
         /// </summary>
-        public byte[] Buffer
-        {
-            get
-            {
-                return m_buffer;
-            }
-        }
+        public byte[] Buffer { get; }
 
         /// <summary>
         /// Valid length of cached buffer image.
         /// </summary>
-        public int Length
-        {
-            get
-            {
-                return m_length;
-            }
-        }
+        public int Length { get; }
 
         #endregion
     }

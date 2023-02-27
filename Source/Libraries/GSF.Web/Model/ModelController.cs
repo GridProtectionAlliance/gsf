@@ -378,7 +378,7 @@ namespace GSF.Web.Model
         [HttpPost, Route("SearchableList")]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData)
         {
-            if (GetAuthCheck() && !AllowSearch)
+            if (!GetAuthCheck() || !AllowSearch)
                 return Unauthorized();
 
             DataTable table = GetSearchResults(postData);
@@ -395,7 +395,7 @@ namespace GSF.Web.Model
         [HttpPost, Route("{parentID?}/SearchableList")]
         public virtual IHttpActionResult GetSearchableList([FromBody] PostData postData, string parentID = null)
         {
-            if (GetAuthCheck() && !AllowSearch)
+            if (!GetAuthCheck() || !AllowSearch)
                 return Unauthorized();
 
             if (ParentKey != string.Empty && parentID != null)
@@ -450,9 +450,9 @@ namespace GSF.Web.Model
             return whereClause;
         }
 
-        private IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecordsWhere(null, false, filterExpression, parameters);
+        protected virtual IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecordsWhere(null, false, filterExpression, parameters);
         
-        private IEnumerable<T> QueryRecordsWhere(string orderBy, bool ascending, string filterExpression, params object[] parameters)
+        protected virtual IEnumerable<T> QueryRecordsWhere(string orderBy, bool ascending, string filterExpression, params object[] parameters)
         {
             string orderString = "";
             if (!string.IsNullOrEmpty(orderBy))
@@ -502,7 +502,7 @@ namespace GSF.Web.Model
             }
         }
 
-        private T QueryRecordWhere(string filterExpression, params object[] parameters)
+        protected virtual T QueryRecordWhere(string filterExpression, params object[] parameters)
         {
             
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
@@ -531,9 +531,9 @@ namespace GSF.Web.Model
             }
         }
 
-        private IEnumerable<T> QueryRecords() => QueryRecords(null, false);
+        protected virtual IEnumerable<T> QueryRecords() => QueryRecords(null, false);
     
-        private IEnumerable<T> QueryRecords(string sortBy, bool ascending)
+        protected virtual IEnumerable<T> QueryRecords(string sortBy, bool ascending)
         {
             string orderString = "";
             if (!string.IsNullOrEmpty(sortBy))

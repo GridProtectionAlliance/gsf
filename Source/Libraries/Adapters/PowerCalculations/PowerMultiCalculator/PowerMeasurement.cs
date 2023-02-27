@@ -23,65 +23,64 @@
 
 using System;
 
-namespace PowerCalculations.PowerMultiCalculator
+namespace PowerCalculations.PowerMultiCalculator;
+
+/// <summary>
+/// Simple model class for measurements
+/// </summary>
+public class PowerMeasurement
 {
-	/// <summary>
-	/// Simple model class for measurements
-	/// </summary>
-	public class PowerMeasurement
-	{
-		#region [ Properties ]
+    #region [ Properties ]
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Signal ID
-		/// </summary>
-		public Guid SignalID { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Signal ID
+    /// </summary>
+    public Guid SignalID { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Point Tag
-		/// </summary>
-		public string PointTag { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Point Tag
+    /// </summary>
+    public string PointTag { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Adder
-		/// </summary>
-		public int Adder { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Adder
+    /// </summary>
+    public int Adder { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Multiplier
-		/// </summary>
-		public int Multiplier { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Multiplier
+    /// </summary>
+    public int Multiplier { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s description
-		/// </summary>
-		public string Description { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s description
+    /// </summary>
+    public string Description { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Device ID
-		/// </summary>
-		public int DeviceID { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Device ID
+    /// </summary>
+    public int DeviceID { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Historian ID
-		/// </summary>
-		public int? HistorianID { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Historian ID
+    /// </summary>
+    public int? HistorianID { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Signal Type ID
-		/// </summary>
-		public int SignalTypeID { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Signal Type ID
+    /// </summary>
+    public int SignalTypeID { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s Enabled flag
-		/// </summary>
-		public bool Enabled { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s Enabled flag
+    /// </summary>
+    public bool Enabled { get; set; }
 
-		/// <summary>
-		/// Gets or sets the current <see cref="PowerMeasurement"/>'s signal reference
-		/// </summary>
-		public string SignalReference { get; set; }
+    /// <summary>
+    /// Gets or sets the current <see cref="PowerMeasurement"/>'s signal reference
+    /// </summary>
+    public string SignalReference { get; set; }
 
-		#endregion
-	}
+    #endregion
 }

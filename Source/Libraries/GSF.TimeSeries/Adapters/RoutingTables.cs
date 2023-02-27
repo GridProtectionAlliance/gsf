@@ -62,9 +62,6 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
-        private InputAdapterCollection m_inputAdapters;
-        private ActionAdapterCollection m_actionAdapters;
-        private OutputAdapterCollection m_outputAdapters;
 
         private readonly LongSynchronizedOperation m_calculateRoutingTablesOperation;
         private volatile MeasurementKey[] m_inputMeasurementKeysRestriction;
@@ -101,10 +98,8 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="RoutingTables"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~RoutingTables()
-        {
+        ~RoutingTables() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -118,47 +113,17 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets the active <see cref="InputAdapterCollection"/>.
         /// </summary>
-        public InputAdapterCollection InputAdapters
-        {
-            get
-            {
-                return m_inputAdapters;
-            }
-            set
-            {
-                m_inputAdapters = value;
-            }
-        }
+        public InputAdapterCollection InputAdapters { get; set; }
 
         /// <summary>
         /// Gets or sets the active <see cref="ActionAdapterCollection"/>.
         /// </summary>
-        public ActionAdapterCollection ActionAdapters
-        {
-            get
-            {
-                return m_actionAdapters;
-            }
-            set
-            {
-                m_actionAdapters = value;
-            }
-        }
+        public ActionAdapterCollection ActionAdapters { get; set; }
 
         /// <summary>
         /// Gets or sets the active <see cref="OutputAdapterCollection"/>.
         /// </summary>
-        public OutputAdapterCollection OutputAdapters
-        {
-            get
-            {
-                return m_outputAdapters;
-            }
-            set
-            {
-                m_outputAdapters = value;
-            }
-        }
+        public OutputAdapterCollection OutputAdapters { get; set; }
 
         #endregion
 
@@ -179,21 +144,21 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        m_inputAdapters = null;
-                        m_actionAdapters = null;
-                        m_outputAdapters = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true; // Prevent duplicate dispose.
-                }
+                if (!disposing)
+                    return;
+
+                InputAdapters = null;
+                ActionAdapters = null;
+                OutputAdapters = null;
+            }
+            finally
+            {
+                m_disposed = true; // Prevent duplicate dispose.
             }
         }
 
@@ -214,14 +179,13 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue routing table calculation: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to queue routing table calculation: {ex.Message}", ex));
             }
         }
 
         private void CalculateRoutingTables()
         {
             long startTime = DateTime.UtcNow.Ticks;
-            Time elapsedTime;
 
             IInputAdapter[] inputAdapterCollection = null;
             IActionAdapter[] actionAdapterCollection = null;
@@ -239,14 +203,14 @@ namespace GSF.TimeSeries.Adapters
             {
                 try
                 {
-                    if ((object)m_inputAdapters != null)
-                        inputAdapterCollection = m_inputAdapters.ToArray<IInputAdapter>();
+                    if (InputAdapters is not null)
+                        inputAdapterCollection = InputAdapters.ToArray<IInputAdapter>();
 
-                    if ((object)m_actionAdapters != null)
-                        actionAdapterCollection = m_actionAdapters.ToArray<IActionAdapter>();
+                    if (ActionAdapters is not null)
+                        actionAdapterCollection = ActionAdapters.ToArray<IActionAdapter>();
 
-                    if ((object)m_outputAdapters != null)
-                        outputAdapterCollection = m_outputAdapters.ToArray<IOutputAdapter>();
+                    if (OutputAdapters is not null)
+                        outputAdapterCollection = OutputAdapters.ToArray<IOutputAdapter>();
 
                     retry = false;
                 }
@@ -266,19 +230,16 @@ namespace GSF.TimeSeries.Adapters
 
             try
             {
-                HashSet<IAdapter> consumerAdapters;
-                HashSet<IAdapter> producerAdapters;
-
                 // Get a full list of all producer (input/action) adapters
-                producerAdapters = new HashSet<IAdapter>((inputAdapterCollection ?? Enumerable.Empty<IAdapter>())
+                HashSet<IAdapter> producerAdapters = new((inputAdapterCollection ?? Enumerable.Empty<IAdapter>())
                     .Concat(actionAdapterCollection ?? Enumerable.Empty<IAdapter>()));
 
                 // Get a full list of all consumer (action/output) adapters
-                consumerAdapters = new HashSet<IAdapter>((actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
+                HashSet<IAdapter> consumerAdapters = new((actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
                     .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>()));
 
-                var producerChanges = new RoutingTablesAdaptersList(m_prevCalculatedProducers, producerAdapters);
-                var consumerChanges = new RoutingTablesAdaptersList(m_prevCalculatedConsumers, consumerAdapters);
+                RoutingTablesAdaptersList producerChanges = new(m_prevCalculatedProducers, producerAdapters);
+                RoutingTablesAdaptersList consumerChanges = new(m_prevCalculatedConsumers, consumerAdapters);
 
                 m_routeMappingTables.PatchRoutingTable(producerChanges, consumerChanges);
                 m_prevCalculatedProducers = producerAdapters;
@@ -287,7 +248,7 @@ namespace GSF.TimeSeries.Adapters
                 // Start or stop any connect on demand adapters
                 HandleConnectOnDemandAdapters(new HashSet<MeasurementKey>(m_inputMeasurementKeysRestriction ?? Enumerable.Empty<MeasurementKey>()), inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
 
-                elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
+                Time elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
 
                 int routeCount = m_routeMappingTables.RouteCount;
                 int destinationCount = consumerAdapters.Count;
@@ -301,7 +262,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Routing tables calculation error: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Routing tables calculation error: {ex.Message}", ex));
             }
         }
 
@@ -311,10 +272,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="sender">the sender object</param>
         /// <param name="measurements">the event arguments</param>
-        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
-        {
+        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements) => 
             m_routeMappingTables.InjectMeasurements(sender, measurements);
-        }
 
         /// <summary>
         /// Event handler for distributing new measurements in a broadcast fashion.
@@ -328,8 +287,8 @@ namespace GSF.TimeSeries.Adapters
         {
             ICollection<IMeasurement> newMeasurements = e.Argument;
 
-            m_actionAdapters.QueueMeasurementsForProcessing(newMeasurements);
-            m_outputAdapters.QueueMeasurementsForProcessing(newMeasurements);
+            ActionAdapters.QueueMeasurementsForProcessing(newMeasurements);
+            OutputAdapters.QueueMeasurementsForProcessing(newMeasurements);
         }
 
         /// <summary>
@@ -403,104 +362,98 @@ namespace GSF.TimeSeries.Adapters
         {
             ISet<IAdapter> dependencyChain;
 
-            ISet<MeasurementKey> inputSignals;
-            ISet<MeasurementKey> outputSignals;
             ISet<MeasurementKey> requestedInputSignals;
             ISet<MeasurementKey> requestedOutputSignals;
 
-            if (inputMeasurementKeysRestriction.Any())
-            {
+            dependencyChain = inputMeasurementKeysRestriction.Any() ?
                 // When an input signals restriction has been defined, determine the set of adapters
                 // by walking the dependency chain of the restriction
-                dependencyChain = TraverseDependencyChain(inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-            }
-            else
-            {
+                TraverseDependencyChain(inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection) :
+
                 // Determine the set of adapters in the dependency chain for all adapters in the system
-                dependencyChain = TraverseDependencyChain(inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-            }
+                TraverseDependencyChain(inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
 
             // Get the full set of requested input and output signals in the entire dependency chain
-            inputSignals = new HashSet<MeasurementKey>(dependencyChain.SelectMany(adapter => adapter.InputMeasurementKeys()));
-            outputSignals = new HashSet<MeasurementKey>(dependencyChain.SelectMany(adapter => adapter.OutputMeasurementKeys()));
+            ISet<MeasurementKey> inputSignals = new HashSet<MeasurementKey>(dependencyChain.SelectMany(adapter => adapter.InputMeasurementKeys()));
+            ISet<MeasurementKey> outputSignals = new HashSet<MeasurementKey>(dependencyChain.SelectMany(adapter => adapter.OutputMeasurementKeys()));
 
             // Turn connect on demand input adapters on or off based on whether they are part of the dependency chain
-            if ((object)inputAdapterCollection != null)
+            if (inputAdapterCollection is not null)
             {
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    if (inputAdapter.Initialized && !inputAdapter.AutoStart)
+                    if (!inputAdapter.Initialized || inputAdapter.AutoStart)
+                        continue;
+
+                    if (dependencyChain.Contains(inputAdapter))
                     {
-                        if (dependencyChain.Contains(inputAdapter))
-                        {
-                            requestedOutputSignals = new HashSet<MeasurementKey>(inputAdapter.OutputMeasurementKeys());
-                            requestedOutputSignals.IntersectWith(inputSignals);
-                            inputAdapter.RequestedOutputMeasurementKeys = requestedOutputSignals.ToArray();
-                            inputAdapter.Enabled = true;
-                        }
-                        else
-                        {
-                            inputAdapter.RequestedOutputMeasurementKeys = null;
-                            inputAdapter.Enabled = false;
-                        }
+                        requestedOutputSignals = new HashSet<MeasurementKey>(inputAdapter.OutputMeasurementKeys());
+                        requestedOutputSignals.IntersectWith(inputSignals);
+                        inputAdapter.RequestedOutputMeasurementKeys = requestedOutputSignals.ToArray();
+                        inputAdapter.Enabled = true;
+                    }
+                    else
+                    {
+                        inputAdapter.RequestedOutputMeasurementKeys = null;
+                        inputAdapter.Enabled = false;
                     }
                 }
             }
 
             // Turn connect on demand action adapters on or off based on whether they are part of the dependency chain
-            if ((object)actionAdapterCollection != null)
+            if (actionAdapterCollection is not null)
             {
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    if (actionAdapter.Initialized && !actionAdapter.AutoStart)
+                    if (!actionAdapter.Initialized || actionAdapter.AutoStart)
+                        continue;
+
+                    if (dependencyChain.Contains(actionAdapter))
                     {
-                        if (dependencyChain.Contains(actionAdapter))
+                        if (actionAdapter.RespectInputDemands)
                         {
-                            if (actionAdapter.RespectInputDemands)
-                            {
-                                requestedInputSignals = new HashSet<MeasurementKey>(actionAdapter.InputMeasurementKeys());
-                                requestedInputSignals.IntersectWith(outputSignals);
-                                actionAdapter.RequestedInputMeasurementKeys = requestedInputSignals.ToArray();
-                            }
-
-                            if (actionAdapter.RespectOutputDemands)
-                            {
-                                requestedOutputSignals = new HashSet<MeasurementKey>(actionAdapter.OutputMeasurementKeys());
-                                requestedOutputSignals.IntersectWith(inputSignals);
-                                actionAdapter.RequestedOutputMeasurementKeys = requestedOutputSignals.ToArray();
-                            }
-
-                            actionAdapter.Enabled = true;
+                            requestedInputSignals = new HashSet<MeasurementKey>(actionAdapter.InputMeasurementKeys());
+                            requestedInputSignals.IntersectWith(outputSignals);
+                            actionAdapter.RequestedInputMeasurementKeys = requestedInputSignals.ToArray();
                         }
-                        else
+
+                        if (actionAdapter.RespectOutputDemands)
                         {
-                            actionAdapter.RequestedInputMeasurementKeys = null;
-                            actionAdapter.RequestedOutputMeasurementKeys = null;
-                            actionAdapter.Enabled = false;
+                            requestedOutputSignals = new HashSet<MeasurementKey>(actionAdapter.OutputMeasurementKeys());
+                            requestedOutputSignals.IntersectWith(inputSignals);
+                            actionAdapter.RequestedOutputMeasurementKeys = requestedOutputSignals.ToArray();
                         }
+
+                        actionAdapter.Enabled = true;
+                    }
+                    else
+                    {
+                        actionAdapter.RequestedInputMeasurementKeys = null;
+                        actionAdapter.RequestedOutputMeasurementKeys = null;
+                        actionAdapter.Enabled = false;
                     }
                 }
             }
 
             // Turn connect on demand output adapters on or off based on whether they are part of the dependency chain
-            if ((object)outputAdapterCollection != null)
+            if (outputAdapterCollection is not null)
             {
                 foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                 {
-                    if (outputAdapter.Initialized && !outputAdapter.AutoStart)
+                    if (!outputAdapter.Initialized || outputAdapter.AutoStart)
+                        continue;
+
+                    if (dependencyChain.Contains(outputAdapter))
                     {
-                        if (dependencyChain.Contains(outputAdapter))
-                        {
-                            requestedInputSignals = new HashSet<MeasurementKey>(outputAdapter.InputMeasurementKeys());
-                            requestedInputSignals.IntersectWith(outputSignals);
-                            outputAdapter.RequestedInputMeasurementKeys = requestedInputSignals.ToArray();
-                            outputAdapter.Enabled = true;
-                        }
-                        else
-                        {
-                            outputAdapter.RequestedInputMeasurementKeys = null;
-                            outputAdapter.Enabled = false;
-                        }
+                        requestedInputSignals = new HashSet<MeasurementKey>(outputAdapter.InputMeasurementKeys());
+                        requestedInputSignals.IntersectWith(outputSignals);
+                        outputAdapter.RequestedInputMeasurementKeys = requestedInputSignals.ToArray();
+                        outputAdapter.Enabled = true;
+                    }
+                    else
+                    {
+                        outputAdapter.RequestedInputMeasurementKeys = null;
+                        outputAdapter.Enabled = false;
                     }
                 }
             }
@@ -519,7 +472,7 @@ namespace GSF.TimeSeries.Adapters
         {
             ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
 
-            if ((object)inputAdapterCollection != null)
+            if (inputAdapterCollection is not null)
             {
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
@@ -528,7 +481,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            if ((object)actionAdapterCollection != null)
+            if (actionAdapterCollection is not null)
             {
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
@@ -550,7 +503,7 @@ namespace GSF.TimeSeries.Adapters
         {
             ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
 
-            if ((object)inputAdapterCollection != null)
+            if (inputAdapterCollection is not null)
             {
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
@@ -559,7 +512,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            if ((object)actionAdapterCollection != null)
+            if (actionAdapterCollection is not null)
             {
                 foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
@@ -568,7 +521,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            if ((object)outputAdapterCollection != null)
+            if (outputAdapterCollection is not null)
             {
                 foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                 {
@@ -583,12 +536,12 @@ namespace GSF.TimeSeries.Adapters
         // Adds an input adapter to the dependency chain.
         private void AddInputAdapter(IInputAdapter adapter, ISet<IAdapter> dependencyChain, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
         {
-            HashSet<MeasurementKey> outputMeasurementKeys = new HashSet<MeasurementKey>(adapter.OutputMeasurementKeys());
+            HashSet<MeasurementKey> outputMeasurementKeys = new(adapter.OutputMeasurementKeys());
 
             // Adds the adapter to the chain
             dependencyChain.Add(adapter);
 
-            if ((object)actionAdapterCollection != null)
+            if (actionAdapterCollection is not null)
             {
                 // Checks all action adapters to determine whether they also need to be
                 // added to the chain as a result of this adapter being added to the chain
@@ -599,7 +552,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            if ((object)outputAdapterCollection != null)
+            if (outputAdapterCollection is not null)
             {
                 // Checks all output adapters to determine whether they also need to be
                 // added to the chain as a result of this adapter being added to the chain
@@ -614,13 +567,13 @@ namespace GSF.TimeSeries.Adapters
         // Adds an action adapter to the dependency chain.
         private void AddActionAdapter(IActionAdapter adapter, ISet<IAdapter> dependencyChain, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
         {
-            HashSet<MeasurementKey> inputMeasurementKeys = new HashSet<MeasurementKey>(adapter.InputMeasurementKeys());
-            HashSet<MeasurementKey> outputMeasurementKeys = new HashSet<MeasurementKey>(adapter.OutputMeasurementKeys());
+            HashSet<MeasurementKey> inputMeasurementKeys = new(adapter.InputMeasurementKeys());
+            HashSet<MeasurementKey> outputMeasurementKeys = new(adapter.OutputMeasurementKeys());
 
             // Adds the adapter to the chain
             dependencyChain.Add(adapter);
 
-            if ((object)inputAdapterCollection != null)
+            if (inputAdapterCollection is not null)
             {
                 // Checks all input adapters to determine whether they also need to be
                 // added to the chain as a result of this adapter being added to the chain
@@ -631,7 +584,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            if ((object)actionAdapterCollection != null)
+            if (actionAdapterCollection is not null)
             {
                 // Checks all action adapters to determine whether they also need to be
                 // added to the chain as a result of this adapter being added to the chain
@@ -647,7 +600,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            if ((object)outputAdapterCollection != null)
+            if (outputAdapterCollection is not null)
             {
                 // Checks all output adapters to determine whether they also need to be
                 // added to the chain as a result of this adapter being added to the chain
@@ -662,12 +615,12 @@ namespace GSF.TimeSeries.Adapters
         // Adds an output adapter to the dependency chain.
         private void AddOutputAdapter(IOutputAdapter adapter, ISet<IAdapter> dependencyChain, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
         {
-            HashSet<MeasurementKey> inputMeasurementKeys = new HashSet<MeasurementKey>(adapter.InputMeasurementKeys());
+            HashSet<MeasurementKey> inputMeasurementKeys = new(adapter.InputMeasurementKeys());
 
             // Adds the adapter to the chain
             dependencyChain.Add(adapter);
 
-            if ((object)inputAdapterCollection != null)
+            if (inputAdapterCollection is not null)
             {
                 // Checks all input adapters to determine whether they also need to be
                 // added to the chain as a result of this adapter being added to the chain
@@ -678,7 +631,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            if ((object)actionAdapterCollection != null)
+            if (actionAdapterCollection is not null)
             {
                 // Checks all action adapters to determine whether they also need to be
                 // added to the chain as a result of this adapter being added to the chain

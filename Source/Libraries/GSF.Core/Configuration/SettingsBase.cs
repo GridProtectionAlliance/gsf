@@ -65,7 +65,6 @@ namespace GSF.Configuration
         // Fields
         private CultureInfo m_culture;
         private BindingFlags m_memberAccessBindingFlags;
-        private bool m_requireSerializeSettingAttribute;
         private bool m_disposed;
 
         #endregion
@@ -82,7 +81,7 @@ namespace GSF.Configuration
         protected SettingsBase(bool requireSerializeSettingAttribute)
         {
             m_culture = CultureInfo.InvariantCulture;
-            m_requireSerializeSettingAttribute = requireSerializeSettingAttribute;
+            RequireSerializeSettingAttribute = requireSerializeSettingAttribute;
             m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
         }
 
@@ -105,17 +104,8 @@ namespace GSF.Configuration
         [Browsable(false), SerializeSetting(false)]
         public CultureInfo Culture
         {
-            get
-            {
-                return m_culture;
-            }
-            set
-            {
-                if ((object)value != null)
-                    m_culture = value;
-                else
-                    m_culture = CultureInfo.InvariantCulture;
-            }
+            get => m_culture;
+            set => m_culture = value ?? CultureInfo.InvariantCulture;
         }
 
         /// <summary>
@@ -127,14 +117,8 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected virtual BindingFlags MemberAccessBindingFlags
         {
-            get
-            {
-                return m_memberAccessBindingFlags;
-            }
-            set
-            {
-                m_memberAccessBindingFlags = value;
-            }
+            get => m_memberAccessBindingFlags;
+            set => m_memberAccessBindingFlags = value;
         }
 
         /// <summary>
@@ -143,17 +127,7 @@ namespace GSF.Configuration
         /// file; defaults to False.
         /// </summary>
         [Browsable(false), SerializeSetting(false)]
-        public bool RequireSerializeSettingAttribute
-        {
-            get
-            {
-                return m_requireSerializeSettingAttribute;
-            }
-            set
-            {
-                m_requireSerializeSettingAttribute = value;
-            }
-        }
+        public bool RequireSerializeSettingAttribute { get; set; }
 
         /// <summary>
         /// Gets or sets the value of the specified field or property.
@@ -163,14 +137,8 @@ namespace GSF.Configuration
         /// <remarks>This is the default member of this class.</remarks>
         public string this[string name]
         {
-            get
-            {
-                return GetValue<string>(name);
-            }
-            set
-            {
-                SetValue(name, value);
-            }
+            get => GetValue<string>(name);
+            set => SetValue(name, value);
         }
 
         #endregion
@@ -192,18 +160,18 @@ namespace GSF.Configuration
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    // We'll make sure settings are saved when class is properly disposed...
-                    if (disposing)
-                        Save();
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                // We'll make sure settings are saved when class is properly disposed...
+                if (disposing)
+                    Save();
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
             }
         }
 
@@ -253,7 +221,7 @@ namespace GSF.Configuration
         public string GetSettingName(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
+                throw new ArgumentException($"{nameof(name)} cannot be null or empty", nameof(name));
 
             return GetAttributeValue<SettingNameAttribute, string>(name, name, attribute => attribute.Name).NotEmpty(name);
         }
@@ -267,7 +235,7 @@ namespace GSF.Configuration
         public object GetDefaultValue(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
+                throw new ArgumentException($"{nameof(name)} cannot be null or empty", nameof(name));
 
             return GetAttributeValue<DefaultValueAttribute, object>(name, null, attribute => attribute.Value);
         }
@@ -281,7 +249,7 @@ namespace GSF.Configuration
         public bool GetEncryptStatus(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
+                throw new ArgumentException($"{nameof(name)} cannot be null or empty", nameof(name));
 
             return GetAttributeValue<EncryptSettingAttribute, bool>(name, false, attribute => attribute.Encrypt);
         }
@@ -295,7 +263,7 @@ namespace GSF.Configuration
         public string GetEncryptKey(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
+                throw new ArgumentException($"{nameof(name)} cannot be null or empty", nameof(name));
 
             return GetAttributeValue<EncryptSettingAttribute, string>(name, null, attribute => attribute.PrivateKey).NotEmpty(name);
         }
@@ -312,7 +280,7 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            if ((object)value == null)
+            if (value is null)
                 CreateSetting(name, setting, EncryptValue(name, ""));
             else
                 CreateSetting(name, setting, EncryptValue(name, Common.TypeConvertToString(value, m_culture)));
@@ -327,7 +295,7 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            if ((object)value == null)
+            if (value is null)
                 StoreSetting(name, setting, EncryptValue(name, ""));
             else
                 StoreSetting(name, setting, EncryptValue(name, Common.TypeConvertToString(value, m_culture)));
@@ -373,24 +341,18 @@ namespace GSF.Configuration
         }
 
         // Encrypt setting value and return a base64 encoded value
-        private string EncryptValue(string name, string value)
-        {
+        private string EncryptValue(string name, string value) =>
             // If encrypt attribute has been applied, encrypt value
-            if (GetEncryptStatus(name))
-                return value.Encrypt(GetEncryptKey(name), CipherStrength.Aes256);
-
-            return value;
-        }
+            GetEncryptStatus(name) ? 
+                value.Encrypt(GetEncryptKey(name), CipherStrength.Aes256) : 
+                value;
 
         // Decrypt setting value
-        private string DecryptValue(string name, string value)
-        {
+        private string DecryptValue(string name, string value) =>
             // If encrypt attribute has been applied, decrypt value
-            if (GetEncryptStatus(name))
-                return value.Decrypt(GetEncryptKey(name), CipherStrength.Aes256);
-
-            return value;
-        }
+            GetEncryptStatus(name) ? 
+                value.Decrypt(GetEncryptKey(name), CipherStrength.Aes256) : 
+                value;
 
         /// <summary>
         /// Initializes configuration settings from derived class fields or properties.
@@ -445,15 +407,12 @@ namespace GSF.Configuration
         protected object DeriveDefaultValue(string name, object value)
         {
             // See if value is equal to its default value (i.e., uninitialized)
-            if (Common.IsDefaultValue(value))
-            {
-                // See if any value exists in a DefaultValueAttribute
-                object defaultValue = GetDefaultValue(name);
-                if (defaultValue != null)
-                    return defaultValue;
-            }
+            if (!Common.IsDefaultValue(value))
+                return value;
 
-            return value;
+            // See if any value exists in a DefaultValueAttribute
+            object defaultValue = GetDefaultValue(name);
+            return defaultValue ?? value;
         }
 
         /// <summary>
@@ -463,7 +422,7 @@ namespace GSF.Configuration
         /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
         public IEnumerator<string> GetEnumerator()
         {
-            List<string> members = new List<string>();
+            List<string> members = new();
 
             // Get names of fields
             ExecuteActionForFields(field => members.Add(field.Name));
@@ -511,10 +470,8 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="fieldAction">Action to execute for all derived class member fields.</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        protected void ExecuteActionForFields(Action<FieldInfo> fieldAction)
-        {
-            ExecuteActionForMembers(fieldAction, this.GetType().GetFields(m_memberAccessBindingFlags));
-        }
+        protected void ExecuteActionForFields(Action<FieldInfo> fieldAction) => 
+            ExecuteActionForMembers(fieldAction, GetType().GetFields(m_memberAccessBindingFlags));
 
         /// <summary>
         /// Executes specified action over all public derived class properties.
@@ -527,13 +484,13 @@ namespace GSF.Configuration
             bool get = isGetOrSet.HasFlag(BindingFlags.GetProperty);
             bool set = isGetOrSet.HasFlag(BindingFlags.SetProperty);
 
-            Action<PropertyInfo> memberAction = property =>
+            void memberAction(PropertyInfo property)
             {
                 if (property.GetIndexParameters().Length == 0)
                     propertyAction(property);
-            };
+            }
 
-            PropertyInfo[] properties = this.GetType()
+            PropertyInfo[] properties = GetType()
                 .GetProperties(m_memberAccessBindingFlags)
                 .Where(property => (!get || property.CanRead) && (!set || property.CanWrite))
                 .ToArray();
@@ -545,19 +502,17 @@ namespace GSF.Configuration
         // Execute specified action over specified members
         private void ExecuteActionForMembers<T>(Action<T> memberAction, T[] members) where T : MemberInfo
         {
-            SerializeSettingAttribute attribute;
-
             // Execute action for each member
             foreach (T member in members)
             {
                 // See if serialize setting attribute exists
-                if (member.TryGetAttribute(out attribute))
+                if (member.TryGetAttribute(out SerializeSettingAttribute attribute))
                 {
                     // Found serialize setting attribute, perform action if setting is true
                     if (attribute.Serialize)
                         memberAction(member);
                 }
-                else if (!m_requireSerializeSettingAttribute)
+                else if (!RequireSerializeSettingAttribute)
                 {
                     // Didn't find serialize setting attribute and it's not required, so we perform action
                     memberAction(member);
@@ -580,35 +535,29 @@ namespace GSF.Configuration
             TAttribute attribute;
 
             // See if field exists with specified name
-            FieldInfo field = this.GetType().GetField(name, m_memberAccessBindingFlags);
+            FieldInfo field = GetType().GetField(name, m_memberAccessBindingFlags);
 
-            if ((object)field != null)
+            if (field is not null)
             {
                 // See if attribute exists on field
-                if (field.TryGetAttribute(out attribute))
-                {
+                return field.TryGetAttribute(out attribute) ?
                     // Return value as specified by delegate
-                    return attributeValue(attribute);
-                }
-
-                // Attribute wasn't found, return default value
-                return defaultValue;
+                    attributeValue(attribute) :
+                    // Attribute wasn't found, return default value
+                    defaultValue;
             }
 
             // See if property exists with specified name
-            PropertyInfo property = this.GetType().GetProperty(name, m_memberAccessBindingFlags);
+            PropertyInfo property = GetType().GetProperty(name, m_memberAccessBindingFlags);
 
-            if ((object)property != null)
+            if (property is not null)
             {
                 // See if attribute exists on property
-                if (property.TryGetAttribute(out attribute))
-                {
+                return property.TryGetAttribute(out attribute) ?
                     // Return value as specified by delegate
-                    return attributeValue(attribute);
-                }
-
-                // Attribute wasn't found, return default value
-                return defaultValue;
+                    attributeValue(attribute) :
+                    // Attribute wasn't found, return default value
+                    defaultValue;
             }
 
             // Return default value

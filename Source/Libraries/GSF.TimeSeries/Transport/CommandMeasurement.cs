@@ -62,30 +62,21 @@ namespace GSF.TimeSeries.Transport
 
         private class DateTimeConverter : TypeConverter
         {
-            TypeConverter defaultConverter = TypeDescriptor.GetConverter(typeof(DateTime));
+            private readonly TypeConverter defaultConverter = TypeDescriptor.GetConverter(typeof(DateTime));
 
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-            {
-                return defaultConverter.CanConvertFrom(context, sourceType);
-            }
+            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => 
+                defaultConverter.CanConvertFrom(context, sourceType);
+            
+            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => 
+                defaultConverter.CanConvertTo(context, destinationType);
 
-            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-            {
-                return defaultConverter.CanConvertTo(context, destinationType);
-            }
+            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) => 
+                defaultConverter.ConvertFrom(context, culture, value);
 
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-            {
-                return defaultConverter.ConvertFrom(context, culture, value);
-            }
-
-            public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-            {
-                if (destinationType == typeof(string))
-                    return ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.fffffff");
-
-                return base.ConvertTo(context, culture, value, destinationType);
-            }
+            public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
+                destinationType == typeof(string) ? 
+                    ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.fffffff") : 
+                    base.ConvertTo(context, culture, value, destinationType);
         }
 
         #endregion

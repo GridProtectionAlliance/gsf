@@ -62,9 +62,7 @@ namespace GSF.Configuration
 
         // Fields
         private string m_cryptoKey;
-        private ConfigurationFile m_file;
         private readonly Dictionary<string, CategorizedSettingsElementCollection> m_sections;
-        private bool m_sectionLoaded;
 
         #endregion
 
@@ -73,11 +71,11 @@ namespace GSF.Configuration
         /// </summary>
         public CategorizedSettingsSection()
         {
-#if MONO
+        #if MONO
             m_sections = new Dictionary<string, CategorizedSettingsElementCollection>();
-#else
+        #else
             m_sections = null;
-#endif
+        #endif
         }
 
         #region [ Properties ]
@@ -85,17 +83,7 @@ namespace GSF.Configuration
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationFile"/> to which this <see cref="CategorizedSettingsSection"/> belongs.
         /// </summary>
-        public ConfigurationFile File
-        {
-            get
-            {
-                return m_file;
-            }
-            internal set
-            {
-                m_file = value;
-            }
-        }
+        public ConfigurationFile File { get; internal set; }
 
         /// <summary>
         /// Gets the <see cref="CategorizedSettingsElementCollection"/> object representing settings under the specified category name.
@@ -119,22 +107,22 @@ namespace GSF.Configuration
                 nameChars[0] = char.ToLower(nameChars[0]);
 
                 // Do not allow spaces in the name so that underlying .Net configuration API does not break.
-                name = (new string(nameChars)).RemoveWhiteSpace();
+                name = new string(nameChars).RemoveWhiteSpace();
 
-                ConfigurationProperty configProperty = new ConfigurationProperty(name, typeof(CategorizedSettingsElementCollection));
-                CategorizedSettingsElementCollection settingsCategory = null;
+                ConfigurationProperty configProperty = new(name, typeof(CategorizedSettingsElementCollection));
+                CategorizedSettingsElementCollection settingsCategory;
 
-                if ((object)m_sections == null)
+                if (m_sections is null)
                 {
                     base.Properties.Add(configProperty);
 
-                    if ((object)base[configProperty] != null)
-                    {
-                        settingsCategory = (CategorizedSettingsElementCollection)base[configProperty];
-                        settingsCategory.Name = name;
-                        settingsCategory.Section = this;
-                        settingsCategory.SetCryptoKey(m_cryptoKey);
-                    }
+                    if (base[configProperty] is null)
+                        return null;
+
+                    settingsCategory = (CategorizedSettingsElementCollection)base[configProperty];
+                    settingsCategory.Name = name;
+                    settingsCategory.Section = this;
+                    settingsCategory.SetCryptoKey(m_cryptoKey);
                 }
                 else
                 {
@@ -142,7 +130,7 @@ namespace GSF.Configuration
                     {
                         base.Properties.Add(configProperty);
 
-                        CategorizedSettingsElementCollection settings = new CategorizedSettingsElementCollection
+                        CategorizedSettingsElementCollection settings = new()
                         {
                             Name = sectionName,
                             Section = this,
@@ -163,28 +151,16 @@ namespace GSF.Configuration
         /// Gets the <see cref="CategorizedSettingsElementCollection"/> object representing settings under "general" category.
         /// </summary>
         /// <returns><see cref="CategorizedSettingsElementCollection"/> object with settings under the "general" category.</returns>
-        public CategorizedSettingsElementCollection General
-        {
-            get
-            {
-                return this["general"];
-            }
-        }
+        public CategorizedSettingsElementCollection General => this["general"];
 
-        internal bool SectionLoaded
-        {
-            get
-            {
-                return m_sectionLoaded;
-            }
-        }
+        internal bool SectionLoaded { get; private set; }
 
         internal bool Modified
         {
             set
             {
-                if ((object)m_sections != null && (object)m_file != null && value)
-                    m_file.m_forceSave = true;
+                if (m_sections is not null && File is not null && value)
+                    File.m_forceSave = true;
             }
         }
 
@@ -196,10 +172,8 @@ namespace GSF.Configuration
         /// Sets the key to be used for encrypting and decrypting setting values.
         /// </summary>
         /// <param name="cryptoKey">New crypto key.</param>
-        public void SetCryptoKey(string cryptoKey)
-        {
+        public void SetCryptoKey(string cryptoKey) => 
             m_cryptoKey = cryptoKey;
-        }
 
         /// <summary>
         /// Removes the specified category name including its associated settings.
@@ -213,12 +187,10 @@ namespace GSF.Configuration
 
             // Remove existing category settings.
             while (settingsCategory.GetEnumerator().MoveNext())
-            {
                 settingsCategory.RemoveAt(0);
-            }
 
             // Remove category from property bag.
-            if ((object)m_sections == null)
+            if (m_sections is null)
                 base.Properties.Remove(settingsCategory.Name);
             else
                 m_sections.Remove(settingsCategory.Name);
@@ -230,76 +202,69 @@ namespace GSF.Configuration
         /// <param name="reader">The <see cref="System.Xml.XmlReader"/> object, which reads from the configuration file.</param>
         protected override void DeserializeSection(XmlReader reader)
         {
-            using (BlockAllocatedMemoryStream configSectionStream = new BlockAllocatedMemoryStream())
+            using BlockAllocatedMemoryStream configSectionStream = new();
+            XmlDocument configSection = new();
+
+            configSection.Load(reader);
+            configSection.Save(configSectionStream);
+
+            // Adds all the categories that are under the categorizedSettings section of the configuration file
+            // to the property collection. Again, this is essentially doing what marking a property with the
+            // <ConfigurationProperty()> attribute does. If this is not done, then an exception will be raised
+            // when the category elements are being deserialized.
+            XmlNodeList categories = configSection.DocumentElement?.SelectNodes("*");
+
+            if (categories != null)
             {
-                XmlDocument configSection = new XmlDocument();
-
-                configSection.Load(reader);
-                configSection.Save(configSectionStream);
-
-                // Adds all the categories that are under the categorizedSettings section of the configuration file
-                // to the property collection. Again, this is essentially doing what marking a property with the
-                // <ConfigurationProperty()> attribute does. If this is not done, then an exception will be raised
-                // when the category elements are being deserialized.
-                if ((object)configSection.DocumentElement != null)
+                foreach (XmlNode category in categories)
                 {
-                    XmlNodeList categories = configSection.DocumentElement.SelectNodes("*");
+                    ConfigurationProperty configProperty = new(category.Name, typeof(CategorizedSettingsElementCollection));
 
-                    if ((object)categories != null)
+                    base.Properties.Add(configProperty);
+
+                    if (m_sections is null)
+                        continue;
+
+                    CategorizedSettingsElementCollection settingsCategory = new()
                     {
-                        foreach (XmlNode category in categories)
-                        {
-                            ConfigurationProperty configProperty = new ConfigurationProperty(category.Name, typeof(CategorizedSettingsElementCollection));
+                        Name = category.Name,
+                        Section = this,
+                    };
 
-                            base.Properties.Add(configProperty);
+                    settingsCategory.SetCryptoKey(m_cryptoKey);
+                    m_sections.Add(category.Name, settingsCategory);
 
-                            if ((object)m_sections != null)
-                            {
-                                CategorizedSettingsElementCollection settingsCategory = new CategorizedSettingsElementCollection
-                                {
-                                    Name = category.Name,
-                                    Section = this,
-                                };
+                    // Read all elements within this category section
+                    XmlNodeList elements = category.SelectNodes("*");
 
-                                settingsCategory.SetCryptoKey(m_cryptoKey);
-                                m_sections.Add(category.Name, settingsCategory);
+                    if (elements is null)
+                        continue;
 
-                                // Read all elements within this category section
-                                XmlNodeList elements = category.SelectNodes("*");
-                                SettingScope scope;
+                    foreach (XmlNode element in elements)
+                    {
+                        CategorizedSettingsElement categorySetting = new(settingsCategory);
 
-                                if ((object)elements != null)
-                                {
-                                    foreach (XmlNode element in elements)
-                                    {
-                                        CategorizedSettingsElement categorySetting = new CategorizedSettingsElement(settingsCategory);
+                        categorySetting.Name = element.GetAttributeValue("name");
+                        categorySetting.Value = element.GetAttributeValue("value");
+                        categorySetting.Description = element.GetAttributeValue("description") ?? "";
+                        categorySetting.Encrypted = element.GetAttributeValue("encrypted").ToNonNullNorWhiteSpace("false").ParseBoolean();
 
-                                        categorySetting.Name = element.GetAttributeValue("name");
-                                        categorySetting.Value = element.GetAttributeValue("value");
-                                        categorySetting.Description = element.GetAttributeValue("description") ?? "";
-                                        categorySetting.Encrypted = element.GetAttributeValue("encrypted").ToNonNullNorWhiteSpace("false").ParseBoolean();
+                        categorySetting.Scope = Enum.TryParse(element.GetAttributeValue("scope").ToNonNullNorWhiteSpace("Application"), out SettingScope scope) ? 
+                            scope : 
+                            SettingScope.Application;
 
-                                        if (Enum.TryParse(element.GetAttributeValue("scope").ToNonNullNorWhiteSpace("Application"), out scope))
-                                            categorySetting.Scope = scope;
-                                        else
-                                            categorySetting.Scope = SettingScope.Application;
-
-                                        settingsCategory.Add(categorySetting);
-                                    }
-                                }
-                            }
-                        }
+                        settingsCategory.Add(categorySetting);
                     }
                 }
-
-                m_sectionLoaded = true;
-
-                if ((object)m_sections == null)
-                {
-                    configSectionStream.Seek(0, SeekOrigin.Begin);
-                    base.DeserializeSection(XmlReader.Create(configSectionStream));
-                }
             }
+
+            SectionLoaded = true;
+
+            if (m_sections is not null)
+                return;
+
+            configSectionStream.Seek(0, SeekOrigin.Begin);
+            base.DeserializeSection(XmlReader.Create(configSectionStream));
         }
 
         /// <summary>
@@ -313,61 +278,58 @@ namespace GSF.Configuration
         /// <param name="saveMode">The <see cref="ConfigurationSaveMode"/> instance to use when writing to a string.</param>
         protected override string SerializeSection(ConfigurationElement parentElement, string name, ConfigurationSaveMode saveMode)
         {
-            if ((object)m_sections != null)
+            if (m_sections is null)
+                return base.SerializeSection(parentElement, name, saveMode);
+
+            const string tempRoot = "__tempRoot__";
+
+            using BlockAllocatedMemoryStream stream = new();
+
+            XmlTextWriter writer = new(stream, Encoding.UTF8);
+
+            writer.Indentation = 2;
+            writer.Formatting = Formatting.Indented;
+
+            // Add a temporary root so that indentation is at the desired level
+            writer.WriteStartElement(tempRoot);
+            writer.WriteStartElement(name);
+
+            foreach (string section in m_sections.Keys)
             {
-                const string tempRoot = "__tempRoot__";
+                CategorizedSettingsElementCollection categorySettings = this[section];
 
-                using (BlockAllocatedMemoryStream stream = new BlockAllocatedMemoryStream())
+                // Add category section
+                writer.WriteStartElement(section);
+
+                // Write each category value
+                foreach (CategorizedSettingsElement categorySetting in categorySettings)
                 {
-                    XmlTextWriter writer = new XmlTextWriter(stream, Encoding.UTF8);
+                    // <add name="TestConfigParam" value="-1.0" description="Parameter description." encrypted="false" scope="User"/>
+                    writer.WriteStartElement("add");
 
-                    writer.Indentation = 2;
-                    writer.Formatting = Formatting.Indented;
+                    writer.WriteAttributeString("name", categorySetting.Name);
+                    writer.WriteAttributeString("value", categorySetting.SerializedValue);
+                    writer.WriteAttributeString("description", categorySetting.Description ?? "");
+                    writer.WriteAttributeString("encrypted", categorySetting.Encrypted.ToString());
 
-                    // Add a temporary root so that indentation is at the desired level
-                    writer.WriteStartElement(tempRoot);
-                    writer.WriteStartElement(name);
-
-                    foreach (string section in m_sections.Keys)
-                    {
-                        CategorizedSettingsElementCollection categorySettings = this[section];
-
-                        // Add category section
-                        writer.WriteStartElement(section);
-
-                        // Write each category value
-                        foreach (CategorizedSettingsElement categorySetting in categorySettings)
-                        {
-                            // <add name="TestConfigParam" value="-1.0" description="Parameter description." encrypted="false" scope="User"/>
-                            writer.WriteStartElement("add");
-
-                            writer.WriteAttributeString("name", categorySetting.Name);
-                            writer.WriteAttributeString("value", categorySetting.SerializedValue);
-                            writer.WriteAttributeString("description", categorySetting.Description ?? "");
-                            writer.WriteAttributeString("encrypted", categorySetting.Encrypted.ToString());
-
-                            if (categorySetting.Scope == SettingScope.User)
-                                writer.WriteAttributeString("scope", categorySetting.Scope.ToString());
-
-                            writer.WriteEndElement();
-                        }
-
-                        writer.WriteEndElement();
-                    }
+                    if (categorySetting.Scope == SettingScope.User)
+                        writer.WriteAttributeString("scope", categorySetting.Scope.ToString());
 
                     writer.WriteEndElement();
-                    writer.WriteEndElement();
-
-                    writer.Flush();
-
-                    string settings = Encoding.UTF8.GetString(stream.ToArray());
-
-                    // Remove temporary root
-                    return settings.Replace(string.Format("<{0}>", tempRoot), "").Replace(string.Format("</{0}>", tempRoot), "");
                 }
+
+                writer.WriteEndElement();
             }
 
-            return base.SerializeSection(parentElement, name, saveMode);
+            writer.WriteEndElement();
+            writer.WriteEndElement();
+            writer.Flush();
+
+            string settings = Encoding.UTF8.GetString(stream.ToArray());
+
+            // Remove temporary root
+            return settings.Replace($"<{tempRoot}>", "").Replace($"</{tempRoot}>", "");
+
         }
 
         #endregion

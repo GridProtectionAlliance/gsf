@@ -186,7 +186,7 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(this.HandleStatus());
                 status.Append(base.Status);

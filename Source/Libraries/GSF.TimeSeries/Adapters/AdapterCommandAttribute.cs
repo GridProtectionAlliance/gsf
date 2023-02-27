@@ -40,7 +40,6 @@ namespace GSF.TimeSeries.Adapters
         #region [ Members ]
 
         // Fields
-        private readonly string m_description;
         private readonly string[] m_allowedRoles;
 
         #endregion
@@ -51,21 +50,16 @@ namespace GSF.TimeSeries.Adapters
         /// Creates a new <see cref="AdapterCommandAttribute"/> with the specified <paramref name="description"/> value.
         /// </summary>
         /// <param name="description">Assigns the description for this adapter command.</param>
-        public AdapterCommandAttribute(string description)
-        {
-            m_description = description;
-        }
+        public AdapterCommandAttribute(string description) => 
+            Description = description;
 
         /// <summary>
         /// Creates a new <see cref="AdapterCommandAttribute"/> with the specified <paramref name="description"/> value.
         /// </summary>
         /// <param name="description">Assigns the description for this adapter command.</param>
         /// <param name="allowedRoles">Assigns the roles which are allowed to invoke this adapter command.</param>
-        public AdapterCommandAttribute(string description, params string[] allowedRoles)
-            : this(description)
-        {
+        public AdapterCommandAttribute(string description, params string[] allowedRoles) : this(description) =>
             m_allowedRoles = allowedRoles;
-        }
 
         #endregion
 
@@ -74,24 +68,13 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the description of this adapter command.
         /// </summary>
-        public string Description
-        {
-            get
-            {
-                return m_description;
-            }
-        }
+        public string Description { get; }
 
         /// <summary>
         /// Gets the roles which are allowed to invoke this adapter command.
         /// </summary>
-        public string[] AllowedRoles
-        {
-            get
-            {
-                return m_allowedRoles ?? new[] { "Administrator" };
-            }
-        }
+        public string[] AllowedRoles => 
+            m_allowedRoles ?? new[] { "Administrator" };
 
         #endregion
     }

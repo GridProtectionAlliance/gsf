@@ -107,10 +107,8 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="ServiceClientBase"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~ServiceClientBase()
-        {
+        ~ServiceClientBase() => 
             Dispose(false);
-        }
 
         #endregion
 
@@ -782,7 +780,7 @@ namespace GSF.TimeSeries
             if (remotingClient.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
             {
                 // Create an exception and do not check policy for localhost
-                IPHostEntry localhost = Dns.GetHostEntry("localhost");
+                IPHostEntry localhost = Dns.GetHostEntry(nameof(localhost));
 
                 if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
                     return true;
@@ -806,7 +804,7 @@ namespace GSF.TimeSeries
             help.AppendFormat("Commands supported by {0}:", AssemblyInfo.EntryAssembly.Name);
             help.AppendLine();
             help.AppendLine();
-            help.Append("Command".PadRight(20));
+            help.Append(nameof(Command).PadRight(20));
             help.Append(" ");
             help.Append("Description".PadRight(55));
             help.AppendLine();
@@ -943,6 +941,7 @@ namespace GSF.TimeSeries
 
                 string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
                 File.WriteAllBytes(tempPath, reportData);
+
                 Process.Start(tempPath);
             }
             catch (Exception ex)

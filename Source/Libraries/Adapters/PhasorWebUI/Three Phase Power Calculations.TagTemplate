@@ -1,0 +1,7 @@
+MW_1	+		CalculatePower	Positive Sequence MW
+MW_A	A		CalculatePower	Single Phase MW A
+MW_B	B		CalculatePower	Single Phase MW B
+MW_C	C		CalculatePower	Single Phase MW C
+MW_3	MW		SumPhase	3-Phase MW
+MVAR_3	MVAR		SumPhase	3-Phase MVAR
+MVA_3	MVA		SumPhase	3-Phase MVA

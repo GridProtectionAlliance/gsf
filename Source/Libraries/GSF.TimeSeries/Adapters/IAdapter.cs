@@ -78,20 +78,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to <see cref="IAdapter"/>.
         /// </summary>
-        DataSet DataSource
-        {
-            get;
-            set;
-        }
+        DataSet DataSource { get; set; }
 
         /// <summary>
         /// Gets or sets key/value pair connection information specific to <see cref="IAdapter"/>.
         /// </summary>
-        string ConnectionString
-        {
-            get;
-            set;
-        }
+        string ConnectionString { get; set; }
 
         /// <summary>
         /// Gets connection info for adapter, if any.
@@ -99,36 +91,22 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// For example, this could return IP or host name of source connection.
         /// </remarks>
-        string ConnectionInfo
-        {
-            get;
-        }
+        string ConnectionInfo { get; }
 
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        Dictionary<string, string> Settings
-        {
-            get;
-        }
+        Dictionary<string, string> Settings { get; }
 
         /// <summary>
         /// Gets or sets name of this <see cref="IAdapter"/>.
         /// </summary>
-        new string Name
-        {
-            get;
-            set;
-        }
+        new string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the numeric ID associated with this <see cref="IAdapter"/>.
         /// </summary>
-        uint ID
-        {
-            get;
-            set;
-        }
+        uint ID { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if the adapter has been initialized successfully.
@@ -136,11 +114,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Implementers only need to track this value.
         /// </remarks>
-        bool Initialized
-        {
-            get;
-            set;
-        }
+        bool Initialized { get; set; }
 
         /// <summary>
         /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
@@ -148,54 +122,32 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Implementers should use value <see cref="Timeout.Infinite"/> to wait indefinitely.
         /// </remarks>
-        int InitializationTimeout
-        {
-            get;
-            set;
-        }
+        int InitializationTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if adapter should automatically start or connect on demand.
         /// </summary>
-        bool AutoStart
-        {
-            get;
-            set;
-        }
+        bool AutoStart { get; set; }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the adapter expects.
         /// </summary>
-        MeasurementKey[] InputMeasurementKeys
-        {
-            get;
-            set;
-        }
+        MeasurementKey[] InputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets or sets output measurements that the adapter will produce, if any.
         /// </summary>
-        IMeasurement[] OutputMeasurements
-        {
-            get;
-            set;
-        }
+        IMeasurement[] OutputMeasurements { get; set; }
 
         /// <summary>
         /// Gets the total number of measurements processed thus far by the <see cref="IAdapter"/>.
         /// </summary>
-        long ProcessedMeasurements
-        {
-            get;
-        }
+        long ProcessedMeasurements { get; }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        bool SupportsTemporalProcessing
-        {
-            get;
-        }
+        bool SupportsTemporalProcessing { get; }
 
         /// <summary>
         /// Gets the start time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
@@ -204,10 +156,7 @@ namespace GSF.TimeSeries.Adapters
         /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
         /// is processing data in real-time.
         /// </remarks>
-        DateTime StartTimeConstraint
-        {
-            get;
-        }
+        DateTime StartTimeConstraint { get; }
 
         /// <summary>
         /// Gets the stop time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
@@ -216,10 +165,7 @@ namespace GSF.TimeSeries.Adapters
         /// This value will be <see cref="DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
         /// is processing data in real-time.
         /// </remarks>
-        DateTime StopTimeConstraint
-        {
-            get;
-        }
+        DateTime StopTimeConstraint { get; }
 
         /// <summary>
         /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
@@ -229,11 +175,7 @@ namespace GSF.TimeSeries.Adapters
         /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
-        int ProcessingInterval
-        {
-            get;
-            set;
-        }
+        int ProcessingInterval { get; set; }
 
         /// <summary>
         ///  Starts the adapter, if it is not already running.
@@ -316,30 +258,24 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="adapter"><see cref="IAdapter"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="IAdapter"/> has a temporal constraint defined.</returns>
-        public static bool TemporalConstraintIsDefined(this IAdapter adapter)
-        {
-            return adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue;
-        }
+        public static bool TemporalConstraintIsDefined(this IAdapter adapter) => 
+            adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue;
 
         /// <summary>
         /// Returns the <see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> input measurements.
         /// </summary>
         /// <param name="adapter"><see cref="IAdapter"/> instance input measurements to convert.</param>
         /// <returns><see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> input measurements.</returns>
-        public static MeasurementKey[] InputMeasurementKeys(this IAdapter adapter)
-        {
-            return adapter.InputMeasurementKeys ?? new MeasurementKey[0];
-        }
+        public static MeasurementKey[] InputMeasurementKeys(this IAdapter adapter) => 
+            adapter.InputMeasurementKeys ?? Array.Empty<MeasurementKey>();
 
         /// <summary>
         /// Returns the <see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> output measurements.
         /// </summary>
         /// <param name="adapter"><see cref="IAdapter"/> instance output measurements to convert.</param>
         /// <returns><see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> output measurements.</returns>
-        public static MeasurementKey[] OutputMeasurementKeys(this IAdapter adapter)
-        {
-            return adapter.OutputMeasurements.MeasurementKeys().ToArray();
-        }
+        public static MeasurementKey[] OutputMeasurementKeys(this IAdapter adapter) => 
+            adapter.OutputMeasurements.MeasurementKeys().ToArray();
 
         /// <summary>
         /// Gets a distinct list of input measurement keys for all of the provided adapters.
@@ -349,13 +285,13 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>Distinct list of input measurement keys for all of the provided adapters.</returns>
         public static MeasurementKey[] InputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
         {
-            List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
+            List<MeasurementKey> inputMeasurementKeys = new();
 
             foreach (T adapter in adapters)
             {
                 MeasurementKey[] adapterInputMeasurementKeys = adapter.InputMeasurementKeys;
 
-                if (adapterInputMeasurementKeys != null && adapterInputMeasurementKeys.Length > 0)
+                if (adapterInputMeasurementKeys is not null && adapterInputMeasurementKeys.Length > 0)
                     inputMeasurementKeys.AddRange(adapterInputMeasurementKeys);
             }
 
@@ -370,13 +306,13 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>Distinct list of output measurement keys for all of the provided adapters.</returns>
         public static MeasurementKey[] OutputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
         {
-            List<MeasurementKey> outputMeasurementKeys = new List<MeasurementKey>();
+            List<MeasurementKey> outputMeasurementKeys = new();
 
             foreach (T adapter in adapters)
             {
                 IEnumerable<MeasurementKey> adapterOutputMeasurementKeys = adapter.OutputMeasurementKeys();
 
-                if ((object)adapterOutputMeasurementKeys != null && adapterOutputMeasurementKeys.Any())
+                if (adapterOutputMeasurementKeys is not null && adapterOutputMeasurementKeys.Any())
                     outputMeasurementKeys.AddRange(adapterOutputMeasurementKeys);
             }
 

@@ -38,7 +38,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -132,11 +131,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines overall monitoring rate, in milliseconds, for devices.")]
         [DefaultValue(DefaultMonitoringRate)]
-        public int MonitoringRate
-        {
-            get;
-            set;
-        }
+        public int MonitoringRate { get; set; }
 
         /// <summary>
         /// Gets or sets the time, in minutes, for which to change the device state to alarm when no data is received.
@@ -155,11 +150,7 @@ namespace GrafanaAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the flag that determines if alarm states should only target parent devices, i.e., PDCs and direct connect PMUs, or all devices.")]
-        public bool TargetParentDevices
-        {
-            get;
-            set;
-        }
+        public bool TargetParentDevices { get; set; }
 
         /// <summary>
         /// Gets or sets delay time, in minutes, before transitioning the Acknowledged state back to Good.
@@ -167,11 +158,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the delay time, in minutes, before transitioning the Acknowledged state back to Good.")]
         [DefaultValue(DefaultAcknowledgedTransitionHysteresisDelay)]
-        public double AcknowledgedTransitionHysteresisDelay
-        {
-            get;
-            set;
-        }
+        public double AcknowledgedTransitionHysteresisDelay { get; set; }
 
         /// <summary>
         /// Gets or sets the delay time, in minutes, before reporting the external database state.
@@ -179,11 +166,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the delay time, in minutes, before reporting the external database state.")]
         [DefaultValue(DefaultExternalDatabaseHysteresisDelay)]
-        public double ExternalDatabaseHysteresisDelay
-        {
-            get;
-            set;
-        }
+        public double ExternalDatabaseHysteresisDelay { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum state for application of <see cref="ExternalDatabaseHysteresisDelay"/>. Defaults to setting Good and Alarm states immediately and applying delay to all other states.
@@ -191,11 +174,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the minimum state for application of \"ExternalDatabaseHysteresisDelay\". Defaults to setting Good and Alarm states immediately and applying delay to all other states.")]
         [DefaultValue(1)]
-        public int ExternalDatabaseHysteresisMinimumState
-        {
-            get;
-            set;
-        } = 1;
+        public int ExternalDatabaseHysteresisMinimumState { get; set; } = 1;
 
         /// <summary>
         /// Gets or sets the flag that determines if an external database connection should be enabled for synchronization of alarm states.
@@ -203,11 +182,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the flag that determines if an external database connection should be enabled for synchronization of alarm states.")]
         [DefaultValue(false)]
-        public bool EnableExternalDatabaseSynchronization
-        {
-            get;
-            set;
-        }
+        public bool EnableExternalDatabaseSynchronization { get; set; }
 
         /// <summary>
         /// Gets or sets the external database connection string used for synchronization of alarm states. Leave blank to use local configuration database defined in "systemSettings".
@@ -215,11 +190,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the external database connection string used for synchronization of alarm states. Leave blank to use local configuration database defined in \"systemSettings\".")]
         [DefaultValue("")]
-        public string ExternalDatabaseConnnectionString
-        {
-            get;
-            set;
-        }
+        public string ExternalDatabaseConnnectionString { get; set; }
 
         /// <summary>
         /// Gets or sets the external database provider string used for synchronization of alarm states.
@@ -227,11 +198,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the external database provider string used for synchronization of alarm states.")]
         [DefaultValue("AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter")]
-        public string ExternalDatabaseProviderString
-        {
-            get;
-            set;
-        }
+        public string ExternalDatabaseProviderString { get; set; }
 
         /// <summary>
         /// Gets or sets the external database command used for synchronization of alarm states.
@@ -239,11 +206,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the external database command used for synchronization of alarm states.")]
         [DefaultValue("sp_LogSsamEvent")]
-        public string ExternalDatabaseCommand
-        {
-            get;
-            set;
-        }
+        public string ExternalDatabaseCommand { get; set; }
 
         /// <summary>
         /// Gets or sets the external database command parameters with value substitutions used for synchronization of alarm states.
@@ -260,11 +223,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the external database command parameters with value substitutions used for synchronization of alarm states.")]
         [DefaultValue("{MappedAlarmState},1,'PDC_DEVICE_{Device.Acronym}','','openPDC Device Status = {AlarmState} for \\[{Device.Acronym}\\]','\\<a href=\"http://localhost:8280/DeviceStatus.cshtml?DeviceID={Device.ID}\"\\>\\[{Device.Acronym}\\] Device Status\\</a\\>'")]
-        public string ExternalDatabaseCommandParameters
-        {
-            get;
-            set;
-        }
+        public string ExternalDatabaseCommandParameters { get; set; }
 
         /// <summary>
         /// Gets or sets the external database mapped alarm states defining the {MappedAlarmState} command parameter substitution parameter used for synchronization of alarm states.
@@ -272,11 +231,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the external database mapped alarm states defining the {MappedAlarmState} command parameter substitution parameter used for synchronization of alarm states.")]
         [DefaultValue("Good=1,Alarm=3,NotAvailable=2,BadData=3,BadTime=3,OutOfService=5")]
-        public string ExternalDatabaseMappedAlarmStates
-        {
-            get;
-            set;
-        }
+        public string ExternalDatabaseMappedAlarmStates { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines if external database should report a single composite state or a state for each device.
@@ -284,11 +239,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the flag that determines if external database should report a single composite state or a state for each device.")]
         [DefaultValue(false)]
-        public bool ExternalDatabaseReportSingleCompositeState
-        {
-            get;
-            set;
-        }
+        public bool ExternalDatabaseReportSingleCompositeState { get; set; }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the adapter expects, if any.
@@ -325,39 +276,24 @@ namespace GrafanaAdapters
                 StringBuilder status = new();
 
                 status.Append(base.Status);
-                status.AppendFormat("           Monitoring Rate: {0:N0}ms", MonitoringRate);
-                status.AppendLine();
-                status.AppendFormat("        Monitoring Enabled: {0}", MonitoringEnabled);
-                status.AppendLine();
-                status.AppendFormat("  Targeting Parent Devices: {0}", TargetParentDevices);
-                status.AppendLine();
-                status.AppendFormat("    Monitored Device Count: {0:N0}", InputMeasurementKeys?.Length ?? 0);
-                status.AppendLine();
-                status.AppendFormat("     No Data Alarm Timeout: {0}", m_alarmTime.ToElapsedTimeString(2));
-                status.AppendLine();
-                status.AppendFormat("       Alarm State Updates: {0:N0}", m_alarmStateUpdates);
-                status.AppendLine();
-                status.AppendFormat(" External Database Updates: {0:N0}", m_externalDatabaseUpdates);
-                status.AppendLine();
-                status.AppendFormat("   Last External DB Result: {0}", m_lastExternalDatabaseResult?.ToString() ?? "null");
-                status.AppendLine();
+                status.AppendLine($"           Monitoring Rate: {MonitoringRate:N0}ms");
+                status.AppendLine($"        Monitoring Enabled: {MonitoringEnabled}");
+                status.AppendLine($"  Targeting Parent Devices: {TargetParentDevices}");
+                status.AppendLine($"    Monitored Device Count: {InputMeasurementKeys?.Length ?? 0:N0}");
+                status.AppendLine($"     No Data Alarm Timeout: {m_alarmTime.ToElapsedTimeString(2)}");
+                status.AppendLine($"       Alarm State Updates: {m_alarmStateUpdates:N0}");
+                status.AppendLine($" External Database Updates: {m_externalDatabaseUpdates:N0}");
+                status.AppendLine($"   Last External DB Result: {m_lastExternalDatabaseResult?.ToString() ?? "null"}");
 
                 lock (m_stateCountLock)
                 {
-                    status.AppendFormat("              Good Devices: {0:N0}", m_stateCounts[AlarmState.Good]);
-                    status.AppendLine();
-                    status.AppendFormat("           Alarmed Devices: {0:N0}", m_stateCounts[AlarmState.Alarm]);
-                    status.AppendLine();
-                    status.AppendFormat("       Unavailable Devices: {0:N0}", m_stateCounts[AlarmState.NotAvailable]);
-                    status.AppendLine();
-                    status.AppendFormat("Devices Reporting Bad Data: {0:N0}", m_stateCounts[AlarmState.BadData]);
-                    status.AppendLine();
-                    status.AppendFormat("Devices Reporting Bad Time: {0:N0}", m_stateCounts[AlarmState.BadTime]);
-                    status.AppendLine();
-                    status.AppendFormat("    Out of Service Devices: {0:N0}", m_stateCounts[AlarmState.OutOfService]);
-                    status.AppendLine();
-                    status.AppendFormat("      Acknowledged Devices: {0:N0}", m_stateCounts[AlarmState.Acknowledged]);
-                    status.AppendLine();
+                    status.AppendLine($"              Good Devices: {m_stateCounts[AlarmState.Good]:N0}");
+                    status.AppendLine($"           Alarmed Devices: {m_stateCounts[AlarmState.Alarm]:N0}");
+                    status.AppendLine($"       Unavailable Devices: {m_stateCounts[AlarmState.NotAvailable]:N0}");
+                    status.AppendLine($"Devices Reporting Bad Data: {m_stateCounts[AlarmState.BadData]:N0}");
+                    status.AppendLine($"Devices Reporting Bad Time: {m_stateCounts[AlarmState.BadTime]:N0}");
+                    status.AppendLine($"    Out of Service Devices: {m_stateCounts[AlarmState.OutOfService]:N0}");
+                    status.AppendLine($"      Acknowledged Devices: {m_stateCounts[AlarmState.Acknowledged]:N0}");
                 }
 
                 return status.ToString();
@@ -410,18 +346,18 @@ namespace GrafanaAdapters
             ConnectionStringParser parser = new();
             parser.ParseConnectionString(ConnectionString, this);
 
-            m_alarmStates = new();
-            m_alarmStateIDs = new();
-            m_deviceMeasurementKeys = new();
-            m_deviceMetadata = new();
-            m_lastDeviceDataUpdates = new();
-            m_lastDeviceStateChange = new(FilePath.GetAbsolutePath($"{Name}_LastStateChangeCache.bin".RemoveInvalidFileNameCharacters()));
-            m_lastAcknowledgedTransition = new();
+            m_alarmStates = new Dictionary<AlarmState, AlarmStateRecord>();
+            m_alarmStateIDs = new Dictionary<int, AlarmState>();
+            m_deviceMeasurementKeys = new Dictionary<int, MeasurementKey[]>();
+            m_deviceMetadata = new Dictionary<int, DataRow>();
+            m_lastDeviceDataUpdates = new Dictionary<MeasurementKey, Ticks>();
+            m_lastDeviceStateChange = new FileBackedDictionary<int, long>(FilePath.GetAbsolutePath($"{Name}_LastStateChangeCache.bin".RemoveInvalidFileNameCharacters()));
+            m_lastAcknowledgedTransition = new Dictionary<int, Ticks>();
             m_lastExternalDatabaseStateChange = 0L;
-            m_mappedAlarmStates = new();
+            m_mappedAlarmStates = new Dictionary<AlarmState, string>();
             m_stateCounts = CreateNewStateCountsMap();
-            m_compositeStates = new();
-            m_stateCountLock = new();
+            m_compositeStates = new List<int>();
+            m_stateCountLock = new object();
 
             LoadAlarmStates();
 
@@ -440,10 +376,10 @@ namespace GrafanaAdapters
             }
 
             // Define synchronized monitoring operation
-            m_monitoringOperation = new(MonitoringOperation, exception => OnProcessException(MessageLevel.Warning, exception));
+            m_monitoringOperation = new ShortSynchronizedOperation(MonitoringOperation, exception => OnProcessException(MessageLevel.Warning, exception));
 
             // Define monitoring timer
-            m_monitoringTimer = new(MonitoringRate)
+            m_monitoringTimer = new Timer(MonitoringRate)
             {
                 AutoReset = true
             };
@@ -454,6 +390,8 @@ namespace GrafanaAdapters
 
         private void LoadAlarmStates(bool reload = false)
         {
+            const int DeviceGroupAccessID = -99999;
+
             using AdoDataConnection connection = new("systemSettings");
 
             // Load alarm state map - this defines database state ID and custom color for each alarm state
@@ -478,7 +416,7 @@ namespace GrafanaAdapters
             // Define SQL expression for direct connect and parent devices or all direct connect and child devices
             string deviceSQL = TargetParentDevices ?
                 "SELECT * FROM Device WHERE (IsConcentrator != 0 OR ParentID IS NULL) AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)" :
-                "SELECT * FROM Device WHERE IsConcentrator = 0 AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)";
+                $"SELECT * FROM Device WHERE IsConcentrator = 0 AND AccessID <> {DeviceGroupAccessID} AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)";
 
             // Load any newly defined devices into the alarm device table
             TableOperations<AlarmDevice> alarmDeviceTable = new(connection);
@@ -580,13 +518,10 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this adapter.</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            if (MonitoringEnabled)
-                return $"Monitoring enabled for every {Ticks.FromMilliseconds(MonitoringRate).ToElapsedTimeString()}".CenterText(maxLength);
-
-            return "Monitoring is disabled...".CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) =>
+            MonitoringEnabled ? 
+                $"Monitoring enabled for every {Ticks.FromMilliseconds(MonitoringRate).ToElapsedTimeString()}".CenterText(maxLength) : 
+                "Monitoring is disabled...".CenterText(maxLength);
 
         private void MonitoringOperation()
         {
@@ -727,7 +662,7 @@ namespace GrafanaAdapters
                     foreach (KeyValuePair<AlarmState, int> stateCount in stateCounts)
                         substitutions[$"{{{stateCount.Key}StateCount}}"] = stateCount.Value.ToString();
 
-                    using AdoDataConnection connection = string.IsNullOrWhiteSpace(ExternalDatabaseConnnectionString) ? new("systemSettings") : new AdoDataConnection(ExternalDatabaseConnnectionString, ExternalDatabaseProviderString);
+                    using AdoDataConnection connection = string.IsNullOrWhiteSpace(ExternalDatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(ExternalDatabaseConnnectionString, ExternalDatabaseProviderString);
 
                     foreach (AlarmDevice alarmDevice in alarmDeviceUpdates)
                     {
@@ -737,21 +672,20 @@ namespace GrafanaAdapters
                         if (!m_alarmStateIDs.TryGetValue(alarmDevice.StateID, out AlarmState state))
                             state = AlarmState.NotAvailable;
 
-                        if (alarmedDeviceMetadata is null)
-                            alarmedDeviceMetadata = metadata;
+                        alarmedDeviceMetadata ??= metadata;
 
                         if (ExternalDatabaseReportSingleCompositeState)
                         {
-                            if (state != AlarmState.Good)
-                            {
-                                // First encountered alarmed device with highest alarm state will be reported as composite state
-                                // because AlarmState values after Good are order by highest to lowest before OutOfService
-                                if (state < compositeState)
-                                {
-                                    compositeState = state;
-                                    alarmedDeviceMetadata = metadata;
-                                }
-                            }
+                            if (state == AlarmState.Good)
+                                continue;
+
+                            // First encountered alarmed device with highest alarm state will be reported as composite state
+                            // because AlarmState values after Good are order by highest to lowest before OutOfService
+                            if (state >= compositeState)
+                                continue;
+
+                            compositeState = state;
+                            alarmedDeviceMetadata = metadata;
                         }
                         else
                         {
@@ -783,19 +717,19 @@ namespace GrafanaAdapters
                             m_compositeStates.Add((int)compositeState);
 
                             // Report other composite states only after specified hysteresis delay has passed
-                            if ((DateTime.UtcNow.Ticks - m_lastExternalDatabaseStateChange).ToMinutes() > ExternalDatabaseHysteresisDelay)
-                            {
-                                // Pick average composite state
-                                compositeState = (AlarmState)(int)Math.Round(m_compositeStates.Average());
+                            if (!((DateTime.UtcNow.Ticks - m_lastExternalDatabaseStateChange).ToMinutes() > ExternalDatabaseHysteresisDelay))
+                                return;
 
-                                // Validate average composite state
-                                if (compositeState <= minimumHysteresisState || compositeState >= AlarmState.OutOfService)
-                                    compositeState = m_compositeStates.Select(state => (AlarmState)state).FirstOrDefault(state => state > minimumHysteresisState && state < AlarmState.OutOfService);
+                            // Pick average composite state
+                            compositeState = (AlarmState)(int)Math.Round(m_compositeStates.Average());
 
-                                ExternalDatabaseReportState(parameterTemplate, connection, compositeState, alarmedDeviceMetadata, substitutions);
-                                m_compositeStates.Clear();
-                                m_externalDatabaseUpdates++;
-                            }
+                            // Validate average composite state
+                            if (compositeState <= minimumHysteresisState || compositeState >= AlarmState.OutOfService)
+                                compositeState = m_compositeStates.Select(state => (AlarmState)state).FirstOrDefault(state => state > minimumHysteresisState && state < AlarmState.OutOfService);
+
+                            ExternalDatabaseReportState(parameterTemplate, connection, compositeState, alarmedDeviceMetadata, substitutions);
+                            m_compositeStates.Clear();
+                            m_externalDatabaseUpdates++;
                         }
                     }
                     else

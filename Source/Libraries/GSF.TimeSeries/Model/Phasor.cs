@@ -31,7 +31,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GSF.TimeSeries.Model
 {
-    [PrimaryLabel("Label")]
+    [PrimaryLabel(nameof(Label))]
     public class Phasor
     {
         [PrimaryKey(true)]

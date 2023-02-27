@@ -38,6 +38,7 @@ using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.Units;
 
+// ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries
 {
@@ -120,12 +121,9 @@ namespace GSF.TimeSeries
 
             // Fields
             private PrecisionTimer m_timer;
-            private readonly int m_framesPerSecond;
-            private readonly int m_processingInterval;
             private readonly int[] m_framePeriods;
             private int m_frameIndex;
             private int m_lastFramePeriod;
-            private int m_referenceCount;
             private bool m_disposed;
 
             #endregion
@@ -147,12 +145,14 @@ namespace GSF.TimeSeries
                 if (processingInterval == 0)
                     throw new InvalidOperationException("A frame rate timer should not be created when using a processing interval of zero, i.e., processing data as fast as possible.");
 
-                m_framesPerSecond = framesPerSecond;
-                m_processingInterval = processingInterval;
+                FramesPerSecond = framesPerSecond;
+                ProcessingInterval = processingInterval;
 
                 // Create a new precision timer for this timer state
-                m_timer = new PrecisionTimer();
-                m_timer.AutoReset = true;
+                m_timer = new PrecisionTimer
+                {
+                    AutoReset = true
+                };
 
                 if (processingInterval > 0)
                 {
@@ -168,9 +168,7 @@ namespace GSF.TimeSeries
                     m_framePeriods = new int[framesPerSecond];
 
                     for (int frameIndex = 0; frameIndex < framesPerSecond; frameIndex++)
-                    {
                         m_framePeriods[frameIndex] = CalcWaitTimeForFrameIndex(frameIndex);
-                    }
 
                     // Establish initial timer period
                     m_lastFramePeriod = m_framePeriods[0];
@@ -184,10 +182,8 @@ namespace GSF.TimeSeries
             /// <summary>
             /// Releases the unmanaged resources before the <see cref="FrameRateTimer"/> object is reclaimed by <see cref="GC"/>.
             /// </summary>
-            ~FrameRateTimer()
-            {
+            ~FrameRateTimer() => 
                 Dispose(false);
-            }
 
             #endregion
 
@@ -196,17 +192,17 @@ namespace GSF.TimeSeries
             /// <summary>
             /// Gets frames per second for this <see cref="FrameRateTimer"/>.
             /// </summary>
-            public int FramesPerSecond => m_framesPerSecond;
+            public int FramesPerSecond { get; }
 
             /// <summary>
             /// Gets the processing interval defined for the <see cref="FrameRateTimer"/>.
             /// </summary>
-            public int ProcessingInterval => m_processingInterval;
+            public int ProcessingInterval { get; }
 
             /// <summary>
             /// Gets reference count for this <see cref="FrameRateTimer"/>.
             /// </summary>
-            public int ReferenceCount => m_referenceCount;
+            public int ReferenceCount { get; private set; }
 
             #endregion
 
@@ -227,26 +223,27 @@ namespace GSF.TimeSeries
             /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
             private void Dispose(bool disposing)
             {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        if (disposing)
-                        {
-                            if ((object)m_timer != null)
-                            {
-                                if (m_processingInterval == -1)
-                                    m_timer.Tick -= SetTimerPeriod;
+                if (m_disposed)
+                    return;
 
-                                m_timer.Dispose();
-                            }
-                            m_timer = null;
-                        }
-                    }
-                    finally
+                try
+                {
+                    if (!disposing)
+                        return;
+
+                    if (m_timer is not null)
                     {
-                        m_disposed = true;  // Prevent duplicate dispose.
+                        if (ProcessingInterval == -1)
+                            m_timer.Tick -= SetTimerPeriod;
+
+                        m_timer.Dispose();
                     }
+                    
+                    m_timer = null;
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
 
@@ -257,7 +254,7 @@ namespace GSF.TimeSeries
             public void AddReference(EventHandler tickFunction)
             {
                 m_timer.Tick += tickFunction;
-                m_referenceCount++;
+                ReferenceCount++;
             }
 
             /// <summary>
@@ -267,22 +264,20 @@ namespace GSF.TimeSeries
             public void RemoveReference(EventHandler tickFunction)
             {
                 m_timer.Tick -= tickFunction;
-                m_referenceCount--;
+                ReferenceCount--;
             }
 
             // Handler to assign next timer period
             private void SetTimerPeriod(object sender, EventArgs e)
             {
-                int period;
-
                 // First things first, prepare timer period for next call...
                 m_frameIndex++;
 
-                if (m_frameIndex >= m_framesPerSecond)
+                if (m_frameIndex >= FramesPerSecond)
                     m_frameIndex = 0;
 
                 // Get the frame period for this frame index
-                period = m_framePeriods[m_frameIndex];
+                int period = m_framePeriods[m_frameIndex];
 
                 // We only update timer period if it has changed since last call. Note that this is necessary since
                 // timer periods are defined as integers but actual period is typically uneven (e.g., 33.333 ms)
@@ -298,11 +293,9 @@ namespace GSF.TimeSeries
             {
                 // Jian Zuo...
                 int millisecondsWaitTime;
-                int frameRate;
-                int deficit;
 
-                frameRate = (int)Math.Round(1000.0D / m_framesPerSecond);
-                deficit = 1000 - frameRate * m_framesPerSecond;
+                int frameRate = (int)Math.Round(1000.0D / FramesPerSecond);
+                int deficit = 1000 - frameRate * FramesPerSecond;
 
                 if (deficit == 0)
                 {
@@ -314,18 +307,18 @@ namespace GSF.TimeSeries
                     {
                         millisecondsWaitTime = frameRate;
                     }
-                    else if (frameIndex == m_framesPerSecond - 1)
+                    else if (frameIndex == FramesPerSecond - 1)
                     {
                         millisecondsWaitTime = frameRate + (deficit > 0 ? 1 : -1);
                     }
                     else
                     {
-                        double interval = m_framesPerSecond / Math.Abs((double)deficit);
+                        double interval = FramesPerSecond / Math.Abs((double)deficit);
                         double pre_dis = mod_dis(frameIndex - 1, interval);
                         double cur_dis = mod_dis(frameIndex, interval);
                         double next_dis = mod_dis(frameIndex + 1, interval);
 
-                        millisecondsWaitTime = frameRate + (cur_dis <= pre_dis && cur_dis < next_dis ? (deficit > 0 ? 1 : -1) : 0);
+                        millisecondsWaitTime = frameRate + (cur_dis <= pre_dis && cur_dis < next_dis ? deficit > 0 ? 1 : -1 : 0);
                     }
                 }
 
@@ -396,7 +389,6 @@ namespace GSF.TimeSeries
         private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
         private SharedTimer m_monitorTimer;                 // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
-        private double m_ticksPerFrame;                     // Ticks per frame
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
@@ -404,19 +396,13 @@ namespace GSF.TimeSeries
         private int m_processingInterval;                   // Defines a specific processing interval for data, if desired
         private DownsamplingMethod m_downsamplingMethod;    // Down-sampling method to use if input is at a higher-resolution than output
         private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
-        private int m_maximumPublicationTimeout;            // Maximum publication wait timeout
-        private Ticks m_lagTicks;                           // Current lag time calculated in ticks
         private volatile bool m_enabled;                    // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
         private long m_stopTime;                            // Stop time of concentrator
         private long m_realTimeTicks;                       // Timestamp of real-time or the most recently received measurement
-        private bool m_ignoreBadTimestamps;                 // Determines whether or not to ignore bad timestamps when sorting measurements
         private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
-        private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
-        private bool m_performTimestampReasonabilityCheck;  // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
         private bool m_processByReceivedTimestamp;          // Determines whether or not to sort and publish measurements by their ReceivedTimestamp
-        private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
         private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
         private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
         private long m_discardedMeasurements;               // Total number of discarded measurements
@@ -428,8 +414,6 @@ namespace GSF.TimeSeries
         private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
         private long m_publishedFrames;                     // Total number of published frames
         private long m_totalPublishTime;                    // Total cumulative frame user function publication time (in ticks) - used to calculate average
-        private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
-        private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
         private IMeasurement m_lastDiscardedMeasurement;    // Last measurement that was discarded by the concentrator
         private long m_lastDiscardedMeasurementLatency;     // Latency of last measurement that was discarded by the concentrator
         private bool m_disposed;                            // Disposed flag detects redundant calls to dispose method
@@ -450,15 +434,15 @@ namespace GSF.TimeSeries
             Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
             m_usePrecisionTimer = true;
             m_allowSortsByArrival = true;
-            m_allowPreemptivePublishing = true;
-            m_performTimestampReasonabilityCheck = true;
+            AllowPreemptivePublishing = true;
+            PerformTimestampReasonabilityCheck = true;
             m_processingInterval = -1;
             m_downsamplingMethod = DownsamplingMethod.LastReceived;
-            m_latestMeasurements = new ImmediateMeasurements(this);
-            m_maximumPublicationTimeout = Timeout.Infinite;
+            LatestMeasurements = new ImmediateMeasurements(this);
+            MaximumPublicationTimeout = Timeout.Infinite;
 
             // Create a new queue for managing real-time frames
-            m_frameQueue = new FrameQueue(this.CreateNewFrame);
+            m_frameQueue = new FrameQueue(CreateNewFrame);
 
             // Set minimum timer resolution to one millisecond to improve timer accuracy
             PrecisionTimer.SetMinimumTimerResolution(1);
@@ -505,19 +489,16 @@ namespace GSF.TimeSeries
         protected ConcentratorBase(int framesPerSecond, double lagTime, double leadTime)
             : this()
         {
-            this.FramesPerSecond = framesPerSecond;
-            this.LagTime = lagTime;
-            this.LeadTime = leadTime;
+            FramesPerSecond = framesPerSecond;
+            LagTime = lagTime;
+            LeadTime = leadTime;
         }
 
         /// <summary>
         /// Releases the unmanaged resources before the <see cref="ConcentratorBase"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~ConcentratorBase()
-        {
-            // We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion.
-            Dispose(false);
-        }
+        ~ConcentratorBase() => 
+            Dispose(false); // We implement finalizer for this class to ensure sample queue shuts down in an orderly fashion.
 
         #endregion
 
@@ -539,27 +520,23 @@ namespace GSF.TimeSeries
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
         public double LagTime
         {
-            get
-            {
-                return m_lagTime;
-            }
+            get => m_lagTime;
             set
             {
                 if (value <= 0)
                     throw new ArgumentOutOfRangeException(nameof(value), "LagTime must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
-                m_lagTicks = (long)(m_lagTime * Ticks.PerSecond);
+                LagTicks = (long)(m_lagTime * Ticks.PerSecond);
 
-                if ((object)LagTimeUpdated != null)
-                    LagTimeUpdated(m_lagTime);
+                LagTimeUpdated?.Invoke(m_lagTime);
             }
         }
 
         /// <summary>
         /// Gets defined past time deviation tolerance, in ticks.
         /// </summary>
-        public Ticks LagTicks => m_lagTicks;
+        public Ticks LagTicks { get; private set; }
 
         /// <summary>
         /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
@@ -572,10 +549,7 @@ namespace GSF.TimeSeries
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         public double LeadTime
         {
-            get
-            {
-                return m_leadTime;
-            }
+            get => m_leadTime;
             set
             {
                 if (value <= 0)
@@ -583,8 +557,7 @@ namespace GSF.TimeSeries
 
                 m_leadTime = value;
 
-                if ((object)LeadTimeUpdated != null)
-                    LeadTimeUpdated(m_leadTime);
+                LeadTimeUpdated?.Invoke(m_leadTime);
             }
         }
 
@@ -595,77 +568,51 @@ namespace GSF.TimeSeries
         /// Latest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
         /// Note that enabling this option will slightly increase the required sorting time.
         /// </remarks>
-        public bool TrackLatestMeasurements
-        {
-            get
-            {
-                return m_trackLatestMeasurements;
-            }
-            set
-            {
-                m_trackLatestMeasurements = value;
-            }
-        }
+        public bool TrackLatestMeasurements { get; set; }
 
         /// <summary>
         /// Gets reference to the collection of absolute latest received measurement values.
         /// </summary>
-        public ImmediateMeasurements LatestMeasurements => m_latestMeasurements;
+        public ImmediateMeasurements LatestMeasurements { get; private set; }
 
         /// <summary>
         /// Gets reference to the last published <see cref="IFrame"/>.
         /// </summary>
-        public IFrame LastFrame
-        {
-            get
-            {
-                if ((object)m_frameQueue != null)
-                {
-                    TrackingFrame last = m_frameQueue.Last;
-
-                    if ((object)last != null)
-                        return last.SourceFrame;
-                }
-
-                return null;
-            }
-        }
+        public IFrame LastFrame => m_frameQueue?.Last?.SourceFrame;
 
         /// <summary>
         /// Gets or sets flag that determines if precision timer should be used for frame publication.
         /// </summary>
         public bool UsePrecisionTimer
         {
-            get
-            {
-                return m_usePrecisionTimer;
-            }
+            get => m_usePrecisionTimer;
             set
             {
-                if (!value && m_processingInterval > 0)
-                    throw new InvalidOperationException("A precision timer must be used when a specific processing interval has been defined.");
-
-                if (value && m_processingInterval == 0)
-                    throw new InvalidOperationException("A precision timer cannot be used when the processing interval is set to zero, i.e., process data as fast as possible.");
-
-                if (m_usePrecisionTimer != value)
+                switch (value)
                 {
-                    m_usePrecisionTimer = value;
+                    case false when m_processingInterval > 0:
+                        throw new InvalidOperationException("A precision timer must be used when a specific processing interval has been defined.");
+                    case true when m_processingInterval == 0:
+                        throw new InvalidOperationException("A precision timer cannot be used when the processing interval is set to zero, i.e., process data as fast as possible.");
+                }
 
-                    if (m_usePrecisionTimer)
-                    {
-                        // Subscribe to frame rate timer, creating it if it doesn't exist
-                        AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
-                    }
-                    else
-                    {
-                        // Unsubscribe from last frame rate timer, if any
-                        DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
+                if (m_usePrecisionTimer == value)
+                    return;
 
-                        // Make sure to release publication wait handle if it's currently waiting...
-                        if ((object)m_publicationWaitHandle != null)
-                            m_publicationWaitHandle.Set();
-                    }
+                m_usePrecisionTimer = value;
+
+                if (m_usePrecisionTimer)
+                {
+                    // Subscribe to frame rate timer, creating it if it doesn't exist
+                    AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
+                }
+                else
+                {
+                    // Unsubscribe from last frame rate timer, if any
+                    DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
+
+                    // Make sure to release publication wait handle if it's currently waiting...
+                    m_publicationWaitHandle?.Set();
                 }
             }
         }
@@ -678,41 +625,37 @@ namespace GSF.TimeSeries
         /// </remarks>
         public int FramesPerSecond
         {
-            get
-            {
-                return m_framesPerSecond;
-            }
+            get => m_framesPerSecond;
             set
             {
                 if (value < 1)
                     throw new ArgumentOutOfRangeException(nameof(value), "Frames per second must be greater than 0");
 
-                if (m_framesPerSecond != value)
+                if (m_framesPerSecond == value)
+                    return;
+
+                // Unsubscribe from last frame rate timer, if any
+                DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
+
+                m_framesPerSecond = value;
+                TicksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
+
+                // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 20%,
+                // this comes out to be 40 milliseconds at 30 frames per second and 20 milliseconds at 60 frames per second
+                MaximumPublicationTimeout = Math.Max((int)Math.Round((TicksPerFrame + TicksPerFrame * 0.2D) / Ticks.PerMillisecond), 1);
+
+                if (m_frameQueue is not null)
+                    m_frameQueue.FramesPerSecond = m_framesPerSecond;
+
+                if (m_usePrecisionTimer)
                 {
-                    // Unsubscribe from last frame rate timer, if any
-                    DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
-
-                    m_framesPerSecond = value;
-                    m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
-
-                    // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 20%,
-                    // this comes out to be 40 milliseconds at 30 frames per second and 20 milliseconds at 60 frames per second
-                    m_maximumPublicationTimeout = Math.Max((int)Math.Round((m_ticksPerFrame + m_ticksPerFrame * 0.2D) / Ticks.PerMillisecond), 1);
-
-                    if ((object)m_frameQueue != null)
-                        m_frameQueue.FramesPerSecond = m_framesPerSecond;
-
-                    if (m_usePrecisionTimer)
-                    {
-                        // Subscribe to frame rate timer, creating it if it doesn't exist
-                        AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
-                    }
-                    else
-                    {
-                        // Make sure to release publication wait handle if it's currently waiting...
-                        if ((object)m_publicationWaitHandle != null)
-                            m_publicationWaitHandle.Set();
-                    }
+                    // Subscribe to frame rate timer, creating it if it doesn't exist
+                    AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
+                }
+                else
+                {
+                    // Make sure to release publication wait handle if it's currently waiting...
+                    m_publicationWaitHandle?.Set();
                 }
             }
         }
@@ -783,39 +726,38 @@ namespace GSF.TimeSeries
         /// </remarks>
         public virtual int ProcessingInterval
         {
-            get
-            {
-                return m_processingInterval;
-            }
+            get => m_processingInterval;
             set
             {
-                if (m_processingInterval != value)
+                if (m_processingInterval == value)
+                    return;
+
+                DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
+
+                m_processingInterval = value;
+
+                if (m_processingInterval < -1)
+                    m_processingInterval = -1;
+
+                ProcessByReceivedTimestamp = m_processingInterval > -1;
+
+                switch (m_processingInterval)
                 {
-                    DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
-
-                    m_processingInterval = value;
-
-                    if (m_processingInterval < -1)
-                        m_processingInterval = -1;
-
-                    ProcessByReceivedTimestamp = m_processingInterval > -1;
-
-                    if (m_processingInterval == 0)
-                    {
+                    case 0:
                         m_usePrecisionTimer = false;
 
                         // Make sure to release publication wait handle if it's currently waiting...
-                        if ((object)m_publicationWaitHandle != null)
-                            m_publicationWaitHandle.Set();
-                    }
-                    else if (m_processingInterval > 0)
-                    {
+                        m_publicationWaitHandle?.Set();
+
+                        break;
+                    case > 0:
                         m_usePrecisionTimer = true;
 
                         // Subscribe to frame rate timer, creating it if it doesn't exist
                         AttachToFrameRateTimer(m_framesPerSecond, m_processingInterval);
-                    }
-                    else
+
+                        break;
+                    default:
                     {
                         if (m_usePrecisionTimer)
                         {
@@ -828,9 +770,10 @@ namespace GSF.TimeSeries
                             DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                             // Make sure to release publication wait handle if it's currently waiting...
-                            if ((object)m_publicationWaitHandle != null)
-                                m_publicationWaitHandle.Set();
+                            m_publicationWaitHandle?.Set();
                         }
+
+                        break;
                     }
                 }
             }
@@ -850,17 +793,7 @@ namespace GSF.TimeSeries
         /// property is set. Users can override this default value to provide custom behavior for this timeout.
         /// </para>
         /// </remarks>
-        public int MaximumPublicationTimeout
-        {
-            get
-            {
-                return m_maximumPublicationTimeout;
-            }
-            set
-            {
-                m_maximumPublicationTimeout = value;
-            }
-        }
+        public int MaximumPublicationTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
@@ -894,10 +827,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         public long TimeResolution
         {
-            get
-            {
-                return m_timeResolution;
-            }
+            get => m_timeResolution;
             set
             {
                 if (value < 0)
@@ -909,7 +839,7 @@ namespace GSF.TimeSeries
                 m_timeOffset = m_timeResolution > 1 ? m_timeResolution / 2 : 1;
 
                 // Assign desired time resolution to frame queue
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue is not null)
                     m_frameQueue.TimeResolution = m_timeResolution;
             }
         }
@@ -920,16 +850,13 @@ namespace GSF.TimeSeries
         /// </summary>
         public bool RoundToNearestTimestamp
         {
-            get
-            {
-                return m_roundToNearestTimestamp;
-            }
+            get => m_roundToNearestTimestamp;
             set
             {
                 m_roundToNearestTimestamp = value;
 
                 // Assign desired setting to frame queue
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue is not null)
                     m_frameQueue.RoundToNearestTimestamp = m_roundToNearestTimestamp;
             }
         }
@@ -942,16 +869,13 @@ namespace GSF.TimeSeries
         /// </remarks>
         public DownsamplingMethod DownsamplingMethod
         {
-            get
-            {
-                return m_downsamplingMethod;
-            }
+            get => m_downsamplingMethod;
             set
             {
                 m_downsamplingMethod = value;
 
                 // Assign desired down-sampling method to frame queue
-                if ((object)m_frameQueue != null)
+                if (m_frameQueue is not null)
                     m_frameQueue.DownsamplingMethod = m_downsamplingMethod;
             }
         }
@@ -959,22 +883,12 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the number of ticks per frame.
         /// </summary>
-        public double TicksPerFrame => m_ticksPerFrame;
+        public double TicksPerFrame { get; private set; }
 
         /// <summary>
         /// Gets or sets the expected number of measurements to be assigned to a single frame.
         /// </summary>
-        public int ExpectedMeasurements
-        {
-            get
-            {
-                return m_expectedMeasurements;
-            }
-            set
-            {
-                m_expectedMeasurements = value;
-            }
-        }
+        public int ExpectedMeasurements { get; set; }
 
         /// <summary>
         /// Gets or sets flag that allows system to preemptively publish frames assuming all <see cref="ExpectedMeasurements"/> have arrived.
@@ -982,17 +896,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// In order for this property to used, the <see cref="ExpectedMeasurements"/> must be defined.
         /// </remarks>
-        public bool AllowPreemptivePublishing
-        {
-            get
-            {
-                return m_allowPreemptivePublishing;
-            }
-            set
-            {
-                m_allowPreemptivePublishing = value;
-            }
-        }
+        public bool AllowPreemptivePublishing { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if timestamp reasonability checks should be performed on incoming
@@ -1005,17 +909,7 @@ namespace GSF.TimeSeries
         /// be grossly incorrect. For non-production configurations, setting this value to false will allow
         /// concentration of historical data.
         /// </remarks>
-        public bool PerformTimestampReasonabilityCheck
-        {
-            get
-            {
-                return m_performTimestampReasonabilityCheck;
-            }
-            set
-            {
-                m_performTimestampReasonabilityCheck = value;
-            }
-        }
+        public bool PerformTimestampReasonabilityCheck { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if concentrator should sort measurements by received time.
@@ -1035,10 +929,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         public bool ProcessByReceivedTimestamp
         {
-            get
-            {
-                return m_processByReceivedTimestamp;
-            }
+            get => m_processByReceivedTimestamp;
             set
             {
                 if (!value && m_processingInterval > -1)
@@ -1046,11 +937,11 @@ namespace GSF.TimeSeries
 
                 m_processByReceivedTimestamp = value;
 
-                if (m_processByReceivedTimestamp)
-                {
-                    m_useLocalClockAsRealTime = true;
-                    m_allowSortsByArrival = false;
-                }
+                if (!m_processByReceivedTimestamp)
+                    return;
+
+                m_useLocalClockAsRealTime = true;
+                m_allowSortsByArrival = false;
             }
         }
 
@@ -1064,10 +955,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         public virtual bool Enabled
         {
-            get
-            {
-                return m_enabled;
-            }
+            get => m_enabled;
             set
             {
                 if (value)
@@ -1119,17 +1007,7 @@ namespace GSF.TimeSeries
         /// Setting this property to <c>true</c> forces system to use timestamps as-is without checking quality.
         /// If this property is <c>true</c>, it will supersede operation of <see cref="AllowSortsByArrival"/>.
         /// </remarks>
-        public bool IgnoreBadTimestamps
-        {
-            get
-            {
-                return m_ignoreBadTimestamps;
-            }
-            set
-            {
-                m_ignoreBadTimestamps = value;
-            }
-        }
+        public bool IgnoreBadTimestamps { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps
@@ -1148,17 +1026,8 @@ namespace GSF.TimeSeries
         /// </remarks>
         public bool AllowSortsByArrival
         {
-            get
-            {
-                return m_allowSortsByArrival;
-            }
-            set
-            {
-                if (m_processByReceivedTimestamp)
-                    m_allowSortsByArrival = false;
-                else
-                    m_allowSortsByArrival = value;
-            }
+            get => m_allowSortsByArrival;
+            set => m_allowSortsByArrival = !m_processByReceivedTimestamp && value;
         }
 
         /// <summary>
@@ -1176,17 +1045,8 @@ namespace GSF.TimeSeries
         /// </remarks>
         public bool UseLocalClockAsRealTime
         {
-            get
-            {
-                return m_useLocalClockAsRealTime;
-            }
-            set
-            {
-                if (m_processByReceivedTimestamp)
-                    m_useLocalClockAsRealTime = true;
-                else
-                    m_useLocalClockAsRealTime = value;
-            }
+            get => m_useLocalClockAsRealTime;
+            set => m_useLocalClockAsRealTime = m_processByReceivedTimestamp || value;
         }
 
         /// <summary>
@@ -1215,7 +1075,7 @@ namespace GSF.TimeSeries
                 if (m_useLocalClockAsRealTime)
                     return DateTime.UtcNow.Ticks;
 
-                if (m_performTimestampReasonabilityCheck)
+                if (PerformTimestampReasonabilityCheck)
                 {
                     // If the current value for real-time is outside of the time deviation tolerance of the local
                     // clock, then we set latest measurement time (i.e., real-time) to be the current local clock
@@ -1313,16 +1173,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets detailed state of concentrator frame queue.
         /// </summary>
-        public string QueueState
-        {
-            get
-            {
-                if ((object)m_frameQueue != null)
-                    return m_frameQueue.ExamineQueueState(m_expectedMeasurements);
-
-                return "";
-            }
-        }
+        public string QueueState => m_frameQueue is not null ? m_frameQueue.ExamineQueueState(ExpectedMeasurements) : "";
 
         /// <summary>
         /// Gets current detailed state and status of concentrator for display purposes.
@@ -1331,65 +1182,45 @@ namespace GSF.TimeSeries
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
                 IFrame lastFrame = LastFrame;
                 IMeasurement lastDiscardedMeasurement = null;
                 DateTime currentTime = DateTime.UtcNow;
 
-                status.AppendFormat("     Data concentration is: {0}", Enabled ? "Enabled" : "Disabled");
-                status.AppendLine();
-                status.AppendFormat("    Total process run time: {0}", RunTime.ToString(3));
-                status.AppendLine();
-                status.AppendFormat("    Measurement wait delay: {0} seconds (lag time)", m_lagTime);
-                status.AppendLine();
-                status.AppendFormat("     Local clock tolerance: {0} seconds (lead time)", m_leadTime);
-                status.AppendLine();
-                status.AppendFormat("   Maximum time resolution: {0} ticks", m_timeResolution);
-                status.AppendLine();
-                status.AppendFormat("      Down-sampling method: {0}", m_downsamplingMethod);
-                status.AppendLine();
-                status.AppendFormat("    Local clock time (UTC): {0:dd-MMM-yyyy HH:mm:ss.fff}", currentTime);
-                status.AppendLine();
-                status.AppendFormat("  Using clock as real-time: {0}", m_useLocalClockAsRealTime);
-                status.AppendLine();
+                status.AppendLine($"     Data concentration is: {(Enabled ? nameof(Enabled) : "Disabled")}");
+                status.AppendLine($"    Total process run time: {RunTime.ToString(3)}");
+                status.AppendLine($"    Measurement wait delay: {m_lagTime} seconds (lag time)");
+                status.AppendLine($"     Local clock tolerance: {m_leadTime} seconds (lead time)");
+                status.AppendLine($"   Maximum time resolution: {m_timeResolution} ticks");
+                status.AppendLine($"      Down-sampling method: {m_downsamplingMethod}");
+                status.AppendLine($"    Local clock time (UTC): {currentTime:dd-MMM-yyyy HH:mm:ss.fff}");
+                status.AppendLine($"  Using clock as real-time: {m_useLocalClockAsRealTime}");
 
                 if (!m_useLocalClockAsRealTime)
                 {
                     status.Append("      Local clock accuracy: ");
                     status.Append(SecondsFromRealTime(DateTime.UtcNow.Ticks).ToString("0.0000"));
-                    status.Append(" second deviation from latest time");
-                    status.AppendLine();
+                    status.AppendLine(" second deviation from latest time");
                 }
 
-                status.AppendFormat("     Ignore bad timestamps: {0}", IgnoreBadTimestamps);
-                status.AppendLine();
-                status.AppendFormat("    Allow sorts by arrival: {0}", !IgnoreBadTimestamps && m_allowSortsByArrival);
-                status.AppendLine();
-                status.AppendFormat(" Use preemptive publishing: {0}", AllowPreemptivePublishing);
-                status.AppendLine();
-                status.AppendFormat("  Time reasonability check: {0}", PerformTimestampReasonabilityCheck ? "Enabled" : "Disabled");
-                status.AppendLine();
-                status.AppendFormat("  Process by received time: {0}", m_processByReceivedTimestamp);
-                status.AppendLine();
-                status.AppendFormat("     Received measurements: {0}", ReceivedMeasurements);
-                status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
-                status.AppendLine();
-                status.AppendFormat("    Discarded measurements: {0}", DiscardedMeasurements);
-                status.AppendLine();
-                status.AppendFormat(" Down-sampled measurements: {0}", DownsampledMeasurements);
-                status.AppendLine();
-                status.AppendFormat("    Published measurements: {0}", PublishedMeasurements);
-                status.AppendLine();
-                status.AppendFormat("     Expected measurements: {0} ({1} / frame)", PublishedFrames * ExpectedMeasurements, ExpectedMeasurements);
-                status.AppendLine();
+                status.AppendLine($"     Ignore bad timestamps: {IgnoreBadTimestamps}");
+                status.AppendLine($"    Allow sorts by arrival: {!IgnoreBadTimestamps && m_allowSortsByArrival}");
+                status.AppendLine($" Use preemptive publishing: {AllowPreemptivePublishing}");
+                status.AppendLine($"  Time reasonability check: {(PerformTimestampReasonabilityCheck ? "Enabled" : "Disabled")}");
+                status.AppendLine($"  Process by received time: {m_processByReceivedTimestamp}");
+                status.AppendLine($"     Received measurements: {ReceivedMeasurements:N0}");
+                status.AppendLine($"    Processed measurements: {ProcessedMeasurements:N0}");
+                status.AppendLine($"    Discarded measurements: {DiscardedMeasurements:N0}");
+                status.AppendLine($" Down-sampled measurements: {DownsampledMeasurements:N0}");
+                status.AppendLine($"    Published measurements: {PublishedMeasurements:N0}");
+                status.AppendLine($"     Expected measurements: {PublishedFrames * ExpectedMeasurements} ({ExpectedMeasurements} / frame)");
                 status.Append("Last discarded measurement: ");
 
                 Interlocked.Exchange(ref lastDiscardedMeasurement, m_lastDiscardedMeasurement);
 
-                if ((object)lastDiscardedMeasurement == null)
+                if (lastDiscardedMeasurement is null)
                 {
-                    status.Append("<none>");
+                    status.AppendLine("<none>");
                 }
                 else
                 {
@@ -1397,79 +1228,58 @@ namespace GSF.TimeSeries
                     status.Append(" - ");
                     status.Append(((DateTime)lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                     status.AppendLine();
-                    status.AppendFormat(" Latency of last discarded: {0:0.0000} seconds", LastDiscardedMeasurementLatency.ToSeconds());
+                    status.AppendLine($" Latency of last discarded: {LastDiscardedMeasurementLatency.ToSeconds():0.0000} seconds");
                 }
 
-                status.AppendLine();
-                status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
-                status.AppendLine();
-                status.AppendFormat("  Pre-lag-time publication: {0:##0.0000%}", (FramesAheadOfSchedule / (double)PublishedFrames));
-                status.AppendLine();
-                status.AppendFormat(" Down-sampling application: {0:##0.0000%}", (DownsampledMeasurements / (double)ProcessedMeasurements));
-                status.AppendLine();
-                status.AppendFormat(" User function utilization: {0:##0.0000%} of available time used", 1.0D - (TicksPerFrame - AveragePublicationTimePerFrame.ToTicks()) / TicksPerFrame);
-                status.AppendLine();
-                status.AppendFormat("Published measurement loss: {0:##0.0000%}", (DiscardedMeasurements / (double)ReceivedMeasurements));
-                status.AppendLine();
+                status.AppendLine($"  Average publication time: {AveragePublicationTimePerFrame / SI.Milli:0.0000)} milliseconds");
+                status.AppendLine($"  Pre-lag-time publication: {FramesAheadOfSchedule / (double)PublishedFrames:##0.0000%}");
+                status.AppendLine($" Down-sampling application: {DownsampledMeasurements / (double)ProcessedMeasurements:##0.0000%}");
+
+                status.AppendLine(" User function utilization: " + (PublishedFrames > 0 ? 
+                    $"{1.0D - (TicksPerFrame - AveragePublicationTimePerFrame.ToTicks()) / TicksPerFrame:##0.0000%} of available time used" : 
+                     "No frames published yet"));
+
+                status.AppendLine($"Published measurement loss: {DiscardedMeasurements / (double)ReceivedMeasurements:##0.0000%}");
 
                 if (m_allowSortsByArrival)
                 {
-                    status.AppendFormat("    Total sorts by arrival: {0}", MeasurementsSortedByArrival);
-                    status.AppendLine();
-                    status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - MeasurementsSortedByArrival / (double)ReceivedMeasurements).ToString("##0.0000%"));
-                    status.AppendLine();
+                    status.AppendLine($"    Total sorts by arrival: {MeasurementsSortedByArrival}");
+                    status.AppendLine($" Measurement time accuracy: {1.0D - MeasurementsSortedByArrival / (double)ReceivedMeasurements:##0.0000%}");
                 }
 
-                status.AppendFormat("   Missed sorts by timeout: {0}", MissedSortsByTimeout);
-                status.AppendLine();
-                status.AppendFormat("      Loss due to timeouts: {0}", (MissedSortsByTimeout / (double)ProcessedMeasurements).ToString("##0.0000%"));
-                status.AppendLine();
-                status.AppendFormat("     Using precision timer: {0}", m_usePrecisionTimer);
-                status.AppendLine();
-                status.AppendFormat("       Wait handle timeout: {0} milliseconds", MaximumPublicationTimeout);
-                status.AppendLine();
-                status.AppendFormat("   Wait handle expirations: {0}", WaitHandleExpirations);
-                status.AppendLine();
-                status.AppendFormat("    Total published frames: {0}", PublishedFrames);
-                status.AppendLine();
-                status.AppendFormat("        Defined frame rate: {0} frames/sec, {1} ticks/frame", m_framesPerSecond, TicksPerFrame.ToString("0.00"));
-                status.AppendLine();
-                status.AppendFormat(" Estimated mean frame rate: {0} frames/sec", (PublishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
-                status.AppendLine();
-                status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? ((Ticks)TicksPerFrame).ToMilliseconds().ToString("0.00") + " milliseconds" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
-                status.AppendLine();
+                status.AppendLine($"   Missed sorts by timeout: {MissedSortsByTimeout:N0}");
+                status.AppendLine($"      Loss due to timeouts: {MissedSortsByTimeout / (double)ProcessedMeasurements:##0.0000%}");
+                status.AppendLine($"     Using precision timer: {m_usePrecisionTimer}");
+                status.AppendLine($"       Wait handle timeout: {MaximumPublicationTimeout} milliseconds");
+                status.AppendLine($"   Wait handle expirations: {WaitHandleExpirations:N0}");
+                status.AppendLine($"    Total published frames: {PublishedFrames:N0}");
+                status.AppendLine($"        Defined frame rate: {m_framesPerSecond} frames/sec, {TicksPerFrame:0.00} ticks/frame");
+                status.AppendLine($" Estimated mean frame rate: {PublishedFrames / (RunTime - m_lagTime):0.00} frames/sec");
+                status.AppendLine($"       Processing interval: {(ProcessingInterval < 0 ? $"{((Ticks)TicksPerFrame).ToMilliseconds():0.00} milliseconds" : ProcessingInterval == 0 ? "As fast as possible" : $"{ProcessingInterval} milliseconds")}");
 
                 lock (s_frameRateTimers)
                 {
-                    Tuple<int, int> key = new Tuple<int, int>(m_framesPerSecond, m_processingInterval);
-                    FrameRateTimer timer;
+                    Tuple<int, int> key = new(m_framesPerSecond, m_processingInterval);
 
-                    if (s_frameRateTimers.TryGetValue(key, out timer))
-                    {
-                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps @ {3:0.00}ms timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", m_framesPerSecond, ProcessingInterval < 0 ? ((Ticks)TicksPerFrame).ToMilliseconds() : (double)ProcessingInterval);
-                        status.AppendLine();
-                    }
+                    if (s_frameRateTimers.TryGetValue(key, out FrameRateTimer timer))
+                        status.AppendLine($"     Timer reference count: {timer.ReferenceCount:N0} concentrator{(timer.ReferenceCount > 1 ? "s" : "")} for the {m_framesPerSecond}fps @ {(ProcessingInterval < 0 ? ((Ticks)TicksPerFrame).ToMilliseconds() : ProcessingInterval):0.00}ms timer");
 
-                    status.AppendFormat("   Total frame rate timers: {0}", s_frameRateTimers.Count);
-                    status.AppendLine();
+                    status.AppendLine($"   Total frame rate timers: {s_frameRateTimers.Count:N0}");
                 }
 
-                status.AppendFormat("        Queued frame count: {0}", m_frameQueue.Count);
-                status.AppendLine();
+                status.AppendLine($"        Queued frame count: {m_frameQueue.Count:N0}");
                 status.Append("      Last published frame: ");
 
-                if ((object)lastFrame == null)
+                if (lastFrame is null)
                 {
-                    status.Append("<none>");
+                    status.AppendLine("<none>");
                 }
                 else
                 {
-                    status.Append(((DateTime)lastFrame.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
-                    status.AppendLine();
+                    status.AppendLine(((DateTime)lastFrame.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                     status.Append("   Last sorted measurement: ");
-                    status.Append(Measurement.ToString(lastFrame.LastSortedMeasurement));
+                    status.AppendLine(Measurement.ToString(lastFrame.LastSortedMeasurement));
                 }
-                status.AppendLine();
 
                 return status.ToString();
             }
@@ -1494,59 +1304,57 @@ namespace GSF.TimeSeries
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                // Make sure concentrator is stopped
+                Stop();
+
+                DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
+
+                m_publicationThread = null;
+
+                if (m_publicationWaitHandle is not null)
                 {
-                    if (disposing)
-                    {
-                        // Make sure concentrator is stopped
-                        Stop();
-
-                        DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
-
-                        m_publicationThread = null;
-
-                        if ((object)m_publicationWaitHandle != null)
-                        {
-                            AutoResetEvent publicationWaitHandle = m_publicationWaitHandle;
-                            m_publicationWaitHandle = null;
-                            publicationWaitHandle.Set();
-                            publicationWaitHandle.Dispose();
-                        }
-
-                        if ((object)m_frameQueue != null)
-                        {
-                            m_frameQueue.Dispose();
-                            m_frameQueue = null;
-                        }
-
-                        if ((object)m_monitorTimer != null)
-                        {
-                            m_monitorTimer.Elapsed -= MonitorUnpublishedSamples;
-                            m_monitorTimer.Dispose();
-                            m_monitorTimer = null;
-                        }
-
-                        if ((object)m_latestMeasurements != null)
-                        {
-                            m_latestMeasurements.Dispose();
-                            m_latestMeasurements = null;
-                        }
-
-                        m_lastDiscardedMeasurement = null;
-
-                        // Clear minimum timer resolution.
-                        PrecisionTimer.ClearMinimumTimerResolution(1);
-                    }
+                    AutoResetEvent publicationWaitHandle = m_publicationWaitHandle;
+                    m_publicationWaitHandle = null;
+                    publicationWaitHandle.Set();
+                    publicationWaitHandle.Dispose();
                 }
-                finally
+
+                if (m_frameQueue is not null)
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
-
-                    if ((object)Disposed != null)
-                        Disposed(this, EventArgs.Empty);
+                    m_frameQueue.Dispose();
+                    m_frameQueue = null;
                 }
+
+                if (m_monitorTimer is not null)
+                {
+                    m_monitorTimer.Elapsed -= MonitorUnpublishedSamples;
+                    m_monitorTimer.Dispose();
+                    m_monitorTimer = null;
+                }
+
+                if (LatestMeasurements is not null)
+                {
+                    LatestMeasurements.Dispose();
+                    LatestMeasurements = null;
+                }
+
+                m_lastDiscardedMeasurement = null;
+
+                // Clear minimum timer resolution.
+                PrecisionTimer.ClearMinimumTimerResolution(1);
+            }
+            finally
+            {
+                m_disposed = true;  // Prevent duplicate dispose.
+                Disposed?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -1559,18 +1367,18 @@ namespace GSF.TimeSeries
         /// </remarks>
         public virtual void Start()
         {
-            if (!m_enabled)
-            {
-                ResetStatistics();
+            if (m_enabled)
+                return;
 
-                m_stopTime = 0;
-                m_startTime = DateTime.UtcNow.Ticks;
-                m_frameQueue.Clear();
-                m_monitorTimer.Start();
+            ResetStatistics();
 
-                // Start real-time frame publication
-                m_enabled = true;
-            }
+            m_stopTime = 0;
+            m_startTime = DateTime.UtcNow.Ticks;
+            m_frameQueue.Clear();
+            m_monitorTimer.Start();
+
+            // Start real-time frame publication
+            m_enabled = true;
         }
 
         /// <summary>
@@ -1578,18 +1386,16 @@ namespace GSF.TimeSeries
         /// </summary>
         public virtual void Stop()
         {
-            if (m_enabled)
-            {
-                m_enabled = false;
+            if (!m_enabled)
+                return;
 
-                if ((object)m_monitorTimer != null)
-                    m_monitorTimer.Stop();
+            m_enabled = false;
 
-                if ((object)m_frameQueue != null)
-                    m_frameQueue.Clear();
+            m_monitorTimer?.Stop();
 
-                m_stopTime = DateTime.UtcNow.Ticks;
-            }
+            m_frameQueue?.Clear();
+
+            m_stopTime = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>
@@ -1624,7 +1430,7 @@ namespace GSF.TimeSeries
             {
                 long currentTimeTicks;
 
-                if (m_performTimestampReasonabilityCheck)
+                if (PerformTimestampReasonabilityCheck)
                     currentTimeTicks = DateTime.UtcNow.Ticks;
                 else
                     currentTimeTicks = timestamp;
@@ -1640,13 +1446,15 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="timestamp">Timestamp to calculate distance from real-time.</param>
         /// <returns>A <see cref="Double"/> value indicating the deviation in milliseconds.</returns>
-        public double MillisecondsFromRealTime(Ticks timestamp) => SecondsFromRealTime(timestamp) / SI.Milli;
+        public double MillisecondsFromRealTime(Ticks timestamp) => 
+            SecondsFromRealTime(timestamp) / SI.Milli;
 
         /// <summary>
         /// Sorts the <see cref="IMeasurement"/> placing the data point in its proper <see cref="IFrame"/>.
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> to sort.</param>
-        public virtual void SortMeasurement(IMeasurement measurement) => SortMeasurements(new[] { measurement });
+        public virtual void SortMeasurement(IMeasurement measurement) => 
+            SortMeasurements(new[] { measurement });
 
         /// <summary>
         /// Sorts each <see cref="IMeasurement"/> placing each data point in its proper <see cref="IFrame"/>.
@@ -1667,11 +1475,7 @@ namespace GSF.TimeSeries
 
             TrackingFrame frame = null;
             List<IMeasurement> discardedMeasurements = null;
-            IMeasurement derivedMeasurement;
-            IFrame sourceFrame;
             Ticks timestamp = 0, lastTimestamp = 0;
-            double distance;
-            bool discardMeasurement;
 
             // Track the total number of measurements ever received for sorting.
             Interlocked.Add(ref m_receivedMeasurements, measurements.Count());
@@ -1682,10 +1486,10 @@ namespace GSF.TimeSeries
             foreach (IMeasurement measurement in measurements)
             {
                 // Reset flag for next measurement.
-                discardMeasurement = false;
+                bool discardMeasurement = false;
 
                 // Check for a bad measurement timestamp.
-                if (!m_ignoreBadTimestamps && (measurement.StateFlags & MeasurementStateFlags.BadTime) > 0)
+                if (!IgnoreBadTimestamps && (measurement.StateFlags & MeasurementStateFlags.BadTime) > 0)
                 {
                     if (m_allowSortsByArrival)
                     {
@@ -1708,6 +1512,8 @@ namespace GSF.TimeSeries
                     timestamp = measurement.Timestamp;
                 }
 
+                double distance;
+
                 if (!discardMeasurement)
                 {
                     //
@@ -1717,7 +1523,7 @@ namespace GSF.TimeSeries
                     // Get the destination frame for the measurement. Note that groups of parsed measurements will
                     // typically be coming in from the same source and will have the same ticks. If we have already
                     // found the destination frame for the same ticks, then there is no need to lookup frame again.
-                    if ((object)frame == null || timestamp != lastTimestamp)
+                    if (frame is null || timestamp != lastTimestamp)
                     {
                         if (m_processByReceivedTimestamp)
                         {
@@ -1733,7 +1539,7 @@ namespace GSF.TimeSeries
                             // timestamp and real-time in seconds is calculated and validated between lag and lead times.
                             distance = SecondsFromRealTime(timestamp);
 
-                            if (distance > m_lagTime || (m_performTimestampReasonabilityCheck && distance < -m_leadTime))
+                            if (distance > m_lagTime || (PerformTimestampReasonabilityCheck && distance < -m_leadTime))
                             {
                                 // This data has come in late or has a future timestamp.  For old timestamps, we're not
                                 // going to create a frame for data that will never be processed.  For future dates we
@@ -1750,7 +1556,7 @@ namespace GSF.TimeSeries
                         }
                     }
 
-                    if ((object)frame == null)
+                    if (frame is null)
                     {
                         // Measurement is discarded if no bucket (i.e., destination frame) was found for it.
                         discardMeasurement = true;
@@ -1759,16 +1565,16 @@ namespace GSF.TimeSeries
                     else
                     {
                         // Derive new measurement value applying any needed down-sampling
-                        derivedMeasurement = frame.DeriveMeasurementValue(measurement);
+                        IMeasurement derivedMeasurement = frame.DeriveMeasurementValue(measurement);
 
-                        if ((object)derivedMeasurement == null)
+                        if (derivedMeasurement is null)
                         {
                             // Count this as a discarded measurement if down-sampling derivation was not applied.
                             discardMeasurement = true;
                         }
                         else
                         {
-                            sourceFrame = frame.SourceFrame;
+                            IFrame sourceFrame = frame.SourceFrame;
 
                             // Access published flag within critical section to ensure no updates will
                             // be made to frame while it is being published
@@ -1801,8 +1607,8 @@ namespace GSF.TimeSeries
                             }
 
                             // If enabled, concentrator will track the absolute latest measurement values.
-                            if (m_trackLatestMeasurements)
-                                m_latestMeasurements.UpdateMeasurementValue(derivedMeasurement);
+                            if (TrackLatestMeasurements)
+                                LatestMeasurements.UpdateMeasurementValue(derivedMeasurement);
                         }
                     }
                 }
@@ -1820,8 +1626,7 @@ namespace GSF.TimeSeries
                     Interlocked.Increment(ref m_discardedMeasurements);
 
                     // Make sure discarded measurement collection exists
-                    if ((object)discardedMeasurements == null)
-                        discardedMeasurements = new List<IMeasurement>();
+                    discardedMeasurements ??= new List<IMeasurement>();
 
                     // Add discarded measurement to local collection
                     discardedMeasurements.Add(measurement);
@@ -1832,52 +1637,52 @@ namespace GSF.TimeSeries
                     // *** Manage "real-time" ticks ***
                     //
 
-                    if (!m_useLocalClockAsRealTime)
+                    if (m_useLocalClockAsRealTime)
+                        continue;
+
+                    // Algorithm:
+                    //      If the measurement time is newer than the current real-time value and within the
+                    //      specified time deviation tolerance of the local clock time, then the measurement
+                    //      timestamp is set as real-time.
+                    if (timestamp <= Thread.VolatileRead(ref m_realTimeTicks))
+                        continue;
+
+                    if (PerformTimestampReasonabilityCheck)
                     {
-                        // Algorithm:
-                        //      If the measurement time is newer than the current real-time value and within the
-                        //      specified time deviation tolerance of the local clock time, then the measurement
-                        //      timestamp is set as real-time.
-                        if (timestamp > Thread.VolatileRead(ref m_realTimeTicks))
+                        // Apply a reasonability check to this value using the local clock. Since the lead time
+                        // typically defines the tolerated accuracy of the local clock to real-time, this value
+                        // is used as the + and - timestamp tolerance to validate if the time is reasonable.
+                        long currentTimeTicks = DateTime.UtcNow.Ticks;
+
+                        if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
                         {
-                            if (m_performTimestampReasonabilityCheck)
-                            {
-                                // Apply a reasonability check to this value using the local clock. Since the lead time
-                                // typically defines the tolerated accuracy of the local clock to real-time, this value
-                                // is used as the + and - timestamp tolerance to validate if the time is reasonable.
-                                long currentTimeTicks = DateTime.UtcNow.Ticks;
+                            // The new time measurement looks good, so this function assumes the time is "real-time"
+                            Thread.VolatileWrite(ref m_realTimeTicks, timestamp);
+                        }
+                        else
+                        {
+                            // Measurement ticks were outside of time deviation tolerances so we'll also check to make
+                            // sure current real-time ticks are within these tolerances as well
+                            distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
 
-                                if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
-                                {
-                                    // The new time measurement looks good, so this function assumes the time is "real-time"
-                                    Thread.VolatileWrite(ref m_realTimeTicks, timestamp);
-                                }
-                                else
-                                {
-                                    // Measurement ticks were outside of time deviation tolerances so we'll also check to make
-                                    // sure current real-time ticks are within these tolerances as well
-                                    distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
-
-                                    if (distance > m_leadTime || distance < -m_leadTime)
-                                    {
-                                        // New time measurement was invalid as was current real-time value so we have no choice but to
-                                        // assume the current time as "real-time", so we set real-time ticks to current ticks
-                                        Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
-                                    }
-                                }
-                            }
-                            else
+                            if (distance > m_leadTime || distance < -m_leadTime)
                             {
-                                // Reasonability checks are disabled, assume newest time is real-time...
-                                Thread.VolatileWrite(ref m_realTimeTicks, timestamp);
+                                // New time measurement was invalid as was current real-time value so we have no choice but to
+                                // assume the current time as "real-time", so we set real-time ticks to current ticks
+                                Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
                             }
                         }
+                    }
+                    else
+                    {
+                        // Reasonability checks are disabled, assume newest time is real-time...
+                        Thread.VolatileWrite(ref m_realTimeTicks, timestamp);
                     }
                 }
             }
 
             // Provide discarded measurements to consumers, if any
-            if ((object)discardedMeasurements != null)
+            if (discardedMeasurements is not null)
                 OnDiscardingMeasurements(discardedMeasurements);
         }
 
@@ -1903,10 +1708,8 @@ namespace GSF.TimeSeries
         /// Derived classes can override this method to create a new custom <see cref="IFrame"/>. Default
         /// behavior creates a basic <see cref="Frame"/> to hold synchronized measurements.
         /// </remarks>
-        protected internal virtual IFrame CreateNewFrame(Ticks timestamp)
-        {
-            return new Frame(timestamp, m_expectedMeasurements);
-        }
+        protected internal virtual IFrame CreateNewFrame(Ticks timestamp) => 
+            new Frame(timestamp, ExpectedMeasurements);
 
         /// <summary>
         /// Assigns <see cref="IMeasurement"/> to its associated <see cref="IFrame"/>.
@@ -1918,20 +1721,16 @@ namespace GSF.TimeSeries
         /// </remarks>
         /// <param name="frame">The <see cref="IFrame"/> that is used.</param>
         /// <param name="measurement">The type of <see cref="IMeasurement"/> to use."/></param>
-        protected virtual void AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
-        {
+        protected virtual void AssignMeasurementToFrame(IFrame frame, IMeasurement measurement) => 
             frame.Measurements[measurement.Key] = measurement;
-        }
 
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected void OnProcessException(Exception ex)
-        {
+        protected void OnProcessException(Exception ex) => 
             OnProcessException(MessageLevel.Info, ex, "Unclassified Exception");
-        }
 
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
@@ -1957,7 +1756,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for {nameof(ProcessException)} event: {ex.Message}", null, ex);
             }
         }
 
@@ -1974,7 +1773,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OnUnpublishedSamples event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(UnpublishedSamples)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1994,7 +1793,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(DiscardingMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -2008,14 +1807,8 @@ namespace GSF.TimeSeries
         // Frame publication handler
         private void PublishFrames()
         {
-            TrackingFrame frame;
-            IFrame sourceFrame;
-            Ticks timestamp;
-            long startTime, stopTime;
-            int frameIndex;
-
             // Keep thread alive...
-            while ((object)m_publicationWaitHandle != null)
+            while (m_publicationWaitHandle is not null)
             {
                 // Keep publishing frames so long as they are ready for publication. This handles case where
                 // system may be falling behind because user function is taking too long - exit when no
@@ -2025,34 +1818,34 @@ namespace GSF.TimeSeries
                     try
                     {
                         // Get top frame
-                        frame = m_frameQueue.Head;
+                        TrackingFrame frame = m_frameQueue.Head;
 
                         // If no frame is ready to publish, exit
-                        if ((object)frame == null)
+                        if (frame is null)
                             break;
 
                         // Get ticks for this frame
-                        sourceFrame = frame.SourceFrame;
-                        timestamp = sourceFrame.Timestamp;
+                        IFrame sourceFrame = frame.SourceFrame;
+                        Ticks timestamp = sourceFrame.Timestamp;
 
                         if (m_processByReceivedTimestamp)
                         {
                             // When processing by received timestamp, we need to test received timestamp against lag-time
                             // to make sure there has been time enough to publish frame:
-                            if (m_lagTicks - (RealTime - sourceFrame.CreatedTimestamp) > 0)
+                            if (LagTicks - (RealTime - sourceFrame.CreatedTimestamp) > 0)
                                 break;
                         }
                         else
                         {
                             // See if any lag-time needs to pass before we begin publishing, exiting if it's not time to publish
-                            if (m_lagTicks - (RealTime - timestamp) > 0)
+                            if (LagTicks - (RealTime - timestamp) > 0)
                             {
                                 // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
                                 // an expected number of measurements per-frame have been defined and the frame has received this
                                 // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
                                 // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
                                 // frame as soon as the expected data has arrived.
-                                if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || sourceFrame.SortedMeasurements < m_expectedMeasurements)
+                                if (ExpectedMeasurements < 1 || !AllowPreemptivePublishing || sourceFrame.SortedMeasurements < ExpectedMeasurements)
                                     break;
 
                                 // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
@@ -2061,12 +1854,12 @@ namespace GSF.TimeSeries
                         }
 
                         // Mark start time for publication
-                        startTime = DateTime.UtcNow.Ticks;
+                        long startTime = DateTime.UtcNow.Ticks;
 
                         // Calculate index of this frame within its second - note that we have to calculate this
                         // value instead of using frameIndex since it is possible for multiple frames to be
                         // published within one frame period if the system is stressed
-                        frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
+                        int frameIndex = (int)((timestamp.DistanceBeyondSecond() + m_timeOffset) / TicksPerFrame);
 
                         // Mark the frame as published to prevent any further sorting into this frame - setting this flag
                         // is in a critical section to ensure that sorting into this frame has ceased prior to publication
@@ -2097,7 +1890,7 @@ namespace GSF.TimeSeries
                             Interlocked.Add(ref m_downsampledMeasurements, frame.DownsampledMeasurements);
 
                             // Mark stop time for publication
-                            stopTime = DateTime.UtcNow.Ticks;
+                            long stopTime = DateTime.UtcNow.Ticks;
 
                             // Track total publication time
                             Interlocked.Add(ref m_totalPublishTime, stopTime - startTime);
@@ -2112,7 +1905,8 @@ namespace GSF.TimeSeries
                 }
 
                 // Wait for next publication signal, timing out if signal takes too long
-                if (m_usePrecisionTimer && (object)m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                if (m_usePrecisionTimer && m_publicationWaitHandle is not null && !m_publicationWaitHandle.WaitOne(MaximumPublicationTimeout))
                     m_waitHandleExpirations++;
                 else
                     Thread.Sleep(1);
@@ -2133,57 +1927,53 @@ namespace GSF.TimeSeries
         // Handle attach to frame rate timer
         private void AttachToFrameRateTimer(int framesPerSecond, int processingInterval)
         {
-            Tuple<int, int> key = new Tuple<int, int>(Math.Min(framesPerSecond, 1000), processingInterval);
+            Tuple<int, int> key = new(Math.Min(framesPerSecond, 1000), processingInterval);
 
             lock (s_frameRateTimers)
             {
-                if (!m_attachedToFrameRateTimer)
+                if (m_attachedToFrameRateTimer)
+                    return;
+
+                // Get static frame rate timer for given frames per second creating it if needed
+                if (!s_frameRateTimers.TryGetValue(key, out FrameRateTimer timer))
                 {
-                    FrameRateTimer timer;
+                    // Create a new frame rate timer which includes a high-precision timer for frame processing
+                    timer = new FrameRateTimer(key.Item1, key.Item2);
 
-                    // Get static frame rate timer for given frames per second creating it if needed
-                    if (!s_frameRateTimers.TryGetValue(key, out timer))
-                    {
-                        // Create a new frame rate timer which includes a high-precision timer for frame processing
-                        timer = new FrameRateTimer(key.Item1, key.Item2);
-
-                        // Add timer state for given rate to static collection
-                        s_frameRateTimers.Add(key, timer);
-                    }
-
-                    // Increment reference count and attach instance method "StartFramePublication" to static timer event list
-                    timer.AddReference(StartFramePublication);
-                    m_attachedToFrameRateTimer = true;
+                    // Add timer state for given rate to static collection
+                    s_frameRateTimers.Add(key, timer);
                 }
+
+                // Increment reference count and attach instance method "StartFramePublication" to static timer event list
+                timer.AddReference(StartFramePublication);
+                m_attachedToFrameRateTimer = true;
             }
         }
 
         // Handle detach from frame rate timer
         private void DetachFromFrameRateTimer(int framesPerSecond, int processingInterval)
         {
-            Tuple<int, int> key = new Tuple<int, int>(Math.Min(framesPerSecond, 1000), processingInterval);
+            Tuple<int, int> key = new(Math.Min(framesPerSecond, 1000), processingInterval);
 
             lock (s_frameRateTimers)
             {
-                if (m_attachedToFrameRateTimer)
-                {
-                    FrameRateTimer timer;
+                if (!m_attachedToFrameRateTimer)
+                    return;
 
-                    // Look up static frame rate timer for given frames per second
-                    if (s_frameRateTimers.TryGetValue(key, out timer))
-                    {
-                        // Decrement reference count and detach instance method "StartFramePublication" from static timer event list
-                        timer.RemoveReference(StartFramePublication);
-                        m_attachedToFrameRateTimer = false;
+                // Look up static frame rate timer for given frames per second
+                if (!s_frameRateTimers.TryGetValue(key, out FrameRateTimer timer))
+                    return;
 
-                        // If timer is no longer being referenced we stop it and remove it from static collection
-                        if (timer.ReferenceCount == 0)
-                        {
-                            timer.Dispose();
-                            s_frameRateTimers.Remove(key);
-                        }
-                    }
-                }
+                // Decrement reference count and detach instance method "StartFramePublication" from static timer event list
+                timer.RemoveReference(StartFramePublication);
+                m_attachedToFrameRateTimer = false;
+
+                // If timer is no longer being referenced we stop it and remove it from static collection
+                if (timer.ReferenceCount != 0)
+                    return;
+
+                timer.Dispose();
+                s_frameRateTimers.Remove(key);
             }
         }
 
@@ -2195,10 +1985,8 @@ namespace GSF.TimeSeries
         private static readonly Dictionary<Tuple<int, int>, FrameRateTimer> s_frameRateTimers;
 
         // Static Constructor
-        static ConcentratorBase()
-        {
+        static ConcentratorBase() => 
             s_frameRateTimers = new Dictionary<Tuple<int, int>, FrameRateTimer>();
-        }
 
         #endregion
     }

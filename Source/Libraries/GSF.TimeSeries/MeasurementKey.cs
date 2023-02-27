@@ -40,12 +40,7 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private readonly Guid m_signalID;
-        private ulong m_id;
-        private string m_source;
         private readonly int m_hashCode;
-        private readonly int m_runtimeID;
-        private MeasurementMetadata m_metadata;
 
         #endregion
 
@@ -53,12 +48,12 @@ namespace GSF.TimeSeries
 
         private MeasurementKey(Guid signalID, ulong id, string source)
         {
-            m_signalID = signalID;
-            m_id = id;
-            m_source = source;
+            SignalID = signalID;
+            ID = id;
+            Source = source;
             m_hashCode = base.GetHashCode();
-            m_runtimeID = Interlocked.Increment(ref s_nextRuntimeID) - 1; // Returns the incremented value. Hints the -1
-            m_metadata = new MeasurementMetadata(this, null, 0, 1, null);
+            RuntimeID = Interlocked.Increment(ref s_nextRuntimeID) - 1; // Returns the incremented value. Hints the -1
+            Metadata = new MeasurementMetadata(this, null, 0, 1, null);
         }
 
         #endregion
@@ -68,12 +63,12 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets <see cref="Guid"/> ID of signal associated with this <see cref="MeasurementKey"/>.
         /// </summary>
-        public Guid SignalID => m_signalID;
+        public Guid SignalID { get; }
 
         /// <summary>
         /// Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.
         /// </summary>
-        public ulong ID => m_id;
+        public ulong ID { get; private set; }
 
         /// <summary>
         /// Gets or sets the source of this <see cref="MeasurementKey"/>.
@@ -81,7 +76,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// This value is typically used to track the archive name in which the measurement, that this <see cref="MeasurementKey"/> represents, is stored.
         /// </remarks>
-        public string Source => m_source;
+        public string Source { get; private set; }
 
         /// <summary>
         /// A unique ID that is assigned at runtime to identify this instance of <see cref="MeasurementKey"/>. 
@@ -93,7 +88,7 @@ namespace GSF.TimeSeries
         /// this provides another unique identifier that is zero indexed. 
         /// This allows certain optimizations such as array lookups.
         /// </remarks>
-        public int RuntimeID => m_runtimeID;
+        public int RuntimeID { get; }
 
         /// <summary>
         /// Gets the <see cref="TimeSeries.MeasurementMetadata"/> as they appear in the primary <see cref="Adapters.IAdapter.DataSource"/>.
@@ -102,7 +97,7 @@ namespace GSF.TimeSeries
         /// This is to be considered the reference value. Adapters are free to change this inside specific <see cref="IMeasurement"/> instances
         /// This value should only be updated upon change in the primary data source using <see cref="SetMeasurementMetadata"/>.
         /// </remarks>
-        public MeasurementMetadata Metadata => m_metadata;
+        public MeasurementMetadata Metadata { get; private set; }
 
         #endregion
 
@@ -120,27 +115,23 @@ namespace GSF.TimeSeries
             if (this == Undefined)
                 throw new NotSupportedException("Cannot set data source information for an undefined measurement.");
 
-            if (m_metadata.TagName != tagName || m_metadata.Adder != adder || m_metadata.Multiplier != multiplier || m_metadata.MeasurementValueFilter != valueFilter)
-                m_metadata = new MeasurementMetadata(this, tagName, adder, multiplier, valueFilter);
+            if (Metadata.TagName != tagName || Metadata.Adder != adder || Metadata.Multiplier != multiplier || Metadata.MeasurementValueFilter != valueFilter)
+                Metadata = new MeasurementMetadata(this, tagName, adder, multiplier, valueFilter);
         }
 
         /// <summary>
         /// Returns a <see cref="string"/> that represents the current <see cref="MeasurementKey"/>.
         /// </summary>
         /// <returns>A <see cref="string"/> that represents the current <see cref="MeasurementKey"/>.</returns>
-        public override string ToString()
-        {
-            return $"{m_source}:{m_id}";
-        }
+        public override string ToString() => 
+            $"{Source}:{ID}";
 
         /// <summary>
         /// Serves as a hash function for the current <see cref="MeasurementKey"/>.
         /// </summary>
         /// <returns>A hash code for the current <see cref="MeasurementKey"/>.</returns>
-        public override int GetHashCode()
-        {
-            return m_hashCode;
-        }
+        public override int GetHashCode() => 
+            m_hashCode;
 
         #endregion
 
@@ -149,9 +140,9 @@ namespace GSF.TimeSeries
         // Static Fields
 
         // All edits to <see cref="s_idCache"/> as well as the ConcurrentDictionaries in s_keyCache should occur within a lock on s_syncEdits
-        private static readonly ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
-        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<ulong, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<ulong, MeasurementKey>>(StringComparer.OrdinalIgnoreCase);
-        private static readonly object s_syncEdits = new object();
+        private static readonly ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<ulong, MeasurementKey>> s_keyCache = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly object s_syncEdits = new();
         private static int s_nextRuntimeID;
 
         /// <summary>
@@ -165,7 +156,7 @@ namespace GSF.TimeSeries
             // Order of operations is critical here since MeasurementKey and MeasurementMetadata have a circular reference
             Undefined = CreateUndefinedMeasurementKey();
             MeasurementMetadata.CreateUndefinedMeasurementMetadata();
-            Undefined.m_metadata = MeasurementMetadata.Undefined;
+            Undefined.Metadata = MeasurementMetadata.Undefined;
         }
 
         // Static Methods
@@ -179,10 +170,7 @@ namespace GSF.TimeSeries
         /// <exception cref="FormatException">The value is not in the correct format for a <see cref="MeasurementKey"/> value.</exception>
         public static MeasurementKey CreateOrUpdate(Guid signalID, string value)
         {
-            string source;
-            ulong id;
-
-            if (!TrySplit(value, out source, out id))
+            if (!TrySplit(value, out string source, out ulong id))
                 throw new FormatException("The value is not in the correct format for a MeasurementKey value");
 
             return CreateOrUpdate(signalID, source, id);
@@ -198,36 +186,31 @@ namespace GSF.TimeSeries
         /// <exception cref="ArgumentNullException"><paramref name="source"/> cannot be null.</exception>
         public static MeasurementKey CreateOrUpdate(Guid signalID, string source, ulong id)
         {
-            Func<Guid, MeasurementKey> addValueFactory;
-            Func<Guid, MeasurementKey, MeasurementKey> updateValueFactory;
-
             if (signalID == Guid.Empty)
                 throw new ArgumentException("Unable to update undefined measurement key", nameof(signalID));
 
             if (string.IsNullOrWhiteSpace(source))
                 throw new ArgumentNullException(nameof(source), "MeasurementKey source cannot be null or empty");
 
-            addValueFactory = guid =>
+            Func<Guid, MeasurementKey> addValueFactory = guid =>
             {
                 // Create a new measurement key and add it to the KeyCache
-                ConcurrentDictionary<ulong, MeasurementKey> idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<ulong, MeasurementKey>());
+                ConcurrentDictionary<ulong, MeasurementKey> idLookup = s_keyCache.GetOrAdd(source, _ => new ConcurrentDictionary<ulong, MeasurementKey>());
                 return idLookup[id] = new MeasurementKey(guid, id, source);
             };
 
-            updateValueFactory = (guid, key) =>
+            Func<Guid, MeasurementKey, MeasurementKey> updateValueFactory = (_, key) =>
             {
-                ConcurrentDictionary<ulong, MeasurementKey> idLookup;
-
                 // If existing measurement key is exactly the same as the
                 // one we are trying to create, simply return that key
                 if (key.ID == id && key.Source == source)
                     return key;
 
                 // Update source and ID and re-insert it into the KeyCache
-                key.m_source = source;
-                key.m_id = id;
+                key.Source = source;
+                key.ID = id;
 
-                idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<ulong, MeasurementKey>());
+                ConcurrentDictionary<ulong, MeasurementKey> idLookup = s_keyCache.GetOrAdd(source, _ => new ConcurrentDictionary<ulong, MeasurementKey>());
                 idLookup[id] = key;
 
                 return key;
@@ -242,9 +225,7 @@ namespace GSF.TimeSeries
             // This lock prevents race conditions that might occur in the addValueFactory that
             // could cause different MeasurementKey objects to be written to the KeyCache and IDCache
             lock (s_syncEdits)
-            {
                 return s_idCache.AddOrUpdate(signalID, addValueFactory, updateValueFactory);
-            }
         }
 
         /// <summary>
@@ -328,13 +309,10 @@ namespace GSF.TimeSeries
         /// </remarks>
         public static MeasurementKey LookUpBySource(string source, ulong id)
         {
-            ConcurrentDictionary<ulong, MeasurementKey> idLookup;
-            MeasurementKey key;
-
-            if (!s_keyCache.TryGetValue(source, out idLookup))
+            if (!s_keyCache.TryGetValue(source, out ConcurrentDictionary<ulong, MeasurementKey> idLookup))
                 return Undefined;
 
-            if (!idLookup.TryGetValue(id, out key))
+            if (!idLookup.TryGetValue(id, out MeasurementKey key))
                 return Undefined;
 
             return key;
@@ -351,16 +329,10 @@ namespace GSF.TimeSeries
         /// If creation succeeds, a new measurement key with matching signal ID, source, and ID.
         /// Otherwise, <see cref="Undefined"/>.
         /// </returns>
-        public static MeasurementKey LookUpOrCreate(Guid signalID, string value)
-        {
-            string source;
-            ulong id;
-
-            if (!TrySplit(value, out source, out id))
-                return LookUpOrCreate(signalID, Undefined.Source, Undefined.ID);
-
-            return LookUpOrCreate(signalID, source, id);
-        }
+        public static MeasurementKey LookUpOrCreate(Guid signalID, string value) => 
+            TrySplit(value, out string source, out ulong id) ? 
+                LookUpOrCreate(signalID, source, id) : 
+                LookUpOrCreate(signalID, Undefined.Source, Undefined.ID);
 
         /// <summary>
         /// Performs a lookup by signal ID and, failing that, attempts to
@@ -394,16 +366,10 @@ namespace GSF.TimeSeries
         /// If creation succeeds, a new measurement key with matching signal ID, source, and ID.
         /// Otherwise, <see cref="Undefined"/>.
         /// </returns>
-        public static MeasurementKey LookUpOrCreate(string value)
-        {
-            string source;
-            ulong id;
-
-            if (!TrySplit(value, out source, out id))
-                return Undefined;
-
-            return LookUpOrCreate(source, id);
-        }
+        public static MeasurementKey LookUpOrCreate(string value) => 
+            TrySplit(value, out string source, out ulong id) ? 
+                LookUpOrCreate(source, id) : 
+                Undefined;
 
         /// <summary>
         /// Performs a lookup by source and, failing that, attempts to create
@@ -434,9 +400,7 @@ namespace GSF.TimeSeries
         /// <exception cref="FormatException">The value is not in the correct format for a <see cref="MeasurementKey"/> value.</exception>
         public static MeasurementKey Parse(string value)
         {
-            MeasurementKey key;
-
-            if (TryParse(value, out key))
+            if (TryParse(value, out MeasurementKey key))
                 return key;
 
             throw new FormatException("The value is not in the correct format for a MeasurementKey value");
@@ -450,27 +414,24 @@ namespace GSF.TimeSeries
         /// <returns>A <c>true</c> if <see cref="MeasurementKey"/>representation contained in <paramref name="value"/> could be parsed; otherwise <c>false</c>.</returns>
         public static bool TryParse(string value, out MeasurementKey key)
         {
-            string source;
-            ulong id;
-
             // Split the input into source and ID
-            if (TrySplit(value, out source, out id))
+            if (TrySplit(value, out string source, out ulong id))
             {
                 // First attempt to look up an existing key
                 key = LookUpBySource(source, id);
 
-                if (key == Undefined)
+                if (key != Undefined)
+                    return key != Undefined;
+
+                try
                 {
-                    try
-                    {
-                        // Lookup failed - attempt to create it with a newly generated signal ID
-                        key = CreateOrUpdate(Guid.NewGuid(), source, id);
-                    }
-                    catch
-                    {
-                        // source is null or empty
-                        key = Undefined;
-                    }
+                    // Lookup failed - attempt to create it with a newly generated signal ID
+                    key = CreateOrUpdate(Guid.NewGuid(), source, id);
+                }
+                catch
+                {
+                    // source is null or empty
+                    key = Undefined;
                 }
             }
             else
@@ -497,14 +458,11 @@ namespace GSF.TimeSeries
         /// </remarks>
         public static void EstablishDefaultCache(IDbConnection connection, Type adapterType, string measurementTable = "ActiveMeasurement")
         {
-            string source;
-            ulong id;
-
             // Establish default measurement key cache
             foreach (DataRow measurement in connection.RetrieveData(adapterType, $"SELECT ID, SignalID FROM {measurementTable}").Rows)
             {
-                if (TrySplit(measurement["ID"].ToString(), out source, out id))
-                    CreateOrUpdate(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), source, id);
+                if (TrySplit(measurement[nameof(ID)].ToString(), out string source, out ulong id))
+                    CreateOrUpdate(measurement[nameof(SignalID)].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), source, id);
             }
         }
 
@@ -513,9 +471,10 @@ namespace GSF.TimeSeries
         /// </summary>
         private static MeasurementKey CreateUndefinedMeasurementKey()
         {
-            MeasurementKey key = new MeasurementKey(Guid.Empty, ulong.MaxValue, "__");
+            MeasurementKey key = new(Guid.Empty, ulong.MaxValue, "__");
+            
             // Lock on s_syncEdits is not required since method is only called by the static constructor
-            s_keyCache.GetOrAdd(key.Source, kcf => new ConcurrentDictionary<ulong, MeasurementKey>())[ulong.MaxValue] = key;
+            s_keyCache.GetOrAdd(key.Source, _ => new ConcurrentDictionary<ulong, MeasurementKey>())[ulong.MaxValue] = key;
             return key;
         }
 
@@ -525,11 +484,9 @@ namespace GSF.TimeSeries
         /// </summary>
         private static bool TrySplit(string value, out string source, out ulong id)
         {
-            string[] elem;
-
             if (!string.IsNullOrEmpty(value))
             {
-                elem = value.Split(':');
+                string[] elem = value.Split(':');
 
                 if (elem.Length == 2 && ulong.TryParse(elem[1].Trim(), out id))
                 {

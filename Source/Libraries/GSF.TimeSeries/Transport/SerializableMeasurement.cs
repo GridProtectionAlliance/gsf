@@ -64,13 +64,8 @@ namespace GSF.TimeSeries.Transport
         /// Creates a new <see cref="SerializableMeasurement"/>.
         /// </summary>
         /// <param name="encoding">Character encoding used to convert strings to binary.</param>
-        public SerializableMeasurement(Encoding encoding)
-        {
-            if ((object)encoding == null)
-                throw new ArgumentNullException(nameof(encoding), "Cannot create serializable measurement with no encoding.");
-
-            m_encoding = encoding;
-        }
+        public SerializableMeasurement(Encoding encoding) => 
+            m_encoding = encoding ?? throw new ArgumentNullException(nameof(encoding), "Cannot create serializable measurement with no encoding.");
 
         /// <summary>
         /// Creates a new <see cref="SerializableMeasurement"/> from an existing <see cref="IMeasurement"/> value.
@@ -127,16 +122,15 @@ namespace GSF.TimeSeries.Transport
             if (length < FixedLength)
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement");
 
-            int size, index = startIndex;
-            uint keyID;
+            int index = startIndex;
             string keySource = "";
 
             // Decode key ID
-            keyID = BigEndian.ToUInt32(buffer, index);
+            uint keyID = BigEndian.ToUInt32(buffer, index);
             index += 4;
 
             // Decode key source string length
-            size = BigEndian.ToInt32(buffer, index);
+            int size = BigEndian.ToInt32(buffer, index);
             index += 4;
 
             // Decode key source string
@@ -227,8 +221,7 @@ namespace GSF.TimeSeries.Transport
 
             buffer.ValidateParameters(startIndex, length);
 
-            byte[] bytes;
-            int size, index = startIndex;
+            int index = startIndex;
             string source = Key.Source.ToNonNullString();
             string tagName = TagName.ToNonNullString();
 
@@ -237,8 +230,8 @@ namespace GSF.TimeSeries.Transport
             index += 4;
 
             // Encode key source string length
-            bytes = m_encoding.GetBytes(source);
-            size = bytes.Length;
+            byte[] bytes = m_encoding.GetBytes(source);
+            int size = bytes.Length;
             BigEndian.CopyBytes(size, buffer, index);
             index += 4;
 

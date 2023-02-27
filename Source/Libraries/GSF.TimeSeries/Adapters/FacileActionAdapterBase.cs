@@ -126,10 +126,8 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Creates a new instance of the <see cref="FacileActionAdapterBase"/> class.
         /// </summary>
-        protected FacileActionAdapterBase()
-        {
+        protected FacileActionAdapterBase() => 
             m_latestMeasurements = new ImmediateMeasurements { RealTimeFunction = () => RealTime };
-        }
 
         #endregion
 
@@ -313,7 +311,7 @@ namespace GSF.TimeSeries.Adapters
         public virtual bool UseLocalClockAsRealTime { get; set; } = DefaultUseLocalClockAsRealTime;
 
         /// <summary>
-        /// Gest or sets flag that determines whether to fall back on local clock time as real time when time is unreasonable.
+        /// Gets or sets flag that determines whether to fall back on local clock time as real time when time is unreasonable.
         /// </summary>
         /// <remarks>
         /// This property is only applicable when <see cref="UseLocalClockAsRealTime"/> is <c>false</c>.
@@ -351,11 +349,11 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine($"        Defined frame rate: {FramesPerSecond} frames/sec");
-                status.AppendLine($"      Measurement tracking: {(TrackLatestMeasurements ? "Enabled" : "Disabled")}");
+                status.AppendLine($"      Measurement tracking: {(TrackLatestMeasurements ? nameof(Enabled) : "Disabled")}");
                 status.AppendLine($"  Respecting input demands: {RespectInputDemands}");
                 status.AppendLine($" Respecting output demands: {RespectOutputDemands}");
                 status.AppendLine($"  Local clock is real time: {UseLocalClockAsRealTime}");
@@ -393,8 +391,13 @@ namespace GSF.TimeSeries.Adapters
 
             if (TrackLatestMeasurements)
             {
-                LatestMeasurements.LagTime = settings.TryGetValue(nameof(LagTime), out setting) ? double.Parse(setting) : DefaultLagTime;
-                LatestMeasurements.LeadTime = settings.TryGetValue(nameof(LeadTime), out setting) ? double.Parse(setting) : DefaultLeadTime;
+                LatestMeasurements.LagTime = settings.TryGetValue(nameof(LagTime), out setting) ? 
+                    double.Parse(setting) : 
+                    DefaultLagTime;
+                
+                LatestMeasurements.LeadTime = settings.TryGetValue(nameof(LeadTime), out setting) ? 
+                    double.Parse(setting) : 
+                    DefaultLeadTime;
             }
 
             if (settings.TryGetValue(nameof(RespectInputDemands), out setting))
@@ -434,13 +437,13 @@ namespace GSF.TimeSeries.Adapters
                 m_latestMeasurements.UpdateMeasurementValue(measurement);
 
                 // Track latest timestamp as real-time, if requested.
-                if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks)
-                {
-                    if (measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
-                        m_realTimeTicks = measurement.Timestamp;
-                    else if (FallBackOnLocalClock)
-                        m_realTimeTicks = DateTime.UtcNow.Ticks;
-                }
+                if (useLocalClockAsRealTime || measurement.Timestamp <= m_realTimeTicks)
+                    continue;
+
+                if (measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
+                    m_realTimeTicks = measurement.Timestamp;
+                else if (FallBackOnLocalClock)
+                    m_realTimeTicks = DateTime.UtcNow.Ticks;
             }
         }
 
@@ -457,7 +460,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(NewMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -474,7 +477,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnpublishedSamples event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(UnpublishedSamples)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -491,7 +494,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(DiscardingMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 

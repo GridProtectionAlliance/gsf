@@ -85,6 +85,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
             public string AssemblyName { get; set; }
 
+            public string TypeName { get; set; }
+
             public string ConnectionString { get; set; }
 
             [UpdateValueExpression("DateTime.UtcNow")]
@@ -134,17 +136,16 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         public HomeUserControl()
         {
             InitializeComponent();
-            this.Loaded += HomeUserControl_Loaded;
-            this.Unloaded += HomeUserControl_Unloaded;
+            Loaded += HomeUserControl_Loaded;
+            Unloaded += HomeUserControl_Unloaded;
 
             // Load Menu
-            XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("MenuDataItems");
-            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);
+            XmlRootAttribute xmlRootAttribute = new("MenuDataItems");
+            XmlSerializer serializer = new(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);
 
-            using (XmlReader reader = XmlReader.Create(FilePath.GetAbsolutePath("Menu.xml")))
-            {
-                m_menuDataItems = (ObservableCollection<MenuDataItem>)serializer.Deserialize(reader);
-            }
+            using XmlReader reader = XmlReader.Create(FilePath.GetAbsolutePath("Menu.xml"));
+
+            m_menuDataItems = (ObservableCollection<MenuDataItem>)serializer.Deserialize(reader);
         }
 
         #endregion
@@ -155,11 +156,10 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         {
             try
             {
-                if (!(m_windowsServiceClient?.Helper is null))
+                if (m_windowsServiceClient?.Helper is not null)
                     m_windowsServiceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
 
-                if (!(m_refreshTimer is null))
-                    m_refreshTimer.Stop();
+                m_refreshTimer?.Stop();
 
                 UnsubscribeChartData();
                 DisposeStatsSubscription();
@@ -210,50 +210,43 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             TextBlockLocalTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
             // Initialize default brush
-            if (s_defaultBrush is null)
-                s_defaultBrush = TextBlockInstance.Background;
+            s_defaultBrush ??= TextBlockInstance.Background;
 
             // Get needed styles
-            if (s_underlineStyle is null)
-                s_underlineStyle = FindResource("Underline") as Style;
-
-            if (s_shadowStyle is null)
-                s_shadowStyle = FindResource("Shadow") as Style;
-
-            if (s_underlineShadowStyle is null)
-                s_underlineShadowStyle = FindResource("UnderlineShadow") as Style;
+            s_underlineStyle ??= FindResource("Underline") as Style;
+            s_shadowStyle ??= FindResource("Shadow") as Style;
+            s_underlineShadowStyle ??= FindResource("UnderlineShadow") as Style;
 
             Version appVersion = AssemblyInfo.EntryAssembly.Version;
             TextBlockManagerVersion.Text = $"{appVersion.Major}.{appVersion.Minor}.{appVersion.Build}.0";
 
             try
             {
-                using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
-                {
-                    TextBlockDatabaseType.Text = database.DatabaseType.ToString();
+                using AdoDataConnection database = new(CommonFunctions.DefaultSettingsCategory);
 
-                    try
+                TextBlockDatabaseType.Text = database.DatabaseType.ToString();
+
+                try
+                {
+                    if (database.IsSqlite || database.IsJetEngine)
                     {
-                        if (database.IsSqlite || database.IsJetEngine)
-                        {
-                            // Extract database file name from connection string for file centric databases
-                            TextBlockDatabaseName.Text = FilePath.GetFileName(database.Connection.ConnectionString.ParseKeyValuePairs()["Data Source"]);
-                        }
-                        else if (database.IsOracle)
-                        {
-                            // Extract user name from connection string for Oracle databases
-                            TextBlockDatabaseName.Text = database.Connection.ConnectionString.ParseKeyValuePairs()["User Id"];
-                        }
-                        else
-                        {
-                            TextBlockDatabaseName.Text = database.Connection.Database;
-                        }
+                        // Extract database file name from connection string for file centric databases
+                        TextBlockDatabaseName.Text = FilePath.GetFileName(database.Connection.ConnectionString.ParseKeyValuePairs()["Data Source"]);
                     }
-                    catch
+                    else if (database.IsOracle)
                     {
-                        // Fall back on database name if file anything fails
+                        // Extract user name from connection string for Oracle databases
+                        TextBlockDatabaseName.Text = database.Connection.ConnectionString.ParseKeyValuePairs()["User Id"];
+                    }
+                    else
+                    {
                         TextBlockDatabaseName.Text = database.Connection.Database;
                     }
+                }
+                catch
+                {
+                    // Fall back on database name if file anything fails
+                    TextBlockDatabaseName.Text = database.Connection.Database;
                 }
             }
             catch
@@ -263,10 +256,9 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
             try
             {
-                using (UserInfo info = new UserInfo(CommonFunctions.CurrentUser))
-                {
-                    TextBlockUser.Text = info.Exists ? info.LoginID : CommonFunctions.CurrentUser;
-                }
+                using UserInfo info = new(CommonFunctions.CurrentUser);
+
+                TextBlockUser.Text = info.Exists ? info.LoginID : CommonFunctions.CurrentUser;
             }
             catch
             {
@@ -275,11 +267,10 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
             ((HorizontalAxis)ChartPlotterDynamic.MainHorizontalAxis).LabelProvider.LabelStringFormat = "";
 
-            //Remove legend on the right.
+            // Remove legend on the right.
             Panel legendParent = (Panel)ChartPlotterDynamic.Legend.ContentGrid.Parent;
 
-            if (!(legendParent is null))
-                legendParent.Children.Remove(ChartPlotterDynamic.Legend.ContentGrid);
+            legendParent?.Children.Remove(ChartPlotterDynamic.Legend.ContentGrid);
 
             ChartPlotterDynamic.NewLegendVisible = false;
 
@@ -298,7 +289,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void LoadComboBoxDeviceAsync()
         {
-            Thread t = new Thread(() =>
+            Thread t = new(() =>
             {
                 Dictionary<int, string> deviceLookupList = Device.GetLookupList(null);
 
@@ -321,10 +312,10 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         {
             int selectedDeviceID = ((KeyValuePair<int, string>)ComboBoxDevice.SelectedItem).Key;
 
-            Thread t = new Thread(() =>
+            Thread t = new(() =>
             {
                 ObservableCollection<MeasurementModel> measurements = MeasurementModel.Load(null, selectedDeviceID);
-                ObservableCollection<MeasurementModel> itemsSource = new ObservableCollection<MeasurementModel>(measurements.Where(m => m.SignalSuffix == "PA" || m.SignalSuffix == "FQ"));
+                ObservableCollection<MeasurementModel> itemsSource = new(measurements.Where(m => m.SignalSuffix == "PA" || m.SignalSuffix == "FQ"));
 
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
@@ -343,7 +334,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void RefreshTimer_Tick(object sender, EventArgs e)
         {
-            if (!(m_windowsServiceClient?.Helper?.RemotingClient is null) && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+            if (m_windowsServiceClient?.Helper?.RemotingClient is not null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
             {
                 try
                 {
@@ -363,7 +354,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                     if (PopupStatus.IsOpen)
                         CommonFunctions.SendCommandToService("Status -actionable");
 
-                    if (!(m_statsSubscription is null) && !m_statsSubscription.Enabled)
+                    if (m_statsSubscription is not null && !m_statsSubscription.Enabled)
                         m_statsSubscription?.Start();
                 }
                 catch (Exception ex)
@@ -381,22 +372,22 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void ButtonQuickLink_Click(object sender, RoutedEventArgs e)
         {
-            MenuDataItem item = new MenuDataItem();
+            MenuDataItem item = new();
             string stringToMatch = ((Button)sender).Tag.ToString();
 
-            if (!string.IsNullOrEmpty(stringToMatch))
-            {
-                if (stringToMatch == "Restart")
-                {
-                    RestartService();
-                }
-                else
-                {
-                    GetMenuDataItem(m_menuDataItems, stringToMatch, ref item);
+            if (string.IsNullOrEmpty(stringToMatch))
+                return;
 
-                    if (!(item.MenuText is null))
-                        item.Command.Execute(null);
-                }
+            if (stringToMatch == "Restart")
+            {
+                RestartService();
+            }
+            else
+            {
+                GetMenuDataItem(m_menuDataItems, stringToMatch, ref item);
+
+                if (item.MenuText is not null)
+                    item.Command.Execute(null);
             }
         }
 
@@ -420,11 +411,11 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         {
             try
             {
-                if (MessageBox.Show("Do you want to restart service?", "Restart Service", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                {
-                    CommonFunctions.SendCommandToService("Restart");
-                    MessageBox.Show("Successfully sent RESTART command to the service.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                if (MessageBox.Show("Do you want to restart service?", "Restart Service", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    return;
+
+                CommonFunctions.SendCommandToService("Restart");
+                MessageBox.Show("Successfully sent RESTART command to the service.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch
             {
@@ -439,64 +430,64 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         /// <param name="e">Event arguments.</param>
         private void Helper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
         {
-            if (ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out bool _))
+            if (!ClientHelper.TryParseActionableResponse(e.Argument, out string sourceCommand, out _))
+                return;
+
+            switch (sourceCommand.ToLowerInvariant())
             {
-                switch (sourceCommand.ToLowerInvariant())
-                {
-                    case "health":
-                        this.Dispatcher.BeginInvoke((Action)delegate
+                case "health":
+                    Dispatcher.BeginInvoke((Action)delegate
+                    {
+                        string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        TextBlockSystemHealth.Text = string.Join(Environment.NewLine, lines.Take(21));
+                        GroupBoxSystemHealth.Header = $"System Health (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
+                    });
+                    break;
+                case "status":
+                    Dispatcher.BeginInvoke((Action)delegate
+                    {
+                        static string trimEnd(string value)
                         {
-                            string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                            TextBlockSystemHealth.Text = string.Join(Environment.NewLine, lines.Take(21));
-                            GroupBoxSystemHealth.Header = $"System Health (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
-                        });
-                        break;
-                    case "status":
-                        this.Dispatcher.BeginInvoke((Action)delegate
-                        {
-                            string trimEnd(string value)
-                            {
-                                const int MaxLength = 80;
+                            const int MaxLength = 80;
 
-                                if (string.IsNullOrEmpty(value))
-                                    return "";
+                            if (string.IsNullOrEmpty(value))
+                                return "";
 
-                                return value.Length <= MaxLength ? value : string.Concat(value.Substring(0, MaxLength - 3), "...");
-                            }
+                            return value.Length <= MaxLength ? value : string.Concat(value.Substring(0, MaxLength - 3), "...");
+                        }
 
-                            string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                            TextBlockStatus.Text = string.Join(Environment.NewLine, lines.Select(trimEnd));
-                            GroupBoxStatus.Header = $"System Status (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
-                        });
-                        break;
-                    case "version":
-                        this.Dispatcher.BeginInvoke((Action)delegate
-                        {
-                            TextBlockVersion.Text = e.Argument.Message.Substring(e.Argument.Message.ToLower().LastIndexOf("version:", StringComparison.Ordinal) + 8).Trim();
-                        });
-                        break;
-                    case "time":
-                        this.Dispatcher.BeginInvoke((Action)delegate
-                        {
-                            string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        TextBlockStatus.Text = string.Join(Environment.NewLine, lines.Select(trimEnd));
+                        GroupBoxStatus.Header = $"System Status (Last Refreshed: {DateTime.Now:HH:mm:ss.fff})";
+                    });
+                    break;
+                case "version":
+                    Dispatcher.BeginInvoke((Action)delegate
+                    {
+                        TextBlockVersion.Text = e.Argument.Message.Substring(e.Argument.Message.ToLower().LastIndexOf("version:", StringComparison.Ordinal) + 8).Trim();
+                    });
+                    break;
+                case "time":
+                    Dispatcher.BeginInvoke((Action)delegate
+                    {
+                        string[] lines = e.Argument.Message.TrimEnd().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-                            if (lines.Length > 0)
-                            {
-                                string[] currentServiceTimes = lines[0].Split(',');
+                        if (lines.Length <= 0)
+                            return;
 
-                                if (currentServiceTimes.Length > 0)
-                                {
-                                    string currentServiceTime = currentServiceTimes[0].Substring(currentServiceTimes[0].ToLower().LastIndexOf("system time:", StringComparison.Ordinal) + 12).Trim();
+                        string[] currentServiceTimes = lines[0].Split(',');
 
-                                    if (DateTime.TryParse(currentServiceTime, out DateTime serviceTime) && DateTime.TryParse(TextBlockLocalTime.Text, out DateTime localTime))
-                                        m_lastLocalToServerTimeDeviation = new Ticks(localTime.Ticks - serviceTime.Ticks).ToSeconds();
+                        if (currentServiceTimes.Length <= 0)
+                            return;
+
+                        string currentServiceTime = currentServiceTimes[0].Substring(currentServiceTimes[0].ToLower().LastIndexOf("system time:", StringComparison.Ordinal) + 12).Trim();
+
+                        if (DateTime.TryParse(currentServiceTime, out DateTime serviceTime) && DateTime.TryParse(TextBlockLocalTime.Text, out DateTime localTime))
+                            m_lastLocalToServerTimeDeviation = new Ticks(localTime.Ticks - serviceTime.Ticks).ToSeconds();
                                     
-                                    TextBlockServerTime.Text = currentServiceTime;
-                                }
-                            }
-                        });
-                        break;
-                }
+                        TextBlockServerTime.Text = currentServiceTime;
+                    });
+                    break;
             }
         }
 
@@ -504,7 +495,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         {
             PopupStatus.IsOpen = true;
 
-            if (!(m_windowsServiceClient?.Helper?.RemotingClient is null) && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+            if (m_windowsServiceClient?.Helper?.RemotingClient is not null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                 CommonFunctions.SendCommandToService("Status -actionable");
         }
 
@@ -528,7 +519,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 else
                     Application.Current.Resources.Add("SelectedMeasurement_Home", ComboBoxMeasurement.SelectedIndex);
 
-                if (!(m_selectedMeasurement is null))
+                if (m_selectedMeasurement is not null)
                 {
                     m_signalID = m_selectedMeasurement.SignalID.ToString();
 
@@ -574,7 +565,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void TimeReasonability_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            Regex regex = new Regex("[^0-9.]+");
+            Regex regex = new("[^0-9.]+");
             e.Handled = regex.IsMatch(e.Text);
 
             if (!e.Handled)
@@ -771,7 +762,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                     try
                     {
                         // Define common custom action adapter assemblies for which to not apply lead/lag time updates
-                        HashSet<string> excludedAssemblies = new HashSet<string>(new[]
+                        HashSet<string> excludedAssemblies = new(new[]
                         { 
                             "GSF.TimeSeries.dll", 
                             "DataQualityMonitoring.dll", 
@@ -781,37 +772,46 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                         StringComparer.OrdinalIgnoreCase);
 
                         // Update lead/lag time values in connection strings for each custom action adapter
-                        using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+                        using AdoDataConnection database = new(CommonFunctions.DefaultSettingsCategory);
+
+                        TableOperations<CustomActionAdapter> actionAdapterTable = new(database);
+
+                        foreach (CustomActionAdapter actionAdapter in actionAdapterTable.QueryRecords())
                         {
-                            TableOperations<CustomActionAdapter> actionAdapterTable = new TableOperations<CustomActionAdapter>(database);
+                            if (excludedAssemblies.Contains(actionAdapter.AssemblyName))
+                                continue;
 
-                            foreach (CustomActionAdapter actionAdapter in actionAdapterTable.QueryRecords())
+                            string connectionString = actionAdapter.ConnectionString;
+
+                            if (string.IsNullOrWhiteSpace(connectionString))
+                                continue;
+
+                            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+                            // Handle special case for PowerMultiCalculator adapter - since adapter concentrates for all devices, subtract 1 second
+                            // from lag and lead times so that tolerance is lower than other adapters to help ensure output is received in time
+                            if (actionAdapter.TypeName.Equals("PowerCalculations.PowerMultiCalculator.PowerMultiCalculatorAdapter") && lagTime > 1.0D && leadTime > 1.0D)
                             {
-                                if (excludedAssemblies.Contains(actionAdapter.AssemblyName))
-                                    continue;
-
-                                string connectionString = actionAdapter.ConnectionString;
-
-                                if (string.IsNullOrWhiteSpace(connectionString))
-                                    continue;
-
-                                Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-                                
+                                settings["LagTime"] = (lagTime - 1.0D).ToString(CultureInfo.InvariantCulture);
+                                settings["LeadTime"] = (leadTime - 1.0D).ToString(CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
                                 settings["LagTime"] = lagTimeText;
                                 settings["LeadTime"] = leadTimeText;
+                            }
+                            
+                            actionAdapter.ConnectionString = settings.JoinKeyValuePairs();
+                            actionAdapterTable.UpdateRecord(actionAdapter);
 
-                                actionAdapter.ConnectionString = settings.JoinKeyValuePairs();
-                                actionAdapterTable.UpdateRecord(actionAdapter);
-
-                                try
-                                {
-                                    if (m_windowsServiceClient?.Helper.RemotingClient.CurrentState == ClientState.Connected)
-                                        CommonFunctions.SendCommandToService($"Init {actionAdapter.AdapterName}");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.SwallowException(ex);
-                                }
+                            try
+                            {
+                                if (m_windowsServiceClient?.Helper.RemotingClient.CurrentState == ClientState.Connected)
+                                    CommonFunctions.SendCommandToService($"Init {actionAdapter.AdapterName}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.SwallowException(ex);
                             }
                         }
                     }
@@ -834,34 +834,34 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
                         string configPath = FilePath.GetAbsolutePath(ConfigurationFile.Current.Configuration.FilePath.Replace("Manager", ""));
 
-                        if (File.Exists(configPath))
+                        if (!File.Exists(configPath))
+                            return;
+
+                        if (UserHasWriteAccess())
                         {
-                            if (UserHasWriteAccess())
+                            XDocument hostConfig = XDocument.Load(configPath);
+                            XElement[] systemSettings = hostConfig.Descendants(SystemSettings).ToArray();
+
+                            getElementValue(systemSettings, "DefaultCalculationLagTime").Value = lagTimeText;
+                            getElementValue(systemSettings, "DefaultCalculationLeadTime").Value = leadTimeText;
+
+                            hostConfig.Save(configPath);
+                        }
+                        else if (MessageBox.Show($"All custom action adapter lag/lead times were successfully updated, however, elevated privileges are required in order to update the service configuration file with new default calculation lag/lead time values.{Environment.NewLine}{Environment.NewLine}Do you want to relaunch the manager with elevated privileges so this task can be completed?", "Time Reasonability Server Update Requires Elevation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            if (Application.Current?.MainWindow is not null)
+                                Application.Current.MainWindow.Visibility = Visibility.Hidden;
+
+                            ProcessStartInfo startInfo = new()
                             {
-                                XDocument hostConfig = XDocument.Load(configPath);
-                                XElement[] systemSettings = hostConfig.Descendants(SystemSettings).ToArray();
+                                FileName = Environment.GetCommandLineArgs()[0],
+                                Arguments = $"{string.Join(" ", Environment.GetCommandLineArgs().Skip(1))} -elevated",
+                                UseShellExecute = true,
+                                Verb = "runas"
+                            };
 
-                                getElementValue(systemSettings, "DefaultCalculationLagTime").Value = lagTimeText;
-                                getElementValue(systemSettings, "DefaultCalculationLeadTime").Value = leadTimeText;
-
-                                hostConfig.Save(configPath);
-                            }
-                            else if (MessageBox.Show($"All custom action adapter lag/lead times were successfully updated, however, elevated privileges are required in order to update the service configuration file with new default calculation lag/lead time values.{Environment.NewLine}{Environment.NewLine}Do you want to relaunch the manager with elevated privileges so this task can be completed?", "Time Reasonability Server Update Requires Elevation", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                            {
-                                if (!(Application.Current?.MainWindow is null))
-                                    Application.Current.MainWindow.Visibility = Visibility.Hidden;
-
-                                ProcessStartInfo startInfo = new ProcessStartInfo
-                                {
-                                    FileName = Environment.GetCommandLineArgs()[0],
-                                    Arguments = $"{string.Join(" ", Environment.GetCommandLineArgs().Skip(1))} -elevated",
-                                    UseShellExecute = true,
-                                    Verb = "runas"
-                                };
-
-                                using (Process.Start(startInfo)) { }
-                                Environment.Exit(0);
-                            }
+                            using (Process.Start(startInfo)) { }
+                            Environment.Exit(0);
                         }
                     }
                     catch (Exception ex)
@@ -1041,16 +1041,15 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         {
             try
             {
-                using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
-                {
-                    m_chartSubscription = new DataSubscriber();
-                    m_chartSubscription.ConnectionEstablished += ChartSubscriptionConnectionEstablished;
-                    m_chartSubscription.NewMeasurements += ChartSubscriptionNewMeasurements;
-                    m_chartSubscription.ConnectionTerminated += ChartSubscriptionConnectionTerminated;
-                    m_chartSubscription.ConnectionString = database.DataPublisherConnectionString();
-                    m_chartSubscription.Initialize();
-                    m_chartSubscription.Start();
-                }
+                using AdoDataConnection database = new(CommonFunctions.DefaultSettingsCategory);
+
+                m_chartSubscription = new DataSubscriber();
+                m_chartSubscription.ConnectionEstablished += ChartSubscriptionConnectionEstablished;
+                m_chartSubscription.NewMeasurements += ChartSubscriptionNewMeasurements;
+                m_chartSubscription.ConnectionTerminated += ChartSubscriptionConnectionTerminated;
+                m_chartSubscription.ConnectionString = database.DataPublisherConnectionString();
+                m_chartSubscription.Initialize();
+                m_chartSubscription.Start();
             }
             catch (Exception ex)
             {
@@ -1117,38 +1116,37 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             {
                 if (m_statsSubscription is null)
                 {
-                    using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+                    using AdoDataConnection database = new(CommonFunctions.DefaultSettingsCategory);
+
+                    string connectionString = database.DataPublisherConnectionString();
+
+                    Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+                    if (settings.TryGetValue("server", out string server))
                     {
-                        string connectionString = database.DataPublisherConnectionString();
-
-                        Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-
-                        if (settings.TryGetValue("server", out string server))
+                        try
                         {
-                            try
-                            {
-                                string[] parts = server.Split(':');
+                            string[] parts = server.Split(':');
 
-                                if (parts.Length > 1)
-                                    server = parts[0];
+                            if (parts.Length > 1)
+                                server = parts[0];
 
-                                m_serverIsLocal = Communication.Transport.IsLocalAddress(server);
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.SwallowException(ex);
-                                m_serverIsLocal = false;
-                            }
+                            m_serverIsLocal = Communication.Transport.IsLocalAddress(server);
                         }
-                        
-                        m_statsSubscription = new DataSubscriber();
-                        m_statsSubscription.ConnectionEstablished += StatsSubscriptionConnectionEstablished;
-                        m_statsSubscription.NewMeasurements += StatsSubscriptionNewMeasurements;
-                        m_statsSubscription.ConnectionTerminated += StatsSubscriptionConnectionTerminated;
-                        m_statsSubscription.ConnectionString = connectionString;
-                        m_statsSubscription.Initialize();
-                        m_statsSubscription.Start();
+                        catch (Exception ex)
+                        {
+                            Logger.SwallowException(ex);
+                            m_serverIsLocal = false;
+                        }
                     }
+                        
+                    m_statsSubscription = new DataSubscriber();
+                    m_statsSubscription.ConnectionEstablished += StatsSubscriptionConnectionEstablished;
+                    m_statsSubscription.NewMeasurements += StatsSubscriptionNewMeasurements;
+                    m_statsSubscription.ConnectionTerminated += StatsSubscriptionConnectionTerminated;
+                    m_statsSubscription.ConnectionString = connectionString;
+                    m_statsSubscription.Initialize();
+                    m_statsSubscription.Start();
                 }
             }
             catch (Exception ex)

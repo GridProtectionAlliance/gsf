@@ -41,7 +41,7 @@
 //  04/21/2010 - Pinal C. Patel
 //       Removed unnecessary overloads of Update() for manageability.
 //  04/22/2010 - Pinal C. Patel
-//       Fixed encryption related bug introduced when adding support for user scope settings.
+//       Fixed encryption related issue introduced when adding support for user scope settings.
 //  12/05/2010 - Pinal C. Patel
 //       Modified Update() and ValueAs() to specify CultureInfo for the conversion.
 //  01/11/2011 - Pinal C. Patel
@@ -110,10 +110,10 @@ namespace GSF.Configuration
 
         private const string DefaultCryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
         private const string EvalRegex = @"Eval\((?<Container>(?<Accessor>[\w\d]+\.?)+)\.(?<Target>[\w\d]+)\)";
+        private const string EnvRegex = @"Env\(((?<Target>Machine|Process|User)\:)?(?<Name>[\w\d]+)\)";
 
         // Fields
         private string m_cryptoKey;
-        private CategorizedSettingsElementCollection m_category;
 
         #endregion
 
@@ -132,8 +132,8 @@ namespace GSF.Configuration
         /// </summary>
         internal CategorizedSettingsElement(CategorizedSettingsElementCollection category, string name)
         {
-            m_category = category;
-            this.Name = name;
+            Category = category;
+            Name = name;
             m_cryptoKey = DefaultCryptoKey;
         }
 
@@ -144,17 +144,7 @@ namespace GSF.Configuration
         /// <summary>
         /// Gets or sets the <see cref="CategorizedSettingsElementCollection"/> to which this <see cref="CategorizedSettingsElement"/> belongs.
         /// </summary>
-        public CategorizedSettingsElementCollection Category
-        {
-            get
-            {
-                return m_category;
-            }
-            internal set
-            {
-                m_category = value;
-            }
-        }
+        public CategorizedSettingsElementCollection Category { get; internal set; }
 
         /// <summary>
         /// Gets or sets the identifier of the setting.
@@ -163,10 +153,7 @@ namespace GSF.Configuration
         [ConfigurationProperty("name", IsKey = true, IsRequired = true)]
         public string Name
         {
-            get
-            {
-                return (string)base["name"];
-            }
+            get => (string)base["name"];
             set
             {
                 base["name"] = value;
@@ -205,10 +192,7 @@ namespace GSF.Configuration
         [ConfigurationProperty("value", IsRequired = true, DefaultValue = DefaultValue)]
         public string Value
         {
-            get
-            {
-                return EvaluateValue(DecryptValue(GetRawValue()));
-            }
+            get => EvaluateValue(GetEnvValue(DecryptValue(GetRawValue())));
             set
             {
                 // Continue only if values are different.
@@ -228,13 +212,16 @@ namespace GSF.Configuration
                     return;
 
                 // Ensure only Eval() can replace Eval().
-                if (Regex.IsMatch(currentValue, EvalRegex, RegexOptions.IgnoreCase) &&
-                    !Regex.IsMatch(value, EvalRegex, RegexOptions.IgnoreCase))
+                if (s_evalRegex.IsMatch(currentValue) && !s_evalRegex.IsMatch(value))
+                    return;
+
+                // Ensure only Env() can replace Env().
+                if (s_envRegex.IsMatch(currentValue) && !s_envRegex.IsMatch(value))
                     return;
 
                 value = EncryptValue(value);
 
-                if (Scope == SettingScope.Application || (object)Category[Name] == null)
+                if (Scope == SettingScope.Application || Category[Name] is null)
                 {
                     // Setting is application wide or is being added for the first time.
                     base["value"] = value;
@@ -255,10 +242,7 @@ namespace GSF.Configuration
         [ConfigurationProperty("description", IsRequired = true, DefaultValue = DefaultDescription)]
         public string Description
         {
-            get
-            {
-                return (string)base["description"];
-            }
+            get => (string)base["description"];
             set
             {
                 // Continue only if values are different.
@@ -277,10 +261,7 @@ namespace GSF.Configuration
         [ConfigurationProperty("encrypted", IsRequired = true, DefaultValue = DefaultEncrypted)]
         public bool Encrypted
         {
-            get
-            {
-                return (bool)base["encrypted"];
-            }
+            get => (bool)base["encrypted"];
             set
             {
                 // Continue only if values are different.
@@ -298,10 +279,7 @@ namespace GSF.Configuration
         [ConfigurationProperty("scope", IsRequired = false, DefaultValue = DefaultScope)]
         public SettingScope Scope
         {
-            get
-            {
-                return (SettingScope)base["scope"];
-            }
+            get => (SettingScope)base["scope"];
             set
             {
                 // Continue only if values are different.
@@ -316,20 +294,14 @@ namespace GSF.Configuration
         /// <summary>
         /// Gets value that will actually be serialized to the configuration file.
         /// </summary>
-        public string SerializedValue
-        {
-            get
-            {
-                return EncryptValue((string)base["value"]);
-            }
-        }
+        public string SerializedValue => EncryptValue((string)base["value"]);
 
         internal bool Modified
         {
             set
             {
-                if ((object)m_category != null)
-                    m_category.Modified = value;
+                if (Category is not null)
+                    Category.Modified = value;
             }
         }
 
@@ -343,57 +315,51 @@ namespace GSF.Configuration
         /// <param name="cryptoKey">New crypto key.</param>
         public void SetCryptoKey(string cryptoKey)
         {
-            if (!string.IsNullOrEmpty(cryptoKey))
+            if (string.IsNullOrEmpty(cryptoKey))
+                return;
+
+            // Re-encrypt the existing value with the new key. This is done because the value gets encrypted,
+            // if specified, with the default crypto key when the value is set during instantiation.
+            string decryptedValue;
+
+            try
             {
-                // Re-encrypt the existing value with the new key. This is done because the value gets encrypted,
-                // if specified, with the default crypto key when the value is set during instantiation.
-                string decryptedValue;
-
-                try
-                {
-                    decryptedValue = Value;
-                }
-                catch (ConfigurationErrorsException)
-                {
-                    // Clear value if it fails to decrypt
-                    decryptedValue = string.Empty;
-                }
-
-                m_cryptoKey = cryptoKey;
-                Value = decryptedValue;
-                Modified = true;
+                decryptedValue = Value;
             }
+            catch (ConfigurationErrorsException)
+            {
+                // Clear value if it fails to decrypt
+                decryptedValue = string.Empty;
+            }
+
+            m_cryptoKey = cryptoKey;
+            Value = decryptedValue;
+            Modified = true;
         }
 
         /// <summary>
         /// Updates setting information.
         /// </summary>
         /// <param name="value">New setting value.</param>
-        public void Update(object value)
-        {
+        public void Update(object value) => 
             Update(value, Description, Encrypted, Scope);
-        }
 
         /// <summary>
         /// Updates setting information.
         /// </summary>
         /// <param name="value">New setting value.</param>
         /// <param name="description">New setting description.</param>
-        public void Update(object value, string description)
-        {
+        public void Update(object value, string description) => 
             Update(value, description, Encrypted, Scope);
-        }
-
+        
         /// <summary>
         /// Updates setting information.
         /// </summary>
         /// <param name="value">New setting value.</param>
         /// <param name="description">New setting description.</param>
         /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
-        public void Update(object value, string description, bool encrypted)
-        {
+        public void Update(object value, string description, bool encrypted) => 
             Update(value, description, encrypted, Scope);
-        }
 
         /// <summary>
         /// Updates setting information.
@@ -404,10 +370,10 @@ namespace GSF.Configuration
         /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
         public void Update(object value, string description, bool encrypted, SettingScope scope)
         {
-            this.Scope = scope;
-            this.Encrypted = encrypted;
-            this.Value = Common.TypeConvertToString(value, m_category.Section.File.Culture);
-            this.Description = description;
+            Scope = scope;
+            Encrypted = encrypted;
+            Value = Common.TypeConvertToString(value, Category.Section.File.Culture);
+            Description = description;
         }
 
         /// <summary>
@@ -418,10 +384,8 @@ namespace GSF.Configuration
         /// <remarks>
         /// If this function fails to properly coerce value to specified type, the default value is returned.
         /// </remarks>
-        public T ValueAs<T>()
-        {
-            return this.ValueAs(default(T));
-        }
+        public T ValueAs<T>() => 
+            ValueAs(default(T));
 
         /// <summary>
         /// Gets the setting value as the specified type.
@@ -438,11 +402,10 @@ namespace GSF.Configuration
             {
                 string value = Value;
 
-                // Value is an empty string - use default value.
-                if (string.IsNullOrEmpty(value))
-                    return defaultValue;
-
-                return value.ConvertToType<T>(m_category.Section.File.Culture);
+                // If value is an empty string, use default value.
+                return string.IsNullOrEmpty(value) ? 
+                    defaultValue : 
+                    value.ConvertToType<T>(Category.Section.File.Culture);
             }
             catch
             {
@@ -455,29 +418,23 @@ namespace GSF.Configuration
         /// Gets the setting value as a string.
         /// </summary>
         /// <returns>Value as string.</returns>
-        public string ValueAsString()
-        {
-            return ValueAsString(string.Empty);
-        }
+        public string ValueAsString() => 
+            ValueAsString(string.Empty);
 
         /// <summary>
         /// Gets the setting value as a string.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as string.</returns>
-        public string ValueAsString(string defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public string ValueAsString(string defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as a boolean.
         /// </summary>
         /// <returns>Value as boolean.</returns>
-        public bool ValueAsBoolean()
-        {
-            return ValueAsBoolean(default(bool));
-        }
+        public bool ValueAsBoolean() => 
+            ValueAsBoolean(default);
 
         /// <summary>
         /// Gets the setting value as a boolean.
@@ -508,248 +465,196 @@ namespace GSF.Configuration
         /// Gets the setting value as a byte.
         /// </summary>
         /// <returns>Value as byte.</returns>
-        public byte ValueAsByte()
-        {
-            return ValueAsByte(default(byte));
-        }
+        public byte ValueAsByte() => 
+            ValueAsByte(default);
 
         /// <summary>
         /// Gets the setting value as a byte.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as byte.</returns>
-        public byte ValueAsByte(byte defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
-
+        public byte ValueAsByte(byte defaultValue) => 
+            ValueAs(defaultValue);
+        
         /// <summary>
         /// Gets the setting value as a signed byte.
         /// </summary>
         /// <returns>Value as signed byte.</returns>
-        public sbyte ValueAsSByte()
-        {
-            return ValueAsSByte(default(sbyte));
-        }
+        public sbyte ValueAsSByte() => 
+            ValueAsSByte(default);
 
         /// <summary>
         /// Gets the setting value as a signed byte.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as signed byte.</returns>
-        public sbyte ValueAsSByte(sbyte defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
-
+        public sbyte ValueAsSByte(sbyte defaultValue) => 
+            ValueAs(defaultValue);
+        
         /// <summary>
         /// Gets the setting value as a char.
         /// </summary>
         /// <returns>Value as char.</returns>
-        public char ValueAsChar()
-        {
-            return ValueAsChar(default(char));
-        }
+        public char ValueAsChar() => 
+            ValueAsChar(default);
 
         /// <summary>
         /// Gets the setting value as a char.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as char.</returns>
-        public char ValueAsChar(char defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public char ValueAsChar(char defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as a short.
         /// </summary>
         /// <returns>Value as short.</returns>
-        public short ValueAsInt16()
-        {
-            return ValueAsInt16(default(short));
-        }
+        public short ValueAsInt16() => 
+            ValueAsInt16(default);
 
         /// <summary>
         /// Gets the setting value as a short.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as short.</returns>
-        public short ValueAsInt16(short defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public short ValueAsInt16(short defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as an int.
         /// </summary>
         /// <returns>Value as int.</returns>
-        public int ValueAsInt32()
-        {
-            return ValueAsInt32(default(int));
-        }
+        public int ValueAsInt32() => 
+            ValueAsInt32(default);
 
         /// <summary>
         /// Gets the setting value as an int.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as int.</returns>
-        public int ValueAsInt32(int defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public int ValueAsInt32(int defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as a long.
         /// </summary>
         /// <returns>Value as long.</returns>
-        public long ValueAsInt64()
-        {
-            return ValueAsInt64(default(long));
-        }
+        public long ValueAsInt64() => 
+            ValueAsInt64(default);
 
         /// <summary>
         /// Gets the setting value as a long.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as long.</returns>
-        public long ValueAsInt64(long defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public long ValueAsInt64(long defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as an unsigned short.
         /// </summary>
         /// <returns>Value as unsigned short.</returns>
-        public ushort ValueAsUInt16()
-        {
-            return ValueAsUInt16(default(ushort));
-        }
+        public ushort ValueAsUInt16() => 
+            ValueAsUInt16(default);
 
         /// <summary>
         /// Gets the setting value as an unsigned short.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as unsigned short.</returns>
-        public ushort ValueAsUInt16(ushort defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public ushort ValueAsUInt16(ushort defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as an unsigned int.
         /// </summary>
         /// <returns>Value as unsigned int.</returns>
-        public uint ValueAsUInt32()
-        {
-            return ValueAsUInt32(default(uint));
-        }
+        public uint ValueAsUInt32() => 
+            ValueAsUInt32(default);
 
         /// <summary>
         /// Gets the setting value as an unsigned int.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as unsigned int.</returns>
-        public uint ValueAsUInt32(uint defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public uint ValueAsUInt32(uint defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as an unsigned long.
         /// </summary>
         /// <returns>Value as unsigned long.</returns>
-        public ulong ValueAsUInt64()
-        {
-            return ValueAsUInt64(default(ulong));
-        }
+        public ulong ValueAsUInt64() => 
+            ValueAsUInt64(default);
 
         /// <summary>
         /// Gets the setting value as an unsigned long.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as unsigned long.</returns>
-        public ulong ValueAsUInt64(ulong defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public ulong ValueAsUInt64(ulong defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as a float.
         /// </summary>
         /// <returns>Value as float.</returns>
-        public float ValueAsSingle()
-        {
-            return ValueAsSingle(default(float));
-        }
+        public float ValueAsSingle() => 
+            ValueAsSingle(default);
 
         /// <summary>
         /// Gets the setting value as a float.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as float.</returns>
-        public float ValueAsSingle(float defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public float ValueAsSingle(float defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as a double.
         /// </summary>
         /// <returns>Value as double.</returns>
-        public double ValueAsDouble()
-        {
-            return ValueAsDouble(default(double));
-        }
+        public double ValueAsDouble() => 
+            ValueAsDouble(default);
 
         /// <summary>
         /// Gets the setting value as a double.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as double.</returns>
-        public double ValueAsDouble(double defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public double ValueAsDouble(double defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as a decimal.
         /// </summary>
         /// <returns>Value as decimal.</returns>
-        public decimal ValueAsDecimal()
-        {
-            return ValueAsDecimal(default(decimal));
-        }
+        public decimal ValueAsDecimal() => 
+            ValueAsDecimal(default);
 
         /// <summary>
         /// Gets the setting value as a decimal.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as decimal.</returns>
-        public decimal ValueAsDecimal(decimal defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public decimal ValueAsDecimal(decimal defaultValue) => 
+            ValueAs(defaultValue);
 
         /// <summary>
         /// Gets the setting value as DateTime.
         /// </summary>
         /// <returns>Value as DateTime.</returns>
-        public DateTime ValueAsDateTime()
-        {
-            return ValueAsDateTime(default(DateTime));
-        }
-
+        public DateTime ValueAsDateTime() => 
+            ValueAsDateTime(default);
+        
         /// <summary>
         /// Gets the setting value as DateTime.
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as DateTime.</returns>
-        public DateTime ValueAsDateTime(DateTime defaultValue)
-        {
-            return ValueAs(defaultValue);
-        }
+        public DateTime ValueAsDateTime(DateTime defaultValue) => 
+            ValueAs(defaultValue);
 
         private string GetRawValue()
         {
@@ -764,17 +669,17 @@ namespace GSF.Configuration
 
         private string EncryptValue(string value)
         {
-            if (Encrypted && !string.IsNullOrEmpty(value))
+            if (!Encrypted || string.IsNullOrEmpty(value))
+                return value;
+
+            try
             {
-                try
-                {
-                    // Encrypts the element's value.
-                    value = value.Encrypt(m_cryptoKey, CipherStrength.Aes256);
-                }
-                catch (Exception ex)
-                {
-                    throw new ConfigurationErrorsException(string.Format("Failed to encrypt '{0}'", value), ex);
-                }
+                // Encrypts the element's value.
+                value = value.Encrypt(m_cryptoKey, CipherStrength.Aes256);
+            }
+            catch (Exception ex)
+            {
+                throw new ConfigurationErrorsException($"Failed to encrypt '{value}'", ex);
             }
 
             return value;
@@ -782,17 +687,17 @@ namespace GSF.Configuration
 
         private string DecryptValue(string value)
         {
-            if (Encrypted && !string.IsNullOrEmpty(value))
+            if (!Encrypted || string.IsNullOrEmpty(value))
+                return value;
+
+            try
             {
-                try
-                {
-                    // Decrypts the element's value.
-                    value = value.Decrypt(m_cryptoKey, CipherStrength.Aes256);
-                }
-                catch (Exception ex)
-                {
-                    throw new ConfigurationErrorsException(string.Format("Failed to decrypt '{0}'", value), ex);
-                }
+                // Decrypts the element's value.
+                value = value.Decrypt(m_cryptoKey, CipherStrength.Aes256);
+            }
+            catch (Exception ex)
+            {
+                throw new ConfigurationErrorsException($"Failed to decrypt '{value}'", ex);
             }
 
             return value;
@@ -800,14 +705,17 @@ namespace GSF.Configuration
 
         private string EvaluateValue(string value)
         {
-            ConfigurationFile config = m_category.Section.File;
-            CategorizedSettingsElement setting;
+            ConfigurationFile config = Category.Section.File;
 
-            foreach (Match match in Regex.Matches(value, EvalRegex, RegexOptions.IgnoreCase))
+            foreach (Match match in s_evalRegex.Matches(value))
             {
+                string containerValue = match.Groups["Container"].Value;
+                string targetValue = match.Groups["Target"].Value;
+
                 // Try replacing Eval() with the actual value.
-                setting = config.Settings[match.Groups["Container"].Value][match.Groups["Target"].Value];
-                if ((object)setting != null)
+                CategorizedSettingsElement setting = config.Settings[containerValue][targetValue];
+
+                if (setting is not null)
                 {
                     // Replacement is the value of another setting.
                     value = value.Replace(match.Value, setting.Value);
@@ -815,35 +723,64 @@ namespace GSF.Configuration
                 else
                 {
                     // Replacement could be the value of .NET type's static member.
-                    Type target = Type.GetType(match.Groups["Container"].Value);
-                    if ((object)target != null)
+                    Type target = Type.GetType(containerValue);
+
+                    if (target is null)
+                        continue;
+
+                    // Specified .NET type is found.
+                    MemberInfo[] members = target.GetMember(targetValue, BindingFlags.Public | BindingFlags.Static);
+
+                    if (members.Length > 0)
                     {
-                        // Specified .NET type is found.
-                        MemberInfo[] members = target.GetMember(match.Groups["Target"].Value, BindingFlags.Public | BindingFlags.Static);
-                        if (members.Length > 0)
+                        // Specified target member is found in the .NET type.
+                        value = members[0].MemberType switch
                         {
-                            // Specified target member is found in the .NET type.
-                            switch (members[0].MemberType)
-                            {
-                                case MemberTypes.Field:
-                                    // Member is a static field.
-                                    value = value.Replace(match.Value, ((FieldInfo)members[0]).GetValue(null).ToNonNullString());
-                                    break;
-                                case MemberTypes.Method:
-                                    // Member is a static method.
-                                    value = value.Replace(match.Value, ((MethodInfo)members[0]).Invoke(null, new object[0]).ToNonNullString());
-                                    break;
-                                case MemberTypes.Property:
-                                    // Member is a static property.
-                                    value = value.Replace(match.Value, ((PropertyInfo)members[0]).GetValue(null, new object[0]).ToNonNullString());
-                                    break;
-                            }
-                        }
+                            MemberTypes.Field =>
+                                // Member is a static field.
+                                value.Replace(match.Value, ((FieldInfo)members[0]).GetValue(null).ToNonNullString()),
+                            MemberTypes.Method =>
+                                // Member is a static method.
+                                value.Replace(match.Value, ((MethodInfo)members[0]).Invoke(null, Array.Empty<object>()).ToNonNullString()),
+                            MemberTypes.Property =>
+                                // Member is a static property.
+                                value.Replace(match.Value, ((PropertyInfo)members[0]).GetValue(null, Array.Empty<object>()).ToNonNullString()),
+                            _ => value
+                        };
                     }
                 }
             }
 
             return value;
+        }
+
+        private static string GetEnvValue(string value)
+        {
+            foreach (Match match in s_envRegex.Matches(value))
+            {
+                Group targetValue = match.Groups["Target"];
+
+                if (!targetValue.Success || !Enum.TryParse(targetValue.Value, true, out EnvironmentVariableTarget target))
+                    target = EnvironmentVariableTarget.Machine;
+
+                // Try replacing Env() with the actual value.
+                value = value.Replace(match.Value, Environment.GetEnvironmentVariable(match.Groups["Name"].Value, target));
+            }
+
+            return value;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        private static readonly Regex s_evalRegex;
+        private static readonly Regex s_envRegex;
+
+        static CategorizedSettingsElement()
+        {
+            s_evalRegex = new Regex(EvalRegex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            s_envRegex = new Regex(EnvRegex, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
 
         #endregion

@@ -192,27 +192,17 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets associated metadata values for the <see cref="IMeasurement"/> .
         /// </summary>
-        MeasurementMetadata Metadata
-        {
-            get;
-            set;
-        }
+        MeasurementMetadata Metadata { get; set; }
 
         /// <summary>
         /// Gets or sets the primary key of this <see cref="IMeasurement"/>.
         /// </summary>
-        MeasurementKey Key
-        {
-            get;
-        }
+        MeasurementKey Key { get; }
 
         /// <summary>
         /// Gets or sets the text based tag name of this <see cref="IMeasurement"/>.
         /// </summary>
-        string TagName
-        {
-            get;
-        }
+        string TagName { get; }
 
         /// <summary>
         /// Gets the adjusted numeric value of this <see cref="IMeasurement"/>, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
@@ -222,10 +212,7 @@ namespace GSF.TimeSeries
         /// <c>return <see cref="ITimeSeriesValue{T}.Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>
         /// </para>
         /// </remarks>
-        double AdjustedValue
-        {
-            get;
-        }
+        double AdjustedValue { get; }
 
         /// <summary>
         /// Defines an offset to add to the <see cref="IMeasurement"/> value.
@@ -233,10 +220,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// Implementers should make sure this value defaults to zero.
         /// </remarks>
-        double Adder
-        {
-            get;
-        }
+        double Adder { get; }
 
         /// <summary>
         /// Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value.
@@ -244,42 +228,26 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// Implementers should make sure this value defaults to one.
         /// </remarks>
-        double Multiplier
-        {
-            get;
-        }
+        double Multiplier { get; }
 
         /// <summary>
         /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="IMeasurement"/>.
         /// </summary>
-        MeasurementStateFlags StateFlags
-        {
-            get;
-            set;
-        }
+        MeasurementStateFlags StateFlags { get; set; }
 
         /// <summary>
         /// Gets the life-span of this <see cref="IMeasurement"/> since its creation.
         /// </summary>
-        ShortTime Lifespan
-        {
-            get;
-        }
+        ShortTime Lifespan { get; }
 
         /// <summary>
         /// Gets timestamp, in ticks, of when this <see cref="IMeasurement"/> was created.
         /// </summary>
-        Ticks CreatedTimestamp
-        {
-            get;
-        }
+        Ticks CreatedTimestamp { get; }
 
         /// <summary>
         /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
-        MeasurementValueFilterFunction MeasurementValueFilter
-        {   
-            get;
-        }
+        MeasurementValueFilterFunction MeasurementValueFilter { get; }
     }
 }

@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using System.Xml;
 using GSF.IO;
 
+// ReSharper disable LocalizableElement
 namespace GSF.TimeSeries
 {
     /// <summary>
@@ -50,13 +51,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets associated application configuration file name.
         /// </summary>
-        protected virtual string ConfigurationName
-        {
-            get
-            {
-                return null;
-            }
-        }
+        protected virtual string ConfigurationName => null;
 
         #endregion
 
@@ -79,7 +74,8 @@ namespace GSF.TimeSeries
         /// Installs the class.
         /// </summary>
         /// <param name="stateSaver">Current state information.</param>
-        [SuppressMessage("Microsoft.Security", "CA2122"), SuppressMessage("Microsoft.Globalization", "CA1300")]
+        [SuppressMessage("Microsoft.Security", "CA2122")]
+        [SuppressMessage("Microsoft.Globalization", "CA1300")]
         public override void Install(IDictionary stateSaver)
         {
             base.Install(stateSaver);
@@ -88,31 +84,31 @@ namespace GSF.TimeSeries
             {
                 string targetDir = FilePath.AddPathSuffix(Context.Parameters["DP_TargetDir"]).Replace("\\\\", "\\");
 
-                if (!string.IsNullOrEmpty(ConfigurationName))
-                {
-                    // Open the configuration file as an XML document.
-                    string configFilePath = targetDir + ConfigurationName;
+                if (string.IsNullOrEmpty(ConfigurationName))
+                    return;
 
-                    if (File.Exists(configFilePath))
-                    {
-                        XmlDocument configurationFile = new XmlDocument();
-                        configurationFile.Load(configFilePath);
-                        XmlNode systemSettingsNode = configurationFile.SelectSingleNode("configuration/categorizedSettings/systemSettings");
+                // Open the configuration file as an XML document.
+                string configFilePath = targetDir + ConfigurationName;
 
-                        // Allow user to add or update custom configuration settings if desired
-                        if (systemSettingsNode != null)
-                            OnSystemSettingsLoaded(configurationFile, systemSettingsNode);
+                if (!File.Exists(configFilePath))
+                    return;
 
-                        // Save any updates to configuration file
-                        configurationFile.Save(configFilePath);
-                    }
-                }
+                XmlDocument configurationFile = new();
+                configurationFile.Load(configFilePath);
+                XmlNode systemSettingsNode = configurationFile.SelectSingleNode("configuration/categorizedSettings/systemSettings");
+
+                // Allow user to add or update custom configuration settings if desired
+                if (systemSettingsNode is not null)
+                    OnSystemSettingsLoaded(configurationFile, systemSettingsNode);
+
+                // Save any updates to configuration file
+                configurationFile.Save(configFilePath);
 
             }
             catch (Exception ex)
             {
                 // Not failing install if we can't perform these steps...
-                MessageBox.Show("There was an exception detected during the install process: " + ex.Message);
+                MessageBox.Show($"There was an exception detected during the install process: {ex.Message}");
             }
         }
 
@@ -145,7 +141,7 @@ namespace GSF.TimeSeries
         //// Lookup installed bit size in configuration file, if defined
         //XmlNode installedBitSizeNode = systemSettingsNode.SelectSingleNode("add[@name = 'InstalledBitSize']");
 
-        //if (installedBitSizeNode != null)
+        //if (installedBitSizeNode is not null)
         //{
         //    installedBitSize = installedBitSizeNode.Attributes["value"].Value;
 
@@ -185,7 +181,7 @@ namespace GSF.TimeSeries
         //    }
         //    finally
         //    {
-        //        if (configurationSetup != null)
+        //        if (configurationSetup is not null)
         //            configurationSetup.Close();
         //    }
         //}

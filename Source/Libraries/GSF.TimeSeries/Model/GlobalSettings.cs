@@ -40,8 +40,8 @@ namespace GSF.TimeSeries.Model
         {
             try
             {
-                CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-                s_companyAcronym = systemSettings["CompanyAcronym"]?.Value;
+                CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings[nameof(systemSettings)];
+                s_companyAcronym = systemSettings[nameof(CompanyAcronym)]?.Value;
             }
             catch (Exception ex)
             {

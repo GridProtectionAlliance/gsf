@@ -388,6 +388,8 @@ namespace DeviceStatAdapters
         /// </summary>
         public override void Initialize()
         {
+            const int DeviceGroupAccessID = -99999;
+            
             base.Initialize();
 
             ConnectionStringParser parser = new ConnectionStringParser();
@@ -403,7 +405,7 @@ namespace DeviceStatAdapters
                 {
                     // Load any newly defined devices into the statistics device table
                     TableOperations<Device> deviceTable = new TableOperations<Device>(statConnection);
-                    DataRow[] devices = gsfConnection.RetrieveData("SELECT * FROM Device WHERE IsConcentrator = 0").Select();
+                    DataRow[] devices = gsfConnection.RetrieveData($"SELECT * FROM Device WHERE IsConcentrator = 0 AND AccessID <> {DeviceGroupAccessID}").Select();
 
                     foreach (DataRow device in devices)
                     {

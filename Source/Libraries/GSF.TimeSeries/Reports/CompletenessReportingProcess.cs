@@ -41,17 +41,6 @@ namespace GSF.TimeSeries.Reports
     /// </summary>
     public class CompletenessReportingProcess : ReportingProcessBase
     {
-        #region [ Members ]
-
-        // Fields
-        private double m_level4Threshold;
-        private double m_level3Threshold;
-        private string m_level4Alias;
-        private string m_level3Alias;
-        private bool m_generateCsvReport;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -60,11 +49,11 @@ namespace GSF.TimeSeries.Reports
         public CompletenessReportingProcess()
             : base("Completeness")
         {
-            m_level4Threshold = 99.0D;
-            m_level3Threshold = 90.0D;
-            m_level4Alias = "Good";
-            m_level3Alias = "Fair";
-            m_generateCsvReport = false;
+            Level4Threshold = 99.0D;
+            Level3Threshold = 90.0D;
+            Level4Alias = "Good";
+            Level3Alias = "Fair";
+            GenerateCsvReport = false;
         }
 
         #endregion
@@ -74,77 +63,27 @@ namespace GSF.TimeSeries.Reports
         /// <summary>
         /// Gets or sets the minimum percentage of measurements received from devices in level 4.
         /// </summary>
-        public double Level4Threshold
-        {
-            get
-            {
-                return m_level4Threshold;
-            }
-            set
-            {
-                m_level4Threshold = value;
-            }
-        }
+        public double Level4Threshold { get; set; }
 
         /// <summary>
         /// Gets or sets the minimum percentage of measurements received from devices in level 3.
         /// </summary>
-        public double Level3Threshold
-        {
-            get
-            {
-                return m_level3Threshold;
-            }
-            set
-            {
-                m_level3Threshold = value;
-            }
-        }
+        public double Level3Threshold { get; set; }
 
         /// <summary>
         /// Gets or sets the alias for the level 4 category.
         /// </summary>
-        public string Level4Alias
-        {
-            get
-            {
-                return m_level4Alias;
-            }
-            set
-            {
-                m_level4Alias = value;
-            }
-        }
+        public string Level4Alias { get; set; }
 
         /// <summary>
         /// Gets or sets the alias for the level 3 category.
         /// </summary>
-        public string Level3Alias
-        {
-            get
-            {
-                return m_level3Alias;
-            }
-            set
-            {
-                m_level3Alias = value;
-            }
-        }
+        public string Level3Alias { get; set; }
 
         /// <summary>
         /// Gets or sets the option to generate a csv report along with pdf report.
         /// </summary>
-        public bool GenerateCsvReport
-        {
-            get
-            {
-                return m_generateCsvReport;
-            }
-            set
-            {
-                m_generateCsvReport = value;
-            }
-        }
+        public bool GenerateCsvReport { get; set; }
 
         /// <summary>
         /// Gets the current status details about reporting process.
@@ -153,16 +92,12 @@ namespace GSF.TimeSeries.Reports
         {
             get
             {
-                StringBuilder status = new StringBuilder(base.Status);
+                StringBuilder status = new(base.Status);
 
-                status.AppendFormat("         Level 4 threshold: {0:N2}%", Level4Threshold);
-                status.AppendLine();
-                status.AppendFormat("         Level 3 threshold: {0:N2}%", Level3Threshold);
-                status.AppendLine();
-                status.AppendFormat("             Level 4 alias: {0}", Level4Alias ?? "undefined");
-                status.AppendLine();
-                status.AppendFormat("             Level 3 alias: {0}", Level3Alias ?? "undefined");
-                status.AppendLine();
+                status.AppendLine($"         Level 4 threshold: {Level4Threshold:N2}%");
+                status.AppendLine($"         Level 3 threshold: {Level3Threshold:N2}%");
+                status.AppendLine($"             Level 4 alias: {Level4Alias ?? "undefined"}");
+                status.AppendLine($"             Level 3 alias: {Level3Alias ?? "undefined"}");
 
                 return status.ToString();
             }
@@ -183,17 +118,17 @@ namespace GSF.TimeSeries.Reports
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
 
-            settings.Add("Level4Threshold", m_level4Threshold, "Minimum percentage of measurements received from devices in level 4.");
-            settings.Add("Level3Threshold", m_level3Threshold, "Minimum percentage of measurements received from devices in level 3.");
-            settings.Add("Level4Alias", m_level4Alias, "Alias for the level 4 category.");
-            settings.Add("Level3Alias", m_level3Alias, "Alias for the level 3 category.");
-            settings.Add("GenerateCsvReport", m_generateCsvReport, "Generate a csv version of the pdf report");
+            settings.Add(nameof(Level4Threshold), Level4Threshold, "Minimum percentage of measurements received from devices in level 4.");
+            settings.Add(nameof(Level3Threshold), Level3Threshold, "Minimum percentage of measurements received from devices in level 3.");
+            settings.Add(nameof(Level4Alias), Level4Alias, "Alias for the level 4 category.");
+            settings.Add(nameof(Level3Alias), Level3Alias, "Alias for the level 3 category.");
+            settings.Add(nameof(GenerateCsvReport), GenerateCsvReport, "Generate a csv version of the pdf report");
 
-            Level4Threshold = settings["Level4Threshold"].ValueAs(m_level4Threshold);
-            Level3Threshold = settings["Level3Threshold"].ValueAs(m_level3Threshold);
-            Level4Alias = settings["Level4Alias"].ValueAs(m_level4Alias);
-            Level3Alias = settings["Level3Alias"].ValueAs(m_level3Alias);
-            GenerateCsvReport = settings["GenerateCsvReport"].ValueAs(m_generateCsvReport);
+            Level4Threshold = settings[nameof(Level4Threshold)].ValueAs(Level4Threshold);
+            Level3Threshold = settings[nameof(Level3Threshold)].ValueAs(Level3Threshold);
+            Level4Alias = settings[nameof(Level4Alias)].ValueAs(Level4Alias);
+            Level3Alias = settings[nameof(Level3Alias)].ValueAs(Level3Alias);
+            GenerateCsvReport = settings[nameof(GenerateCsvReport)].ValueAs(GenerateCsvReport);
         }
 
         /// <summary>
@@ -207,11 +142,11 @@ namespace GSF.TimeSeries.Reports
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
 
-            settings["Level4Threshold", true].Update(m_level4Threshold);
-            settings["Level3Threshold", true].Update(m_level3Threshold);
-            settings["Level4Alias", true].Update(m_level4Alias);
-            settings["Level3Alias", true].Update(m_level3Alias);
-            settings["GenerateCsvReport"].Update(m_generateCsvReport);
+            settings[nameof(Level4Threshold), true].Update(Level4Threshold);
+            settings[nameof(Level3Threshold), true].Update(Level3Threshold);
+            settings[nameof(Level4Alias), true].Update(Level4Alias);
+            settings[nameof(Level3Alias), true].Update(Level3Alias);
+            settings[nameof(GenerateCsvReport)].Update(GenerateCsvReport);
             config.Save();
         }
 
@@ -246,31 +181,29 @@ namespace GSF.TimeSeries.Reports
         {
             base.SetArguments(args);
 
-            double value;
             string arg = args["level4Threshold"];
 
-            if ((object)arg != null && double.TryParse(arg.Trim(), out value))
+            if (arg is not null && double.TryParse(arg.Trim(), out double value))
                 Level4Threshold = value;
 
             arg = args["level3Threshold"];
 
-            if ((object)arg != null && double.TryParse(arg.Trim(), out value))
+            if (arg is not null && double.TryParse(arg.Trim(), out value))
                 Level3Threshold = value;
 
             arg = args["level4Alias"];
 
-            if ((object)arg != null)
+            if (arg is not null)
                 Level4Alias = arg.Trim();
 
             arg = args["level3Alias"];
 
-            if ((object)arg != null)
+            if (arg is not null)
                 Level3Alias = arg.Trim();
 
-            bool value2;
-            arg = args["GenerateCsvReport"];
+            arg = args[nameof(GenerateCsvReport)];
 
-            if ((object)arg != null && bool.TryParse(arg.Trim(), out value2))
+            if (arg is not null && bool.TryParse(arg.Trim(), out bool value2))
                 GenerateCsvReport = value2;
         }
 
@@ -279,12 +212,10 @@ namespace GSF.TimeSeries.Reports
         /// </summary>
         public override bool IsReportFileName(string fileName)
         {
-            string regex = string.Format(@"{0} (?<Date>[^.]+)\.csv", Title);
+            string regex = $@"{Title} (?<Date>[^.]+)\.csv";
             Match match = Regex.Match(fileName, regex);
-            DateTime reportDate;
 
-
-            return base.IsReportFileName(fileName) || match.Success && DateTime.TryParse(match.Groups["Date"].Value, out reportDate);
+            return base.IsReportFileName(fileName) || match.Success && DateTime.TryParse(match.Groups["Date"].Value, out DateTime reportDate);
         }
 
         #endregion

@@ -27,6 +27,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using GSF.Data;
+using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -36,6 +37,13 @@ namespace GSF.TimeSeries.Adapters
     public class FilterAdapterCollection : AdapterCollectionBase<IFilterAdapter>, IFilterAdapter
     {
         #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Provides notification of change in collection count.
+        /// </summary>
+        public event EventHandler CollectionCountChanged;
 
         // Fields
         private List<IFilterAdapter> m_sortedFilterAdapters;
@@ -75,7 +83,7 @@ namespace GSF.TimeSeries.Adapters
         {
             List<IFilterAdapter> sortedFilterAdapters = m_sortedFilterAdapters;
 
-            if ((object)sortedFilterAdapters == null)
+            if (sortedFilterAdapters is null)
             {
                 lock (this)
                 {
@@ -83,7 +91,7 @@ namespace GSF.TimeSeries.Adapters
                     // the first time we checked for null so we should check again
                     sortedFilterAdapters = m_sortedFilterAdapters;
 
-                    if ((object)sortedFilterAdapters == null)
+                    if (sortedFilterAdapters is null)
                     {
                         sortedFilterAdapters = this
                             .Cast<IFilterAdapter>()
@@ -95,11 +103,8 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            foreach (IFilterAdapter adapter in sortedFilterAdapters)
-            {
-                if (adapter.Enabled)
-                    adapter.HandleNewMeasurements(measurements);
-            }
+            foreach (IFilterAdapter adapter in sortedFilterAdapters.Where(adapter => adapter.Enabled))
+                adapter.HandleNewMeasurements(measurements);
         }
 
         /// <summary>
@@ -131,6 +136,7 @@ namespace GSF.TimeSeries.Adapters
         {
             base.InsertItem(index, item);
             m_sortedFilterAdapters = null;
+            OnCollectionCountChanged();
         }
 
         /// <summary>
@@ -152,8 +158,35 @@ namespace GSF.TimeSeries.Adapters
         {
             base.RemoveItem(index);
             m_sortedFilterAdapters = null;
+            OnCollectionCountChanged();
         }
 
+        /// <summary>
+        /// Removes all elements from the <see cref="Collection{T}"/>.
+        /// </summary>
+        protected override void ClearItems()
+        {
+            base.ClearItems();
+            m_sortedFilterAdapters = null;
+            OnCollectionCountChanged();
+        }
+
+        /// <summary>
+        /// Raises <see cref="CollectionCountChanged"/> event.
+        /// </summary>
+        protected virtual void OnCollectionCountChanged()
+        {
+            try
+            {
+                CollectionCountChanged?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(CollectionCountChanged)} event: {ex.Message}", ex), "ConsumerEventException");
+            }
+        }
+        
         #endregion
     }
 }

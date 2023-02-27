@@ -162,7 +162,7 @@ namespace GSF.TimeSeries.Statistics
                                     min = time;
                             }
 
-                            BigInteger average = weightedSum / totalWeights;
+                            BigInteger average = totalWeights > BigInteger.Zero ? weightedSum / totalWeights : BigInteger.Zero;
                             AverageTime = average > BigInteger.Zero && average < s_bigMaxLong ? (long)average : 0L;
                             MinimumTime = min;
                             MaximumTime = max;

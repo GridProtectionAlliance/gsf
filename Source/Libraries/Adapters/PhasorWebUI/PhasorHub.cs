@@ -24,6 +24,7 @@
 using GSF;
 using GSF.ComponentModel;
 using GSF.Data.Model;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.IEEEC37_118;
@@ -34,12 +35,15 @@ using GSF.Web.Security;
 using PhasorProtocolAdapters;
 using PhasorWebUI.Adapters;
 using PhasorWebUI.Model;
+using PhasorWebUI.Properties;
 using PowerCalculations.PowerMultiCalculator;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 #if MONO
 using System.Xml.Linq;
@@ -148,32 +152,134 @@ namespace PhasorWebUI
         // Static Fields
         private static Action<string, UpdateType> s_logStatusMessageFunction;
         private static Action<Exception> s_logExceptionFunction;
-        private static int s_ieeeC37_118ProtocolID;
-        private static int s_virtualProtocolID;
+        private static int? s_ieeeC37_118ProtocolID;
+        private static int? s_virtualProtocolID;
+        private static int? s_analogSignalTypeID;
+        private static int? s_digitalSignalTypeID;
         private static dynamic s_appModelGlobal;
         private static string s_companyAcronym;
-        private static double s_defaultCalculationLagTime;
-        private static double s_defaultCalculationLeadTime;
-        private static int s_defaultCalculationFramesPerSecond;
+        private static double? s_defaultCalculationLagTime;
+        private static double? s_defaultCalculationLeadTime;
+        private static int? s_defaultCalculationFramesPerSecond;
 
         // Quasi-Static Properties
 
-        private int IeeeC37_118ProtocolID => s_ieeeC37_118ProtocolID != default(int) ? s_ieeeC37_118ProtocolID : s_ieeeC37_118ProtocolID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='IeeeC37_118V1'");
+        private int IeeeC37_118ProtocolID => s_ieeeC37_118ProtocolID ??= DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='IeeeC37_118V1'");
 
-        private int VirtualProtocolID => s_virtualProtocolID != default(int) ? s_virtualProtocolID : s_virtualProtocolID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
+        private int VirtualProtocolID => s_virtualProtocolID ??= DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
+
+        private int AnalogSignalTypeID => s_analogSignalTypeID ??= DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM SignalType WHERE Acronym='ALOG'");
+
+        private int DigitalSignalTypeID => s_digitalSignalTypeID ??= DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM SignalType WHERE Acronym='DIGI'");
 
         private dynamic AppModelGlobal => s_appModelGlobal != default(dynamic) ? s_appModelGlobal : s_appModelGlobal = (ValueExpressionParser.DefaultTypeRegistry["Global"] as ExpressionEvaluator.ValueType)?.Value;
 
-        private string CompanyAcronym => s_companyAcronym ?? (s_companyAcronym = AppModelGlobal.CompanyAcronym);
+        private string CompanyAcronym => s_companyAcronym ??= AppModelGlobal.CompanyAcronym;
 
-        private double DefaultCalculationLagTime => s_defaultCalculationLagTime != default(double) ? s_defaultCalculationLagTime : s_defaultCalculationLagTime = AppModelGlobal.DefaultCalculationLagTime;
+        private double DefaultCalculationLagTime => s_defaultCalculationLagTime ??= (double)AppModelGlobal.DefaultCalculationLagTime;
 
-        private double DefaultCalculationLeadTime => s_defaultCalculationLeadTime != default(double) ? s_defaultCalculationLeadTime : s_defaultCalculationLeadTime = AppModelGlobal.DefaultCalculationLeadTime;
+        private double DefaultCalculationLeadTime => s_defaultCalculationLeadTime ??= (double)AppModelGlobal.DefaultCalculationLeadTime;
 
-        private int DefaultCalculationFramesPerSecond => s_defaultCalculationFramesPerSecond != default(int) ? s_defaultCalculationFramesPerSecond : s_defaultCalculationFramesPerSecond = AppModelGlobal.DefaultCalculationFramesPerSecond;
+        private int DefaultCalculationFramesPerSecond => s_defaultCalculationFramesPerSecond ??= (int)AppModelGlobal.DefaultCalculationFramesPerSecond;
 
         private const string SystemFrequencyDeviceName = "{0}SYSTEM!FREQ";
 
+        static PhasorHub()
+        {
+            RestoreEmbeddedResources();
+        }
+
+        private static void RestoreEmbeddedResources()
+        {
+            const string RootNamespace = $"{nameof(PhasorWebUI)}.";
+            const string TagTemplateExt = ".TagTemplate";
+
+            try
+            {
+                HashSet<string> textTypes = new(new[] { TagTemplateExt }, StringComparer.OrdinalIgnoreCase);
+                Assembly executingAssembly = typeof(PhasorHub).Assembly;
+                string targetPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(""));
+
+                // This simple file restoration assumes embedded resources to restore are in root namespace
+                foreach (string name in executingAssembly.GetManifestResourceNames())
+                {
+                    using Stream resourceStream = executingAssembly.GetManifestResourceStream(name);
+
+                    if (resourceStream is null)
+                        continue;
+
+                    string filePath = name;
+
+                    // Remove namespace prefix from resource file name
+                    if (filePath.StartsWith(RootNamespace))
+                        filePath = filePath.Substring(RootNamespace.Length);
+
+                    string targetFileName = Path.Combine(targetPath, filePath);
+                    string targetFileExt = Path.GetExtension(targetFileName);
+                    bool restoreFile = true;
+                    bool isTextType = textTypes.Contains(targetFileExt);
+
+                    if (File.Exists(targetFileName) && !isTextType)
+                    {
+                        string resourceMD5 = GetMD5HashFromStream(resourceStream);
+                        resourceStream.Seek(0, SeekOrigin.Begin);
+                        restoreFile = !resourceMD5.Equals(GetMD5HashFromFile(targetFileName));
+                    }
+
+                    if (!restoreFile)
+                        continue;
+
+                    byte[] buffer = new byte[resourceStream.Length];
+
+                    // ReSharper disable once MustUseReturnValue
+                    resourceStream.Read(buffer, 0, (int)resourceStream.Length);
+
+                    if (isTextType)
+                    {
+                        using StreamWriter writer = File.CreateText(targetFileName);
+                        
+                        if (targetFileExt.Equals(TagTemplateExt, StringComparison.OrdinalIgnoreCase))
+                        {
+                            StringBuilder tagTemplate = new();
+
+                            tagTemplate.AppendLine($"# {Path.GetFileNameWithoutExtension(filePath)} Template");
+                            tagTemplate.AppendLine("#");
+                            tagTemplate.AppendLine(Resources.TagTemplateHeader);
+                            tagTemplate.Append(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+
+                            writer.Write(tagTemplate.ToString());
+                        }
+                        else
+                        {
+                            writer.Write(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+                        }
+                    }
+                    else
+                    {
+                        using FileStream stream = File.Create(targetFileName);
+                        stream.Write(buffer);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogPublisher log = Logger.CreatePublisher(typeof(PhasorHub), MessageClass.Component);
+                log.Publish(MessageLevel.Error, "Error Message", "Failed to restore embedded resources", null, ex);
+            }
+        }
+
+        private static string GetMD5HashFromFile(string fileName)
+        {
+            using FileStream stream = File.OpenRead(fileName);
+            return GetMD5HashFromStream(stream);
+        }
+
+        private static string GetMD5HashFromStream(Stream stream)
+        {
+            using MD5 md5 = MD5.Create();
+            return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
+        }
+        
         #endregion
 
         // Client-side script functionality
@@ -376,7 +482,7 @@ namespace PhasorWebUI
         [RecordOperation(typeof(Phasor), RecordOperation.CreateNewRecord)]
         public Phasor NewPhasor()
         {
-            return DataContext.Table<Phasor>().NewRecord();;
+            return DataContext.Table<Phasor>().NewRecord();
         }
 
         public Phasor NewPhasorWithTimestamps(string updatedOn, string createdOn)
@@ -548,6 +654,73 @@ namespace PhasorWebUI
 
         #endregion
 
+        #region [ CustomFilterAdapter Table Operations ]
+
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.QueryRecordCount)]
+        public int QueryCustomFilterAdapterCount(string filterText)
+        {
+            return DataContext.Table<CustomFilterAdapter>().QueryRecordCount(filterText);
+        }
+
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.QueryRecords)]
+        public IEnumerable<CustomFilterAdapter> QueryCustomFilterAdapters(string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            return DataContext.Table<CustomFilterAdapter>().QueryRecords(sortField, ascending, page, pageSize, filterText);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.DeleteRecord)]
+        public void DeleteCustomFilterAdapter(int id)
+        {
+            DataContext.Table<CustomFilterAdapter>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.CreateNewRecord)]
+        public CustomFilterAdapter NewCustomFilterAdapter()
+        {
+            return DataContext.Table<CustomFilterAdapter>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.AddNewRecord)]
+        public void AddNewCustomFilterAdapter(CustomFilterAdapter customFilterAdapter)
+        {
+            DataContext.Table<CustomFilterAdapter>().AddNewRecord(customFilterAdapter);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(CustomFilterAdapter), RecordOperation.UpdateRecord)]
+        public void UpdateCustomFilterAdapter(CustomFilterAdapter customFilterAdapter)
+        {
+            DataContext.Table<CustomFilterAdapter>().UpdateRecord(customFilterAdapter);
+        }
+
+        public void AddNewOrUpdateCustomFilterAdapter(CustomFilterAdapter customFilterAdapter)
+        {
+            TableOperations<CustomFilterAdapter> customFilterAdapterTable = DataContext.Table<CustomFilterAdapter>();
+
+            if (customFilterAdapterTable.QueryRecordCountWhere("AdapterName = {0}", customFilterAdapter.AdapterName) == 0)
+            {
+                AddNewCustomFilterAdapter(customFilterAdapter);
+            }
+            else
+            {
+                CustomFilterAdapter existingFilterAdapter = customFilterAdapterTable.QueryRecordWhere("AdapterName = {0}", customFilterAdapter.AdapterName);
+
+                existingFilterAdapter.AssemblyName = customFilterAdapter.AssemblyName;
+                existingFilterAdapter.TypeName = customFilterAdapter.TypeName;
+                existingFilterAdapter.ConnectionString = customFilterAdapter.ConnectionString;
+                existingFilterAdapter.LoadOrder = customFilterAdapter.LoadOrder;
+                existingFilterAdapter.Enabled = customFilterAdapter.Enabled;
+                existingFilterAdapter.UpdatedBy = customFilterAdapter.UpdatedBy;
+                existingFilterAdapter.UpdatedOn = customFilterAdapter.UpdatedOn;
+
+                UpdateCustomFilterAdapter(existingFilterAdapter);
+            }
+        }
+
+        #endregion
+
         #region [ Synchrophasor Device Wizard Operations ]
 
         public IEnumerable<SignalType> LoadSignalTypes(string source)
@@ -569,7 +742,7 @@ namespace PhasorWebUI
         {
             return CommonPhasorServices.CreatePointTag(CompanyAcronym, deviceAcronym, null, signalTypeAcronym, phasorLabel, signalIndex, string.IsNullOrWhiteSpace(phase) ? '_' : phase.Trim()[0], baseKV);
         }
-
+        
         public ConfigurationFrame ExtractConfigurationFrame(int deviceID)
         {
             Device device = QueryDeviceByID(deviceID);
@@ -577,7 +750,7 @@ namespace PhasorWebUI
             if (device.ID == 0)
                 return new ConfigurationFrame();
 
-            ConfigurationFrame derivedFrame = new ConfigurationFrame
+            ConfigurationFrame derivedFrame = new()
             {
                 IDCode = (ushort)device.AccessID,
                 StationName = device.Name,
@@ -596,7 +769,7 @@ namespace PhasorWebUI
                 foreach (Device childDevice in devices)
                 {
                     // Create new configuration cell
-                    ConfigurationCell derivedCell = new ConfigurationCell
+                    ConfigurationCell derivedCell = new()
                     {
                         ID = childDevice.ID,
                         ParentID = device.ID,
@@ -605,25 +778,15 @@ namespace PhasorWebUI
                         Latitude = device.Latitude,
                         IDCode = (ushort)childDevice.AccessID,
                         StationName = childDevice.Name,
-                        IDLabel = childDevice.Acronym
+                        IDLabel = childDevice.Acronym,
+                        FrequencyDefinition = new FrequencyDefinition { Label = "Frequency" }
                     };
 
-                    derivedCell.FrequencyDefinition = new FrequencyDefinition { Label = "Frequency" };
-
                     // Extract phasor definitions
-                    foreach (Phasor phasor in QueryPhasorsForDevice(childDevice.ID))
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition
-                        { 
-                            ID = phasor.ID, 
-                            Label = phasor.Label, 
-                            PhasorType = phasor.Type == 'V' ? "Voltage" : "Current", 
-                            Phase = phasor.Phase.ToString(), 
-                            DestinationPhasorID = phasor.DestinationPhasorID, 
-                            NominalVoltage = phasor.BaseKV, 
-                            SourceIndex = phasor.SourceIndex,
-                            CreatedOn = phasor.CreatedOn,
-                            UpdatedOn = phasor.UpdatedOn
-                        });
+                    derivedCell.PhasorDefinitions.AddRange(QueryPhasorsForDevice(childDevice.ID).Select(GetPhasorDefinition));
+
+                    // Extract analog and digital definitions
+                    AddAnalogsAndDigitals(childDevice.ID, derivedCell);
 
                     // Add cell to frame
                     derivedFrame.Cells.Add(derivedCell);
@@ -638,7 +801,7 @@ namespace PhasorWebUI
                     // This is a directly connected device
                     derivedFrame.IsConcentrator = false;
 
-                    ConfigurationCell derivedCell = new ConfigurationCell
+                    ConfigurationCell derivedCell = new()
                     {
                         ID = device.ID,
                         UniqueID = device.UniqueID,
@@ -647,25 +810,15 @@ namespace PhasorWebUI
                         ParentID = null,
                         IDCode = derivedFrame.IDCode,
                         StationName = device.Name,
-                        IDLabel = device.Acronym
+                        IDLabel = device.Acronym,
+                        FrequencyDefinition = new FrequencyDefinition { Label = "Frequency" }
                     };
 
-                    derivedCell.FrequencyDefinition = new FrequencyDefinition { Label = "Frequency" };
-
                     // Extract phasor definitions
-                    foreach (Phasor phasor in QueryPhasorsForDevice(device.ID))
-                        derivedCell.PhasorDefinitions.Add(new PhasorDefinition
-                        { 
-                            ID = phasor.ID, 
-                            Label = phasor.Label, 
-                            PhasorType = phasor.Type == 'V' ? "Voltage" : "Current", 
-                            Phase = phasor.Phase.ToString(), 
-                            DestinationPhasorID = phasor.DestinationPhasorID, 
-                            NominalVoltage = phasor.BaseKV, 
-                            SourceIndex = phasor.SourceIndex,
-                            CreatedOn = phasor.CreatedOn,
-                            UpdatedOn = phasor.UpdatedOn
-                        });
+                    derivedCell.PhasorDefinitions.AddRange(QueryPhasorsForDevice(device.ID).Select(GetPhasorDefinition));
+
+                    // Extract analog and digital definitions
+                    AddAnalogsAndDigitals(device.ID, derivedCell);
 
                     // Add cell to frame
                     derivedFrame.Cells.Add(derivedCell);
@@ -676,7 +829,7 @@ namespace PhasorWebUI
                 derivedFrame.IsConcentrator = true;
 
                 // Create new configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell
+                ConfigurationCell derivedCell = new()
                 {
                     ID = device.ID,
                     UniqueID = device.UniqueID,
@@ -685,31 +838,47 @@ namespace PhasorWebUI
                     ParentID = null,
                     IDCode = (ushort)device.AccessID,
                     StationName = device.Name,
-                    IDLabel = device.Acronym
+                    IDLabel = device.Acronym,
+                    FrequencyDefinition = new FrequencyDefinition { Label = "Frequency" }
                 };
 
-                derivedCell.FrequencyDefinition = new FrequencyDefinition { Label = "Frequency" };
-
                 // Extract phasor definitions
-                foreach (Phasor phasor in QueryPhasorsForDevice(device.ID))
-                    derivedCell.PhasorDefinitions.Add(new PhasorDefinition 
-                    { 
-                        ID = phasor.ID, 
-                        Label = phasor.Label, 
-                        PhasorType = phasor.Type == 'V' ? "Voltage" : "Current", 
-                        Phase = phasor.Phase.ToString(), 
-                        DestinationPhasorID = phasor.DestinationPhasorID, 
-                        NominalVoltage = phasor.BaseKV, 
-                        SourceIndex = phasor.SourceIndex,
-                        CreatedOn = phasor.CreatedOn,
-                        UpdatedOn = phasor.UpdatedOn
-                    });
+                derivedCell.PhasorDefinitions.AddRange(QueryPhasorsForDevice(device.ID).Select(GetPhasorDefinition));
+
+                // Extract analog and digital definitions
+                AddAnalogsAndDigitals(device.ID, derivedCell);
 
                 // Add cell to frame
                 derivedFrame.Cells.Add(derivedCell);
             }
 
             return derivedFrame;
+        }
+
+        private static PhasorDefinition GetPhasorDefinition(Phasor phasor) => new()
+        { 
+            ID = phasor.ID, 
+            Label = phasor.Label, 
+            PhasorType = phasor.Type == 'V' ? "Voltage" : "Current", 
+            Phase = phasor.Phase.ToString(), 
+            DestinationPhasorID = phasor.DestinationPhasorID, 
+            NominalVoltage = phasor.BaseKV, 
+            SourceIndex = phasor.SourceIndex,
+            CreatedOn = phasor.CreatedOn,
+            UpdatedOn = phasor.UpdatedOn
+        };
+
+        private void AddAnalogsAndDigitals(int deviceID, ConfigurationCell derivedCell)
+        {
+            Measurement[] measurements = QueryDeviceMeasurements(deviceID).ToArray();
+
+            // Extract analog definitions
+            IEnumerable<Measurement> analogs = measurements.Where(measurement => measurement.SignalTypeID == AnalogSignalTypeID).OrderBy(measurement => new SignalReference(measurement.SignalReference).Index);
+            derivedCell.AnalogDefinitions.AddRange(analogs.Select(analog => new AnalogDefinition { Label = analog.AlternateTag, AnalogType = nameof(AnalogType.SinglePointOnWave) }));
+
+            // Extract digital definitions
+            IEnumerable<Measurement> digitals = measurements.Where(measurement => measurement.SignalTypeID == DigitalSignalTypeID).OrderBy(measurement => new SignalReference(measurement.SignalReference).Index);
+            derivedCell.DigitalDefinitions.AddRange(digitals.Select(digital => new DigitalDefinition { Label = digital.AlternateTag }));
         }
 
         public ConfigurationFrame LoadConfigurationFrame(string sourceData)
@@ -728,7 +897,7 @@ namespace PhasorWebUI
                 protocolID = GetProtocolID(settings["phasorProtocol"]);
             }
 
-            ConfigurationFrame derivedFrame = new ConfigurationFrame
+            ConfigurationFrame derivedFrame = new()
             {
                 IDCode = sourceFrame.IDCode,
                 FrameRate = sourceFrame.FrameRate,
@@ -739,7 +908,7 @@ namespace PhasorWebUI
             foreach (IConfigurationCell sourceCell in sourceFrame.Cells)
             {
                 // Create new derived configuration cell
-                ConfigurationCell derivedCell = new ConfigurationCell
+                ConfigurationCell derivedCell = new()
                 {
                     ID = --deviceID, // Provide a negative index so any database lookup will return null
                     ParentID = null,
@@ -844,7 +1013,7 @@ namespace PhasorWebUI
                 // Try deserializing input as connection settings
                 ConnectionSettings connectionSettings;
 
-#if MONO
+            #if MONO
                 connectionSettings = new ConnectionSettings();
                 XDocument doc = XDocument.Parse(sourceData);
 
@@ -874,17 +1043,17 @@ namespace PhasorWebUI
                             break;
                     }
                 }
-#else
-                SoapFormatter formatter = new SoapFormatter
+            #else
+                SoapFormatter formatter = new()
                 {
                     AssemblyFormat = FormatterAssemblyStyle.Simple,
                     TypeFormat = FormatterTypeStyle.TypesWhenNeeded,
                     Binder = Serialization.LegacyBinder
                 };
 
-                using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
+                using (MemoryStream source = new(Encoding.UTF8.GetBytes(sourceData)))
                     connectionSettings = formatter.Deserialize(source) as ConnectionSettings;
-#endif
+            #endif
 
                 if (connectionSettings != null)
                 {
@@ -929,16 +1098,16 @@ namespace PhasorWebUI
                     return RequestConfigurationFrame(connectionString);
                 }
 
-#if !MONO
+            #if !MONO
                 // Try deserializing input as a configuration frame
                 IConfigurationFrame configurationFrame;
 
-                using (MemoryStream source = new MemoryStream(Encoding.UTF8.GetBytes(sourceData)))
+                using (MemoryStream source = new(Encoding.UTF8.GetBytes(sourceData)))
                     configurationFrame = formatter.Deserialize(source) as IConfigurationFrame;
 
                 if (configurationFrame != null)
                     return configurationFrame;
-#endif
+            #endif
 
                 // Finally, assume input is simply a connection string and attempt to return retrieved configuration frame
                 return RequestConfigurationFrame(sourceData);
@@ -951,17 +1120,17 @@ namespace PhasorWebUI
 
         private IConfigurationFrame RequestConfigurationFrame(string connectionString)
         {
-            using (CommonPhasorServices phasorServices = new CommonPhasorServices())
-            {
-                phasorServices.StatusMessage += (sender, e) => LogStatusMessage(e.Argument.Replace("**", ""));
-                phasorServices.ProcessException += (sender, e) => LogException(e.Argument);
-                return phasorServices.RequestDeviceConfiguration(connectionString);
-            }
+            using CommonPhasorServices phasorServices = new();
+
+            phasorServices.StatusMessage += (_, e) => LogStatusMessage(e.Argument.Replace("**", ""));
+            phasorServices.ProcessException += (_, e) => LogException(e.Argument);
+            
+            return phasorServices.RequestDeviceConfiguration(connectionString);
         }
 
         public IEnumerable<string> GetTemplateTypes()
         {
-            List<string> templateTypes = new List<string>(FilePath.GetFileList(FilePath.GetAbsolutePath("*.TagTemplate")).Select(FilePath.GetFileNameWithoutExtension));
+            List<string> templateTypes = new(FilePath.GetFileList(FilePath.GetAbsolutePath("*.TagTemplate")).Select(FilePath.GetFileNameWithoutExtension));
             templateTypes.Insert(0, "None: Save Mapping Only - No Calculations");
             return templateTypes;
         }
@@ -972,7 +1141,7 @@ namespace PhasorWebUI
             if (!string.IsNullOrEmpty(Path.GetDirectoryName(templateType)))
                 throw new SecurityException("Path access error");
 
-            List<TagTemplate> tagTemplates = new List<TagTemplate>();
+            List<TagTemplate> tagTemplates = new();
 
             foreach (string line in File.ReadLines(FilePath.GetAbsolutePath($"{templateType}.TagTemplate")))
             {

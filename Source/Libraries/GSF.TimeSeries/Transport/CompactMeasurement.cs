@@ -183,7 +183,6 @@ namespace GSF.TimeSeries.Transport
         private int m_timeIndex;
         private readonly bool m_useMillisecondResolution;
         private bool m_usingBaseTimeOffset;
-        private readonly bool m_includeTime;
 
         #endregion
 
@@ -200,13 +199,12 @@ namespace GSF.TimeSeries.Transport
         public CompactMeasurement(SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0, bool useMillisecondResolution = false)
         {
             m_signalIndexCache = signalIndexCache;
-            m_includeTime = includeTime;
+            IncludeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if ((object)baseTimeOffsets == null)
-                m_baseTimeOffsets = s_emptyBaseTimeOffsets;
-            else
-                m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
+            m_baseTimeOffsets = baseTimeOffsets is null ? 
+                s_emptyBaseTimeOffsets 
+                : new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
 
             m_timeIndex = timeIndex;
             m_useMillisecondResolution = useMillisecondResolution;
@@ -229,13 +227,12 @@ namespace GSF.TimeSeries.Transport
             StateFlags = measurement.StateFlags;
 
             m_signalIndexCache = signalIndexCache;
-            m_includeTime = includeTime;
+            IncludeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if ((object)baseTimeOffsets == null)
-                m_baseTimeOffsets = s_emptyBaseTimeOffsets;
-            else
-                m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
+            m_baseTimeOffsets = baseTimeOffsets is null ? 
+                s_emptyBaseTimeOffsets : 
+                new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
 
             m_timeIndex = timeIndex;
             m_useMillisecondResolution = useMillisecondResolution;
@@ -248,13 +245,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets flag that determines if time is serialized into measurement binary image.
         /// </summary>
-        public bool IncludeTime
-        {
-            get
-            {
-                return m_includeTime;
-            }
-        }
+        public bool IncludeTime { get; }
 
         /// <summary>
         /// Gets the length of the <see cref="CompactMeasurement"/>.
@@ -265,39 +256,39 @@ namespace GSF.TimeSeries.Transport
             {
                 int length = FixedLength;
 
-                if (m_includeTime)
+                if (!IncludeTime)
+                    return length;
+
+                long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
+
+                if (baseTimeOffset > 0)
                 {
-                    long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
+                    // See if timestamp will fit within space allowed for active base offset. We cache result so that post call
+                    // to binary length, result will speed other subsequent parsing operations by not having to reevaluate.
+                    long difference = (long)Timestamp - m_baseTimeOffsets[m_timeIndex];
 
-                    if (baseTimeOffset > 0)
+                    if (difference > 0)
+                        m_usingBaseTimeOffset = m_useMillisecondResolution ? difference / Ticks.PerMillisecond < ushort.MaxValue : difference < uint.MaxValue;
+                    else
+                        m_usingBaseTimeOffset = false;
+
+                    if (m_usingBaseTimeOffset)
                     {
-                        // See if timestamp will fit within space allowed for active base offset. We cache result so that post call
-                        // to binary length, result will speed other subsequent parsing operations by not having to reevaluate.
-                        long difference = (long)Timestamp - m_baseTimeOffsets[m_timeIndex];
-
-                        if (difference > 0)
-                            m_usingBaseTimeOffset = m_useMillisecondResolution ? difference / Ticks.PerMillisecond < ushort.MaxValue : difference < uint.MaxValue;
+                        if (m_useMillisecondResolution)
+                            length += 2;    // Use two bytes for millisecond resolution timestamp with valid offset
                         else
-                            m_usingBaseTimeOffset = false;
-
-                        if (m_usingBaseTimeOffset)
-                        {
-                            if (m_useMillisecondResolution)
-                                length += 2;    // Use two bytes for millisecond resolution timestamp with valid offset
-                            else
-                                length += 4;    // Use four bytes for tick resolution timestamp with valid offset
-                        }
-                        else
-                        {
-                            // Use eight bytes for full fidelity time
-                            length += 8;
-                        }
+                            length += 4;    // Use four bytes for tick resolution timestamp with valid offset
                     }
                     else
                     {
                         // Use eight bytes for full fidelity time
                         length += 8;
                     }
+                }
+                else
+                {
+                    // Use eight bytes for full fidelity time
+                    length += 8;
                 }
 
                 return length;
@@ -307,24 +298,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets offset compressed millisecond-resolution 2-byte timestamp.
         /// </summary>
-        public ushort TimestampC2
-        {
-            get
-            {
-                return (ushort)(Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds();
-            }
-        }
+        public ushort TimestampC2 => (ushort)(Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds();
 
         /// <summary>
         /// Gets offset compressed tick-resolution 4-byte timestamp.
         /// </summary>
-        public uint TimestampC4
-        {
-            get
-            {
-                return (uint)((long)Timestamp - m_baseTimeOffsets[m_timeIndex]);
-            }
-        }
+        public uint TimestampC4 => (uint)((long)Timestamp - m_baseTimeOffsets[m_timeIndex]);
 
         /// <summary>
         /// Gets or sets byte level compact state flags with encoded time index and base time offset bits.
@@ -359,21 +338,15 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public ushort RuntimeID
         {
-            get
-            {
-                return m_signalIndexCache.GetSignalIndex(Key);
-            }
+            get => m_signalIndexCache.GetSignalIndex(Key);
             set
             {
                 // Attempt to restore signal identification
-                MeasurementKey key;
 
-                if (m_signalIndexCache.Reference.TryGetValue(value, out key))
-                {
+                if (m_signalIndexCache.Reference.TryGetValue(value, out MeasurementKey key))
                     Metadata = key.Metadata;
-                }
                 else
-                    throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + value);
+                    throw new InvalidOperationException($"Failed to find associated signal identification for runtime ID {value}");
             }
         }
 
@@ -414,35 +387,35 @@ namespace GSF.TimeSeries.Transport
             Value = BigEndian.ToSingle(buffer, index);
             index += 4;
 
-            if (m_includeTime)
+            if (!IncludeTime)
+                return index - startIndex;
+
+            if (m_usingBaseTimeOffset)
             {
-                if (m_usingBaseTimeOffset)
+                long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
+
+                if (m_useMillisecondResolution)
                 {
-                    long baseTimeOffset = m_baseTimeOffsets[m_timeIndex];
+                    // Decode 2-byte millisecond offset timestamp
+                    if (baseTimeOffset > 0)
+                        Timestamp = baseTimeOffset + BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
 
-                    if (m_useMillisecondResolution)
-                    {
-                        // Decode 2-byte millisecond offset timestamp
-                        if (baseTimeOffset > 0)
-                            Timestamp = baseTimeOffset + BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
-
-                        index += 2;
-                    }
-                    else
-                    {
-                        // Decode 4-byte tick offset timestamp
-                        if (baseTimeOffset > 0)
-                            Timestamp = baseTimeOffset + BigEndian.ToUInt32(buffer, index);
-
-                        index += 4;
-                    }
+                    index += 2;
                 }
                 else
                 {
-                    // Decode 8-byte full fidelity timestamp
-                    Timestamp = BigEndian.ToInt64(buffer, index);
-                    index += 8;
+                    // Decode 4-byte tick offset timestamp
+                    if (baseTimeOffset > 0)
+                        Timestamp = baseTimeOffset + BigEndian.ToUInt32(buffer, index);
+
+                    index += 4;
                 }
+            }
+            else
+            {
+                // Decode 8-byte full fidelity timestamp
+                Timestamp = BigEndian.ToInt64(buffer, index);
+                index += 8;
             }
 
             return index - startIndex;
@@ -489,26 +462,19 @@ namespace GSF.TimeSeries.Transport
             // Encode adjusted value (accounts for adder and multiplier)
             startIndex += BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
 
-            if (m_includeTime)
+            if (!IncludeTime)
+                return length;
+
+            if (m_usingBaseTimeOffset)
             {
-                if (m_usingBaseTimeOffset)
-                {
-                    if (m_useMillisecondResolution)
-                    {
-                        // Encode 2-byte millisecond offset timestamp
-                        BigEndian.CopyBytes(TimestampC2, buffer, startIndex);
-                    }
-                    else
-                    {
-                        // Encode 4-byte ticks offset timestamp
-                        BigEndian.CopyBytes(TimestampC4, buffer, startIndex);
-                    }
-                }
+                if (m_useMillisecondResolution)
+                    BigEndian.CopyBytes(TimestampC2, buffer, startIndex); // Encode 2-byte millisecond offset timestamp
                 else
-                {
-                    // Encode 8-byte full fidelity timestamp
-                    BigEndian.CopyBytes((long)Timestamp, buffer, startIndex);
-                }
+                    BigEndian.CopyBytes(TimestampC4, buffer, startIndex); // Encode 4-byte ticks offset timestamp
+            }
+            else
+            {
+                BigEndian.CopyBytes((long)Timestamp, buffer, startIndex); // Encode 8-byte full fidelity timestamp
             }
 
             return length;
@@ -519,7 +485,7 @@ namespace GSF.TimeSeries.Transport
         #region [ Static ]
 
         // Static Fields
-        private static readonly long[] s_emptyBaseTimeOffsets = new long[] { 0, 0 };
+        private static readonly long[] s_emptyBaseTimeOffsets = { 0, 0 };
 
         #endregion
     }
@@ -581,12 +547,9 @@ namespace GSF.TimeSeries.Transport
 
             if (includeTime)
             {
-                // Encode timestamps
+                // Encode timestamps - since large majority of 8-byte tick values will be repeated, they should compress well
                 for (int i = 0; i < measurementCount; i++)
-                {
-                    // Since large majority of 8-byte tick values will be repeated, they should compress well
                     index += NativeEndianOrder.Default.CopyBytes((long)measurements[i].Timestamp, buffer, index);
-                }
             }
 
             // Attempt to compress buffer
@@ -637,12 +600,9 @@ namespace GSF.TimeSeries.Transport
             byte[] buffer = new byte[bufferLength];
             Buffer.BlockCopy(source, index, buffer, 0, dataLength);
 
-            // Check that OS endian-order matches endian-order of compressed data
+            // Check that OS endian-order matches endian-order of compressed data - can be modified to decompress a payload that is in a non-native Endian order
             if (!(BitConverter.IsLittleEndian && (flags & DataPacketFlags.LittleEndianCompression) > 0))
-            {
-                // can be modified to decompress a payload that is in a non-native Endian order
                 throw new NotImplementedException("Cannot currently decompress payload that is not in native endian-order.");
-            }
 
             // Attempt to decompress buffer
             int uncompressedSize = PatternDecompressor.DecompressBuffer(buffer, 0, dataLength, bufferLength);

@@ -43,19 +43,12 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// Represents a concurrent dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
         /// </remarks>
-        ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
-        {
-            get;
-        }
+        ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements { get; }
 
         /// <summary>
         /// Gets or sets published state of this <see cref="IFrame"/> (pre-processing).
         /// </summary>
-        bool Published
-        {
-            get;
-            set;
-        }
+        bool Published { get; set; }
 
         /// <summary>
         /// Gets or sets total number of measurements that have been sorted into this <see cref="IFrame"/>.
@@ -63,11 +56,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// If this property has not been assigned a value, implementers should return measurement count.
         /// </remarks>
-        int SortedMeasurements
-        {
-            get;
-            set;
-        }
+        int SortedMeasurements { get; set; }
 
         /// <summary>
         /// Gets or sets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.
@@ -75,27 +64,17 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        Ticks Timestamp
-        {
-            get;
-            set;
-        }
+        Ticks Timestamp { get; set; }
 
         /// <summary>
         /// Gets the life-span of this <see cref="IFrame"/> since its creation.
         /// </summary>
-        ShortTime Lifespan
-        {
-            get;
-        }
+        ShortTime Lifespan { get; }
 
         /// <summary>
         /// Gets timestamp, in ticks, of when this <see cref="IFrame"/> was created.
         /// </summary>
-        Ticks CreatedTimestamp
-        {
-            get;
-        }
+        Ticks CreatedTimestamp { get; }
 
         /// <summary>
         /// Gets or sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="IFrame"/>.
@@ -104,10 +83,6 @@ namespace GSF.TimeSeries
         /// <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="IFrame"/>.</para>
         /// <para>Implementers need only track the value.</para>
         /// </remarks>
-        IMeasurement LastSortedMeasurement
-        {
-            get;
-            set;
-        }
+        IMeasurement LastSortedMeasurement { get; set; }
     }
 }

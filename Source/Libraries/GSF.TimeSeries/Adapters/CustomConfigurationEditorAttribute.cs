@@ -36,10 +36,9 @@ namespace GSF.TimeSeries.Adapters
         #region [ Members ]
 
         // Fields
-        private string m_assemblyName;
-        private string m_typeName;
+        private readonly string m_assemblyName;
+        private readonly string m_typeName;
         private Type m_editorType;
-        private string m_connectionString;
 
         #endregion
 
@@ -55,7 +54,7 @@ namespace GSF.TimeSeries.Adapters
         {
             m_assemblyName = assemblyName;
             m_typeName = typeName;
-            m_connectionString = connectionString;
+            ConnectionString = connectionString;
         }
 
         /// <summary>
@@ -66,7 +65,7 @@ namespace GSF.TimeSeries.Adapters
         public CustomConfigurationEditorAttribute(Type editorType, string connectionString = null)
         {
             m_editorType = editorType;
-            m_connectionString = connectionString;
+            ConnectionString = connectionString;
         }
 
         #endregion
@@ -80,13 +79,11 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                Assembly editorAssembly;
+                if (m_editorType is not null)
+                    return m_editorType;
 
-                if ((object)m_editorType == null)
-                {
-                    editorAssembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_assemblyName));
-                    m_editorType = editorAssembly.GetType(m_typeName);
-                }
+                Assembly editorAssembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_assemblyName));
+                m_editorType = editorAssembly.GetType(m_typeName);
 
                 return m_editorType;
             }
@@ -95,13 +92,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the connection string used to configure the editor.
         /// </summary>
-        public string ConnectionString
-        {
-            get
-            {
-                return m_connectionString;
-            }
-        }
+        public string ConnectionString { get; }
 
         #endregion
     }

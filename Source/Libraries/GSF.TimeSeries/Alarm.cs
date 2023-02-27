@@ -230,10 +230,8 @@ namespace GSF.TimeSeries
         /// Creates a new instance of the <see cref="Alarm"/> class.
         /// </summary>
         /// <param name="operation">The operation to be performed when testing values from the incoming signal.</param>
-        public Alarm(AlarmOperation operation)
-        {
+        public Alarm(AlarmOperation operation) => 
             Operation = operation;
-        }
 
         #endregion
 
@@ -244,14 +242,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public int ID
         {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
+            get => m_id;
+            set => m_id = value;
         }
 
         /// <summary>
@@ -259,14 +251,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public string TagName
         {
-            get
-            {
-                return m_tagName;
-            }
-            set
-            {
-                m_tagName = value;
-            }
+            get => m_tagName;
+            set => m_tagName = value;
         }
 
         /// <summary>
@@ -275,14 +261,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public Guid SignalID
         {
-            get
-            {
-                return m_signalID;
-            }
-            set
-            {
-                m_signalID = value;
-            }
+            get => m_signalID;
+            set => m_signalID = value;
         }
 
         /// <summary>
@@ -291,14 +271,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public Guid? AssociatedMeasurementID
         {
-            get
-            {
-                return m_associatedMeasurementID;
-            }
-            set
-            {
-                m_associatedMeasurementID = value;
-            }
+            get => m_associatedMeasurementID;
+            set => m_associatedMeasurementID = value;
         }
 
         /// <summary>
@@ -306,14 +280,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public string Description
         {
-            get
-            {
-                return m_description;
-            }
-            set
-            {
-                m_description = value;
-            }
+            get => m_description;
+            set => m_description = value;
         }
 
         /// <summary>
@@ -322,10 +290,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public AlarmOperation Operation
         {
-            get
-            {
-                return m_operation;
-            }
+            get => m_operation;
             set
             {
                 m_operation = value;
@@ -339,14 +304,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public AlarmSeverity Severity
         {
-            get
-            {
-                return m_severity;
-            }
-            set
-            {
-                m_severity = value;
-            }
+            get => m_severity;
+            set => m_severity = value;
         }
 
         /// <summary>
@@ -357,14 +316,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public double? SetPoint
         {
-            get
-            {
-                return m_setPoint;
-            }
-            set
-            {
-                m_setPoint = value;
-            }
+            get => m_setPoint;
+            set => m_setPoint = value;
         }
 
         /// <summary>
@@ -386,14 +339,8 @@ namespace GSF.TimeSeries
         /// </remarks>
         public double? Tolerance
         {
-            get
-            {
-                return m_tolerance;
-            }
-            set
-            {
-                m_tolerance = value;
-            }
+            get => m_tolerance;
+            set => m_tolerance = value;
         }
 
         /// <summary>
@@ -403,14 +350,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public double? Delay
         {
-            get
-            {
-                return m_delay;
-            }
-            set
-            {
-                m_delay = value;
-            }
+            get => m_delay;
+            set => m_delay = value;
         }
 
         /// <summary>
@@ -435,14 +376,8 @@ namespace GSF.TimeSeries
         /// </remarks>
         public double? Hysteresis
         {
-            get
-            {
-                return m_hysteresis;
-            }
-            set
-            {
-                m_hysteresis = value;
-            }
+            get => m_hysteresis;
+            set => m_hysteresis = value;
         }
 
         /// <summary>
@@ -450,14 +385,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public AlarmState State
         {
-            get
-            {
-                return m_state;
-            }
-            set
-            {
-                m_state = value;
-            }
+            get => m_state;
+            set => m_state = value;
         }
 
         /// <summary>
@@ -466,14 +395,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public Ticks TimeRaised
         {
-            get
-            {
-                return m_timeRaised;
-            }
-            set
-            {
-                m_timeRaised = value;
-            }
+            get => m_timeRaised;
+            set => m_timeRaised = value;
         }
 
         /// <summary>
@@ -482,15 +405,12 @@ namespace GSF.TimeSeries
         /// </summary>
         public IMeasurement Cause
         {
-            get
-            {
-                return m_cause;
-            }
+            get => m_cause;
             private set
             {
                 m_cause = value;
 
-                if ((object)m_cause != null)
+                if (m_cause is not null)
                     m_timeRaised = m_cause.Timestamp;
             }
         }
@@ -507,20 +427,18 @@ namespace GSF.TimeSeries
         /// <returns>true if the alarm's state changed; false otherwise</returns>
         public bool Test(IMeasurement measurement)
         {
-            if (m_state == AlarmState.Raised && m_clearTest(measurement))
+            switch (m_state)
             {
-                m_state = AlarmState.Cleared;
-                return true;
+                case AlarmState.Raised when m_clearTest(measurement):
+                    m_state = AlarmState.Cleared;
+                    return true;
+                case AlarmState.Cleared when m_raiseTest(measurement):
+                    m_state = AlarmState.Raised;
+                    Cause = measurement;
+                    return true;
+                default:
+                    return false;
             }
-
-            if (m_state == AlarmState.Cleared && m_raiseTest(measurement))
-            {
-                m_state = AlarmState.Raised;
-                Cause = measurement;
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -530,10 +448,8 @@ namespace GSF.TimeSeries
         /// A new alarm that is a copy of this instance.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        public Alarm Clone()
-        {
-            return (Alarm)MemberwiseClone();
-        }
+        public Alarm Clone() => 
+            (Alarm)MemberwiseClone();
 
         /// <summary>
         /// Creates a new object that is a copy of the current instance.
@@ -542,79 +458,43 @@ namespace GSF.TimeSeries
         /// A new object that is a copy of this instance.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object ICloneable.Clone()
-        {
-            return MemberwiseClone();
-        }
-
+        object ICloneable.Clone() => 
+            MemberwiseClone();
+        
         // Returns the function used to determine when the alarm is raised.
-        private Func<IMeasurement, bool> GetRaiseTest()
-        {
-            switch (m_operation)
+        private Func<IMeasurement, bool> GetRaiseTest() =>
+            m_operation switch
             {
-                case AlarmOperation.Equal:
-                    return RaiseIfEqual;
-
-                case AlarmOperation.NotEqual:
-                    return RaiseIfNotEqual;
-
-                case AlarmOperation.GreaterOrEqual:
-                    return RaiseIfGreaterOrEqual;
-
-                case AlarmOperation.LessOrEqual:
-                    return RaiseIfLessOrEqual;
-
-                case AlarmOperation.GreaterThan:
-                    return RaiseIfGreaterThan;
-
-                case AlarmOperation.LessThan:
-                    return RaiseIfLessThan;
-
-                case AlarmOperation.Flatline:
-                    return RaiseIfFlatline;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+                AlarmOperation.Equal => RaiseIfEqual,
+                AlarmOperation.NotEqual => RaiseIfNotEqual,
+                AlarmOperation.GreaterOrEqual => RaiseIfGreaterOrEqual,
+                AlarmOperation.LessOrEqual => RaiseIfLessOrEqual,
+                AlarmOperation.GreaterThan => RaiseIfGreaterThan,
+                AlarmOperation.LessThan => RaiseIfLessThan,
+                AlarmOperation.Flatline => RaiseIfFlatline,
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
         // Returns the function used to determine when the alarm is cleared.
-        private Func<IMeasurement, bool> GetClearTest()
-        {
-            switch (m_operation)
+        private Func<IMeasurement, bool> GetClearTest() =>
+            m_operation switch
             {
-                case AlarmOperation.Equal:
-                    return ClearIfNotEqual;
-
-                case AlarmOperation.NotEqual:
-                    return ClearIfNotNotEqual;
-
-                case AlarmOperation.GreaterOrEqual:
-                    return ClearIfNotGreaterOrEqual;
-
-                case AlarmOperation.LessOrEqual:
-                    return ClearIfNotLessOrEqual;
-
-                case AlarmOperation.GreaterThan:
-                    return ClearIfNotGreaterThan;
-
-                case AlarmOperation.LessThan:
-                    return ClearIfNotLessThan;
-
-                case AlarmOperation.Flatline:
-                    return ClearIfNotFlatline;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+                AlarmOperation.Equal => ClearIfNotEqual,
+                AlarmOperation.NotEqual => ClearIfNotNotEqual,
+                AlarmOperation.GreaterOrEqual => ClearIfNotGreaterOrEqual,
+                AlarmOperation.LessOrEqual => ClearIfNotLessOrEqual,
+                AlarmOperation.GreaterThan => ClearIfNotGreaterThan,
+                AlarmOperation.LessThan => ClearIfNotLessThan,
+                AlarmOperation.Flatline => ClearIfNotFlatline,
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
         // Indicates whether the given measurement is
         // equal to the set point within the tolerance.
         private bool RaiseIfEqual(IMeasurement measurement)
         {
-            bool isEqual = (measurement.Value <= m_setPoint + m_tolerance) &&
-                           (measurement.Value >= m_setPoint - m_tolerance);
+            bool isEqual = measurement.Value <= m_setPoint + m_tolerance &&
+                           measurement.Value >= m_setPoint - m_tolerance;
 
             return CheckDelay(measurement, isEqual);
         }
@@ -623,101 +503,79 @@ namespace GSF.TimeSeries
         // the range defined by the set point and tolerance.
         private bool RaiseIfNotEqual(IMeasurement measurement)
         {
-            bool isNotEqual = (measurement.Value < m_setPoint - m_tolerance) ||
-                              (measurement.Value > m_setPoint + m_tolerance);
+            bool isNotEqual = measurement.Value < m_setPoint - m_tolerance ||
+                              measurement.Value > m_setPoint + m_tolerance;
 
             return CheckDelay(measurement, isNotEqual);
         }
 
         // Indicates whether the given measurement
         // is greater than or equal to the set point.
-        private bool RaiseIfGreaterOrEqual(IMeasurement measurement)
-        {
-            return CheckDelay(measurement, measurement.Value >= m_setPoint);
-        }
+        private bool RaiseIfGreaterOrEqual(IMeasurement measurement) => 
+            CheckDelay(measurement, measurement.Value >= m_setPoint);
 
         // Indicates whether the given measurement
         // is less than or equal to the set point.
-        private bool RaiseIfLessOrEqual(IMeasurement measurement)
-        {
-            return CheckDelay(measurement, measurement.Value <= m_setPoint);
-        }
+        private bool RaiseIfLessOrEqual(IMeasurement measurement) => 
+            CheckDelay(measurement, measurement.Value <= m_setPoint);
 
         // Indicates whether the given measurement
         // is greater than the set point.
-        private bool RaiseIfGreaterThan(IMeasurement measurement)
-        {
-            return CheckDelay(measurement, measurement.Value > m_setPoint);
-        }
+        private bool RaiseIfGreaterThan(IMeasurement measurement) => 
+            CheckDelay(measurement, measurement.Value > m_setPoint);
 
         // Indicates whether the given measurement
         // is less than the set point.
-        private bool RaiseIfLessThan(IMeasurement measurement)
-        {
-            return CheckDelay(measurement, measurement.Value < m_setPoint);
-        }
+        private bool RaiseIfLessThan(IMeasurement measurement) => 
+            CheckDelay(measurement, measurement.Value < m_setPoint);
 
         // Indicates whether the given measurement has maintained the same
         // value for at least a number of seconds defined by the delay.
         private bool RaiseIfFlatline(IMeasurement measurement)
         {
-            long dist, diff;
-
             if (measurement.Value != m_lastValue)
             {
                 m_lastChanged = measurement.Timestamp;
                 m_lastValue = measurement.Value;
             }
 
-            dist = Ticks.FromSeconds(Delay.GetValueOrDefault());
-            diff = measurement.Timestamp - m_lastChanged;
+            long dist = Ticks.FromSeconds(Delay.GetValueOrDefault());
+            long diff = measurement.Timestamp - m_lastChanged;
 
             return diff >= dist;
         }
 
         // Indicates whether the given measurement is not
         // equal to the set point within the tolerance.
-        private bool ClearIfNotEqual(IMeasurement measurement)
-        {
-            return (measurement.Value < m_setPoint - m_tolerance) ||
-                   (measurement.Value > m_setPoint + m_tolerance);
-        }
+        private bool ClearIfNotEqual(IMeasurement measurement) =>
+            measurement.Value < m_setPoint - m_tolerance ||
+            measurement.Value > m_setPoint + m_tolerance;
 
         // Indicates whether the given measurement is not outside
         // the range defined by the set point and tolerance.
-        private bool ClearIfNotNotEqual(IMeasurement measurement)
-        {
-            return (measurement.Value <= m_setPoint + m_tolerance) &&
-                   (measurement.Value >= m_setPoint - m_tolerance);
-        }
+        private bool ClearIfNotNotEqual(IMeasurement measurement) =>
+            measurement.Value <= m_setPoint + m_tolerance &&
+            measurement.Value >= m_setPoint - m_tolerance;
 
         // Indicates whether the given measurement is not greater
         // than or equal to the set point, offset by the hysteresis.
-        private bool ClearIfNotGreaterOrEqual(IMeasurement measurement)
-        {
-            return measurement.Value < m_setPoint - m_hysteresis;
-        }
+        private bool ClearIfNotGreaterOrEqual(IMeasurement measurement) => 
+            measurement.Value < m_setPoint - m_hysteresis;
 
         // Indicates whether the given measurement is not less
         // than or equal to the set point, offset by the hysteresis.
-        private bool ClearIfNotLessOrEqual(IMeasurement measurement)
-        {
-            return measurement.Value > m_setPoint + m_hysteresis;
-        }
+        private bool ClearIfNotLessOrEqual(IMeasurement measurement) => 
+            measurement.Value > m_setPoint + m_hysteresis;
 
         // Indicates whether the given measurement is not greater
         // than the set point, offset by the hysteresis.
-        private bool ClearIfNotGreaterThan(IMeasurement measurement)
-        {
-            return measurement.Value <= m_setPoint - m_hysteresis;
-        }
+        private bool ClearIfNotGreaterThan(IMeasurement measurement) => 
+            measurement.Value <= m_setPoint - m_hysteresis;
 
         // Indicates whether the given measurement is not less
         // than the set point, offset by the hysteresis.
-        private bool ClearIfNotLessThan(IMeasurement measurement)
-        {
-            return measurement.Value >= m_setPoint + m_hysteresis;
-        }
+        private bool ClearIfNotLessThan(IMeasurement measurement) => 
+            measurement.Value >= m_setPoint + m_hysteresis;
 
         // Indicates whether the given measurement's value has changed.
         private bool ClearIfNotFlatline(IMeasurement measurement)
@@ -737,24 +595,22 @@ namespace GSF.TimeSeries
         // measurement is eligible to raise the alarm based on the delay.
         private bool CheckDelay(IMeasurement measurement, bool raiseCondition)
         {
-            Ticks dist;
-
-            if (!raiseCondition)
-            {
-                // Keep track of the last time
-                // the signal failed the raise test
-                m_lastNegative = measurement.Timestamp;
-            }
-            else
+            if (raiseCondition)
             {
                 // Get the amount of time since the last
                 // time the signal failed the raise test
-                dist = measurement.Timestamp - m_lastNegative;
+                Ticks dist = measurement.Timestamp - m_lastNegative;
 
                 // If the amount of time is larger than
                 // the delay threshold, raise the alarm
                 if (dist >= Ticks.FromSeconds(m_delay.GetValueOrDefault()))
                     return true;
+            }
+            else
+            {
+                // Keep track of the last time
+                // the signal failed the raise test
+                m_lastNegative = measurement.Timestamp;
             }
 
             return false;

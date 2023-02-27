@@ -46,21 +46,20 @@ namespace GSF.TimeSeries.Statistics
         /// <returns>Difference from last cached statistic value.</returns>
         public double GetDifference()
         {
-            if (CurrentState > 0.0D)
-            {
-                double value = CurrentState - PreviousState;
+            if (CurrentState <= 0.0D)
+                return 0.0D;
 
-                // If value is negative, statistics may have been reset by user
-                if (value < 0.0D)
-                    value = CurrentState;
+            double value = CurrentState - PreviousState;
 
-                // Track last value
-                PreviousState = CurrentState;
+            // If value is negative, statistics may have been reset by user
+            if (value < 0.0D)
+                value = CurrentState;
 
-                return value;
-            }
+            // Track last value
+            PreviousState = CurrentState;
 
-            return 0.0D;
+            return value;
+
         }
     }
 }

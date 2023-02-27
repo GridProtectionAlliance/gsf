@@ -154,9 +154,9 @@ namespace GrafanaAdapters
                 {
                     target = valueGroup.Target,
                     rootTarget = valueGroup.RootTarget,
-                    meta = new()
+                    meta = new MetaData
                     {
-                        custom = new()
+                        custom = new HistorianMetaData
                         {
                             Latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
                             Longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
@@ -174,7 +174,7 @@ namespace GrafanaAdapters
                 }
 
                 // Process series data in parallel
-                Parallel.ForEach(result, new() { CancellationToken = cancellationToken }, series =>
+                Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
                     // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
                     DataSourceValueGroup valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
@@ -279,81 +279,82 @@ namespace GrafanaAdapters
             }
 
             // Query any remaining targets
-            if (targetSet.Count > 0)
+            if (targetSet.Count == 0)
+                yield break;
+
+            // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
+            string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
+
+            Dictionary<ulong, string> targetMap = new();
+
+            // Expand target set to include point tags for all parsed inputs
+            foreach (string target in allTargets)
             {
-                // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
-                string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
-
-                Dictionary<ulong, string> targetMap = new();
-
-                // Expand target set to include point tags for all parsed inputs
-                foreach (string target in allTargets)
+                targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
                 {
-                    targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
-                    {
-                        MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
+                    MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
 
-                        if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
-                            return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
+                    if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
+                        return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
 
-                        return results.Select(key => key.TagFromKey(Metadata)).ToArray();
-                    }));
-                }
+                    return results.Select(key => key.TagFromKey(Metadata)).ToArray();
+                }));
+            }
 
-                // Target set now contains both original expressions and newly parsed individual point tags - to create final point list we
-                // are only interested in the point tags, provided either by direct user entry or derived by parsing filter expressions
-                foreach (string target in targetSet)
+            // Target set now contains both original expressions and newly parsed individual point tags - to create final point list we
+            // are only interested in the point tags, provided either by direct user entry or derived by parsing filter expressions
+            foreach (string target in targetSet)
+            {
+                // Reduce all targets down to a dictionary of point ID's mapped to point tags
+                MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(Metadata));
+
+                if (key == MeasurementKey.Undefined)
                 {
-                    // Reduce all targets down to a dictionary of point ID's mapped to point tags
-                    MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(Metadata));
+                    Tuple<MeasurementKey, string> result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(Metadata));
+
+                    key = result.Item1;
+                    string pointTag = result.Item2;
 
                     if (key == MeasurementKey.Undefined)
                     {
-                        Tuple<MeasurementKey, string> result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(Metadata));
+                        result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"key@{target}", () =>
+                        {
+                            MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
+
+                            return new Tuple<MeasurementKey, string>(parsedKey, parsedKey.TagFromKey(Metadata));
+                        });
 
                         key = result.Item1;
-                        string pointTag = result.Item2;
+                        pointTag = result.Item2;
 
-                        if (key == MeasurementKey.Undefined)
-                        {
-                            result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"key@{target}", () =>
-                            {
-                                MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
-                                return new(parsedKey, parsedKey.TagFromKey(Metadata));
-                            });
-
-                            key = result.Item1;
-                            pointTag = result.Item2;
-
-                            if (key != MeasurementKey.Undefined)
-                                targetMap[key.ID] = pointTag;
-                        }
-                        else
-                        {
+                        if (key != MeasurementKey.Undefined)
                             targetMap[key.ID] = pointTag;
-                        }
                     }
                     else
                     {
-                        targetMap[key.ID] = target;
+                        targetMap[key.ID] = pointTag;
                     }
                 }
-
-                // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-                List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, interval, includePeaks, targetMap)
-                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
-
-                foreach (KeyValuePair<ulong, string> target in targetMap)
-                    yield return new()
-                    {
-                        Target = target.Value,
-                        RootTarget = target.Value,
-                        SourceTarget = sourceTarget,
-                        Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value)),
-                        DropEmptySeries = dropEmptySeries,
-                        refId = sourceTarget.refId
-                    };
+                else
+                {
+                    targetMap[key.ID] = target;
+                }
             }
+
+            // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
+            List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, interval, includePeaks, targetMap)
+                .TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
+
+            foreach (KeyValuePair<ulong, string> target in targetMap)
+                yield return new DataSourceValueGroup
+                {
+                    Target = target.Value,
+                    RootTarget = target.Value,
+                    SourceTarget = sourceTarget,
+                    Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value)),
+                    DropEmptySeries = dropEmptySeries,
+                    refId = sourceTarget.refId
+                };
         }
 
         private DataRow LookupTargetMetadata(string target)

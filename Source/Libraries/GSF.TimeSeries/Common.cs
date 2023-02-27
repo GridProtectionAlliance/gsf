@@ -32,7 +32,7 @@ namespace GSF.TimeSeries
     internal class Common
     {
         /// <summary>
-        /// Folder name for dyanmically compiled assemblies.
+        /// Folder name for dynamically compiled assemblies.
         /// </summary>
         public const string DynamicAssembliesFolderName = "DynamicAssemblies";
 
@@ -43,10 +43,7 @@ namespace GSF.TimeSeries
         static Common()
         {
             using (Logger.AppendStackMessages("Owner", "TimeSeries.Common"))
-            {
                 TimerScheduler = new SharedTimerScheduler();
-            }
         }
-
     }
 }

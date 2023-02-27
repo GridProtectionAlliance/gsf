@@ -52,9 +52,7 @@ namespace GSF.Configuration
         #region [ Members ]
 
         // Fields
-        private string m_name;
         private string m_cryptoKey;
-        private CategorizedSettingsSection m_section;
 
         #endregion
 
@@ -63,32 +61,12 @@ namespace GSF.Configuration
         /// <summary>
         /// Gets or sets the name of the <see cref="CategorizedSettingsElementCollection"/>.
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return m_name;
-            }
-            internal set
-            {
-                m_name = value;
-            }
-        }
+        public string Name { get; internal set; }
 
         /// <summary>
         /// Gets or sets the <see cref="CategorizedSettingsSection"/> to which this <see cref="CategorizedSettingsElementCollection"/> belongs.
         /// </summary>
-        public CategorizedSettingsSection Section
-        {
-            get
-            {
-                return m_section;
-            }
-            internal set
-            {
-                m_section = value;
-            }
-        }
+        public CategorizedSettingsSection Section { get; internal set; }
 
         /// <summary>
         /// Gets or sets the <see cref="CategorizedSettingsElement"/> object at the specified index.
@@ -99,18 +77,18 @@ namespace GSF.Configuration
         {
             get
             {
-                if (index >= base.Count)
+                if (index >= Count)
                     throw new IndexOutOfRangeException();
 
-                CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(index);
+                CategorizedSettingsElement setting = (CategorizedSettingsElement)BaseGet(index);
                 setting.SetCryptoKey(m_cryptoKey);
 
                 return setting;
             }
             set
             {
-                if ((object)base.BaseGet(index) != null)
-                    base.BaseRemoveAt(index);
+                if (BaseGet(index) is not null)
+                    BaseRemoveAt(index);
 
                 base.BaseAdd(index, value);
                 Modified = true;
@@ -122,13 +100,7 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object to retrieve.</param>
         /// <returns>The <see cref="CategorizedSettingsElement"/> object with the specified name if it exists; otherwise null.</returns>
-        public new CategorizedSettingsElement this[string name]
-        {
-            get
-            {
-                return this[name, false];
-            }
-        }
+        public new CategorizedSettingsElement this[string name] => this[name, false];
 
         /// <summary>
         /// Gets the <see cref="CategorizedSettingsElement"/> object with the specified name.
@@ -141,14 +113,13 @@ namespace GSF.Configuration
             get
             {
                 // Add setting since it's not there
-                if (ensureExistance && (object)base.BaseGet(name) == null)
+                if (ensureExistance && BaseGet(name) is null)
                     Add(name, string.Empty);
 
-                CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(name);
+                CategorizedSettingsElement setting = (CategorizedSettingsElement)BaseGet(name);
 
                 // Set the crypto key for the setting
-                if ((object)setting != null)
-                    setting.SetCryptoKey(m_cryptoKey);
+                setting?.SetCryptoKey(m_cryptoKey);
 
                 return setting;
             }
@@ -158,8 +129,8 @@ namespace GSF.Configuration
         {
             set
             {
-                if ((object)m_section != null)
-                    m_section.Modified = value;
+                if (Section is not null)
+                    Section.Modified = value;
             }
         }
 
@@ -171,30 +142,24 @@ namespace GSF.Configuration
         /// Sets the key to be used for encrypting and decrypting setting values.
         /// </summary>
         /// <param name="cryptoKey">New crypto key.</param>
-        public void SetCryptoKey(string cryptoKey)
-        {
+        public void SetCryptoKey(string cryptoKey) => 
             m_cryptoKey = cryptoKey;
-        }
-
+        
         /// <summary>
         /// Gets the index of the specified <see cref="CategorizedSettingsElement"/> object.
         /// </summary>
         /// <param name="setting">The <see cref="CategorizedSettingsElement"/> object whose index is to be retrieved.</param>
         /// <returns>Index of the specified <see cref="CategorizedSettingsElement"/> object if found; otherwise -1.</returns>
-        public int IndexOf(CategorizedSettingsElement setting)
-        {
-            return base.BaseIndexOf(setting);
-        }
+        public int IndexOf(CategorizedSettingsElement setting) => 
+            BaseIndexOf(setting);
 
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
         /// </summary>
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        public void Add(string name, object value)
-        {
+        public void Add(string name, object value) => 
             Add(name, value, CategorizedSettingsElement.DefaultDescription, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
-        }
 
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
@@ -202,10 +167,8 @@ namespace GSF.Configuration
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
-        public void Add(string name, object value, string description)
-        {
+        public void Add(string name, object value, string description) => 
             Add(name, value, description, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
-        }
 
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
@@ -214,10 +177,8 @@ namespace GSF.Configuration
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        public void Add(string name, object value, string description, bool encryptValue)
-        {
+        public void Add(string name, object value, string description, bool encryptValue) => 
             Add(name, value, description, encryptValue, CategorizedSettingsElement.DefaultScope);
-        }
 
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
@@ -229,14 +190,14 @@ namespace GSF.Configuration
         /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
         public void Add(string name, object value, string description, bool encryptValue, SettingScope scope)
         {
-            if ((object)base.BaseGet(name) == null)
-            {
-                // Add the element only if it does not exist.
-                CategorizedSettingsElement setting = new CategorizedSettingsElement(this, name);
-                setting.Update(value, description, encryptValue, scope);
+            if (BaseGet(name) is not null)
+                return;
 
-                Add(setting);
-            }
+            // Add the element only if it does not exist.
+            CategorizedSettingsElement setting = new(this, name);
+            setting.Update(value, description, encryptValue, scope);
+
+            Add(setting);
         }
 
         /// <summary>
@@ -245,14 +206,15 @@ namespace GSF.Configuration
         /// <param name="setting">The <see cref="CategorizedSettingsElement"/> object to add.</param>
         public void Add(CategorizedSettingsElement setting)
         {
-            if ((object)base.BaseGet(setting.Name) == null)
-            {
-                // Add the element only if it does not exist.
-                setting.Category = this;
-                setting.SetCryptoKey(m_cryptoKey);
-                base.BaseAdd(setting);
-                Modified = true;
-            }
+            if (BaseGet(setting.Name) is not null)
+                return;
+
+            // Add the element only if it does not exist.
+            setting.Category = this;
+            setting.SetCryptoKey(m_cryptoKey);
+            
+            base.BaseAdd(setting);
+            Modified = true;
         }
 
         /// <summary>
@@ -261,7 +223,7 @@ namespace GSF.Configuration
         /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object to remove.</param>
         public void Remove(string name)
         {
-            base.BaseRemove(name);
+            BaseRemove(name);
             Modified = true;
         }
 
@@ -271,11 +233,11 @@ namespace GSF.Configuration
         /// <param name="setting">The <see cref="CategorizedSettingsElement"/> object to remove.</param>
         public void Remove(CategorizedSettingsElement setting)
         {
-            if (base.BaseIndexOf(setting) >= 0)
-            {
-                Remove(setting.Name);
-                Modified = true;
-            }
+            if (BaseIndexOf(setting) < 0)
+                return;
+
+            Remove(setting.Name);
+            Modified = true;
         }
 
         /// <summary>
@@ -284,7 +246,7 @@ namespace GSF.Configuration
         /// <param name="index">Index location of the <see cref="CategorizedSettingsElement"/> object to remove.</param>
         public void RemoveAt(int index)
         {
-            base.BaseRemoveAt(index);
+            BaseRemoveAt(index);
             Modified = true;
         }
 
@@ -293,7 +255,7 @@ namespace GSF.Configuration
         /// </summary>
         public void Clear()
         {
-            base.BaseClear();
+            BaseClear();
             Modified = true;
         }
 
@@ -301,30 +263,24 @@ namespace GSF.Configuration
         /// Creates a new <see cref="CategorizedSettingsElement"/> object.
         /// </summary>
         /// <returns>Instance of <see cref="CategorizedSettingsElement"/>.</returns>
-        protected override ConfigurationElement CreateNewElement()
-        {
-            return new CategorizedSettingsElement(this);
-        }
+        protected override ConfigurationElement CreateNewElement() => 
+            new CategorizedSettingsElement(this);
 
         /// <summary>
         /// Creates a new <see cref="CategorizedSettingsElement"/> object.
         /// </summary>
         /// <param name="elementName">Name identifying the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <returns>Instance of <see cref="CategorizedSettingsElement"/>.</returns>
-        protected override ConfigurationElement CreateNewElement(string elementName)
-        {
-            return new CategorizedSettingsElement(this, elementName);
-        }
+        protected override ConfigurationElement CreateNewElement(string elementName) => 
+            new CategorizedSettingsElement(this, elementName);
 
         /// <summary>
         /// Gets the key for a <see cref="CategorizedSettingsElement"/> object.
         /// </summary>
         /// <param name="element"><see cref="CategorizedSettingsElement"/> object whose key is to be retrieved.</param>
         /// <returns>String key value for a <see cref="CategorizedSettingsElement"/> object.</returns>
-        protected override object GetElementKey(ConfigurationElement element)
-        {
-            return ((CategorizedSettingsElement)element).Name;
-        }
+        protected override object GetElementKey(ConfigurationElement element) => 
+            ((CategorizedSettingsElement)element).Name;
 
         #endregion
     }

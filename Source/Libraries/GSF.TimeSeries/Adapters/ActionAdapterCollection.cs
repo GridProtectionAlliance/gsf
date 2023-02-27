@@ -69,8 +69,6 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler RequestTemporalSupport;
 
         // Fields
-        private bool m_respectInputDemands;
-        private bool m_respectOutputDemands;
 
         #endregion
 
@@ -97,17 +95,7 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
         /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
         /// </remarks>
-        public virtual bool RespectInputDemands
-        {
-            get
-            {
-                return m_respectInputDemands;
-            }
-            set
-            {
-                m_respectInputDemands = value;
-            }
-        }
+        public virtual bool RespectInputDemands { get; set; }
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on output demands.
@@ -117,17 +105,18 @@ namespace GSF.TimeSeries.Adapters
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
         /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
         /// </remarks>
-        public virtual bool RespectOutputDemands
-        {
-            get
-            {
-                return m_respectOutputDemands;
-            }
-            set
-            {
-                m_respectOutputDemands = value;
-            }
-        }
+        public virtual bool RespectOutputDemands { get; set; }
+
+        /// <summary>
+        /// Gets or sets flag that determines if readonly collections should be converted
+        /// to writable so published measurement sets can be augmented by filter adapters.
+        /// </summary>
+        /// <remarks>
+        /// When filter adapters are detected in the <see cref="IaonSession"/>, collections that
+        /// output new measurements should convert all readonly measurement collections into
+        /// collections that can be modified so that measurements can be removed if needed.
+        /// </remarks>
+        public bool ConvertReadonlyCollectionsToWritable { get; set; }
 
         /// <summary>
         /// Gets the descriptive status of this <see cref="ActionAdapterCollection"/>.
@@ -136,13 +125,12 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
-                status.AppendFormat("  Respecting input demands: {0}", RespectInputDemands);
-                status.AppendLine();
-                status.AppendFormat(" Respecting output demands: {0}", RespectOutputDemands);
-                status.AppendLine();
+                status.AppendLine($"  Respecting Input Demands: {RespectInputDemands}");
+                status.AppendLine($" Respecting Output Demands: {RespectOutputDemands}");
+                status.AppendLine($"      Readonly Collections: {(ConvertReadonlyCollectionsToWritable ? "Converting to Writable" : "Unmodified")}");
 
                 return status.ToString();
             }
@@ -160,17 +148,9 @@ namespace GSF.TimeSeries.Adapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
-            if (settings.TryGetValue("respectInputDemands", out setting))
-                RespectInputDemands = setting.ParseBoolean();
-            else
-                RespectInputDemands = false;
-
-            if (settings.TryGetValue("respectOutputDemands", out setting))
-                RespectOutputDemands = setting.ParseBoolean();
-            else
-                RespectOutputDemands = true;
+            RespectInputDemands = settings.TryGetValue(nameof(RespectInputDemands), out string setting) && setting.ParseBoolean();
+            RespectOutputDemands = !settings.TryGetValue(nameof(RespectOutputDemands), out setting) || setting.ParseBoolean();
         }
 
         /// <summary>
@@ -186,6 +166,7 @@ namespace GSF.TimeSeries.Adapters
                 {
                     foreach (IActionAdapter item in this)
                     {
+                        // ReSharper disable once PossibleMultipleEnumeration
                         if (item.Enabled)
                             item.QueueMeasurementsForProcessing(measurements);
                     }
@@ -193,7 +174,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to queue measurements to action adapters: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to queue measurements to action adapters: {ex.Message}", ex));
             }
         }
 
@@ -205,12 +186,15 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
+                if (ConvertReadonlyCollectionsToWritable && measurements.IsReadOnly)
+                    NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(new List<IMeasurement>(measurements)));
+
                 NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(NewMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -227,7 +211,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnpublishedSamples event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(UnpublishedSamples)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -244,7 +228,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(DiscardingMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -260,7 +244,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for RequestTemporalSupport event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(RequestTemporalSupport)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -270,23 +254,19 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item">New <see cref="IActionAdapter"/> implementation.</param>
         protected override void InitializeItem(IActionAdapter item)
         {
-            ActionAdapterCollection collection;
+            if (item is null)
+                return;
 
-            if ((object)item != null)
-            {
-                // Wire up events
-                item.NewMeasurements += item_NewMeasurements;
-                item.UnpublishedSamples += item_UnpublishedSamples;
-                item.DiscardingMeasurements += item_DiscardingMeasurements;
+            // Wire up events
+            item.NewMeasurements += item_NewMeasurements;
+            item.UnpublishedSamples += item_UnpublishedSamples;
+            item.DiscardingMeasurements += item_DiscardingMeasurements;
 
-                // Attach to collection-specific temporal support event
-                collection = item as ActionAdapterCollection;
+            // Attach to collection-specific temporal support event
+            if (item is ActionAdapterCollection collection)
+                collection.RequestTemporalSupport += item_RequestTemporalSupport;
 
-                if ((object)collection != null)
-                    collection.RequestTemporalSupport += item_RequestTemporalSupport;
-
-                base.InitializeItem(item);
-            }
+            base.InitializeItem(item);
         }
 
         /// <summary>
@@ -295,36 +275,36 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item"><see cref="IActionAdapter"/> to dispose.</param>
         protected override void DisposeItem(IActionAdapter item)
         {
-            ActionAdapterCollection collection;
+            if (item is null)
+                return;
 
-            if ((object)item != null)
-            {
-                // Un-wire events
-                item.NewMeasurements -= item_NewMeasurements;
-                item.UnpublishedSamples -= item_UnpublishedSamples;
-                item.DiscardingMeasurements -= item_DiscardingMeasurements;
+            // Un-wire events
+            item.NewMeasurements -= item_NewMeasurements;
+            item.UnpublishedSamples -= item_UnpublishedSamples;
+            item.DiscardingMeasurements -= item_DiscardingMeasurements;
 
-                // Detach from collection-specific temporal support event
-                collection = item as ActionAdapterCollection;
+            // Detach from collection-specific temporal support event
+            if (item is ActionAdapterCollection collection)
+                collection.RequestTemporalSupport -= item_RequestTemporalSupport;
 
-                if ((object)collection != null)
-                    collection.RequestTemporalSupport -= item_RequestTemporalSupport;
-
-                base.DisposeItem(item);
-            }
+            base.DisposeItem(item);
         }
 
         // Raise new measurements event on behalf of each item in collection
-        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) => NewMeasurements?.Invoke(sender, e);
+        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) => 
+            NewMeasurements?.Invoke(sender, e);
 
         // Raise unpublished samples event on behalf of each item in collection
-        private void item_UnpublishedSamples(object sender, EventArgs<int> e) => UnpublishedSamples?.Invoke(sender, e);
+        private void item_UnpublishedSamples(object sender, EventArgs<int> e) => 
+            UnpublishedSamples?.Invoke(sender, e);
 
         // Raise discarding measurements event on behalf of each item in collection
-        private void item_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e) => DiscardingMeasurements?.Invoke(sender, e);
+        private void item_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e) => 
+            DiscardingMeasurements?.Invoke(sender, e);
 
         // Raise request temporal support event on behalf of each item in collection
-        private void item_RequestTemporalSupport(object sender, EventArgs e) => RequestTemporalSupport?.Invoke(sender, e);
+        private void item_RequestTemporalSupport(object sender, EventArgs e) => 
+            RequestTemporalSupport?.Invoke(sender, e);
 
         #endregion
     }

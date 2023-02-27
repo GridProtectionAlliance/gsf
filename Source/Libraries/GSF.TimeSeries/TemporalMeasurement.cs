@@ -60,7 +60,7 @@ namespace GSF.TimeSeries
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         public TemporalMeasurement(IMeasurement measurement, double lagTime, double leadTime)
         {
-            if (measurement != null)
+            if (measurement is not null)
             {
                 Metadata = measurement.Metadata;
                 Value = measurement.Value;
@@ -132,7 +132,7 @@ namespace GSF.TimeSeries
         public double GetAdjustedValue(Ticks timestamp)
         {
             // We only return a measurement value that is up-to-date...
-            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? base.AdjustedValue : double.NaN;
+            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? AdjustedValue : double.NaN;
         }
 
         /// <summary>Gets numeric value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
@@ -144,7 +144,7 @@ namespace GSF.TimeSeries
         public double GetValue(Ticks timestamp)
         {
             // We only return a measurement value that is up-to-date...
-            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? base.Value : double.NaN;
+            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? Value : double.NaN;
         }
 
         /// <summary>Sets numeric value and timestamp, as ticks, of this <see cref="TemporalMeasurement"/>.</summary>
@@ -157,14 +157,13 @@ namespace GSF.TimeSeries
         public bool SetValue(Ticks timestamp, double value)
         {
             // We only store a value that is newer than the current value
-            if (timestamp > Timestamp && timestamp.UtcTimeIsValid(m_lagTime, m_leadTime))
-            {
-                base.Value = value;
-                Timestamp = timestamp;
-                return true;
-            }
+            if (timestamp <= Timestamp || !timestamp.UtcTimeIsValid(m_lagTime, m_leadTime))
+                return false;
 
-            return false;
+            Value = value;
+            Timestamp = timestamp;
+            return true;
+
         }
 
         #endregion

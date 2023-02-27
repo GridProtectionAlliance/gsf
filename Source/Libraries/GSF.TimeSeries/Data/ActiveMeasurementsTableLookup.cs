@@ -47,11 +47,12 @@ namespace GSF.TimeSeries.Data
                 return;
 
             DataTable table = dataSet.Tables["ActiveMeasurements"];
-            List<DataRow> rowList;
 
             foreach (DataRow row in table.Rows)
             {
                 uint? id = row.AsUInt32("DeviceID");
+
+                List<DataRow> rowList;
 
                 if (id.HasValue)
                 {
@@ -69,7 +70,7 @@ namespace GSF.TimeSeries.Data
 
                 string device = row.AsString("Device");
 
-                if (device == null)
+                if (device is null)
                     continue;
 
                 if (!m_lookupByDeviceNameNoStats.TryGetValue(device, out rowList))
@@ -90,7 +91,8 @@ namespace GSF.TimeSeries.Data
         /// <returns>
         /// Returns an empty set if the deviceID could not be found.
         /// </returns>
-        public IEnumerable<DataRow> LookupByDeviceID(uint deviceId) => m_lookupByDeviceID.TryGetValue(deviceId, out List<DataRow> rows) ? rows : m_emptySet;
+        public IEnumerable<DataRow> LookupByDeviceID(uint deviceId) => 
+            m_lookupByDeviceID.TryGetValue(deviceId, out List<DataRow> rows) ? rows : m_emptySet;
 
         /// <summary>
         /// Gets all of the rows with the provided device name. This will exclude
@@ -102,6 +104,7 @@ namespace GSF.TimeSeries.Data
         /// <returns>
         /// Returns an empty set if the device could not be found.
         /// </returns>
-        public IEnumerable<DataRow> LookupByDeviceNameNoStat(string deviceName) => m_lookupByDeviceNameNoStats.TryGetValue(deviceName, out List<DataRow> rows) ? rows : m_emptySet;
+        public IEnumerable<DataRow> LookupByDeviceNameNoStat(string deviceName) => 
+            m_lookupByDeviceNameNoStats.TryGetValue(deviceName, out List<DataRow> rows) ? rows : m_emptySet;
     }
 }

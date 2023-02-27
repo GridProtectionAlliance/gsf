@@ -158,7 +158,7 @@ namespace GrafanaAdapters
 
             // Create annotation query request for full resolution data using "Interval(0, {target})"
             // function so that any encountered alarms not will not be down-sampled
-            return new()
+            return new QueryRequest
             {
                 range = request.range,
                 rangeRaw = request.rangeRaw,
@@ -210,7 +210,7 @@ namespace GrafanaAdapters
                 if (type == AnnotationType.Undefined)
                     throw new InvalidOperationException("Unrecognized type or syntax for annotation query expression.");
 
-                return new(type, parsedFilterExpression);
+                return new Tuple<AnnotationType, bool>(type, parsedFilterExpression);
             });
 
             useFilterExpression = result.Item2;
@@ -365,18 +365,18 @@ namespace GrafanaAdapters
             string pointTag = "Undefined";
 
             if (record is null)
-                return new(MeasurementKey.Undefined, pointTag);
+                return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
 
             try
             {
                 MeasurementKey key = MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
                 pointTag = record["PointTag"].ToNonNullString(key.ToString());
-                return new(key, pointTag);
+                return new Tuple<MeasurementKey, string>(key, pointTag);
             }
             catch (Exception ex)
             {
                 Logger.SwallowException(ex);
-                return new(MeasurementKey.Undefined, pointTag);
+                return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
             }
         }
 
@@ -462,13 +462,11 @@ namespace GrafanaAdapters
             return TargetCache<DataRow>.GetOrAdd(target, () => GetMetaData(source, "ActiveMeasurements", $"ID = '{GetTargetFromGuid(target)}'"));
         }
 
-        private static string GetAlarmCondition(DataRow defintion)
+        private static string GetAlarmCondition(DataRow definition)
         {
-            StringBuilder description;
+            StringBuilder description = new("value");
 
-            description = new("value");
-
-            if (!Enum.TryParse(defintion["Operation"].ToNonNullNorWhiteSpace(AlarmOperation.Equal.ToString()), out AlarmOperation operation))
+            if (!Enum.TryParse(definition["Operation"].ToNonNullNorWhiteSpace(AlarmOperation.Equal.ToString()), out AlarmOperation operation))
                 operation = AlarmOperation.Equal;
 
             switch (operation)
@@ -499,7 +497,7 @@ namespace GrafanaAdapters
 
                 case AlarmOperation.Flatline:
                     description.Append(" flat-lined for ");
-                    description.Append(defintion["Delay"]);
+                    description.Append(definition["Delay"]);
                     description.Append(" seconds");
                     return description.ToString();
 
@@ -508,7 +506,7 @@ namespace GrafanaAdapters
                     break;
             }
 
-            string setPoint = defintion["SetPoint"].ToNonNullString();
+            string setPoint = definition["SetPoint"].ToNonNullString();
 
             description.Append(string.IsNullOrWhiteSpace(setPoint) ? "undefined" : setPoint);
 

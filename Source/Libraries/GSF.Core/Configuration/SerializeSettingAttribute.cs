@@ -37,13 +37,6 @@ namespace GSF.Configuration
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public sealed class SerializeSettingAttribute : Attribute
     {
-        #region [ Members ]
-
-        // Fields
-        private readonly bool m_serialize;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -51,7 +44,7 @@ namespace GSF.Configuration
         /// </summary>
         public SerializeSettingAttribute()
         {
-            m_serialize = true;
+            Serialize = true;
         }
 
         /// <summary>
@@ -63,7 +56,7 @@ namespace GSF.Configuration
         /// </param>
         public SerializeSettingAttribute(bool serialize)
         {
-            m_serialize = serialize;
+            Serialize = serialize;
         }
 
         #endregion
@@ -74,13 +67,7 @@ namespace GSF.Configuration
         /// Gets or sets flag that determines if the property or field this <see cref="SerializeSettingAttribute"/>
         /// modifies should be serialized to the configuration file.
         /// </summary>
-        public bool Serialize
-        {
-            get
-            {
-                return m_serialize;
-            }
-        }
+        public bool Serialize { get; }
 
         #endregion
     }

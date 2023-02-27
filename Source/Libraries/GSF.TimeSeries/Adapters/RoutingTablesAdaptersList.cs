@@ -35,10 +35,12 @@ namespace GSF.TimeSeries.Adapters
         /// A list of all <see cref="IAdapter"/> that did NOT existed in the old route calculation, but do exist in the new route calculation. 
         /// </summary>
         public readonly List<IAdapter> NewAdapter;
+        
         /// <summary>
         /// A list of all <see cref="IAdapter"/> that existed in the old route calculation, and also exist in the new route calculation. 
         /// </summary>
         public readonly List<IAdapter> ExistingAdapter;
+
         /// <summary>
         /// A list of all <see cref="IAdapter"/> that existed in the old route calculation, but do NOT exist in the new route calculation. 
         /// </summary>
@@ -62,9 +64,9 @@ namespace GSF.TimeSeries.Adapters
             NewAndExistingAdapters = new List<IAdapter>();
 
             NewAndExistingAdapters.AddRange(currentAdapterList);
-            NewAdapter.AddRange(currentAdapterList.Where(x => !previousAdapterList.Contains(x)));
-            OldAdapter.AddRange(previousAdapterList.Where(x => !currentAdapterList.Contains(x)));
-            ExistingAdapter.AddRange(currentAdapterList.Where(x => previousAdapterList.Contains(x)));
+            NewAdapter.AddRange(currentAdapterList.Where(adapter => !previousAdapterList.Contains(adapter)));
+            OldAdapter.AddRange(previousAdapterList.Where(adapter => !currentAdapterList.Contains(adapter)));
+            ExistingAdapter.AddRange(currentAdapterList.Where(previousAdapterList.Contains));
         }
     }
 }

@@ -37,13 +37,6 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     public class SubscriberRightsLookup
     {
-        #region [ Members ]
-
-        // Fields
-        private Func<Guid, bool> m_hasRightsFunc;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -51,10 +44,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="dataSource">The source of metadata providing the tables required by the rights logic.</param>
         /// <param name="subscriberID">The ID of the subscriber whose rights are being looked up.</param>
-        public SubscriberRightsLookup(DataSet dataSource, Guid subscriberID)
-        {
-            m_hasRightsFunc = BuildLookup(dataSource, subscriberID);
-        }
+        public SubscriberRightsLookup(DataSet dataSource, Guid subscriberID) => 
+            HasRightsFunc = BuildLookup(dataSource, subscriberID);
 
         #endregion
 
@@ -63,13 +54,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the function that determines whether the subscriber has rights to a given signal.
         /// </summary>
-        public Func<Guid, bool> HasRightsFunc
-        {
-            get
-            {
-                return m_hasRightsFunc;
-            }
-        }
+        public Func<Guid, bool> HasRightsFunc { get; }
 
         #endregion
 
@@ -80,35 +65,30 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="signalID">The ID of the signal.</param>
         /// <returns>True if the subscriber has rights; false otherwise.</returns>
-        public bool HasRights(Guid signalID)
-        {
-            return m_hasRightsFunc(signalID);
-        }
+        public bool HasRights(Guid signalID) => 
+            HasRightsFunc(signalID);
 
         private Func<Guid, bool> BuildLookup(DataSet dataSource, Guid subscriberID)
         {
-            HashSet<Guid> authorizedSignals = new HashSet<Guid>();
+            HashSet<Guid> authorizedSignals = new();
 
             const string filterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
 
-            DataRow subscriber;
-            DataRow[] subscriberMeasurementGroups;
-
             //==================================================================
-            //Check if subscriber is disabled or removed
+            // Check if subscriber is disabled or removed
 
             // If subscriber has been disabled or removed
             // from the list of valid subscribers,
             // they no longer have rights to any signals
-            subscriber = dataSource.Tables["Subscribers"].Select($"ID = '{subscriberID}' AND Enabled <> 0").FirstOrDefault();
+            DataRow subscriber = dataSource.Tables["Subscribers"].Select($"ID = '{subscriberID}' AND Enabled <> 0").FirstOrDefault();
 
-            if ((object)subscriber == null)
-                return id => false;
+            if (subscriber is null)
+                return _ => false;
 
             //=================================================================
             // Check group implicitly authorized signals
 
-            subscriberMeasurementGroups = dataSource.Tables["SubscriberMeasurementGroups"].Select($"SubscriberID = '{subscriberID}'");
+            DataRow[] subscriberMeasurementGroups = dataSource.Tables["SubscriberMeasurementGroups"].Select($"SubscriberID = '{subscriberID}'");
 
             subscriberMeasurementGroups
                 .Join(dataSource.Tables["MeasurementGroups"].Select(),
@@ -129,7 +109,7 @@ namespace GSF.TimeSeries.Transport
                 .ForEach(grouping => authorizedSignals.Add(grouping.Key));
 
             //=================================================================
-            //Check implicitly authorized signals
+            // Check implicitly authorized signals
 
             List<Match> matches = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), filterRegex, RegexOptions.IgnoreCase)
                 .Cast<Match>()
@@ -158,7 +138,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             //==================================================================
-            //Check explicit group authorizations
+            // Check explicit group authorizations
 
             subscriberMeasurementGroups
                 .Join(dataSource.Tables["MeasurementGroupMeasurements"].Select(),

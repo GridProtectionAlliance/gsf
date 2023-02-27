@@ -40,8 +40,6 @@ namespace GSF.Configuration
         #region [ Members ]
 
         // Fields
-        private readonly bool m_encrypt;
-        private string m_privateKey;
 
         #endregion
 
@@ -52,7 +50,7 @@ namespace GSF.Configuration
         /// </summary>
         public EncryptSettingAttribute()
         {
-            m_encrypt = true;
+            Encrypt = true;
         }
 
         /// <summary>
@@ -64,7 +62,7 @@ namespace GSF.Configuration
         /// </param>
         public EncryptSettingAttribute(bool encrypt)
         {
-            m_encrypt = encrypt;
+            Encrypt = encrypt;
         }
 
         #endregion
@@ -75,13 +73,7 @@ namespace GSF.Configuration
         /// Gets or sets flag that determines if the property or field this <see cref="EncryptSettingAttribute"/>
         /// modifies should be encrypted when serialized to the configuration file.
         /// </summary>
-        public bool Encrypt
-        {
-            get
-            {
-                return m_encrypt;
-            }
-        }
+        public bool Encrypt { get; }
 
         /// <summary>
         /// Gets or sets optional encryption key that will be used on a setting for added security.
@@ -90,17 +82,7 @@ namespace GSF.Configuration
         /// This key is not the actual key used for encryption, it is used for hash lookup of the actual AES key.
         /// If this key is not specified, the property name will be used for the hash lookup.
         /// </remarks>
-        public string PrivateKey
-        {
-            get
-            {
-                return m_privateKey;
-            }
-            set
-            {
-                m_privateKey = value;
-            }
-        }
+        public string PrivateKey { get; set; }
 
         #endregion
     }

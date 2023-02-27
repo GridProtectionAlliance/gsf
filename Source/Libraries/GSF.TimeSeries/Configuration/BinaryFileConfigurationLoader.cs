@@ -39,7 +39,6 @@ namespace GSF.TimeSeries.Configuration
         #region [ Members ]
 
         // Fields
-        private string m_filePath;
 
         #endregion
 
@@ -48,17 +47,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets or sets the path to the binary file.
         /// </summary>
-        public string FilePath
-        {
-            get
-            {
-                return m_filePath;
-            }
-            set
-            {
-                m_filePath = value;
-            }
-        }
+        public string FilePath { get; set; }
 
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
@@ -77,12 +66,10 @@ namespace GSF.TimeSeries.Configuration
         {
             DataSet configuration;
 
-            OnStatusMessage(MessageLevel.Info, $"Loading binary based configuration from \"{m_filePath}\".");
+            OnStatusMessage(MessageLevel.Info, $"Loading binary based configuration from \"{FilePath}\".");
 
-            using (FileStream stream = File.OpenRead(m_filePath))
-            {
+            using (FileStream stream = File.OpenRead(FilePath))
                 configuration = stream.DeserializeToDataSet();
-            }
 
             OnStatusMessage(MessageLevel.Info, "Binary based configuration successfully loaded.");
 
@@ -92,10 +79,8 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Not supported.
         /// </summary>
-        public override void Augment(DataSet configuration)
-        {
+        public override void Augment(DataSet configuration) => 
             throw new NotSupportedException();
-        }
 
         #endregion
     }

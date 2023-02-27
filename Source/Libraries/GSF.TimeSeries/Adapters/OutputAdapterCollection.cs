@@ -130,10 +130,9 @@ namespace GSF.TimeSeries.Adapters
             {
                 lock (this)
                 {
+                    // ReSharper disable once PossibleMultipleEnumeration
                     foreach (IOutputAdapter item in this)
-                    {
                         item.QueueMeasurementsForProcessing(measurements);
-                    }
                 }
             }
             catch (Exception ex)
@@ -177,7 +176,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(UnprocessedMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -187,12 +186,12 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item">New <see cref="IOutputAdapter"/> implementation.</param>
         protected override void InitializeItem(IOutputAdapter item)
         {
-            if ((object)item != null)
-            {
-                // Wire up unprocessed measurements event
-                item.UnprocessedMeasurements += item_UnprocessedMeasurements;
-                base.InitializeItem(item);
-            }
+            if (item is null)
+                return;
+
+            // Wire up unprocessed measurements event
+            item.UnprocessedMeasurements += item_UnprocessedMeasurements;
+            base.InitializeItem(item);
         }
 
         /// <summary>
@@ -201,16 +200,17 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item"><see cref="IOutputAdapter"/> to dispose.</param>
         protected override void DisposeItem(IOutputAdapter item)
         {
-            if ((object)item != null)
-            {
-                // Un-wire unprocessed measurements event
-                item.UnprocessedMeasurements -= item_UnprocessedMeasurements;
-                base.DisposeItem(item);
-            }
+            if (item is null)
+                return;
+
+            // Un-wire unprocessed measurements event
+            item.UnprocessedMeasurements -= item_UnprocessedMeasurements;
+            base.DisposeItem(item);
         }
 
         // Raise unprocessed measurements event on behalf of each item in collection
-        private void item_UnprocessedMeasurements(object sender, EventArgs<int> e) => UnprocessedMeasurements?.Invoke(sender, e);
+        private void item_UnprocessedMeasurements(object sender, EventArgs<int> e) => 
+            UnprocessedMeasurements?.Invoke(sender, e);
 
         #endregion
     }

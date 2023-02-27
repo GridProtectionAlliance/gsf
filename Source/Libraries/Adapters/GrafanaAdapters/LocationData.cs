@@ -91,7 +91,7 @@ namespace GrafanaAdapters
                             if (matchingRows.Count > 1)
                                 groupedRows.Add(matchingRows.ToArray());
 
-                            matchingRows = new() { row };
+                            matchingRows = new List<DataRow> { row };
                             firstGroupRow = matchingRows.First();
                             firstGroupRowValid = coordinatesAreValid(firstGroupRow);
                         }
@@ -146,7 +146,7 @@ namespace GrafanaAdapters
             DataTable activeMeasurements = DataSource?.Metadata?.Tables["ActiveMeasurements"];
 
             if (activeMeasurements is null)
-                return new();
+                return new DataTable();
 
             // Create a hash set of desired targets for quick contains-based lookup
             IEnumerable<string> targets = request.Select(target => target.target).Where(value => !string.IsNullOrEmpty(value));

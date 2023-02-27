@@ -62,7 +62,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AggregateFunctions.cs" />
     <Compile Include="DatabaseNotifier.cs" />
+    <Compile Include="DynamicFilter.cs" />
     <Compile Include="EmailNotifier.cs" />
     <Compile Include="DynamicCalculator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

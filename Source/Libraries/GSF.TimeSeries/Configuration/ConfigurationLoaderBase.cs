@@ -72,10 +72,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
         /// </summary>
-        public abstract bool CanAugment
-        {
-            get;
-        }
+        public abstract bool CanAugment { get; }
 
         #endregion
 
@@ -118,7 +115,7 @@ namespace GSF.TimeSeries.Configuration
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(StatusMessage)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -146,7 +143,7 @@ namespace GSF.TimeSeries.Configuration
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for {nameof(ProcessException)} event: {ex.Message}", null, ex);
             }
         }
 

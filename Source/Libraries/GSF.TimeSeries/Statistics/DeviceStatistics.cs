@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+#pragma warning disable IDE0051 // Remove unused private members
+
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedParameter.Local
 namespace GSF.TimeSeries.Statistics
@@ -58,15 +60,13 @@ namespace GSF.TimeSeries.Statistics
         // Calculates the difference between a device time and the average of all devices
         private static double GetDeviceStatistic_DeviceTimeDeviationFromAverage(object source, string _)
         {
-            if (source is IDevice device)
-            {
-                long deviation = GlobalDeviceStatistics.GetDeviceTimeDeviationFromAverage(device);
-                return deviation > long.MinValue ? new Ticks(deviation).ToSeconds() : double.NaN;
-            }
+            if (source is not IDevice device)
+                return double.NaN;
 
-            return double.NaN;
+            long deviation = GlobalDeviceStatistics.GetDeviceTimeDeviationFromAverage(device);
+            return deviation > long.MinValue ? new Ticks(deviation).ToSeconds() : double.NaN;
         }
 
-        private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+        private static readonly StatisticValueStateCache s_statisticValueCache = new();
     }
 }

@@ -31,6 +31,7 @@ using System;
 using System.ComponentModel;
 using GSF.Interop;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.Configuration
 {
     /// <summary>
@@ -99,8 +100,6 @@ namespace GSF.Configuration
 
         // Fields
         private IniFile m_iniFile;
-        private string m_sectionName;
-        private bool m_useCategoryAttributes;
 
         #endregion
 
@@ -168,8 +167,8 @@ namespace GSF.Configuration
             : base(requireSerializeSettingAttribute)
         {
             m_iniFile = iniFile;
-            m_sectionName = sectionName;
-            m_useCategoryAttributes = useCategoryAttributes;
+            SectionName = sectionName;
+            UseCategoryAttributes = useCategoryAttributes;
 
             // Make sure settings exist and load current values
             if (initialize)
@@ -186,33 +185,14 @@ namespace GSF.Configuration
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
         protected IniFile IniFile
         {
-            get
-            {
-                return m_iniFile;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_iniFile = value;
-            }
+            get => m_iniFile;
+            set => m_iniFile = value ?? throw new NullReferenceException("value cannot be null");
         }
 
         /// <summary>
         /// Gets or sets default name of section used to access settings in INI file.
         /// </summary>
-        public string SectionName
-        {
-            get
-            {
-                return m_sectionName;
-            }
-            set
-            {
-                m_sectionName = value;
-            }
-        }
+        public string SectionName { get; set; }
 
         /// <summary>
         /// Gets or sets value that determines whether a <see cref="CategoryAttribute"/> applied to a field or property
@@ -225,17 +205,7 @@ namespace GSF.Configuration
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <see cref="SectionName"/> value.
         /// </remarks>
-        public bool UseCategoryAttributes
-        {
-            get
-            {
-                return m_useCategoryAttributes;
-            }
-            set
-            {
-                m_useCategoryAttributes = value;
-            }
-        }
+        public bool UseCategoryAttributes { get; set; }
 
         #endregion
 
@@ -265,10 +235,8 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <returns>Setting value.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override string RetrieveSetting(string name, string setting)
-        {
-            return m_iniFile[GetFieldSectionName(name), setting];
-        }
+        protected override string RetrieveSetting(string name, string setting) => 
+            m_iniFile[GetFieldSectionName(name), setting];
 
         /// <summary>
         /// Stores setting to INI file.
@@ -278,10 +246,8 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override void StoreSetting(string name, string setting, string value)
-        {
+        protected override void StoreSetting(string name, string setting, string value) => 
             m_iniFile[GetFieldSectionName(name), setting] = value;
-        }
 
         /// <summary>
         /// Persists any pending changes to INI file.
@@ -309,11 +275,11 @@ namespace GSF.Configuration
                 throw new ArgumentException("name cannot be null or empty");
 
             // If user wants to respect category attributes, we attempt to use those as configuration section names
-            if (m_useCategoryAttributes)
-                return GetAttributeValue<CategoryAttribute, string>(name, m_sectionName, attribute => attribute.Category);
+            if (UseCategoryAttributes)
+                return GetAttributeValue<CategoryAttribute, string>(name, SectionName, attribute => attribute.Category);
 
             // Otherwise return default category name
-            return m_sectionName;
+            return SectionName;
         }
 
         #endregion

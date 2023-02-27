@@ -35,25 +35,12 @@ namespace GSF.TimeSeries.Transport
         #region [ Members ]
 
         // Fields
-        private string m_filterExpression;
 
         private bool m_useCompactMeasurementFormat;
-        private bool m_useMillisecondResolution;
-        private bool m_requestNaNValueFilter;
-
-        private bool m_udpDataChannel;
         private int m_dataChannelLocalPort;
-
         private double m_lagTime;
         private double m_leadTime;
-        private bool m_useLocalClockAsRealTime;
-
-        private string m_startTime;
-        private string m_stopTime;
-        private string m_constraintParameters;
         private int m_processingInterval;
-
-        private string m_extraConnectionStringParameters;
 
         #endregion
 
@@ -79,17 +66,7 @@ namespace GSF.TimeSeries.Transport
         /// Gets or sets the filter expression used to define which
         /// measurements are being requested by the subscriber.
         /// </summary>
-        public virtual string FilterExpression
-        {
-            get
-            {
-                return m_filterExpression;
-            }
-            set
-            {
-                m_filterExpression = value;
-            }
-        }
+        public virtual string FilterExpression { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether to use the
@@ -98,31 +75,15 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public virtual bool UseCompactMeasurementFormat
         {
-            get
-            {
-                return m_useCompactMeasurementFormat;
-            }
-            set
-            {
-                m_useCompactMeasurementFormat = value;
-            }
+            get => m_useCompactMeasurementFormat;
+            set => m_useCompactMeasurementFormat = value;
         }
 
         /// <summary>
         /// Gets or sets the flag that determines whether the subscriber
         /// is requesting its data over a separate UDP data channel.
         /// </summary>
-        public virtual bool UdpDataChannel
-        {
-            get
-            {
-                return m_udpDataChannel;
-            }
-            set
-            {
-                m_udpDataChannel = value;
-            }
-        }
+        public virtual bool UdpDataChannel { get; set; }
 
         /// <summary>
         /// Gets or sets the port number that the UDP data channel binds to.
@@ -131,14 +92,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public virtual int DataChannelLocalPort
         {
-            get
-            {
-                return m_dataChannelLocalPort;
-            }
-            set
-            {
-                m_dataChannelLocalPort = value;
-            }
+            get => m_dataChannelLocalPort;
+            set => m_dataChannelLocalPort = value;
         }
 
         /// <summary>
@@ -147,14 +102,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public virtual double LagTime
         {
-            get
-            {
-                return m_lagTime;
-            }
-            set
-            {
-                m_lagTime = value;
-            }
+            get => m_lagTime;
+            set => m_lagTime = value;
         }
 
         /// <summary>
@@ -163,14 +112,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public virtual double LeadTime
         {
-            get
-            {
-                return m_leadTime;
-            }
-            set
-            {
-                m_leadTime = value;
-            }
+            get => m_leadTime;
+            set => m_leadTime = value;
         }
 
         /// <summary>
@@ -178,17 +121,7 @@ namespace GSF.TimeSeries.Transport
         /// local clock is used as real-time. If false, the timestamps
         /// of the measurements will be used as real-time.
         /// </summary>
-        public virtual bool UseLocalClockAsRealTime
-        {
-            get
-            {
-                return m_useLocalClockAsRealTime;
-            }
-            set
-            {
-                m_useLocalClockAsRealTime = value;
-            }
-        }
+        public virtual bool UseLocalClockAsRealTime { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether measurement timestamps use
@@ -198,33 +131,13 @@ namespace GSF.TimeSeries.Transport
         /// This flag determines the size of the timestamps transmitted as part of
         /// the compact measurement format when the server is using base time offsets.
         /// </remarks>
-        public virtual bool UseMillisecondResolution
-        {
-            get
-            {
-                return m_useMillisecondResolution;
-            }
-            set
-            {
-                m_useMillisecondResolution = value;
-            }
-        }
+        public virtual bool UseMillisecondResolution { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether to request that measurements
         /// sent to the subscriber should be filtered by the publisher prior to sending them.
         /// </summary>
-        public virtual bool RequestNaNValueFilter
-        {
-            get
-            {
-                return m_requestNaNValueFilter;
-            }
-            set
-            {
-                m_requestNaNValueFilter = value;
-            }
-        }
+        public virtual bool RequestNaNValueFilter { get; set; }
 
         /// <summary>
         /// Gets or sets the start time of the requested
@@ -272,17 +185,7 @@ namespace GSF.TimeSeries.Transport
         /// </list>
         /// </para>
         /// </remarks>
-        public virtual string StartTime
-        {
-            get
-            {
-                return m_startTime;
-            }
-            set
-            {
-                m_startTime = value;
-            }
-        }
+        public virtual string StartTime { get; set; }
 
         /// <summary>
         /// Gets or sets the stop time of the requested
@@ -330,33 +233,13 @@ namespace GSF.TimeSeries.Transport
         /// </list>
         /// </para>
         /// </remarks>
-        public virtual string StopTime
-        {
-            get
-            {
-                return m_stopTime;
-            }
-            set
-            {
-                m_stopTime = value;
-            }
-        }
+        public virtual string StopTime { get; set; }
 
         /// <summary>
         /// Gets or sets the additional constraint parameters
         /// supplied to temporal adapters in a temporal session.
         /// </summary>
-        public virtual string ConstraintParameters
-        {
-            get
-            {
-                return m_constraintParameters;
-            }
-            set
-            {
-                m_constraintParameters = value;
-            }
-        }
+        public virtual string ConstraintParameters { get; set; }
 
         /// <summary>
         /// Gets or sets the processing interval requested by the subscriber.
@@ -371,14 +254,8 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         public virtual int ProcessingInterval
         {
-            get
-            {
-                return m_processingInterval;
-            }
-            set
-            {
-                m_processingInterval = value;
-            }
+            get => m_processingInterval;
+            set => m_processingInterval = value;
         }
 
         /// <summary>
@@ -386,17 +263,7 @@ namespace GSF.TimeSeries.Transport
         /// be applied to the connection string sent to the publisher
         /// during subscription.
         /// </summary>
-        public virtual string ExtraConnectionStringParameters
-        {
-            get
-            {
-                return m_extraConnectionStringParameters;
-            }
-            set
-            {
-                m_extraConnectionStringParameters = value;
-            }
-        }
+        public virtual string ExtraConnectionStringParameters { get; set; }
 
         #endregion
 
@@ -407,10 +274,8 @@ namespace GSF.TimeSeries.Transport
         /// <see cref="SubscriptionInfo"/> object.
         /// </summary>
         /// <returns>The copy of this object.</returns>
-        public virtual SubscriptionInfo Copy()
-        {
-            return (SubscriptionInfo)MemberwiseClone();
-        }
+        public virtual SubscriptionInfo Copy() => 
+            (SubscriptionInfo)MemberwiseClone();
 
         #endregion
     }
@@ -420,21 +285,6 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     public sealed class SynchronizedSubscriptionInfo : SubscriptionInfo
     {
-        #region [ Members ]
-
-        // Fields
-        private bool m_remotelySynchronized;
-
-        private int m_framesPerSecond;
-        private DownsamplingMethod m_downsamplingMethod;
-        private bool m_allowPreemptivePublishing;
-
-        private bool m_allowSortsByArrival;
-        private bool m_ignoreBadTimestamps;
-        private long m_timeResolution;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -444,14 +294,12 @@ namespace GSF.TimeSeries.Transport
         /// <param name="framesPerSecond">Frame rate of the subscription in frames per second.</param>
         public SynchronizedSubscriptionInfo(bool remotelySynchronized, int framesPerSecond)
         {
-            m_remotelySynchronized = remotelySynchronized;
-
-            m_framesPerSecond = framesPerSecond;
-            m_downsamplingMethod = DownsamplingMethod.LastReceived;
-            m_allowPreemptivePublishing = true;
-
-            m_allowSortsByArrival = true;
-            m_timeResolution = Ticks.PerMillisecond;
+            RemotelySynchronized = remotelySynchronized;
+            FramesPerSecond = framesPerSecond;
+            DownsamplingMethod = DownsamplingMethod.LastReceived;
+            AllowPreemptivePublishing = true;
+            AllowSortsByArrival = true;
+            TimeResolution = Ticks.PerMillisecond;
         }
 
         #endregion
@@ -462,99 +310,39 @@ namespace GSF.TimeSeries.Transport
         /// Gets or sets the flag that determines whether this subscription
         /// is remotely synchronized or locally synchronized.
         /// </summary>
-        public bool RemotelySynchronized
-        {
-            get
-            {
-                return m_remotelySynchronized;
-            }
-            set
-            {
-                m_remotelySynchronized = value;
-            }
-        }
+        public bool RemotelySynchronized { get; set; }
 
         /// <summary>
         /// Gets or sets the frame rate of the subscription in frames per second.
         /// </summary>
-        public int FramesPerSecond
-        {
-            get
-            {
-                return m_framesPerSecond;
-            }
-            set
-            {
-                m_framesPerSecond = value;
-            }
-        }
+        public int FramesPerSecond { get; set; }
 
         /// <summary>
         /// Gets or sets the down-sampling method used when the frame rate of
         /// the subscription is lower than the frame rate of the measurement's
         /// source.
         /// </summary>
-        public DownsamplingMethod DownsamplingMethod
-        {
-            get
-            {
-                return m_downsamplingMethod;
-            }
-            set
-            {
-                m_downsamplingMethod = value;
-            }
-        }
+        public DownsamplingMethod DownsamplingMethod { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether frames should be published
         /// as soon as the data is available. If false, frames will be published
         /// when their timestamp expires <c>(realTime > timestamp + lagTime)</c>.
         /// </summary>
-        public bool AllowPreemptivePublishing
-        {
-            get
-            {
-                return m_allowPreemptivePublishing;
-            }
-            set
-            {
-                m_allowPreemptivePublishing = value;
-            }
-        }
+        public bool AllowPreemptivePublishing { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether to allow measurement
         /// sorting based on the measurement's time of arrival, if its timestamp
         /// is unreasonable.
         /// </summary>
-        public bool AllowSortsByArrival
-        {
-            get
-            {
-                return m_allowSortsByArrival;
-            }
-            set
-            {
-                m_allowSortsByArrival = value;
-            }
-        }
+        public bool AllowSortsByArrival { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether to
         /// ignore bad timestamps when sorting measurements.
         /// </summary>
-        public bool IgnoreBadTimestamps
-        {
-            get
-            {
-                return m_ignoreBadTimestamps;
-            }
-            set
-            {
-                m_ignoreBadTimestamps = value;
-            }
-        }
+        public bool IgnoreBadTimestamps { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
@@ -586,17 +374,7 @@ namespace GSF.TimeSeries.Transport
         /// values values greater than <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/> will be set to <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/>
         /// since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
         /// </remarks>
-        public long TimeResolution
-        {
-            get
-            {
-                return m_timeResolution;
-            }
-            set
-            {
-                m_timeResolution = value;
-            }
-        }
+        public long TimeResolution { get; set; }
 
         #endregion
     }
@@ -606,15 +384,6 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     public sealed class UnsynchronizedSubscriptionInfo : SubscriptionInfo
     {
-        #region [ Members ]
-
-        // Fields
-        private bool m_throttled;
-        private double m_publishInterval;
-        private bool m_includeTime;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -623,9 +392,9 @@ namespace GSF.TimeSeries.Transport
         /// <param name="throttled">The flag that determines whether to request that the subscription be throttled.</param>
         public UnsynchronizedSubscriptionInfo(bool throttled)
         {
-            m_throttled = throttled;
-            m_publishInterval = -1;
-            m_includeTime = true;
+            Throttled = throttled;
+            PublishInterval = -1;
+            IncludeTime = true;
         }
 
         #endregion
@@ -636,50 +405,20 @@ namespace GSF.TimeSeries.Transport
         /// Gets or sets the flag that determines whether
         /// to request that the subscription be throttled.
         /// </summary>
-        public bool Throttled
-        {
-            get
-            {
-                return m_throttled;
-            }
-            set
-            {
-                m_throttled = value;
-            }
-        }
+        public bool Throttled { get; set; }
 
         /// <summary>
         /// Gets or sets the interval at which data should be
         /// published when using a throttled subscription.
         /// </summary>
-        public double PublishInterval
-        {
-            get
-            {
-                return m_publishInterval;
-            }
-            set
-            {
-                m_publishInterval = value;
-            }
-        }
+        public double PublishInterval { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether timestamps are
         /// included in the data sent from the publisher. This value is
         /// ignored if the data is remotely synchronized.
         /// </summary>
-        public bool IncludeTime
-        {
-            get
-            {
-                return m_includeTime;
-            }
-            set
-            {
-                m_includeTime = value;
-            }
-        }
+        public bool IncludeTime { get; set; }
 
         #endregion
     }

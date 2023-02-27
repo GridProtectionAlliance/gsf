@@ -44,10 +44,8 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Constructs a new instance of the <see cref="AllAdaptersCollection"/>.
         /// </summary>
-        public AllAdaptersCollection()
-        {
+        public AllAdaptersCollection() => 
             base.Name = "All Adapters Collection";
-        }
 
         #endregion
 
@@ -75,10 +73,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public override DataSet DataSource
         {
-            get
-            {
-                return base.DataSource;
-            }
+            get => base.DataSource;
             set
             {
                 // First remove old adapters that are no longer defined in the configuration
@@ -135,8 +130,8 @@ namespace GSF.TimeSeries.Adapters
         protected override void InitializeItem(IAdapterCollection item)
         {
             base.InitializeItem(item);
-            item.InputMeasurementKeysUpdated += (sender, args) => OnInputMeasurementKeysUpdated();
-            item.OutputMeasurementsUpdated += (sender, args) => OnOutputMeasurementsUpdated();
+            item.InputMeasurementKeysUpdated += (_, _) => OnInputMeasurementKeysUpdated();
+            item.OutputMeasurementsUpdated += (_, _) => OnOutputMeasurementsUpdated();
         }
 
         /// <summary>
@@ -158,16 +153,17 @@ namespace GSF.TimeSeries.Adapters
                 {
                     string dataMember = adapterCollection.DataMember;
 
-                    if (dataSource.Tables.Contains(dataMember))
-                    {
-                        // Create newly defined adapters
-                        foreach (DataRow adapterRow in dataSource.Tables[dataMember].Rows)
-                        {
-                            IAdapter adapter;
+                    if (!dataSource.Tables.Contains(dataMember))
+                        continue;
 
-                            if (!adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(adapterRow, out adapter))
-                                adapterCollection.Add(adapter);
-                        }
+                    // Create newly defined adapters
+                    foreach (DataRow adapterRow in dataSource.Tables[dataMember].Rows)
+                    {
+                        if (adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow[nameof(ID)].ToNonNullString("0")), out _) || !adapterCollection.TryCreateAdapter(adapterRow, out IAdapter adapter))
+                            continue;
+
+                        adapterCollection.Add(adapter);
+                        OnStatusMessage(MessageLevel.Info, $"[{adapterCollection.Name}] Added new referenced adapter \"{adapter.Name}\" [{adapter.ID}]");
                     }
                 }
             }
@@ -192,28 +188,29 @@ namespace GSF.TimeSeries.Adapters
                 {
                     string dataMember = adapterCollection.DataMember;
 
-                    if (dataSource.Tables.Contains(dataMember))
+                    if (!dataSource.Tables.Contains(dataMember))
+                        continue;
+
+                    // Remove adapters that are no longer present in the configuration
+                    for (int i = adapterCollection.Count - 1; i >= 0; i--)
                     {
-                        // Remove adapters that are no longer present in the configuration
-                        for (int i = adapterCollection.Count - 1; i >= 0; i--)
+                        IAdapter adapter = adapterCollection[i];
+                        DataRow[] adapterRows = dataSource.Tables[dataMember].Select($"ID = {adapter.ID}");
+
+                        if (adapterRows.Length != 0 || adapter.ID == 0)
+                            continue;
+
+                        try
                         {
-                            IAdapter adapter = adapterCollection[i];
-                            DataRow[] adapterRows = dataSource.Tables[dataMember].Select($"ID = {adapter.ID}");
-
-                            if (adapterRows.Length == 0 && adapter.ID != 0)
-                            {
-                                try
-                                {
-                                    adapter.Stop();
-                                }
-                                catch (Exception ex)
-                                {
-                                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception while stopping adapter {adapter.Name}: {ex.Message}", ex));
-                                }
-
-                                adapterCollection.Remove(adapter);
-                            }
+                            adapter.Stop();
                         }
+                        catch (Exception ex)
+                        {
+                            OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception while stopping adapter {adapter.Name}: {ex.Message}", ex));
+                        }
+
+                        adapterCollection.Remove(adapter);
+                        OnStatusMessage(MessageLevel.Info, $"[{adapterCollection.Name}] Removed unreferenced adapter \"{adapter.Name}\" [{adapter.ID}]");
                     }
                 }
             }
@@ -232,11 +229,11 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IAdapterCollection collection in this)
                 {
-                    if (collection.TryGetAdapterByID(id, out adapter))
-                    {
-                        adapterCollection = collection;
-                        return true;
-                    }
+                    if (!collection.TryGetAdapterByID(id, out adapter))
+                        continue;
+
+                    adapterCollection = collection;
+                    return true;
                 }
             }
 
@@ -258,11 +255,11 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (IAdapterCollection collection in this)
                 {
-                    if (collection.TryGetAdapterByName(name, out adapter))
-                    {
-                        adapterCollection = collection;
-                        return true;
-                    }
+                    if (!collection.TryGetAdapterByName(name, out adapter))
+                        continue;
+
+                    adapterCollection = collection;
+                    return true;
                 }
             }
 
@@ -297,19 +294,15 @@ namespace GSF.TimeSeries.Adapters
         /// This method is not implemented in <see cref="AllAdaptersCollection"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool TryCreateAdapter(DataRow adapterRow, out IAdapterCollection adapter)
-        {
+        public override bool TryCreateAdapter(DataRow adapterRow, out IAdapterCollection adapter) => 
             throw new NotImplementedException();
-        }
 
         /// <summary>
         /// This method is not implemented in <see cref="AllAdaptersCollection"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool TryGetAdapterByID(uint id, out IAdapterCollection adapter)
-        {
+        public override bool TryGetAdapterByID(uint id, out IAdapterCollection adapter) => 
             throw new NotImplementedException();
-        }
 
         #endregion
     }

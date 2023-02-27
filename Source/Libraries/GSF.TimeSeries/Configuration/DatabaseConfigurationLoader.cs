@@ -54,9 +54,6 @@ namespace GSF.TimeSeries.Configuration
         #region [ Members ]
 
         // Fields
-        private string m_connectionString;
-        private string m_dataProviderString;
-        private string m_nodeIDQueryString;
 
         private AdoDataConnection m_database;
 
@@ -68,48 +65,18 @@ namespace GSF.TimeSeries.Configuration
         /// Gets or sets the connection string which
         /// defines how to connect to the database.
         /// </summary>
-        public string ConnectionString
-        {
-            get
-            {
-                return m_connectionString;
-            }
-            set
-            {
-                m_connectionString = value;
-            }
-        }
+        public string ConnectionString { get; set; }
 
         /// <summary>
         /// Gets or sets the data provider string, which determines the
         /// .NET types to use when opening connections to the database.
         /// </summary>
-        public string DataProviderString
-        {
-            get
-            {
-                return m_dataProviderString;
-            }
-            set
-            {
-                m_dataProviderString = value;
-            }
-        }
+        public string DataProviderString { get; set; }
 
         /// <summary>
         /// Gets or sets the string to use in queries when filtering results by node ID.
         /// </summary>
-        public string NodeIDQueryString
-        {
-            get
-            {
-                return m_nodeIDQueryString;
-            }
-            set
-            {
-                m_nodeIDQueryString = value;
-            }
-        }
+        public string NodeIDQueryString { get; set; }
 
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
@@ -142,7 +109,7 @@ namespace GSF.TimeSeries.Configuration
         {
             using (m_database)
             {
-                m_database = new AdoDataConnection(m_connectionString, m_dataProviderString);
+                m_database = new AdoDataConnection(ConnectionString, DataProviderString);
                 OnStatusMessage(MessageLevel.Info, "Database connection opened.");
             }
         }
@@ -155,17 +122,14 @@ namespace GSF.TimeSeries.Configuration
         {
             DataSet configuration = null;
 
-            Execute(database =>
+            Execute(_ =>
             {
-                ulong latestVersion;
-                DataTable entities;
-
                 configuration = new DataSet("Iaon");
-                latestVersion = GetLatestVersion(0LU);
+                ulong latestVersion = GetLatestVersion(0LU);
                 ExecuteDataOperations();
 
                 // Load configuration entities defined in database
-                entities = GetEntities();
+                DataTable entities = GetEntities();
 
                 // Add configuration entities table to system configuration for reference
                 configuration.Tables.Add(entities.Copy());
@@ -194,28 +158,9 @@ namespace GSF.TimeSeries.Configuration
 
             Execute(database =>
             {
-                ulong latestVersion;
-
-                DataTable entities;
-                string sourceName;
-                string runtimeName;
-
-                DataTable trackedChanges;
                 string[] trackedTables;
-                int changeCount;
-
-                DataTable entityTable;
                 string primaryKeyColumn;
                 HashSet<string> primaryKeys;
-
-                DataRow[] entityChanges;
-                Dictionary<string, int> unchangedRecordIndexes;
-                Dictionary<string, DataRow> changedRecords;
-                List<int> rowsToRemove;
-
-                Ticks operationStartTime;
-                Time operationElapsedTime;
-                bool success;
 
                 // First check if we can augment
                 if (!CanAugment)
@@ -226,13 +171,13 @@ namespace GSF.TimeSeries.Configuration
                 // to prevent potential race conditions that might occur between this and other
                 // processes that may be modifying the database that could result in failure to
                 // update changes to an augmented table
-                latestVersion = GetLatestVersion(currentVersion);
+                ulong latestVersion = GetLatestVersion(currentVersion);
 
                 // Execute data operations before loading anything else from the database
                 ExecuteDataOperations(currentVersion);
 
                 // Load configuration entities defined in database
-                entities = GetEntities();
+                DataTable entities = GetEntities();
 
                 // If any tables exist in the configuration data set that do not exist
                 // in the ConfigurationEntity table, they were either added at runtime
@@ -248,7 +193,7 @@ namespace GSF.TimeSeries.Configuration
                 configuration.Tables.Add(entities.Copy());
 
                 // Get the changes since the current version of the configuration data set
-                trackedChanges = GetTrackedChanges(currentVersion);
+                DataTable trackedChanges = GetTrackedChanges(currentVersion);
 
                 if (TrackedChangesAreValid(currentVersion))
                 {
@@ -258,7 +203,7 @@ namespace GSF.TimeSeries.Configuration
                     if (trackedChanges.Select().Select(row => Convert.ToUInt64(row["ID"])).DefaultIfEmpty(currentVersion + 1LU).Min() != currentVersion + 1LU)
                     {
                         currentVersion = ulong.MinValue;
-                        trackedTables = new string[0];
+                        trackedTables = Array.Empty<string>();
                     }
                     else
                     {
@@ -273,16 +218,16 @@ namespace GSF.TimeSeries.Configuration
                     // version, there may have been an unexpected manual database change or migration. Therefore,
                     // we pretend there are no tracked tables so that all tables will be reloaded from scratch
                     currentVersion = ulong.MinValue;
-                    trackedTables = new string[0];
+                    trackedTables = Array.Empty<string>();
                 }
 
                 foreach (DataRow entityRow in entities.Rows)
                 {
-                    success = false;
+                    bool success = false;
 
                     // Get the source name and runtime name of the table we are attempting to augment
-                    sourceName = entityRow["SourceName"].ToNonNullString();
-                    runtimeName = entityRow["RuntimeName"].ToNonNullString();
+                    string sourceName = entityRow["SourceName"].ToNonNullString();
+                    string runtimeName = entityRow["RuntimeName"].ToNonNullString();
 
                     // A table can only be augmented if the table is tracked and if it exists in the current configuration
                     if (configuration.Tables.Contains(runtimeName) && trackedTables.Contains(sourceName))
@@ -290,38 +235,37 @@ namespace GSF.TimeSeries.Configuration
                         try
                         {
                             // Get the list of changes specific to this table
-                            entityChanges = trackedChanges.Select($"TableName = '{sourceName}'");
+                            DataRow[] entityChanges = trackedChanges.Select($"TableName = '{sourceName}'");
 
                             // If there are no changes to this table, there is nothing to do
                             if (entityChanges.Length > 0)
                             {
                                 // Track the amount of time it takes to do this operation
-                                operationStartTime = DateTime.UtcNow.Ticks;
+                                Ticks operationStartTime = DateTime.UtcNow.Ticks;
 
                                 // Get the actual table to be augmented out of the current configuration
-                                entityTable = configuration.Tables[runtimeName];
+                                DataTable entityTable = configuration.Tables[runtimeName];
 
                                 // Get the name of the column containing the primary key for that table
                                 primaryKeyColumn = entityChanges.Select(row => row["PrimaryKeyColumn"].ToNonNullString()).First();
 
                                 // Get the distinct list of valid primary keys
-                                primaryKeys = new HashSet<string>(entityChanges.Select(row => row["PrimaryKeyValue"]).Where(primaryKey => primaryKey != null && primaryKey != DBNull.Value).Select(primaryKey => primaryKey.ToString()), StringComparer.CurrentCultureIgnoreCase);
+                                primaryKeys = new HashSet<string>(entityChanges.Select(row => row["PrimaryKeyValue"]).Where(primaryKey => primaryKey is not null && primaryKey != DBNull.Value).Select(primaryKey => primaryKey.ToString()), StringComparer.CurrentCultureIgnoreCase);
 
                                 // Get the relevant records from the entity table as well as the updated values from the database
-                                unchangedRecordIndexes = entityTable.Rows.Cast<DataRow>().Select((row, index) => Tuple.Create(row[primaryKeyColumn].ToString(), index)).Where(tuple => primaryKeys.Contains(tuple.Item1)).ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2, StringComparer.CurrentCultureIgnoreCase);
-                                changedRecords = GetChangedRecords(sourceName, primaryKeyColumn, currentVersion).Rows.Cast<DataRow>().ToDictionary(row => row[primaryKeyColumn].ToString(), row => row, StringComparer.CurrentCultureIgnoreCase);
-                                rowsToRemove = new List<int>();
+                                Dictionary<string, int> unchangedRecordIndexes = entityTable.Rows.Cast<DataRow>().Select((row, index) => Tuple.Create(row[primaryKeyColumn].ToString(), index)).Where(tuple => primaryKeys.Contains(tuple.Item1)).ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2, StringComparer.CurrentCultureIgnoreCase);
+                                Dictionary<string, DataRow> changedRecords = GetChangedRecords(sourceName, primaryKeyColumn, currentVersion).Rows.Cast<DataRow>().ToDictionary(row => row[primaryKeyColumn].ToString(), row => row, StringComparer.CurrentCultureIgnoreCase);
+                                List<int> rowsToRemove = new();
 
                                 // Go through the list of distinct primary key values and query
                                 // the database for the latest changes to each of the modified records
-                                changeCount = 0;
+                                int changeCount = 0;
 
                                 foreach (string primaryKey in primaryKeys)
                                 {
                                     int unchangedIndex;
-                                    DataRow changedRow;
 
-                                    if (changedRecords.TryGetValue(primaryKey, out changedRow))
+                                    if (changedRecords.TryGetValue(primaryKey, out DataRow changedRow))
                                     {
                                         // Record was inserted or modified - add or
                                         // update it in the augmented configuration
@@ -357,7 +301,7 @@ namespace GSF.TimeSeries.Configuration
                                 }
 
                                 // Get the amount of time it took to augment the table
-                                operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+                                Time operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                                 // Display information to the user
                                 OnStatusMessage(MessageLevel.Info, $"Loaded {changeCount} change{(changeCount == 1 ? "" : "s")} to \"{runtimeName}\" in {operationElapsedTime.ToString(3)}...");
@@ -371,15 +315,15 @@ namespace GSF.TimeSeries.Configuration
                         }
                     }
 
-                    if (!success)
-                    {
-                        // If we were unable to augment the table, we need to
-                        // drop the current configuration and load the whole table
-                        if (configuration.Tables.Contains(runtimeName))
-                            configuration.Tables.Remove(runtimeName);
+                    if (success)
+                        continue;
 
-                        configuration.Tables.Add(LoadTable(entityRow));
-                    }
+                    // If we were unable to augment the table, we need to
+                    // drop the current configuration and load the whole table
+                    if (configuration.Tables.Contains(runtimeName))
+                        configuration.Tables.Remove(runtimeName);
+
+                    configuration.Tables.Add(LoadTable(entityRow));
                 }
 
                 AddVersion(configuration, latestVersion);
@@ -400,43 +344,38 @@ namespace GSF.TimeSeries.Configuration
         /// </summary>
         public void Close()
         {
-            if ((object)m_database != null)
-            {
-                m_database.Dispose();
-                m_database = null;
+            if (m_database is null)
+                return;
 
-                OnStatusMessage(MessageLevel.Info, "Database connection closed.");
-            }
+            m_database.Dispose();
+            m_database = null;
+
+            OnStatusMessage(MessageLevel.Info, "Database connection closed.");
         }
 
         /// <summary>
         /// Releases all the resources used by the <see cref="DatabaseConfigurationLoader"/> object.
         /// </summary>
-        public void Dispose()
-        {
+        public void Dispose() => 
             Close();
-        }
 
         private void ExecuteDataOperations(ulong trackingVersion = ulong.MinValue)
         {
             Execute(database =>
             {
-                string assemblyName = "", typeName = "", methodName = "", arguments;
-                Assembly assembly;
-                Type type;
-                MethodInfo method;
+                string assemblyName = "", typeName = "", methodName = "";
 
-                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={m_nodeIDQueryString}) AND Enabled <> 0 ORDER BY LoadOrder").Rows)
+                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={NodeIDQueryString}) AND Enabled <> 0 ORDER BY LoadOrder").Rows)
                 {
                     try
                     {
                         OnStatusMessage(MessageLevel.Info, $"Executing startup data operation \"{row["Description"].ToNonNullString("Unlabeled")}\".");
 
                         // Load data operation parameters
-                        assemblyName = row["AssemblyName"].ToNonNullString();
+                        assemblyName = row[nameof(AssemblyName)].ToNonNullString();
                         typeName = row["TypeName"].ToNonNullString();
                         methodName = row["MethodName"].ToNonNullString();
-                        arguments = row["Arguments"].ToNonNullString();
+                        string arguments = row["Arguments"].ToNonNullString();
 
                         if (string.IsNullOrWhiteSpace(assemblyName))
                             throw new InvalidOperationException("Data operation assembly name was not defined.");
@@ -448,12 +387,12 @@ namespace GSF.TimeSeries.Configuration
                             throw new InvalidOperationException("Data operation method name was not defined.");
 
                         // Load data operation from containing assembly and type
-                        assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
-                        type = assembly.GetType(typeName);
-                        method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
+                        Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
+                        Type type = assembly.GetType(typeName);
+                        MethodInfo method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
 
                         // Execute data operation via loaded assembly method
-                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(database, m_nodeIDQueryString, trackingVersion, arguments, status => OnStatusMessage(MessageLevel.Info, status), ex => OnProcessException(MessageLevel.Warning, ex));
+                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method!))(database, NodeIDQueryString, trackingVersion, arguments, status => OnStatusMessage(MessageLevel.Info, status), ex => OnProcessException(MessageLevel.Warning, ex));
                     }
                     catch (Exception ex)
                     {
@@ -469,17 +408,10 @@ namespace GSF.TimeSeries.Configuration
 
             Execute(database =>
             {
-                DataTable source;
-                DataColumnCollection columns;
-                Dictionary<int, int> columnIndex;
-
-                Ticks operationStartTime;
-                Time operationElapsedTime;
-
                 // Load configuration entity data filtered by node ID
-                operationStartTime = DateTime.UtcNow.Ticks;
-                source = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {entityRow["SourceName"]} WHERE NodeID={m_nodeIDQueryString}");
-                operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+                Ticks operationStartTime = DateTime.UtcNow.Ticks;
+                DataTable source = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {entityRow["SourceName"]} WHERE NodeID={NodeIDQueryString}");
+                Time operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                 // Update table name as defined in configuration entity
                 source.TableName = entityRow["RuntimeName"].ToString();
@@ -492,18 +424,16 @@ namespace GSF.TimeSeries.Configuration
                 destination = source.Clone();
 
                 // Get destination column collection
-                columns = destination.Columns;
+                DataColumnCollection columns = destination.Columns;
 
                 // Remove redundant node ID column
                 columns.Remove("NodeID");
 
                 // Pre-cache column index translation after removal of NodeID column to speed data copy
-                columnIndex = new Dictionary<int, int>();
+                Dictionary<int, int> columnIndex = new();
 
                 foreach (DataColumn column in columns)
-                {
                     columnIndex[column.Ordinal] = source.Columns[column.ColumnName].Ordinal;
-                }
 
                 // Manually copy-in each row into table
                 foreach (DataRow sourceRow in source.Rows)
@@ -512,9 +442,7 @@ namespace GSF.TimeSeries.Configuration
 
                     // Copy each column of data in the current row
                     for (int x = 0; x < columns.Count; x++)
-                    {
                         newRow[x] = sourceRow[columnIndex[x]];
-                    }
 
                     // Add new row to destination table
                     destination.Rows.Add(newRow);
@@ -546,7 +474,7 @@ namespace GSF.TimeSeries.Configuration
             try
             {
                 return configuration.Tables["ConfigurationDataSet"].Select()
-                    .Select(row => row.ConvertField<ulong>("Version"))
+                    .Select(row => row.ConvertField<ulong>(nameof(Version)))
                     .First();
             }
             catch
@@ -608,7 +536,7 @@ namespace GSF.TimeSeries.Configuration
 
             Execute(database =>
             {
-                string query = string.Format("SELECT * FROM {0} WHERE {1} IN (SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{0}' AND ID > {2}) AND NodeID = {3}", tableName, primaryKeyColumn, currentVersion, m_nodeIDQueryString);
+                string query = $"SELECT * FROM {tableName} WHERE {primaryKeyColumn} IN (SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{tableName}' AND ID > {currentVersion}) AND NodeID = {NodeIDQueryString}";
                 changes = database.Connection.RetrieveData(database.AdapterType, query);
             });
 
@@ -627,7 +555,7 @@ namespace GSF.TimeSeries.Configuration
         private void AddVersion(DataSet configuration, ulong version)
         {
             DataTable configurationDataSetTable = configuration.Tables.Add("ConfigurationDataSet");
-            configurationDataSetTable.Columns.Add("Version");
+            configurationDataSetTable.Columns.Add(nameof(Version));
             configurationDataSetTable.Rows.Add(version);
         }
 
@@ -635,15 +563,12 @@ namespace GSF.TimeSeries.Configuration
         {
             Execute(database =>
             {
-                Ticks operationStartTime;
-                Time operationElapsedTime;
-
                 // Extract and begin cache of current security context - this does not require an existing security provider
                 OnStatusMessage(MessageLevel.Info, "Preparing current security context...", flags: MessageFlags.SecurityMessage);
 
-                operationStartTime = DateTime.UtcNow.Ticks;
+                Ticks operationStartTime = DateTime.UtcNow.Ticks;
                 AdoSecurityProvider.ExtractSecurityContext(database.Connection, ex => OnProcessException(MessageLevel.Warning, ex, flags: MessageFlags.SecurityMessage));
-                operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+                Time operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                 OnStatusMessage(MessageLevel.Info, $"Security context prepared in {operationElapsedTime.ToString(3)}.");
                 OnStatusMessage(MessageLevel.Info, "Database configuration successfully loaded.", flags: MessageFlags.SecurityMessage);
@@ -652,7 +577,7 @@ namespace GSF.TimeSeries.Configuration
 
         private void Execute(Action<AdoDataConnection> action)
         {
-            bool isOpen = (object)m_database != null;
+            bool isOpen = m_database is not null;
 
             try
             {

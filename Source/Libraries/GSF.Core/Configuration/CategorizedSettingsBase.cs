@@ -106,8 +106,6 @@ namespace GSF.Configuration
 
         // Fields
         private ConfigurationFile m_configFile;
-        private string m_categoryName;
-        private bool m_useCategoryAttributes;
 
         #endregion
 
@@ -173,8 +171,8 @@ namespace GSF.Configuration
             : base(requireSerializeSettingAttribute)
         {
             m_configFile = configFile;
-            m_categoryName = categoryName;
-            m_useCategoryAttributes = useCategoryAttributes;
+            CategoryName = categoryName;
+            UseCategoryAttributes = useCategoryAttributes;
 
             // Make sure settings exist and load current values
             if (initialize)
@@ -191,34 +189,15 @@ namespace GSF.Configuration
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
         protected ConfigurationFile ConfigFile
         {
-            get
-            {
-                return m_configFile;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_configFile = value;
-            }
+            get => m_configFile;
+            set => m_configFile = value ?? throw new NullReferenceException("value cannot be null");
         }
 
         /// <summary>
         /// Gets or sets default category name of section used to access settings in configuration file.
         /// </summary>
         [Browsable(false), SerializeSetting(false)]
-        public string CategoryName
-        {
-            get
-            {
-                return m_categoryName;
-            }
-            set
-            {
-                m_categoryName = value;
-            }
-        }
+        public string CategoryName { get; set; }
 
         /// <summary>
         /// Gets or sets value that determines whether a <see cref="CategoryAttribute"/> applied to a field or property
@@ -232,17 +211,7 @@ namespace GSF.Configuration
         /// will serialized into the section labeled by the <see cref="CategoryName"/> value.
         /// </remarks>
         [Browsable(false), SerializeSetting(false)]
-        public bool UseCategoryAttributes
-        {
-            get
-            {
-                return m_useCategoryAttributes;
-            }
-            set
-            {
-                m_useCategoryAttributes = value;
-            }
-        }
+        public bool UseCategoryAttributes { get; set; }
 
         #endregion
 
@@ -256,10 +225,8 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override void CreateSetting(string name, string setting, string value)
-        {
+        protected override void CreateSetting(string name, string setting, string value) => 
             m_configFile.Settings[GetFieldCategoryName(name)].Add(setting, value, GetFieldDescription(name), GetEncryptStatus(name), GetFieldSettingScope(name));
-        }
 
         /// <summary>
         /// Retrieves setting from configuration file.
@@ -269,10 +236,8 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <returns>Setting value.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override string RetrieveSetting(string name, string setting)
-        {
-            return m_configFile.Settings[GetFieldCategoryName(name)][setting].Value;
-        }
+        protected override string RetrieveSetting(string name, string setting) => 
+            m_configFile.Settings[GetFieldCategoryName(name)][setting].Value;
 
         /// <summary>
         /// Stores setting to configuration file.
@@ -282,20 +247,16 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override void StoreSetting(string name, string setting, string value)
-        {
+        protected override void StoreSetting(string name, string setting, string value) => 
             m_configFile.Settings[GetFieldCategoryName(name)][setting].Value = value;
-        }
 
         /// <summary>
         /// Persist any pending changes to configuration file.
         /// This method is for internal use.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override void PersistSettings()
-        {
+        protected override void PersistSettings() => 
             m_configFile.Save();
-        }
 
         /// <summary>
         /// Gets the category name to use for the specified field or property.
@@ -310,14 +271,14 @@ namespace GSF.Configuration
         public string GetFieldCategoryName(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
+                throw new ArgumentException($"{nameof(name)} cannot be null or empty", nameof(name));
 
             // If user wants to respect category attributes, we attempt to use those as configuration section names
-            if (m_useCategoryAttributes)
-                return GetAttributeValue<CategoryAttribute, string>(name, m_categoryName, attribute => attribute.Category);
+            if (UseCategoryAttributes)
+                return GetAttributeValue<CategoryAttribute, string>(name, CategoryName, attribute => attribute.Category);
 
             // Otherwise return default category name
-            return m_categoryName;
+            return CategoryName;
         }
 
         /// <summary>
@@ -329,7 +290,7 @@ namespace GSF.Configuration
         public string GetFieldDescription(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
+                throw new ArgumentException($"{nameof(name)} cannot be null or empty", nameof(name));
 
             return GetAttributeValue<DescriptionAttribute, string>(name, "", attribute => attribute.Description);
         }
@@ -343,9 +304,9 @@ namespace GSF.Configuration
         public SettingScope GetFieldSettingScope(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name cannot be null or empty");
+                throw new ArgumentException($"{nameof(name)} cannot be null or empty", nameof(name));
 
-            return GetAttributeValue<UserScopedSettingAttribute, SettingScope>(name, SettingScope.Application, attribute => SettingScope.User);
+            return GetAttributeValue<UserScopedSettingAttribute, SettingScope>(name, SettingScope.Application, _ => SettingScope.User);
         }
 
         #endregion
@@ -562,12 +523,14 @@ namespace GSF.Configuration
         /// <summary>
         /// Refresh property values from modeled value expressions.
         /// </summary>
-        public void UpdateProperties() => m_updateProperties(m_instance);
+        public void UpdateProperties() => 
+            m_updateProperties(m_instance);
 
         /// <summary>
         /// Refresh modeled value expressions from property values.
         /// </summary>
-        public void UpdateExpressions() => m_updateExpressions(m_instance);
+        public void UpdateExpressions() => 
+            m_updateExpressions(m_instance);
 
         #endregion
     }

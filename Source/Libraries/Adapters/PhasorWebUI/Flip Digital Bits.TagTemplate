@@ -1,0 +1,1 @@
+DIGI	DIGI[]	NOT CAST(value[INDEX], ushort)	ValueAdjuster	Flips digital bits

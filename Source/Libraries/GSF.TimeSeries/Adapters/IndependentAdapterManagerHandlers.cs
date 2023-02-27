@@ -83,7 +83,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
         public static void HandleDispose(this IIndependentAdapterManager instance)
         {
-            if (instance.RoutingTables != null)
+            if (instance.RoutingTables is not null)
             {
                 instance.InputMeasurementKeysUpdated -= Instance_InputMeasurementKeysUpdated;
 
@@ -92,7 +92,7 @@ namespace GSF.TimeSeries.Adapters
                 instance.RoutingTables.Dispose();
             }
 
-            if (instance.ConfigurationReloadedWaitHandle != null)
+            if (instance.ConfigurationReloadedWaitHandle is not null)
             {
                 instance.ConfigurationReloadedWaitHandle.Set();
                 instance.ConfigurationReloadedWaitHandle.Dispose();
@@ -117,7 +117,7 @@ namespace GSF.TimeSeries.Adapters
             if (instance.InputMeasurementIndexUsedForName < 0 || instance.InputMeasurementIndexUsedForName > instance.PerAdapterInputCount - 1)
                 instance.InputMeasurementIndexUsedForName = 0;
 
-            if (instance.SignalTypes != null && instance.SignalTypes.Length < instance.PerAdapterOutputNames.Count)
+            if (instance.SignalTypes is not null && instance.SignalTypes.Length < instance.PerAdapterOutputNames.Count)
             {
                 instance.OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Defined {nameof(IIndependentAdapterManager.SignalTypes)} array length for adapter \"{instance.Name}\" does not match {nameof(IIndependentAdapterManager.PerAdapterOutputNames)} array length."));
                 return;
@@ -169,7 +169,7 @@ namespace GSF.TimeSeries.Adapters
         {
             const int MaxMeasurementsToShow = 10;
 
-            StringBuilder status = new StringBuilder();
+            StringBuilder status = new();
 
             status.AppendLine($"        Point Tag Template: {instance.PointTagTemplate}");
             status.AppendLine($"    Alternate Tag Template: {instance.AlternateTagTemplate}");
@@ -195,7 +195,7 @@ namespace GSF.TimeSeries.Adapters
             if (!string.IsNullOrWhiteSpace(instance.DatabaseConnectionString))
                 status.AppendLine($"  Custom Database Provider: {instance.DatabaseProviderString ?? ""}");
 
-            if (instance.OutputMeasurements != null && instance.OutputMeasurements.Length > instance.OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+            if (instance.OutputMeasurements is not null && instance.OutputMeasurements.Length > instance.OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
             {
                 status.AppendLine($"       Output measurements: {instance.OutputMeasurements.Length:N0} defined measurements");
                 status.AppendLine();
@@ -213,7 +213,7 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
             }
 
-            if (instance.InputMeasurementKeys != null && instance.InputMeasurementKeys.Length > instance.InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+            if (instance.InputMeasurementKeys is not null && instance.InputMeasurementKeys.Length > instance.InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
             {
                 status.AppendLine($"        Input measurements: {instance.InputMeasurementKeys.Length:N0} defined measurements");
                 status.AppendLine();
@@ -237,7 +237,7 @@ namespace GSF.TimeSeries.Adapters
         public static void HandleParseConnectionString(this IIndependentAdapterManager instance)
         {
             // Parse all properties marked with ConnectionStringParameterAttribute from provided ConnectionString value
-            ConnectionStringParser parser = new ConnectionStringParser();
+            ConnectionStringParser parser = new();
             parser.ParseConnectionString(instance.ConnectionString, instance);
 
             // Parse input measurement keys like class was a typical adapter
@@ -278,7 +278,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public static void HandleQueueMeasurementsForProcessing(this IIndependentAdapterManager instance, IEnumerable<IMeasurement> measurements)
         {
-            if (instance.RoutingTables == null)
+            if (instance.RoutingTables is null)
                 return;
 
             // Pass measurements coming into parent collection adapter to routing tables for individual child adapter distribution
@@ -292,13 +292,10 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of the <see cref="IndependentAdapterManagerExtensions"/>.</returns>
-        public static string HandleGetShortStatus(this IIndependentAdapterManager instance, int maxLength)
-        {
-            if (instance.Enabled)
-                return $"Processing enabled for {instance.Count:N0} adapters.".CenterText(maxLength);
-
-            return "Processing not enabled".CenterText(maxLength);
-        }
+        public static string HandleGetShortStatus(this IIndependentAdapterManager instance, int maxLength) =>
+            instance.Enabled ? 
+                $"Processing enabled for {instance.Count:N0} adapters.".CenterText(maxLength) : 
+                "Processing not enabled".CenterText(maxLength);
 
         /// <summary>
         /// Enumerates child adapters.
@@ -306,13 +303,13 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="instance">Target <see cref="IIndependentAdapterManager"/> instance.</param>
         public static void HandleEnumerateAdapters(this IIndependentAdapterManager instance)
         {
-            StringBuilder enumeratedAdapters = new StringBuilder();
+            StringBuilder enumeratedAdapters = new();
             IAdapter[] adapters = instance.ToArray();
 
             enumeratedAdapters.AppendLine($"{instance.Name} Indexed Adapter Enumeration - {adapters.Length:N0} Total:\r\n");
 
             for (int i = 0; i < adapters.Length; i++)
-                enumeratedAdapters.AppendLine($"{i.ToString("N0").PadLeft(5)}: {adapters[i].Name}".TrimWithEllipsisMiddle(79));
+                enumeratedAdapters.AppendLine($"{i,5:N0}: {adapters[i].Name}".TrimWithEllipsisMiddle(79));
 
             instance.OnStatusMessage(MessageLevel.Info, enumeratedAdapters.ToString());
         }
@@ -362,27 +359,27 @@ namespace GSF.TimeSeries.Adapters
         // Make sure to expose any routing table messages
         private static void RoutingTables_StatusMessage(object sender, EventArgs<string> e)
         {
-            if (sender is RoutingTables routingTables)
-            {
-                IIndependentAdapterManager instance =
-                    routingTables.ActionAdapters as IIndependentAdapterManager ??
-                    routingTables.OutputAdapters as IIndependentAdapterManager;
+            if (sender is not RoutingTables routingTables)
+                return;
 
-                instance?.OnStatusMessage(MessageLevel.Info, e.Argument);
-            }
+            IIndependentAdapterManager instance =
+                routingTables.ActionAdapters as IIndependentAdapterManager ??
+                routingTables.OutputAdapters as IIndependentAdapterManager;
+
+            instance?.OnStatusMessage(MessageLevel.Info, e.Argument);
         }
 
         // Make sure to expose any routing table exceptions
         private static void RoutingTables_ProcessException(object sender, EventArgs<Exception> e)
         {
-            if (sender is RoutingTables routingTables)
-            {
-                IIndependentAdapterManager instance =
-                    routingTables.ActionAdapters as IIndependentAdapterManager ??
-                    routingTables.OutputAdapters as IIndependentAdapterManager;
+            if (sender is not RoutingTables routingTables)
+                return;
 
-                instance?.OnProcessException(MessageLevel.Warning, e.Argument);
-            }
+            IIndependentAdapterManager instance =
+                routingTables.ActionAdapters as IIndependentAdapterManager ??
+                routingTables.OutputAdapters as IIndependentAdapterManager;
+
+            instance?.OnProcessException(MessageLevel.Warning, e.Argument);
         }
     }
 }

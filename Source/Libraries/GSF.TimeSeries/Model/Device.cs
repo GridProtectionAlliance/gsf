@@ -33,7 +33,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GSF.TimeSeries.Model
 {
-    [PrimaryLabel("Acronym")]
+    [PrimaryLabel(nameof(Acronym))]
     public class Device
     {
         [DefaultValueExpression("Global.NodeID")]
@@ -70,7 +70,7 @@ namespace GSF.TimeSeries.Model
         [DefaultValueExpression("Connection.ExecuteScalar(typeof(int), (object)null, 'SELECT ID FROM Company WHERE Acronym = {0}', Global.CompanyAcronym)", Cached = true)]
         public int? CompanyID { get; set; }
 
-        [Label("Historian")]
+        [Label(nameof(Historian))]
         public int? HistorianID { get; set; }
 
         [Label("Access ID")]

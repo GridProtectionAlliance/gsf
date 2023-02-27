@@ -99,17 +99,11 @@ namespace GSF.Configuration
             /// </param>
             public ConnectionStringProperty(PropertyInfo propertyInfo, TypeRegistry typeRegistry = null)
             {
-                SettingNameAttribute settingNameAttribute;
-                DefaultValueAttribute defaultValueAttribute;
-                DefaultValueExpressionAttribute defaultValueExpressionAttribute;
-                TypeConverterAttribute typeConverterAttribute;
-                Type converterType;
-
                 PropertyInfo = propertyInfo;
-                Names = propertyInfo.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Names : new[] { propertyInfo.Name };
+                Names = propertyInfo.TryGetAttribute(out SettingNameAttribute settingNameAttribute) ? settingNameAttribute.Names : new[] { propertyInfo.Name };
 
-                bool hasDefaultValue = propertyInfo.TryGetAttribute(out defaultValueAttribute);
-                bool hasDefaultValueExpression = propertyInfo.TryGetAttribute(out defaultValueExpressionAttribute);
+                bool hasDefaultValue = propertyInfo.TryGetAttribute(out DefaultValueAttribute defaultValueAttribute);
+                bool hasDefaultValueExpression = propertyInfo.TryGetAttribute(out DefaultValueExpressionAttribute defaultValueExpressionAttribute);
 
                 Required = !hasDefaultValue && !hasDefaultValueExpression;
 
@@ -119,11 +113,11 @@ namespace GSF.Configuration
                 }
                 else
                 {
-                    if ((object)defaultValueAttribute == null)
+                    if (defaultValueAttribute is null)
                     {
-                        ValueExpressionParser parser = new ValueExpressionParser(defaultValueExpressionAttribute, propertyInfo);
+                        ValueExpressionParser parser = new(defaultValueExpressionAttribute, propertyInfo);
 
-                        if ((object)typeRegistry != null)
+                        if (typeRegistry is not null)
                             parser.TypeRegistry = typeRegistry;
 
                         DefaultValue = parser.Eval();
@@ -134,11 +128,11 @@ namespace GSF.Configuration
                     }
                 }
 
-                if (propertyInfo.TryGetAttribute(out typeConverterAttribute))
+                if (propertyInfo.TryGetAttribute(out TypeConverterAttribute typeConverterAttribute))
                 {
-                    converterType = Type.GetType(typeConverterAttribute.ConverterTypeName);
+                    Type converterType = Type.GetType(typeConverterAttribute.ConverterTypeName);
 
-                    if ((object)converterType != null)
+                    if (converterType is not null)
                         Converter = (TypeConverter)Activator.CreateInstance(converterType);
                 }
 
@@ -179,12 +173,6 @@ namespace GSF.Configuration
         public const bool DefaultSerializeUnspecifiedProperties = true;
 
         // Fields
-        private char m_parameterDelimiter;
-        private char m_keyValueDelimiter;
-        private char m_startValueDelimiter;
-        private char m_endValueDelimiter;
-        private bool m_explicitlySpecifyDefaults;
-        private bool m_serializeUnspecifiedProperties;
 
         #endregion
 
@@ -195,11 +183,11 @@ namespace GSF.Configuration
         /// </summary>
         public ConnectionStringParser()
         {
-            m_parameterDelimiter = DefaultParameterDelimiter;
-            m_keyValueDelimiter = DefaultKeyValueDelimiter;
-            m_startValueDelimiter = DefaultStartValueDelimiter;
-            m_endValueDelimiter = DefaultEndValueDelimiter;
-            m_serializeUnspecifiedProperties = DefaultSerializeUnspecifiedProperties;
+            ParameterDelimiter = DefaultParameterDelimiter;
+            KeyValueDelimiter = DefaultKeyValueDelimiter;
+            StartValueDelimiter = DefaultStartValueDelimiter;
+            EndValueDelimiter = DefaultEndValueDelimiter;
+            SerializeUnspecifiedProperties = DefaultSerializeUnspecifiedProperties;
         }
 
         #endregion
@@ -210,100 +198,40 @@ namespace GSF.Configuration
         /// Gets or sets the parameter delimiter used to
         /// separate key-value pairs in the connection string.
         /// </summary>
-        public char ParameterDelimiter
-        {
-            get
-            {
-                return m_parameterDelimiter;
-            }
-            set
-            {
-                m_parameterDelimiter = value;
-            }
-        }
+        public char ParameterDelimiter { get; set; }
 
         /// <summary>
         /// Gets or sets the key-value delimiter used to
         /// separate keys from values in the connection string.
         /// </summary>
-        public char KeyValueDelimiter
-        {
-            get
-            {
-                return m_keyValueDelimiter;
-            }
-            set
-            {
-                m_keyValueDelimiter = value;
-            }
-        }
+        public char KeyValueDelimiter { get; set; }
 
         /// <summary>
         /// Gets or sets the start value delimiter used to denote the
         /// start of a value in the cases where the value contains one
         /// of the delimiters defined for the connection string.
         /// </summary>
-        public char StartValueDelimiter
-        {
-            get
-            {
-                return m_startValueDelimiter;
-            }
-            set
-            {
-                m_startValueDelimiter = value;
-            }
-        }
+        public char StartValueDelimiter { get; set; }
 
         /// <summary>
         /// Gets or sets the end value delimiter used to denote the
         /// end of a value in the cases where the value contains one
         /// of the delimiters defined for the connection string.
         /// </summary>
-        public char EndValueDelimiter
-        {
-            get
-            {
-                return m_endValueDelimiter;
-            }
-            set
-            {
-                m_endValueDelimiter = value;
-            }
-        }
+        public char EndValueDelimiter { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether to explicitly
         /// specify parameter values that match their defaults when
         /// serializing settings to a connection string.
         /// </summary>
-        public bool ExplicitlySpecifyDefaults
-        {
-            get
-            {
-                return m_explicitlySpecifyDefaults;
-            }
-            set
-            {
-                m_explicitlySpecifyDefaults = value;
-            }
-        }
+        public bool ExplicitlySpecifyDefaults { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether to include properties which are not
         /// annotated with the <see cref="SerializeSettingAttribute"/> in the connection string.
         /// </summary>
-        public bool SerializeUnspecifiedProperties
-        {
-            get
-            {
-                return m_serializeUnspecifiedProperties;
-            }
-            set
-            {
-                m_serializeUnspecifiedProperties = value;
-            }
-        }
+        public bool SerializeUnspecifiedProperties { get; set; }
 
         #endregion
 
@@ -320,7 +248,7 @@ namespace GSF.Configuration
             Dictionary<string, string> settings;
 
             // Null objects don't have properties
-            if (settingsObject == null)
+            if (settingsObject is null)
                 return string.Empty;
 
             // Get the set of properties which are part of the connection string
@@ -330,11 +258,11 @@ namespace GSF.Configuration
             // can easily be converted to a connection string
             settings = connectionStringProperties
                 .Select(property => Tuple.Create(property, property.PropertyInfo.GetValue(settingsObject)))
-                .Where(tuple => tuple.Item2 != null && (m_explicitlySpecifyDefaults || !tuple.Item2.Equals(tuple.Item1.DefaultValue)))
+                .Where(tuple => tuple.Item2 is not null && (ExplicitlySpecifyDefaults || !tuple.Item2.Equals(tuple.Item1.DefaultValue)))
                 .ToDictionary(tuple => tuple.Item1.Names.First(), tuple => ConvertToString(tuple.Item2, tuple.Item1), StringComparer.CurrentCultureIgnoreCase);
 
             // Convert the dictionary to a connection string and return the result
-            return settings.JoinKeyValuePairs(m_parameterDelimiter, m_keyValueDelimiter, m_startValueDelimiter, m_endValueDelimiter);
+            return settings.JoinKeyValuePairs(ParameterDelimiter, KeyValueDelimiter, StartValueDelimiter, EndValueDelimiter);
         }
 
         /// <summary>
@@ -346,38 +274,35 @@ namespace GSF.Configuration
         /// <exception cref="ArgumentException">A required connection string parameter cannot be found in the connection string.</exception>
         public virtual void ParseConnectionString(string connectionString, object settingsObject)
         {
-            ConnectionStringProperty[] connectionStringProperties;
-            Dictionary<string, string> settings;
-            string key;
             string value;
 
             // Null objects don't have properties
-            if (settingsObject == null)
+            if (settingsObject is null)
                 throw new ArgumentNullException(nameof(settingsObject), "Unable to parse connection string because settings object is invalid.");
 
             // Get the set of properties which are part of the connection string
-            connectionStringProperties = GetConnectionStringProperties(settingsObject.GetType());
+            ConnectionStringProperty[] connectionStringProperties = GetConnectionStringProperties(settingsObject.GetType());
 
             // If there are no properties, then our work is done
             if (connectionStringProperties.Length <= 0)
                 return;
 
             // Parse the connection string into a dictionary of key-value pairs for easy lookups
-            settings = connectionString.ParseKeyValuePairs(m_parameterDelimiter, m_keyValueDelimiter, m_startValueDelimiter, m_endValueDelimiter);
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs(ParameterDelimiter, KeyValueDelimiter, StartValueDelimiter, EndValueDelimiter);
 
             foreach (ConnectionStringProperty property in connectionStringProperties)
             {
                 value = string.Empty;
-                key = property.Names.FirstOrDefault(name => settings.TryGetValue(name, out value));
+                string key = property.Names.FirstOrDefault(name => settings.TryGetValue(name, out value));
 
-                if ((object)key != null)
+                if (key is not null)
                     property.PropertyInfo.SetValue(settingsObject, ConvertToPropertyType(value, property));
                 else if (!property.Required)
                     property.PropertyInfo.SetValue(settingsObject, property.DefaultValue);
                 else
                     throw new ArgumentException("Unable to parse required connection string parameter because it does not exist in the connection string.", property.Names.First());
 
-                if ((object)property.ValidationAttributes == null)
+                if (property.ValidationAttributes is null)
                     continue;
 
                 object propertyValue = property.PropertyInfo.GetValue(settingsObject);
@@ -393,12 +318,10 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="settingsObjectType">The type of the settings object used to look up properties via reflection.</param>
         /// <returns>The set of properties which are part of the connection string.</returns>
-        protected virtual ConnectionStringProperty[] GetConnectionStringProperties(Type settingsObjectType)
-        {
-            return m_serializeUnspecifiedProperties
+        protected virtual ConnectionStringProperty[] GetConnectionStringProperties(Type settingsObjectType) =>
+            SerializeUnspecifiedProperties
                 ? s_allPropertiesLookup.GetOrAdd(settingsObjectType, s_allPropertiesFactory)
                 : s_explicitPropertiesLookup.GetOrAdd(settingsObjectType, s_explicitPropertiesFactory);
-        }
 
         /// <summary>
         /// Converts the given string value to the type of the given property.
@@ -406,12 +329,10 @@ namespace GSF.Configuration
         /// <param name="value">The string value to be converted.</param>
         /// <param name="property">The property used to determine what type to convert to.</param>
         /// <returns>The given string converted to the type of the given property.</returns>
-        protected virtual object ConvertToPropertyType(string value, ConnectionStringProperty property)
-        {
-            return ((object)property.Converter != null)
+        protected virtual object ConvertToPropertyType(string value, ConnectionStringProperty property) =>
+            property.Converter is not null
                 ? property.Converter.ConvertFromString(value)
                 : value.ConvertToType(property.PropertyInfo.PropertyType);
-        }
 
         /// <summary>
         /// Converts the given object to a string.
@@ -419,39 +340,33 @@ namespace GSF.Configuration
         /// <param name="obj">The object to be converted.</param>
         /// <param name="property">The property which defines the type of the object.</param>
         /// <returns>The object converted to a string.</returns>
-        protected virtual string ConvertToString(object obj, ConnectionStringProperty property)
-        {
-            return ((object)property.Converter != null)
+        protected virtual string ConvertToString(object obj, ConnectionStringProperty property) =>
+            property.Converter is not null
                 ? property.Converter.ConvertToString(obj)
                 : Common.TypeConvertToString(obj);
-        }
 
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_allPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
-        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_explicitPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
+        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_allPropertiesLookup = new();
+        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_explicitPropertiesLookup = new();
 
         private static readonly Func<Type, ConnectionStringProperty[]> s_allPropertiesFactory = t =>
         {
-            SerializeSettingAttribute attribute;
-
             return t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
-                .Where(property => !property.TryGetAttribute(out attribute) || attribute.Serialize)
+                .Where(property => !property.TryGetAttribute(out SerializeSettingAttribute attribute) || attribute.Serialize)
                 .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
         };
 
         private static readonly Func<Type, ConnectionStringProperty[]> s_explicitPropertiesFactory = t =>
         {
-            SerializeSettingAttribute attribute;
-
             return t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
-                .Where(property => property.TryGetAttribute(out attribute) && attribute.Serialize)
+                .Where(property => property.TryGetAttribute(out SerializeSettingAttribute attribute) && attribute.Serialize)
                 .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
         };
@@ -486,15 +401,12 @@ namespace GSF.Configuration
         /// <returns>The XML root element converted from the connection string.</returns>
         public static XElement ToXML(string connectionString)
         {
-            XElement root;
-            Dictionary<string, string> settings;
-
-            settings = connectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             if (settings.Count != 1)
                 throw new InvalidOperationException($"Connection string does not define exactly one root element: {connectionString}");
 
-            root = new XElement(settings.Keys.First());
+            XElement root = new(settings.Keys.First());
             SetXMLContent(root, settings.Values.First());
 
             return root;
@@ -502,10 +414,7 @@ namespace GSF.Configuration
 
         private static void SetXMLContent(XElement parent, string connectionStringValue)
         {
-            Dictionary<string, string> settings;
-            XElement element;
-
-            settings = connectionStringValue.ParseKeyValuePairs();
+            Dictionary<string, string> settings = connectionStringValue.ParseKeyValuePairs();
 
             if (!settings.Any())
             {
@@ -515,7 +424,7 @@ namespace GSF.Configuration
             {
                 foreach (KeyValuePair<string, string> setting in settings)
                 {
-                    element = new XElement(setting.Key);
+                    XElement element = new(setting.Key);
                     SetXMLContent(element, setting.Value);
                     parent.Add(element);
                 }
@@ -544,14 +453,8 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         public new bool SerializeUnspecifiedProperties
         {
-            get
-            {
-                return false;
-            }
-            set
-            {
-                throw new InvalidOperationException("Not implemented");
-            }
+            get => false;
+            set => throw new InvalidOperationException("Not implemented");
         }
 
         #endregion
@@ -563,29 +466,22 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="settingsObjectType">The type of the settings object used to look up properties via reflection.</param>
         /// <returns>The set of properties which are part of the connection string.</returns>
-        protected override ConnectionStringProperty[] GetConnectionStringProperties(Type settingsObjectType)
-        {
-            return s_connectionStringPropertiesLookup.GetOrAdd(settingsObjectType, s_valueFactory);
-        }
+        protected override ConnectionStringProperty[] GetConnectionStringProperties(Type settingsObjectType) => 
+            s_connectionStringPropertiesLookup.GetOrAdd(settingsObjectType, s_valueFactory);
 
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_connectionStringPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
+        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_connectionStringPropertiesLookup = new();
         private static TypeRegistry s_typeRegistry;
 
-        private static readonly Func<Type, ConnectionStringProperty[]> s_valueFactory = t =>
-        {
-            TParameterAttribute attribute;
-
-            return t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(property => property.CanRead && property.CanWrite)
-                .Where(property => property.TryGetAttribute(out attribute))
-                .Select(property => new ConnectionStringProperty(property, s_typeRegistry))
-                .ToArray();
-        };
+        private static readonly Func<Type, ConnectionStringProperty[]> s_valueFactory = t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(property => property.CanRead && property.CanWrite)
+            .Where(property => property.TryGetAttribute(out TParameterAttribute attribute))
+            .Select(property => new ConnectionStringProperty(property, s_typeRegistry))
+            .ToArray();
 
         // Static Properties
 
@@ -603,14 +499,8 @@ namespace GSF.Configuration
         [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public static TypeRegistry TypeRegistry
         {
-            get
-            {
-                return s_typeRegistry ?? (s_typeRegistry = ValueExpressionParser.DefaultTypeRegistry.Clone());
-            }
-            set
-            {
-                s_typeRegistry = value;
-            }
+            get => s_typeRegistry ??= ValueExpressionParser.DefaultTypeRegistry.Clone();
+            set => s_typeRegistry = value;
         }
 
         #endregion
@@ -639,19 +529,18 @@ namespace GSF.Configuration
         /// <returns>A connection string containing the serialized properties.</returns>
         public override string ComposeConnectionString(object settingsObject)
         {
-            StringBuilder builder = new StringBuilder();
-            object nestedSettingsObject;
+            StringBuilder builder = new();
 
-            if (settingsObject == null)
+            if (settingsObject is null)
                 return string.Empty;
 
             builder.Append(base.ComposeConnectionString(settingsObject));
 
             foreach (PropertyInfo property in GetNestedSettingsProperties(settingsObject))
             {
-                nestedSettingsObject = property.GetValue(settingsObject);
+                object nestedSettingsObject = property.GetValue(settingsObject);
 
-                if (nestedSettingsObject != null)
+                if (nestedSettingsObject is not null)
                     builder.Append($"; {GetNames(property).First()}={{ {ComposeConnectionString(nestedSettingsObject)} }}");
             }
 
@@ -667,51 +556,40 @@ namespace GSF.Configuration
         /// <exception cref="ArgumentException">A required connection string parameter cannot be found in the connection string.</exception>
         public override void ParseConnectionString(string connectionString, object settingsObject)
         {
-            Dictionary<string, string> settings;
-            object nestedSettingsObject;
             string nestedSettings;
 
             base.ParseConnectionString(connectionString, settingsObject);
-            settings = connectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             foreach (PropertyInfo property in GetNestedSettingsProperties(settingsObject))
             {
-                nestedSettingsObject = property.GetValue(settingsObject);
+                object nestedSettingsObject = property.GetValue(settingsObject);
                 nestedSettings = string.Empty;
 
-                if (nestedSettingsObject != null)
-                {
-                    nestedSettings = GetNames(property)
-                        .Where(name => settings.TryGetValue(name, out nestedSettings))
-                        .Select(name => nestedSettings)
-                        .DefaultIfEmpty(string.Empty)
-                        .First();
+                if (nestedSettingsObject is null)
+                    continue;
 
-                    ParseConnectionString(nestedSettings, nestedSettingsObject);
-                }
+                nestedSettings = GetNames(property)
+                    .Where(name => settings.TryGetValue(name, out nestedSettings))
+                    .Select(_ => nestedSettings)
+                    .DefaultIfEmpty(string.Empty)
+                    .First();
+
+                ParseConnectionString(nestedSettings, nestedSettingsObject);
             }
         }
 
         // Gets a collection of properties from the settings object which represent the nested connection strings
-        private static PropertyInfo[] GetNestedSettingsProperties(object settingsObject)
-        {
-            TNestedSettingsAttribute nestedSettingsAttribute;
-
-            return settingsObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(property => property.TryGetAttribute(out nestedSettingsAttribute))
+        private static PropertyInfo[] GetNestedSettingsProperties(object settingsObject) =>
+            settingsObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.TryGetAttribute(out TNestedSettingsAttribute nestedSettingsAttribute))
                 .ToArray();
-        }
 
         // Gets a collection of names for the given property which can
         // be used during parsing or composing of connection strings
-        private static string[] GetNames(PropertyInfo property)
-        {
-            SettingNameAttribute settingNameAttribute;
-
-            if (property.TryGetAttribute(out settingNameAttribute))
-                return settingNameAttribute.Names;
-
-            return new[] { property.Name };
-        }
+        private static string[] GetNames(PropertyInfo property) =>
+            property.TryGetAttribute(out SettingNameAttribute settingNameAttribute) ? 
+                settingNameAttribute.Names : 
+                new[] { property.Name };
     }
 }

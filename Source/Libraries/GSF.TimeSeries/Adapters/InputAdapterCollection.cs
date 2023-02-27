@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Adapters
@@ -71,6 +72,37 @@ namespace GSF.TimeSeries.Adapters
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets flag that determines if readonly collections should be converted
+        /// to writable so published measurement sets can be augmented by filter adapters.
+        /// </summary>
+        /// <remarks>
+        /// When filter adapters are detected in the <see cref="IaonSession"/>, collections that
+        /// output new measurements should convert all readonly measurement collections into
+        /// collections that can be modified so that measurements can be removed if needed.
+        /// </remarks>
+        public bool ConvertReadonlyCollectionsToWritable { get; set; }
+
+        /// <summary>
+        /// Gets the descriptive status of this <see cref="ActionAdapterCollection"/>.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new();
+
+                status.Append(base.Status);
+                status.AppendLine($"      Readonly Collections: {(ConvertReadonlyCollectionsToWritable ? "Converting to Writable" : "Unmodified")}");
+
+                return status.ToString();
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
@@ -81,12 +113,15 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
+                if (ConvertReadonlyCollectionsToWritable && measurements.IsReadOnly)
+                    NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(new List<IMeasurement>(measurements)));
+
                 NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(NewMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -102,7 +137,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(ProcessingComplete)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -112,13 +147,13 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item">New <see cref="IInputAdapter"/> implementation.</param>
         protected override void InitializeItem(IInputAdapter item)
         {
-            if ((object)item != null)
-            {
-                // Wire up new measurement event
-                item.NewMeasurements += item_NewMeasurements;
-                item.ProcessingComplete += item_ProcessingComplete;
-                base.InitializeItem(item);
-            }
+            if (item is null)
+                return;
+
+            // Wire up new measurement event
+            item.NewMeasurements += item_NewMeasurements;
+            item.ProcessingComplete += item_ProcessingComplete;
+            base.InitializeItem(item);
         }
 
         /// <summary>
@@ -127,20 +162,21 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item"><see cref="IInputAdapter"/> to dispose.</param>
         protected override void DisposeItem(IInputAdapter item)
         {
-            if ((object)item != null)
-            {
-                // Un-wire new measurements event
-                item.NewMeasurements -= item_NewMeasurements;
-                item.ProcessingComplete -= item_ProcessingComplete;
-                base.DisposeItem(item);
-            }
+            if (item is null)
+                return;
+
+            // Un-wire new measurements event
+            item.NewMeasurements -= item_NewMeasurements;
+            item.ProcessingComplete -= item_ProcessingComplete;
+            base.DisposeItem(item);
         }
 
         // Raise new measurements event on behalf of each item in collection
         private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) => NewMeasurements?.Invoke(sender, e);
 
         // Raise processing complete event on behalf of each item in collection
-        private void item_ProcessingComplete(object sender, EventArgs e) => ProcessingComplete?.Invoke(sender, e);
+        private void item_ProcessingComplete(object sender, EventArgs e) =>
+            ProcessingComplete?.Invoke(sender, e);
 
         #endregion
     }

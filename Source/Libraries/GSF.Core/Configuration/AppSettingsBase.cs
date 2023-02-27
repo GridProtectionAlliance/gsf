@@ -32,6 +32,7 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.Configuration
 {
     /// <summary>
@@ -145,17 +146,8 @@ namespace GSF.Configuration
         /// <exception cref="NullReferenceException">value cannot be null.</exception>
         protected ConfigurationFile ConfigFile
         {
-            get
-            {
-                return m_configFile;
-            }
-            set
-            {
-                if ((object)value == null)
-                    throw new NullReferenceException("value cannot be null");
-
-                m_configFile = value;
-            }
+            get => m_configFile;
+            set => m_configFile = value ?? throw new NullReferenceException("value cannot be null");
         }
 
         #endregion
@@ -174,7 +166,7 @@ namespace GSF.Configuration
         {
             KeyValueConfigurationCollection settings = m_configFile.Configuration.AppSettings.Settings;
 
-            if ((object)settings[setting] == null)
+            if (settings[setting] is null)
                 settings.Add(setting, value);
         }
 
@@ -186,10 +178,8 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <returns>Setting value.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override string RetrieveSetting(string name, string setting)
-        {
-            return m_configFile.Configuration.AppSettings.Settings[setting].Value;
-        }
+        protected override string RetrieveSetting(string name, string setting) => 
+            m_configFile.Configuration.AppSettings.Settings[setting].Value;
 
         /// <summary>
         /// Stores setting to configuration file.
@@ -199,20 +189,16 @@ namespace GSF.Configuration
         /// <param name="setting">Setting name.</param>
         /// <param name="value">Setting value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override void StoreSetting(string name, string setting, string value)
-        {
+        protected override void StoreSetting(string name, string setting, string value) => 
             m_configFile.Configuration.AppSettings.Settings[setting].Value = value;
-        }
 
         /// <summary>
         /// Persist any pending changes to configuration file.
         /// This method is for internal use.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected override void PersistSettings()
-        {
+        protected override void PersistSettings() => 
             m_configFile.Save();
-        }
 
         #endregion
     }

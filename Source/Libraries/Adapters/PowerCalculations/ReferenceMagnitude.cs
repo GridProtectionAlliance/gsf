@@ -36,97 +36,96 @@ using GSF.TimeSeries;
 using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
-namespace PowerCalculations
+namespace PowerCalculations;
+
+/// <summary>
+/// Calculates an average magnitude associated with a composed reference angle.
+/// </summary>
+[Description("Reference Magnitude: Calculates an average magnitude associated with a composed reference angle")]
+public class ReferenceMagnitude : CalculatedMeasurementBase
 {
+    #region [ Members ]
+
+    // Fields
+    private double m_referenceMagnitude;
+
+    #endregion
+
+    #region [ Properties ]
+
     /// <summary>
-    /// Calculates an average magnitude associated with a composed reference angle.
+    /// Returns the detailed status of the <see cref="ReferenceMagnitude"/> calculator.
     /// </summary>
-    [Description("Reference Magnitude: Calculates an average magnitude associated with a composed reference angle")]
-    public class ReferenceMagnitude : CalculatedMeasurementBase
+    public override string Status
     {
-        #region [ Members ]
-
-        // Fields
-        private double m_referenceMagnitude;
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Returns the detailed status of the <see cref="ReferenceMagnitude"/> calculator.
-        /// </summary>
-        public override string Status
+        get
         {
-            get
-            {
-                StringBuilder status = new StringBuilder();
+            StringBuilder status = new();
 
-                status.AppendFormat(" Last calculated magnitude: {0}", m_referenceMagnitude);
-                status.AppendLine();
-                status.Append(base.Status);
+            status.AppendLine($" Last calculated magnitude: {m_referenceMagnitude}");
+            status.Append(base.Status);
 
-                return status.ToString();
-            }
+            return status.ToString();
         }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Initializes the <see cref="ReferenceMagnitude"/> calculator.
-        /// </summary>
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            // Validate input measurements
-            List<MeasurementKey> validInputMeasurementKeys = new List<MeasurementKey>();
-            SignalType keyType;
-
-            for (int i = 0; i < InputMeasurementKeys.Length; i++)
-            {
-                keyType = InputMeasurementKeyTypes[i];
-
-                // Make sure measurement key type is a phase magnitude
-                if (keyType == SignalType.VPHM || keyType == SignalType.IPHM)
-                    validInputMeasurementKeys.Add(InputMeasurementKeys[i]);
-            }
-
-            if (validInputMeasurementKeys.Count == 0)
-                throw new InvalidOperationException("No valid phase magnitudes were specified as inputs to the reference magnitude calculator.");
-
-            if (InputMeasurementKeyTypes.Count(s => s == SignalType.VPHM) > 0 && InputMeasurementKeyTypes.Count(s => s == SignalType.IPHM) > 0)
-                throw new InvalidOperationException("A mixture of voltage and current phase magnitudes were specified as inputs to the reference magnitude calculator - you must specify one or the other: only voltage phase magnitudes or only current phase magnitudes.");
-
-            // Make sure only phase magnitudes are used as input
-            InputMeasurementKeys = validInputMeasurementKeys.ToArray();
-
-            // Validate output measurements
-            if (OutputMeasurements.Length < 1)
-                throw new InvalidOperationException("An output measurement was not specified for the reference magnitude calculator - one measurement is expected to represent the \"Calculated Reference Magnitude\" value.");
-        }
-
-        /// <summary>
-        /// Calculates the average reference magnitude.
-        /// </summary>
-        /// <param name="frame">Single frame of measurement data within a one second sample.</param>
-        /// <param name="index">Index of frame within the one second sample.</param>
-        protected override void PublishFrame(IFrame frame, int index)
-        {
-            if (frame.Measurements.Count > 0)
-            {
-                // Calculate the average magnitude
-                m_referenceMagnitude = frame.Measurements.Values.Select(m => m.AdjustedValue).Average();
-
-                // Provide calculated measurement for external consumption
-                OnNewMeasurements(new IMeasurement[] { Measurement.Clone(OutputMeasurements[0], m_referenceMagnitude, frame.Timestamp) });
-            }
-            else
-                m_referenceMagnitude = 0.0D;
-        }
-
-        #endregion
     }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Initializes the <see cref="ReferenceMagnitude"/> calculator.
+    /// </summary>
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        // Validate input measurements
+        List<MeasurementKey> validInputMeasurementKeys = new();
+
+        for (int i = 0; i < InputMeasurementKeys.Length; i++)
+        {
+            SignalType keyType = InputMeasurementKeyTypes[i];
+
+            // Make sure measurement key type is a phase magnitude
+            if (keyType is SignalType.VPHM or SignalType.IPHM)
+                validInputMeasurementKeys.Add(InputMeasurementKeys[i]);
+        }
+
+        if (validInputMeasurementKeys.Count == 0)
+            throw new InvalidOperationException("No valid phase magnitudes were specified as inputs to the reference magnitude calculator.");
+
+        if (InputMeasurementKeyTypes.Count(s => s == SignalType.VPHM) > 0 && InputMeasurementKeyTypes.Count(s => s == SignalType.IPHM) > 0)
+            throw new InvalidOperationException("A mixture of voltage and current phase magnitudes were specified as inputs to the reference magnitude calculator - you must specify one or the other: only voltage phase magnitudes or only current phase magnitudes.");
+
+        // Make sure only phase magnitudes are used as input
+        InputMeasurementKeys = validInputMeasurementKeys.ToArray();
+
+        // Validate output measurements
+        if (OutputMeasurements.Length < 1)
+            throw new InvalidOperationException("An output measurement was not specified for the reference magnitude calculator - one measurement is expected to represent the \"Calculated Reference Magnitude\" value.");
+    }
+
+    /// <summary>
+    /// Calculates the average reference magnitude.
+    /// </summary>
+    /// <param name="frame">Single frame of measurement data within a one second sample.</param>
+    /// <param name="index">Index of frame within the one second sample.</param>
+    protected override void PublishFrame(IFrame frame, int index)
+    {
+        if (frame.Measurements.Count > 0)
+        {
+            // Calculate the average magnitude
+            m_referenceMagnitude = frame.Measurements.Values.Select(m => m.AdjustedValue).Average();
+
+            // Provide calculated measurement for external consumption
+            OnNewMeasurements(new IMeasurement[] { Measurement.Clone(OutputMeasurements[0], m_referenceMagnitude, frame.Timestamp) });
+        }
+        else
+        {
+            m_referenceMagnitude = 0.0D;
+        }
+    }
+
+    #endregion
 }

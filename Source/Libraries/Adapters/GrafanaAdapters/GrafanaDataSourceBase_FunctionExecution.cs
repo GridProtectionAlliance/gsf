@@ -51,7 +51,7 @@ namespace GrafanaAdapters
             {
                 if (Enum.TryParse(value, out TimeUnit timeUnit))
                 {
-                    targetTimeUnit = new()
+                    targetTimeUnit = new TargetTimeUnit
                     {
                         Unit = timeUnit
                     };
@@ -62,7 +62,7 @@ namespace GrafanaAdapters
                 switch (value?.ToLowerInvariant())
                 {
                     case "milliseconds":
-                        targetTimeUnit = new()
+                        targetTimeUnit = new TargetTimeUnit
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Milli
@@ -70,7 +70,7 @@ namespace GrafanaAdapters
 
                         return true;
                     case "microseconds":
-                        targetTimeUnit = new()
+                        targetTimeUnit = new TargetTimeUnit
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Micro
@@ -78,7 +78,7 @@ namespace GrafanaAdapters
 
                         return true;
                     case "nanoseconds":
-                        targetTimeUnit = new()
+                        targetTimeUnit = new TargetTimeUnit
                         {
                             Unit = TimeUnit.Seconds,
                             Factor = SI.Nano
@@ -211,7 +211,7 @@ namespace GrafanaAdapters
                     }
                 }
 
-                return new(parsedParameters.ToArray(), expression);
+                return new Tuple<string[], string>(parsedParameters.ToArray(), expression);
             });
 
             string[] parameters = expressionParameters.Item1;
@@ -240,17 +240,52 @@ namespace GrafanaAdapters
 
                     DataSourceValueGroup[] valueGroups = dataset.ToArray();
                     string[] seriesLabels = new string[valueGroups.Length];
-                    string[] components = label.Split('.');
-                    string table;
 
-                    if (components.Length == 2)
+                    void applyFieldSubstitutions(Dictionary<string, string> substitutions, string target, string tableName, bool usePrefix)
                     {
-                        table = components[0].Trim();
-                        label = components[1].Trim();
-                    }
-                    else
-                    {
-                        table = "ActiveMeasurements";
+                        DataRow record = target.MetadataRecordFromTag(Metadata, tableName);
+                        string prefix = usePrefix ? $"{tableName}." : "";
+
+                        if (record is null)
+                        {
+                            // Apply empty field substitutions when point tag metadata is not found
+                            foreach (string fieldName in Metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => column.ColumnName))
+                            {
+                                string columnName = $"{prefix}{fieldName}";
+
+                                if (columnName.Equals("PointTag", StringComparison.OrdinalIgnoreCase))
+                                    continue;
+
+                                if (!substitutions.ContainsKey(columnName))
+                                    substitutions.Add(columnName, "");
+                            }
+
+                            if (string.IsNullOrEmpty(prefix))
+                            {
+                                if (substitutions.TryGetValue("PointTag", out string substitution))
+                                    substitutions["PointTag"] = $"{substitution}, {target}";
+                                else
+                                    substitutions.Add("PointTag", target);
+                            }
+                        }
+                        else
+                        {
+                            foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
+                            {
+                                string columnName = $"{prefix}{fieldName}";
+                                string columnValue = record[fieldName].ToString();
+
+                                if (substitutions.TryGetValue(columnName, out string substitution))
+                                {
+                                    if (!string.IsNullOrWhiteSpace(columnValue))
+                                        substitutions[columnName] = string.IsNullOrWhiteSpace(substitution) ? columnValue : $"{substitution}, {columnValue}";
+                                }
+                                else
+                                {
+                                    substitutions.Add(columnName, columnValue);
+                                }
+                            }
+                        }
                     }
 
                     bool labelHasSubstitution = label.IndexOf('{') >= 0;
@@ -264,10 +299,13 @@ namespace GrafanaAdapters
                             if (!labelHasSubstitution)
                                 return label;
 
-                            Dictionary<string, string> substitutions = new();
+                            Dictionary<string, string> substitutions = new(StringComparer.OrdinalIgnoreCase);
+                            Regex fieldExpression = new(@"\{(?<Field>[^}]+)\}", RegexOptions.Compiled);
 
+                            // Handle substitutions for each tag defined in the rootTarget
                             foreach (string item in rootTarget.Split(';'))
                             {
+                                // Add {alias} substitutions
                                 string target = item.SplitAlias(out string alias);
 
                                 if (substitutions.TryGetValue("alias", out string substitution))
@@ -280,39 +318,29 @@ namespace GrafanaAdapters
                                     substitutions.Add("alias", alias ?? "");
                                 }
 
-                                DataRow record = target.MetadataRecordFromTag(Metadata, table);
+                                // Check all substitution fields for table name specifications (ActiveMeasurements assumed)
+                                HashSet<string> tableNames = new(new[] { "ActiveMeasurements" }, StringComparer.OrdinalIgnoreCase);
+                                MatchCollection fields = fieldExpression.Matches(label);
 
-                                if (record is null)
+                                foreach (Match match in fields)
                                 {
-                                    foreach (string fieldName in Metadata.Tables[table].Columns.Cast<DataColumn>().Select(column => column.ColumnName))
-                                    {
-                                        if (fieldName.Equals("PointTag", StringComparison.OrdinalIgnoreCase))
-                                            continue;
-
-                                        substitutions.Add(fieldName, "");
-                                    }
-
-                                    if (substitutions.TryGetValue("PointTag", out substitution))
-                                        substitutions["PointTag"] = $"{substitution}, {target}";
-                                    else
-                                        substitutions.Add("PointTag", target);
+                                    string field = match.Result("${Field}");
+                                    
+                                    // Check if specified field substitution has a table name prefix
+                                    string[] components = field.Split('.');
+                                    
+                                    if (components.Length == 2)
+                                        tableNames.Add(components[0]);
                                 }
-                                else
-                                {
-                                    foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
-                                    {
-                                        string columnValue = record[fieldName].ToString();
 
-                                        if (substitutions.TryGetValue(fieldName, out substitution))
-                                        {
-                                            if (!string.IsNullOrWhiteSpace(columnValue))
-                                                substitutions[fieldName] = string.IsNullOrWhiteSpace(substitution) ? columnValue : $"{substitution}, {columnValue}";
-                                        }
-                                        else
-                                        {
-                                            substitutions.Add(fieldName, columnValue);
-                                        }
-                                    }
+                                foreach (string tableName in tableNames)
+                                {
+                                    // ActiveMeasurements view fields are added as non-prefixed field name substitutions
+                                    if (tableName.Equals("ActiveMeasurements", StringComparison.OrdinalIgnoreCase)) 
+                                        applyFieldSubstitutions(substitutions, target, tableName, false);
+
+                                    // All other table fields are added with table name as the prefix {table.field}
+                                    applyFieldSubstitutions(substitutions, target, tableName, true);
                                 }
                             }
 
@@ -341,7 +369,7 @@ namespace GrafanaAdapters
 
                     for (int i = 0; i < valueGroups.Length; i++)
                     {
-                        yield return new()
+                        yield return new DataSourceValueGroup
                         {
                             Target = seriesLabels[i],
                             RootTarget = valueGroups[i].RootTarget,
@@ -362,7 +390,7 @@ namespace GrafanaAdapters
 
                     foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, SeriesFunction.Evaluate, parameters, cancellationToken))
                     {
-                        yield return new()
+                        yield return new DataSourceValueGroup
                         {
                             Target = $"Evaluate({{ {parameters[0]} }}, {valueGroup.Target})",
                             RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
@@ -408,7 +436,7 @@ namespace GrafanaAdapters
 
                             foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters, cancellationToken))
                             {
-                                yield return new()
+                                yield return new DataSourceValueGroup
                                 {
                                     Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
                                     RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
@@ -424,7 +452,7 @@ namespace GrafanaAdapters
                         {
                             foreach (DataSourceValueGroup valueGroup in dataset)
                             {
-                                yield return new()
+                                yield return new DataSourceValueGroup
                                 {
                                     Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
                                     RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
@@ -457,7 +485,7 @@ namespace GrafanaAdapters
 
             foreach (IGrouping<string, DataSourceValue> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target))
             {
-                yield return new()
+                yield return new DataSourceValueGroup
                 {
                     Target = valueGroup.Key,
                     RootTarget = valueGroup.Key,
@@ -772,7 +800,7 @@ namespace GrafanaAdapters
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new() { Value = dataValue.Value - lastValue, Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = dataValue.Value - lastValue, Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -781,12 +809,12 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.TimeDifference:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Seconds };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new() { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
@@ -794,12 +822,12 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Derivative:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Seconds };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new() { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, timeUnit), Time = dataValue.Time, Target = lastTarget };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -808,7 +836,7 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.TimeIntegration:
                     if (parameters.Length == 0 || !TargetTimeUnit.TryParse(parameters[0], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Hours };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Hours };
 
                     result.Value = 0.0D;
 
@@ -830,7 +858,7 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Interval:
                     if (parameters.Length == 1 || !TargetTimeUnit.TryParse(parameters[1], out timeUnit))
-                        timeUnit = new() { Unit = TimeUnit.Seconds };
+                        timeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds };
 
                     value = FromTimeUnits(ParseFloat(parameters[0], source, true, isSliceOperation), timeUnit) / SI.Milli;
 
@@ -972,7 +1000,7 @@ namespace GrafanaAdapters
                         IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () => context.CompileDynamic(expression));
 
                         // Return evaluated expression
-                        yield return new() { Value = Convert.ToDouble(dynamicExpression.Evaluate()), Time = lastTime, Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}" };
+                        yield return new DataSourceValue { Value = Convert.ToDouble(dynamicExpression.Evaluate()), Time = lastTime, Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}" };
                     }
 
                     break;
@@ -1029,7 +1057,7 @@ namespace GrafanaAdapters
             Tuple<bool, double> cache = TargetCache<Tuple<bool, double>>.GetOrAdd(parameter, () =>
             {
                 bool success = double.TryParse(parameter, out double result);
-                return new(success, result);
+                return new Tuple<bool, double>(success, result);
             });
 
             if (cache.Item1)
@@ -1115,7 +1143,7 @@ namespace GrafanaAdapters
                     success = int.TryParse(parameter, out result);
                 }
 
-                return new(success, result);
+                return new Tuple<bool, int>(success, result);
             });
 
             if (cache.Item1)

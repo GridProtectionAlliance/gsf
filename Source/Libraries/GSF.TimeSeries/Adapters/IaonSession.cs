@@ -140,13 +140,13 @@ namespace GSF.TimeSeries.Adapters
             ConfigurationFile configFile = ConfigurationFile.Current;
 
             // Initialize system settings
-            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+            CategorizedSettingsElementCollection systemSettings = configFile.Settings[nameof(systemSettings)];
 
-            systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
-            m_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
+            systemSettings.Add(nameof(NodeID), Guid.NewGuid().ToString(), "Unique Node ID");
+            m_nodeID = systemSettings[nameof(NodeID)].ValueAs<Guid>();
 
             // Initialize threshold settings
-            CategorizedSettingsElementCollection thresholdSettings = configFile.Settings["thresholdSettings"];
+            CategorizedSettingsElementCollection thresholdSettings = configFile.Settings[nameof(thresholdSettings)];
 
             thresholdSettings.Add("MeasurementWarningThreshold", "100000", "Number of unarchived measurements allowed in any output adapter queue before displaying a warning message");
             thresholdSettings.Add("MeasurementDumpingThreshold", "500000", "Number of unarchived measurements allowed in any output adapter queue before taking evasive action and dumping data");
@@ -156,18 +156,14 @@ namespace GSF.TimeSeries.Adapters
             m_measurementDumpingThreshold = thresholdSettings["MeasurementDumpingThreshold"].ValueAsInt32();
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
-            using (Logger.AppendStackMessages("HostAdapter","IaonSession"))
+            using (Logger.AppendStackMessages("HostAdapter",nameof(IaonSession)))
             {
                 // Create a new set of routing tables
-                switch (OptimizationOptions.DefaultRoutingMethod)
+                m_routingTables = OptimizationOptions.DefaultRoutingMethod switch
                 {
-                    case OptimizationOptions.RoutingMethod.HighLatencyLowCpu:
-                        m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu());
-                        break;
-                    default:
-                        m_routingTables = new RoutingTables();
-                        break;
-                }
+                    OptimizationOptions.RoutingMethod.HighLatencyLowCpu => new RoutingTables(new RouteMappingHighLatencyLowCpu()),
+                    _ => new RoutingTables()
+                };
             }
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
@@ -185,8 +181,9 @@ namespace GSF.TimeSeries.Adapters
 
             // Create filter adapters collection
             m_filterAdapters = new FilterAdapterCollection();
-
-            // Create input adapters collection
+            m_filterAdapters.CollectionCountChanged += FilterCollectionCountChangedHandler;
+            
+                // Create input adapters collection
             m_inputAdapters = new InputAdapterCollection();
             m_inputAdapters.NewMeasurements += NewMeasurementsHandler;
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
@@ -297,34 +294,34 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.AppendLine();
                 status.AppendLine(">> Filter Adapters:");
                 status.AppendLine();
 
-                if (!(m_filterAdapters is null))
+                if (m_filterAdapters is not null)
                     status.AppendLine(m_filterAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Input Adapters:");
                 status.AppendLine();
 
-                if (!(m_inputAdapters is null))
+                if (m_inputAdapters is not null)
                     status.AppendLine(m_inputAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Action Adapters:");
                 status.AppendLine();
 
-                if (!(m_actionAdapters is null))
+                if (m_actionAdapters is not null)
                     status.AppendLine(m_actionAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Output Adapters:");
                 status.AppendLine();
 
-                if (!(m_outputAdapters is null))
+                if (m_outputAdapters is not null)
                     status.AppendLine(m_outputAdapters.Status);
 
                 return status.ToString();
@@ -361,15 +358,16 @@ namespace GSF.TimeSeries.Adapters
                 DataSet dataSource = DataSource;
 
                 // Dispose filter adapters collection
-                if (!(m_filterAdapters is null))
+                if (m_filterAdapters is not null)
                 {
                     m_filterAdapters.Stop();
+                    m_filterAdapters.CollectionCountChanged -= FilterCollectionCountChangedHandler;
                     m_filterAdapters.Dispose();
                 }
                 m_filterAdapters = null;
 
                 // Dispose input adapters collection
-                if (!(m_inputAdapters is null))
+                if (m_inputAdapters is not null)
                 {
                     m_inputAdapters.Stop();
                     m_inputAdapters.NewMeasurements -= NewMeasurementsHandler;
@@ -379,7 +377,7 @@ namespace GSF.TimeSeries.Adapters
                 m_inputAdapters = null;
 
                 // Dispose action adapters collection
-                if (!(m_actionAdapters is null))
+                if (m_actionAdapters is not null)
                 {
                     m_actionAdapters.Stop();
                     m_actionAdapters.NewMeasurements -= NewMeasurementsHandler;
@@ -390,7 +388,7 @@ namespace GSF.TimeSeries.Adapters
                 m_actionAdapters = null;
 
                 // Dispose output adapters collection
-                if (!(m_outputAdapters is null))
+                if (m_outputAdapters is not null)
                 {
                     m_outputAdapters.Stop();
                     m_outputAdapters.UnprocessedMeasurements -= UnprocessedMeasurementsHandler;
@@ -399,7 +397,7 @@ namespace GSF.TimeSeries.Adapters
                 m_outputAdapters = null;
 
                 // Dispose all adapters collection
-                if (!(m_allAdapters is null))
+                if (m_allAdapters is not null)
                 {
                     m_allAdapters.StatusMessage -= StatusMessageHandler;
                     m_allAdapters.ProcessException -= ProcessExceptionHandler;
@@ -412,7 +410,7 @@ namespace GSF.TimeSeries.Adapters
                 m_allAdapters = null;
 
                 // Dispose of routing tables
-                if (!(m_routingTables is null))
+                if (m_routingTables is not null)
                 {
                     m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
                     m_routingTables.ProcessException -= m_routingTables_ProcessException;
@@ -477,23 +475,18 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>Derived name of specified object.</returns>
         public virtual string GetDerivedName(object sender)
         {
-            string name = null;
-
-            switch (sender)
+            string name = sender switch
             {
-                case IProvideStatus statusProvider:
-                    name = statusProvider.Name;
-                    break;
-                case string nameValue:
-                    name = nameValue;
-                    break;
-            }
+                IProvideStatus statusProvider => statusProvider.Name,
+                string nameValue => nameValue,
+                _ => null
+            };
 
             if (string.IsNullOrWhiteSpace(name))
                 name = sender.GetType().Name;
 
             if (!string.IsNullOrWhiteSpace(m_name))
-                name += "#" + m_name;
+                name += $"#{m_name}";
 
             return name;
         }
@@ -522,7 +515,7 @@ namespace GSF.TimeSeries.Adapters
 
             // When using default informational update type, see if an update type code was embedded in the status message - this allows for compatibility for event
             // handlers that are normally unaware of the update type
-            if (type == UpdateType.Information && !(status is null) && status.Length > 3 && status.StartsWith("0x") && Enum.TryParse(status[2].ToString(), out type))
+            if (type == UpdateType.Information && status is not null && status.Length > 3 && status.StartsWith("0x") && Enum.TryParse(status[2].ToString(), out type))
                 status = status.Substring(3);
 
             StatusMessage(sender, new EventArgs<string, UpdateType>(status, type));
@@ -541,7 +534,7 @@ namespace GSF.TimeSeries.Adapters
         [StringFormatMethod("formattedStatus")]
         protected virtual void OnStatusMessage(object sender, string formattedStatus, UpdateType type, params object[] args)
         {
-            if (!(StatusMessage is null))
+            if (StatusMessage is not null)
                 OnStatusMessage(sender, string.Format(formattedStatus, args), type);
         }
 
@@ -689,7 +682,7 @@ namespace GSF.TimeSeries.Adapters
                 processingInterval = adapter.ProcessingInterval;
 
             // Allow much more time before warning for when a fast processing interval has been defined
-            if (processingInterval > -1 && processingInterval < 100)
+            if (processingInterval is > -1 and < 100)
                 threshold *= 4;
 
             if (secondsOfData > threshold)
@@ -715,7 +708,7 @@ namespace GSF.TimeSeries.Adapters
                     return;
 
                 // Create a new temporal support identification table
-                DataTable temporalSupport = new DataTable("TemporalSupport");
+                DataTable temporalSupport = new("TemporalSupport");
 
                 temporalSupport.Columns.Add("Source", typeof(string));
                 temporalSupport.Columns.Add("ID", typeof(uint));
@@ -810,12 +803,23 @@ namespace GSF.TimeSeries.Adapters
             OnDisposed(sender);
         }
 
+        private void FilterCollectionCountChangedHandler(object sender, EventArgs e)
+        {
+            bool filterAdaptersExist = m_filterAdapters.Count > 0;
+            
+            if (m_inputAdapters is not null)
+                m_inputAdapters.ConvertReadonlyCollectionsToWritable = filterAdaptersExist;
+            
+            if (m_actionAdapters is not null)
+                m_actionAdapters.ConvertReadonlyCollectionsToWritable = filterAdaptersExist;
+        }
+
+        // Bubble routing table messages out through Iaon session
         private void m_routingTables_StatusMessage(object sender, EventArgs<string> e) =>
-            // Bubble routing table messages out through Iaon session
             OnStatusMessage(this, e.Argument);
 
+        // Bubble routing table exceptions out through Iaon session
         private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e) =>
-            // Bubble routing table exceptions out through Iaon session
             ProcessExceptionHandler(sender, e);
 
         #endregion
@@ -823,7 +827,7 @@ namespace GSF.TimeSeries.Adapters
         #region [ Static ]
 
         // Static Fields
-        private static readonly object s_requestTemporalSupportLock = new object();
+        private static readonly object s_requestTemporalSupportLock = new();
         private static DataSet s_currentRealTimeConfiguration;
         private static DataSet s_currentTemporalConfiguration;
 
@@ -840,13 +844,13 @@ namespace GSF.TimeSeries.Adapters
            {
                 // Since the same real-time configuration is shared among all adapters we can return
                 // existing cached temporal configuration if real-time configuration hasn't changed
-                if (!(s_currentRealTimeConfiguration is null) && !(s_currentTemporalConfiguration is null) && ReferenceEquals(s_currentRealTimeConfiguration, realtimeConfiguration))
+                if (s_currentRealTimeConfiguration is not null && s_currentTemporalConfiguration is not null && ReferenceEquals(s_currentRealTimeConfiguration, realtimeConfiguration))
                     return s_currentTemporalConfiguration;
 
                 try
                 {
                     // Duplicate current run-time session configuration that has temporal support
-                    DataSet temporalConfiguration = new DataSet("IaonTemporal");
+                    DataSet temporalConfiguration = new("IaonTemporal");
                     DataTable temporalSupport = realtimeConfiguration.Tables["TemporalSupport"];
 
                     foreach (DataTable table in realtimeConfiguration.Tables)
@@ -858,6 +862,7 @@ namespace GSF.TimeSeries.Adapters
                             case "inputadapters":
                             case "actionadapters":
                             case "outputadapters":
+                            case "filteradapters":
                                 // For Iaon adapter tables, we only copy in adapters that support temporal processing
                                 temporalConfiguration.Tables.Add(table.Clone());
 

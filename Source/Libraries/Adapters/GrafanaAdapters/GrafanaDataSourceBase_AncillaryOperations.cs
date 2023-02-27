@@ -66,8 +66,7 @@ namespace GrafanaAdapters
                     return false;
 
                 // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
-                if (s_selectExpression is null)
-                    s_selectExpression = new(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                s_selectExpression ??= new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
                 Match match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
 
@@ -122,10 +121,8 @@ namespace GrafanaAdapters
                                 if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
                                     takeCount = MaximumSearchTargetsPerRequest;
 
-                                void executeSelect(IEnumerable<DataRow> queryOperation)
-                                {
+                                void executeSelect(IEnumerable<DataRow> queryOperation) => 
                                     results.AddRange(queryOperation.Take(takeCount).Select(row => string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
-                                }
 
                                 if (string.IsNullOrWhiteSpace(expression))
                                 {
@@ -164,7 +161,8 @@ namespace GrafanaAdapters
                     // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
                     return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
                 });
-            }, cancellationToken);
+            },
+            cancellationToken);
         }
 
         /// <summary>
@@ -177,7 +175,8 @@ namespace GrafanaAdapters
             return Task.Factory.StartNew(() =>
             {
                 return TargetCache<string[]>.GetOrAdd($"search!fields!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
-            }, cancellationToken);
+            },
+            cancellationToken);
         }
 
         /// <summary>
@@ -191,7 +190,8 @@ namespace GrafanaAdapters
             {
                 // Any table that includes columns for ID, SignalID, PointTag, Adder and Multiplier can be used as measurement sources for filter expressions
                 return TargetCache<string[]>.GetOrAdd("search!filters!{63F7E9F6B334}", () => Metadata.Tables.Cast<DataTable>().Where(table => new[] { "ID", "SignalID", "PointTag", "Adder", "Multiplier" }.All(fieldName => table.Columns.Contains(fieldName))).Select(table => table.TableName).ToArray());
-            }, cancellationToken);
+            },
+            cancellationToken);
         }
 
         /// <summary>
@@ -205,7 +205,8 @@ namespace GrafanaAdapters
             {
                 // Result will typically be the same list as SearchFields but allows ability to deviate in case certain fields are not suitable for ORDER BY expression
                 return TargetCache<string[]>.GetOrAdd($"search!orderbys!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
-            }, cancellationToken);
+            },
+            cancellationToken);
         }
 
         /// <summary>
@@ -237,23 +238,23 @@ namespace GrafanaAdapters
                     target = parts[0].Trim();
                 }
 
-                if (definitions.TryGetValue(target, out DataRow definition))
+                if (!definitions.TryGetValue(target, out DataRow definition))
+                    continue;
+
+                foreach (double[] datapoint in values.datapoints)
                 {
-                    foreach (double[] datapoint in values.datapoints)
+                    if (!type.IsApplicable(datapoint))
+                        continue;
+
+                    AnnotationResponse response = new()
                     {
-                        if (type.IsApplicable(datapoint))
-                        {
-                            AnnotationResponse response = new()
-                            {
-                                annotation = request.annotation,
-                                time = datapoint[TimeSeriesValues.Time]
-                            };
+                        annotation = request.annotation,
+                        time = datapoint[TimeSeriesValues.Time]
+                    };
 
-                            type.PopulateResponse(response, target, definition, datapoint, Metadata);
+                    type.PopulateResponse(response, target, definition, datapoint, Metadata);
 
-                            responses.Add(response);
-                        }
-                    }
+                    responses.Add(response);
                 }
             }
 
@@ -435,7 +436,7 @@ namespace GrafanaAdapters
                     .Select(key => $"'{key.SignalID}'").ToList();
 
                 if (signalIDs.Count == 0)
-                    return new();
+                    return new List<GrafanaAlarm>();
 
                 using AdoDataConnection connection = new("systemSettings");
                 return new TableOperations<GrafanaAlarm>(connection).QueryRecordsWhere($"SignalID IN ({string.Join(",", signalIDs)})").ToList();

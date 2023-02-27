@@ -65,10 +65,7 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
 
         // Fields
-        private readonly LongSynchronizedOperation m_metadataRefreshOperation;
-        private ProcessQueue<IMeasurement> m_measurementQueue;
         private List<string> m_inputSourceIDs;
-        private MeasurementKey[] m_requestedInputMeasurementKeys;
         private readonly LongSynchronizedOperation m_connectionOperation;
         private SharedTimer m_connectionTimer;
         private SharedTimer m_monitorTimer;
@@ -84,13 +81,13 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected OutputAdapterBase()
         {
-            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh)
+            MetadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh)
             {
                 IsBackground = true
             };
 
-            m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
-            m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
+            InternalProcessQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
+            InternalProcessQueue.ProcessException += m_measurementQueue_ProcessException;
 
             m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation)
             {
@@ -121,10 +118,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public override DataSet DataSource
         {
-            get
-            {
-                return base.DataSource;
-            }
+            get => base.DataSource;
             set
             {
                 base.DataSource = value;
@@ -136,17 +130,13 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets whether or not to automatically place measurements back into the processing
         /// queue if an exception occurs while processing.  Defaults to false.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines whether or not to automatically place measurements back into the processing queue if an exception occurs while processing.  Defaults to false."), DefaultValue(false)]
+        [ConnectionStringParameter]
+        [Description("Defines whether or not to automatically place measurements back into the processing queue if an exception occurs while processing.  Defaults to false.")]
+        [DefaultValue(false)]
         public virtual bool RequeueOnException
         {
-            get
-            {
-                return m_measurementQueue.RequeueOnException;
-            }
-            set
-            {
-                m_measurementQueue.RequeueOnException = value;
-            }
+            get => InternalProcessQueue.RequeueOnException;
+            set => InternalProcessQueue.RequeueOnException = value;
         }
 
         /// <summary>
@@ -158,16 +148,10 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual string[] InputSourceIDs
         {
-            get
-            {
-                if ((object)m_inputSourceIDs == null)
-                    return null;
-
-                return m_inputSourceIDs.ToArray();
-            }
+            get => m_inputSourceIDs?.ToArray();
             set
             {
-                if ((object)value == null)
+                if (value is null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -185,17 +169,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedInputMeasurementKeys
-        {
-            get
-            {
-                return m_requestedInputMeasurementKeys;
-            }
-            set
-            {
-                m_requestedInputMeasurementKeys = value;
-            }
-        }
+        public virtual MeasurementKey[] RequestedInputMeasurementKeys { get; set; }
 
         /// <summary>
         /// Gets the flag that determines if measurements sent to this <see cref="OutputAdapterBase"/> are destined for archival.
@@ -205,10 +179,7 @@ namespace GSF.TimeSeries.Adapters
         /// been archived per minute. Historians would normally set this property to <c>true</c>; other custom exports would set
         /// this property to <c>false</c>.
         /// </remarks>
-        public abstract bool OutputIsForArchive
-        {
-            get;
-        }
+        public abstract bool OutputIsForArchive { get; }
 
         /// <summary>
         /// Gets the flag indicating if this <see cref="OutputAdapterBase"/> implementation supports temporal processing.
@@ -220,13 +191,7 @@ namespace GSF.TimeSeries.Adapters
         /// is <c>true</c>. If you have an output adapter that you want to support temporal data processing independent of the
         /// <see cref="OutputIsForArchive"/> value, then override this property and force the base value to the desired state.
         /// </remarks>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return !OutputIsForArchive;
-            }
-        }
+        public override bool SupportsTemporalProcessing => !OutputIsForArchive;
 
         /// <summary>
         /// Gets or sets the desired processing interval, in milliseconds, for the output adapter.
@@ -238,55 +203,52 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public override int ProcessingInterval
         {
-            get
-            {
-                return base.ProcessingInterval;
-            }
+            get => base.ProcessingInterval;
             set
             {
-                if (base.ProcessingInterval != value)
+                if (base.ProcessingInterval == value)
+                    return;
+
+                base.ProcessingInterval = value;
+                bool enabled = false;
+                bool requeueOnException = ProcessQueue<IMeasurement>.DefaultRequeueOnException;
+                IMeasurement[] unprocessedMeasurements = null;
+
+                if (InternalProcessQueue is not null)
                 {
-                    base.ProcessingInterval = value;
-                    bool enabled = false;
-                    bool requeueOnException = ProcessQueue<IMeasurement>.DefaultRequeueOnException;
-                    IMeasurement[] unprocessedMeasurements = null;
+                    enabled = InternalProcessQueue.Enabled;
+                    requeueOnException = InternalProcessQueue.RequeueOnException;
 
-                    if (m_measurementQueue != null)
+                    if (InternalProcessQueue.Count > 0)
                     {
-                        enabled = m_measurementQueue.Enabled;
-                        requeueOnException = m_measurementQueue.RequeueOnException;
-
-                        if (m_measurementQueue.Count > 0)
-                        {
-                            m_measurementQueue.Stop();
-                            unprocessedMeasurements = m_measurementQueue.ToArray();
-                        }
-
-                        m_measurementQueue.ProcessException -= m_measurementQueue_ProcessException;
-                        m_measurementQueue.Dispose();
+                        InternalProcessQueue.Stop();
+                        unprocessedMeasurements = InternalProcessQueue.ToArray();
                     }
 
-                    if (value <= 0)
-                    {
-                        // The default processing interval is "as fast as possible"
-                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
-                    }
-                    else
-                    {
-                        // Set the desired processing interval
-                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateSynchronousQueue(ProcessMeasurements);
-                        m_measurementQueue.ProcessInterval = value;
-                    }
-
-                    m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
-                    m_measurementQueue.RequeueOnException = requeueOnException;
-
-                    // Requeue any existing measurements
-                    if (unprocessedMeasurements != null && unprocessedMeasurements.Length > 0)
-                        m_measurementQueue.AddRange(unprocessedMeasurements);
-
-                    m_measurementQueue.Enabled = enabled;
+                    InternalProcessQueue.ProcessException -= m_measurementQueue_ProcessException;
+                    InternalProcessQueue.Dispose();
                 }
+
+                if (value <= 0)
+                {
+                    // The default processing interval is "as fast as possible"
+                    InternalProcessQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
+                }
+                else
+                {
+                    // Set the desired processing interval
+                    InternalProcessQueue = ProcessQueue<IMeasurement>.CreateSynchronousQueue(ProcessMeasurements);
+                    InternalProcessQueue.ProcessInterval = value;
+                }
+
+                InternalProcessQueue.ProcessException += m_measurementQueue_ProcessException;
+                InternalProcessQueue.RequeueOnException = requeueOnException;
+
+                // Requeue any existing measurements
+                if (unprocessedMeasurements is not null && unprocessedMeasurements.Length > 0)
+                    InternalProcessQueue.AddRange(unprocessedMeasurements);
+
+                InternalProcessQueue.Enabled = enabled;
             }
         }
 
@@ -296,10 +258,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Derived classes should return true when data output stream connects asynchronously, otherwise return false.
         /// </remarks>
-        protected abstract bool UseAsyncConnect
-        {
-            get;
-        }
+        protected abstract bool UseAsyncConnect { get; }
 
         /// <summary>
         /// Gets or sets the connection attempt interval, in milliseconds, for the data output adapter.
@@ -308,14 +267,14 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                if (m_connectionTimer != null)
+                if (m_connectionTimer is not null)
                     return m_connectionTimer.Interval;
 
                 return 2000.0D;
             }
             set
             {
-                if (m_connectionTimer != null)
+                if (m_connectionTimer is not null)
                     m_connectionTimer.Interval = (int)value;
             }
         }
@@ -323,24 +282,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the operation that calls <see cref="ExecuteMetadataRefresh"/>.
         /// </summary>
-        protected LongSynchronizedOperation MetadataRefreshOperation
-        {
-            get
-            {
-                return m_metadataRefreshOperation;
-            }
-        }
+        protected LongSynchronizedOperation MetadataRefreshOperation { get; }
 
         /// <summary>
         /// Allows derived class access to internal processing queue.
         /// </summary>
-        protected ProcessQueue<IMeasurement> InternalProcessQueue
-        {
-            get
-            {
-                return m_measurementQueue;
-            }
-        }
+        protected ProcessQueue<IMeasurement> InternalProcessQueue { get; private set; }
 
         /// <summary>
         /// Returns the detailed status of the data input source.  Derived classes should extend status with implementation specific information.
@@ -351,14 +298,13 @@ namespace GSF.TimeSeries.Adapters
             {
                 const int MaxMeasurementsToShow = 10;
 
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
 
-                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                if (RequestedInputMeasurementKeys is not null && RequestedInputMeasurementKeys.Length > 0)
                 {
-                    status.AppendFormat("      Requested input keys: {0:N0} defined measurements", RequestedInputMeasurementKeys.Length);
-                    status.AppendLine();
+                    status.AppendLine($"      Requested input keys: {RequestedInputMeasurementKeys.Length:N0} defined measurements");
                     status.AppendLine();
 
                     for (int i = 0; i < Math.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
@@ -370,13 +316,10 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("     Source ID filter list: {0}", (object)m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(','));
-                status.AppendLine();
-                status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
-                status.AppendLine();
-                status.AppendFormat("     Output is for archive: {0}", OutputIsForArchive);
-                status.AppendLine();
-                status.Append(m_measurementQueue.Status);
+                status.AppendLine($"     Source ID filter list: {(m_inputSourceIDs is null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(','))}");
+                status.AppendLine($"   Asynchronous connection: {UseAsyncConnect}");
+                status.AppendLine($"     Output is for archive: {OutputIsForArchive}");
+                status.Append(InternalProcessQueue.Status);
 
                 return status.ToString();
             }
@@ -390,14 +333,8 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public new virtual IMeasurement[] OutputMeasurements
         {
-            get
-            {
-                return base.OutputMeasurements;
-            }
-            set
-            {
-                base.OutputMeasurements = value;
-            }
+            get => base.OutputMeasurements;
+            set => base.OutputMeasurements = value;
         }
 
         #endregion
@@ -410,39 +347,39 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_connectionTimer != null)
-                        {
-                            m_connectionTimer.Elapsed -= m_connectionTimer_Elapsed;
-                            m_connectionTimer.Dispose();
-                        }
-                        m_connectionTimer = null;
+                if (!disposing)
+                    return;
 
-                        if (m_monitorTimer != null)
-                        {
-                            m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
-                            m_monitorTimer.Dispose();
-                        }
-                        m_monitorTimer = null;
-
-                        if (m_measurementQueue != null)
-                        {
-                            m_measurementQueue.ProcessException -= m_measurementQueue_ProcessException;
-                            m_measurementQueue.Dispose();
-                        }
-                        m_measurementQueue = null;
-                    }
-                }
-                finally
+                if (m_connectionTimer is not null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_connectionTimer.Elapsed -= m_connectionTimer_Elapsed;
+                    m_connectionTimer.Dispose();
                 }
+                m_connectionTimer = null;
+
+                if (m_monitorTimer is not null)
+                {
+                    m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
+                    m_monitorTimer.Dispose();
+                }
+                m_monitorTimer = null;
+
+                if (InternalProcessQueue is not null)
+                {
+                    InternalProcessQueue.ProcessException -= m_measurementQueue_ProcessException;
+                    InternalProcessQueue.Dispose();
+                }
+                InternalProcessQueue = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -454,20 +391,18 @@ namespace GSF.TimeSeries.Adapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             // Load optional parameters
-            if (settings.TryGetValue("inputSourceIDs", out setting) || settings.TryGetValue("sourceids", out setting))
+            if (settings.TryGetValue(nameof(InputSourceIDs), out string setting) || settings.TryGetValue("sourceids", out setting))
                 InputSourceIDs = setting.Split(',');
             else
                 InputSourceIDs = null;
 
-            if (settings.TryGetValue("requeueOnException", out setting))
+            if (settings.TryGetValue(nameof(RequeueOnException), out setting))
                 RequeueOnException = setting.ParseBoolean();
 
             // Start data monitor...
-            if (m_monitorTimer != null)
-                m_monitorTimer.Start();
+            m_monitorTimer?.Start();
         }
 
         /// <summary>
@@ -478,15 +413,12 @@ namespace GSF.TimeSeries.Adapters
         public void RefreshMetadata()
         {
             // Force a recalculation of input measurement keys so that system can appropriately update routing tables
-            string setting;
-
-            if (Settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, setting);
-            else
-                InputMeasurementKeys = new MeasurementKey[0];
+            InputMeasurementKeys = Settings.TryGetValue(nameof(InputMeasurementKeys), out string setting) ? 
+                ParseInputMeasurementKeys(DataSource, true, setting) : 
+                Array.Empty<MeasurementKey>();
 
             InputSourceIDs = InputSourceIDs;
-            m_metadataRefreshOperation.RunOnceAsync();
+            MetadataRefreshOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -504,11 +436,11 @@ namespace GSF.TimeSeries.Adapters
             base.Start();
 
             // Start the connection cycle
-            if (m_connectionTimer != null)
+            if (m_connectionTimer is not null)
                 m_connectionTimer.Enabled = true;
 
             // Make sure data monitor is started...
-            if (m_monitorTimer != null && !m_monitorTimer.Enabled)
+            if (m_monitorTimer is not null && !m_monitorTimer.Enabled)
                 m_monitorTimer.Start();
         }
 
@@ -530,9 +462,7 @@ namespace GSF.TimeSeries.Adapters
         protected virtual void OnConnected()
         {
             // Start data processing thread
-            if (m_measurementQueue != null)
-                m_measurementQueue.Start();
-
+            InternalProcessQueue?.Start();
             OnStatusMessage(MessageLevel.Info, "Connection established.", "Connecting");
         }
 
@@ -546,13 +476,13 @@ namespace GSF.TimeSeries.Adapters
                 bool performedDisconnect = Enabled;
 
                 // Stop the connection cycle
-                if (m_connectionTimer != null)
+                if (m_connectionTimer is not null)
                     m_connectionTimer.Enabled = false;
 
                 base.Stop();
 
                 // Stop data processing thread
-                m_measurementQueue.Stop();
+                InternalProcessQueue.Stop();
 
                 // Attempt disconnection from historian (e.g., consumer to call historian API disconnect function)
                 AttemptDisconnection();
@@ -581,19 +511,15 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Derived classes should call this method manually if <see cref="UseAsyncConnect"/> is <c>true</c>.
         /// </remarks>
-        protected virtual void OnDisconnected()
-        {
+        protected virtual void OnDisconnected() => 
             OnStatusMessage(MessageLevel.Info, $"Disconnected from {m_connectionInfo ?? ConnectionInfo}.");
-        }
 
         /// <summary>
         /// Queues a single measurement for processing. Measurement is automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurement">Measurement to queue for processing.</param>
-        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
-        {
+        public virtual void QueueMeasurementForProcessing(IMeasurement measurement) => 
             QueueMeasurementsForProcessing(new[] { measurement });
-        }
 
         /// <summary>
         /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
@@ -604,8 +530,9 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            m_measurementQueue.AddRange(measurements);
-            IncrementProcessedMeasurements(measurements.Count());
+            IMeasurement[] collection = measurements as IMeasurement[] ?? measurements.ToArray();
+            InternalProcessQueue.AddRange(collection);
+            IncrementProcessedMeasurements(collection.Length);
         }
 
         /// <summary>
@@ -656,10 +583,8 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            lock (m_measurementQueue.SyncRoot)
-            {
-                m_measurementQueue.RemoveRange(0, Math.Min(total, m_measurementQueue.Count));
-            }
+            lock (InternalProcessQueue.SyncRoot)
+                InternalProcessQueue.RemoveRange(0, Math.Min(total, InternalProcessQueue.Count));
         }
 
         /// <summary>
@@ -677,11 +602,8 @@ namespace GSF.TimeSeries.Adapters
         /// this method before the class is destructed, there may be items that remain unprocessed in the queue.
         /// </para>
         /// </remarks>
-        public virtual void Flush()
-        {
-            if (m_measurementQueue != null)
-                m_measurementQueue.Flush();
-        }
+        public virtual void Flush() => 
+            InternalProcessQueue?.Flush();
 
         /// <summary>
         /// Raises the <see cref="UnprocessedMeasurements"/> event.
@@ -696,7 +618,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex), "ConsumerEventException");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for {nameof(UnprocessedMeasurements)} event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -710,20 +632,19 @@ namespace GSF.TimeSeries.Adapters
                 m_connectionInfo = ConnectionInfo;
 
                 // So long as user hasn't requested to stop, attempt connection
-                if (Enabled)
-                {
-                    OnStatusMessage(MessageLevel.Info, $"Attempting connection{(m_connectionInfo is null ? "" : $" to {m_connectionInfo}")}...");
+                if (!Enabled)
+                    return;
 
-                    // Attempt connection to data output adapter (e.g., call historian API connect function).
-                    AttemptConnection();
+                OnStatusMessage(MessageLevel.Info, $"Attempting connection{(m_connectionInfo is null ? "" : $" to {m_connectionInfo}")}...");
 
-                    // Try to update connection info after successful connection attempt in case info is now available
-                    if (m_connectionInfo is null)
-                        m_connectionInfo = ConnectionInfo;
+                // Attempt connection to data output adapter (e.g., call historian API connect function).
+                AttemptConnection();
 
-                    if (!UseAsyncConnect)
-                        OnConnected();
-                }
+                // Try to update connection info after successful connection attempt in case info is now available
+                m_connectionInfo ??= ConnectionInfo;
+
+                if (!UseAsyncConnect)
+                    OnConnected();
             }
             catch (Exception ex)
             {
@@ -735,22 +656,16 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
-        {
+        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e) => 
             m_connectionOperation.TryRunOnceAsync();
-        }
 
         // All we do here is expose the total number of unarchived measurements in the queue
-        private void m_monitorTimer_Elapsed(object sender, EventArgs<DateTime> e)
-        {
-            OnUnprocessedMeasurements(m_measurementQueue.Count);
-        }
+        private void m_monitorTimer_Elapsed(object sender, EventArgs<DateTime> e) => 
+            OnUnprocessedMeasurements(InternalProcessQueue.Count);
 
         // Bubble any exceptions occurring in the process queue to the base class event
-        private void m_measurementQueue_ProcessException(object sender, EventArgs<Exception> e)
-        {
+        private void m_measurementQueue_ProcessException(object sender, EventArgs<Exception> e) => 
             OnProcessException(MessageLevel.Info, e.Argument);
-        }
 
         #endregion
     }

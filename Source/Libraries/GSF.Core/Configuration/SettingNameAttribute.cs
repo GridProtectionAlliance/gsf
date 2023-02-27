@@ -42,13 +42,6 @@ namespace GSF.Configuration
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public sealed class SettingNameAttribute : Attribute
     {
-        #region [ Members ]
-
-        // Fields
-        private readonly string[] m_names;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
@@ -57,7 +50,7 @@ namespace GSF.Configuration
         /// <param name="names">Assigns name(s) used to serialize setting into config file.</param>
         public SettingNameAttribute(params string[] names)
         {
-            m_names = names;
+            Names = names;
         }
 
         #endregion
@@ -67,24 +60,12 @@ namespace GSF.Configuration
         /// <summary>
         /// Gets the name used to serialize field or property into config file.
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return m_names.First();
-            }
-        }
+        public string Name => Names.First();
 
         /// <summary>
         /// Gets the names used to serialize field or property into config file.
         /// </summary>
-        public string[] Names
-        {
-            get
-            {
-                return m_names;
-            }
-        }
+        public string[] Names { get; }
 
         #endregion
     }
