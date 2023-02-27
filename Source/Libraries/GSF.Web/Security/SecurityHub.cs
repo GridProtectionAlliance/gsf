@@ -464,9 +464,29 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if group name was found in Azure AD; otherwise, <c>false</c>.</returns>
         public async Task<bool> IsValidAzureADGroupName(string groupName)
         {
-            //GraphServiceClient graphClient = GraphClient;
+            // Either of the following returns false positives:
+            //return graphClient is not null && await graphClient.Groups[groupName].Request().GetAsync() is not null;
             //return graphClient is not null && await graphClient.Groups.Request().Filter($"displayName eq '{groupName}'").GetAsync() is not null;
-            return (await GetAzureADGroupList()).Any(group => group.Equals(groupName, StringComparison.OrdinalIgnoreCase));
+
+            GraphServiceClient graphClient = GraphClient;
+
+            if (graphClient is null)
+                return false;
+
+            IGraphServiceGroupsCollectionPage groups = await graphClient.Groups.Request().GetAsync();
+            
+            while (groups.Count > 0)
+            {
+                if (groups.Any(group => group.DisplayName.Equals(groupName, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+
+                if (groups.NextPageRequest is not null)
+                    groups = await groups.NextPageRequest.GetAsync();
+                else
+                    break;
+            }
+
+            return false;
         }
 
         #endregion
