@@ -119,12 +119,14 @@ namespace GSF.SELEventParser
             return Parse(filename, 60.0D);
         }
 
-        public static EventFile Parse(string filename, double systemFrequency, double maxFileDuration = 0.0D)
+        public static EventFile Parse(string filename, double systemFrequency, double maxFileDuration = 0.0D) =>
+            Parse(filename, File.ReadAllText(filename), systemFrequency, maxFileDuration);
+
+        public static EventFile Parse(string filename, string fileText, double systemFrequency, double maxFileDuration = 0.0D)
         {
             string[] lineSeparators = { "\r\n", "\n\r", "\r", "\n" };
 
             EventFile parsedFile = new EventFile();
-            string fileText = File.ReadAllText(filename);
 
             int firstLineSeparatorIndex = lineSeparators.Select(separator => fileText.IndexOf(separator)).Where(index => index >= 0).Min();
             string lineSeparator = lineSeparators.First(separator => fileText.IndexOf(separator) == firstLineSeparatorIndex);
