@@ -215,7 +215,7 @@ namespace GSF.Security
         protected override void SaveFileData(FileStream fileStream, byte[] fileData)
         {
             // Encrypt data local to this machine (this way user cannot copy user data cache to another machine)
-            base.SaveFileData(fileStream, ProtectedData.Protect(fileData, null, DataProtectionScope.LocalMachine));
+            base.SaveFileData(fileStream, DataProtection.Protect(fileData, null, DataProtectionScope.LocalMachine));
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace GSF.Security
         protected override byte[] LoadFileData(FileStream fileStream)
         {
             // Decrypt data that was encrypted local to this machine
-            byte[] serializedUserDataTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
+            byte[] serializedUserDataTable = DataProtection.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
             Dictionary<string, UserData> userDataTable = DeserializeCache(serializedUserDataTable);
 
             // Wait for thread level lock on user data table

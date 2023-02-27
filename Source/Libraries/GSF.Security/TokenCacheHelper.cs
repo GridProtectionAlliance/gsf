@@ -25,6 +25,7 @@ using Microsoft.Identity.Client;
 using System.IO;
 using System.Security.Cryptography;
 using GSF.IO;
+using GSF.Security.Cryptography;
 
 namespace GSF.Security
 {
@@ -51,8 +52,11 @@ namespace GSF.Security
             
             if (File.Exists(CacheFilePath))
             {
+                // Even though this cache will be for the current system user, we cannot guarantee that the 
+                // current user context will match the user system context, e.g., when using an Azure AD
+                // account or database user, so we will use the local machine to ensure consistent access.
                 lock (s_fileLock)
-                    msal = ProtectedData.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.CurrentUser);
+                    msal = DataProtection.Unprotect(File.ReadAllBytes(CacheFilePath), null, DataProtectionScope.LocalMachine);
             }
 
             args.TokenCache.DeserializeMsalV3(msal);
@@ -63,7 +67,10 @@ namespace GSF.Security
             if (!args.HasStateChanged)
                 return;
             
-            byte[] msal = ProtectedData.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.CurrentUser);
+            // Even though this cache will be for the current system user, we cannot guarantee that the 
+            // current user context will match the user system context, e.g., when using an Azure AD
+            // account or database user, so we will use the local machine to ensure consistent access.
+            byte[] msal = DataProtection.Protect(args.TokenCache.SerializeMsalV3(), null, DataProtectionScope.LocalMachine);
 
             lock (s_fileLock)
                 File.WriteAllBytes(CacheFilePath, msal);

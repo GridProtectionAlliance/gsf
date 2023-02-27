@@ -129,11 +129,10 @@ namespace GSF.Security.Cryptography
             #region [ Members ]
 
             // Internal key and initialization vector table
-            private Dictionary<string, byte[][]> m_keyIVTable = new Dictionary<string, byte[][]>();
-            private readonly object m_keyIVTableLock = new object();
+            private Dictionary<string, byte[][]> m_keyIVTable = new();
+            private readonly object m_keyIVTableLock = new();
 
             // Flag to choose between AesManaged and AesCryptoServiceProvider for encryption
-            private bool m_managedEncryption;
 
             #endregion
 
@@ -166,17 +165,7 @@ namespace GSF.Security.Cryptography
             /// Gets or sets a boolean value that determines whether to use AesManaged
             /// or the CAPI wrapper (AesCryptoServiceProvider) for encryption.
             /// </summary>
-            public bool ManagedEncryption
-            {
-                get
-                {
-                    return m_managedEncryption;
-                }
-                set
-                {
-                    m_managedEncryption = value;
-                }
-            }
+            public bool ManagedEncryption { get; set; }
 
             #endregion
 
@@ -192,7 +181,6 @@ namespace GSF.Security.Cryptography
             {
                 string hash = GetPasswordHash(password, keySize);
                 byte[][] keyIV;
-                byte[] key, iv;
                 bool addedKey = false;
 
                 // We wait until the key and IV cache is loaded before attempting to access it
@@ -207,7 +195,7 @@ namespace GSF.Security.Cryptography
                         Aes symmetricAlgorithm;
 
                         // Key for password hash doesn't exist, create a new one
-                        if (m_managedEncryption)
+                        if (ManagedEncryption)
                         {
                             symmetricAlgorithm = new AesManaged();
                         }
@@ -221,8 +209,8 @@ namespace GSF.Security.Cryptography
                         symmetricAlgorithm.GenerateKey();
                         symmetricAlgorithm.GenerateIV();
 
-                        key = symmetricAlgorithm.Key;
-                        iv = symmetricAlgorithm.IV;
+                        byte[] key = symmetricAlgorithm.Key;
+                        byte[] iv = symmetricAlgorithm.IV;
                         keyIV = new[] { key, iv };
 
                         // Add new crypto key to key table
@@ -376,7 +364,7 @@ namespace GSF.Security.Cryptography
             protected override void SaveFileData(FileStream fileStream, byte[] fileData)
             {
                 // Encrypt data local to this machine (this way user cannot copy key cache to another machine)
-                base.SaveFileData(fileStream, ProtectedData.Protect(fileData, null, DataProtectionScope.LocalMachine));
+                base.SaveFileData(fileStream, DataProtection.Protect(fileData, null, DataProtectionScope.LocalMachine));
             }
 
             /// <summary>
@@ -390,7 +378,7 @@ namespace GSF.Security.Cryptography
             protected override byte[] LoadFileData(FileStream fileStream)
             {
                 // Decrypt data that was encrypted local to this machine
-                byte[] serializedKeyIVTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
+                byte[] serializedKeyIVTable = DataProtection.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
                 Dictionary<string, byte[][]> keyIVTable = Serialization.Deserialize<Dictionary<string, byte[][]>>(serializedKeyIVTable, SerializationFormat.Binary);
 
                 // Wait for thread level lock on key table
@@ -432,11 +420,12 @@ namespace GSF.Security.Cryptography
         /// </summary>
         static partial void OnCreated()
         {
-#if MONO
+        #if MONO
             s_textEncoding = Encoding.Default;
-#else
+        #else
             s_textEncoding = Encoding.Unicode;
-#endif
+        #endif
+
             KeyIVCache localKeyIVCache;
             EnabledState useFIPSModules = EnabledState.Auto;
             string localCacheFileName = DefaultCacheFileName;
@@ -471,13 +460,13 @@ namespace GSF.Security.Cryptography
                     RetryDelayInterval = retryDelayInterval,
                     MaximumRetryAttempts = maximumRetryAttempts,
                     ManagedEncryption = s_managedEncryption,
-#if DNF45 && !MONO
+                #if DNF45 && !MONO
                     ReloadOnChange = true,
-#else
+                #else
                     // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
                     // automatic runtime reloading of key/iv data cached by another application.
                     ReloadOnChange = false,
-#endif
+                #endif
                     AutoSave = false
                 };
 
@@ -521,13 +510,13 @@ namespace GSF.Security.Cryptography
                         FileName = userCacheFileName,
                         RetryDelayInterval = retryDelayInterval,
                         MaximumRetryAttempts = maximumRetryAttempts,
-#if DNF45 && !MONO
+                    #if DNF45 && !MONO
                         ReloadOnChange = true,
-#else
+                    #else
                         // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
                         // automatic runtime reloading of key/iv data cached by another application.
                         ReloadOnChange = false,
-#endif
+                    #endif
                         AutoSave = true
                     };
 
@@ -538,7 +527,7 @@ namespace GSF.Security.Cryptography
                     globalKeyIVCache.MergeRight(localKeyIVCache);
                 }
 
-                if ((object)localKeyIVCache != null)
+                if (localKeyIVCache is not null)
                     localKeyIVCache.Dispose();
 
                 return globalKeyIVCache;
@@ -580,9 +569,6 @@ namespace GSF.Security.Cryptography
         /// </summary>
         public static void ReloadCache()
         {
-            ConfigurationFile config;
-            CategorizedSettingsElementCollection settings;
-
             string commonCacheFileName = string.Empty;
             double retryDelayInterval = 0.0;
             int maximumRetryAttempts = 0;
@@ -591,8 +577,8 @@ namespace GSF.Security.Cryptography
             GlobalKeyIVCache.Load();
 
             // Load cryptographic settings
-            config = ConfigurationFile.Current;
-            settings = config.Settings[CryptoServicesSettingsCategory];
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[CryptoServicesSettingsCategory];
             commonCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(commonCacheFileName));
 
             if (commonCacheFileName != GlobalKeyIVCache.FileName)
@@ -603,7 +589,7 @@ namespace GSF.Security.Cryptography
                 maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
                 // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
-                using (KeyIVCache commonKeyIVCache = new KeyIVCache
+                using KeyIVCache commonKeyIVCache = new()
                 {
                     FileName = commonCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
@@ -611,14 +597,13 @@ namespace GSF.Security.Cryptography
                     ManagedEncryption = s_managedEncryption,
                     ReloadOnChange = false,
                     AutoSave = false
-                })
-                {
-                    // Load initial keys
-                    commonKeyIVCache.Load();
+                };
 
-                    // Merge new or updated keys, common cache folder keys taking precedence
-                    GlobalKeyIVCache.MergeRight(commonKeyIVCache);
-                }
+                // Load initial keys
+                commonKeyIVCache.Load();
+
+                // Merge new or updated keys, common cache folder keys taking precedence
+                GlobalKeyIVCache.MergeRight(commonKeyIVCache);
             }
         }
 
@@ -628,10 +613,8 @@ namespace GSF.Security.Cryptography
         /// <param name="password">User password used for key lookups.</param>
         /// <param name="keySize">Specifies the desired key size.</param>
         /// <returns><c>true</c> if a key and initialization vector exists for the given <paramref name="password"/>; otherwise <c>false</c>.</returns>
-        public static bool KeyIVExists(string password, int keySize)
-        {
-            return GlobalKeyIVCache.KeyIVExists(password, keySize);
-        }
+        public static bool KeyIVExists(string password, int keySize) => 
+            GlobalKeyIVCache.KeyIVExists(password, keySize);
 
         /// <summary>
         /// Imports a key and initialization vector into the local system key cache.
@@ -642,10 +625,8 @@ namespace GSF.Security.Cryptography
         /// <remarks>
         /// This method is used to manually import a key created on another computer.
         /// </remarks>
-        public static void ImportKeyIV(string password, int keySize, string keyIVText)
-        {
+        public static void ImportKeyIV(string password, int keySize, string keyIVText) => 
             GlobalKeyIVCache.ImportKeyIV(password, keySize, keyIVText);
-        }
 
         /// <summary>
         /// Exports a key and initialization vector from the local system key cache.
@@ -656,10 +637,8 @@ namespace GSF.Security.Cryptography
         /// <remarks>
         /// This method is used to manually export a key to be installed on another computer. 
         /// </remarks>
-        public static string ExportKeyIV(string password, int keySize)
-        {
-            return GlobalKeyIVCache.ExportKeyIV(password, keySize);
-        }
+        public static string ExportKeyIV(string password, int keySize) => 
+            GlobalKeyIVCache.ExportKeyIV(password, keySize);
 
         /// <summary>
         /// Gets the Base64 encoded SHA-256 hash of given user password.
@@ -679,7 +658,7 @@ namespace GSF.Security.Cryptography
             string hash;
 
             // Null password should produce a null hash
-            if ((object)password == null)
+            if (password is null)
                 return null;
 
             // Suffix password with category ID (key size) since same password may be in use for different category IDs
@@ -727,10 +706,8 @@ namespace GSF.Security.Cryptography
         /// <param name="password">User password used for key lookup.</param>
         /// <param name="strength">Cryptographic strength to use when encrypting data.</param>
         /// <returns>An encrypted version of the source data.</returns>
-        public static byte[] Encrypt(this byte[] source, string password, CipherStrength strength)
-        {
-            return source.Encrypt(0, source.Length, password, strength);
-        }
+        public static byte[] Encrypt(this byte[] source, string password, CipherStrength strength) => 
+            source.Encrypt(0, source.Length, password, strength);
 
         /// <summary>
         /// Returns a binary array of encrypted data for the given parameters.
@@ -762,10 +739,8 @@ namespace GSF.Security.Cryptography
         /// <param name="iv">Initialization vector to use to encrypt data.</param>
         /// <param name="strength">Cryptographic strength to use when encrypting data.</param>
         /// <returns>An encrypted version of the source data.</returns>
-        public static byte[] Encrypt(this byte[] source, byte[] key, byte[] iv, CipherStrength strength)
-        {
-            return source.Encrypt(0, source.Length, key, iv, strength);
-        }
+        public static byte[] Encrypt(this byte[] source, byte[] key, byte[] iv, CipherStrength strength) => 
+            source.Encrypt(0, source.Length, key, iv, strength);
 
         /// <summary>
         /// Returns a binary array of encrypted data for the given parameters.
@@ -809,7 +784,7 @@ namespace GSF.Security.Cryptography
         /// </remarks>
         public static MemoryStream Encrypt(this Stream source, byte[] key, byte[] iv, CipherStrength strength)
         {
-            MemoryStream destination = new MemoryStream();
+            MemoryStream destination = new();
 
             source.Encrypt(destination, key, iv, strength, null);
             destination.Position = 0;
@@ -830,13 +805,11 @@ namespace GSF.Security.Cryptography
         {
             ProcessProgressHandler<long> progress = null;
             byte[] inBuffer = new byte[Standard.BufferSize];
-            byte[] outBuffer, lengthBuffer;
             long total = 0;
             long length = -1;
-            int read;
 
             // Sends initial progress event.
-            if ((object)progressHandler != null)
+            if (progressHandler is not null)
             {
                 try
                 {
@@ -849,27 +822,29 @@ namespace GSF.Security.Cryptography
                 }
 
                 // Create a new progress handler to track encryption progress
-                progress = new ProcessProgressHandler<long>(progressHandler, "Encrypt", length);
-                progress.Complete = 0;
+                progress = new ProcessProgressHandler<long>(progressHandler, "Encrypt", length)
+                { 
+                    Complete = 0
+                };
             }
 
             // Reads initial buffer.
-            read = source.Read(inBuffer, 0, Standard.BufferSize);
+            int read = source.Read(inBuffer, 0, Standard.BufferSize);
 
             while (read > 0)
             {
                 // Encrypts buffer.
-                outBuffer = inBuffer.BlockCopy(0, read).Encrypt(key, iv, strength);
+                byte[] outBuffer = inBuffer.BlockCopy(0, read).Encrypt(key, iv, strength);
 
                 // The destination encryption stream length does not have to be same as the input stream length, so we
                 // prepend the final size of each encrypted buffer onto the destination output stream so that we can
                 // safely decrypt the stream in a "chunked" fashion later.
-                lengthBuffer = BitConverter.GetBytes(outBuffer.Length);
+                byte[] lengthBuffer = BitConverter.GetBytes(outBuffer.Length);
                 destination.Write(lengthBuffer, 0, lengthBuffer.Length);
                 destination.Write(outBuffer, 0, outBuffer.Length);
 
                 // Updates encryption progress.
-                if ((object)progressHandler != null)
+                if (progressHandler is not null)
                 {
                     total += read;
                     progress.Complete = total;
@@ -890,18 +865,17 @@ namespace GSF.Security.Cryptography
         /// <param name="progressHandler">Optional delegate to handle progress updates for encrypting large files.</param>
         public static void EncryptFile(string sourceFileName, string destinationFileName, string password, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            using (FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName))
-            {
-                if (string.IsNullOrEmpty(password))
-                    throw new ArgumentNullException(nameof(password));
+            using FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName);
 
-                byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentNullException(nameof(password));
 
-                sourceFileStream.Encrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
+            byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-                destFileStream.Flush();
-                destFileStream.Close();
-            }
+            sourceFileStream.Encrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
+
+            destFileStream.Flush();
+            destFileStream.Close();
         }
 
         /// <summary>
@@ -930,10 +904,8 @@ namespace GSF.Security.Cryptography
         /// <param name="password">User password used for key lookup.</param>
         /// <param name="strength">Cryptographic strength to use when decrypting data.</param>
         /// <returns>A decrypted version of the source data.</returns>
-        public static byte[] Decrypt(this byte[] source, string password, CipherStrength strength)
-        {
-            return source.Decrypt(0, source.Length, password, strength);
-        }
+        public static byte[] Decrypt(this byte[] source, string password, CipherStrength strength) => 
+            source.Decrypt(0, source.Length, password, strength);
 
         /// <summary>
         /// Returns a binary array of decrypted data for the given parameters.
@@ -965,10 +937,8 @@ namespace GSF.Security.Cryptography
         /// <param name="iv">Initialization vector to use to decrypt data.</param>
         /// <param name="strength">Cryptographic strength to use when decrypting data.</param>
         /// <returns>A decrypted version of the source data.</returns>
-        public static byte[] Decrypt(this byte[] source, byte[] key, byte[] iv, CipherStrength strength)
-        {
-            return source.Decrypt(0, source.Length, key, iv, strength);
-        }
+        public static byte[] Decrypt(this byte[] source, byte[] key, byte[] iv, CipherStrength strength) => 
+            source.Decrypt(0, source.Length, key, iv, strength);
 
         /// <summary>
         /// Returns a binary array of decrypted data for the given parameters.
@@ -1012,7 +982,7 @@ namespace GSF.Security.Cryptography
         /// </remarks>
         public static MemoryStream Decrypt(this Stream source, byte[] key, byte[] iv, CipherStrength strength)
         {
-            MemoryStream destination = new MemoryStream();
+            MemoryStream destination = new();
 
             source.Decrypt(destination, key, iv, strength, null);
             destination.Position = 0;
@@ -1032,14 +1002,12 @@ namespace GSF.Security.Cryptography
         public static void Decrypt(this Stream source, Stream destination, byte[] key, byte[] iv, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
-            byte[] inBuffer, outBuffer;
             byte[] lengthBuffer = BitConverter.GetBytes((int)0);
             long total = 0;
             long length = -1;
-            int size, read;
 
             // Sends initial progress event.
-            if ((object)progressHandler != null)
+            if (progressHandler is not null)
             {
                 try
                 {
@@ -1052,8 +1020,10 @@ namespace GSF.Security.Cryptography
                 }
 
                 // Create a new progress handler to track decryption progress
-                progress = new ProcessProgressHandler<long>(progressHandler, "Decrypt", length);
-                progress.Complete = 0;
+                progress = new ProcessProgressHandler<long>(progressHandler, "Decrypt", length)
+                { 
+                    Complete = 0
+                };
             }
 
             // When the source stream was encrypted, it was known that the encrypted stream length did not have to be same as
@@ -1062,27 +1032,27 @@ namespace GSF.Security.Cryptography
             // "chunked" fashion, hence the following:
 
             // Reads the size of the next buffer from the stream.
-            read = source.Read(lengthBuffer, 0, lengthBuffer.Length);
+            int read = source.Read(lengthBuffer, 0, lengthBuffer.Length);
 
             while (read > 0)
             {
                 // Converts the byte array containing the buffer size into an integer.
-                size = BitConverter.ToInt32(lengthBuffer, 0);
+                int size = BitConverter.ToInt32(lengthBuffer, 0);
 
                 if (size > 0)
                 {
                     // Creates and reads the next buffer.
-                    inBuffer = new byte[size];
+                    byte[] inBuffer = new byte[size];
                     read = source.Read(inBuffer, 0, size);
 
                     if (read > 0)
                     {
                         // Decrypts buffer.
-                        outBuffer = inBuffer.Decrypt(key, iv, strength);
+                        byte[] outBuffer = inBuffer.Decrypt(key, iv, strength);
                         destination.Write(outBuffer, 0, outBuffer.Length);
 
                         // Updates decryption progress.
-                        if ((object)progressHandler != null)
+                        if (progressHandler is not null)
                         {
                             total += read + lengthBuffer.Length;
                             progress.Complete = total;
@@ -1105,17 +1075,16 @@ namespace GSF.Security.Cryptography
         /// <param name="progressHandler">Optional delegate to handle progress updates for decrypting large files.</param>
         public static void DecryptFile(string sourceFileName, string destinationFileName, string password, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            using (FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName))
-            {
-                if (string.IsNullOrEmpty(password))
-                    throw new ArgumentNullException(nameof(password));
+            using FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName);
 
-                byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentNullException(nameof(password));
 
-                sourceFileStream.Decrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
+            byte[][] keyIV = GlobalKeyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-                destFileStream.Flush();
-            }
+            sourceFileStream.Decrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
+
+            destFileStream.Flush();
         }
     }
 }

@@ -29,6 +29,7 @@ using System.Security.Cryptography;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
+using GSF.Security.Cryptography;
 using GSF.Threading;
 
 namespace GSF.Security
@@ -145,7 +146,7 @@ namespace GSF.Security
         protected override void SaveFileData(FileStream fileStream, byte[] fileData)
         {
             // Encrypt data local to this machine (this way user cannot copy ADO security cache to another machine)
-            base.SaveFileData(fileStream, ProtectedData.Protect(fileData, null, DataProtectionScope.LocalMachine));
+            base.SaveFileData(fileStream, DataProtection.Protect(fileData, null, DataProtectionScope.LocalMachine));
         }
 
         /// <summary>
@@ -159,7 +160,7 @@ namespace GSF.Security
         protected override byte[] LoadFileData(FileStream fileStream)
         {
             // Decrypt data that was encrypted local to this machine
-            byte[] serializedDataSet = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
+            byte[] serializedDataSet = DataProtection.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
             DataSet dataSet;
 
             using (MemoryStream stream = new(serializedDataSet))
