@@ -81,7 +81,7 @@
         new[] { "FirstName", "First Name", "text-center valign-middle" },
         new[] {"LastName", "Last Name", "text-center valign-middle"},
         new[] { null, "User Name", "text-center valign-middle"},
-        new[] { "UseADAuthentication", "Is&nbsp;AD&nbsp;User", "text-center" },
+        new[] { "UseADAuthentication", "Is&nbsp;AD&nbsp;User", "text-center valign-middle" },
         new[] { "CreatedOn", "Date&nbsp;Added", "text-center" },
         new[] { null, "User Roles", "text-center valign-middle" }
     };
@@ -102,9 +102,18 @@
     string applicationName = settings["ApplicationName"].ValueAs(SecurityProviderBase.DefaultApplicationName);
     string passwordRequirementsRegex = settings["PasswordRequirementsRegex"].ValueAs(AdoSecurityProvider.DefaultPasswordRequirementsRegex);
     string passwordRequirementsError = settings["PasswordRequirementsError"].ValueAs(AdoSecurityProvider.DefaultPasswordRequirementsError);
+    bool azureADEnabled = false;
+
+    try {
+        AzureADSettings azureADSettings = AzureADSettings.Load();
+        azureADEnabled = azureADSettings.Enabled;
+    }
+    catch {
+        azureADEnabled = false;
+    }
 
     ViewBag.BodyRows = BodyRows().ToString();
-    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext, passwordRequirementsRegex, passwordRequirementsError).ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext, passwordRequirementsRegex, passwordRequirementsError, azureADEnabled).ToString();
     ViewBag.AddNewEditTitle = "User";
 }
 @helper BodyRows()
@@ -129,11 +138,11 @@
         <span id="accountUnknown" class="account-feedback-message"><span class="glyphicon glyphicon-warning-sign account-feedback-icon" data-bind="style: {color: $root.recordMode()===RecordMode.View ? 'gray' : 'orange'}"></span>&nbsp;<em class="small">Valid account name is not a user or Active Directory access is limited</em></span>
     </div>
 }
-@helper AddNewEditDialog(DataContext dataContext, string passwordRequirementsRegex, string passwordRequirementsError)
+@helper AddNewEditDialog(DataContext dataContext, string passwordRequirementsRegex, string passwordRequirementsError, bool azureADEnabled)
 {
     <div class="col-md-12">
-        @Raw(dataContext.AddInputField<UserAccount>("Name", fieldLabel: "Name" + AccountValidationFeedback().ToString().Trim(), customDataBinding: "attr: {'acct-valid': validateAccount($data), 'autocomplete': 'off'}", initialFocus: true))
-        <div class="panel panel-default" data-bind="css: {'panel-readonly': $root.recordMode()===RecordMode.View, 'panel-primary': UseDBAuthentication}">
+        @Raw(dataContext.AddInputField<UserAccount>("Name", fieldLabel: "Name" + AccountValidationFeedback().ToString().Trim(), customDataBinding: "attr: {'acct-valid': validateAccount(), 'autocomplete': 'off'}", initialFocus: true))
+        <div class="panel panel-default" data-bind="css: {'panel-readonly': $root.recordMode()===RecordMode.View, 'panel-primary': AuthOption() != 'AD'}">
             <div class="panel-heading">
                 @* Adding actual UseADAuthentication field check-box, but hidden, to pick-up any model based field initializers *@
                 <div style="display: none">
@@ -144,13 +153,13 @@
                     <div class="col-md-8">
                         <div class="row">
                             <div class="col-md-4">
-                                <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: false, checked: UseDBAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Active&nbsp;Directory&nbsp;User</label>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Active&nbsp;Directory&nbsp;User</label>
+                            </div>
+                            <div class="col-md-4"@Raw(azureADEnabled ? "" : " style=\"display: none\"")>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AzureAD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Azure&nbsp;AD&nbsp;User</label>
                             </div>
                             <div class="col-md-4">
-                                <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: true, checked: UseAzureADAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View || !viewModel.currentRecord().UseDBAuthentication() ? true : undefined)}">&nbsp;Azure&nbsp;AD&nbsp;User</label>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="radio-inline"><input type="radio" name="radioUseDBAuthentication" data-bind="checkedValue: true, checked: UseDBAuthentication, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Database&nbsp;User</label>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="DB" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Database&nbsp;User</label>
                             </div>
                         </div>
                     </div>
@@ -161,18 +170,18 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <div data-bind="visible: viewModel.currentRecord().UseDBAuthentication() && !viewModel.currentRecord().UseAzureADAuthentication()">
+                        <div data-bind="visible: viewModel.currentRecord().AuthOption() == 'DB'">
                             @Raw(dataContext.AddInputField<UserAccount>("Password", "password", dependencyFieldName: "UseDBAuthentication"))
                         </div>
                         @Raw(dataContext.AddInputField<UserAccount>("FirstName"))
                         @Raw(dataContext.AddInputField<UserAccount>("LastName"))
                     </div>
                     <div class="col-md-6">
-                        <div data-bind="visible: viewModel.currentRecord().UseDBAuthentication() && !viewModel.currentRecord().UseAzureADAuthentication()">
+                        <div data-bind="visible: viewModel.currentRecord().AuthOption() == 'DB'">
                             @Raw(dataContext.AddInputField<UserAccount>("Phone", dependencyFieldName: "UseDBAuthentication"))
                         </div>
                         @Raw(dataContext.AddInputField<UserAccount>("Email"))
-                        <div data-bind="visible: viewModel.currentRecord().UseDBAuthentication() && !viewModel.currentRecord().UseAzureADAuthentication()">
+                        <div data-bind="visible: viewModel.currentRecord().AuthOption() == 'DB'">
                             @Raw(dataContext.AddDateField<UserAccount>("ChangePasswordOn", dependencyFieldName: "UseDBAuthentication"))
                             @{
                                 dataContext.AddPageDefinedFieldInitialization("Password", "\"\"",
@@ -243,19 +252,23 @@
             Resolving: 3
         }
 
+        const azureADEnabled = @(azureADEnabled.ToString().ToLowerInvariant());
+
         function lookupAccountName(record) {
             if (viewModel.dataHubIsConnected()) {
-                securityHub.sidToAccountName(record.Name).done(function(accountName) {
+                securityHub.sidToAccountName(record.Name).done(function (accountName) {
                     record.AccountName(accountName);
                 });
             }
         }
 
-        function validateAccount(observableRecord) {
+        function validateAccount() {
+            const observableRecord = viewModel.currentRecord();
+
             showAccountNameValidityFeedback(AccountState.Resolving);
 
-            if (viewModel.dataHubIsConnected()) {
-                if (observableRecord.UseDBAuthentication() && !observableRecord.UseAzureADAuthentication()) {
+            if (viewModel.dataHubIsConnected() && observableRecord.UseDBAuthentication) {
+                if (observableRecord.UseDBAuthentication()) {
                     hideAccountNameValidityFeedback();
                 } else {
                     const accountName = observableRecord.Name();
@@ -356,29 +369,27 @@
         $(viewModel).on("newRecord", function(event, newRecord) {
             // Make sure new records get virtual field
             newRecord.AccountName = ko.observable("");
+            newRecord.UseADAuthentication = false;
         });
 
         $(viewModel).on("beforeEdit", function(event, observableRecord) {
             // Create backing field for virtual UseDBAuthentication computed property that is negated state of actual UseADAuthentication field
-            observableRecord._useDBAuthentication = ko.observable(!observableRecord.UseADAuthentication());
+            observableRecord._useDBAuthentication = ko.observable(!observableRecord.UseADAuthentication() && (!azureADEnabled || !observableRecord.AccountName().includes("@@")));
+
+            // Create backing field for virtual UseAzureADAuthentication computed property
+            observableRecord._useAzureADAuthentication = ko.observable(!observableRecord.UseADAuthentication() && (azureADEnabled && observableRecord.AccountName().includes("@@")));
 
             // Create a virtual UseDBAuthentication computed propery
-            observableRecord.UseDBAuthentication =  = ko.pureComputed({
+            observableRecord.UseDBAuthentication = ko.pureComputed({
                 read: observableRecord._useDBAuthentication,
                 write: function (value) {
                     if (value === undefined)
                         value = false;
 
                     observableRecord._useDBAuthentication(value);
-
-                    if (!value)
-                        observableRecord._useAzureADAuthentication(false);
                 },
                 owner: observableRecord
             });
-
-            // Create backing field for virtual UseAzureADAuthentication computed property
-            observableRecord._useAzureADAuthentication = ko.observable(observableRecord.UseDBAuthentication() && observableRecord.AccountName().includes("@@"));
 
             // Create virtual UseAzureADAuthentication computed property
             observableRecord.UseAzureADAuthentication = ko.pureComputed({
@@ -388,7 +399,40 @@
                         value = false;
 
                     observableRecord._useAzureADAuthentication(value);
-                    observableRecord.UseDBAuthentication(value);
+                },
+                owner: observableRecord
+            });
+
+            observableRecord.AuthOption = ko.pureComputed({
+               read: function () {
+                    if (observableRecord.UseDBAuthentication())
+                        return "DB";
+                    else if (observableRecord.UseAzureADAuthentication())
+                        return "AzureAD";
+                    else
+                        return "AD";
+                },
+               write: function (value) {
+                    if (value === undefined)
+                        value = "AD";
+
+                    switch (value) {
+                        case "DB":
+                            observableRecord.UseADAuthentication(false);
+                            observableRecord.UseDBAuthentication(true);
+                            observableRecord.UseAzureADAuthentication(false);
+                            break;
+                        case "AzureAD":
+                            observableRecord.UseADAuthentication(false);
+                            observableRecord.UseDBAuthentication(false);
+                            observableRecord.UseAzureADAuthentication(true);
+                            break;
+                        case "AD":
+                            observableRecord.UseADAuthentication(true);
+                            observableRecord.UseDBAuthentication(false);
+                            observableRecord.UseAzureADAuthentication(false);
+                            break;
+                    }
                 },
                 owner: observableRecord
             });
@@ -404,12 +448,14 @@
 
         $(viewModel).on("beforeSave", function(event, observableRecord, promises) {
             // Set state of actual field to be negated state of virtual field
-            observableRecord.UseADAuthentication(!observableRecord.UseDBAuthentication());
+            observableRecord.UseADAuthentication(!observableRecord.UseDBAuthentication() && !observableRecord.UseAzureADAuthentication());
 
             // Remove virtual observable fields before serialization for record updates
             delete observableRecord.UseDBAuthentication;
-            delete observableRecord._useAzureADAuthentication;
             delete observableRecord.UseAzureADAuthentication;
+            delete observableRecord.AuthOption;
+            delete observableRecord._useDBAuthentication;
+            delete observableRecord._useAzureADAuthentication;
             delete observableRecord.AccountName;
 
             // Push promise to convert user name back to SID before updating record
@@ -453,6 +499,12 @@
         }
 
         $(function() {
+            $("#addNewEditDialog").on("show.bs.modal", function () {
+                $("form").attr("autocomplete", "off");
+                $("#inputName").attr("aria-autocomplete", "none");
+                $("#inputPassword").attr("aria-autocomplete", "none");
+            });
+
             $("#editRolesDialog").modal({ show: false, backdrop: "static" });
 
             $("#saveRolesButton").click(function() {

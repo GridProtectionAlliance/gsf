@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using GSF.Data.Model;
 using GSF.Identity;
 using GSF.Security;
@@ -463,8 +464,9 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if group name was found in Azure AD; otherwise, <c>false</c>.</returns>
         public async Task<bool> IsValidAzureADGroupName(string groupName)
         {
-            GraphServiceClient graphClient = GraphClient;
-            return graphClient is not null && await graphClient.Groups[groupName].Request().GetAsync() is not null;
+            //GraphServiceClient graphClient = GraphClient;
+            //return graphClient is not null && await graphClient.Groups.Request().Filter($"displayName eq '{groupName}'").GetAsync() is not null;
+            return (await GetAzureADGroupList()).Any(group => group.Equals(groupName, StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion
