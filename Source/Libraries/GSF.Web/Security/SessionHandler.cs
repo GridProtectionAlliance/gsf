@@ -35,6 +35,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Web;
+using System.Web.Hosting;
 using System.Web.Http;
 using GSF.Collections;
 using GSF.Configuration;
@@ -227,7 +229,7 @@ namespace GSF.Web.Security
             HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
             // Store session ID in response message cookie
-            response.Headers.AddCookies(new[] { new CookieHeaderValue(SessionToken, sessionCookieValue) { Path = "/" } });
+            SetCookie(request, response, SessionToken, sessionCookieValue);
 
             // Get authentication options associated with this request
             ReadonlyAuthenticationOptions options = request.GetAuthenticationOptions();
@@ -253,14 +255,7 @@ namespace GSF.Web.Security
 
                     InvalidateAuthenticationToken(request);
 
-                    response.Headers.AddCookies(new[]
-                    {
-                        new CookieHeaderValue(AuthenticationToken, authenticationToken)
-                        {
-                            Path = request.RequestUri.LocalPath,
-                            MaxAge = TimeSpan.FromDays(s_sessionExpirationDays)
-                        }
-                    });
+                    SetCookie(request, response, AuthenticationToken, authenticationToken, request.RequestUri.LocalPath, TimeSpan.FromDays(s_sessionExpirationDays));
                 }
 
                 // AuthTest page should always have a valid request verification token
@@ -579,6 +574,38 @@ namespace GSF.Web.Security
             return sessionID;
         }
 
+        /// <summary>
+        /// Gets the session state as defined in the request cookie header values.
+        /// </summary>
+        /// <param name="request">Request message.</param>
+        /// <param name="response">Response message.</param>
+        /// <param name="key">Cookie key.</param>
+        /// <param name="value">Cookie value.</param>
+        /// <param name="path">Cookie path.</param>
+        /// <param name="maxAge">Cookie max age.</param>
+        public static void SetCookie(HttpRequestMessage request, HttpResponseMessage response, string key, string value, string path = "/", TimeSpan? maxAge = null)
+        {
+            if (HostingEnvironment.IsHosted)
+            {
+                IOwinContext owinContext = request.GetOwinContext();
+                HttpContextBase httpContext = owinContext.Get<HttpContextBase>(typeof(HttpContextBase).FullName);
+                
+                httpContext.Response.AppendCookie(new HttpCookie(key, value)
+                { 
+                    Path = "/",
+                    Expires = maxAge is null ? DateTime.MinValue : DateTime.UtcNow.Add(maxAge.Value)
+                });
+            }
+            else
+            {
+                response.Headers.AddCookies(new[] { new CookieHeaderValue(key, value)
+                {
+                    Path = path,
+                    MaxAge = maxAge
+                }});
+            }
+        }
+
         private static void UpdateSession(Guid sessionID)
         {
             // Get cached session for this request, creating it if necessary
@@ -636,13 +663,25 @@ namespace GSF.Web.Security
         /// <returns>The authentication options.</returns>
         public static ReadonlyAuthenticationOptions GetAuthenticationOptions(this HttpRequestMessage request)
         {
-            if (request.Properties.TryGetValue("MS_OwinContext", out object value))
-            {
-                if (value is IOwinContext context && context.Environment.TryGetValue("AuthenticationOptions", out value))
-                    return value as ReadonlyAuthenticationOptions;
-            }
+            IOwinContext context = request.GetOwinContext();
+
+            if (context is not null && context.Environment.TryGetValue("AuthenticationOptions", out object value))
+                return value as ReadonlyAuthenticationOptions;
 
             return null;
+        }
+
+        /// <summary>
+        /// Retrieves the OWIN context from the specified <paramref name="request"/>.
+        /// </summary>
+        /// <param name="request">The HTTP request.</param>
+        /// <returns><see cref="IOwinContext"/> if found; otherwise, <c>null</c>.</returns>
+        public static IOwinContext GetOwinContext(this HttpRequestMessage request)
+        {
+            if (!request.Properties.TryGetValue("MS_OwinContext", out object value))
+                return null;
+
+            return value as IOwinContext;
         }
 
         /// <summary>
