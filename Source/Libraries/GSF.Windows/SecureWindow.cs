@@ -178,6 +178,11 @@ namespace GSF.Windows
             set => SetValue(SecurityPrincipalProperty, value);
         }
 
+        /// <summary>
+        /// Gets or sets any <see cref="Exception"/> that was thrown during the load process.
+        /// </summary>
+        public Exception LoadException { get; set; }
+
         #endregion
 
         #region [ Methods ]
@@ -193,6 +198,10 @@ namespace GSF.Windows
         {
             // Don't proceed if the window is opened in design mode
             if (DesignerProperties.GetIsInDesignMode(this))
+                return;
+
+            // Cancel initialization if a load exception is defined
+            if (LoadException is not null)
                 return;
 
             // Check if the resource is excluded from being secured
