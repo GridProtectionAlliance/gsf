@@ -31,6 +31,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using Microsoft.Win32;
 
+// ReSharper disable InconsistentNaming
 namespace NoInetFixUtil
 {
     public partial class Main : Form
@@ -149,6 +150,21 @@ namespace NoInetFixUtil
             if (!m_applyAll)
                 return;
 
+            [DllImport("wininet.dll", SetLastError = true)]
+            static extern bool InternetGetConnectedState(out int lpdwFlags, int dwReserved);
+
+            static bool InternetConnectionDetected()
+            {
+                try
+                {
+                    return InternetGetConnectedState(out int _, 0);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
             try
             {
                 if (!ServiceOIDCheckBox.Checked)
@@ -160,9 +176,9 @@ namespace NoInetFixUtil
                 if (!ClientOIDCheckBox.Checked)
                     ClientOIDCheckBox.Checked = true;
 
-                if (!RootCertificateListCheckBox.Checked)
+                // Only auto-disable root certificate list auto update if the system is not connected to the Internet
+                if (!RootCertificateListCheckBox.Checked && !InternetConnectionDetected())
                     RootCertificateListCheckBox.Checked = true;
-
             }
             catch
             {
