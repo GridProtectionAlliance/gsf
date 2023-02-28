@@ -136,8 +136,8 @@
 @helper AddNewEditDialog(DataContext dataContext, bool azureADEnabled)
 {
     <div class="col-md-12">
-        @Raw(dataContext.AddInputField<SecurityGroup>("Name", fieldLabel: "Name" + AccountValidationFeedback().ToString().Trim(), customDataBinding: "attr: {'acct-valid': validateAccount($data), 'autocomplete': 'off'}", initialFocus: true))
-        <div class="panel panel-default" data-bind="css: {'panel-readonly': $root.recordMode()===RecordMode.View, 'panel-primary': UseDBAuthentication}">
+        @Raw(dataContext.AddInputField<SecurityGroup>("Name", fieldLabel: "Name" + AccountValidationFeedback().ToString().Trim(), customDataBinding: "attr: {'acct-valid': validateAccount(), 'autocomplete': 'off'}", initialFocus: true))
+        <div class="panel panel-default" data-bind="css: {'panel-readonly': $root.recordMode()===RecordMode.View, 'panel-primary': AuthOption() != 'AD'}">
             <div class="panel-heading">
                 <div class="row">
                     <div class="col-md-8">
