@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+[assembly: InternalsVisibleTo("GSF.ServiceProcess")]
 [assembly: InternalsVisibleTo("GSF.TimeSeries")]
 [assembly: InternalsVisibleTo("GSF.Web")]
 [assembly: InternalsVisibleTo("GSF.Windows")]

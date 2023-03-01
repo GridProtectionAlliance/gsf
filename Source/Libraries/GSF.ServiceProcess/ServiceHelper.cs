@@ -2523,14 +2523,23 @@ namespace GSF.ServiceProcess
                     if (SecureRemoteInteractions)
                     {
                         // Create a new security provider to authenticate the user for this client connection
-                        WindowsPrincipal windowsPrincipal = TryGetWindowsPrincipal(client);
-                        string username = client.ClientUsername ?? windowsPrincipal?.Identity.Name;
+                        IPrincipal principal = TryGetWindowsPrincipal(client);
+                        string username = client.ClientUsername ?? principal?.Identity.Name;
 
                         if (username is null)
                             throw new SecurityException("Authentication failed for client: unable to determine user name.");
 
-                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, windowsPrincipal, false);
-                        securityProvider.SecurePassword = client.SecureClientPassword;
+                        AzureADSettings azureADSettings = AzureADSettings.Load();
+
+                        if (azureADSettings.Enabled && username.Contains('@'))
+                            principal = new AzureADPassthroughPrincipal(username);
+
+                        ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, principal, false);
+
+                        if (securityProvider.UserData.IsAzureAD)
+                            securityProvider.Password = string.Empty;
+                        else
+                            securityProvider.SecurePassword = client.SecureClientPassword;
 
                         if (!securityProvider.Authenticate())
                             throw new SecurityException($"Authentication failed for user '{client.ClientUsername}'. Reason: {securityProvider.AuthenticationFailureReason}");
