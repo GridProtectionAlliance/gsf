@@ -21,11 +21,13 @@
 //
 //******************************************************************************************************
 
-using Microsoft.Identity.Client;
+using System;
 using System.IO;
 using System.Security.Cryptography;
+using Microsoft.Identity.Client;
 using GSF.IO;
 using GSF.Security.Cryptography;
+using Logger = GSF.Diagnostics.Logger;
 
 namespace GSF.Security
 {
@@ -36,7 +38,19 @@ namespace GSF.Security
     {
         static TokenCacheHelper()
         {
-            CacheFilePath = Path.Combine(FilePath.GetApplicationDataFolder(), "msalv3.cache");
+            string appDataFolder = FilePath.GetApplicationDataFolder();
+
+            try
+            {
+                if (!Directory.Exists(appDataFolder))
+                    Directory.CreateDirectory(appDataFolder);
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+
+            CacheFilePath = Path.Combine(appDataFolder, "msalv3.cache");
         }
 
         /// <summary>
