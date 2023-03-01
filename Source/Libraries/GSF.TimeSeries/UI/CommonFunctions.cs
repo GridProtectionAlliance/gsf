@@ -70,7 +70,6 @@ namespace GSF.TimeSeries.UI
         #region [ Static ]
 
         // Static Fields
-        private static SecurityPrincipal s_currentPrincipal;
         private static Guid s_currentNodeID;
         private static string s_serviceConnectionString;
         private static string s_dataPublisherConnectionString;
@@ -86,17 +85,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Defines the current principal for the thread owning the common functions.
         /// </summary>
-        public static SecurityPrincipal CurrentPrincipal
-        {
-            get
-            {
-                return s_currentPrincipal;
-            }
-            set
-            {
-                s_currentPrincipal = value;
-            }
-        }
+        public static SecurityPrincipal CurrentPrincipal { get; set; }
 
         /// <summary>
         /// Defines the current user name as defined in the CurrentPrincipal.Identity.
@@ -114,9 +103,8 @@ namespace GSF.TimeSeries.UI
                 ISecurityProvider securityProvider = currentPrincipal.Identity.Provider;
 
                 return
-                    ((object)s_currentPage != null) &&
-                    ((object)s_currentPage.Next != null) &&
-                    currentPrincipal.Identity.IsAuthenticated &&
+                    s_currentPage?.Next is not null && 
+                    currentPrincipal.Identity.IsAuthenticated && 
                     securityProvider.UserData.Roles.Any();
             }
         }
@@ -132,9 +120,8 @@ namespace GSF.TimeSeries.UI
                 ISecurityProvider securityProvider = currentPrincipal.Identity.Provider;
 
                 return
-                    ((object)s_currentPage != null) &&
-                    ((object)s_currentPage.Previous != null) &&
-                    currentPrincipal.Identity.IsAuthenticated &&
+                    s_currentPage?.Previous is not null && 
+                    currentPrincipal.Identity.IsAuthenticated && 
                     securityProvider.UserData.Roles.Any();
             }
         }
@@ -187,39 +174,38 @@ namespace GSF.TimeSeries.UI
 
             try
             {
-                if (!string.IsNullOrEmpty(CurrentUser))
+                if (string.IsNullOrEmpty(CurrentUser))
+                    return;
+
+                if (database is null)
                 {
-                    if ((object)database == null)
-                    {
-                        database = new AdoDataConnection(DefaultSettingsCategory);
-                        createdConnection = true;
-                    }
+                    database = new AdoDataConnection(DefaultSettingsCategory);
+                    createdConnection = true;
+                }
 
-                    IDbCommand command;
-                    string connectionType = database.Connection.GetType().Name.ToLower();
+                IDbCommand command;
+                string connectionType = database.Connection.GetType().Name.ToLower();
 
-                    // Set Current User for the database session for this connection.
-
-                    switch (connectionType)
-                    {
-                        case "sqlconnection":
-                            const string contextSql = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
-                            command = database.Connection.CreateCommand();
-                            command.CommandText = contextSql;
-                            command.AddParameterWithValue("@userName", CurrentUser);
-                            command.ExecuteNonQuery();
-                            break;
-                        case "mysqlconnection":
-                            command = database.Connection.CreateCommand();
-                            command.CommandText = "SET @context = '" + CurrentUser + "';";
-                            command.ExecuteNonQuery();
-                            break;
-                        case "oracleconnection":
-                            command = database.Connection.CreateCommand();
-                            command.CommandText = "BEGIN context.set_current_user('" + CurrentUser + "'); END;";
-                            command.ExecuteNonQuery();
-                            break;
-                    }
+                // Set Current User for the database session for this connection.
+                switch (connectionType)
+                {
+                    case "sqlconnection":
+                        const string ContextSql = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
+                        command = database.Connection.CreateCommand();
+                        command.CommandText = ContextSql;
+                        command.AddParameterWithValue("@userName", CurrentUser);
+                        command.ExecuteNonQuery();
+                        break;
+                    case "mysqlconnection":
+                        command = database.Connection.CreateCommand();
+                        command.CommandText = "SET @context = '" + CurrentUser + "';";
+                        command.ExecuteNonQuery();
+                        break;
+                    case "oracleconnection":
+                        command = database.Connection.CreateCommand();
+                        command.CommandText = "BEGIN context.set_current_user('" + CurrentUser + "'); END;";
+                        command.ExecuteNonQuery();
+                        break;
                 }
             }
             finally
@@ -315,50 +301,49 @@ namespace GSF.TimeSeries.UI
         private static void GetNodeSettings(this AdoDataConnection database)
         {
             Node node = Node.GetCurrentNode(database);
-            if (node != null)
+
+            if (node is null)
+                return;
+
+            string interfaceValue = string.Empty;
+            Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
+
+            if (settings.ContainsKey("realtimestatisticserviceurl"))
+                s_realTimeStatisticServiceUrl = settings["realtimestatisticserviceurl"];
+
+            if (settings.ContainsKey("timeseriesdataserviceurl"))
+                s_timeSeriesDataServiceUrl = settings["timeseriesdataserviceurl"];
+
+            if (settings.ContainsKey("interface"))
+                interfaceValue = settings["interface"];
+
+            if (!settings.ContainsKey("remotestatusserverconnectionstring"))
+                return;
+
+            s_serviceConnectionString = settings["remotestatusserverconnectionstring"];
+            Dictionary<string, string> serviceSettings = s_serviceConnectionString.ParseKeyValuePairs();
+
+            if (serviceSettings.ContainsKey("interface"))
+                interfaceValue = serviceSettings["interface"];
+
+            if (!serviceSettings.ContainsKey("server"))
+                return;
+
+            string server = serviceSettings["server"];
+
+            if (serviceSettings.ContainsKey("datapublisherport"))
             {
-                string interfaceValue = string.Empty;
-                Dictionary<string, string> settings = node.Settings.ToLower().ParseKeyValuePairs();
+                s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + serviceSettings["datapublisherport"];
 
-                if (settings.ContainsKey("realtimestatisticserviceurl"))
-                    s_realTimeStatisticServiceUrl = settings["realtimestatisticserviceurl"];
+                if (!string.IsNullOrEmpty(interfaceValue))
+                    s_dataPublisherConnectionString += ";interface=" + interfaceValue;
+            }
+            else if (settings.ContainsKey("datapublisherport"))
+            {
+                s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + settings["datapublisherport"];
 
-                if (settings.ContainsKey("timeseriesdataserviceurl"))
-                    s_timeSeriesDataServiceUrl = settings["timeseriesdataserviceurl"];
-
-                if (settings.ContainsKey("interface"))
-                    interfaceValue = settings["interface"];
-
-                if (settings.ContainsKey("remotestatusserverconnectionstring"))
-                {
-                    Dictionary<string, string> serviceSettings;
-
-                    s_serviceConnectionString = settings["remotestatusserverconnectionstring"];
-                    serviceSettings = s_serviceConnectionString.ParseKeyValuePairs();
-
-                    if (serviceSettings.ContainsKey("interface"))
-                        interfaceValue = serviceSettings["interface"];
-
-                    if (serviceSettings.ContainsKey("server"))
-                    {
-                        string server = serviceSettings["server"];
-
-                        if (serviceSettings.ContainsKey("datapublisherport"))
-                        {
-                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + serviceSettings["datapublisherport"];
-
-                            if (!string.IsNullOrEmpty(interfaceValue))
-                                s_dataPublisherConnectionString += ";interface=" + interfaceValue;
-                        }
-                        else if (settings.ContainsKey("datapublisherport"))
-                        {
-                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + settings["datapublisherport"];
-
-                            if (!string.IsNullOrEmpty(interfaceValue))
-                                s_dataPublisherConnectionString += ";interface=" + interfaceValue;
-                        }
-                    }
-                }
+                if (!string.IsNullOrEmpty(interfaceValue))
+                    s_dataPublisherConnectionString += ";interface=" + interfaceValue;
             }
         }
 
@@ -366,20 +351,16 @@ namespace GSF.TimeSeries.UI
         /// Returns current node id <see cref="System.Guid"/> UI is connected to.
         /// </summary>
         /// <returns>Current Node ID.</returns>
-        public static Guid CurrentNodeID()
-        {
-            return s_currentNodeID;
-        }
+        public static Guid CurrentNodeID() => 
+            s_currentNodeID;
 
         /// <summary>
         /// Returns current node id <see cref="System.Guid"/> UI is connected to.
         /// </summary>
         /// <param name="database">Connected <see cref="AdoDataConnection"/></param>
         /// <returns>Proper <see cref="System.Guid"/> implementation for current node id.</returns>
-        public static object CurrentNodeID(this AdoDataConnection database)
-        {
-            return database.Guid(s_currentNodeID);
-        }
+        public static object CurrentNodeID(this AdoDataConnection database) => 
+            database.Guid(s_currentNodeID);
 
         #endregion
 
@@ -389,19 +370,20 @@ namespace GSF.TimeSeries.UI
         /// <param name="nodeID">Current node ID <see cref="CurrentNodeID()"/> to assign.</param>
         public static void SetAsCurrentNodeID(this Guid nodeID)
         {
-            if (s_currentNodeID != nodeID)
-            {
-                s_currentNodeID = nodeID;
+            if (s_currentNodeID == nodeID)
+                return;
 
-                // When node selection changes, reset other static members related to node.
-                s_serviceConnectionString = string.Empty;
-                s_dataPublisherConnectionString = string.Empty;
-                s_realTimeStatisticServiceUrl = string.Empty;
-                s_timeSeriesDataServiceUrl = string.Empty;
-                SetRetryServiceConnection(true);
-                DisconnectWindowsServiceClient();
-                ConnectWindowsServiceClient();
-            }
+            s_currentNodeID = nodeID;
+
+            // When node selection changes, reset other static members related to node.
+            s_serviceConnectionString = string.Empty;
+            s_dataPublisherConnectionString = string.Empty;
+            s_realTimeStatisticServiceUrl = string.Empty;
+            s_timeSeriesDataServiceUrl = string.Empty;
+            
+            SetRetryServiceConnection(true);
+            DisconnectWindowsServiceClient();
+            ConnectWindowsServiceClient();
         }
 
         /// <summary>
@@ -409,16 +391,13 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         /// <param name="value">Value to test for null.</param>
         /// <returns><see cref="DBNull"/> if <paramref name="value"/> is <c>null</c>; otherwise <paramref name="value"/>.</returns>
-        public static object ToNotNull(this object value)
-        {
-            if ((object)value == null)
-                return (object)DBNull.Value;
-
-            if (value is int && (int)value == 0)
-                return (object)DBNull.Value;
-
-            return value;
-        }
+        public static object ToNotNull(this object value) =>
+            value switch
+            {
+                null => DBNull.Value,
+                int i when i == 0 => DBNull.Value,
+                _ => value
+            };
 
         /// <summary>
         /// Returns a collection of down sampling methods.
@@ -426,7 +405,7 @@ namespace GSF.TimeSeries.UI
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection of down sampling methods.</returns>
         public static Dictionary<string, string> GetDownsamplingMethodLookupList()
         {
-            Dictionary<string, string> downsamplingLookupList = new Dictionary<string, string>();
+            Dictionary<string, string> downsamplingLookupList = new();
 
             downsamplingLookupList.Add("LastReceived", "LastReceived");
             downsamplingLookupList.Add("Closest", "Closest");
@@ -443,7 +422,7 @@ namespace GSF.TimeSeries.UI
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection of system time zones.</returns>
         public static Dictionary<string, string> GetTimeZones(bool isOptional)
         {
-            Dictionary<string, string> timeZonesList = new Dictionary<string, string>();
+            Dictionary<string, string> timeZonesList = new();
 
             if (isOptional)
                 timeZonesList.Add("", "Select Time Zone");
@@ -466,17 +445,18 @@ namespace GSF.TimeSeries.UI
         public static void GetChildren(UIElement parent, Type targetType, ref List<UIElement> children)
         {
             int count = VisualTreeHelper.GetChildrenCount(parent);
-            if (count > 0)
+
+            if (count <= 0)
+                return;
+
+            for (int i = 0; i < count; i++)
             {
-                for (int i = 0; i < count; i++)
-                {
-                    UIElement child = (UIElement)VisualTreeHelper.GetChild(parent, i);
-                    if (child.GetType() == targetType)
-                    {
-                        children.Add(child);
-                    }
-                    GetChildren(child, targetType, ref children);
-                }
+                UIElement child = (UIElement)VisualTreeHelper.GetChild(parent, i);
+                
+                if (child.GetType() == targetType)
+                    children.Add(child);
+                
+                GetChildren(child, targetType, ref children);
             }
         }
 
@@ -489,19 +469,21 @@ namespace GSF.TimeSeries.UI
         public static void GetFirstChild(UIElement parent, Type targetType, ref UIElement element)
         {
             int count = VisualTreeHelper.GetChildrenCount(parent);
-            if (count > 0)
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    UIElement child = (UIElement)VisualTreeHelper.GetChild(parent, i);
-                    if (child.GetType() == targetType)
-                    {
-                        element = child;
-                        break;
-                    }
 
-                    GetFirstChild(child, targetType, ref element);
+            if (count <= 0)
+                return;
+
+            for (int i = 0; i < count; i++)
+            {
+                UIElement child = (UIElement)VisualTreeHelper.GetChild(parent, i);
+                
+                if (child.GetType() == targetType)
+                {
+                    element = child;
+                    break;
                 }
+
+                GetFirstChild(child, targetType, ref element);
             }
         }
 
@@ -519,7 +501,7 @@ namespace GSF.TimeSeries.UI
 
             try
             {
-                if ((object)database == null)
+                if (database is null)
                 {
                     database = new AdoDataConnection(DefaultSettingsCategory);
                     createdConnection = true;
@@ -528,7 +510,7 @@ namespace GSF.TimeSeries.UI
                 string query = database.ParameterizedQueryString("SELECT ID FROM Runtime WHERE SourceTable = {0} AND SourceID = {1}", "sourceTable", "sourceID");
                 object id = database.Connection.ExecuteScalar(query, sourceTable, sourceID);
 
-                if (id != null)
+                if (id is not null)
                     runtimeID = id.ToString();
 
                 return runtimeID;
@@ -547,6 +529,7 @@ namespace GSF.TimeSeries.UI
         public static void SetRetryServiceConnection(bool retry)
         {
             s_retryServiceConnection = retry;
+
             if (!retry)
                 DisconnectWindowsServiceClient();
         }
@@ -566,44 +549,39 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public static void ConnectWindowsServiceClient(bool overwrite = false)
         {
-            TlsClient remotingClient;
-            ISecurityProvider securityProvider;
-
             if (overwrite)
             {
                 DisconnectWindowsServiceClient();
                 ServiceConnectionRefreshed(null, EventArgs.Empty);
             }
-            else if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
+            else if (s_windowsServiceClient is null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
             {
-                if (s_windowsServiceClient != null)
+                if (s_windowsServiceClient is not null)
                     DisconnectWindowsServiceClient();
 
-                AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
+                AdoDataConnection database = new(DefaultSettingsCategory);
 
                 try
                 {
                     string connectionString = database.ServiceConnectionString(true);
 
-                    if (!string.IsNullOrWhiteSpace(connectionString))
-                    {
-                        s_windowsServiceClient = new WindowsServiceClient(connectionString);
+                    if (string.IsNullOrWhiteSpace(connectionString))
+                        return;
 
-                        securityProvider = s_currentPrincipal.Identity.Provider;
-                        s_windowsServiceClient.Helper.Username = securityProvider.UserData.LoginID;
-                        s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(securityProvider.Password);
+                    s_windowsServiceClient = new WindowsServiceClient(connectionString);
 
-                        remotingClient = s_windowsServiceClient.Helper.RemotingClient as TlsClient;
+                    ISecurityProvider securityProvider = CurrentPrincipal.Identity.Provider;
+                    s_windowsServiceClient.Helper.Username = securityProvider.UserData.LoginID;
+                    s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(securityProvider.Password);
 
-                        if ((object)remotingClient != null && (object)securityProvider.SecurePassword != null && securityProvider.SecurePassword.Length > 0)
-                            remotingClient.NetworkCredential = new NetworkCredential(securityProvider.UserData.LoginID, securityProvider.SecurePassword);
+                    if (s_windowsServiceClient.Helper.RemotingClient is TlsClient remotingClient && !securityProvider.UserData.IsAzureAD && securityProvider.SecurePassword is not null && securityProvider.SecurePassword.Length > 0)
+                        remotingClient.NetworkCredential = new NetworkCredential(securityProvider.UserData.LoginID, securityProvider.SecurePassword);
 
-                        s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
-                        s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
-                        s_windowsServiceClient.Helper.RemotingClient.ConnectionException += RemotingClient_ConnectionException;
+                    s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+                    s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+                    s_windowsServiceClient.Helper.RemotingClient.ConnectionException += RemotingClient_ConnectionException;
 
-                        ConnectAsync();
-                    }
+                    ConnectAsync();
                 }
                 finally
                 {
@@ -612,21 +590,19 @@ namespace GSF.TimeSeries.UI
             }
         }
 
-        private static void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
-        {
+        private static void RemotingClient_ConnectionEstablished(object sender, EventArgs e) => 
             ServiceConnectionRefreshed(null, EventArgs.Empty);
-        }
 
         private static void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
             bool logException = true;
             SocketException ex = e.Argument as SocketException;
 
-            if ((object)ex == null && (object)e.Argument.InnerException != null)
+            if (ex is null && e.Argument.InnerException is not null)
                 ex = e.Argument.InnerException as SocketException;
 
-            if ((object)ex != null)
-                logException = (ex.SocketErrorCode != SocketError.ConnectionRefused);
+            if (ex is not null)
+                logException = ex.SocketErrorCode != SocketError.ConnectionRefused;
 
             if (logException)
                 LogException(null, "Remoting Client Connect", e.Argument);
@@ -639,8 +615,6 @@ namespace GSF.TimeSeries.UI
         public static void DisplayStatusMessage(string message)
         {
             Dispatcher dispatcher = Application.Current.Dispatcher;
-            TextBlock statusTextBlock;
-            Popup statusPopup;
 
             if (dispatcher.Thread != Thread.CurrentThread)
             {
@@ -648,15 +622,15 @@ namespace GSF.TimeSeries.UI
                 return;
             }
 
-            statusTextBlock = Application.Current.MainWindow.FindName("TextBlockResult") as TextBlock;
-            statusPopup = Application.Current.MainWindow.FindName("PopupStatus") as Popup;
+            TextBlock statusTextBlock = Application.Current.MainWindow!.FindName("TextBlockResult") as TextBlock;
+            Popup statusPopup = Application.Current.MainWindow.FindName("PopupStatus") as Popup;
 
-            if ((object)statusTextBlock != null && (object)statusPopup != null)
-            {
-                statusTextBlock.Text = message;
-                statusPopup.IsOpen = true;
-                statusPopup.InvalidateVisual();
-            }
+            if (statusTextBlock is null || statusPopup is null)
+                return;
+
+            statusTextBlock.Text = message;
+            statusPopup.IsOpen = true;
+            statusPopup.InvalidateVisual();
         }
 
         /// <summary>
@@ -665,7 +639,6 @@ namespace GSF.TimeSeries.UI
         public static void HideStatusMessage()
         {
             Dispatcher dispatcher = Application.Current.Dispatcher;
-            Popup statusPopup;
 
             if (dispatcher.Thread != Thread.CurrentThread)
             {
@@ -673,23 +646,16 @@ namespace GSF.TimeSeries.UI
                 return;
             }
 
-            statusPopup = Application.Current.MainWindow.FindName("PopupStatus") as Popup;
-
-            if ((object)statusPopup != null)
+            if (Application.Current.MainWindow?.FindName("PopupStatus") is Popup statusPopup)
                 statusPopup.IsOpen = false;
         }
 
         /// <summary>
         /// Gets a message box to display message to users.
         /// </summary>
-        public static Action<string, string, MessageBoxImage> Popup
-        {
-            get
-            {
-                return (Action<string, string, MessageBoxImage>)((message, caption, messageBoxImage) =>
-                     MessageBox.Show(Application.Current.MainWindow, message, caption, MessageBoxButton.OK, messageBoxImage));
-            }
-        }
+        public static Action<string, string, MessageBoxImage> Popup =>
+            (message, caption, messageBoxImage) =>
+                MessageBox.Show(Application.Current.MainWindow!, message, caption, MessageBoxButton.OK, messageBoxImage);
 
         /// <summary>
         /// Connects asynchronously to backend windows service.
@@ -700,24 +666,29 @@ namespace GSF.TimeSeries.UI
             {
                 try
                 {
-                    if (!(s_windowsServiceClient is null) && s_retryServiceConnection)
-                    {
-                        s_windowsServiceClient.Helper.Connect();
+                    if (s_windowsServiceClient is null || !s_retryServiceConnection)
+                        return;
 
-                        // If connection attempt failed with provided credentials, try once more with direct authentication
-                        // but only when transport is secured
-                        if (!s_windowsServiceClient.Authenticated && s_windowsServiceClient.Helper.RemotingClient is TlsClient)
-                        {
-                            ISecurityProvider provider = s_currentPrincipal.Identity.Provider;
+                    s_windowsServiceClient.Helper.Connect();
 
-                            if (provider.SecurePassword?.Length > 0)
-                            {
-                                s_windowsServiceClient.Helper.Disconnect();
-                                s_windowsServiceClient.Helper.SecurePassword = provider.SecurePassword;
-                                s_windowsServiceClient.Helper.Connect();
-                            }
-                        }
-                    }
+                    // If connection attempt failed with provided credentials, try once more with direct authentication
+                    // but only when transport is secured
+                    if (s_windowsServiceClient.Authenticated || s_windowsServiceClient.Helper.RemotingClient is not TlsClient)
+                        return;
+
+                    ISecurityProvider provider = CurrentPrincipal.Identity.Provider;
+
+                    if (provider.SecurePassword?.Length == 0 && !provider.UserData.IsAzureAD)
+                        return;
+
+                    s_windowsServiceClient.Helper.Disconnect();
+
+                    if (provider.UserData.IsAzureAD)
+                        s_windowsServiceClient.Helper.Password = string.Empty;
+                    else
+                        s_windowsServiceClient.Helper.SecurePassword = provider.SecurePassword;
+
+                    s_windowsServiceClient.Helper.Connect();
                 }
                 catch (Exception ex)
                 {
@@ -733,11 +704,11 @@ namespace GSF.TimeSeries.UI
         {
             try
             {
-                if (s_windowsServiceClient != null)
-                {
-                    s_windowsServiceClient.Dispose();
-                    s_windowsServiceClient = null;
-                }
+                if (s_windowsServiceClient is null)
+                    return;
+
+                s_windowsServiceClient.Dispose();
+                s_windowsServiceClient = null;
             }
             catch (Exception ex)
             {
@@ -752,50 +723,35 @@ namespace GSF.TimeSeries.UI
         /// <returns>string, indicating success.</returns>
         public static string SendCommandToService(string command)
         {
-            if (s_windowsServiceClient != null)
-            {
-                // Make sure requests are serialized
-                lock (s_windowsServiceClient)
-                {
-                    if (s_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
-                        s_windowsServiceClient.Helper.SendRequest(command);
-                    else
-                        throw new ApplicationException("Application is currently disconnected from service.");
-                }
+            if (s_windowsServiceClient is null)
+                throw new ApplicationException("Application is currently disconnected from service.");
 
-                return "Successfully sent " + command + " command.";
+            // Make sure requests are serialized
+            lock (s_windowsServiceClient)
+            {
+                if (s_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+                    s_windowsServiceClient.Helper.SendRequest(command);
+                else
+                    throw new ApplicationException("Application is currently disconnected from service.");
             }
 
-            throw new ApplicationException("Application is currently disconnected from service.");
+            return "Successfully sent " + command + " command.";
+
         }
 
         /// <summary>
         /// Retrieves a list of <see cref="StopBits"/>.
         /// </summary>
         /// <returns>Collection of <see cref="StopBits"/> as a <see cref="List{T}"/>.</returns>
-        public static List<string> GetStopBits()
-        {
-            List<string> stopBitsList = new List<string>();
-
-            foreach (string stopBit in Enum.GetNames(typeof(StopBits)))
-                stopBitsList.Add(stopBit);
-
-            return stopBitsList;
-        }
+        public static List<string> GetStopBits() => 
+            Enum.GetNames(typeof(StopBits)).ToList();
 
         /// <summary>
         /// Retrieves a list of <see cref="Parity"/>.
         /// </summary>
         /// <returns>Collection of <see cref="Parity"/> as a <see cref="List{T}"/>.</returns>
-        public static List<string> GetParities()
-        {
-            List<string> parityList = new List<string>();
-
-            foreach (string parity in Enum.GetNames(typeof(Parity)))
-                parityList.Add(parity);
-
-            return parityList;
-        }
+        public static List<string> GetParities() => 
+            Enum.GetNames(typeof(Parity)).ToList();
 
         /// <summary>
         /// Converts value to specified type.
@@ -807,22 +763,16 @@ namespace GSF.TimeSeries.UI
         {
             Type dataType = Type.GetType(xmlDataType);
 
-            if (double.TryParse(xmlValue, out double value))
-            {
-                switch (xmlDataType)
-                {
-                    case "System.Double":
-                        return value;
-                    case "System.DateTime":
-                        return new DateTime((long)value);
-                    case "GSF.UnixTimeTag":
-                        return new UnixTimeTag((decimal)value);
-                    default:
-                        return Convert.ChangeType(value, dataType ?? typeof(double));
-                }
-            }
+            if (!double.TryParse(xmlValue, out double value))
+                return string.Empty.ConvertToType(dataType);
 
-            return string.Empty.ConvertToType(dataType);
+            return xmlDataType switch
+            {
+                "System.Double" => value,
+                "System.DateTime" => new DateTime((long)value),
+                "GSF.UnixTimeTag" => new UnixTimeTag((decimal)value),
+                _ => Convert.ChangeType(value, dataType ?? typeof(double))
+            };
         }
 
         /// <summary>
@@ -833,7 +783,7 @@ namespace GSF.TimeSeries.UI
         /// <returns>KeyValuePair containing min and max point id.</returns>
         public static KeyValuePair<int?, int?> GetMinMaxPointIDs(AdoDataConnection connection, Guid nodeID)
         {
-            KeyValuePair<int?, int?> minMaxPointIDs = new KeyValuePair<int?, int?>(1, 5000);
+            KeyValuePair<int?, int?> minMaxPointIDs = new(1, 5000);
             bool createdConnection = false;
 
             try
@@ -850,7 +800,7 @@ namespace GSF.TimeSeries.UI
             }
             finally
             {
-                if (createdConnection && (object)connection != null)
+                if (createdConnection && connection is not null)
                     connection.Dispose();
             }
 
@@ -864,7 +814,7 @@ namespace GSF.TimeSeries.UI
         /// <returns>Current header text from user control group box host, if possible; otherwise, <paramref name="defaultText"/>.</returns>
         public static string GetHeaderText(string defaultText)
         {
-            if ((object)s_currentPage != null && (object)s_currentPage.Value != null)
+            if (s_currentPage?.Value is not null)
                 defaultText = s_currentPage.Value.Item1.ToNonNullNorWhiteSpace(defaultText);
 
             return defaultText;
@@ -881,13 +831,12 @@ namespace GSF.TimeSeries.UI
         {
             try
             {
-                ISecurityProvider securityProvider = s_currentPrincipal.Identity.Provider;
+                ISecurityProvider securityProvider = CurrentPrincipal.Identity.Provider;
                 string applicationName;
 
-                if ((object)securityProvider != null)
-                    applicationName = securityProvider.ApplicationName;
-                else
-                    applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+                applicationName = securityProvider is null ? 
+                    FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName) : 
+                    securityProvider.ApplicationName;
 
                 EventLog.WriteEntry(applicationName, message, eventType, eventID);
 
@@ -896,7 +845,7 @@ namespace GSF.TimeSeries.UI
             }
             catch (Exception ex)
             {
-                LogException(null, "LogEvent", new InvalidOperationException(string.Format("Failed to write message \"{0}\" to event log: {1}", message, ex.Message), ex));
+                LogException(null, "LogEvent", new InvalidOperationException($"Failed to write message \"{message}\" to event log: {ex.Message}", ex));
             }
         }
 
@@ -904,43 +853,37 @@ namespace GSF.TimeSeries.UI
         private static void LogEventRemotely(object state)
         {
             // Make sure service client and remoting client are defined
-            if ((object)s_windowsServiceClient != null && (object)s_windowsServiceClient.Helper != null && (object)s_windowsServiceClient.Helper.RemotingClient != null)
+            if (s_windowsServiceClient?.Helper?.RemotingClient is null)
+                return;
+
+            try
             {
-                try
-                {
-                    // Client base may be a normal TCP client or a TLS client - so we check for this
-                    ClientBase client = s_windowsServiceClient.Helper.RemotingClient;
-                    TlsClient remotingClient = client as TlsClient;
-                    string remotingAddress = null;
+                // Client base may be a normal TCP client or a TLS client - so we check for this
+                ClientBase client = s_windowsServiceClient.Helper.RemotingClient;
+                TlsClient remotingClient = client as TlsClient;
+                string remotingAddress = null;
 
-                    // Get remote client address for remoting client (console) connection
-                    if ((object)remotingClient != null)
-                        remotingAddress = ((IPEndPoint)remotingClient.Client.RemoteEndPoint).Address.ToString();
+                // Get remote client address for remoting client (console) connection
+                if (remotingClient is not null)
+                    remotingAddress = ((IPEndPoint)remotingClient.Client.RemoteEndPoint).Address.ToString();
 
-                    // If this is not a local address - we will also send event to be logged on the server
-                    if (!string.IsNullOrEmpty(remotingAddress) && !Communication.Transport.IsLocalAddress(remotingAddress))
-                    {
-                        string message;
-                        EventLogEntryType eventType;
-                        int eventID;
+                // If this is not a local address - we will also send event to be logged on the server
+                if (string.IsNullOrEmpty(remotingAddress) || Communication.Transport.IsLocalAddress(remotingAddress))
+                    return;
 
-                        Tuple<string, EventLogEntryType, int> parameters = state as Tuple<string, EventLogEntryType, int>;
+                if (state is not Tuple<string, EventLogEntryType, int> parameters)
+                    return;
 
-                        if ((object)parameters != null)
-                        {
-                            message = parameters.Item1;
-                            eventType = parameters.Item2;
-                            eventID = parameters.Item3;
+                string message = parameters.Item1;
+                EventLogEntryType eventType = parameters.Item2;
+                int eventID = parameters.Item3;
 
-                            string command = string.Format("LogEvent -Message=\"{0}\" -Type={1} -ID={2}", message.Replace('"', '\''), eventType, eventID);
-                            SendCommandToService(command);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LogException(null, "RemoteLogEvent", new InvalidOperationException(string.Format("Failed to send message to remote event log: {0}", ex.Message), ex));
-                }
+                string command = $"LogEvent -Message=\"{message.Replace('"', '\'')}\" -Type={eventType} -ID={eventID}";
+                SendCommandToService(command);
+            }
+            catch (Exception ex)
+            {
+                LogException(null, "RemoteLogEvent", new InvalidOperationException($"Failed to send message to remote event log: {ex.Message}", ex));
             }
         }
 
@@ -955,10 +898,8 @@ namespace GSF.TimeSeries.UI
             bool createdConnection = false;
             try
             {
-                string query;
-
                 createdConnection = DataModelBase.CreateConnection(ref connection);
-                query = connection.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message, Detail) VALUES ({0}, {1}, {2})", "source", "message", "detail");
+                string query = connection.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Message, Detail) VALUES ({0}, {1}, {2})", "source", "message", "detail");
                 connection.Connection.ExecuteNonQuery(query, DataModelBase.DefaultTimeout, source, ex.Message, ex.ToString());
             }
             catch
@@ -967,7 +908,7 @@ namespace GSF.TimeSeries.UI
             }
             finally
             {
-                if (createdConnection && connection != null)
+                if (createdConnection && connection is not null)
                     connection.Dispose();
             }
         }
@@ -980,83 +921,71 @@ namespace GSF.TimeSeries.UI
         /// <param name="constructorArgs">Parameters for the constructor of the user control.</param>
         public static UserControl LoadUserControl(string title, Type userControlType, params object[] constructorArgs)
         {
-            Panel panel = Application.Current.MainWindow.FindName("UserControlPanel") as Panel;
-            UserControl userControl;
-            bool canGoForward;
-            bool canGoBack;
+            if (Application.Current.MainWindow?.FindName("UserControlPanel") is not Panel panel)
+                return null;
 
-            GroupBox groupBox;
-            Run run;
-            TextBlock txt;
+            if (Activator.CreateInstance(userControlType, constructorArgs) is not UserControl userControl)
+                return null;
 
-            if ((object)panel != null)
+            // If no page history exists yet, create it
+            s_pageHistory ??= new LinkedList<Tuple<string, Type, object[]>>();
+
+            // Display the user control
+            panel.Children.Clear();
+            panel.Children.Add(userControl);
+
+            if (s_currentPage is not null)
             {
-                userControl = Activator.CreateInstance(userControlType, constructorArgs) as UserControl;
+                bool canGoForward = CanGoForward;
+                bool canGoBack = CanGoBack;
 
-                if ((object)userControl != null)
-                {
-                    // If no page history exists yet, create it
-                    if ((object)s_pageHistory == null)
-                        s_pageHistory = new LinkedList<Tuple<string, Type, object[]>>();
+                // Add the new page after the current
+                s_pageHistory.AddAfter(s_currentPage, Tuple.Create(title, userControlType, constructorArgs));
+                s_currentPage = s_currentPage.Next;
 
-                    // Display the user control
-                    panel.Children.Clear();
-                    panel.Children.Add(userControl);
+                // Truncate the list to the page that was just added
+                while (s_pageHistory.Last != s_currentPage)
+                    s_pageHistory.RemoveLast();
 
-                    if ((object)s_currentPage != null)
-                    {
-                        canGoForward = CanGoForward;
-                        canGoBack = CanGoBack;
+                // Shorten the history to the maximum number of pages
+                while (s_pageHistory.Count > MaxPageHistory)
+                    s_pageHistory.RemoveFirst();
 
-                        // Add the new page after the current
-                        s_pageHistory.AddAfter(s_currentPage, Tuple.Create(title, userControlType, constructorArgs));
-                        s_currentPage = s_currentPage.Next;
+                // Determine if flags to indicate whether
+                // we can go forward or back have changed
+                if (canGoForward)
+                    OnCanGoForwardChanged();
 
-                        // Truncate the list to the page that was just added
-                        while (s_pageHistory.Last != s_currentPage)
-                            s_pageHistory.RemoveLast();
-
-                        // Shorten the history to the maximum number of pages
-                        while (s_pageHistory.Count > MaxPageHistory)
-                            s_pageHistory.RemoveFirst();
-
-                        // Determine if flags to indicate whether
-                        // we can go forward or back have changed
-                        if (canGoForward)
-                            OnCanGoForwardChanged();
-
-                        if (!canGoBack)
-                            OnCanGoBackChanged();
-                    }
-                    else
-                    {
-                        // Add this page as the first page in history
-                        s_pageHistory.AddFirst(Tuple.Create(title, userControlType, constructorArgs));
-                        s_currentPage = s_pageHistory.First;
-                    }
-
-                    // Set the header on the group box to the title passed into this method
-                    groupBox = Application.Current.MainWindow.FindName("UserControlGroupBox") as GroupBox;
-
-                    if ((object)groupBox != null)
-                    {
-                        run = new Run();
-                        run.FontWeight = FontWeights.Bold;
-                        run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-                        run.Text = title;
-
-                        txt = new TextBlock();
-                        txt.Padding = new Thickness(5.0);
-                        txt.Inlines.Add(run);
-
-                        groupBox.Header = txt;
-                    }
-
-                    return userControl;
-                }
+                if (!canGoBack)
+                    OnCanGoBackChanged();
+            }
+            else
+            {
+                // Add this page as the first page in history
+                s_pageHistory.AddFirst(Tuple.Create(title, userControlType, constructorArgs));
+                s_currentPage = s_pageHistory.First;
             }
 
-            return null;
+            // Set the header on the group box to the title passed into this method
+            if (Application.Current.MainWindow.FindName("UserControlGroupBox") is not GroupBox groupBox)
+                return userControl;
+
+            Run run = new()
+            { 
+                FontWeight = FontWeights.Bold, 
+                Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)), 
+                Text = title 
+            };
+
+            TextBlock textBlock = new()
+            { 
+                Padding = new Thickness(5.0)
+            };
+
+            textBlock.Inlines.Add(run);
+            groupBox.Header = textBlock;
+
+            return userControl;
         }
 
         /// <summary>
@@ -1064,58 +993,56 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public static void GoForward()
         {
-            Panel panel = Application.Current.MainWindow.FindName("UserControlPanel") as Panel;
+            Panel panel = Application.Current.MainWindow?.FindName("UserControlPanel") as Panel;
+
+            if (!CanGoForward || panel is null)
+                return;
+
+            bool canGoBack = CanGoBack;
+
+            // Get the next page and instantiate the user control
+            s_currentPage = s_currentPage.Next;
+
             UserControl userControl;
-            bool canGoBack;
+            
+            if (s_currentPage is null)
+                userControl = null;
+            else
+                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
 
-            GroupBox groupBox;
-            Run run;
-            TextBlock txt;
+            if (userControl is null)
+                return;
 
-            if (CanGoForward && (object)panel != null)
-            {
-                canGoBack = CanGoBack;
+            // Display the user control
+            panel.Children.Clear();
+            panel.Children.Add(userControl);
 
-                // Get the next page and instantiate the user control
-                s_currentPage = s_currentPage.Next;
+            // Determine if flags to indicate whether
+            // we can go forward or back have changed
+            if (!CanGoForward)
+                OnCanGoForwardChanged();
 
-                if ((object)s_currentPage == null)
-                    userControl = null;
-                else
-                    userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+            if (!canGoBack)
+                OnCanGoBackChanged();
 
-                if ((object)userControl != null)
-                {
-                    // Display the user control
-                    panel.Children.Clear();
-                    panel.Children.Add(userControl);
+            // Set the header on the group box to the title of the user control
+            if (Application.Current.MainWindow.FindName("UserControlGroupBox") is not GroupBox groupBox)
+                return;
 
-                    // Determine if flags to indicate whether
-                    // we can go forward or back have changed
-                    if (!CanGoForward)
-                        OnCanGoForwardChanged();
+            Run run = new()
+            { 
+                FontWeight = FontWeights.Bold, 
+                Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)), 
+                Text = s_currentPage.Value.Item1
+            };
 
-                    if (!canGoBack)
-                        OnCanGoBackChanged();
-
-                    // Set the header on the group box to the title of the user control
-                    groupBox = Application.Current.MainWindow.FindName("UserControlGroupBox") as GroupBox;
-
-                    if ((object)groupBox != null)
-                    {
-                        run = new Run();
-                        run.FontWeight = FontWeights.Bold;
-                        run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-                        run.Text = s_currentPage.Value.Item1;
-
-                        txt = new TextBlock();
-                        txt.Padding = new Thickness(5.0);
-                        txt.Inlines.Add(run);
-
-                        groupBox.Header = txt;
-                    }
-                }
-            }
+            TextBlock textBlock = new()
+            { 
+                Padding = new Thickness(5.0)
+            };
+            
+            textBlock.Inlines.Add(run);
+            groupBox.Header = textBlock;
         }
 
         /// <summary>
@@ -1123,96 +1050,80 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public static void GoBack()
         {
-            Panel panel = Application.Current.MainWindow.FindName("UserControlPanel") as Panel;
+            Panel panel = Application.Current.MainWindow?.FindName("UserControlPanel") as Panel;
+
+            if (!CanGoBack || panel is null)
+                return;
+
+            bool canGoForward = CanGoForward;
+
+            // Get the previous page and instantiate the user control
+            s_currentPage = s_currentPage.Previous;
+
             UserControl userControl;
-            bool canGoForward;
+            
+            if (s_currentPage is null)
+                userControl = null;
+            else
+                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
 
-            GroupBox groupBox;
-            Run run;
-            TextBlock txt;
+            if (userControl is null)
+                return;
 
-            if (CanGoBack && (object)panel != null)
-            {
-                canGoForward = CanGoForward;
+            // Display the user control
+            panel.Children.Clear();
+            panel.Children.Add(userControl);
 
-                // Get the previous page and instantiate the user control
-                s_currentPage = s_currentPage.Previous;
+            // Determine if flags to indicate whether
+            // we can go forward or back have changed
+            if (!canGoForward)
+                OnCanGoForwardChanged();
 
-                if ((object)s_currentPage == null)
-                    userControl = null;
-                else
-                    userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+            if (!CanGoBack)
+                OnCanGoBackChanged();
 
-                if ((object)userControl != null)
-                {
-                    // Display the user control
-                    panel.Children.Clear();
-                    panel.Children.Add(userControl);
+            // Set the header on the group box to the title of the user control
+            if (Application.Current.MainWindow.FindName("UserControlGroupBox") is not GroupBox groupBox)
+                return;
 
-                    // Determine if flags to indicate whether
-                    // we can go forward or back have changed
-                    if (!canGoForward)
-                        OnCanGoForwardChanged();
+            Run run = new()
+            { 
+                FontWeight = FontWeights.Bold, 
+                Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)), 
+                Text = s_currentPage.Value.Item1
+            };
 
-                    if (!CanGoBack)
-                        OnCanGoBackChanged();
-
-                    // Set the header on the group box to the title of the user control
-                    groupBox = Application.Current.MainWindow.FindName("UserControlGroupBox") as GroupBox;
-
-                    if ((object)groupBox != null)
-                    {
-                        run = new Run();
-                        run.FontWeight = FontWeights.Bold;
-                        run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-                        run.Text = s_currentPage.Value.Item1;
-
-                        txt = new TextBlock();
-                        txt.Padding = new Thickness(5.0);
-                        txt.Inlines.Add(run);
-
-                        groupBox.Header = txt;
-                    }
-                }
-            }
+            TextBlock textBlock = new()
+            { 
+                Padding = new Thickness(5.0)
+            };
+            
+            textBlock.Inlines.Add(run);
+            groupBox.Header = textBlock;
         }
 
         private static string GetCurrentUserPassword()
         {
-            SecurityPrincipal currentPrincipal = s_currentPrincipal;
-            SecurityIdentity identity;
-            ISecurityProvider provider;
+            SecurityPrincipal currentPrincipal = CurrentPrincipal;
 
-            if ((object)currentPrincipal == null)
+            if (currentPrincipal?.Identity is not SecurityIdentity identity)
                 return null;
 
-            identity = currentPrincipal.Identity as SecurityIdentity;
+            ISecurityProvider provider = identity.Provider;
 
-            if ((object)identity == null)
-                return null;
-
-            provider = identity.Provider;
-
-            if ((object)provider == null)
-                return null;
-
-            return provider.Password;
+            return provider?.Password;
         }
 
         private static bool TryImpersonate(string loginID, string password, out WindowsImpersonationContext impersonationContext)
         {
-            string domain;
-            string username;
-            string[] splitLoginID;
-
             try
             {
-                splitLoginID = loginID.Split('\\');
+                string[] splitLoginID = loginID.Split('\\');
 
                 if (splitLoginID.Length == 2)
                 {
-                    domain = splitLoginID[0];
-                    username = splitLoginID[1];
+                    string domain = splitLoginID[0];
+                    string username = splitLoginID[1];
                     impersonationContext = UserInfo.ImpersonateUser(domain, username, password);
 
                     return true;
@@ -1229,24 +1140,16 @@ namespace GSF.TimeSeries.UI
 
         private static void OnCurrentPrincipalRefreshed()
         {
-            if ((object)CurrentPrincipalRefreshed != null)
-                CurrentPrincipalRefreshed(null, EventArgs.Empty);
-
+            CurrentPrincipalRefreshed?.Invoke(null, EventArgs.Empty);
             OnCanGoForwardChanged();
             OnCanGoBackChanged();
         }
 
-        private static void OnCanGoForwardChanged()
-        {
-            if ((object)CanGoForwardChanged != null)
-                CanGoForwardChanged(null, EventArgs.Empty);
-        }
+        private static void OnCanGoForwardChanged() => 
+            CanGoForwardChanged?.Invoke(null, EventArgs.Empty);
 
-        private static void OnCanGoBackChanged()
-        {
-            if ((object)CanGoBackChanged != null)
-                CanGoBackChanged(null, EventArgs.Empty);
-        }
+        private static void OnCanGoBackChanged() => 
+            CanGoBackChanged?.Invoke(null, EventArgs.Empty);
 
         #endregion
     }
