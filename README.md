@@ -77,9 +77,9 @@ The [open Phasor Data Concentrator](https://github.com/GridProtectionAlliance/op
 
 ## Requirements
 
-* 64-bit Windows 7 or newer or POSIX OS, e.g. Linux or Mac.
-* .NET 4.6 or newer.
-* Visual Studio 2012 or higher.
+* 64-bit Windows 10 or newer or POSIX OS, e.g. Linux or Mac.
+* .NET 4.8 or newer.
+* Visual Studio 2022 or higher.
 * NuGet (usually included in Visual Studio).
 
 # Contributing
