@@ -58,6 +58,14 @@ namespace GSF.TimeSeries
             (measurement.StateFlags & MeasurementStateFlags.BadTime) == 0;
 
         /// <summary>
+        /// Returns <c>true</c> if <see cref="MeasurementStateFlags.SuspectTime"/> is set.
+        /// </summary>
+        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <returns><c>true</c> if <see cref="MeasurementStateFlags.SuspectTime"/> is set.</returns>
+        public static bool TimestampQualityIsSuspect(this IMeasurement measurement) =>
+            (measurement.StateFlags & MeasurementStateFlags.SuspectTime) != 0;
+
+        /// <summary>
         /// Gets derived quality flags from a set of source measurements.
         /// </summary>
         /// <param name="measurements">Source measurements.</param>

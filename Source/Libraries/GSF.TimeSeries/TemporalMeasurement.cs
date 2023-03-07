@@ -28,6 +28,26 @@ using System;
 namespace GSF.TimeSeries
 {
     /// <summary>
+    /// Enumeration that defines how to handle <see cref="TemporalMeasurement"/>
+    /// values that are outside of the defined Lag/Lead time bounds.
+    /// </summary>
+    public enum TemporalOutlierOperation
+    {
+        /// <summary>
+        /// Measurement value is set to <see cref="double.NaN"/> if it is outside of the
+        /// defined time bounds. This is the default behavior.
+        /// </summary>
+        PublishValueAsNan,
+
+        /// <summary>
+        /// Measurement value is preserved if it is outside of the time bounds, but the state
+        /// flags are set to <see cref="TemporalMeasurement.OutlierState"/> which defaults to
+        /// <see cref="MeasurementStateFlags.SuspectTime"/>.
+        /// </summary>
+        PublishWithBadState
+    }
+
+    /// <summary>
     /// Represents a time constrained measured value.
     /// </summary>
     public class TemporalMeasurement : Measurement
@@ -69,10 +89,10 @@ namespace GSF.TimeSeries
             }
 
             if (lagTime <= 0)
-                throw new ArgumentOutOfRangeException(nameof(lagTime), "lagTime must be greater than zero, but it can be less than one");
+                throw new ArgumentOutOfRangeException(nameof(lagTime), "Value must be greater than zero, but it can be less than one");
 
             if (leadTime <= 0)
-                throw new ArgumentOutOfRangeException(nameof(leadTime), "leadTime must be greater than zero, but it can be less than one");
+                throw new ArgumentOutOfRangeException(nameof(leadTime), "Value must be greater than zero, but it can be less than one");
 
             m_lagTime = lagTime;
             m_leadTime = leadTime;
@@ -81,6 +101,19 @@ namespace GSF.TimeSeries
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="TemporalOutlierOperation"/> for this <see cref="TemporalMeasurement"/> when
+        /// timestamp is outside defined Lag/Lead time bounds.
+        /// </summary>
+        public TemporalOutlierOperation OutlierOperation { get; set; } = TemporalOutlierOperation.PublishValueAsNan;
+
+        /// <summary>
+        /// Gets or sets the <see cref="MeasurementStateFlags"/> to apply to this <see cref="TemporalMeasurement"/> when
+        /// <see cref="OutlierOperation"/> is set to <see cref="TemporalOutlierOperation.PublishWithBadState"/> and
+        /// timestamp is outside defined Lag/Lead time bounds.
+        /// </summary>
+        public MeasurementStateFlags OutlierState { get; set; } = MeasurementStateFlags.SuspectTime;
 
         /// <summary>Allowed past time deviation tolerance in seconds (can be sub-second).</summary>
         /// <remarks>
@@ -94,7 +127,7 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), "LagTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
             }
@@ -112,7 +145,7 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), "LeadTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be greater than zero, but it can be less than one");
 
                 m_leadTime = value;
             }
@@ -122,7 +155,9 @@ namespace GSF.TimeSeries
 
         #region [ Methods ]
 
-        /// <summary>Gets numeric adjusted value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
+        /// <summary>
+        /// Gets numeric adjusted value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.
+        /// </summary>
         /// <remarks>
         /// <para>Operation will return NaN if ticks are outside of time deviation tolerances.</para>
         /// <para>Note that returned value will be offset by adder and multiplier.</para>
@@ -131,11 +166,21 @@ namespace GSF.TimeSeries
         /// <returns>Value offset by adder and multiplier (i.e., Value * Multiplier + Adder).</returns>
         public double GetAdjustedValue(Ticks timestamp)
         {
+            bool timeInBounds = Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime);
+
             // We only return a measurement value that is up-to-date...
-            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? AdjustedValue : double.NaN;
+            if (OutlierOperation == TemporalOutlierOperation.PublishValueAsNan)
+                return timeInBounds ? AdjustedValue : double.NaN;
+
+            if (!timeInBounds)
+                StateFlags |= OutlierState;
+
+            return AdjustedValue;
         }
 
-        /// <summary>Gets numeric value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
+        /// <summary>
+        /// Gets numeric value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.
+        /// </summary>
         /// <remarks>
         /// <para>Operation will return NaN if ticks are outside of time deviation tolerances.</para>
         /// </remarks>
@@ -143,27 +188,48 @@ namespace GSF.TimeSeries
         /// <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier).</returns>
         public double GetValue(Ticks timestamp)
         {
+            bool timeInBounds = Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime);
+
             // We only return a measurement value that is up-to-date...
-            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? Value : double.NaN;
+            if (OutlierOperation == TemporalOutlierOperation.PublishValueAsNan)
+                return timeInBounds ? Value : double.NaN;
+
+            if (!timeInBounds)
+                StateFlags |= OutlierState;
+
+            return Value;
         }
 
-        /// <summary>Sets numeric value and timestamp, as ticks, of this <see cref="TemporalMeasurement"/>.</summary>
+        /// <summary>
+        /// Sets numeric value and timestamp, as ticks, of this <see cref="TemporalMeasurement"/>.
+        /// </summary>
         /// <remarks>
         /// <para>Operation will only store a value that is newer than the cached value.</para>
         /// </remarks>
         /// <param name="timestamp">New timestamp, in ticks, for <see cref="TemporalMeasurement"/>.</param>
         /// <param name="value">New value for <see cref="TemporalMeasurement"/>, only stored if <paramref name="timestamp"/> are newer than current <see cref="Ticks"/>.</param>
+        /// <param name="flags">New flags for <see cref="TemporalMeasurement"/>.</param>
         /// <returns><c>true</c> if value was updated; otherwise <c>false</c>.</returns>
-        public bool SetValue(Ticks timestamp, double value)
+        public bool SetValue(Ticks timestamp, double value, MeasurementStateFlags flags)
         {
             // We only store a value that is newer than the current value
-            if (timestamp <= Timestamp || !timestamp.UtcTimeIsValid(m_lagTime, m_leadTime))
+            if (timestamp <= Timestamp)
+                return false;
+
+            bool timeInBounds = timestamp.UtcTimeIsValid(m_lagTime, m_leadTime);
+
+            if (!timeInBounds && OutlierOperation == TemporalOutlierOperation.PublishValueAsNan)
                 return false;
 
             Value = value;
             Timestamp = timestamp;
-            return true;
 
+            if (timeInBounds)
+                StateFlags = flags;
+            else
+                StateFlags = flags | OutlierState;
+
+            return true;
         }
 
         #endregion

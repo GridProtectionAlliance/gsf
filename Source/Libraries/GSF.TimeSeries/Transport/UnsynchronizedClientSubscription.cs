@@ -380,6 +380,13 @@ namespace GSF.TimeSeries.Transport
 
             m_includeTime = !Settings.TryGetValue("includeTime", out setting) || setting.ParseBoolean();
 
+            // Default throttled publication to continue with value publication but with suspect time state when timestamps
+            // are outside defined lag/lead bounds, but allow override for original NaN output behavior which can be enabled
+            // by adding 'publishThrottledOutliersAsNan=true' to ExtraConnectionStringParameters in subscription info objects
+            LatestMeasurements.OutlierOperation = Settings.TryGetValue("publishThrottledOutliersAsNan", out setting) && setting.ParseBoolean() ? 
+                TemporalOutlierOperation.PublishValueAsNan : 
+                TemporalOutlierOperation.PublishWithBadState;
+
             m_useMillisecondResolution = Settings.TryGetValue("useMillisecondResolution", out setting) && setting.ParseBoolean();
 
             if (Settings.TryGetValue("requestNaNValueFilter", out setting))
@@ -835,7 +842,7 @@ namespace GSF.TimeSeries.Transport
                 int oldIndex = m_timeIndex;
 
                 // Switch to newer timestamp
-                m_timeIndex ^= 1;
+                Interlocked.Exchange(ref m_timeIndex, m_timeIndex ^ 1);
 
                 // Now make older timestamp the newer timestamp
                 m_baseTimeOffsets[oldIndex] = RealTime + m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;

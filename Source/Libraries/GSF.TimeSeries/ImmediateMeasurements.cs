@@ -45,8 +45,8 @@ namespace GSF.TimeSeries
         private ConcurrentDictionary<MeasurementKey, TemporalMeasurement> m_measurements;
         private ConcurrentDictionary<string, List<MeasurementKey>> m_taggedMeasurements;
         private Func<Ticks> m_realTimeFunction;
-        private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
-        private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
+        private double m_lagTime;   // Allowed past time deviation tolerance, in seconds
+        private double m_leadTime;  // Allowed future time deviation tolerance, in seconds
         private bool m_disposed;
 
         #endregion
@@ -86,7 +86,22 @@ namespace GSF.TimeSeries
 
         #region [ Properties ]
 
-        /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
+        /// <summary>
+        /// Gets or sets the <see cref="TemporalOutlierOperation"/> for the <see cref="ImmediateMeasurements"/> when
+        /// timestamp is outside defined Lag/Lead time bounds.
+        /// </summary>
+        public TemporalOutlierOperation OutlierOperation { get; set; } = TemporalOutlierOperation.PublishValueAsNan;
+
+        /// <summary>
+        /// Gets or sets the <see cref="MeasurementStateFlags"/> to apply to the <see cref="ImmediateMeasurements"/> when
+        /// <see cref="OutlierOperation"/> is set to <see cref="TemporalOutlierOperation.PublishWithBadState"/> and
+        /// timestamp is outside defined Lag/Lead time bounds.
+        /// </summary>
+        public MeasurementStateFlags OutlierState { get; set; } = MeasurementStateFlags.SuspectTime;
+
+        /// <summary>
+        /// We retrieve adjusted measurement values within time tolerance of concentrator real-time.
+        /// </summary>
         /// <param name="id">A <see cref="Guid"/> representing the measurement ID.</param>
         /// <returns>A <see cref="Double"/> representing the adjusted measurement value.</returns>
         public double this[MeasurementKey id] => Measurement(id).GetAdjustedValue(m_realTimeFunction());
@@ -97,7 +112,9 @@ namespace GSF.TimeSeries
         /// <summary>Returns ID collection for measurement tags.</summary>
         public ICollection<string> Tags => m_taggedMeasurements.Keys;
 
-        /// <summary>Returns the minimum value of all measurements.</summary>
+        /// <summary>
+        /// Returns the minimum value of all measurements.
+        /// </summary>
         /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
         public double Minimum
         {
@@ -120,7 +137,9 @@ namespace GSF.TimeSeries
             }
         }
 
-        /// <summary>Returns the maximum value of all measurements.</summary>
+        /// <summary>
+        /// Returns the maximum value of all measurements.
+        /// </summary>
         /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
         public double Maximum
         {
@@ -244,13 +263,17 @@ namespace GSF.TimeSeries
             }
         }
 
-        /// <summary>Returns measurement list of specified tag, if it exists.</summary>
+        /// <summary>
+        /// Returns measurement list of specified tag, if it exists.
+        /// </summary>
         /// <param name="tag">A <see cref="String"/> that indicates the tag to use.</param>
         /// <returns>A collection of measurement keys.</returns>
         public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag) => 
             new(m_taggedMeasurements[tag]);
 
-        /// <summary>Store new measurement.</summary>
+        /// <summary>
+        /// Store new measurement.
+        /// </summary>
         /// <param name="newMeasurement">New measurement value to update.</param>
         /// <remarks>Value is only stored if it is newer than the cached value.</remarks>
         public void UpdateMeasurementValue(IMeasurement newMeasurement)
@@ -258,34 +281,37 @@ namespace GSF.TimeSeries
             TemporalMeasurement measurement = Measurement(newMeasurement);
 
             // Set new value updating state flags if value was updated...
-            if (!measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value))
+            if (!measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value, newMeasurement.StateFlags))
                 return;
 
             measurement.Metadata = newMeasurement.Metadata;
-            measurement.StateFlags = newMeasurement.StateFlags;
         }
 
-        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
+        /// <summary>
+        /// Retrieves the specified immediate temporal measurement, creating it if needed.
+        /// </summary>
         /// <param name="id"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
         public TemporalMeasurement Measurement(MeasurementKey id) =>
             m_measurements.GetOrAdd(id, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
+                OutlierOperation = OutlierOperation,
+                OutlierState = OutlierState,
                 Metadata = key.Metadata,
             });
 
-        /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
+        /// <summary>
+        /// Retrieves the specified immediate temporal measurement, creating it if needed.
+        /// </summary>
         /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(IMeasurement measurement)
-        {
-            TemporalMeasurement temporalMeasurement = m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
+        public TemporalMeasurement Measurement(IMeasurement measurement) =>
+            m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
+                OutlierOperation = OutlierOperation,
+                OutlierState = OutlierState,
                 Metadata = key.Metadata.ChangeAdderMultiplier(measurement.Adder, measurement.Multiplier)
             });
-
-            return temporalMeasurement;
-        }
 
         /// <summary>
         /// Clears the existing measurement cache.
@@ -293,7 +319,9 @@ namespace GSF.TimeSeries
         public void ClearMeasurementCache() => 
             m_measurements.Clear();
 
-        /// <summary>Defines tagged measurements from a data table.</summary>
+        /// <summary>
+        /// Defines tagged measurements from a data table.
+        /// </summary>
         /// <remarks>Expects <see cref="String"/> based tag field to be aliased as "Tag" and <see cref="Guid"/> based measurement ID field to be aliased as "ID".</remarks>
         /// <param name="taggedMeasurements">A <see cref="DataTable"/> to use for defining the tagged measurements.</param>
         public void DefineTaggedMeasurements(DataTable taggedMeasurements)
@@ -308,7 +336,9 @@ namespace GSF.TimeSeries
             }
         }
 
-        /// <summary>Associates a new measurement ID with a tag, creating the new tag if needed.</summary>
+        /// <summary>
+        /// Associates a new measurement ID with a tag, creating the new tag if needed.
+        /// </summary>
         /// <remarks>Allows you to define "grouped" points so you can aggregate certain measurements.</remarks>
         /// <param name="tag">A <see cref="String"/> to represent the key.</param>
         /// <param name="id">A <see cref="Guid"/> ID to associate with the tag.</param>
@@ -324,7 +354,9 @@ namespace GSF.TimeSeries
             measurements.Sort();
         }
 
-        /// <summary>Calculates an average of all measurements.</summary>
+        /// <summary>
+        /// Calculates an average of all measurements.
+        /// </summary>
         /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
         /// <param name="count">An <see cref="Int32"/> value to get the count of values averaged.</param>
         /// <returns>A <see cref="Double"/> value representing the average of the measurements.</returns>
@@ -346,7 +378,9 @@ namespace GSF.TimeSeries
             return total / count;
         }
 
-        /// <summary>Calculates an average of all measurements associated with the specified tag.</summary>
+        /// <summary>
+        /// Calculates an average of all measurements associated with the specified tag.
+        /// </summary>
         /// <param name="count">An <see cref="Int32"/> value to get the count of values averaged.</param>
         /// <param name="tag">The type of measurements to average.</param>
         /// <returns>A <see cref="Double"/> value representing the average of the tags.</returns>
@@ -368,7 +402,9 @@ namespace GSF.TimeSeries
             return total / count;
         }
 
-        /// <summary>Returns the minimum value of all measurements associated with the specified tag.</summary>
+        /// <summary>
+        /// Returns the minimum value of all measurements associated with the specified tag.
+        /// </summary>
         /// <returns>A <see cref="Double"/> value representing the tag minimum.</returns>
         /// <param name="tag">The tag group to evaluate.</param>
         public double TagMinimum(string tag)
@@ -389,7 +425,9 @@ namespace GSF.TimeSeries
             return minValue;
         }
 
-        /// <summary>Returns the maximum value of all measurements associated with the specified tag.</summary>
+        /// <summary>
+        /// Returns the maximum value of all measurements associated with the specified tag.
+        /// </summary>
         /// <returns>A <see cref="Double"/> value representing the tag maximum.</returns>
         /// <param name="tag">The tag group to evaluate.</param>
         public double TagMaximum(string tag)
