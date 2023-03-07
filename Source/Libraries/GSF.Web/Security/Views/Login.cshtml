@@ -50,7 +50,7 @@
     string useAjaxVerification = AuthenticationOptions.DefaultAjaxRequestVerificationToken;
     string loginHeader = "";
     bool unsecureConnection = request.RequestUri.Scheme != "https" && !request.RequestUri.IsLoopback;
-    bool isPOSIX = GSF.Common.IsPosixEnvironment;
+    bool isPOSIX = Common.IsPosixEnvironment;
     bool azureADAuthEnabled = azureADSettings.Enabled;
     string msalUseRedirect;
     bool logoutPageRequested = queryParams.ContainsKey("logout");
@@ -296,7 +296,8 @@
                         </span>&nbsp;&nbsp;<span id="workingIcon" class="glyphicon glyphicon-refresh glyphicon-spin"@Raw(logoutPageRequested ? "" : "  style=\"display: none\"")></span></h4>
                     </div>
                     <div class="panel-body" id="credentialsForm"@Raw(logoutPageRequested ? "  style=\"display: none\"": "")>
-                         @if (string.IsNullOrEmpty(oidcError)) {
+                    @if (string.IsNullOrEmpty(oidcError))
+                    {
                         <form role="form">
                             <div class="form-group">
                                 <label for="username">User name:</label>
@@ -312,11 +313,28 @@
                                         <div class="form-group">
                                             <input type="checkbox" id="iwa" />
                                             <label class="inline" for="iwa">
-                                                Use Integrated Windows&nbsp;Authentication
-                                                @if (azureADAuthEnabled)
+                                                @if (!isPOSIX)
                                                 {
                                                     <text>
-                                                        or<wbr/> Azure&nbsp;AD Single-Sign&nbsp;On
+                                                        Use Integrated Windows&nbsp;Authentication
+                                                    </text>
+                                                }
+                                                @if (azureADAuthEnabled)
+                                                {
+                                                    if (isPOSIX)
+                                                    {
+                                                        <text>
+                                                            Use
+                                                        </text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>
+                                                            or<wbr />
+                                                        </text>
+                                                    }
+                                                    <text>
+                                                        Azure&nbsp;AD Single-Sign&nbsp;On
                                                     </text>
                                                 }
                                             </label>
