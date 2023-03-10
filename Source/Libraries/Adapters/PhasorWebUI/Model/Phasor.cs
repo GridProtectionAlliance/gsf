@@ -33,13 +33,13 @@ namespace PhasorWebUI.Model
         public int SourceIndex { get; set; }
 
         /// <summary>
-        ///     Created on field.
+        /// Created on field.
         /// </summary>
         [DefaultValueExpression("DateTime.UtcNow")]
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
-        ///     Created by field.
+        /// Created by field.
         /// </summary>
         [Required]
         [StringLength(50)]
@@ -47,14 +47,19 @@ namespace PhasorWebUI.Model
         public string CreatedBy { get; set; }
 
         /// <summary>
-        ///     Updated on field.
+        /// Updated on field.
         /// </summary>
-        [DefaultValueExpression("this.CreatedOn", EvaluationOrder = 1)]
+        /// <remarks>
+        /// For phasors, any time record is saved, we increment time of update
+        /// as compared to the time of creation to ensure that any future loads
+        /// do not attempt to guess phase data that has already been edited.
+        /// </remarks>
+        [DefaultValueExpression("this.CreatedOn.AddSeconds(0.5)", EvaluationOrder = 1)]
         [UpdateValueExpression("DateTime.UtcNow")]
         public DateTime UpdatedOn { get; set; }
 
         /// <summary>
-        ///     Updated by field.
+        /// Updated by field.
         /// </summary>
         [Required]
         [StringLength(50)]
