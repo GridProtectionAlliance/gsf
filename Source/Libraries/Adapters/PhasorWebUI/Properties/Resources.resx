@@ -173,7 +173,7 @@
 # defined before they are used as inputs. Names of Inputs should be the Inputs variable name or the Tag Name suffixed with an
 # array indicator "[]". ValueAdjuster types create no new tags, so the Tag Name column is instead used to specify the name of
 # the Inputs array which will be used as the targets for value adjustment and should be referenced in the equation text with
-# an alias name of "value". The equation operates indepedently over each value in the target array by its index where active
+# an alias name of "value". The equation operates independently over each value in the target array by its index where active
 # value is referenced in the expression as "value[INDEX]". Equation result should be a double type such that the result of
 # the equation will be used to replace the measurement value before further system processing, i.e., from the perspective all
 # other system adapters, it will appear as if the new assigned value was the original received value except that the new value
@@ -186,7 +186,7 @@
 # defined before they are used as inputs. Names of Inputs should be the Inputs variable name or the Tag Name suffixed with an
 # array indicator "[]". ValueFilter types create no new tags, so the Tag Name column is instead used to specify the name of
 # the Inputs array which will be used as the targets for value removal and should be referenced in the equation text with
-# an alias name of "value". The equation operates indepedently over each value in the target array by its index where active
+# an alias name of "value". The equation operates independently over each value in the target array by its index where active
 # value is referenced in the expression as "value[INDEX]". Equation result should be a boolean type such that the result of
 # the equation, when true, will be used to determine if the measurement should before removed from further system processing,
 # i.e., from the perspective all other system adapters, it will appear as if the the value was never received by the system.
