@@ -950,7 +950,7 @@ namespace GSF.InstallerActions
             }
             catch (Exception ex)
             {
-                Logger logger = new Logger(session);
+                Logger logger = new Logger(session, "ERROR");
                 logger.Log(EventLogEntryType.Warning, ex);
             }
 
@@ -972,10 +972,15 @@ namespace GSF.InstallerActions
             private readonly string m_serviceName;
             private readonly bool m_isImmediate;
 
-            public Logger(Session session)
+            public Logger(Session session) :
+                this(session, GetPropertyValue(session, "SERVICENAME"))
+            {
+            }
+
+            public Logger(Session session, string serviceName)
             {
                 m_session = session;
-                m_serviceName = GetPropertyValue(session, "SERVICENAME");
+                m_serviceName = serviceName;
                 m_isImmediate = IsImmediate(session);
             }
 
