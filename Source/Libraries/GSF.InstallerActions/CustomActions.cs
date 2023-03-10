@@ -943,8 +943,20 @@ namespace GSF.InstallerActions
             }
             catch (Exception ex)
             {
-                Logger logger = new(session, "ERROR");
-                logger.Log(EventLogEntryType.Warning, ex);
+                bool logged = true;
+                
+                try
+                {
+                    Logger logger = new(session, "Windows Installer");
+                    logger.Log(EventLogEntryType.Warning, ex);
+                }
+                catch
+                {
+                    logged = false;
+                }
+
+                if (!logged)
+                    throw;
             }
 
             return null;
