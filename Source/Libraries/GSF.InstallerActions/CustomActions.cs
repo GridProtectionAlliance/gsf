@@ -61,7 +61,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult AuthenticateServiceAccountAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             string serviceDomain = string.Empty;
             string serviceUser = string.Empty;
@@ -99,23 +99,22 @@ namespace GSF.InstallerActions
             }
             else if (isManagedServiceAccount)
             {
-                using (UserInfo serviceAccountInfo = new UserInfo(serviceAccount))
-                {
-                    bool isManagedServiceAccountValid = serviceAccountInfo.Exists &&
-                                                        !serviceAccountInfo.AccountIsDisabled &&
-                                                        !serviceAccountInfo.AccountIsLockedOut &&
-                                                        serviceAccountInfo.GetUserPropertyValue("msDS-HostServiceAccountBL").Split(',')[0].
-                                                            Equals("CN=" + Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
+                using UserInfo serviceAccountInfo = new(serviceAccount);
 
-                    if (isManagedServiceAccountValid)
-                    {
-                        session["SERVICEPASSWORD"] = string.Empty;
-                        session["SERVICEAUTHENTICATED"] = "yes";
-                    }
-                    else
-                    {
-                        session["SERVICEAUTHENTICATED"] = null;
-                    }
+                bool isManagedServiceAccountValid = serviceAccountInfo.Exists &&
+                                                    !serviceAccountInfo.AccountIsDisabled &&
+                                                    !serviceAccountInfo.AccountIsLockedOut &&
+                                                    serviceAccountInfo.GetUserPropertyValue("msDS-HostServiceAccountBL").Split(',')[0].
+                                                        Equals("CN=" + Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
+
+                if (isManagedServiceAccountValid)
+                {
+                    session["SERVICEPASSWORD"] = string.Empty;
+                    session["SERVICEAUTHENTICATED"] = "yes";
+                }
+                else
+                {
+                    session["SERVICEAUTHENTICATED"] = null;
                 }
             }
             else
@@ -137,7 +136,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult XmlFileAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin XmlFileAction");
 
@@ -207,7 +206,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult ConnectionStringAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin ConnectionStringAction");
 
@@ -236,7 +235,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult LoadExistingCompanyInfoAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin LoadExistingCompanyInfoAction");
 
@@ -282,7 +281,7 @@ namespace GSF.InstallerActions
             const string DefaultCompanyAcronym = "GPA";
             const string DefaultSystemName = " ";
 
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin CompanyInfoAction");
 
@@ -373,7 +372,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult ConfigureServiceAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin ConfigureServiceAction");
             UpdateServiceConfig(session, logger);
@@ -390,7 +389,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult ServiceAccountAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin ServiceAccountAction");
 
@@ -480,7 +479,7 @@ namespace GSF.InstallerActions
                 string groupSID = UserInfo.GroupNameToSID(serviceAdminsGroupName);
                 string acl;
 
-                using (Process process = new Process())
+                using (Process process = new())
                 {
                     process.StartInfo.FileName = "sc";
                     process.StartInfo.Arguments = $"sdshow {serviceName}";
@@ -552,7 +551,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult BrowseFileAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             Thread staThread;
 
@@ -560,18 +559,17 @@ namespace GSF.InstallerActions
 
             staThread = new Thread(() =>
             {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
-                {
-                    openFileDialog.CheckFileExists = true;
-                    openFileDialog.FileName = GetPropertyValue(session, "SelectedFile");
-                    openFileDialog.DefaultExt = GetPropertyValue(session, "BrowseFileExtension");
-                    openFileDialog.Filter = $"{GetPropertyValue(session, "BrowseFileExtension").ToUpper()} Files|*.{GetPropertyValue(session, "BrowseFileExtension")}|All Files|*.*";
+                using OpenFileDialog openFileDialog = new();
 
-                    if (openFileDialog.ShowDialog() == DialogResult.OK)
-                        session["SELECTEDFILE"] = openFileDialog.FileName;
-                    else
-                        session["SELECTEDFILE"] = null;
-                }
+                openFileDialog.CheckFileExists = true;
+                openFileDialog.FileName = GetPropertyValue(session, "SelectedFile");
+                openFileDialog.DefaultExt = GetPropertyValue(session, "BrowseFileExtension");
+                openFileDialog.Filter = $"{GetPropertyValue(session, "BrowseFileExtension").ToUpper()} Files|*.{GetPropertyValue(session, "BrowseFileExtension")}|All Files|*.*";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    session["SELECTEDFILE"] = openFileDialog.FileName;
+                else
+                    session["SELECTEDFILE"] = null;
             });
 
             staThread.SetApartmentState(ApartmentState.STA);
@@ -591,7 +589,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult CheckFileExistenceAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin CheckFileExistenceAction");
             session["FILEEXISTS"] = File.Exists(GetPropertyValue(session, "FILEPATH")) ? "yes" : null;
@@ -608,7 +606,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult UnzipAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin UnzipAction");
 
@@ -634,11 +632,11 @@ namespace GSF.InstallerActions
                 if (!Directory.Exists(directoryPath))
                     Directory.CreateDirectory(directoryPath);
 
-                using (Stream stream = entry.Open())
-                using (FileStream fileStream = File.Create(filePath))
-                {
-                    stream.CopyTo(fileStream);
-                }
+                using Stream stream = entry.Open();
+
+                using FileStream fileStream = File.Create(filePath);
+
+                stream.CopyTo(fileStream);
             }
 
             logger.Log("End UnzipAction");
@@ -654,7 +652,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult PasswordGenerationAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin PasswordGenerationAction");
 
@@ -676,7 +674,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult TestDatabaseConnectionAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin TestDatabaseConnectionAction");
 
@@ -714,7 +712,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult DatabaseQueryAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             string dllPath;
 
@@ -741,10 +739,9 @@ namespace GSF.InstallerActions
                     Assembly.Load(File.ReadAllBytes(dllPath));
 
                 // Execute the database script
-                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
-                {
-                    connection.ExecuteNonQuery(query);
-                }
+                using AdoDataConnection connection = new(connectionString, dataProviderString);
+
+                connection.ExecuteNonQuery(query);
             }
             catch (Exception ex)
             {
@@ -775,7 +772,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult DatabaseScriptAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             logger.Log("Begin DatabaseScriptAction");
 
@@ -787,10 +784,9 @@ namespace GSF.InstallerActions
             try
             {
                 // Execute the database script
-                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
-                {
-                    connection.ExecuteScript(scriptPath);
-                }
+                using AdoDataConnection connection = new(connectionString, dataProviderString);
+
+                connection.ExecuteScript(scriptPath);
             }
             catch (Exception ex)
             {
@@ -820,7 +816,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult StartProcessAction(Session session)
         {
-            Logger logger = new Logger(session);
+            Logger logger = new(session);
 
             Dictionary<string, string> infoLookup;
             ProcessStartInfo info;
@@ -854,27 +850,26 @@ namespace GSF.InstallerActions
                 findAndExecute("UseShellExecute", value => info.UseShellExecute = Convert.ToBoolean(value));
 
                 // Start the process
-                using (Process process = Process.Start(info))
+                using Process process = Process.Start(info);
+
+                if (process == null)
+                    throw new Exception($"Failed to start process \"{info.FileName}\".");
+
+                findAndExecute("WaitForExit", _ =>
                 {
-                    if (process == null)
-                        throw new Exception($"Failed to start process \"{info.FileName}\".");
+                    // ReSharper disable AccessToDisposedClosure
+                    process.OutputDataReceived += (sender, args) => logger.Log(args.Data);
 
-                    findAndExecute("WaitForExit", value =>
+                    process.ErrorDataReceived += (sender, args) =>
                     {
-                        // ReSharper disable AccessToDisposedClosure
-                        process.OutputDataReceived += (sender, args) => logger.Log(args.Data);
+                        string message = $"Error in executing process: {args.Data}";
+                        logger.Log(InstallMessage.Error, message);
+                        logger.Log(EventLogEntryType.Error, message);
+                    };
 
-                        process.ErrorDataReceived += (sender, args) =>
-                        {
-                            string message = $"Error in executing process: {args.Data}";
-                            logger.Log(InstallMessage.Error, message);
-                            logger.Log(EventLogEntryType.Error, message);
-                        };
-
-                        process.WaitForExit();
-                        // ReSharper restore AccessToDisposedClosure
-                    });
-                }
+                    process.WaitForExit();
+                    // ReSharper restore AccessToDisposedClosure
+                });
             }
             catch (Exception ex)
             {
@@ -900,7 +895,7 @@ namespace GSF.InstallerActions
             // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
             string parameters = $@"http add urlacl url=http://{endPoint}/ user=""{serviceAccount}""";
 
-            ProcessStartInfo psi = new ProcessStartInfo("netsh", parameters)
+            ProcessStartInfo psi = new("netsh", parameters)
             {
                 Verb = "runas",
                 CreateNoWindow = true,
@@ -909,11 +904,10 @@ namespace GSF.InstallerActions
                 Arguments = parameters
             };
 
-            using (Process shell = Process.Start(psi))
-            {
-                if (shell != null && !shell.WaitForExit(5000))
-                    shell.Kill();
-            }
+            using Process shell = Process.Start(psi);
+
+            if (shell != null && !shell.WaitForExit(5000))
+                shell.Kill();
         }
 
         // Delete an http namespace reservation
@@ -922,7 +916,7 @@ namespace GSF.InstallerActions
             // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
             string parameters = $@"http delete urlacl url=http://{endPoint}";
 
-            ProcessStartInfo psi = new ProcessStartInfo("netsh", parameters)
+            ProcessStartInfo psi = new("netsh", parameters)
             {
                 Verb = "runas",
                 CreateNoWindow = true,
@@ -931,11 +925,10 @@ namespace GSF.InstallerActions
                 Arguments = parameters
             };
 
-            using (Process shell = Process.Start(psi))
-            {
-                if (shell != null && !shell.WaitForExit(5000))
-                    shell.Kill();
-            }
+            using Process shell = Process.Start(psi);
+
+            if (shell != null && !shell.WaitForExit(5000))
+                shell.Kill();
         }
 
         // Method to get the value of a property
@@ -950,8 +943,20 @@ namespace GSF.InstallerActions
             }
             catch (Exception ex)
             {
-                Logger logger = new Logger(session);
-                logger.Log(EventLogEntryType.Warning, ex);
+                bool logged = true;
+                
+                try
+                {
+                    Logger logger = new(session, "Windows Installer");
+                    logger.Log(EventLogEntryType.Warning, ex);
+                }
+                catch
+                {
+                    logged = false;
+                }
+
+                if (!logged)
+                    throw;
             }
 
             return null;
@@ -972,10 +977,15 @@ namespace GSF.InstallerActions
             private readonly string m_serviceName;
             private readonly bool m_isImmediate;
 
-            public Logger(Session session)
+            public Logger(Session session) :
+                this(session, GetPropertyValue(session, "SERVICENAME"))
+            {
+            }
+
+            public Logger(Session session, string serviceName)
             {
                 m_session = session;
-                m_serviceName = GetPropertyValue(session, "SERVICENAME");
+                m_serviceName = serviceName;
                 m_isImmediate = IsImmediate(session);
             }
 
@@ -983,19 +993,18 @@ namespace GSF.InstallerActions
 
             public void Log(InstallMessage messageType, string message)
             {
-                using (Record record = new Record(0))
-                {
-                    // Square brackets and curly braces are evaluated upon logging the message so we escape them here
-                    record.FormatString = Regex.Replace(message, @"[\[\]{}]", @"[\$&]");
+                using Record record = new(0);
 
-                    // session.Log and session.Message both make use of MsiProcessMessage, which cannot be used during a DoAction ControlEvent.
-                    // https://msdn.microsoft.com/en-us/library/aa368322(VS.85).aspx
-                    //
-                    // Setting the value of a property generates a message in the log file so we use that as a workaround.
-                    // However, you cannot set session properties unless the custom action is an immediate custom action.
-                    if (m_session.Message(messageType, record) == MessageResult.None && m_isImmediate)
-                        m_session["LOGMESSAGE"] = message;
-                }
+                // Square brackets and curly braces are evaluated upon logging the message so we escape them here
+                record.FormatString = Regex.Replace(message, @"[\[\]{}]", @"[\$&]");
+
+                // session.Log and session.Message both make use of MsiProcessMessage, which cannot be used during a DoAction ControlEvent.
+                // https://msdn.microsoft.com/en-us/library/aa368322(VS.85).aspx
+                //
+                // Setting the value of a property generates a message in the log file so we use that as a workaround.
+                // However, you cannot set session properties unless the custom action is an immediate custom action.
+                if (m_session.Message(messageType, record) == MessageResult.None && m_isImmediate)
+                    m_session["LOGMESSAGE"] = message;
             }
 
             public void Log(EventLogEntryType messageType, Exception ex) => Log(messageType, ex.ToString());
@@ -1028,7 +1037,7 @@ namespace GSF.InstallerActions
         private static void UpdateServiceConfig(Session session, Logger logger)
         {
             // The failure actions to be defined for the service
-            List<WindowsApi.SC_ACTION> failureActionsList = new List<WindowsApi.SC_ACTION>
+            List<WindowsApi.SC_ACTION> failureActionsList = new()
             {
                 new WindowsApi.SC_ACTION { Type = (WindowsApi.SC_ACTION_TYPE)(uint)RecoverAction.Restart, Delay = 2000 },
                 new WindowsApi.SC_ACTION { Type = (uint)RecoverAction.None, Delay = 2000 }
@@ -1114,7 +1123,7 @@ namespace GSF.InstallerActions
                 }
 
                 // Set up the failure actions
-                WindowsApi.SERVICE_FAILURE_ACTIONS failureActions = new WindowsApi.SERVICE_FAILURE_ACTIONS
+                WindowsApi.SERVICE_FAILURE_ACTIONS failureActions = new()
                 {
                     cActions = failureActionsList.Count,
                     dwResetPeriod = 120,
@@ -1143,7 +1152,7 @@ namespace GSF.InstallerActions
                 // Failure actions flag only applies on Vista / 2008 or better
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT && Environment.OSVersion.Version.Major >= 6)
                 {
-                    WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG failureActionFlag = new WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG();
+                    WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG failureActionFlag = new();
                     failureActionFlag.bFailureAction = true;
                     result = WindowsApi.ChangeServiceConfig2(serviceHandle, SERVICE_CONFIG_FAILURE_ACTIONS_FLAG, ref failureActionFlag);
 
@@ -1189,7 +1198,7 @@ namespace GSF.InstallerActions
         {
             bool grantSuccess = false;
             IntPtr processToken = IntPtr.Zero;
-            WindowsApi.TOKEN_PRIVILEGES tokenPrivileges = new WindowsApi.TOKEN_PRIVILEGES();
+            WindowsApi.TOKEN_PRIVILEGES tokenPrivileges = new();
             long luid = 0;
             int returnLen = 0;
 
@@ -1238,7 +1247,7 @@ namespace GSF.InstallerActions
             int sidSize = 0;
 
             // StringBuilder and size for the domain name
-            StringBuilder domainName = new StringBuilder();
+            StringBuilder domainName = new();
             int nameSize = 0;
 
             // Account-type variable for lookup
@@ -1255,10 +1264,10 @@ namespace GSF.InstallerActions
             if (WindowsApi.LookupAccountName(string.Empty, account, sid, ref sidSize, domainName, ref nameSize, ref accountType))
             {
                 // Initialize an empty Unicode-string
-                WindowsApi.LSA_UNICODE_STRING systemName = new WindowsApi.LSA_UNICODE_STRING();
+                WindowsApi.LSA_UNICODE_STRING systemName = new();
 
                 // These attributes are not used, but LsaOpenPolicy wants them to exist
-                WindowsApi.LSA_OBJECT_ATTRIBUTES objectAttributes = new WindowsApi.LSA_OBJECT_ATTRIBUTES();
+                WindowsApi.LSA_OBJECT_ATTRIBUTES objectAttributes = new();
 
                 // Get a policy handle
                 uint result = WindowsApi.LsaOpenPolicy(ref systemName, ref objectAttributes, (int)WindowsApi.LsaAccess.POLICY_ALL_ACCESS, out IntPtr policyHandle);
