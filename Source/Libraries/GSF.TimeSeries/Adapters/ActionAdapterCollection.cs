@@ -188,8 +188,8 @@ namespace GSF.TimeSeries.Adapters
             {
                 if (ConvertReadonlyCollectionsToWritable && measurements.IsReadOnly)
                     NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(new List<IMeasurement>(measurements)));
-
-                NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                else
+                    NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
