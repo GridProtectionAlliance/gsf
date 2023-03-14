@@ -578,16 +578,22 @@ namespace GSF.TimeSeries.Adapters
                 // Check for adapters that are no longer referenced and need to be removed
                 IEnumerable<IActionAdapter> adaptersToRemove = this.Where<IActionAdapter>(adapter => !activeAdapterNames.Contains(adapter.Name));
 
-                foreach (IActionAdapter adapter in adaptersToRemove)
-                    Remove(adapter);
+                lock (this)
+                {
+                    foreach (IActionAdapter adapter in adaptersToRemove)
+                        Remove(adapter);
+                }
 
                 // Host system was notified about configuration changes, i.e., new or updated output measurements.
                 // Before initializing child adapters, we wait for this process to complete.
                 this.WaitForSignalsToLoad(signalIDs.ToArray(), SourceMeasurementTable);
 
-                // Add new adapters to parent bulk adapter collection, this will auto-initialize each child adapter
-                foreach (TAdapter adapter in adapters)
-                    Add(adapter as IActionAdapter);
+                lock (this)
+                {
+                    // Add new adapters to parent bulk adapter collection, this will auto-initialize each child adapter
+                    foreach (TAdapter adapter in adapters)
+                        Add(adapter as IActionAdapter);
+                }
 
                 RecalculateRoutingTables();
             }
