@@ -275,7 +275,10 @@ namespace GSF.TimeSeries.Adapters
 
             // Update current data window with provided measurements
             foreach (IMeasurement measurement in frame.Measurements.Values)
-                dataWindow[m_keyIndexes[measurement.Key], index] = measurement;
+            {
+                if (m_keyIndexes.TryGetValue(measurement.Key, out int keyIndex))
+                    dataWindow[keyIndex, index] = measurement;
+            }
         }
 
         private void ProcessDataWindows()
