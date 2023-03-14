@@ -115,7 +115,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 base.InputMeasurementKeys = value;
-                InputMeasurementKeyTypes = DataSource.GetSignalTypes(value, SourceMeasurementTable);
+                InputMeasurementKeyTypes = DataSource?.GetSignalTypes(value, SourceMeasurementTable);
             }
         }
 
@@ -132,7 +132,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 base.OutputMeasurements = value;
-                OutputMeasurementTypes = DataSource.GetSignalTypes(value, SourceMeasurementTable);
+                OutputMeasurementTypes = DataSource?.GetSignalTypes(value, SourceMeasurementTable);
             }
         }
 
