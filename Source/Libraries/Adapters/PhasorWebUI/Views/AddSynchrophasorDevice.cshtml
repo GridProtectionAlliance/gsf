@@ -508,7 +508,7 @@
     <script src="@Resources.Root/Shared/Scripts/select2.js"></script>
     <script src="@Resources.Root/Shared/Scripts/knockout-select2.js"></script>
     <script>
-        "use script";
+        "use strict";
 
         var phasorHub, phasorHubClient;
         var firstConnect = true;
@@ -1999,9 +1999,16 @@
                             }
 
                             // Remove phasor
-                            promises.push(phasorHub.deletePhasor(phasorDefinition.ID).fail(function (error) {
-                                showErrorMessage("Failed to delete phasor: " + error, null, true);
-                            }));
+                            for (let j = 0; j < phasors.length; j++) {
+                                const phasor = phasors[j];
+
+                                if (phasor.SourceIndex === phasorDefinition.SourceIndex) {
+                                    promises.push(phasorHub.deletePhasor(phasor.ID).fail(function (error) {
+                                        showErrorMessage("Failed to delete phasor: " + error, null, true);
+                                    }));
+                                    break;
+                                }
+                            }
 
                             return $(promises).whenAll();
                         })
