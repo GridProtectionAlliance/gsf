@@ -109,14 +109,28 @@ namespace GSF.TimeSeries.Adapters
         /// Raises the <see cref="NewMeasurements"/> event.
         /// </summary>
         /// <param name="measurements">New measurements.</param>
-        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
+        protected void OnNewMeasurements(ICollection<IMeasurement> measurements) =>
+            OnNewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+
+        /// <summary>
+        /// Raises the <see cref="NewMeasurements"/> event.
+        /// </summary>
+        /// <param name="sender">Event source.</param>
+        /// <param name="e">New measurements event arguments.</param>
+        /// <remarks>
+        /// This event handler is overridable to allow derived class interception of all
+        /// measurements flowing out of the <see cref="InputAdapterCollection"/>.
+        /// </remarks>
+        protected virtual void OnNewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             try
             {
+                ICollection<IMeasurement> measurements = e.Argument;
+
                 if (ConvertReadonlyCollectionsToWritable && measurements.IsReadOnly)
-                    NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(new List<IMeasurement>(measurements)));
-                else
-                    NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                    e = new EventArgs<ICollection<IMeasurement>>(new List<IMeasurement>(measurements));
+
+                NewMeasurements?.Invoke(sender, e);
             }
             catch (Exception ex)
             {
@@ -172,7 +186,8 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise new measurements event on behalf of each item in collection
-        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) => NewMeasurements?.Invoke(sender, e);
+        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) =>
+            OnNewMeasurements(sender, e);
 
         // Raise processing complete event on behalf of each item in collection
         private void item_ProcessingComplete(object sender, EventArgs e) =>
