@@ -138,8 +138,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             StepOneExpanded = true;
             NewDeviceConfiguration = true;
 
+            string lastCompanyID = IsolatedStorageManager.ReadFromIsolatedStorage("CompanyID")?.ToString();
+            string lastInterconnectionID = IsolatedStorageManager.ReadFromIsolatedStorage("InterconnectionID")?.ToString();
+
             if (CompanyLookupList.Count > 0)
-                CompanyID = CompanyLookupList.First().Key;
+                CompanyID = int.TryParse(lastCompanyID, out int companyID) && CompanyLookupList.ContainsKey(companyID) ?
+                    companyID :
+                    CompanyLookupList.First().Key;
 
             if (HistorianLookupList.Count > 1)
                 HistorianID = HistorianLookupList.Skip(1).First().Key;
@@ -147,7 +152,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 HistorianID = HistorianLookupList.First().Key;
 
             if (InterconnectionLookupList.Count > 0)
-                InterconnectionID = InterconnectionLookupList.First().Key;
+                InterconnectionID = int.TryParse(lastInterconnectionID, out int interconnectionID) && InterconnectionLookupList.ContainsKey(interconnectionID) ?
+                    interconnectionID :
+                    InterconnectionLookupList.First().Key;
 
             if (ProtocolLookupList.Count > 0)
                 ProtocolID = ProtocolLookupList.First().Key;
@@ -1909,6 +1916,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 DisconnectedCurrentDevice = false;
                 CurrentDeviceRuntimeID = 0;
+
+                IsolatedStorageManager.WriteToIsolatedStorage("CompanyID", CompanyID);
+                IsolatedStorageManager.WriteToIsolatedStorage("InterconnectionID", InterconnectionID);
             }
             catch (Exception ex)
             {
