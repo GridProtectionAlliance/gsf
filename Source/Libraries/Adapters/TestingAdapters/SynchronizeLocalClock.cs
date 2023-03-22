@@ -423,13 +423,13 @@ namespace TestingAdapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            List<IMeasurement> measurementsWithGoodTime = new();
+            bool goodSourceTime = false;
             long latestTime = Volatile.Read(ref m_latestTime);
 
             foreach (IMeasurement measurement in measurements)
             {
                 if (measurement.TimestampQualityIsGood())
-                    measurementsWithGoodTime.Add(measurement);
+                    goodSourceTime = true;
 
                 long measurementTime = measurement.Timestamp.Value;
 
@@ -440,16 +440,10 @@ namespace TestingAdapters
 
             Volatile.Write(ref m_latestTime, latestTime);
 
-            if (measurementsWithGoodTime.Count == 0)
-            {
-                base.QueueMeasurementsForProcessing(measurements);
-                m_goodSourceTime = false;
-            }
-            else
-            {
-                base.QueueMeasurementsForProcessing(measurementsWithGoodTime);
-                m_goodSourceTime = true;
-            }
+            // Track if any source measurements had good time quality
+            m_goodSourceTime = goodSourceTime;
+
+            // Not passing values to base class, no further measurement processing needed
         }
 
         private void UpdateTimer_Elapsed(object sender, ElapsedEventArgs e)
