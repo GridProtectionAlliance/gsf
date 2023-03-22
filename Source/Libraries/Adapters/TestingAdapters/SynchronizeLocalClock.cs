@@ -25,6 +25,7 @@
 // ReSharper disable PossibleMultipleEnumeration
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable FieldCanBeMadeReadOnly.Local
+// ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable UnusedMember.Global
 
 using System;
@@ -240,7 +241,7 @@ namespace TestingAdapters
                 if (!disposing)
                     return;
 
-                if (!(m_updateTimer is null))
+                if (m_updateTimer is not null)
                 {
                     m_updateTimer.Stop();
                     m_updateTimer.Elapsed -= UpdateTimer_Elapsed;
@@ -281,6 +282,15 @@ namespace TestingAdapters
             else
                 UpdateTolerance = DefaultUpdateTolerance;
 
+            try
+            {
+                EnableSystemTimePrivilege();
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Clock synchronizations may fail: {ex.Message}", ex));
+            }
+
             m_updateTimer = new Timer(UpdateFrequency);
             m_updateTimer.Elapsed += UpdateTimer_Elapsed;
             m_updateTimer.Start();
@@ -294,7 +304,7 @@ namespace TestingAdapters
             base.Stop();
             m_updateTimer.Stop();
             
-            OnStatusMessage(MessageLevel.Info, "Clock synchronizations paused...");
+            OnStatusMessage(MessageLevel.Info, "Clock synchronizations stopped...");
         }
 
         /// <summary>
@@ -305,7 +315,39 @@ namespace TestingAdapters
             base.Start();
             m_updateTimer.Start();
 
-            OnStatusMessage(MessageLevel.Info, "Clock synchronizations resumed...");
+            OnStatusMessage(MessageLevel.Info, "Clock synchronizations started...");
+        }
+
+        /// <summary>
+        /// Attempts to enable system time privilege for the current process. Privilege must be already granted.
+        /// </summary>
+        [AdapterCommand("Attempts to enable system time privilege for the current process. Privilege must be already granted.", "Administrator")]
+        public void EnableSystemTimePrivilege()
+        {
+            const int SE_PRIVILEGE_ENABLED = 0x00000002;
+            const int TOKEN_QUERY = 0x0008;
+            const int TOKEN_ADJUST_PRIVILEGES = 0x0020;
+
+            TOKEN_PRIVILEGES newState = new();
+            TOKEN_PRIVILEGES previousState = new();
+            LUID luid = new();
+            int handle = -1;
+
+            if (!LookupPrivilegeValue(null, SE_SYSTEMTIME_NAME, ref luid))
+                throw new InvalidOperationException($"Failed to enable system time privilege, LUID lookup for \"{SE_SYSTEMTIME_NAME}\" privilege did not succeed.");
+
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref handle))
+                throw new InvalidOperationException("Failed to enable system time privilege, could not open access token to adjust privileges for the current process.");
+
+            newState.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            newState.Privileges[0].Luid = luid;
+
+            int bufferLength = Marshal.SizeOf(typeof(TOKEN_PRIVILEGES));
+            int returnLength = 0;
+
+            // Make sure SE_SYSTEMTIME_NAME privilege is enabled (can only be granted by a system administrator)
+            if (!AdjustTokenPrivileges(handle, 0, ref newState, bufferLength, ref previousState, ref returnLength))
+                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to enable system time privilege, verify service account has been granted \"{SE_SYSTEMTIME_NAME}\" privilege.");
         }
 
         /// <summary>
@@ -416,18 +458,15 @@ namespace TestingAdapters
             {
                 m_timerEvents++;
                 
-                long newSystemTime = Volatile.Read(ref m_latestTime);
+                long latestTime = Volatile.Read(ref m_latestTime);
 
-                if (newSystemTime <= 0L)
-                    return;
-
-                if (Math.Abs(newSystemTime - DateTime.UtcNow.Ticks) < m_updateTolerance)
+                if (latestTime <= 0L || Math.Abs(latestTime - DateTime.UtcNow.Ticks) < m_updateTolerance)
                 {
                     m_skippedUpdates++;
                     return;
                 }
 
-                SetSystemTime(new DateTime(newSystemTime, DateTimeKind.Utc));
+                SetSystemTime(new DateTime(latestTime, DateTimeKind.Utc));
                 m_successfulUpdates++;
 
                 if (!m_goodSourceTime)
@@ -446,9 +485,6 @@ namespace TestingAdapters
 
         // Static Methods
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool SetSystemTime(ref SYSTEMTIME lpSystemTime);
-
         [DllImport("advapi32.dll")]
         private static extern bool OpenProcessToken(int ProcessHandle, int DesiredAccess, ref int TokenHandle);
 
@@ -461,38 +497,11 @@ namespace TestingAdapters
         [DllImport("advapi32.dll", SetLastError = true)]
         private static extern bool AdjustTokenPrivileges(int TokenHandle, int DisableAllPrivileges, [MarshalAs(UnmanagedType.Struct)] ref TOKEN_PRIVILEGES NewState, int BufferLength, [MarshalAs(UnmanagedType.Struct)] ref TOKEN_PRIVILEGES PreviousState, ref int ReturnLength);
 
-        private static bool EnableSystemTimePrivilege()
-        {
-            const int SE_PRIVILEGE_ENABLED = 0x00000002;
-            const int TOKEN_QUERY = 0x0008;
-            const int TOKEN_ADJUST_PRIVILEGES = 0x0020;
-
-            TOKEN_PRIVILEGES newState = new();
-            TOKEN_PRIVILEGES previousState = new();
-            LUID luid = new();
-            int handle = -1;
-
-            if (!LookupPrivilegeValue(null, SE_SYSTEMTIME_NAME, ref luid))
-                return false;
-
-            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref handle))
-                return false;
-
-            newState.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-            newState.Privileges[0].Luid = luid;
-            
-            int bufferLength = Marshal.SizeOf(typeof(TOKEN_PRIVILEGES));
-            int returnLength = 0;
-
-            return AdjustTokenPrivileges(handle, 0, ref newState, bufferLength, ref previousState, ref returnLength);
-        }
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetSystemTime(ref SYSTEMTIME lpSystemTime);
 
         private static void SetSystemTime(DateTime newSystemTime)
         {
-            // Make sure SE_SYSTEMTIME_NAME privilege is enabled (can only be granted by a system administrator)
-            if (!EnableSystemTimePrivilege())
-                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to enable system time privileges, verify service account has \"{SE_SYSTEMTIME_NAME}\" privilege.");
-
             SYSTEMTIME systemTime = new()
             {
                 wYear = (ushort)newSystemTime.Year,
@@ -506,7 +515,7 @@ namespace TestingAdapters
 
             // Attempt to adjust system clock
             if (!SetSystemTime(ref systemTime))
-                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to set local system time, verify service account has \"{SE_SYSTEMTIME_NAME}\" privilege.");
+                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to set local system time, verify service account has been granted \"{SE_SYSTEMTIME_NAME}\" privilege.");
         }
 
         #endregion
