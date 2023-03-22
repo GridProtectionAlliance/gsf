@@ -56,19 +56,6 @@ namespace TestingAdapters
         #pragma warning disable 169
         #pragma warning disable 414
         #pragma warning disable 649
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct SYSTEMTIME
-        {
-            public ushort wYear;
-            public ushort wMonth;
-            public ushort wDayOfWeek;
-            public ushort wDay;
-            public ushort wHour;
-            public ushort wMinute;
-            public ushort wSecond;
-            public ushort wMilliseconds;
-        }
         
         [StructLayout(LayoutKind.Sequential)]
         private struct LUID
@@ -99,6 +86,19 @@ namespace TestingAdapters
             }
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct SYSTEMTIME
+        {
+            public ushort wYear;
+            public ushort wMonth;
+            public ushort wDayOfWeek;
+            public ushort wDay;
+            public ushort wHour;
+            public ushort wMinute;
+            public ushort wSecond;
+            public ushort wMilliseconds;
+        }
+
         #pragma warning restore 169
         #pragma warning restore 414
         #pragma warning restore 649
@@ -116,14 +116,20 @@ namespace TestingAdapters
         /// </summary>
         public const double DefaultUpdateTolerance = 0.001D; // One millisecond
 
+        /// <summary>
+        /// Default value for the <see cref="PreferGoodTimeQuality"/> property.
+        /// </summary>
+        public const bool DefaultPreferGoodTimeQuality = true;
+
         // Fields
         private Timer m_updateTimer;
         private long m_skippedUpdates;
         private long m_failedUpdates;
         private long m_successfulUpdates;
+        private long m_badTimeSyncs;
         private long m_timerEvents;
         private long m_updateTolerance;
-        private bool m_goodSourceTime;
+        private bool m_goodSourceTimeQuality;
         private long m_latestTime;
         private bool m_disposed;
 
@@ -150,6 +156,15 @@ namespace TestingAdapters
             get => new Ticks(m_updateTolerance).ToSeconds();
             set => m_updateTolerance = Ticks.FromSeconds(value);
         }
+
+        /// <summary>
+        /// Gets or sets flag that determines if good time quality should be preferred for clock syncs.
+        /// If false, absolute latest time will always be used regardless of reported quality.
+        /// </summary>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultPreferGoodTimeQuality)]
+        [Description("Defines flag that determines if good time quality should be preferred for clock syncs. If false, absolute latest time will always be used regardless of reported quality.")]
+        public bool PreferGoodTimeQuality { get; set; } = DefaultPreferGoodTimeQuality;
 
         /// <summary>
         /// Gets or sets flag that determines whether or not to use the local clock time as real time.
@@ -215,9 +230,16 @@ namespace TestingAdapters
                 status.AppendLine($"Absolute latest time value: {(latestTime > 0L ? $"{new DateTime(latestTime, DateTimeKind.Utc):yyyy-MM-dd HH:mm:ss.fff}" : "No time value has been received")}");
                 
                 status.AppendLine($"          Update tolerance: {UpdateTolerance:N3} seconds ({TimeSpan.FromSeconds(UpdateTolerance).TotalMilliseconds:N3} milliseconds)");
+                status.AppendLine($"          Update frequency: {UpdateFrequency:N0} milliseconds");
+                status.AppendLine($"  Prefer good time quality: {PreferGoodTimeQuality}");
                 status.AppendLine($"     Skipped clock updates: {m_skippedUpdates:N0} were within update tolerance");
                 status.AppendLine($"      Failed clock updates: {m_failedUpdates:N0}");
                 status.AppendLine($"  Successful clock updates: {m_successfulUpdates:N0}");
+                
+                if (PreferGoodTimeQuality)
+                    status.AppendLine($"    Syncs with bad quality: {m_badTimeSyncs:N0}");
+                
+                status.AppendLine($"         Total time checks: {m_timerEvents:N0}");
 
                 return status.ToString();
             }
@@ -271,16 +293,16 @@ namespace TestingAdapters
             if (InputMeasurementKeys.Length == 0)
                 throw new InvalidOperationException("No input measurement keys were specified, cannot synchronize local clock without any inputs.");
 
-            if (settings.TryGetValue(nameof(UpdateFrequency), out string setting))
-            {
-                if (int.TryParse(setting, out int updateFrequency) && updateFrequency > 0)
-                    UpdateFrequency = updateFrequency;
-            }
+            if (settings.TryGetValue(nameof(UpdateFrequency), out string setting) && int.TryParse(setting, out int updateFrequency) && updateFrequency > 0)
+                UpdateFrequency = updateFrequency;
 
             if (settings.TryGetValue(nameof(UpdateTolerance), out setting) && double.TryParse(setting, out double tolerance))
                 UpdateTolerance = tolerance;
             else
                 UpdateTolerance = DefaultUpdateTolerance;
+
+            if (settings.TryGetValue(nameof(PreferGoodTimeQuality), out setting))
+                PreferGoodTimeQuality = setting.ParseBoolean();
 
             try
             {
@@ -423,25 +445,38 @@ namespace TestingAdapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            bool goodSourceTime = false;
-            long latestTime = Volatile.Read(ref m_latestTime);
+            bool goodSourceTimeQuality = false;
+            long absoluteLatestTime, latestGoodQualityTime = absoluteLatestTime = Volatile.Read(ref m_latestTime);
 
             foreach (IMeasurement measurement in measurements)
             {
-                if (measurement.TimestampQualityIsGood())
-                    goodSourceTime = true;
-
                 long measurementTime = measurement.Timestamp.Value;
 
+                if (PreferGoodTimeQuality && measurement.TimestampQualityIsGood())
+                {
+                    // Track if any source measurements had good time quality
+                    goodSourceTimeQuality = true;
+
+                    // Track latest time with good quality
+                    if (measurementTime > latestGoodQualityTime)
+                        latestGoodQualityTime = measurementTime;
+                }
+
                 // Track absolute latest time, regardless of reasonability or quality
-                if (measurementTime > latestTime)
-                    latestTime = measurementTime;
+                if (measurementTime > absoluteLatestTime)
+                    absoluteLatestTime = measurementTime;
             }
 
-            Volatile.Write(ref m_latestTime, latestTime);
+            Volatile.Write(ref m_latestTime, goodSourceTimeQuality ? latestGoodQualityTime : absoluteLatestTime);
 
-            // Track if any source measurements had good time quality
-            m_goodSourceTime = goodSourceTime;
+            if (!PreferGoodTimeQuality)
+                return;
+
+            // Track the number of times a time with bad quality was used for time sync
+            if (!goodSourceTimeQuality)
+                m_badTimeSyncs++;
+
+            m_goodSourceTimeQuality = goodSourceTimeQuality;
 
             // Not passing values to base class, no further measurement processing needed
         }
@@ -463,8 +498,13 @@ namespace TestingAdapters
                 SetSystemTime(new DateTime(latestTime, DateTimeKind.Utc));
                 m_successfulUpdates++;
 
-                if (!m_goodSourceTime)
-                    OnStatusMessage(MessageLevel.Warning, "WARNING: Clock set with measurement that has bad quality -- increase measurement sources.");
+                // There are race conditions with the use of the m_goodSourceTimeQuality which are considered acceptable
+                // for this use case since its only function is to provide logged indications of syncs using timestamps
+                // sourced with bad time quality. Generally, if the time quality is bad it will remain so for a period
+                // long enough to be reported here. Otherwise counter exists for individual bad time quality blips that
+                // will be captured through normal status logging.
+                if (PreferGoodTimeQuality && !m_goodSourceTimeQuality)
+                    OnStatusMessage(MessageLevel.Warning, "WARNING: Clock set with measurement that has bad time quality -- increase measurement sources.");
             }
             catch (Exception ex)
             {
