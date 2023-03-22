@@ -32,11 +32,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Timers;
 using GSF;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using Timer = System.Timers.Timer;
 
 namespace TestingAdapters
 {
@@ -121,7 +123,7 @@ namespace TestingAdapters
         private long m_timerEvents;
         private long m_updateTolerance;
         private bool m_goodSourceTime;
-        private Ticks m_latestTime;
+        private long m_latestTime;
         private bool m_disposed;
 
         #endregion
@@ -207,7 +209,10 @@ namespace TestingAdapters
                 StringBuilder status = new();
 
                 status.Append(base.Status);
-                status.AppendLine($"Absolute latest time value: {(m_latestTime.Value > 0L ? $"{m_latestTime:yyyy-MM-dd HH:mm:ss.fff}" : "No time value has been received")}");
+
+                long latestTime = Volatile.Read(ref m_latestTime);
+                status.AppendLine($"Absolute latest time value: {(latestTime > 0L ? $"{new DateTime(latestTime, DateTimeKind.Utc):yyyy-MM-dd HH:mm:ss.fff}" : "No time value has been received")}");
+                
                 status.AppendLine($"          Update tolerance: {UpdateTolerance:N3} seconds ({TimeSpan.FromSeconds(UpdateTolerance).TotalMilliseconds:N3} milliseconds)");
                 status.AppendLine($"     Skipped clock updates: {m_skippedUpdates:N0} were within update tolerance");
                 status.AppendLine($"      Failed clock updates: {m_failedUpdates:N0}");
@@ -256,10 +261,9 @@ namespace TestingAdapters
         {
             Dictionary<string, string> settings = Settings;
 
-            // Force facile adapter to use incoming timestamps as time source, i.e., "RealTime"
             settings[nameof(UseLocalClockAsRealTime)] = false.ToString();
-            settings[nameof(FallBackOnLocalClock)] = true.ToString();
-            settings[nameof(TrackLatestMeasurements)] = true.ToString();
+            settings[nameof(FallBackOnLocalClock)] = false.ToString();
+            settings[nameof(TrackLatestMeasurements)] = false.ToString();
 
             base.Initialize();
 
@@ -335,20 +339,22 @@ namespace TestingAdapters
         [AdapterCommand("Forces local clock synchronization to absolute latest received time value without reasonability considerations.", "Administrator")]
         public void ForceSync()
         {
-            Ticks targetTime = m_latestTime;
+            long targetTime = Volatile.Read(ref m_latestTime);
 
-            if (targetTime.Value > 0L)
+            if (targetTime > 0L)
             {
+                DateTime newSystemTime = new(targetTime);
+
                 try
                 {
-                    SetSystemTime(targetTime);
+                    SetSystemTime(newSystemTime);
                     m_successfulUpdates++;
-                    OnStatusMessage(MessageLevel.Info, $"Forced local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}");
+                    OnStatusMessage(MessageLevel.Info, $"Forced local clock to {newSystemTime:yyyy-MM-dd HH:mm:ss.fff}");
                 }
                 catch (Exception ex)
                 {
                     m_failedUpdates++;
-                    OnStatusMessage(MessageLevel.Error, $"Failed to force local clock to {targetTime:yyyy-MM-dd HH:mm:ss.fff}: {ex.Message}");
+                    OnStatusMessage(MessageLevel.Error, $"Failed to force local clock to {newSystemTime:yyyy-MM-dd HH:mm:ss.fff}: {ex.Message}");
                 }
             }
             else
@@ -376,16 +382,21 @@ namespace TestingAdapters
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
             List<IMeasurement> measurementsWithGoodTime = new();
+            long latestTime = Volatile.Read(ref m_latestTime);
 
             foreach (IMeasurement measurement in measurements)
             {
                 if (measurement.TimestampQualityIsGood())
                     measurementsWithGoodTime.Add(measurement);
 
+                long measurementTime = measurement.Timestamp.Value;
+
                 // Track absolute latest time, regardless of reasonability or quality
-                if (measurement.Timestamp.Value > m_latestTime.Value)
-                    m_latestTime = measurement.Timestamp;
+                if (measurementTime > latestTime)
+                    latestTime = measurementTime;
             }
+
+            Volatile.Write(ref m_latestTime, latestTime);
 
             if (measurementsWithGoodTime.Count == 0)
             {
@@ -405,18 +416,18 @@ namespace TestingAdapters
             {
                 m_timerEvents++;
                 
-                Ticks newSystemTime = RealTime;
+                long newSystemTime = Volatile.Read(ref m_latestTime);
 
                 if (newSystemTime <= 0L)
                     return;
 
-                if (Math.Abs(newSystemTime.Value - DateTime.UtcNow.Ticks) < m_updateTolerance)
+                if (Math.Abs(newSystemTime - DateTime.UtcNow.Ticks) < m_updateTolerance)
                 {
                     m_skippedUpdates++;
                     return;
                 }
 
-                SetSystemTime(RealTime);
+                SetSystemTime(new DateTime(newSystemTime, DateTimeKind.Utc));
                 m_successfulUpdates++;
 
                 if (!m_goodSourceTime)
