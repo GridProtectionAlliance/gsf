@@ -24,6 +24,7 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable PossibleMultipleEnumeration
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable UnusedMember.Global
 
 using System;
@@ -52,6 +53,8 @@ namespace TestingAdapters
         #pragma warning disable 169
         #pragma warning disable 414
         #pragma warning disable 649
+
+        [StructLayout(LayoutKind.Sequential)]
         private struct SYSTEMTIME
         {
             public ushort wYear;
@@ -63,11 +66,42 @@ namespace TestingAdapters
             public ushort wSecond;
             public ushort wMilliseconds;
         }
+        
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LUID
+        {
+            public int LowPart;
+            public int HighPart;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LUID_AND_ATTRIBUTES
+        {
+            public LUID Luid;
+            public int Attributes;
+        }
+
+        // Fixed at one privilege for local use case
+        [StructLayout(LayoutKind.Sequential)]
+        private struct TOKEN_PRIVILEGES
+        {
+            public int PrivilegeCount;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public LUID_AND_ATTRIBUTES[] Privileges;
+
+            public TOKEN_PRIVILEGES()
+            {
+                PrivilegeCount = 1;
+                Privileges = new LUID_AND_ATTRIBUTES[1];
+            }
+        }
+
         #pragma warning restore 169
         #pragma warning restore 414
         #pragma warning restore 649
 
         // Constants
+        private const string SE_SYSTEMTIME_NAME = "SeSystemtimePrivilege";
 
         /// <summary>
         /// Default value for the <see cref="UpdateFrequency"/> property.
@@ -130,7 +164,7 @@ namespace TestingAdapters
         }
 
         /// <summary>
-        /// Gest or sets flag that determines whether to fall back on local clock time as real time when time is unreasonable.
+        /// Gets or sets flag that determines whether to fall back on local clock time as real time when time is unreasonable.
         /// </summary>
         /// <remarks>
         /// This property is only applicable when <see cref="FacileActionAdapterBase.UseLocalClockAsRealTime"/> is <c>false</c>.
@@ -170,7 +204,7 @@ namespace TestingAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine($"Absolute latest time value: {(m_latestTime.Value > 0L ? $"{m_latestTime:yyyy-MM-dd HH:mm:ss.fff}" : "No time value has been received")}");
@@ -228,6 +262,9 @@ namespace TestingAdapters
             settings[nameof(TrackLatestMeasurements)] = true.ToString();
 
             base.Initialize();
+
+            if (InputMeasurementKeys.Length == 0)
+                throw new InvalidOperationException("No input measurement keys were specified, cannot synchronize local clock without any inputs.");
 
             if (settings.TryGetValue(nameof(UpdateFrequency), out string setting))
             {
@@ -318,10 +355,9 @@ namespace TestingAdapters
             {
                 int count = InputMeasurementKeys.Length;
 
-                if (count > 0)
-                    OnStatusMessage(MessageLevel.Warning, $"Cannot force clock update - no time has been received from any of the {count:N0} defined input sources.");
-                else
-                    OnStatusMessage(MessageLevel.Warning, "Cannot force clock update - no input sources have been defined.");
+                OnStatusMessage(MessageLevel.Warning, count > 0 ? 
+                    $"Cannot force clock update - no time has been received from any of the {count:N0} defined input sources." : 
+                    "Cannot force clock update - no input sources have been defined.");
             }
         }
 
@@ -330,7 +366,8 @@ namespace TestingAdapters
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
-        public override string GetShortStatus(int maxLength) => $"Updated clock {m_successfulUpdates:N0} times out of {m_timerEvents:N0} checks so far...".CenterText(maxLength);
+        public override string GetShortStatus(int maxLength) =>
+            $"Updated clock {m_successfulUpdates:N0} times out of {m_timerEvents:N0} checks so far...".CenterText(maxLength);
 
         /// <summary>
         /// Queues a collection of measurements for processing.
@@ -338,14 +375,14 @@ namespace TestingAdapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            List<IMeasurement> measurementsWithGoodTime = new List<IMeasurement>();
+            List<IMeasurement> measurementsWithGoodTime = new();
 
             foreach (IMeasurement measurement in measurements)
             {
                 if (measurement.TimestampQualityIsGood())
                     measurementsWithGoodTime.Add(measurement);
 
-                // Track absolute latest time, regardless of resonability or quality
+                // Track absolute latest time, regardless of reasonability or quality
                 if (measurement.Timestamp.Value > m_latestTime.Value)
                     m_latestTime = measurement.Timestamp;
             }
@@ -401,9 +438,51 @@ namespace TestingAdapters
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetSystemTime(ref SYSTEMTIME lpSystemTime);
 
+        [DllImport("advapi32.dll")]
+        private static extern bool OpenProcessToken(int ProcessHandle, int DesiredAccess, ref int TokenHandle);
+
+        [DllImport("kernel32.dll")]
+        private static extern int GetCurrentProcess();
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto)]
+        private static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, [MarshalAs(UnmanagedType.Struct)] ref LUID lpLuid);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern bool AdjustTokenPrivileges(int TokenHandle, int DisableAllPrivileges, [MarshalAs(UnmanagedType.Struct)] ref TOKEN_PRIVILEGES NewState, int BufferLength, [MarshalAs(UnmanagedType.Struct)] ref TOKEN_PRIVILEGES PreviousState, ref int ReturnLength);
+
+        private static bool EnableSystemTimePrivilege()
+        {
+            const int SE_PRIVILEGE_ENABLED = 0x00000002;
+            const int TOKEN_QUERY = 0x0008;
+            const int TOKEN_ADJUST_PRIVILEGES = 0x0020;
+
+            TOKEN_PRIVILEGES newState = new();
+            TOKEN_PRIVILEGES previousState = new();
+            LUID luid = new();
+            int handle = -1;
+
+            if (!LookupPrivilegeValue(null, SE_SYSTEMTIME_NAME, ref luid))
+                return false;
+
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref handle))
+                return false;
+
+            newState.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            newState.Privileges[0].Luid = luid;
+            
+            int bufferLength = Marshal.SizeOf(typeof(TOKEN_PRIVILEGES));
+            int returnLength = 0;
+
+            return AdjustTokenPrivileges(handle, 0, ref newState, bufferLength, ref previousState, ref returnLength);
+        }
+
         private static void SetSystemTime(DateTime newSystemTime)
         {
-            SYSTEMTIME systime = new SYSTEMTIME
+            // Make sure SE_SYSTEMTIME_NAME privilege is enabled (can only be granted by a system administrator)
+            if (!EnableSystemTimePrivilege())
+                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to enable system time privileges, verify service account has \"{SE_SYSTEMTIME_NAME}\" privilege.");
+
+            SYSTEMTIME systemTime = new()
             {
                 wYear = (ushort)newSystemTime.Year,
                 wMonth = (ushort)newSystemTime.Month,
@@ -414,8 +493,9 @@ namespace TestingAdapters
                 wMilliseconds = (ushort)newSystemTime.Millisecond
             };
 
-            if (!SetSystemTime(ref systime))
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to set local system time, verify service account has SE_SYSTEMTIME_NAME privilege.");
+            // Attempt to adjust system clock
+            if (!SetSystemTime(ref systemTime))
+                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to set local system time, verify service account has \"{SE_SYSTEMTIME_NAME}\" privilege.");
         }
 
         #endregion
