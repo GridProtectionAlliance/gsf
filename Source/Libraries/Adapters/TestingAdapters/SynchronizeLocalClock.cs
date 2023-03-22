@@ -376,9 +376,9 @@ namespace TestingAdapters
         }
 
         /// <summary>
-        /// Forces local clock synchronization to latest time value without reasonability considerations.
+        /// Forces local clock synchronization to latest time value.
         /// </summary>
-        [AdapterCommand("Forces local clock synchronization to absolute latest received time value without reasonability considerations.", "Administrator")]
+        [AdapterCommand("Forces local clock synchronization to absolute latest received time value.", "Administrator")]
         public void ForceSync()
         {
             long targetTime = Volatile.Read(ref m_latestTime);
@@ -410,10 +410,10 @@ namespace TestingAdapters
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="AdapterBase"/>.
+        /// Gets a short one-line status of this <see cref="SynchronizeLocalClock"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
-        /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
+        /// <returns>A short one-line summary of the current status of this <see cref="SynchronizeLocalClock"/>.</returns>
         public override string GetShortStatus(int maxLength) =>
             $"Updated clock {m_successfulUpdates:N0} times out of {m_timerEvents:N0} checks so far...".CenterText(maxLength);
 
