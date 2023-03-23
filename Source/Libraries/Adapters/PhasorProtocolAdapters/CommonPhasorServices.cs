@@ -198,7 +198,7 @@ namespace PhasorProtocolAdapters
             }
 
             // Define a line of asterisks for emphasis
-            string stars = new string('*', 79);
+            string stars = new('*', 79);
 
             // Only allow configuration request if another request is not already pending...
             if (Monitor.TryEnter(m_frameParser))
@@ -206,7 +206,7 @@ namespace PhasorProtocolAdapters
                 try
                 {
                     Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-                    List<ushort> accessIDList = new List<ushort>();
+                    List<ushort> accessIDList = new();
                     int serverCount;
 
                     // Parse any defined access ID
@@ -216,7 +216,7 @@ namespace PhasorProtocolAdapters
                     // Parse any defined access IDs from server list, this assumes TCP connection since this is currently the only connection type that supports multiple end points
                     if (settings.TryGetValue("server", out setting) && !string.IsNullOrWhiteSpace(setting))
                     {
-                        List<string> serverList = new List<string>();
+                        List<string> serverList = new();
                         
                         string[] servers = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -334,24 +334,23 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Initiates a full point-tag rename based on the currently configured \"PointTagNameExpression\" as defined in the <systemSettings> section of the local configuration file.", "Administrator")]
         public void RenameAllPointTags()
         {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            const string FilterExpression = $"MethodName = '{nameof(PhasorDataSourceValidation)}'";
+
+            using AdoDataConnection connection = new("systemSettings");
+            TableOperations<DataOperation> dataOperationTable = new(connection);
+            DataOperation record = dataOperationTable.QueryRecordWhere(FilterExpression);
+
+            if (record is null)
             {
-                string filterExpression = $"MethodName = '{nameof(PhasorDataSourceValidation)}'";
-                TableOperations<DataOperation> dataOperationTable = new TableOperations<DataOperation>(connection);
-                DataOperation record = dataOperationTable.QueryRecordWhere(filterExpression);
-
-                if (record is null)
-                {
-                    OnProcessException(MessageLevel.Warning, new Exception($"Failed to find DataOperation record with {filterExpression}."));
-                    return;
-                }
-
-                record.Arguments = "renameAllPointTags=true";
-                dataOperationTable.UpdateRecordWhere(record, filterExpression);
-
-                // Inform IoanSession of change to invoke ReloadConfig
-                OnInputMeasurementKeysUpdated();
+                OnProcessException(MessageLevel.Warning, new Exception($"Failed to find DataOperation record with {FilterExpression}."));
+                return;
             }
+
+            record.Arguments = "renameAllPointTags=true";
+            dataOperationTable.UpdateRecordWhere(record, FilterExpression);
+
+            // Inform IoanSession of change to invoke ReloadConfig
+            OnInputMeasurementKeysUpdated();
         }
 
         /// <summary>
@@ -431,7 +430,7 @@ namespace PhasorProtocolAdapters
         #region [ Static ]
 
         // Static Fields
-        private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+        private static readonly StatisticValueStateCache s_statisticValueCache = new();
 
         // Common use static timer for the Phasor Protocols Library
         internal static readonly SharedTimerScheduler TimerScheduler;
@@ -456,9 +455,7 @@ namespace PhasorProtocolAdapters
         static CommonPhasorServices()
         {
             using (Logger.AppendStackMessages("Owner", "CommonPhasorServices"))
-            {
                 TimerScheduler = new SharedTimerScheduler();
-            }
         }
 
         // Static Methods
@@ -479,37 +476,26 @@ namespace PhasorProtocolAdapters
         public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string label = null, int signalIndex = -1, char phase = '_', int baseKV = 0)
         {
             // Initialize point tag expression parser
-            if (s_pointTagExpressionParser is null)
-                s_pointTagExpressionParser = InitializePointTagExpressionParser();
+            s_pointTagExpressionParser ??= InitializePointTagExpressionParser();
 
             // Initialize signal type dictionary
-            if (s_signalTypes is null)
-                s_signalTypes = InitializeSignalTypes();
-
-            Dictionary<string, string> substitutions;
+            s_signalTypes ??= InitializeSignalTypes();
 
             if (!s_signalTypes.TryGetValue(signalTypeAcronym, out DataRow signalTypeValues))
                 throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
 
             // Validate key acronyms
-            if (companyAcronym is null)
-                companyAcronym = "";
-
-            if (deviceAcronym is null)
-                deviceAcronym = "";
-
-            if (vendorAcronym is null)
-                vendorAcronym = "";
-
-            if (label is null)
-                label = "";
+            companyAcronym ??= "";
+            deviceAcronym ??= "";
+            vendorAcronym ??= "";
+            label ??= "";
 
             companyAcronym = companyAcronym.Trim();
             deviceAcronym = deviceAcronym.Trim();
             vendorAcronym = vendorAcronym.Trim();
 
             // Define fixed parameter replacements
-            substitutions = new Dictionary<string, string>
+            Dictionary<string, string> substitutions = new()
             {
                 { "{CompanyAcronym}", companyAcronym },
                 { "{DeviceAcronym}", deviceAcronym },
@@ -562,17 +548,13 @@ namespace PhasorProtocolAdapters
 
         private static Dictionary<string, DataRow> InitializeSignalTypes()
         {
-            Dictionary<string, DataRow> signalTypes;
-
             // It is expected that when a point tag is needing to be created that the database will be available
-            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
-            {
-                signalTypes = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
+            using AdoDataConnection database = new("systemSettings");
+            Dictionary<string, DataRow> signalTypes = new(StringComparer.OrdinalIgnoreCase);
 
-                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SignalType").AsEnumerable())
-                {
-                    signalTypes.AddOrUpdate(row["Acronym"].ToString(), row);
-                }
+            foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SignalType").AsEnumerable())
+            {
+                signalTypes.AddOrUpdate(row["Acronym"].ToString(), row);
             }
 
             return signalTypes;
@@ -671,7 +653,7 @@ namespace PhasorProtocolAdapters
             if (!settings["ProcessPhasorDataSourceValidation"].ValueAsBoolean())
                 return;
 
-            Dictionary<string, string> args = new Dictionary<string, string>();
+            Dictionary<string, string> args = new();
             bool skipOptimization = false, renameAllPointTags = false;
             string acronym;
 
@@ -863,9 +845,9 @@ namespace PhasorProtocolAdapters
             // Define kinds of output signal that will designate a location in an output stream protocol frame - other non-mappable measurements will be removed from output stream measurements
             SignalKind[] validOutputSignalKinds = { SignalKind.Angle, SignalKind.Magnitude, SignalKind.Frequency, SignalKind.DfDt, SignalKind.Status, SignalKind.Analog, SignalKind.Digital, SignalKind.Quality };
 
-            HashSet<int> measurementIDsToDelete = new HashSet<int>();
+            HashSet<int> measurementIDsToDelete = new();
             SignalReference deviceSignalReference;
-            string query, signalReference, pointTag, company, description, protocolIDs;
+            string query, signalReference, pointTag, company, description;
             int adapterID, deviceID, signalIndex;
             bool firstStatisticExisted;
             int? historianID;
@@ -895,7 +877,7 @@ namespace PhasorProtocolAdapters
             statusMessage("Validating device protocols...");
 
             // Extract IDs for phasor protocols
-            StringBuilder protocolIDList = new StringBuilder();
+            StringBuilder protocolIDList = new();
             DataTable protocols = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Protocol");
 
             if (protocols.Columns.Contains("Category"))
@@ -950,7 +932,7 @@ namespace PhasorProtocolAdapters
                 }
             }
 
-            protocolIDs = protocolIDList.ToString();
+            string protocolIDs = protocolIDList.ToString();
 
             try
             {
@@ -972,8 +954,7 @@ namespace PhasorProtocolAdapters
 
                 // Get protocol ID list for those protocols that support time quality flags
                 DataTable timeQualityProtocols = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM Protocol WHERE Acronym = 'IeeeC37_118V1' OR Acronym = 'IeeeC37_118V2' OR Acronym = 'IeeeC37_118D6' OR Acronym = 'Iec61850_90_5'");
-                StringBuilder timeQualityProtocolIDList = new StringBuilder();
-                string timeQualityProtocolIDs;
+                StringBuilder timeQualityProtocolIDList = new();
 
                 foreach (DataRow timeQualityProtocol in timeQualityProtocols.Rows)
                 {
@@ -983,7 +964,7 @@ namespace PhasorProtocolAdapters
                     timeQualityProtocolIDList.Append(timeQualityProtocol.ConvertField<int>("ID"));
                 }
 
-                timeQualityProtocolIDs = timeQualityProtocolIDList.ToString();
+                string timeQualityProtocolIDs = timeQualityProtocolIDList.ToString();
 
                 int qualityFlagsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='QUAL'"));
 
@@ -1026,13 +1007,10 @@ namespace PhasorProtocolAdapters
                 {
                     foreach (DataRow statistic in deviceStatistics)
                     {
-                        string oldAcronym;
-                        string oldSignalReference;
-
                         signalIndex = statistic.ConvertField<int>("SignalIndex");
-                        oldAcronym = device.Field<string>("Acronym");
+                        string oldAcronym = device.Field<string>("Acronym");
                         acronym = oldAcronym + "!PMU";
-                        oldSignalReference = SignalReference.ToString(oldAcronym, SignalKind.Statistic, signalIndex);
+                        string oldSignalReference = SignalReference.ToString(oldAcronym, SignalKind.Statistic, signalIndex);
                         signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
 
                         // If the original format for device statistics is found in the database, update to new format
@@ -1147,7 +1125,7 @@ namespace PhasorProtocolAdapters
             {
                 statusMessage("Renaming all point tags...");
 
-                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase, BaseKV, AlternateTag FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
+                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, PhasorLabel, Phase, BaseKV, AlternateTag FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND SignalAcronym <> 'CALC' AND Internal <> 0 AND Subscribed = 0").Rows)
                 {
                     company = measurement.ConvertField<string>("CompanyAcronym");
 
@@ -1165,7 +1143,7 @@ namespace PhasorProtocolAdapters
 
                     try
                     {
-                        SignalReference signal = new SignalReference(measurement.ConvertField<string>("SignalReference"));
+                        SignalReference signal = new(measurement.ConvertField<string>("SignalReference"));
                         signalIndex = signal.Index;
 
                         if (signalIndex <= 0)
