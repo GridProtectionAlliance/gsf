@@ -1114,7 +1114,14 @@ namespace PhasorWebUI
             }
             catch
             {
-                return new ConfigurationErrorFrame();
+                try
+                {
+                    return RequestConfigurationFrame(sourceData);
+                }
+                catch
+                {
+                    return new ConfigurationErrorFrame();
+                }
             }
         }
 
