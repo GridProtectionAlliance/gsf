@@ -431,7 +431,10 @@ namespace GSF.Web.Security
             }
             catch (Exception ex)
             {
-                AuthenticationException authEx = new("Failed to authenticate with basic credentials", ex);
+                AuthenticationException authEx = new(username.Contains("@") ? 
+                    "Failed to authenticate with Azure user token" :
+                    "Failed to authenticate with basic credentials", ex);
+
                 Log.Publish(MessageLevel.Warning, nameof(AuthenticateBasic), authEx.Message, exception: authEx);
                 throw authEx;
             }
