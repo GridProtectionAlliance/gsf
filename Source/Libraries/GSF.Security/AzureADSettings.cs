@@ -149,7 +149,7 @@ public class AzureADSettings
         ConfigurationFile config = ConfigurationFile.Current;
         CategorizedSettingsElementCollection settings = config.Settings[settingsCategory];
 
-        settings.Add(AzureADSecretKey, "", "Defines the Azure AD secret value to be used for user info and group lookups, post authentication.", true);
+        settings.Add(AzureADSecretKey, $"env({nameof(AzureADSecretKey)})", "Defines the Azure AD secret value to be used for user info and group lookups, post authentication.");
         config.Save(ConfigurationSaveMode.Modified);
 
         string secret = settings[AzureADSecretKey].ValueAs("");
