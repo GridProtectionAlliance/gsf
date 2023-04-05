@@ -848,6 +848,7 @@ namespace GSF.IO
                 {
                     StopEnumeration();
                     ClearTrackedDirectories();
+                    m_watcherThread.Clear();
                     m_fileWatchTimer.Stop();
                     m_fileWatchTimer.Dispose();
                     m_requeueTokenSource.Dispose();
