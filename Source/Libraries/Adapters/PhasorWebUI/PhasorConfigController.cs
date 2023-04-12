@@ -61,34 +61,12 @@ namespace PhasorWebUI
             return File.Exists(fileName) ? File.ReadAllText(fileName) : "";
         }
 
-        /// <summary>
-        /// Gets the file name of the configuration cache file for the device with the given acronym.
-        /// </summary>
-        /// <param name="acronym">Acronym of device.</param>
-        [HttpGet]
-        [Authorize(Roles = "Administrator,Editor")]
-        public string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym)
-        {
-            return Path.Combine(ConfigurationCachePath, $"{acronym}.configuration.json");
-        }
-
-        /// <summary>
-        /// Gets the path to the configuration cache directory.
-        /// </summary>
-        [HttpGet]
-        [Authorize(Roles = "Administrator,Editor")]
-        public string GetConfigurationCachePath()
-        {
-            return ConfigurationCachePath;
-        }
-
         #endregion
 
         #region [ Static ]
 
         // Static Fields
         private static string s_configurationCachePath;
-
 
         // Static Properties
         private static string ConfigurationCachePath
@@ -117,6 +95,19 @@ namespace PhasorWebUI
                 return s_configurationCachePath;
             }
         }
+
+        /// <summary>
+        /// Gets the file name of the configuration cache file for the device with the given acronym.
+        /// </summary>
+        /// <param name="acronym">Acronym of device.</param>
+        public static string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym) => 
+            Path.Combine(ConfigurationCachePath, $"{acronym}.configuration.json");
+
+        /// <summary>
+        /// Gets the path to the configuration cache directory.
+        /// </summary>
+        public static string GetConfigurationCachePath() => 
+            ConfigurationCachePath;
 
         #endregion
     }

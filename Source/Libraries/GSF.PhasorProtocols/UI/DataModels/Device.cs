@@ -44,12 +44,14 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
+using GSF.IO;
 using GSF.TimeSeries.UI;
 using PhasorProtocolAdapters;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
@@ -693,7 +695,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         // Static Fields
         private static readonly string s_companyAcronym;
-        
+        private static string s_configurationCachePath;
+
         // Static Constructor
         static Device()
         {
@@ -711,7 +714,48 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
         }
 
+        // Static Properties
+        private static string ConfigurationCachePath
+        {
+            get
+            {
+                // This property will not change during system life-cycle so we cache if for future use
+                if (!string.IsNullOrEmpty(s_configurationCachePath))
+                    return s_configurationCachePath;
+
+                // Define default configuration cache directory relative to path of host application
+                s_configurationCachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
+
+                // Make sure configuration cache path setting exists within system settings section of config file
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+                systemSettings.Add("ConfigurationCachePath", s_configurationCachePath, "Defines the path used to cache serialized phasor protocol configurations");
+
+                // Retrieve configuration cache directory as defined in the config file
+                s_configurationCachePath = FilePath.AddPathSuffix(systemSettings["ConfigurationCachePath"].Value);
+
+                // Make sure configuration cache directory exists
+                if (!Directory.Exists(s_configurationCachePath))
+                    Directory.CreateDirectory(s_configurationCachePath);
+
+                return s_configurationCachePath;
+            }
+        }
+
         // Static Methods
+
+        /// <summary>
+        /// Gets the file name of the configuration cache file for the device with the given acronym.
+        /// </summary>
+        /// <param name="acronym">Acronym of device.</param>
+        public static string GetConfigurationCacheFileName(string acronym) =>
+            Path.Combine(ConfigurationCachePath, $"{acronym}.configuration.json");
+
+        /// <summary>
+        /// Gets the path to the configuration cache directory.
+        /// </summary>
+        public static string GetConfigurationCachePath() =>
+            ConfigurationCachePath;
 
         /// <summary>
         /// LoadKeys <see cref="Phasor"/> information as an <see cref="ObservableCollection{T}"/> style list.
@@ -1361,6 +1405,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 //database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ParentID = {0}", "ParentID"), DefaultTimeout, device.ID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ID = {0}", "deviceID"), DefaultTimeout, device.ID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStreamDevice WHERE Acronym = {0}", "deviceAcronym"), DefaultTimeout, device.Acronym);
+
+                try
+                {
+                    File.Delete(GetConfigurationCacheFileName(device.Acronym));
+                }
+                catch (Exception ex)
+                {
+                    LogPublisher log = Logger.CreatePublisher(typeof(Device), MessageClass.Component);
+                    log.Publish(MessageLevel.Warning, "Error Message", "Failed to delete cached device config", null, ex);
+                }
 
                 return "Device deleted successfully";
             }
