@@ -44,8 +44,8 @@ let msalLoading = msalUseRedirect;
 
 function loadSettings() {
     $("#username").val(persistentStorage.getItem("username")).trigger("input");
-    $("#iwa").prop("checked", !isPOSIX && persistentStorage.getItem("iwa") === "true").change();
-    $("#remember").prop("checked", !isPOSIX && persistentStorage.getItem("remember") === "true").change();
+    $("#iwa").prop("checked", (!isPOSIX || azureADAuthEnabled) && persistentStorage.getItem("iwa") === "true").change();
+    $("#remember").prop("checked", (!isPOSIX || azureADAuthEnabled) && persistentStorage.getItem("remember") === "true").change();
     $("#ntlm").prop("checked", !isIE && !isPOSIX && persistentStorage.getItem("ntlm") !== "false").change();
 
     if (!azureADAuthEnabled)
