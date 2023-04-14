@@ -147,7 +147,7 @@
             auth: {{
                 clientId: ""{0}"",
                 authority: ""{1}"",
-                redirectUri: ""{2}""
+                redirectUri: ""/""
             }},
             cache: {{
                 cacheLocation: ""localStorage"",
@@ -179,8 +179,7 @@
         }};
     ",
         /* 0 */ azureADSettings.ClientID.JavaScriptEncode(),
-        /* 1 */ azureADSettings.Authority.ToString().JavaScriptEncode(),
-        /* 2 */ redirectPage.JavaScriptEncode()
+        /* 1 */ azureADSettings.Authority.ToString().JavaScriptEncode()
     );
 }
 <!DOCTYPE html>
