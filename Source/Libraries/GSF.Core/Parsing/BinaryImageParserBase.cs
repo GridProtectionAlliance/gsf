@@ -216,7 +216,7 @@ namespace GSF.Parsing
                 }
 
                 status.Append("     Total parser run-time: ");
-                status.Append(RunTime);
+                status.Append(RunTime.ToString(3));
                 status.AppendLine();
                 status.Append("   Total buffers processed: ");
                 status.Append(TotalProcessedBuffers);
