@@ -116,7 +116,11 @@ namespace GSF.Web.Security.AntiCsrf
             string currentUsername = string.Empty;
 
             // Requests for AuthTest page come from anonymous users
-            if (identity != null && identity.IsAuthenticated && !request.RequestUri.LocalPath.Equals(request.GetAuthenticationOptions().AuthTestPage, StringComparison.OrdinalIgnoreCase))
+            Model.UrlHelper urlHelper = new();
+            string basePath = urlHelper.Content("~");
+            string authTestPath = request.GetAuthenticationOptions().GetFullAuthTestPath(basePath);
+
+            if (identity != null && identity.IsAuthenticated && request.RequestUri.LocalPath != authTestPath)
                 currentUsername = identity.Name ?? string.Empty;
 
             // OpenID and other similar authentication schemes use URIs for the username.

@@ -43,11 +43,12 @@ using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Security;
+using GSF.Web.Model;
 using Microsoft.AspNet.SignalR;
 using Microsoft.Owin;
 using RazorEngine.Templating;
-using Timer = System.Timers.Timer;
 using Random = GSF.Security.Cryptography.Random;
+using Timer = System.Timers.Timer;
 
 #pragma warning disable SG0015 // Validated - no hard-coded password present
 
@@ -229,13 +230,15 @@ namespace GSF.Web.Security
             HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
             // Store session ID in response message cookie
-            SetCookie(request, response, SessionToken, sessionCookieValue);
+            UrlHelper urlHelper = new();
+            string basePath = urlHelper.Content("~");
+            SetCookie(request, response, SessionToken, sessionCookieValue, basePath.ToNonNullNorEmptyString("/"));
 
             // Get authentication options associated with this request
             ReadonlyAuthenticationOptions options = request.GetAuthenticationOptions();
 
             // If requesting the AuthTest page using BASIC authentication, reissue the client's authentication token
-            string authTestPage = options.AuthTestPage;
+            string authTestPage = options.GetFullAuthTestPath(basePath);
 
             if (request.RequestUri.LocalPath == authTestPage)
             {
