@@ -25,6 +25,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using GSF.Reflection;
 using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Reports
@@ -146,7 +147,7 @@ namespace GSF.TimeSeries.Reports
             ReportingProcessCollection reportingProcesses = new();
             IReportingProcess reportingProcess;
 
-            foreach (Type reportingProcessType in typeof(IReportingProcess).LoadImplementations())
+            foreach (Type reportingProcessType in typeof(IReportingProcess).LoadImplementations(AssemblyInfo.ExecutingAssembly.Location))
             {
                 reportingProcess = null;
 
