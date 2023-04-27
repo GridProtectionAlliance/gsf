@@ -595,7 +595,7 @@ namespace GSF.Web.Security
                 
                 httpContext.Response.AppendCookie(new HttpCookie(key, value)
                 { 
-                    Path = "/",
+                    Path = path,
                     Expires = maxAge is null ? DateTime.MinValue : DateTime.UtcNow.Add(maxAge.Value)
                 });
             }
