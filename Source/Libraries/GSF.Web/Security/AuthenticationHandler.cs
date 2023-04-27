@@ -40,6 +40,7 @@ using System.Web.Hosting;
 using GSF.Diagnostics;
 using GSF.Reflection;
 using GSF.Security;
+using Microsoft.Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Infrastructure;
 
@@ -270,6 +271,11 @@ namespace GSF.Web.Security
                 using TextWriter writer = new StreamWriter(Response.Body, Encoding.UTF8, 4096, true);
                 await writer.WriteAsync(bodyMessage);
                 Response.StatusCode = 200;
+
+                string pathBase = Request.PathBase.HasValue ? Request.PathBase.Value : "";
+                CookieOptions cookieOptions = new CookieOptions();
+                cookieOptions.Path = Options.GetFullAuthTestPath(pathBase);
+                Response.Cookies.Delete(Options.AuthenticationToken, cookieOptions);
 
                 return true; // Abort pipeline
             }
