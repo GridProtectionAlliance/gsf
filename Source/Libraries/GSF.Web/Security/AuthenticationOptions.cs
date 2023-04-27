@@ -475,4 +475,72 @@ namespace GSF.Web.Security
 
         #endregion
     }
+
+    /// <summary>
+    /// Extension methods for authentication options.
+    /// </summary>
+    public static class AuthenticationOptionsExtensions
+    {
+        /// <summary>
+        /// Gets full path to <see cref="AuthenticationOptions.LoginPage"/>,
+        /// evaluating leading <c>~</c> character as the given base path.
+        /// </summary>
+        /// <param name="options">Authentication options for the website</param>
+        /// <param name="basePath">Base path of the website</param>
+        /// <returns>The full path to the login page.</returns>
+        public static string GetFullLoginPath(this AuthenticationOptions options, string basePath) =>
+            s_basePathRegex.Replace(options.LoginPage, basePath);
+
+        /// <summary>
+        /// Gets full path to <see cref="AuthenticationOptions.LogoutPage"/>,
+        /// evaluating leading <c>~</c> character as the given base path.
+        /// </summary>
+        /// <param name="options">Authentication options for the website</param>
+        /// <param name="basePath">Base path of the website</param>
+        /// <returns>The full path to the logout page.</returns>
+        public static string GetFullLogoutPath(this AuthenticationOptions options, string basePath) =>
+            s_basePathRegex.Replace(options.LogoutPage, basePath);
+
+        /// <summary>
+        /// Gets full path to <see cref="AuthenticationOptions.AuthTestPage"/>,
+        /// evaluating leading <c>~</c> character as the given base path.
+        /// </summary>
+        /// <param name="options">Authentication options for the website</param>
+        /// <param name="basePath">Base path of the website</param>
+        /// <returns>The full path to the auth test page.</returns>
+        public static string GetFullAuthTestPath(this AuthenticationOptions options, string basePath) =>
+            s_basePathRegex.Replace(options.AuthTestPage, basePath);
+
+        /// <summary>
+        /// Gets full path to <see cref="ReadonlyAuthenticationOptions.LoginPage"/>,
+        /// evaluating leading <c>~</c> character as the given base path.
+        /// </summary>
+        /// <param name="options">Authentication options for the website</param>
+        /// <param name="basePath">Base path of the website</param>
+        /// <returns>The full path to the login page.</returns>
+        public static string GetFullLoginPath(this ReadonlyAuthenticationOptions options, string basePath) =>
+            s_basePathRegex.Replace(options.LoginPage, basePath);
+
+        /// <summary>
+        /// Gets full path to <see cref="ReadonlyAuthenticationOptions.LogoutPage"/>,
+        /// evaluating leading <c>~</c> character as the given base path.
+        /// </summary>
+        /// <param name="options">Authentication options for the website</param>
+        /// <param name="basePath">Base path of the website</param>
+        /// <returns>The full path to the logout page.</returns>
+        public static string GetFullLogoutPath(this ReadonlyAuthenticationOptions options, string basePath) =>
+            s_basePathRegex.Replace(options.LogoutPage, basePath);
+
+        /// <summary>
+        /// Gets full path to <see cref="ReadonlyAuthenticationOptions.AuthTestPage"/>,
+        /// evaluating leading <c>~</c> character as the given base path.
+        /// </summary>
+        /// <param name="options">Authentication options for the website</param>
+        /// <param name="basePath">Base path of the website</param>
+        /// <returns>The full path to the auth test page.</returns>
+        public static string GetFullAuthTestPath(this ReadonlyAuthenticationOptions options, string basePath) =>
+            s_basePathRegex.Replace(options.AuthTestPage, basePath);
+
+        private static readonly Regex s_basePathRegex = new("^~(?=/|$)", RegexOptions.Compiled);
+    }
 }

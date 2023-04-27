@@ -35,7 +35,6 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Hosting;
 using GSF.Diagnostics;
@@ -96,9 +95,13 @@ namespace GSF.Web.Security
             }
         }
 
+        // Gets the path that matches the Logout page
+        private string LogoutPath =>
+            Options.GetFullLogoutPath("");
+
         // Gets the path that matches the AuthTest page
         private string AuthTestPath =>
-            s_basePathRegex.Replace(Options.AuthTestPage, "");
+            Options.GetFullAuthTestPath("");
 
         private string FaultReason { get; set; }
 
@@ -131,7 +134,7 @@ namespace GSF.Web.Security
                 // Attempt to read the session ID from the HTTP cookies
                 Guid sessionID = SessionHandler.GetSessionIDFromCookie(Request, Options.SessionToken);
 
-                if (Request.Uri.LocalPath == Options.LogoutPage)
+                if (Request.Path.Value == LogoutPath)
                 {
                     IIdentity logoutIdentity = new GenericIdentity(sessionID.ToString());
                     string[] logoutRoles = { "logout" };
@@ -312,8 +315,8 @@ namespace GSF.Web.Security
 
                 ISecurityProvider securityProvider = securityPrincipal?.Identity?.Provider ?? SecurityProviderCache.CreateProvider("", autoRefresh: false, useAlternate: useAlternateSecurityProvider);
 
-                string pathBase = Request.PathBase.HasValue ? Request.PathBase.Value : "/";
-                string path = s_basePathRegex.Replace(Options.LoginPage, pathBase);
+                string pathBase = Request.PathBase.HasValue ? Request.PathBase.Value : "";
+                string path = Options.GetFullLoginPath(pathBase);
                 Response.Redirect(securityProvider.TranslateRedirect(path, Request.Uri, encodedPath, referrer));
             }
             else
@@ -507,7 +510,6 @@ namespace GSF.Web.Security
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(AuthenticationHandler), MessageClass.Framework);
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_authorizationCache;
         private static readonly ConcurrentDictionary<Guid, SecurityPrincipal> s_alternateAuthorizationCache;
-        private static readonly Regex s_basePathRegex = new("^~(?=/)", RegexOptions.Compiled);
 
         // Static Constructor
         static AuthenticationHandler()
