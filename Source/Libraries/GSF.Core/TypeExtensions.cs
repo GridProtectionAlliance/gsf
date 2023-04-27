@@ -102,7 +102,7 @@ namespace GSF
         [SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom")]
         public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true, bool executeStaticConstructors = false)
         {
-            List<Type> types = new List<Type>();
+            List<Type> types = new();
 
             if (string.IsNullOrEmpty(binariesDirectory))
             {
@@ -131,32 +131,38 @@ namespace GSF
                         // Load the assembly in the current app domain.
                         Assembly asm = Assembly.LoadFrom(bin);
 
-                        if (!validateReferences || asm.TryLoadAllReferences())
+                        // Assume assemblies references are already loaded.
+                        bool referencesLoaded = true; 
+
+                        if (validateReferences)
+                            referencesLoaded = asm.TryLoadAllReferences();
+
+                        if (!referencesLoaded)
+                            continue;
+
+                        // Process only the public types in the assembly.
+                        foreach (Type asmType in asm.GetExportedTypes())
                         {
-                            // Process only the public types in the assembly.
-                            foreach (Type asmType in asm.GetExportedTypes())
+                            if (excludeAbstractTypes && asmType.IsAbstract)
+                                continue;
+
+                            // Either the current type is not abstract or it's OK to include abstract types.
+                            if (type.IsClass && asmType.IsSubclassOf(type))
                             {
-                                if (!excludeAbstractTypes || !asmType.IsAbstract)
-                                {
-                                    // Either the current type is not abstract or it's OK to include abstract types.
-                                    if (type.IsClass && asmType.IsSubclassOf(type))
-                                    {
-                                        // The type being tested is a class and current type derives from it.
-                                        types.Add(asmType);
-                                    }
+                                // The type being tested is a class and current type derives from it.
+                                types.Add(asmType);
+                            }
 
-                                    if (type.IsInterface && (object)asmType.GetInterface(type.FullName) != null)
-                                    {
-                                        // The type being tested is an interface and current type implements it.
-                                        types.Add(asmType);
-                                    }
+                            if (type.IsInterface && (object)asmType.GetInterface(type.FullName) != null)
+                            {
+                                // The type being tested is an interface and current type implements it.
+                                types.Add(asmType);
+                            }
 
-                                    if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
-                                    {
-                                        // The type being tested is an attribute and current type has the attribute.
-                                        types.Add(asmType);
-                                    }
-                                }
+                            if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
+                            {
+                                // The type being tested is an attribute and current type has the attribute.
+                                types.Add(asmType);
                             }
                         }
                     }
