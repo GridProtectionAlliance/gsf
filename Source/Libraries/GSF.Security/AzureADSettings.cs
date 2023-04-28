@@ -62,6 +62,11 @@ public class AzureADSettings
     public const string DefaultClientID = "";
 
     /// <summary>
+    /// Default value for <see cref="RedirectURI"/> property.
+    /// </summary>
+    public const string DefaultRedirectURI = "/";
+
+    /// <summary>
     /// Default value for <see cref="CallbackPath"/> property.
     /// </summary>
     public const string DefaultCallbackPath = "/signin-oidc";
@@ -85,6 +90,7 @@ public class AzureADSettings
 
     // Client ID (application ID) obtained from the Azure portal
     ""ClientId"": ""[Enter the Client Id here]"",
+    ""RedirectURI"": ""{DefaultRedirectURI}"",
     ""CallbackPath"": ""{DefaultCallbackPath}"",
     ""SignedOutCallbackPath"": ""{DefaultSignedOutCallbackPath}"",
     ""Enabled"":  false
@@ -105,6 +111,11 @@ public class AzureADSettings
     /// Gets or sets the Azure AD client ID.
     /// </summary>
     public string ClientID { get; set; } = DefaultClientID;
+
+    /// <summary>
+    /// Gets or sets the redirect URI where authentication responses can be received by the application.
+    /// </summary>
+    public string RedirectURI { get; set; } = DefaultRedirectURI;
 
     /// <summary>
     /// Gets or sets the Azure AD call-back path.
@@ -234,11 +245,12 @@ public class AzureADSettings
 
         return new AzureADSettings
         {
-            Instance = settings?.Instance ?? DefaultInstance, 
-            TenantID = settings?.TenantId ?? DefaultTenantID, 
-            ClientID = settings?.ClientId ?? DefaultClientID, 
-            CallbackPath = settings?.CallbackPath ?? DefaultCallbackPath, 
-            SignedOutCallbackPath = settings?.SignedOutCallbackPath ?? DefaultSignedOutCallbackPath, 
+            Instance = settings?.Instance ?? DefaultInstance,
+            TenantID = settings?.TenantId ?? DefaultTenantID,
+            ClientID = settings?.ClientId ?? DefaultClientID,
+            RedirectURI = settings?.RedirectURI ?? DefaultRedirectURI,
+            CallbackPath = settings?.CallbackPath ?? DefaultCallbackPath,
+            SignedOutCallbackPath = settings?.SignedOutCallbackPath ?? DefaultSignedOutCallbackPath,
             Enabled = settings?.Enabled ?? DefaultEnabled
         };
     }
@@ -260,6 +272,7 @@ public class AzureADSettings
         settings.Add(nameof(Instance), DefaultInstance, "Azure AD instance URL.");
         settings.Add(nameof(TenantID), DefaultTenantID, "Azure AD tenant ID.");
         settings.Add(nameof(ClientID), DefaultClientID, "Azure AD client ID.");
+        settings.Add(nameof(RedirectURI), DefaultRedirectURI, "URI where authentication responses can be received by the application");
         settings.Add(nameof(CallbackPath), DefaultCallbackPath, "Azure AD call-back path.");
         settings.Add(nameof(SignedOutCallbackPath), DefaultSignedOutCallbackPath, "Azure AD signed out call-back path.");
         settings.Add(nameof(Enabled), DefaultEnabled, "Flag that determines if Azure AD is enabled.");
@@ -269,6 +282,7 @@ public class AzureADSettings
             Instance = settings[nameof(Instance)].ValueAs(DefaultInstance),
             TenantID = settings[nameof(TenantID)].ValueAs(DefaultTenantID),
             ClientID = settings[nameof(ClientID)].ValueAs(DefaultClientID),
+            RedirectURI = settings[nameof(RedirectURI)].ValueAs(DefaultRedirectURI),
             CallbackPath = settings[nameof(CallbackPath)].ValueAs(DefaultCallbackPath),
             SignedOutCallbackPath = settings[nameof(SignedOutCallbackPath)].ValueAs(DefaultSignedOutCallbackPath),
             Enabled = settings[nameof(Enabled)].ValueAs(DefaultEnabled),
