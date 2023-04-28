@@ -523,21 +523,35 @@ namespace GSF.TimeSeries
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
 
             // Create reporting processes
-            m_reportingProcesses = ReportingProcessCollection.LoadImplementations(ex =>
-            {
-                DisplayStatusMessage("Failed to load reporting process: {0}", UpdateType.Warning, ex.Message);
-                LogException(ex);
-            });
-            
+            m_reportingProcesses = new ReportingProcessCollection();
             m_serviceHelper.ServiceComponents.Add(m_reportingProcesses);
+
+            m_reportingProcesses.LoadImplementations(
+                reportingProcess =>
+                {
+                    try
+                    {
+                        if (m_serviceHelper.IsDisposed)
+                            return;
+
+                        // Define processes for each report (initially unscheduled)
+                        m_serviceHelper.AddProcess(ReportingProcessHandler, $"{reportingProcess.ReportType}Reporting");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogException(ex);
+                    }
+                },
+                ex =>
+                {
+                    DisplayStatusMessage("Failed to load reporting process: {0}", UpdateType.Warning, ex.Message);
+                    LogException(ex);
+                }
+            );
 
             // Define scheduled service processes
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
             m_serviceHelper.AddScheduledProcess(StatusExportProcessHandler, "StatusExport", "*/30 * * * *");   // Every 30 minutes
-
-            // Define processes for each report (initially unscheduled)
-            foreach (IReportingProcess reportingProcess in m_reportingProcesses)
-                m_serviceHelper.AddProcess(ReportingProcessHandler, $"{reportingProcess.ReportType}Reporting");
 
             // Add key Iaon collections as service components
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.InputAdapters);
