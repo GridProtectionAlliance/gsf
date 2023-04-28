@@ -107,31 +107,38 @@ namespace GSF.TimeSeries.Reports
             // Load any user defined reporting processes on a background thread
             new Thread(() =>
             {
-                foreach (Type reportingProcessType in typeof(IReportingProcess).LoadImplementations())
+                try
                 {
-                    if (reportingProcessType == typeof(CompletenessReportingProcess) || reportingProcessType == typeof(CorrectnessReportingProcess))
-                        continue;
-
-                    IReportingProcess reportingProcess = null;
-
-                    try
+                    foreach (Type reportingProcessType in typeof(IReportingProcess).LoadImplementations())
                     {
-                        // Try to load the reporting process implementation
-                        reportingProcess = Activator.CreateInstance(reportingProcessType) as IReportingProcess;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (exceptionHandler is not null)
-                            exceptionHandler(ex);
-                        else
-                            Logger.SwallowException(ex);
-                    }
+                        if (reportingProcessType == typeof(CompletenessReportingProcess) || reportingProcessType == typeof(CorrectnessReportingProcess))
+                            continue;
 
-                    if (reportingProcess is null)
-                        continue;
+                        IReportingProcess reportingProcess = null;
 
-                    Add(reportingProcess);
-                    newReportProcessHandler(reportingProcess);
+                        try
+                        {
+                            // Try to load the reporting process implementation
+                            reportingProcess = Activator.CreateInstance(reportingProcessType) as IReportingProcess;
+                        }
+                        catch (Exception ex)
+                        {
+                            if (exceptionHandler is not null)
+                                exceptionHandler(ex);
+                            else
+                                throw;
+                        }
+
+                        if (reportingProcess is null)
+                            continue;
+
+                        Add(reportingProcess);
+                        newReportProcessHandler(reportingProcess);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex);
                 }
             })
             {
