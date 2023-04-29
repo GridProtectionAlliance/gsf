@@ -354,6 +354,26 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
+        /// Removes file from local folder.
+        /// </summary>
+        /// <param name="fileName">File name to remove.</param>
+        [AdapterCommand("Removes specified file - local folder only", "Administrator", "Editor")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void RemoveFile(string fileName)
+        {
+            if (fileName.Length > Path.GetFileName(fileName).Length)
+            {
+                if (!fileName.StartsWith(FilePath.GetAbsolutePath(""), StringComparison.OrdinalIgnoreCase))
+                    throw new UnauthorizedAccessException("Cannot remove files outside current folder");
+            }
+
+            fileName = FilePath.GetAbsolutePath(fileName);
+
+            if (File.Exists(fileName))
+                File.Delete(fileName);
+        }
+
+        /// <summary>
         /// Sends the specified <see cref="DeviceCommand"/> to the current device connection.
         /// </summary>
         /// <param name="command"><see cref="DeviceCommand"/> to send to connected device.</param>
