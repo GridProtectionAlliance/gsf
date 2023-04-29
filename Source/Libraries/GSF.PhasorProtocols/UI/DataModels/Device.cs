@@ -1406,14 +1406,29 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ID = {0}", "deviceID"), DefaultTimeout, device.ID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStreamDevice WHERE Acronym = {0}", "deviceAcronym"), DefaultTimeout, device.Acronym);
 
+                string configCacheFileName = GetConfigurationCacheFileName(device.Acronym);
+
                 try
                 {
-                    File.Delete(GetConfigurationCacheFileName(device.Acronym));
+                    // File delete may fail if host application is running from
+                    // protected "Program Files" folder and application is not
+                    // running with elevated privileges
+                    File.Delete(configCacheFileName);
                 }
                 catch (Exception ex)
                 {
                     LogPublisher log = Logger.CreatePublisher(typeof(Device), MessageClass.Component);
                     log.Publish(MessageLevel.Warning, "Error Message", "Failed to delete cached device config", null, ex);
+
+                    try
+                    {
+                        // Fall back on asking service to delete config file (note that service may not be available)
+                        CommonFunctions.SendCommandToService($"INVOKE 0 RemoveFile \"{configCacheFileName}\"");
+                    }
+                    catch (Exception ex2)
+                    {
+                        log.Publish(MessageLevel.Warning, "Error Message", "Failed to request service to delete cached device config", null, ex2);
+                    }
                 }
 
                 return "Device deleted successfully";
