@@ -914,7 +914,7 @@ namespace GSF.InstallerActions
         private static void RemoveHttpNamespaceReservation(string endPoint)
         {
             // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
-            string parameters = $@"http delete urlacl url=http://{endPoint}";
+            string parameters = $@"http delete urlacl url=http://{endPoint}/";
 
             ProcessStartInfo psi = new("netsh", parameters)
             {
