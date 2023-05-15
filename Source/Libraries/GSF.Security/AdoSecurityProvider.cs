@@ -577,13 +577,15 @@ namespace GSF.Security
                 DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable]
                     .Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
 
-                //Filter ApplicationRoles by NodeID in case multiple Nodes use the same database
-                Func<DataRow, bool> nodeIDFilter = (row) =>
+                // Filter ApplicationRoles by NodeID in case multiple Nodes use the same database
+                Func<DataRow, bool> nodeIDFilter = row =>
                 {
                     DataRow applicationRole = null;
 
                     if (securityContext.Tables[ApplicationRoleTable].PrimaryKey.Length > 0)
+                    {
                         applicationRole = securityContext.Tables[ApplicationRoleTable].Rows.Find(row["ApplicationRoleID"]);
+                    }
                     else
                     {
                         DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select($"ID = '{EncodeEscapeSequences(row["ApplicationRoleID"].ToString())}'");
@@ -592,9 +594,7 @@ namespace GSF.Security
                             applicationRole = applicationRoles[0];
                     }
 
-                    if (applicationRole is null || Convert.IsDBNull(applicationRole["Name"]))
-                        return false;
-                    return true;
+                    return (applicationRole is not null && !Convert.IsDBNull(applicationRole["Name"]))
                 };
 
                 userApplicationRoles = userApplicationRoles.Where(nodeIDFilter).ToArray();
