@@ -594,7 +594,7 @@ namespace GSF.Security
                             applicationRole = applicationRoles[0];
                     }
 
-                    return (applicationRole is not null && !Convert.IsDBNull(applicationRole["Name"]))
+                    return (applicationRole is not null && !Convert.IsDBNull(applicationRole["Name"]));
                 };
 
                 userApplicationRoles = userApplicationRoles.Where(nodeIDFilter).ToArray();
