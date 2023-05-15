@@ -574,7 +574,30 @@ namespace GSF.Security
 
                 // Filter explicitly assigned application roles for current user - this will return an empty set if no
                 // explicitly defined roles exist for the user -or- user doesn't exist in the database.
-                DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
+                DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable]
+                    .Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
+
+                // Filter ApplicationRoles by NodeID in case multiple Nodes use the same database
+                Func<DataRow, bool> nodeIDFilter = row =>
+                {
+                    DataRow applicationRole = null;
+
+                    if (securityContext.Tables[ApplicationRoleTable].PrimaryKey.Length > 0)
+                    {
+                        applicationRole = securityContext.Tables[ApplicationRoleTable].Rows.Find(row["ApplicationRoleID"]);
+                    }
+                    else
+                    {
+                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select($"ID = '{EncodeEscapeSequences(row["ApplicationRoleID"].ToString())}'");
+
+                        if (applicationRoles.Length > 0)
+                            applicationRole = applicationRoles[0];
+                    }
+
+                    return (applicationRole is not null && !Convert.IsDBNull(applicationRole["Name"]))
+                };
+
+                userApplicationRoles = userApplicationRoles.Where(nodeIDFilter).ToArray();
 
                 // If no explicitly assigned application roles are found for the current user, we check for implicitly assigned
                 // application roles based on the role assignments of the groups the user is a member of.
