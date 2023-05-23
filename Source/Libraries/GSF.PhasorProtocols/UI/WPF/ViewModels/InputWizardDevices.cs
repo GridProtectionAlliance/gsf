@@ -92,6 +92,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private string m_pdcAcronym;
         private string m_pdcName;
         private bool m_useSourcePrefix;
+        private bool m_useConfigLabels;
         private int m_pdcVendorDeviceID;
         private int m_pdcFrameRate;
         private int m_companyID;
@@ -140,6 +141,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             string lastCompanyID = IsolatedStorageManager.ReadFromIsolatedStorage("CompanyID")?.ToString();
             string lastInterconnectionID = IsolatedStorageManager.ReadFromIsolatedStorage("InterconnectionID")?.ToString();
+            string lastUseConfigLabels = IsolatedStorageManager.ReadFromIsolatedStorage("UseConfigLabels")?.ToString();
 
             if (CompanyLookupList.Count > 0)
                 CompanyID = int.TryParse(lastCompanyID, out int companyID) && CompanyLookupList.ContainsKey(companyID) ?
@@ -161,6 +163,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if (VendorDeviceLookupList.Count > 0)
                 PdcVendorDeviceID = VendorDeviceLookupList.First().Key;
+
+            if (lastUseConfigLabels.ParseBoolean())
+                UseConfigLabels = true;
 
             m_dispatcher = Dispatcher.CurrentDispatcher;
             m_errorMessages = new Dictionary<string, string>();
@@ -448,10 +453,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 {
                     string prefix = $"{m_pdcAcronym}!";
 
-                    for (int i = 0; i < ItemsSource.Count; i++)
+                    foreach (InputWizardDevice device in ItemsSource)
                     {
-                        if (!ItemsSource[i].Acronym.StartsWith(prefix))
-                            ItemsSource[i].Acronym = $"{prefix}{ItemsSource[i].Acronym}";
+                        if (!device.Acronym.StartsWith(prefix))
+                            device.Acronym = $"{prefix}{device.Acronym}";
                     }
                 }
                 else
@@ -467,6 +472,31 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 m_deviceAcronyms = ItemsSource.Select(childDevice => childDevice.Acronym).ToArray();
                 OnPropertyChanged(nameof(DeviceAcronyms));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets if config labels should be used for phasor label names.
+        /// </summary>
+        public bool UseConfigLabels
+        {
+            get => m_useConfigLabels;
+            set
+            {
+                m_useConfigLabels = value;
+                OnPropertyChanged(nameof(UseConfigLabels));
+
+                if (ItemsSource.Count == 0)
+                    return;
+
+                foreach (InputWizardDevice device in ItemsSource)
+                {
+                    foreach (InputWizardDevicePhasor phasor in device.PhasorList)
+                    {
+                        phasor.Label = value ? phasor.ConfigFrameLabel : phasor.DatabaseLabel;
+                        phasor.Type = value ? phasor.ConfigFrameType : phasor.DatabaseType;
+                    }
+                }
             }
         }
 
@@ -775,7 +805,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     connectionSettings = sf.Deserialize(fileData) as ConnectionSettings;
                 }
 
-                if (!(connectionSettings is null))
+                if (connectionSettings is not null)
                 {
                     ConnectionString = connectionSettings.ConnectionString;
                     Dictionary<string, string> connectionStringKeyValues = ConnectionString.ParseKeyValuePairs();
@@ -794,7 +824,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                     ConnectionString = $"transportprotocol={connectionSettings.TransportProtocol};{connectionStringKeyValues.JoinKeyValuePairs()}";
 
-                    if (!(connectionSettings.ConnectionParameters is null))
+                    if (connectionSettings.ConnectionParameters is not null)
                     {
                         switch (connectionSettings.PhasorProtocol)
                         {
@@ -830,7 +860,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     {
                         Protocol protocol = m_protocolList.FirstOrDefault(protocolRecord => string.Equals(protocolRecord.Acronym, connectionSettings.PhasorProtocol.ToString(), StringComparison.OrdinalIgnoreCase));
 
-                        if (!(protocol is null))
+                        if (protocol is not null)
                             ProtocolID = protocol.ID;
                     }
                 }
@@ -920,7 +950,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             ObservableCollection<InputWizardDevice> wizardDeviceList = new ObservableCollection<InputWizardDevice>();
             bool isConcentrator = false;
 
-            if (!(m_configurationFrame is null))
+            if (m_configurationFrame is not null)
             {
                 PdcFrameRate = m_configurationFrame.FrameRate;
 
@@ -948,14 +978,14 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     if (existingDevice is null)
                         existingDevice = Device.GetDevice(null, $"WHERE Acronym = '{deviceAcronym}'");
 
-                    if (existingDevice is null && !(uniqueID is null) && uniqueID != Guid.Empty)
+                    if (existingDevice is null && uniqueID is not null && uniqueID != Guid.Empty)
                     {
                         try
                         {
                             // If about to add a new device and unique ID already exists locally, then
                             // source device implementation of configuration 3 GlobalID is faulty. In
                             // this case we just create our own unique ID normally...
-                            if (!(Device.GetDevice(null, $"WHERE UniqueID = '{uniqueID.ToString().ToLower()}'") is null))
+                            if (Device.GetDevice(null, $"WHERE UniqueID = '{uniqueID.ToString().ToLower()}'") is not null)
                             {
                                 try
                                 {
@@ -1139,11 +1169,19 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         return "0";
                     }
 
-                    bool phasorExists(IPhasorDefinition phasor) => !(phasor is null) && (existingPhasors?.ContainsKey(phasor.Index) ?? false);
+                    bool phasorExists(IPhasorDefinition phasor) => phasor is not null && (existingPhasors?.ContainsKey(phasor.Index) ?? false);
 
-                    string getPhasorLabel(IPhasorDefinition phasor) => phasorExists(phasor) ? existingPhasors?[phasor.Index].Label : phasor.Label;
+                    string getDatabaseLabel(IPhasorDefinition phasor) => phasorExists(phasor) ? existingPhasors?[phasor.Index].Label : phasor.Label;
 
-                    string getPhasorType(IPhasorDefinition phasor) => phasorExists(phasor) ? existingPhasors?[phasor.Index].Type : phasor.PhasorType == PhasorType.Current ? "I" : "V";
+                    string getConfigFrameLabel(IPhasorDefinition phasor) => phasor.Label;
+
+                    string getDatabaseType(IPhasorDefinition phasor) => phasorExists(phasor) ? existingPhasors?[phasor.Index].Type : phasor.PhasorType == PhasorType.Current ? "I" : "V";
+
+                    string getConfigFrameType(IPhasorDefinition phasor) => phasor.PhasorType == PhasorType.Current ? "I" : "V";
+
+                    string getPhasorLabel(IPhasorDefinition phasor) => UseConfigLabels ? getConfigFrameLabel(phasor) : getDatabaseLabel(phasor);
+
+                    string getPhasorType(IPhasorDefinition phasor) => UseConfigLabels ? getConfigFrameType(phasor) : getDatabaseType(phasor);
 
                     string getPhasorPhase(IPhasorDefinition phasor)
                     {
@@ -1225,7 +1263,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         AnalogCount = cell.AnalogDefinitions.Count,
                         AddDigitals = cell.DigitalDefinitions.Count > 0,
                         AddAnalogs = cell.AnalogDefinitions.Count > 0,
-                        Existing = !(existingDevice is null),
+                        Existing = existingDevice is not null,
                         DigitalLabels = GetAnalogOrDigitalLabels(cell.DigitalDefinitions),
                         AnalogLabels = GetAnalogOrDigitalLabels(cell.AnalogDefinitions),
                         AnalogScalars = getAnalogScalars(cell.AnalogDefinitions),
@@ -1235,7 +1273,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             select new InputWizardDevicePhasor
                             {
                                 Label = getPhasorLabel(phasor),
+                                DatabaseLabel = getDatabaseLabel(phasor),
+                                ConfigFrameLabel = getConfigFrameLabel(phasor),
                                 Type = getPhasorType(phasor),
+                                DatabaseType = getDatabaseType(phasor),
+                                ConfigFrameType = getConfigFrameType(phasor),
                                 ConfigLabel = $"Phasor {phasor.Index + 1:N0} label from config: {phasor.Label}",
                                 ConfigType = $"Phasor {phasor.Index + 1:N0} type from config: {phasor.PhasorType}",
                                 Phase = getPhasorPhase(phasor),
@@ -1778,7 +1820,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             {
                                 Phasor existing = Phasor.GetPhasor(database, $"WHERE DeviceID = {device.ID} AND Label = '{inputPhasor.Label}'");
 
-                                if (!(existing is null))
+                                if (existing is not null)
                                     Phasor.Delete(database, existing.ID);
                             }
 
@@ -1816,7 +1858,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 {
                                     Phasor existing = Phasor.GetPhasor(database, $"WHERE DeviceID = {device.ID} AND SourceIndex = {oldPhasor.SourceIndex}");
 
-                                    if (!(existing is null))
+                                    if (existing is not null)
                                         Phasor.Delete(database, existing.ID);
                                 }
 
@@ -1850,7 +1892,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             {
                                 Phasor existing = Phasor.GetPhasor(database, $"WHERE DeviceID = {device.ID} AND SourceIndex = {oldPhasor.SourceIndex}");
 
-                                if (!(existing is null))
+                                if (existing is not null)
                                     Phasor.Delete(database, existing.ID);
                             }
 
@@ -1919,6 +1961,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 IsolatedStorageManager.WriteToIsolatedStorage("CompanyID", CompanyID);
                 IsolatedStorageManager.WriteToIsolatedStorage("InterconnectionID", InterconnectionID);
+                IsolatedStorageManager.WriteToIsolatedStorage("UseConfigLabels", UseConfigLabels.ToString());
             }
             catch (Exception ex)
             {

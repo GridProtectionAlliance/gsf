@@ -377,6 +377,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
         //private string m_destinationLabel;
         private bool m_include;
 
+        internal string DatabaseLabel;
+        internal string ConfigFrameLabel;
+        internal string DatabaseType;
+        internal string ConfigFrameType;
+
         #endregion
 
         #region [ Properties ]

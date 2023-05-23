@@ -247,7 +247,8 @@
                 <Expander.HeaderTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Step 3: Select Devices to Configure" Margin="0,0,250,0" />
+                            <TextBlock Text="Step 3: Select Devices to Configure" Margin="0,0,50,0" />
+                            <CheckBox IsChecked="{tsfBinding:Column Path=DataContext.UseConfigLabels, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Content="Use Config Phasor Labels" Margin="0,0,150,0" Visibility="{Binding ElementName=ExpanderStep3, Path=IsExpanded, Converter={StaticResource ObjectToVisibilityConverter}}" />
                             <StackPanel Orientation="Horizontal" Visibility="{Binding ElementName=ExpanderStep3, Path=IsExpanded, Converter={StaticResource ObjectToVisibilityConverter}}">
                                 <TextBlock Background="#FF2EB30D" Foreground="White" Text="*" FontWeight="Bold" TextAlignment="Center" Width="20"/>
                                 <TextBlock Foreground="Red" Text=" Device acronym already exists in the database." />
