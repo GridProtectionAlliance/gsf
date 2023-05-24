@@ -1,4 +1,5 @@
-﻿<UserControl x:Class="GSF.PhasorProtocols.UI.UserControls.InputWizardUserControl"
+﻿<!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+<UserControl x:Class="GSF.PhasorProtocols.UI.UserControls.InputWizardUserControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"             
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -54,7 +55,7 @@
                         </StackPanel>
                     </ControlTemplate>
                 </Button.Template>
-                Launch Walkthrough
+                Launch Walk-through
             </Button>
             
             <Expander x:Name="ExpanderStep1" IsExpanded="{Binding StepOneExpanded}" Header="Step 1: Configure Connection Settings" Expanded="ExpanderStep1_Expanded">
@@ -310,14 +311,14 @@
                         <sdk:DataGridTemplateColumn Header="Digitals" Width="*">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <CheckBox Content="{tsfBinding:Column Path=DigitalCount}" IsChecked="{tsfBinding:Column Path=AddDigitals}" Margin="0" HorizontalAlignment="Center"/>
+                                    <CheckBox Content="{tsfBinding:Column Path=DigitalCount}" IsChecked="{tsfBinding:Column Path=AddDigitals}" ToolTip="{Binding Path=DigitalLabelsPreview}" Margin="0" HorizontalAlignment="Center"/>
                                 </DataTemplate>
                             </sdk:DataGridTemplateColumn.CellTemplate>
                         </sdk:DataGridTemplateColumn>
                         <sdk:DataGridTemplateColumn Header="Analogs" Width="*">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <CheckBox Content="{tsfBinding:Column Path=AnalogCount}" IsChecked="{tsfBinding:Column Path=AddAnalogs}" Margin="0" HorizontalAlignment="Center"/>
+                                    <CheckBox Content="{tsfBinding:Column Path=AnalogCount}" IsChecked="{tsfBinding:Column Path=AddAnalogs}" ToolTip="{Binding Path=AnalogLabelsPreview}" Margin="0" HorizontalAlignment="Center"/>
                                 </DataTemplate>
                             </sdk:DataGridTemplateColumn.CellTemplate>
                         </sdk:DataGridTemplateColumn>

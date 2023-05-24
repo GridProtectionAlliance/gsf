@@ -26,8 +26,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.TimeSeries.UI;
 
 namespace GSF.PhasorProtocols.UI.DataModels
@@ -317,6 +319,66 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets <see cref="InputWizardDevice"/> analog scalars, i.e., adders and multipliers.
         /// </summary>
         public Tuple<float, float>[] AnalogScalars { get; set; }
+
+        /// <summary>
+        /// Gets a tool tip preview of <see cref="DigitalLabels"/>.
+        /// </summary>
+        public string DigitalLabelsPreview
+        {
+            get
+            {
+                try
+                {
+                    string[] labels = DigitalLabels?.ToArray();
+
+                    if (labels is null || labels.Length == 0)
+                        return string.Empty;
+
+                    for (int i = 0; i < labels.Length; i++)
+                    {
+                        string label = labels[i];
+
+                        // Check for a config frame 3 style digital label
+                        string[] cfg3BitLabels = label.Split('|');
+
+                        if (cfg3BitLabels.Length == 16)
+                        {
+                            labels[i] = $"Digital {i}: [{string.Join(", ", cfg3BitLabels.Select((bitLabel, bitIndex) => $"{bitIndex}: {bitLabel.GetValidLabel()}"))}]";
+                        }
+                        else
+                        {
+                            List<string> bitLabels = new();
+
+                            for (int j = 0; j < label.Length; j += 16)
+                            {
+                                int bitIndex = j / 16;
+
+                                if (bitIndex > 15)
+                                    break;
+
+                                bitLabels.Add($"{bitIndex}: " + (label.Length - j < 16 || bitIndex == 15 ?
+                                    $"{label.Substring(j).GetValidLabel().Trim()}" :
+                                    $"{label.Substring(j, 16).GetValidLabel().Trim()}"));
+                            }
+
+                            labels[i] = $"Digital {i}: [{string.Join(", ", bitLabels)}]";
+                        }
+                    }
+
+                    return string.Join(Environment.NewLine, labels);
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex);
+                    return string.Empty;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a tool tip preview of <see cref="AnalogLabels"/>.
+        /// </summary>
+        public string AnalogLabelsPreview => AnalogLabels is not null ? string.Join(Environment.NewLine, AnalogLabels.Select((label, index) => $"Analog {index}: {label}")) : string.Empty;
 
         #endregion
 
