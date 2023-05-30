@@ -114,7 +114,7 @@ namespace GSF.PhasorProtocols
             {
                 Cells.Clear();
                 State = new CommandFrameParsingState(0, value.Length, true, true);
-                ParseBodyImage(value, 0, value.Length);
+                base.ParseBodyImage(value, 0, value.Length);
             }
         }
 
