@@ -492,7 +492,7 @@
   <Target Name="CorePushToServer" Condition="'$(DoNotPush)' == 'false' And '$(SkipVersioning)' != 'true'">
     <PropertyGroup>
       <RemoteBranch>$(GitBranch)</RemoteBranch>
-      <RemoteBranch Condition="'$(PushToVersionBranch) == 'true'">$(BuildTag)</RemoteBranch>
+      <RemoteBranch Condition="'$(PushToVersionBranch)' == 'true'">$(BuildTag)</RemoteBranch>
     </PropertyGroup>
     <!-- Commit all of the pending changes. -->
     <Message Text="Pushing changes to Git server..." />
