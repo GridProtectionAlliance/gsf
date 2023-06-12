@@ -68,11 +68,12 @@ namespace GSF.Web.Model
 
         public class PagedResults
         {
-            public int RecordPerPage { get; set; }
+            public int RecordsPerPage { get; set; }
             public int NumberOfPages { get; set; }
             public int TotalRecords { get; set; }
             public string Data { get; set; }
         }
+
         #endregion
 
         #region [ Constructor ]
@@ -395,10 +396,10 @@ namespace GSF.Web.Model
 
         /// <summary>
         /// Gets a subset of records from associated table, filtered and sorted as defined in <paramref name="postData"/>.
-        /// based on <see cref="Take" /> and 0 based <paramref name="page"/>
+        /// based on <see cref="Take" /> and 0-based <paramref name="page"/> index
         /// </summary>
         /// <param name="postData"><see cref="PostData"/> containing the search and sort parameters</param>
-        /// <param name="page"> The 0 based Page to be retrieved</param>
+        /// <param name="page">The 0-based index of the page to be retrieved</param>
         /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
         [HttpPost, Route("PagedList/{page}")]
         public virtual IHttpActionResult GetPagedList([FromBody] PostData postData, int page)
@@ -407,17 +408,19 @@ namespace GSF.Web.Model
                 return Unauthorized();
 
             if (!AllowSearch)
-                postData.Searches = new List<Search>(); 
+                postData.Searches = new List<Search>();
 
-            DataTable table = GetSearchResults(postData, page);
-            int Nrecords = CountSearchResults(postData);
+            using DataTable table = GetSearchResults(postData, page);
+            int recordCount = CountSearchResults(postData);
+            int recordsPerPage = Take ?? 50;
 
-            return Ok(new PagedResults() { 
+            return Ok(new PagedResults()
+            {
                 Data = JsonConvert.SerializeObject(table),
-                RecordPerPage = Take ?? 50,
-                TotalRecords = Nrecords,
-                NumberOfPages = Math.Ceil((double)Nrecords/(double)(Take ?? 50))
-            });         
+                RecordsPerPage = recordsPerPage,
+                TotalRecords = recordCount,
+                NumberOfPages = (recordCount + recordsPerPage - 1) / recordsPerPage
+            });
         }
 
         /// <summary>
@@ -451,10 +454,10 @@ namespace GSF.Web.Model
 
         /// <summary>
         /// Gets a subset of records from associated table, filtered and sorted as defined in <paramref name="postData"/>.
-        /// based on <see cref="Take" /> and 0 based <paramref name="page"/>
+        /// based on <see cref="Take" /> and 0-based <paramref name="page"/> index
         /// </summary>
         /// <param name="postData"><see cref="PostData"/> containing the search and sort parameters</param>
-        /// <param name="page"> The 0 based Page to be retrieved</param>
+        /// <param name="page">The 0-based index of the page to be retrieved</param>
         /// <param name="parentID"> Parent ID to be used if Table has a set Parent Key</param>
         /// <returns><see cref="IHttpActionResult"/> containing <see cref="IEnumerable{T}"/> or <see cref="Exception"/></returns>
         [HttpPost, Route("{parentID?}/PagedList/{page}")]
@@ -464,7 +467,7 @@ namespace GSF.Web.Model
                 return Unauthorized();
 
             if (!AllowSearch)
-                postData.Searches = new List<Search>(); 
+                postData.Searches = new List<Search>();
 
             if (ParentKey != string.Empty && parentID != null)
             {
@@ -472,22 +475,25 @@ namespace GSF.Web.Model
                 PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                 if (parentKey.PropertyType == typeof(int))
                     searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
-                else 
+                else
                     searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
                 postData.Searches = searches;
             }
 
-            DataTable table = GetSearchResults(postData, page);
-            int Nrecords = CountSearchResults(postData);
+            using DataTable table = GetSearchResults(postData, page);
+            int recordCount = CountSearchResults(postData);
+            int recordsPerPage = Take ?? 50;
 
-            return Ok(new PagedResults() { 
+            return Ok(new PagedResults()
+            {
                 Data = JsonConvert.SerializeObject(table),
-                RecordPerPage = Take ?? 50,
-                TotalRecords = Nrecords,
-                NumberOfPages = Math.Ceil((double)Nrecords/(double)(Take ?? 50))
-            });         
+                RecordsPerPage = recordsPerPage,
+                TotalRecords = recordCount,
+                NumberOfPages = (recordCount + recordsPerPage - 1) / recordsPerPage
+            });
         }
+
         #endregion
 
         #region [Helper Methods]
@@ -724,8 +730,10 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets the <see cref="DataTable"/> with the SearchResults as specified in <see cref="PostData"/>. 
         /// </summary>
-        /// <returns>A <see cref="DataTable"/>.</returns>
-        protected virtual DataTable GetSearchResults(PostData postData, int? page = null) 
+        /// <param name="postData"><see cref="PostData"/> containing the search and sort parameters</param>
+        /// <param name="page">The 0-based index of the page to be retrieved</param>
+        /// <returns>A <see cref="DataTable"/> containing the results of the search.</returns>
+        protected virtual DataTable GetSearchResults(PostData postData, int? page = null)
         {
             string whereClause = BuildWhereClause(postData.Searches);
 
@@ -748,7 +756,7 @@ namespace GSF.Web.Model
 
                 string limit;
 
-                if (Take is null || page is not null )
+                if (Take is null || page is not null)
                     limit = "";
                 else
                     limit = $"TOP {(int)Take}";
@@ -807,90 +815,88 @@ namespace GSF.Web.Model
 
                 if (page is not null)
                 {
-                    int recordPerPage = Take ?? 50;
-                    sql = sql + $" OFFSET {page*recordPerPage} ROWS FETCH NEXT {recordPerPage} ROWS ONLY ";
+                    int recordsPerPage = Take ?? 50;
+                    sql += $" OFFSET {page * recordsPerPage} ROWS FETCH NEXT {recordsPerPage} ROWS ONLY";
                 }
-                    
+
                 if (param.Count() > 0)
                     return connection.RetrieveData(sql, param);
                 return connection.RetrieveData(sql,"");
             }
-
         }
 
         /// <summary>
-        /// Counts the number of records with the SearchResults as specified in <see cref="PostData"/>. 
+        /// Counts the number of records with the SearchResults as specified in <see cref="PostData"/>.
         /// </summary>
-        /// <returns>A <see cref="int"/>.</returns>
+        /// <param name="postData"><see cref="PostData"/> containing the search and sort parameters</param>
+        /// <returns>The number of records that match the search filters.</returns>
         protected virtual int CountSearchResults(PostData postData)
         {
-
             string whereClause = BuildWhereClause(postData.Searches);
 
-            object[] param = new object[] { };
-            if (RootQueryRestriction != null)
+            object[] param = new object[0];
+            if (RootQueryRestriction is not null)
             {
                 if (whereClause == "")
-                    whereClause = $" WHERE {RootQueryRestriction.FilterExpression}";
+                    whereClause = $"WHERE {RootQueryRestriction.FilterExpression}";
                 else
                     whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
 
                 param = RootQueryRestriction.Parameters.ToArray();
             }
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using AdoDataConnection connection = new(Connection);
+            string tableName = TableOperations<T>.GetTableName();
+
+            string sql = "";
+
+            if (SearchSettings is null && CustomView == string.Empty)
+                sql = $@"SELECT COUNT(*) FROM {tableName} FullTbl {whereClause}";
+            else if (SearchSettings is null)
+                sql = $@"SELECT COUNT(*) FROM ({CustomView}) FullTbl {whereClause}";
+            else
             {
-                string tableName = TableOperations<T>.GetTableName();
+                string pivotColumns = "(" + string.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
 
-                string sql = "";
+                if (pivotColumns == "()")
+                    pivotColumns = "('')";
 
-                if (SearchSettings == null && CustomView == String.Empty)
-                    sql = $@" SELECT COUNT(*) FROM {tableName} FullTbl {whereClause}";
-                else if (SearchSettings == null)
-                    sql = $@" SELECT COUNT(*) FROM({CustomView}) FullTbl {whereClause}";
-                else
-                {
-                    string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
+                string columnCondition = SearchSettings.Condition;
+                if (columnCondition != string.Empty)
+                    columnCondition = $"({columnCondition}) AND ";
+                columnCondition += $"{SearchSettings.FieldKeyField} IN {pivotColumns}";
 
-                    if (pivotCollums == "()")
-                        pivotCollums = "('')";
+                string searchSettingConditions = SearchSettings.Condition;
+                if (searchSettingConditions != string.Empty)
+                    searchSettingConditions = "(" + searchSettingConditions + ")";
 
-                    string collumnCondition = SearchSettings.Condition;
-                    if (collumnCondition != String.Empty)
-                        collumnCondition = $"({collumnCondition}) AND ";
-                    collumnCondition = collumnCondition + $"{SearchSettings.FieldKeyField} IN {pivotCollums}";
+                string joinCondition = $"af.FieldName IN {pivotColumns} AND ";
+                joinCondition += searchSettingConditions;
+                if (SearchSettings.Condition != string.Empty)
+                    joinCondition = $"{joinCondition} AND ";
+                joinCondition += $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
 
-                    string searchSettingConditions = SearchSettings.Condition;
-                    if (searchSettingConditions != String.Empty)
-                        searchSettingConditions = "(" + searchSettingConditions + ")";
-
-                    string joinCondition = $"af.FieldName IN {pivotCollums} AND ";
-                    joinCondition = joinCondition + searchSettingConditions;
-                    if (SearchSettings.Condition != String.Empty)
-                        joinCondition = $"{joinCondition} AND ";
-                    joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
-
-                    string sqlPivotColumns = $@"
+                string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
-                            FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]";
-                    sqlPivotColumns = string.Join(",", connection.RetrieveData(sqlPivotColumns).Select().Select(r => r[0].ToString()));
-                    string tblSelect = $@"
-                        (SELECT 
+                        FROM (SELECT DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {columnCondition}) AS [Fields]";
+                sqlPivotColumns = string.Join(",", connection.RetrieveData(sqlPivotColumns).Select().Select(r => r[0].ToString()));
+                string tblSelect = $@"
+                        (SELECT
                             SRC.*,
                             'AFV_' + AF.{SearchSettings.FieldKeyField} AS AFFieldKey,
                             AF.{SearchSettings.ValueField} AS AFValue
-                        FROM  {(string.IsNullOrEmpty(CustomView) ? tableName : $"({CustomView})")} SRC LEFT JOIN
+                        FROM {(string.IsNullOrEmpty(CustomView) ? tableName : $"({CustomView})")} SRC LEFT JOIN
                             {SearchSettings.AdditionalFieldTable} AF ON {joinCondition}
                         ) as FullTbl {(string.IsNullOrEmpty(sqlPivotColumns) ? "" : $"PIVOT (Max(FullTbl.AFValue) FOR FullTbl.AFFieldKey IN ({sqlPivotColumns})) AS FullTbl")}";
-                    
-                    sql = $"SELECT COUNT(*) FROM {tblSelect} {whereClause}";
-                }
-   
-                if (param.Count() > 0)
-                    return connection.ExecuteScalar<int>(sql, param);
-                return connection.ExecuteScalar<int>(sql,"");
+
+                sql = $"SELECT COUNT(*) FROM {tblSelect} {whereClause}";
             }
+
+            if (param.Any())
+                return connection.ExecuteScalar<int>(sql, param);
+            return connection.ExecuteScalar<int>(sql, "");
         }
-            #endregion
+
+        #endregion
     }
 }
