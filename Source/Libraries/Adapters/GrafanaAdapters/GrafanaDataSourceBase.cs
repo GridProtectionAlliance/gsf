@@ -34,6 +34,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ParsedFunction = System.Tuple<GrafanaAdapters.SeriesFunction, string, GrafanaAdapters.GroupOperation, string>;
+using GrafanaAdapters.GrafanaFunctions;
+
 
 namespace GrafanaAdapters
 {
@@ -147,6 +149,9 @@ namespace GrafanaAdapters
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
+                foreach (Target target in request.targets)
+                    Functions.ParseFunction(target.target);
+
                 DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
@@ -241,6 +246,12 @@ namespace GrafanaAdapters
             HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
             HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
             List<Match> seriesFunctions = new();
+
+            List<IFunctionsModel> functionList = Functions.FunctionList;
+            foreach (IFunctionsModel function in functionList)
+            {
+                Console.WriteLine(function.Name);
+            }
 
             foreach (string target in targetSet)
             {

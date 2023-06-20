@@ -42,6 +42,10 @@ namespace GrafanaAdapters
         /// Target type, can be "timeseries" or "table".
         /// </summary>
         public string type { get; set; }
+        /// <summary>
+        /// Metadata selections
+        /// </summary>
+        public string metadataTables { get; set; }
 
         /// <summary>
         /// Exclude data that have the specified flags set.
@@ -52,5 +56,6 @@ namespace GrafanaAdapters
         /// Exclude data that has normal flag set.
         /// </summary>
         public bool excludeNormalFlags { get; set; }
+
     }
 }
