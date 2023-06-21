@@ -18,36 +18,44 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     new Parameter<decimal>
                     {
-                        Default = typeof(decimal),
+                        Default = 0,
                         Description = "Decimal number to add",
                         Required = true,
-                    },
-                    new Parameter<DataSourceValue>
-                    {
-                        Default = typeof(DataSourceValue),
-                        Description = "Series",
-                        Required = true
                     }
                 },
-                values =>
+                (parameters, dataSourceValues) =>
                 {
-                    foreach (object value in values)
+                    double value = double.Parse(parameters[0]);
+
+
+                    IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
+                    new DataSourceValue
                     {
-                        Console.WriteLine(value);
-                    }
+                        Value = value + dataValue.Value,
+                        Time = dataValue.Time,
+                        Target = dataValue.Target
+                    });
+
+                    return transformedDataSourceValues;
                 }
             ),
+
             new GrafanaFunction(
                 "AbsoluteValue",
                 "(AbsoluteValue|Abs)",
                 "Returns absolute value of DataSourceValue",
                 new List<IParameter>(),
-                values =>
+                (parameters, dataSourceValues) =>
                 {
-                    foreach (object value in values)
+                    IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
+                    new DataSourceValue
                     {
-                        Console.WriteLine(value);
-                    }
+                        Value = Math.Abs(dataValue.Value),
+                        Time = dataValue.Time,
+                        Target = dataValue.Target
+                    });
+
+                    return transformedDataSourceValues;
                 }
             )
         };

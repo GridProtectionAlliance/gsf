@@ -12,7 +12,7 @@ namespace GrafanaAdapters.GrafanaFunctions
     {
         private const string ExpressionFormat = @"^{0}\s*\(\s*(?<Expression>.+)\s*\)";
 
-        public GrafanaFunction(string functionName, string regexName, string functionDescription, List<IParameter> parameters, Action<List<object>> computeLogic)
+        public GrafanaFunction(string functionName, string regexName, string functionDescription, List<IParameter> parameters, Func<string[], IEnumerable<DataSourceValue>, IEnumerable<DataSourceValue>> computeLogic)
         {
             Name = functionName;
             Regex = new Regex(string.Format(ExpressionFormat, regexName), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -28,21 +28,20 @@ namespace GrafanaAdapters.GrafanaFunctions
         public string Description { get; }
         public List<IParameter> Parameters { get; }
 
-        private Action<List<object>> ComputeLogic { get; }
+        private Func<string[], IEnumerable<DataSourceValue>, IEnumerable<DataSourceValue>> ComputeLogic { get; }
 
-        public void Compute(List<object> values)
+        public IEnumerable<DataSourceValue> Compute(string[] values, IEnumerable<DataSourceValue> dataSourceValues)
         {
-            ComputeLogic(values);
+            return ComputeLogic(values, dataSourceValues);
         }
     }
 
-    internal class Parameter<T> : IParameter
+    internal class Parameter<T> : IParameter<T>
     {
-        public Type Default { get; set; }
+        public T Default { get; set; }
         public string Description { get; set; }
         public bool Required { get; set; }
-        public Type Type { get; } = typeof(T);
-    }
+    }   
 
     internal class QueryDataHolder
     {

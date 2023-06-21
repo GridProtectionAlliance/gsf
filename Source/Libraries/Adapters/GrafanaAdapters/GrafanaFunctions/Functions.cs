@@ -23,15 +23,18 @@ namespace GrafanaAdapters.GrafanaFunctions
                 return GetDataSourceValue(parameterValue, dataSourceBase, queryData);
             }
 
-            string[] parsedParameters = parameterValue?.Split(',');
-
-            Console.WriteLine(function.Name);
-            Console.WriteLine(parameterValue);
+            string[] parsedParameters = ParseParameters(parameterValue);
 
             // Recursive call to parse the nested function
             DataSourceValueGroup[] nestedResult = ParseFunction(parsedParameters?.LastOrDefault() ?? "", dataSourceBase, queryData);
 
-            // Perform actions on the nested result as needed
+            // Apply the compute function
+            for (int i = 0; i < nestedResult.Length; i++)
+            {
+                IEnumerable<DataSourceValue> computedValues = function.Compute(parsedParameters, nestedResult[i].Source);
+
+                nestedResult[i].Source = computedValues;
+            }
 
             // Return the result to the previous call
             return nestedResult;
@@ -136,5 +139,25 @@ namespace GrafanaAdapters.GrafanaFunctions
             return dataResult;
         }
 
+        public static string[] ParseParameters(string expression)
+        {
+            if (expression == null)
+            {
+                return new string[0];
+            }
+
+            int indexOpenBracket = expression.IndexOf('(');
+            int indexComma = expression.IndexOf(',');
+
+            // If '(' doesn't exist or is after ',' then split by comma
+            if ((indexOpenBracket == -1 || indexComma < indexOpenBracket) && indexComma != -1)
+            {
+                return expression.Split(',');
+            }
+
+            // Otherwise return the whole string as a single item array
+            return new string[] { expression };
+        }
     }
+
 }

@@ -150,13 +150,18 @@ namespace GrafanaAdapters
                     target.target = target.target?.Trim() ?? "";
 
 
+                List<DataSourceValueGroup> allGroups = new List<DataSourceValueGroup>();
+
                 foreach (Target target in request.targets)
                 {
                     QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, cancellationToken);
-                    Functions.ParseFunction(target.target, this, queryData);
+                    DataSourceValueGroup[] groups = Functions.ParseFunction(target.target, this, queryData);
+                    allGroups.AddRange(groups);  // adding each group to the overall list
                 }
 
-                DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
+                DataSourceValueGroup[] valueGroups = allGroups.ToArray();
+
+                //DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues

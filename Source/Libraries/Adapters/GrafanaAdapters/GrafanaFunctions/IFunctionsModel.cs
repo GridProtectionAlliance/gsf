@@ -13,14 +13,17 @@ namespace GrafanaAdapters.GrafanaFunctions
         string Name { get; }
         string Description { get; }
         List<IParameter> Parameters { get; }
-        void Compute(List<object> values);
+        IEnumerable<DataSourceValue> Compute(string[] values, IEnumerable<DataSourceValue> dataSourceValues);
     }
 
     internal interface IParameter
     {
-        Type Default { get; set; }
         string Description { get; set; }
         bool Required { get; set; }
-        public Type Type { get; }
+    }
+
+    internal interface IParameter<T> : IParameter
+    {
+        T Default { get; set; }
     }
 }
