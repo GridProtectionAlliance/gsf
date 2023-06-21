@@ -88,7 +88,7 @@ namespace GrafanaAdapters
         /// <param name="includePeaks">Flag that determines if decimated data should include min/max interval peaks over provided time range.</param>
         /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
-        protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
+        public abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
 
         /// <summary>
         /// Queries data source returning data as Grafana time-series data set.
@@ -149,8 +149,12 @@ namespace GrafanaAdapters
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
+
                 foreach (Target target in request.targets)
-                    Functions.ParseFunction(target.target);
+                {
+                    QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, cancellationToken);
+                    Functions.ParseFunction(target.target, this, queryData);
+                }
 
                 DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
 
@@ -247,7 +251,7 @@ namespace GrafanaAdapters
             HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
             List<Match> seriesFunctions = new();
 
-            List<IFunctionsModel> functionList = Functions.FunctionList;
+            List<IFunctionsModel> functionList = FunctionsBase.GrafanaFunctions;
             foreach (IFunctionsModel function in functionList)
             {
                 Console.WriteLine(function.Name);
