@@ -321,6 +321,7 @@ namespace GrafanaAdapters
                 }));
             }
 
+            //FILTER EXPRESSION IS HERE
             // Target set now contains both original expressions and newly parsed individual point tags - to create final point list we
             // are only interested in the point tags, provided either by direct user entry or derived by parsing filter expressions
             foreach (string target in targetSet)

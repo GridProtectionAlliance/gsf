@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text;
@@ -8,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using GrafanaAdapters.GrafanaFunctions;
 using GSF.TimeSeries;
+using GSF;
+using GSF.IO;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
@@ -15,7 +18,7 @@ namespace GrafanaAdapters.GrafanaFunctions
     {
         public static DataSourceValueGroup[] ParseFunction(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
-            (IFunctionsModel function, string parameterValue) = MatchFunction(expression);
+            (IGrafanaFunction function, string parameterValue) = MatchFunction(expression);
 
             // Base Case
             if (function == null)
@@ -23,15 +26,27 @@ namespace GrafanaAdapters.GrafanaFunctions
                 return GetDataSourceValue(parameterValue, dataSourceBase, queryData);
             }
 
+            //Split Parameters
+            string[] functionParameters;
             string[] parsedParameters = ParseParameters(parameterValue);
+            if (parsedParameters.Length > 1)
+            {
+                functionParameters = parsedParameters.Take(parsedParameters.Length - 1).ToArray();
+            }
+            else
+            {
+                functionParameters = new string[0]; 
+            }
+            string functionQuery = parsedParameters.Last();
 
             // Recursive call to parse the nested function
-            DataSourceValueGroup[] nestedResult = ParseFunction(parsedParameters?.LastOrDefault() ?? "", dataSourceBase, queryData);
+            DataSourceValueGroup[] nestedResult = ParseFunction(functionQuery ?? "", dataSourceBase, queryData);
 
             // Apply the compute function
             for (int i = 0; i < nestedResult.Length; i++)
             {
-                IEnumerable<DataSourceValue> computedValues = function.Compute(parsedParameters, nestedResult[i].Source);
+                object[] computeParameters = GenerateParameters(function, functionParameters, nestedResult[i].Source);
+                IEnumerable<DataSourceValue> computedValues = function.Compute(computeParameters); 
 
                 nestedResult[i].Source = computedValues;
             }
@@ -40,11 +55,10 @@ namespace GrafanaAdapters.GrafanaFunctions
             return nestedResult;
         }
 
-
-
-        public static (IFunctionsModel function, string parameterValue) MatchFunction(string expression)
+        public static (IGrafanaFunction function, string parameterValue) MatchFunction(string expression)
         {
-            foreach (IFunctionsModel function in FunctionsBase.GrafanaFunctions)
+            List<IGrafanaFunction> grafanaFunctions = GetGrafanaFunctions();
+            foreach (IGrafanaFunction function in grafanaFunctions)
             {
                 // Check if the expression matches the current function's regex
                 if (!function.Regex.IsMatch(expression))
@@ -139,6 +153,49 @@ namespace GrafanaAdapters.GrafanaFunctions
             return dataResult;
         }
 
+        public static object[] GenerateParameters(IGrafanaFunction function, string[] parsedParameters, IEnumerable<DataSourceValue> dataPoints)
+        {
+            object[] parameters = new object[function.Parameters.Count()];
+            int index = 0;
+            int paramIndex = 0;
+            foreach (IParameter parameter in function.Parameters)
+            {
+                //DataSourceValue
+                if (parameter is IParameter<IEnumerable<DataSourceValue>>)
+                {
+                    parameters[index] = dataPoints;
+                }
+
+                //Other
+                else
+                {
+                    //Not enough parameters 
+                    if (paramIndex >= parsedParameters.Length)
+                    {
+                        //Required -> error
+                        if (parameter.Required)
+                        {
+                            throw new ArgumentException($"Required parameter '{parameter.GetType().ToString()}' is missing.");
+                        }
+                        //Not required -> set to default
+                        else
+                        {
+                            IParameter<object> genericParameter = parameter as IParameter<object>;
+                            parameters[index] = genericParameter.Default;
+                        }
+                    }
+                    //Have a valid parameter
+                    else
+                    {
+                        parameters[index] = parsedParameters[paramIndex];
+                        paramIndex++;
+                    }
+                }
+                index++;
+            }
+            return parameters;
+        }
+
         public static string[] ParseParameters(string expression)
         {
             if (expression == null)
@@ -157,6 +214,23 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             // Otherwise return the whole string as a single item array
             return new string[] { expression };
+        }
+
+        public static List<IGrafanaFunction> GetGrafanaFunctions()
+        {
+            List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar), true, false).ToList();
+            List<IGrafanaFunction> grafanaFunctions = new List<IGrafanaFunction>();
+
+            foreach (Type type in implementationTypes)
+            {
+                if (type.GetConstructor(Type.EmptyTypes) != null) // Check if the type has a parameterless constructor
+                {
+                    IGrafanaFunction instance = (IGrafanaFunction)Activator.CreateInstance(type);
+                    grafanaFunctions.Add(instance);
+                }
+            }
+
+            return grafanaFunctions;
         }
     }
 
