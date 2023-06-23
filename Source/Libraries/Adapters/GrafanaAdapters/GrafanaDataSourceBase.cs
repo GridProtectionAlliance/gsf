@@ -256,12 +256,6 @@ namespace GrafanaAdapters
             HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
             List<Match> seriesFunctions = new();
 
-            List<IFunctionsModel> functionList = FunctionsBase.GrafanaFunctions;
-            foreach (IFunctionsModel function in functionList)
-            {
-                Console.WriteLine(function.Name);
-            }
-
             foreach (string target in targetSet)
             {
                 // Find any series functions in target

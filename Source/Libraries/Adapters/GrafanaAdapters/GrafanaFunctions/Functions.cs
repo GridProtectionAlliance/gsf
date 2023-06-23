@@ -11,6 +11,7 @@ using GrafanaAdapters.GrafanaFunctions;
 using GSF.TimeSeries;
 using GSF;
 using GSF.IO;
+using GSF.TimeSeries.Adapters;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
@@ -87,8 +88,23 @@ namespace GrafanaAdapters.GrafanaFunctions
             Dictionary<ulong, string> targetMap = new();
             string[] allTargets = expression.Split(';');
 
-            // Reduce all targets down to a dictionary of point ID's mapped to point tags
+            // Expand target set to include point tags for all parsed inputs
+            HashSet<string> targetSet = new HashSet<string>();
             foreach (string target in allTargets)
+            {
+                targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
+                {
+                    MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
+
+                    if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
+                        return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
+
+                    return results.Select(key => key.TagFromKey(Metadata)).ToArray();
+                }));
+            }
+
+            // Reduce all targets down to a dictionary of point ID's mapped to point tags
+            foreach (string target in targetSet)
             {
                 MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(Metadata));
 
