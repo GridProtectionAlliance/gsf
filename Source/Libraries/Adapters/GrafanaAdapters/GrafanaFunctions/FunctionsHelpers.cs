@@ -61,7 +61,10 @@ namespace GrafanaAdapters.GrafanaFunctions
         public T Default { get; set; }
         public string Description { get; set; }
         public bool Required { get; set; }
+        public Type ParameterType => typeof(T);
+        public string ParameterTypeName { get; set; }
     }
+
 
 
     internal class QueryDataHolder

@@ -59,6 +59,16 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// Gets or sets a value indicating whether the parameter is required.
         /// </summary>
         bool Required { get; set; }
+
+        /// <summary>
+        /// Gets the type of the parameter.
+        /// </summary>
+        Type ParameterType { get; }
+
+        /// <summary>
+        /// Gets or sets the type name of the parameter.
+        /// </summary>
+        string ParameterTypeName { get; set; }
     }
 
     /// <summary>
@@ -71,6 +81,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// Gets or sets the default value of the parameter.
         /// </summary>
         T Default { get; set; }
+
     }
 
 }

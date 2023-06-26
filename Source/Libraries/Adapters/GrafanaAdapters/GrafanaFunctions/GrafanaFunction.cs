@@ -35,12 +35,14 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Default = 0,
                     Description = "Decimal number to add",
                     Required = true,
+                    ParameterTypeName = "decimal"
                 },
                 new Parameter<IEnumerable<DataSourceValue>>
                 {
                     Default = Enumerable.Empty<DataSourceValue>(),
                     Description = "Data Points",
                     Required = true,
+                    ParameterTypeName = "data"
                 }
             };
 
@@ -98,6 +100,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Default = Enumerable.Empty<DataSourceValue>(),
                     Description = "Data Points",
                     Required = true,
+                    ParameterTypeName = "data"
                 }
             };
 
