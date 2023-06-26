@@ -28,16 +28,13 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             //Split Parameters
-            string[] functionParameters;
             string[] parsedParameters = ParseParameters(parameterValue);
+            string[] functionParameters;
             if (parsedParameters.Length > 1)
-            {
                 functionParameters = parsedParameters.Take(parsedParameters.Length - 1).ToArray();
-            }
             else
-            {
                 functionParameters = new string[0]; 
-            }
+
             string functionQuery = parsedParameters.Last();
 
             // Recursive call to parse the nested function
@@ -220,16 +217,25 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             int indexOpenBracket = expression.IndexOf('(');
-            int indexComma = expression.IndexOf(',');
 
-            // If '(' doesn't exist or is after ',' then split by comma
-            if ((indexOpenBracket == -1 || indexComma < indexOpenBracket) && indexComma != -1)
+            // If '(' doesn't exist, return split
+            if (indexOpenBracket == -1)
             {
                 return expression.Split(',');
             }
 
-            // Otherwise return the whole string as a single item array
-            return new string[] { expression };
+            string parametersSubstring = expression.Substring(0, indexOpenBracket);
+
+            // Split the substring by comma
+            string[] parameters = parametersSubstring.Split(',');
+
+            if (parameters.Length > 0 && !string.IsNullOrWhiteSpace(parameters[parameters.Length - 1]))
+            {
+                // Last item is not empty or whitespace, append the remaining expression
+                parameters[parameters.Length - 1] += expression.Substring(indexOpenBracket);
+            }
+
+            return parameters;
         }
 
         public static List<IGrafanaFunction> GetGrafanaFunctions()
