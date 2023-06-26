@@ -33,7 +33,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 new Parameter<decimal>
                 {
                     Default = 0,
-                    Description = "Decimal number to add",
+                    Description = "A floating point value representing an additive offset to be applied to each value the source series.",
                     Required = true,
                     ParameterTypeName = "decimal"
                 },
@@ -49,9 +49,6 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <inheritdoc />
         public IEnumerable<DataSourceValue> Compute(object[] values)
         {
-            // Verify Values
-            //FunctionsModelHelper.CheckValuesIntegrity(this, values);
-
             // Get Values
             double value = double.Parse(values[0].ToString());
             IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[1];
@@ -107,9 +104,6 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <inheritdoc />
         public IEnumerable<DataSourceValue> Compute(object[] values)
         {
-            // Verify Values
-            //FunctionsModelHelper.CheckValuesIntegrity(this, values);
-
             // Get Values
             IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[0];
 
@@ -129,5 +123,68 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// Initializes a new instance of the <see cref="AbsoluteValue"/> class.
         /// </summary>
         public AbsoluteValue() { }
+    }
+
+
+    /// <summary>
+    /// Represents the "Round" function that rounds the value of a DataSourceValue.
+    /// </summary>
+    public class Round : IGrafanaFunction
+    {
+        /// <inheritdoc />
+        public string Name { get; } = "Round";
+
+        /// <inheritdoc />
+        public string Description { get; } = "Rounds the value of DataSourceValue";
+
+        /// <inheritdoc />
+        public Type Type { get; } = typeof(AbsoluteValue);
+
+        /// <inheritdoc />
+        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        /// <inheritdoc />
+        public List<IParameter> Parameters { get; } =
+            new List<IParameter>
+            {
+                new Parameter<int>
+                {
+                    Default = 0,
+                    Description = "A positive integer value representing the number of decimal places in the return value - defaults to 0.",
+                    Required = false,
+                    ParameterTypeName = "int"
+                },
+                new Parameter<IEnumerable<DataSourceValue>>
+                {
+                    Default = Enumerable.Empty<DataSourceValue>(),
+                    Description = "Data Points",
+                    Required = true,
+                    ParameterTypeName = "data"
+                }
+            };
+
+        /// <inheritdoc />
+        public IEnumerable<DataSourceValue> Compute(object[] values)
+        {
+            // Get Values
+            int numberDecimals = int.Parse(values[0].ToString());
+            IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[1];
+
+            // Compute
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
+                new DataSourceValue
+                {
+                    Value = Math.Round(dataValue.Value, numberDecimals),
+                    Time = dataValue.Time,
+                    Target = dataValue.Target
+                });
+
+            return transformedDataSourceValues;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AbsoluteValue"/> class.
+        /// </summary>
+        public Round() { }
     }
 }
