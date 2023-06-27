@@ -62,5 +62,9 @@ namespace GrafanaAdapters
         /// Defines a refID for a specific Grafana Query.
         /// </summary>
         public string refId;
+        /// <summary>
+        /// Defines a refID for a specific Grafana Query.
+        /// </summary>
+        public Dictionary<string, string> metadata;
     }
 }

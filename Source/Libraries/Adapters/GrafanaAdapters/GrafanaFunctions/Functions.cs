@@ -12,6 +12,7 @@ using GSF.TimeSeries;
 using GSF;
 using GSF.IO;
 using GSF.TimeSeries.Adapters;
+using System.ServiceModel.Description;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
@@ -156,14 +157,48 @@ namespace GrafanaAdapters.GrafanaFunctions
                     SourceTarget = queryData.SourceTarget,
                     Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value)),
                     DropEmptySeries = queryData.DropEmptySeries,
-                    refId = queryData.SourceTarget.refId
+                    refId = queryData.SourceTarget.refId,
+                    metadata = GetMetadata(dataSourceBase, target.Value, queryData.MetadataSelection)
                 };
 
                 dataResult[index] = dataSourceValueGroup;
                 index++;
             }
 
+            
             return dataResult;
+        }
+
+        public static Dictionary<string, string> GetMetadata(GrafanaDataSourceBase dataSourceBase, string rootTarget, Dictionary<string, List<string>> metadataSelection)
+        {
+            // Create a new dictionary to hold the metadata values
+            var metadataDict = new Dictionary<string, string>();
+
+            // Return an empty dictionary if metadataSelection is null or empty
+            if (metadataSelection == null || metadataSelection.Count == 0)
+            {
+                return metadataDict;
+            }
+
+            //Iterate through selections
+            foreach (var entry in metadataSelection)
+            {
+                string table = entry.Key;
+                List<string> values = entry.Value;
+                DataRow[] rows = dataSourceBase?.Metadata.Tables[table].Select($"PointTag = '{rootTarget}'") ?? new DataRow[0];
+
+                // Populate the entry dictionary with the metadata values
+                foreach (string value in values)
+                {
+                    string metadataValue = string.Empty;
+                    if (rows.Length > 0)
+                        metadataValue = rows[0][value].ToString();
+
+                    metadataDict[value] = metadataValue;
+                }
+            }
+
+            return metadataDict;
         }
 
         public static object[] GenerateParameters(IGrafanaFunction function, string[] parsedParameters, IEnumerable<DataSourceValue> dataPoints)

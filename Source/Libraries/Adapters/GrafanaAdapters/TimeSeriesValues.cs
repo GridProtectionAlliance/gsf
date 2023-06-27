@@ -62,7 +62,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Defines metaData attached to the <see cref="TimeSeriesValues"/>
         /// </summary>
-        public MetaData meta;
+        public Dictionary<string, string> meta;
 
         /// <summary>
         /// Defines flag that determines if empty series are produced.

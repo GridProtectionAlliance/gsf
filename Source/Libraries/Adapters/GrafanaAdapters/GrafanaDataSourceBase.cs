@@ -131,11 +131,11 @@ namespace GrafanaAdapters
                 });
             }
 
-            float lookupTargetCoordinate(string target, string field)
-            {
-                return TargetCache<float>.GetOrAdd($"{target}_{field}", () =>
-                    LookupTargetMetadata(target)?.ConvertNullableField<float>(field) ?? 0.0F);
-            }
+            //float lookupTargetCoordinate(string target, string field)
+            //{
+            //    return TargetCache<float>.GetOrAdd($"{target}_{field}", () =>
+            //        LookupTargetMetadata(target)?.ConvertNullableField<float>(field) ?? 0.0F);
+            //}
 
             // Task allows processing of multiple simultaneous queries
             return Task.Factory.StartNew(() =>
@@ -154,7 +154,7 @@ namespace GrafanaAdapters
 
                 foreach (Target target in request.targets)
                 {
-                    QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, cancellationToken);
+                    QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, target.metadataSelection, cancellationToken);
                     DataSourceValueGroup[] groups = Functions.ParseFunction(target.target, this, queryData);
                     allGroups.AddRange(groups);  // adding each group to the overall list
                 }
@@ -163,19 +163,34 @@ namespace GrafanaAdapters
 
                 //DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
 
+                if (request.targets != null)
+                {
+                    foreach (var target in request.targets)
+                    {
+                        if (target.metadataSelection != null)
+                        {
+                            foreach (var entry in target.metadataSelection)
+                            {
+                                string key = entry.Key;
+                                List<string> values = entry.Value;
+
+                                Console.WriteLine($"Target refId: {target.refId}");
+                                Console.WriteLine($"Table Name (Key): {key}");
+                                foreach (string value in values)
+                                {
+                                    Console.WriteLine($"Value: {value}");
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
                 {
                     target = valueGroup.Target,
                     rootTarget = valueGroup.RootTarget,
-                    meta = new MetaData
-                    {
-                        custom = new HistorianMetaData
-                        {
-                            Latitude = lookupTargetCoordinate(valueGroup.RootTarget, "Latitude"),
-                            Longitude = lookupTargetCoordinate(valueGroup.RootTarget, "Longitude")
-                        }
-                    },
+                    meta = valueGroup.metadata,
                     dropEmptySeries = valueGroup.DropEmptySeries,
                     refId = valueGroup.refId
                 }).ToList();

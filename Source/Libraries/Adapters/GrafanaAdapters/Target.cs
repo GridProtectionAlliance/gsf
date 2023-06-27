@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
+
 namespace GrafanaAdapters
 {
     /// <summary>
@@ -45,7 +47,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Metadata selections
         /// </summary>
-        public string metadataTables { get; set; }
+        public Dictionary<string, List<string>> metadataSelection { get; set; }
 
         /// <summary>
         /// Exclude data that have the specified flags set.

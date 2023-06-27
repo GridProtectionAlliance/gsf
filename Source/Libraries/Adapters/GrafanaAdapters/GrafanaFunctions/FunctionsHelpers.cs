@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel.Description;
 using System.Text;
 using System.Threading;
 
@@ -75,10 +76,12 @@ namespace GrafanaAdapters.GrafanaFunctions
         public string Interval { get; }
         public bool IncludePeaks { get; }
         public bool DropEmptySeries { get; }
+        public Dictionary<string, List<string>> MetadataSelection { get; }
 
         public CancellationToken CancellationToken { get; }
 
-        public QueryDataHolder(Target sourceTarget, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, CancellationToken cancellationToken)
+        public QueryDataHolder(Target sourceTarget, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, 
+            bool dropEmptySeries, Dictionary<string, List<string>> metadataSelection, CancellationToken cancellationToken)
         {
             SourceTarget = sourceTarget;
             StartTime = startTime;
@@ -86,6 +89,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             Interval = interval;
             IncludePeaks = includePeaks;
             DropEmptySeries = dropEmptySeries;
+            MetadataSelection = metadataSelection;
             CancellationToken = cancellationToken;
         }
     }
