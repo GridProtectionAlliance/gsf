@@ -22,7 +22,9 @@
 //******************************************************************************************************
 
 using System.IO;
+using System.Linq;
 using System.Web.Http;
+using GSF;
 using GSF.Configuration;
 using GSF.IO;
 using Newtonsoft.Json;
@@ -53,7 +55,8 @@ namespace ModbusAdapters
         [Authorize(Roles = "Administrator,Editor")]
         public string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym)
         {
-            return Path.Combine(ConfigurationCachePath, $"{acronym}.configuration.json");
+            // Path traversal attacks are prevented by replacing invalid file name characters
+            return Path.Combine(ConfigurationCachePath, $"{acronym.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.configuration.json");
         }
 
         [HttpGet]

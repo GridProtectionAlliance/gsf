@@ -22,7 +22,9 @@
 //******************************************************************************************************
 
 using System.IO;
+using System.Linq;
 using System.Web.Http;
+using GSF;
 using GSF.Configuration;
 using GSF.IO;
 using Newtonsoft.Json;
@@ -100,8 +102,11 @@ namespace PhasorWebUI
         /// Gets the file name of the configuration cache file for the device with the given acronym.
         /// </summary>
         /// <param name="acronym">Acronym of device.</param>
-        public static string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym) => 
-            Path.Combine(ConfigurationCachePath, $"{acronym}.configuration.json");
+        public static string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym)
+        {
+            // Path traversal attacks are prevented by replacing invalid file name characters
+            return Path.Combine(ConfigurationCachePath, $"{acronym.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.configuration.json");
+        }
 
         /// <summary>
         /// Gets the path to the configuration cache directory.
