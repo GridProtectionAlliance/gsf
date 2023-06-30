@@ -358,7 +358,6 @@ namespace GSF
 
             foreach (string key in pairs.Keys)
             {
-               
                 value = pairs[key];
                 
                 if (value is null)
